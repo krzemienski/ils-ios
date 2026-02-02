@@ -8,8 +8,34 @@ struct MCPController: RouteCollection {
         let mcp = routes.grouped("mcp")
 
         mcp.get(use: list)
+        mcp.get(":name", use: show)
         mcp.post(use: create)
         mcp.delete(":name", use: delete)
+    }
+
+    /// GET /mcp/:name - Get a single MCP server by name
+    /// Query params: ?scope=user|project
+    @Sendable
+    func show(req: Request) async throws -> APIResponse<MCPServer> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid MCP server name")
+        }
+
+        var scope: MCPScope?
+        if let scopeString = req.query[String.self, at: "scope"] {
+            scope = MCPScope(rawValue: scopeString)
+        }
+
+        let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: false)
+
+        guard let server = servers.first(where: { $0.name == name }) else {
+            throw Abort(.notFound, reason: "MCP server '\(name)' not found")
+        }
+
+        return APIResponse(
+            success: true,
+            data: server
+        )
     }
 
     /// GET /mcp - List all MCP servers

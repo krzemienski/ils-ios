@@ -37,12 +37,22 @@ This phase brings Claude Code's extensibility to iOS—browsing skills, viewing 
   - Full CRUD operations (create, update, delete) also implemented
   - Uses Skill model from ILSShared with all required fields (name, description, version, tags, content, path, source)
 
-- [ ] Complete MCPController backend implementation:
+- [x] Complete MCPController backend implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/MCPController.swift`
   - Implement `index()` to return all MCP server configurations
   - Implement `show()` to return single MCP server details
   - Parse mcp_servers.json format (name, command, args, env)
   - Return in MCPServerDTO format matching ILSShared model
+
+  **Completed 2026-02-02:** MCPController now fully implemented with:
+  - `list()` endpoint at GET /mcp returns all MCP servers with cache-aware scanning
+  - `show()` endpoint at GET /mcp/:name returns single server by name
+  - `?scope=user|project` query param filters by scope
+  - `?refresh=true` query param bypasses FileSystemCache
+  - `create()` and `delete()` endpoints for CRUD operations
+  - Uses MCPServer model from ILSShared with all fields (name, command, args, env, scope, status, configPath)
+  - Reads from ~/.mcp.json (primary) and ~/.claude.json (legacy fallback)
+  - Masks sensitive environment variable values in responses
 
 - [ ] Update iOS SkillsListView and ViewModel:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Skills/SkillsListView.swift`
