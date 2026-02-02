@@ -28,6 +28,9 @@ struct ChatView: View {
         }
         .onAppear {
             viewModel.sessionId = session.id
+            Task {
+                await viewModel.loadMessageHistory()
+            }
         }
         .alert("Connection Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
@@ -97,6 +100,7 @@ struct ChatView: View {
         ChatInputView(
             text: $inputText,
             isStreaming: viewModel.isStreaming,
+            isDisabled: viewModel.isLoadingHistory,
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
             onCommandPalette: { showCommandPalette = true }
@@ -156,6 +160,7 @@ struct ChatView: View {
 struct ChatInputView: View {
     @Binding var text: String
     let isStreaming: Bool
+    var isDisabled: Bool = false
     let onSend: () -> Void
     let onCancel: () -> Void
     let onCommandPalette: () -> Void
@@ -164,14 +169,16 @@ struct ChatInputView: View {
         HStack(spacing: ILSTheme.spacingS) {
             Button(action: onCommandPalette) {
                 Image(systemName: "command")
-                    .foregroundColor(ILSTheme.accent)
+                    .foregroundColor(isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
             }
+            .disabled(isDisabled)
 
             TextField("Message Claude...", text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...5)
+                .disabled(isDisabled)
                 .onSubmit {
-                    if !text.isEmpty {
+                    if !text.isEmpty && !isDisabled {
                         onSend()
                     }
                 }
@@ -184,9 +191,9 @@ struct ChatInputView: View {
             } else {
                 Button(action: onSend) {
                     Image(systemName: "arrow.up.circle.fill")
-                        .foregroundColor(text.isEmpty ? ILSTheme.tertiaryText : ILSTheme.accent)
+                        .foregroundColor(text.isEmpty || isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
                 }
-                .disabled(text.isEmpty)
+                .disabled(text.isEmpty || isDisabled)
             }
         }
         .padding()

@@ -35,11 +35,12 @@ This phase ensures chat history survives app restarts and backend reboots. Users
   - Include full message content and metadata
   - **Completed**: Endpoint already implemented in SessionsController.swift (lines 156-193) with route registration at line 17. Includes session validation, pagination via `limit` (default 100) and `offset` (default 0) query params, ascending sort by createdAt, total count for pagination, and full message metadata via `toShared()` conversion. Build verified.
 
-- [ ] Update iOS ChatViewModel to load message history:
+- [x] Update iOS ChatViewModel to load message history:
   - On session selection, fetch existing messages from backend
   - Populate messages array before enabling chat input
   - Show loading indicator while fetching history
   - Handle empty sessions gracefully (welcome message)
+  - **Completed**: ChatView.onAppear now calls loadMessageHistory() which fetches messages from `/sessions/{id}/messages` endpoint. ChatInputView accepts `isDisabled` parameter to disable input while loading. ChatViewModel shows welcome message ("Hello! I'm Claude, your AI assistant. How can I help you today?") for empty sessions. Build verified successful.
 
 - [ ] Update ChatView to display loaded history:
   - Render historical messages with correct styling (user vs assistant)
