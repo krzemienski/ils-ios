@@ -8,3 +8,22 @@
 .worktrees/
 .security-key
 logs/security/
+
+# Build artifacts
+build/
+ILSApp/build/
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Database (created at runtime)
+ils.sqlite
+ils.sqlite-shm
+ils.sqlite-wal
+
+# Swift Package Manager
+.swiftpm/
+
+# macOS
+.DS_Store
