@@ -1,0 +1,114 @@
+{
+  "configurations" : [
+    {
+      "id" : "1E7F8A9B-2C3D-4E5F-6A7B-8C9D0E1F2A3B",
+      "name" : "Default Configuration",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "uiTestingScreenshotsLifetime" : "deleteOnSuccess",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    },
+    {
+      "id" : "2F8G9H0I-3J4K-5L6M-7N8O-9P0Q1R2S3T4U",
+      "name" : "Quick Smoke Tests",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "sequential",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      },
+      "testTargets" : [
+        {
+          "target" : {
+            "containerPath" : "container:ILSApp.xcodeproj",
+            "identifier" : "ILSAppUITests",
+            "name" : "ILSAppUITests"
+          },
+          "selectedTests" : [
+            "ValidationGateTests/testGate1_SessionsListLoads",
+            "FeatureGateTests/testGate9_ProjectsListLoads",
+            "FeatureGateTests/testGate11_SkillsListLoads",
+            "FeatureGateTests/testGate13_SettingsViewLoads",
+            "FeatureGateTests/testGate14_PluginsListLoads"
+          ]
+        }
+      ]
+    },
+    {
+      "id" : "3V5W7X9Y-0Z1A-2B3C-4D5E-6F7G8H9I0J1K",
+      "name" : "Full Regression",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "maximumTestRepetitions" : 3,
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "testRepetitionMode" : "retryOnFailure",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    },
+    {
+      "id" : "4L6M8N0O-1P2Q-3R4S-5T6U-7V8W9X0Y1Z2A",
+      "name" : "Localization Testing - German",
+      "options" : {
+        "language" : "de",
+        "region" : "DE",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    },
+    {
+      "id" : "5B3C4D5E-6F7G-8H9I-0J1K-2L3M4N5O6P7Q",
+      "name" : "Localization Testing - Japanese",
+      "options" : {
+        "language" : "ja",
+        "region" : "JP",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    },
+    {
+      "id" : "6R8S9T0U-1V2W-3X4Y-5Z6A-7B8C9D0E1F2G",
+      "name" : "Localization Testing - Arabic (RTL)",
+      "options" : {
+        "language" : "ar",
+        "region" : "SA",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:ILSApp.xcodeproj",
+      "identifier" : "ILSApp",
+      "name" : "ILSApp"
+    },
+    "testTimeoutsEnabled" : true,
+    "defaultTestExecutionTimeAllowance" : 600,
+    "maximumTestExecutionTimeAllowance" : 1200
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:ILSApp.xcodeproj",
+        "identifier" : "ILSAppUITests",
+        "name" : "ILSAppUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
