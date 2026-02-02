@@ -1,0 +1,549 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
+		000000000000000000000001 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
+		000000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000012 /* ContentView.swift */; };
+		000000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000013 /* Assets.xcassets */; };
+		000000000000000000000020 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
+		000000000000000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
+		000000000000000000000022 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
+		000000000000000000000023 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
+		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
+		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
+		000000000000000000000026 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
+		000000000000000000000027 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
+		000000000000000000000028 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000038 /* ProjectsListView.swift */; };
+		000000000000000000000029 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000039 /* NewProjectView.swift */; };
+		00000000000000000000002A /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003A /* ProjectDetailView.swift */; };
+		00000000000000000000002B /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
+		00000000000000000000002C /* PluginsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003C /* PluginsListView.swift */; };
+		00000000000000000000002D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
+		00000000000000000000002E /* MCPServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003E /* MCPServerListView.swift */; };
+		00000000000000000000002F /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
+		000000000000000000000040 /* SkillsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000050 /* SkillsListView.swift */; };
+		000000000000000000000041 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
+		000000000000000000000042 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* SettingsView.swift */; };
+		000000000000000000000043 /* SessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000053 /* SessionsListView.swift */; };
+		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
+		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		000000000000000000000010 /* ILSApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000011 /* ILSAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSAppApp.swift; sourceTree = "<group>"; };
+		000000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		000000000000000000000014 /* ILSApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSApp.entitlements; sourceTree = "<group>"; };
+		000000000000000000000030 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
+		000000000000000000000031 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		000000000000000000000032 /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
+		000000000000000000000033 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
+		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
+		000000000000000000000036 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		000000000000000000000037 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		000000000000000000000038 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		000000000000000000000039 /* NewProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewProjectView.swift; sourceTree = "<group>"; };
+		00000000000000000000003A /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		00000000000000000000003B /* ProjectsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsViewModel.swift; sourceTree = "<group>"; };
+		00000000000000000000003C /* PluginsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsListView.swift; sourceTree = "<group>"; };
+		00000000000000000000003D /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
+		00000000000000000000003E /* MCPServerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerListView.swift; sourceTree = "<group>"; };
+		00000000000000000000003F /* MCPViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPViewModel.swift; sourceTree = "<group>"; };
+		000000000000000000000050 /* SkillsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsListView.swift; sourceTree = "<group>"; };
+		000000000000000000000051 /* SkillsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsViewModel.swift; sourceTree = "<group>"; };
+		000000000000000000000052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		000000000000000000000053 /* SessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListView.swift; sourceTree = "<group>"; };
+		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
+		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		00000000000000000000000D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000080 /* ILSShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000007 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000015 /* ILSApp */,
+				00000000000000000000000F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		00000000000000000000000F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000010 /* ILSApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000015 /* ILSApp */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000011 /* ILSAppApp.swift */,
+				000000000000000000000012 /* ContentView.swift */,
+				000000000000000000000060 /* Theme */,
+				000000000000000000000061 /* Services */,
+				000000000000000000000062 /* Views */,
+				000000000000000000000063 /* ViewModels */,
+				000000000000000000000013 /* Assets.xcassets */,
+				000000000000000000000014 /* ILSApp.entitlements */,
+			);
+			path = ILSApp;
+			sourceTree = "<group>";
+		};
+		000000000000000000000060 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000030 /* ILSTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		000000000000000000000061 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000031 /* APIClient.swift */,
+				000000000000000000000032 /* SSEClient.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		000000000000000000000062 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000070 /* Sidebar */,
+				000000000000000000000071 /* Chat */,
+				000000000000000000000072 /* Projects */,
+				000000000000000000000073 /* Plugins */,
+				000000000000000000000074 /* MCP */,
+				000000000000000000000075 /* Skills */,
+				000000000000000000000076 /* Sessions */,
+				000000000000000000000077 /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		000000000000000000000077 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000052 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		000000000000000000000063 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000037 /* ChatViewModel.swift */,
+				00000000000000000000003B /* ProjectsViewModel.swift */,
+				00000000000000000000003D /* PluginsViewModel.swift */,
+				00000000000000000000003F /* MCPViewModel.swift */,
+				000000000000000000000051 /* SkillsViewModel.swift */,
+				000000000000000000000055 /* SessionsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		000000000000000000000070 /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000033 /* SidebarView.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		000000000000000000000071 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000034 /* MessageView.swift */,
+				000000000000000000000035 /* CommandPaletteView.swift */,
+				000000000000000000000036 /* ChatView.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		000000000000000000000072 /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000038 /* ProjectsListView.swift */,
+				000000000000000000000039 /* NewProjectView.swift */,
+				00000000000000000000003A /* ProjectDetailView.swift */,
+			);
+			path = Projects;
+			sourceTree = "<group>";
+		};
+		000000000000000000000073 /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000003C /* PluginsListView.swift */,
+			);
+			path = Plugins;
+			sourceTree = "<group>";
+		};
+		000000000000000000000074 /* MCP */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000003E /* MCPServerListView.swift */,
+			);
+			path = MCP;
+			sourceTree = "<group>";
+		};
+		000000000000000000000075 /* Skills */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000050 /* SkillsListView.swift */,
+			);
+			path = Skills;
+			sourceTree = "<group>";
+		};
+		000000000000000000000076 /* Sessions */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000053 /* SessionsListView.swift */,
+				000000000000000000000054 /* NewSessionView.swift */,
+			);
+			path = Sessions;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		00000000000000000000000E /* ILSApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00000000000000000000001D /* Build configuration list for PBXNativeTarget "ILSApp" */;
+			buildPhases = (
+				00000000000000000000000B /* Sources */,
+				00000000000000000000000C /* Resources */,
+				00000000000000000000000D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ILSApp;
+			packageProductDependencies = (
+				000000000000000000000090 /* ILSShared */,
+			);
+			productName = ILSApp;
+			productReference = 000000000000000000000010 /* ILSApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000008 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					00000000000000000000000E = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = 00000000000000000000000A /* Build configuration list for PBXProject "ILSApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000007;
+			packageReferences = (
+				0000000000000000000000A0 /* XCLocalSwiftPackageReference ".." */,
+			);
+			productRefGroup = 00000000000000000000000F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				00000000000000000000000E /* ILSApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		00000000000000000000000C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00000000000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000001 /* ILSAppApp.swift in Sources */,
+				000000000000000000000002 /* ContentView.swift in Sources */,
+				000000000000000000000020 /* ILSTheme.swift in Sources */,
+				000000000000000000000021 /* APIClient.swift in Sources */,
+				000000000000000000000022 /* SSEClient.swift in Sources */,
+				000000000000000000000023 /* SidebarView.swift in Sources */,
+				000000000000000000000024 /* MessageView.swift in Sources */,
+				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
+				000000000000000000000026 /* ChatView.swift in Sources */,
+				000000000000000000000027 /* ChatViewModel.swift in Sources */,
+				000000000000000000000028 /* ProjectsListView.swift in Sources */,
+				000000000000000000000029 /* NewProjectView.swift in Sources */,
+				00000000000000000000002A /* ProjectDetailView.swift in Sources */,
+				00000000000000000000002B /* ProjectsViewModel.swift in Sources */,
+				00000000000000000000002C /* PluginsListView.swift in Sources */,
+				00000000000000000000002D /* PluginsViewModel.swift in Sources */,
+				00000000000000000000002E /* MCPServerListView.swift in Sources */,
+				00000000000000000000002F /* MCPViewModel.swift in Sources */,
+				000000000000000000000040 /* SkillsListView.swift in Sources */,
+				000000000000000000000041 /* SkillsViewModel.swift in Sources */,
+				000000000000000000000042 /* SettingsView.swift in Sources */,
+				000000000000000000000043 /* SessionsListView.swift in Sources */,
+				000000000000000000000044 /* NewSessionView.swift in Sources */,
+				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000019 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		00000000000000000000001A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		00000000000000000000001B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ILSApp/ILSApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "ILS needs to connect to the backend server on your local network.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ils.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		00000000000000000000001C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ILSApp/ILSApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "ILS needs to connect to the backend server on your local network.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ils.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		00000000000000000000000A /* Build configuration list for PBXProject "ILSApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000019 /* Debug */,
+				00000000000000000000001A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00000000000000000000001D /* Build configuration list for PBXNativeTarget "ILSApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00000000000000000000001B /* Debug */,
+				00000000000000000000001C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0000000000000000000000A0 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		000000000000000000000090 /* ILSShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0000000000000000000000A0 /* XCLocalSwiftPackageReference ".." */;
+			productName = ILSShared;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = 000000000000000000000008 /* Project object */;
+}

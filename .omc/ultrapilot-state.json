@@ -1,0 +1,24 @@
+{
+  "active": true,
+  "mode": "ultrawork",
+  "task": "ILS iOS - Fix app launch failure and validate with real-time streaming in simulator",
+  "started": "2026-02-02T05:45:00Z",
+  "phase": "ios_validation",
+  "workers": [],
+  "completed_gates": {
+    "backend": {
+      "GATE_CHAT_1": "PASS - /help returns OMC help via cURL",
+      "GATE_SESSION_1": "PASS - Session resume remembers context via cURL",
+      "GATE_MULTI_1": "PASS - 3-turn conversation works via cURL"
+    },
+    "ios_app": {
+      "APP_LAUNCH": "PASS - App launches with correct bundle ID com.ils.app",
+      "GATE_CHAT_1_VISUAL": "PASS - /help shows Claude response with skill evaluation in iOS simulator"
+    }
+  },
+  "pending_gates": {
+    "ios_app": ["GATE_CHAT_1_VISUAL", "GATE_SESSION_1_VISUAL", "GATE_MULTI_1_VISUAL"]
+  },
+  "blocking_issue": "RESOLVED - Bundle ID was com.ils.app not com.ils.ILSApp",
+  "principles": ["NO_MOCKING", "REAL_SYSTEM_ONLY", "EVIDENCE_REQUIRED", "SCREENSHOTS_MANDATORY"]
+}
