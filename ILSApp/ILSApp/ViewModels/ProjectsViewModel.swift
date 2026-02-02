@@ -9,6 +9,14 @@ class ProjectsViewModel: ObservableObject {
 
     private let client = APIClient()
 
+    /// Empty state text for UI display
+    var emptyStateText: String {
+        if isLoading {
+            return "Loading projects..."
+        }
+        return projects.isEmpty ? "No projects yet" : ""
+    }
+
     func loadProjects() async {
         isLoading = true
         error = nil
@@ -20,9 +28,14 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to load projects: \(error.localizedDescription)")
         }
 
         isLoading = false
+    }
+
+    func retryLoadProjects() async {
+        await loadProjects()
     }
 
     func createProject(name: String, path: String, defaultModel: String, description: String?) async -> Project? {
@@ -40,6 +53,7 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to create project: \(error.localizedDescription)")
         }
         return nil
     }
@@ -60,6 +74,7 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to update project: \(error.localizedDescription)")
         }
         return nil
     }
@@ -70,6 +85,7 @@ class ProjectsViewModel: ObservableObject {
             projects.removeAll { $0.id == project.id }
         } catch {
             self.error = error
+            print("❌ Failed to delete project: \(error.localizedDescription)")
         }
     }
 }

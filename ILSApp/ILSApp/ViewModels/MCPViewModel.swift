@@ -22,6 +22,17 @@ class MCPViewModel: ObservableObject {
         }
     }
 
+    /// Empty state text for UI display
+    var emptyStateText: String {
+        if isLoading {
+            return "Loading MCP servers..."
+        }
+        if !searchText.isEmpty && filteredServers.isEmpty {
+            return "No MCP servers found"
+        }
+        return servers.isEmpty ? "No MCP servers configured" : ""
+    }
+
     /// Load servers from backend
     /// - Parameter refresh: If true, bypasses server cache to rescan configuration files
     func loadServers(refresh: Bool = false) async {
@@ -36,6 +47,7 @@ class MCPViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to load MCP servers: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -44,6 +56,10 @@ class MCPViewModel: ObservableObject {
     /// Refresh servers by rescanning configuration files
     func refreshServers() async {
         await loadServers(refresh: true)
+    }
+
+    func retryLoadServers() async {
+        await loadServers()
     }
 
     func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
@@ -61,6 +77,7 @@ class MCPViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to add MCP server '\(name)': \(error.localizedDescription)")
         }
         return nil
     }
@@ -71,6 +88,7 @@ class MCPViewModel: ObservableObject {
             servers.removeAll { $0.id == server.id }
         } catch {
             self.error = error
+            print("❌ Failed to delete MCP server '\(server.name)': \(error.localizedDescription)")
         }
     }
 }

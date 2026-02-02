@@ -9,6 +9,14 @@ class SessionsViewModel: ObservableObject {
 
     private let client = APIClient()
 
+    /// Empty state text for UI display
+    var emptyStateText: String {
+        if isLoading {
+            return "Loading sessions..."
+        }
+        return sessions.isEmpty ? "No sessions" : ""
+    }
+
     func loadSessions() async {
         isLoading = true
         error = nil
@@ -20,9 +28,14 @@ class SessionsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to load sessions: \(error.localizedDescription)")
         }
 
         isLoading = false
+    }
+
+    func retryLoadSessions() async {
+        await loadSessions()
     }
 
     func createSession(projectId: UUID?, name: String?, model: String) async -> ChatSession? {
@@ -39,6 +52,7 @@ class SessionsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to create session: \(error.localizedDescription)")
         }
         return nil
     }
@@ -49,6 +63,7 @@ class SessionsViewModel: ObservableObject {
             sessions.removeAll { $0.id == session.id }
         } catch {
             self.error = error
+            print("❌ Failed to delete session: \(error.localizedDescription)")
         }
     }
 
@@ -61,6 +76,7 @@ class SessionsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to fork session: \(error.localizedDescription)")
         }
         return nil
     }

@@ -9,6 +9,14 @@ class PluginsViewModel: ObservableObject {
 
     private let client = APIClient()
 
+    /// Empty state text for UI display
+    var emptyStateText: String {
+        if isLoading {
+            return "Loading plugins..."
+        }
+        return plugins.isEmpty ? "No plugins installed" : ""
+    }
+
     func loadPlugins() async {
         isLoading = true
         error = nil
@@ -20,9 +28,14 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to load plugins: \(error.localizedDescription)")
         }
 
         isLoading = false
+    }
+
+    func retryLoadPlugins() async {
+        await loadPlugins()
     }
 
     func installPlugin(name: String, marketplace: String) async {
@@ -34,6 +47,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to install plugin '\(name)': \(error.localizedDescription)")
         }
     }
 
@@ -43,6 +57,7 @@ class PluginsViewModel: ObservableObject {
             plugins.removeAll { $0.id == plugin.id }
         } catch {
             self.error = error
+            print("❌ Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
 
@@ -56,6 +71,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to enable plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
 
@@ -69,6 +85,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
 }

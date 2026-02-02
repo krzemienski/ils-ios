@@ -21,6 +21,17 @@ class SkillsViewModel: ObservableObject {
         }
     }
 
+    /// Empty state text for UI display
+    var emptyStateText: String {
+        if isLoading {
+            return "Loading skills..."
+        }
+        if !searchText.isEmpty && filteredSkills.isEmpty {
+            return "No skills found"
+        }
+        return skills.isEmpty ? "No skills found" : ""
+    }
+
     /// Load skills from backend
     /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
     func loadSkills(refresh: Bool = false) async {
@@ -35,6 +46,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to load skills: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -43,6 +55,10 @@ class SkillsViewModel: ObservableObject {
     /// Refresh skills by rescanning ~/.claude directory
     func refreshSkills() async {
         await loadSkills(refresh: true)
+    }
+
+    func retryLoadSkills() async {
+        await loadSkills()
     }
 
     func createSkill(name: String, description: String?, content: String) async -> SkillItem? {
@@ -59,6 +75,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to create skill '\(name)': \(error.localizedDescription)")
         }
         return nil
     }
@@ -75,6 +92,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
+            print("❌ Failed to update skill '\(skill.name)': \(error.localizedDescription)")
         }
         return nil
     }
@@ -85,6 +103,7 @@ class SkillsViewModel: ObservableObject {
             skills.removeAll { $0.id == skill.id }
         } catch {
             self.error = error
+            print("❌ Failed to delete skill '\(skill.name)': \(error.localizedDescription)")
         }
     }
 }
