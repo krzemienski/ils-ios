@@ -82,13 +82,22 @@ This phase wires up the core chat functionality—the heart of the Claude Code i
   - Error handling via Combine binding from SSEClient `$error` publisher
   - Build verification: `xcodebuild` completes successfully
 
-- [ ] Update ChatView UI for streaming experience:
+- [x] Update ChatView UI for streaming experience:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift`
   - Show typing indicator while waiting for first chunk
   - Display message text as it streams in (character by character feel)
   - Disable send button during active stream
   - Auto-scroll to bottom as new content appears
   - Handle stream errors with user-friendly alert
+
+  **Verified Complete (2026-02-02):** ChatView enhanced with full streaming UX:
+  - Added `StreamingStatusView` showing connection state banner (Connecting, Reconnecting, etc.)
+  - Added `TypingIndicatorView` with animated bouncing dots shown when streaming but no content yet
+  - Refactored view body into extracted components (`statusBanner`, `messagesScrollView`, `messagesContent`, `inputBar`, `toolbarContent`) to help Swift type-checker
+  - Auto-scroll triggers on message count change and streaming state change
+  - Error alert with "OK" and "Retry" buttons using `.onReceive(viewModel.$error)` for Combine-based error observation
+  - Send button already disabled during active stream (handled by `ChatInputView.isStreaming`)
+  - Build verification: `xcodebuild` completes successfully
 
 - [ ] Test end-to-end chat flow:
   - Start backend server
