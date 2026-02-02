@@ -27,6 +27,36 @@ struct ChatController: RouteCollection {
             throw Abort(.serviceUnavailable, reason: "Claude CLI is not available. Please ensure 'claude' is installed and in PATH.")
         }
 
+        // Get or create session
+        let sessionId: UUID
+        if let existingSessionId = input.sessionId {
+            sessionId = existingSessionId
+        } else {
+            // Create a new session if none provided
+            let newSession = SessionModel(
+                projectId: input.projectId,
+                model: input.options?.model ?? "sonnet",
+                permissionMode: input.options?.permissionMode ?? .default
+            )
+            try await newSession.save(on: req.db)
+            sessionId = newSession.id!
+        }
+
+        // Save user message to database
+        let userMessage = MessageModel(
+            sessionId: sessionId,
+            role: .user,
+            content: input.prompt
+        )
+        try await userMessage.save(on: req.db)
+        let userMessageId = userMessage.id!
+
+        // Update session message count
+        if let session = try await SessionModel.find(sessionId, on: req.db) {
+            session.messageCount += 1
+            try await session.save(on: req.db)
+        }
+
         // Get project path if specified
         var projectPath: String?
         if let projectId = input.projectId {
@@ -39,8 +69,8 @@ struct ChatController: RouteCollection {
         var options = ExecutionOptions(from: input.options)
 
         // If resuming a session, get the Claude session ID
-        if let sessionId = input.sessionId {
-            if let session = try await SessionModel.find(sessionId, on: req.db) {
+        if let existingSessionId = input.sessionId {
+            if let session = try await SessionModel.find(existingSessionId, on: req.db) {
                 options.resume = session.claudeSessionId
             }
         }
@@ -52,8 +82,13 @@ struct ChatController: RouteCollection {
             options: options
         )
 
-        // Return SSE response
-        return StreamingService.createSSEResponse(from: stream, on: req)
+        // Return SSE response with message persistence
+        return StreamingService.createSSEResponseWithPersistence(
+            from: stream,
+            sessionId: sessionId,
+            userMessageId: userMessageId,
+            on: req
+        )
     }
 
     /// WebSocket handler for /chat/ws/:sessionId

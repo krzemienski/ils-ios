@@ -116,6 +116,8 @@ extension EnabledResponse: Content {}
 // MARK: - Model Types
 extension Project: Content {}
 extension ChatSession: Content {}
+extension Message: Content {}
+extension MessageRole: Content {}
 extension ExternalSession: Content {}
 extension Skill: Content {}
 extension Plugin: Content {}

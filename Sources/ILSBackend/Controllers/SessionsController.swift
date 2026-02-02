@@ -14,6 +14,7 @@ struct SessionsController: RouteCollection {
         sessions.get(":id", use: get)
         sessions.delete(":id", use: delete)
         sessions.post(":id", "fork", use: fork)
+        sessions.get(":id", "messages", use: messages)
     }
 
     /// GET /sessions - List all sessions
@@ -149,6 +150,45 @@ struct SessionsController: RouteCollection {
         return APIResponse(
             success: true,
             data: forked.toShared(projectName: original.project?.name)
+        )
+    }
+
+    /// GET /sessions/:id/messages - Get all messages for a session
+    @Sendable
+    func messages(req: Request) async throws -> APIResponse<ListResponse<Message>> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        // Verify session exists
+        guard let _ = try await SessionModel.find(id, on: req.db) else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        // Get pagination parameters
+        let limit = req.query[Int.self, at: "limit"] ?? 100
+        let offset = req.query[Int.self, at: "offset"] ?? 0
+
+        // Query messages for this session
+        let query = MessageModel.query(on: req.db)
+            .filter(\.$session.$id == id)
+            .sort(\.$createdAt, .ascending)
+
+        // Get total count before pagination
+        let total = try await query.count()
+
+        // Apply pagination and fetch
+        let messageModels = try await query
+            .offset(offset)
+            .limit(limit)
+            .all()
+
+        // Convert to shared Message type
+        let messages = messageModels.map { $0.toShared() }
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: messages, total: total)
         )
     }
 }

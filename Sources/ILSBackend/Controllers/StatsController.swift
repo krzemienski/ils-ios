@@ -10,31 +10,47 @@ struct StatsController: RouteCollection {
         routes.get("settings", use: settings)
     }
 
-    /// GET /stats - Get overall statistics from real Claude config files
+    /// GET /stats - Get overall statistics using same data sources as individual controllers
     @Sendable
     func stats(req: Request) async throws -> APIResponse<StatsResponse> {
         let fm = FileManager.default
 
-        // Count projects from ~/.claude/projects/
-        var projectCount = 0
-        var totalSessions = 0
-        let projectsPath = fileSystem.claudeProjectsPath
-        if fm.fileExists(atPath: projectsPath),
-           let projectDirs = try? fm.contentsOfDirectory(atPath: projectsPath) {
-            projectCount = projectDirs.filter { dir in
-                var isDir: ObjCBool = false
-                return fm.fileExists(atPath: "\(projectsPath)/\(dir)", isDirectory: &isDir) && isDir.boolValue
-            }.count
+        // Count sessions from DATABASE (same as SessionsController)
+        let totalSessions = try await SessionModel.query(on: req.db).count()
 
-            // Count total sessions across all projects
-            for projectDir in projectDirs {
-                let sessionsIndexPath = "\(projectsPath)/\(projectDir)/sessions-index.json"
-                if let data = try? Data(contentsOf: URL(fileURLWithPath: sessionsIndexPath)),
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let entries = json["entries"] as? [[String: Any]] {
-                    totalSessions += entries.count
+        // Count projects from FILESYSTEM ~/.claude/projects/ (same as ProjectsController)
+        var projectCount = 0
+        let homeDir = fm.homeDirectoryForCurrentUser
+        let claudeProjectsDir = homeDir.appendingPathComponent(".claude/projects")
+
+        if fm.fileExists(atPath: claudeProjectsDir.path) {
+            let projectDirs = try? fm.contentsOfDirectory(
+                at: claudeProjectsDir,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            projectCount = projectDirs?.filter { projectDir in
+                var isDirectory: ObjCBool = false
+                guard fm.fileExists(atPath: projectDir.path, isDirectory: &isDirectory),
+                      isDirectory.boolValue else {
+                    return false
                 }
-            }
+                let sessionsIndexPath = projectDir.appendingPathComponent("sessions-index.json")
+                guard fm.fileExists(atPath: sessionsIndexPath.path) else {
+                    return false
+                }
+
+                // Only count projects with at least one session entry (same as ProjectsController)
+                guard let data = try? Data(contentsOf: sessionsIndexPath),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let entries = json["entries"] as? [[String: Any]],
+                      !entries.isEmpty else {
+                    return false
+                }
+
+                return true
+            }.count ?? 0
         }
 
         // Count skills (use cached data for performance)
@@ -45,20 +61,36 @@ struct StatsController: RouteCollection {
         let mcpServers = try await fileSystem.readMCPServers()
         let healthyServers = mcpServers.filter { $0.status == .healthy }.count
 
-        // Count plugins from installed_plugins.json
+        // Count plugins from FILESYSTEM (same as PluginsController)
         var totalPlugins = 0
         var enabledCount = 0
         let installedPluginsPath = "\(fileSystem.claudeDirectory)/plugins/installed_plugins.json"
-        if let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let plugins = json["plugins"] as? [String: Any] {
-            totalPlugins = plugins.count
+
+        // Read enabled status from settings.json
+        let settingsPath = fileSystem.userSettingsPath
+        var enabledPlugins: [String: Bool] = [:]
+        if fm.fileExists(atPath: settingsPath),
+           let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
+           let settingsJson = try? JSONSerialization.jsonObject(with: settingsData) as? [String: Any],
+           let enabled = settingsJson["enabledPlugins"] as? [String: Bool] {
+            enabledPlugins = enabled
         }
 
-        // Get enabled count from settings.json
-        let config = try? fileSystem.readConfig(scope: "user")
-        let enabledPlugins = config?.content.enabledPlugins ?? [:]
-        enabledCount = enabledPlugins.values.filter { $0 }.count
+        // Read installed plugins
+        if fm.fileExists(atPath: installedPluginsPath),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let pluginsDict = json["plugins"] as? [String: Any] {
+            totalPlugins = pluginsDict.count
+
+            // Count enabled plugins (default to true if not specified)
+            for (pluginKey, _) in pluginsDict {
+                let isEnabled = enabledPlugins[pluginKey] ?? true
+                if isEnabled {
+                    enabledCount += 1
+                }
+            }
+        }
 
         return APIResponse(
             success: true,
