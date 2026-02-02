@@ -4,6 +4,21 @@ import ILSShared
 struct MessageView: View {
     let message: ChatMessage
 
+    /// Formatter for displaying message timestamps
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    /// Formatter for displaying dates (for messages from previous days)
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: ILSTheme.spacingXS) {
             HStack {
@@ -35,20 +50,51 @@ struct MessageView: View {
                 .padding()
                 .background(message.isUser ? ILSTheme.userBubble : ILSTheme.assistantBubble)
                 .cornerRadius(ILSTheme.cornerRadiusL)
+                .overlay(
+                    // Visual indicator for historical messages
+                    message.isFromHistory ?
+                        RoundedRectangle(cornerRadius: ILSTheme.cornerRadiusL)
+                            .strokeBorder(ILSTheme.tertiaryText.opacity(0.3), lineWidth: 1)
+                        : nil
+                )
 
                 if !message.isUser { Spacer() }
             }
 
-            // Metadata
-            if let cost = message.cost {
-                HStack {
-                    if message.isUser { Spacer() }
+            // Metadata row: timestamp and cost
+            HStack(spacing: ILSTheme.spacingS) {
+                if message.isUser { Spacer() }
+
+                // Timestamp for historical messages
+                if let timestamp = message.timestamp {
+                    Text(formattedTimestamp(timestamp))
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.tertiaryText)
+                }
+
+                // Cost display
+                if let cost = message.cost {
+                    if message.timestamp != nil {
+                        Text("•")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.tertiaryText)
+                    }
                     Text("$\(cost, specifier: "%.4f")")
                         .font(ILSTheme.captionFont)
                         .foregroundColor(ILSTheme.tertiaryText)
-                    if !message.isUser { Spacer() }
                 }
+
+                if !message.isUser { Spacer() }
             }
+        }
+    }
+
+    /// Format timestamp based on whether it's from today or an earlier date
+    private func formattedTimestamp(_ date: Date) -> String {
+        if Calendar.current.isDateInToday(date) {
+            return Self.timeFormatter.string(from: date)
+        } else {
+            return Self.dateFormatter.string(from: date)
         }
     }
 }
@@ -161,13 +207,37 @@ struct ThinkingView: View {
 // MARK: - Data Models
 
 struct ChatMessage: Identifiable {
-    let id = UUID()
+    let id: UUID
     let isUser: Bool
     var text: String
     var toolCalls: [ToolCall] = []
     var toolResults: [ToolResult] = []
     var thinking: String?
     var cost: Double?
+    var timestamp: Date?
+    var isFromHistory: Bool = false
+
+    init(
+        id: UUID = UUID(),
+        isUser: Bool,
+        text: String,
+        toolCalls: [ToolCall] = [],
+        toolResults: [ToolResult] = [],
+        thinking: String? = nil,
+        cost: Double? = nil,
+        timestamp: Date? = nil,
+        isFromHistory: Bool = false
+    ) {
+        self.id = id
+        self.isUser = isUser
+        self.text = text
+        self.toolCalls = toolCalls
+        self.toolResults = toolResults
+        self.thinking = thinking
+        self.cost = cost
+        self.timestamp = timestamp
+        self.isFromHistory = isFromHistory
+    }
 }
 
 struct ToolCall: Identifiable {

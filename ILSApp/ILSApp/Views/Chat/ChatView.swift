@@ -62,11 +62,22 @@ struct ChatView: View {
             ScrollView {
                 messagesContent
             }
-            .onChange(of: viewModel.messages.count) { _, _ in
-                scrollToBottom(proxy: proxy)
+            .onChange(of: viewModel.messages.count) { oldCount, newCount in
+                // Only auto-scroll for new messages, not when loading history
+                // History loading replaces messages (goes from 0 to N), new messages append (increment by 1)
+                let isNewMessage = oldCount > 0 && newCount == oldCount + 1
+                if isNewMessage {
+                    scrollToBottom(proxy: proxy)
+                }
             }
             .onChange(of: viewModel.isStreaming) { _, isStreaming in
                 if isStreaming {
+                    scrollToBottom(proxy: proxy)
+                }
+            }
+            .onChange(of: viewModel.isLoadingHistory) { wasLoading, isLoading in
+                // Scroll to bottom after history finishes loading
+                if wasLoading && !isLoading && !viewModel.messages.isEmpty {
                     scrollToBottom(proxy: proxy)
                 }
             }

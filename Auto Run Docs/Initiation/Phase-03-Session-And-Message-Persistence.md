@@ -42,11 +42,12 @@ This phase ensures chat history survives app restarts and backend reboots. Users
   - Handle empty sessions gracefully (welcome message)
   - **Completed**: ChatView.onAppear now calls loadMessageHistory() which fetches messages from `/sessions/{id}/messages` endpoint. ChatInputView accepts `isDisabled` parameter to disable input while loading. ChatViewModel shows welcome message ("Hello! I'm Claude, your AI assistant. How can I help you today?") for empty sessions. Build verified successful.
 
-- [ ] Update ChatView to display loaded history:
+- [x] Update ChatView to display loaded history:
   - Render historical messages with correct styling (user vs assistant)
   - Maintain scroll position when loading older messages
   - Distinguish between loaded history and new messages
   - Show timestamps for historical messages
+  - **Completed**: MessageView.swift now displays timestamps for historical messages using smart formatting (time-only for today, full date+time for earlier). Historical messages show a subtle border overlay to visually distinguish them from new messages. ChatView.swift updated with smart scroll logic that auto-scrolls to bottom after history loads, preserves position during history loading, and only auto-scrolls for new messages (not bulk history loads). Build verified successful.
 
 - [ ] Test message persistence end-to-end:
   - Send several messages in a session
