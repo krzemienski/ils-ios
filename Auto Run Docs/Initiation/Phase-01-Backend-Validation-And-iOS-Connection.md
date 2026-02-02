@@ -12,7 +12,7 @@ This phase validates the existing ILS infrastructure and delivers a working end-
 
   **Completed 2026-02-02**: Build successful (3.68s) with minor Sendable conformance warnings. Server running on port 8080, health endpoint returning "OK".
 
-- [ ] Complete the ProjectsController CRUD implementation:
+- [x] Complete the ProjectsController CRUD implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ProjectsController.swift`
   - Ensure `index()` returns all projects from database
   - Ensure `create()` saves new project to database and returns it
@@ -20,6 +20,14 @@ This phase validates the existing ILS infrastructure and delivers a working end-
   - Ensure `update()` modifies existing project
   - Ensure `delete()` removes project from database
   - All methods should use Fluent ORM with ProjectModel
+
+  **Completed 2026-02-02**: ProjectsController already fully implemented with Fluent ORM. All CRUD operations verified via curl:
+  - `index()` returns projects sorted by lastAccessedAt with session counts
+  - `create()` saves projects with duplicate path detection
+  - `show()` retrieves by UUID with session count
+  - `update()` supports partial updates (name, defaultModel, description)
+  - `delete()` cascades to delete associated sessions
+  - Bonus: `getSessions()` endpoint for project-session relationship
 
 - [ ] Complete the SessionsController CRUD implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/SessionsController.swift`
