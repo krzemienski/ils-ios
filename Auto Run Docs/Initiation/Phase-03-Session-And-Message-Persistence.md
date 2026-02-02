@@ -28,11 +28,12 @@ This phase ensures chat history survives app restarts and backend reboots. Users
   - Return message IDs in SSE events for client correlation
   - **Completed**: ChatController.swift saves user messages (lines 46-52) with session creation/update. StreamingService.swift accumulates assistant content (lines 110-169), saves on completion (lines 182-208), includes tool calls/results (lines 148-156, 187-188), and returns message IDs via SSE headers (X-User-Message-ID, X-Session-ID) and messageId event (lines 205-207). Build verified.
 
-- [ ] Add messages endpoint to SessionsController:
+- [x] Add messages endpoint to SessionsController:
   - Add GET `/api/v1/sessions/:id/messages` endpoint
   - Return all messages for session ordered by createdAt
   - Support pagination with `limit` and `offset` query params
   - Include full message content and metadata
+  - **Completed**: Endpoint already implemented in SessionsController.swift (lines 156-193) with route registration at line 17. Includes session validation, pagination via `limit` (default 100) and `offset` (default 0) query params, ascending sort by createdAt, total count for pagination, and full message metadata via `toShared()` conversion. Build verified.
 
 - [ ] Update iOS ChatViewModel to load message history:
   - On session selection, fetch existing messages from backend
