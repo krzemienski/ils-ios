@@ -32,12 +32,21 @@ This phase completes the app's configuration capabilities—reading and writing 
   - All fields remain optional enabling partial update support
   - iOS SettingsView.swift updated to import ILSShared, removing duplicate local model definitions
 
-- [ ] Update iOS SettingsView for config display:
+- [x] Update iOS SettingsView for config display:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift`
   - Fetch current config from backend on view appear
   - Display config sections: General, Permissions, Advanced
   - Show current values with appropriate UI controls (toggles, pickers, text fields)
   - Add section for backend connection settings (host, port)
+
+  **Completed:** Enhanced SettingsView with comprehensive config display:
+  - Added `Backend Connection` section with separate host/port fields and connection test button
+  - Added `General` section displaying: default model, color scheme, updates channel, extended thinking, co-author settings
+  - Added `Permissions` section with: default mode, allowed rules (expandable), denied rules (expandable)
+  - Added `Advanced` section with: hooks count, enabled plugins count, status line type, environment vars count, and raw config editor links
+  - Updated `SettingsViewModel` with `loadConfig()` method that fetches config from backend on view appear
+  - Added pull-to-refresh support via `.refreshable` modifier
+  - All sections use appropriate UI controls (LabeledContent, DisclosureGroup, checkmark icons)
 
 - [ ] Implement config editing in SettingsView:
   - Allow editing safe config values (theme, default model)

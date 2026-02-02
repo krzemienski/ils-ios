@@ -4,20 +4,33 @@ import ILSShared
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SettingsViewModel()
-    @State private var serverURL: String = ""
+    @State private var serverHost: String = "localhost"
+    @State private var serverPort: String = "8080"
 
     var body: some View {
         Form {
-            Section("Connection") {
-                TextField("Server URL", text: $serverURL)
-                    .textContentType(.URL)
-                    .autocapitalization(.none)
-                    .onAppear { serverURL = appState.serverURL }
+            // MARK: - Connection Section
+            Section {
+                HStack {
+                    Text("Host")
+                        .frame(width: 50, alignment: .leading)
+                    TextField("localhost", text: $serverHost)
+                        .textContentType(.URL)
+                        .autocapitalization(.none)
+                        .keyboardType(.URL)
+                }
+
+                HStack {
+                    Text("Port")
+                        .frame(width: 50, alignment: .leading)
+                    TextField("8080", text: $serverPort)
+                        .keyboardType(.numberPad)
+                }
 
                 HStack {
                     Text("Status")
                     Spacer()
-                    HStack {
+                    HStack(spacing: 6) {
                         Circle()
                             .fill(appState.isConnected ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
@@ -27,21 +40,168 @@ struct SettingsView: View {
                 }
 
                 Button("Test Connection") {
-                    appState.serverURL = serverURL
+                    let url = "http://\(serverHost):\(serverPort)"
+                    appState.serverURL = url
                     appState.checkConnection()
+                }
+            } header: {
+                Text("Backend Connection")
+            } footer: {
+                Text("Configure the ILS backend server address")
+            }
+
+            // MARK: - General Settings Section
+            Section {
+                if viewModel.isLoadingConfig {
+                    HStack {
+                        ProgressView()
+                            .padding(.trailing, 8)
+                        Text("Loading configuration...")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                } else if let config = viewModel.config?.content {
+                    // Default Model
+                    LabeledContent("Default Model") {
+                        Text(config.model ?? "claude-sonnet-4-20250514")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+
+                    // Theme Color Scheme
+                    if let theme = config.theme {
+                        LabeledContent("Color Scheme") {
+                            Text(theme.colorScheme?.capitalized ?? "System")
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Auto Updates Channel
+                    if let channel = config.autoUpdatesChannel {
+                        LabeledContent("Updates Channel") {
+                            Text(channel.capitalized)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Always Thinking
+                    LabeledContent("Extended Thinking") {
+                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                    }
+
+                    // Co-authored by
+                    LabeledContent("Include Co-Author") {
+                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                    }
+                } else {
+                    Text("No configuration loaded")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                Text("General")
+            } footer: {
+                if viewModel.config != nil {
+                    Text("Scope: \(viewModel.config?.scope ?? "user") • \(viewModel.config?.path ?? "")")
                 }
             }
 
-            Section("Claude Configuration") {
-                NavigationLink("User Settings") {
+            // MARK: - Permissions Section
+            Section {
+                if let config = viewModel.config?.content, let permissions = config.permissions {
+                    // Default Permission Mode
+                    LabeledContent("Default Mode") {
+                        Text(permissions.defaultMode?.capitalized ?? "Prompt")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+
+                    // Allowed Commands
+                    if let allowed = permissions.allow, !allowed.isEmpty {
+                        DisclosureGroup {
+                            ForEach(allowed, id: \.self) { item in
+                                Text(item)
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        } label: {
+                            LabeledContent("Allowed", value: "\(allowed.count) rules")
+                        }
+                    } else {
+                        LabeledContent("Allowed", value: "None")
+                    }
+
+                    // Denied Commands
+                    if let denied = permissions.deny, !denied.isEmpty {
+                        DisclosureGroup {
+                            ForEach(denied, id: \.self) { item in
+                                Text(item)
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        } label: {
+                            LabeledContent("Denied", value: "\(denied.count) rules")
+                        }
+                    } else {
+                        LabeledContent("Denied", value: "None")
+                    }
+                } else if !viewModel.isLoadingConfig {
+                    Text("No permissions configured")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                Text("Permissions")
+            }
+
+            // MARK: - Advanced Section
+            Section {
+                if let config = viewModel.config?.content {
+                    // Hooks Summary
+                    if let hooks = config.hooks {
+                        let hookCount = countHooks(hooks)
+                        LabeledContent("Hooks Configured", value: "\(hookCount)")
+                    } else {
+                        LabeledContent("Hooks Configured", value: "0")
+                    }
+
+                    // Enabled Plugins Count
+                    if let plugins = config.enabledPlugins {
+                        let enabledCount = plugins.filter { $0.value }.count
+                        LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                    } else {
+                        LabeledContent("Enabled Plugins", value: "0")
+                    }
+
+                    // Status Line
+                    if let statusLine = config.statusLine {
+                        LabeledContent("Status Line") {
+                            Text(statusLine.type ?? "disabled")
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Environment Variables
+                    if let env = config.env, !env.isEmpty {
+                        LabeledContent("Environment Vars", value: "\(env.count)")
+                    }
+                } else if !viewModel.isLoadingConfig {
+                    Text("No advanced settings")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+
+                // Raw Config Editor Links
+                NavigationLink("Edit User Settings") {
                     ConfigEditorView(scope: "user")
                 }
 
-                NavigationLink("Project Settings") {
+                NavigationLink("Edit Project Settings") {
                     ConfigEditorView(scope: "project")
                 }
+            } header: {
+                Text("Advanced")
+            } footer: {
+                Text("Edit raw JSON configuration files")
             }
 
+            // MARK: - Statistics Section
             Section("Statistics") {
                 if viewModel.isLoading {
                     ProgressView()
@@ -54,6 +214,7 @@ struct SettingsView: View {
                 }
             }
 
+            // MARK: - About Section
             Section("About") {
                 LabeledContent("Version", value: "1.0.0")
                 LabeledContent("Build", value: "1")
@@ -69,9 +230,36 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
-        .task {
-            await viewModel.loadStats()
+        .refreshable {
+            await viewModel.loadAll()
         }
+        .task {
+            parseServerURL()
+            await viewModel.loadAll()
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private func parseServerURL() {
+        // Parse existing server URL into host and port
+        if let url = URL(string: appState.serverURL),
+           let host = url.host {
+            serverHost = host
+            if let port = url.port {
+                serverPort = String(port)
+            }
+        }
+    }
+
+    private func countHooks(_ hooks: HooksConfig) -> Int {
+        var count = 0
+        if let h = hooks.sessionStart { count += h.count }
+        if let h = hooks.subagentStart { count += h.count }
+        if let h = hooks.userPromptSubmit { count += h.count }
+        if let h = hooks.preToolUse { count += h.count }
+        if let h = hooks.postToolUse { count += h.count }
+        return count
     }
 }
 
@@ -137,10 +325,18 @@ struct ConfigEditorView: View {
 @MainActor
 class SettingsViewModel: ObservableObject {
     @Published var stats: StatsResponse?
+    @Published var config: ConfigInfo?
     @Published var isLoading = false
+    @Published var isLoadingConfig = false
     @Published var error: Error?
 
     private let client = APIClient()
+
+    func loadAll() async {
+        async let statsTask: () = loadStats()
+        async let configTask: () = loadConfig()
+        _ = await (statsTask, configTask)
+    }
 
     func loadStats() async {
         isLoading = true
@@ -153,6 +349,19 @@ class SettingsViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    func loadConfig(scope: String = "user") async {
+        isLoadingConfig = true
+
+        do {
+            let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
+            config = response.data
+        } catch {
+            self.error = error
+        }
+
+        isLoadingConfig = false
     }
 }
 
