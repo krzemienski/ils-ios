@@ -66,12 +66,21 @@ This phase wires up the core chat functionality—the heart of the Claude Code i
   - Heartbeat ping comments (`:`) from server are properly ignored
   - Build verification: `xcodebuild` completes successfully
 
-- [ ] Update ChatViewModel to handle streaming messages:
+- [x] Update ChatViewModel to handle streaming messages:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
   - Implement `sendMessage()` that posts to backend and opens SSE stream
   - Accumulate streaming text chunks into assistant message
   - Update UI state as chunks arrive (isStreaming, currentMessage)
   - Handle stream completion and errors
+
+  **Verified Complete (2026-02-02):** ChatViewModel implementation enhanced with full streaming support:
+  - `sendMessage(prompt:projectId:)` creates `ChatStreamRequest` and calls `sseClient.startStream()`
+  - `processStreamMessages()` accumulates text chunks, tool calls, tool results, and thinking blocks into `ChatMessage`
+  - Added `connectionState` binding from SSEClient for connection lifecycle tracking
+  - Added `currentStreamingMessage` computed property for easy access to in-progress message
+  - Added `statusText` computed property for human-readable connection status ("Connecting...", "Claude is responding...", "Reconnecting (attempt N/3)...")
+  - Error handling via Combine binding from SSEClient `$error` publisher
+  - Build verification: `xcodebuild` completes successfully
 
 - [ ] Update ChatView UI for streaming experience:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift`

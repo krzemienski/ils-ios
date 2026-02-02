@@ -7,6 +7,29 @@ class ChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var isStreaming = false
     @Published var error: Error?
+    @Published var connectionState: SSEClient.ConnectionState = .disconnected
+
+    /// Computed property for current assistant message being streamed
+    var currentStreamingMessage: ChatMessage? {
+        guard isStreaming, let lastMessage = messages.last, !lastMessage.isUser else {
+            return nil
+        }
+        return lastMessage
+    }
+
+    /// Human-readable status text for connection state
+    var statusText: String? {
+        switch connectionState {
+        case .disconnected:
+            return nil
+        case .connecting:
+            return "Connecting..."
+        case .connected:
+            return isStreaming ? "Claude is responding..." : nil
+        case .reconnecting(let attempt):
+            return "Reconnecting (attempt \(attempt)/3)..."
+        }
+    }
 
     var sessionId: UUID?
 
@@ -25,6 +48,10 @@ class ChatViewModel: ObservableObject {
         sseClient.$error
             .receive(on: DispatchQueue.main)
             .assign(to: &$error)
+
+        sseClient.$connectionState
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$connectionState)
 
         sseClient.$messages
             .receive(on: DispatchQueue.main)
