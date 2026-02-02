@@ -59,11 +59,18 @@ This phase validates the existing ILS infrastructure and delivers a working end-
   - List sessions: Returns `APIResponse<ListResponse<ChatSession>>` with items array and total count
   - All JSON responses match ILSShared DTO structures (Project.swift, Session.swift, Requests.swift)
 
-- [ ] Verify iOS app APIClient connects to backend:
+- [x] Verify iOS app APIClient connects to backend:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift`
   - Confirm baseURL is set to `http://localhost:8080` (or configurable)
   - Check that generic `fetch()` and `post()` methods handle JSON encoding/decoding
   - Verify error handling returns meaningful errors to ViewModels
+
+  **Completed 2026-02-02**: APIClient implementation verified:
+  - `baseURL` defaults to `http://localhost:8080` (line 10), configurable via init parameter
+  - Generic methods `get()`, `post()`, `put()`, `delete()` all handle JSON with ISO8601 date encoding/decoding
+  - `APIError` enum implements `LocalizedError` with meaningful descriptions for `.invalidResponse`, `.httpError(statusCode:)`, and `.decodingError(Error)`
+  - ViewModels (e.g., `ProjectsViewModel`) properly capture errors in `@Published var error: Error?` for UI display
+  - Uses Swift `actor` for thread-safe network isolation + `@MainActor` on ViewModels for UI safety
 
 - [ ] Test iOS app displays projects from backend:
   - Open ILSApp in Xcode and run on simulator (with backend running)
