@@ -29,13 +29,21 @@ This phase validates the existing ILS infrastructure and delivers a working end-
   - `delete()` cascades to delete associated sessions
   - Bonus: `getSessions()` endpoint for project-session relationship
 
-- [ ] Complete the SessionsController CRUD implementation:
+- [x] Complete the SessionsController CRUD implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/SessionsController.swift`
   - Ensure `index()` returns all sessions (optionally filtered by projectId query param)
   - Ensure `create()` saves new session with projectId association
   - Ensure `show()` returns single session by ID
   - Ensure `delete()` removes session from database
   - Sessions should link to projects via projectId field
+
+  **Completed 2026-02-02**: SessionsController already fully implemented with Fluent ORM. All CRUD operations verified via curl:
+  - `list()` returns sessions sorted by lastActiveAt, with optional `?projectId=` filter
+  - `create()` saves sessions with projectId association, returns projectName in response
+  - `get()` retrieves single session by UUID with project relationship eager-loaded
+  - `delete()` removes session and returns `{deleted: true}` confirmation
+  - Bonus: `fork()` endpoint for session cloning with forkedFrom tracking
+  - Bonus: `scan()` endpoint for discovering external Claude Code sessions
 
 - [ ] Test backend API endpoints manually:
   - Create a project: `curl -X POST http://localhost:8080/api/v1/projects -H "Content-Type: application/json" -d '{"name":"Test Project","path":"/tmp/test"}'`
