@@ -34,7 +34,8 @@ let package = Package(
         .target(
             name: "ILSShared",
             dependencies: [],
-            path: "Sources/ILSShared"
+            path: "Sources/ILSShared",
+            exclude: ["Models/CLAUDE.md"]
         ),
         // Vapor backend
         .executableTarget(
@@ -47,7 +48,8 @@ let package = Package(
                 .product(name: "Yams", package: "Yams"),
                 .product(name: "ClaudeCodeSDK", package: "ClaudeCodeSDK"),
             ],
-            path: "Sources/ILSBackend"
+            path: "Sources/ILSBackend",
+            exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"]
         ),
         // Tests
         .testTarget(

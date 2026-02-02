@@ -269,11 +269,11 @@ actor ClaudeExecutorService {
         }
     }
 
-    private func storeSession(_ sessionId: String, cancellable: AnyCancellable) {
+    private func storeSession(_ sessionId: String, cancellable: AnyCancellable) async {
         activeSessions[sessionId] = cancellable
     }
 
-    private func removeSession(_ sessionId: String) {
+    private func removeSession(_ sessionId: String) async {
         activeSessions.removeValue(forKey: sessionId)
     }
 

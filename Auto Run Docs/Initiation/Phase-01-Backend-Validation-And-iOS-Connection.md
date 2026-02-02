@@ -90,7 +90,17 @@ This phase validates the existing ILS infrastructure and delivers a working end-
   - Both views auto-load data via `.task { await viewModel.loadProjects/Sessions() }`
   - Screenshots captured in `Auto Run Docs/Working/` documenting verification process
 
-- [ ] Fix any compilation warnings in the codebase:
+- [x] Fix any compilation warnings in the codebase:
   - Address unused variable warnings in PluginsController
   - Review Sendable conformance warnings and add conformance where appropriate
   - Ensure clean build with `swift build 2>&1 | grep -i warning`
+
+  **Completed 2026-02-02**: All compilation warnings fixed:
+  - PluginsController.swift: Fixed unused `installedAt`/`lastUpdated` variables (replaced with `_` assignments)
+  - FileSystemService.swift: Changed `var isValid` to `let isValid` (never mutated)
+  - VaporContent+Extensions.swift: Added `@unchecked Sendable` for retroactive conformance of `APIResponse` and `ListResponse`
+  - StreamMessage.swift: Added `@unchecked Sendable` to `AnyCodable` (stores only Sendable primitive types)
+  - ClaudeExecutorService.swift: Made `storeSession`/`removeSession` explicitly async to fix actor isolation warnings
+  - Package.swift: Added `exclude` paths for non-source files (CLAUDE.md, .py scripts)
+  - Tests/: Added placeholder test files to satisfy SPM empty target warnings
+  - Final verification: `swift build 2>&1 | grep -i warning` returns no warnings

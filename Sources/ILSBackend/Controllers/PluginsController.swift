@@ -61,8 +61,9 @@ struct PluginsController: RouteCollection {
             // Extract install info
             let installPath = latestInstall["installPath"] as? String
             let version = latestInstall["version"] as? String
-            let installedAt = latestInstall["installedAt"] as? String
-            let lastUpdated = latestInstall["lastUpdated"] as? String
+            // Note: installedAt and lastUpdated available but not currently used
+            _ = latestInstall["installedAt"] as? String
+            _ = latestInstall["lastUpdated"] as? String
 
             // Check enabled status (default to true if not specified)
             let isEnabled = enabledPlugins[pluginKey] ?? true

@@ -43,6 +43,7 @@ extension APIResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension APIResponse: Content where T: Content {}
+extension APIResponse: @unchecked Sendable where T: Sendable {}
 
 // ListResponse conformances
 extension ListResponse: AsyncResponseEncodable where T: Content {
@@ -83,6 +84,7 @@ extension ListResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension ListResponse: Content where T: Content {}
+extension ListResponse: @unchecked Sendable where T: Sendable {}
 
 // MARK: - Request Types
 extension CreateProjectRequest: Content {}

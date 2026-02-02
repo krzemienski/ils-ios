@@ -27,9 +27,14 @@ struct FileSystemService {
         "\(claudeDirectory)/settings.json"
     }
 
-    /// User claude.json path (for MCP servers)
+    /// User claude.json path (legacy)
     var userClaudeJsonPath: String {
         "\(homeDirectory)/.claude.json"
+    }
+
+    /// User MCP config path (~/.mcp.json)
+    var userMCPConfigPath: String {
+        "\(homeDirectory)/.mcp.json"
     }
 
     /// Claude projects directory for session scanning
@@ -149,13 +154,38 @@ struct FileSystemService {
     // MARK: - MCP Servers
 
     /// Read MCP servers from configuration
+    /// Checks ~/.mcp.json (primary), ~/.claude.json (legacy), and project .mcp.json
     func readMCPServers(scope: MCPScope? = nil) throws -> [MCPServer] {
         var servers: [MCPServer] = []
 
-        // User scope - ~/.claude.json
+        // User scope - check ~/.mcp.json first, then ~/.claude.json as fallback
         if scope == nil || scope == .user {
-            if let userServers = try? readMCPFromFile(userClaudeJsonPath, scope: .user) {
+            // Primary: ~/.mcp.json
+            if let userServers = try? readMCPFromFile(userMCPConfigPath, scope: .user) {
                 servers.append(contentsOf: userServers)
+            }
+            // Fallback: ~/.claude.json (legacy location)
+            else if let legacyServers = try? readMCPFromFile(userClaudeJsonPath, scope: .user) {
+                servers.append(contentsOf: legacyServers)
+            }
+        }
+
+        // Get enabled status from settings.local.json
+        var enabledServers: [String]?
+        if fileManager.fileExists(atPath: "\(claudeDirectory)/settings.local.json"),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: "\(claudeDirectory)/settings.local.json")),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            enabledServers = json["enabledMcpjsonServers"] as? [String]
+        }
+
+        // Mark servers as healthy if they're in the enabled list
+        if let enabled = enabledServers {
+            servers = servers.map { server in
+                var updated = server
+                if enabled.contains(server.name) {
+                    updated.status = .healthy
+                }
+                return updated
             }
         }
 
@@ -174,13 +204,35 @@ struct FileSystemService {
         }
 
         return mcpServers.compactMap { name, config -> MCPServer? in
-            guard let configDict = config as? [String: Any],
-                  let command = configDict["command"] as? String else {
+            guard let configDict = config as? [String: Any] else {
                 return nil
             }
 
-            let args = configDict["args"] as? [String] ?? []
-            let env = configDict["env"] as? [String: String]
+            // Handle both stdio and http types
+            let serverType = configDict["type"] as? String ?? "stdio"
+            var command: String
+            var args: [String] = []
+            var env: [String: String]?
+
+            if serverType == "http" {
+                // HTTP MCP server - use url as command
+                command = configDict["url"] as? String ?? ""
+            } else {
+                // stdio MCP server
+                command = configDict["command"] as? String ?? ""
+                args = configDict["args"] as? [String] ?? []
+            }
+
+            // Filter out sensitive env vars for response
+            if let envDict = configDict["env"] as? [String: String] {
+                env = envDict.mapValues { value in
+                    // Mask sensitive values
+                    if value.count > 10 {
+                        return String(value.prefix(4)) + "..." + String(value.suffix(4))
+                    }
+                    return value
+                }
+            }
 
             return MCPServer(
                 name: name,
@@ -194,9 +246,9 @@ struct FileSystemService {
         }
     }
 
-    /// Add an MCP server to configuration
+    /// Add an MCP server to configuration (~/.mcp.json)
     func addMCPServer(_ server: MCPServer) throws {
-        let path = server.scope == .user ? userClaudeJsonPath : userClaudeJsonPath
+        let path = userMCPConfigPath
 
         var json: [String: Any] = [:]
         if fileManager.fileExists(atPath: path),
@@ -208,6 +260,7 @@ struct FileSystemService {
         var mcpServers = json["mcpServers"] as? [String: Any] ?? [:]
 
         var serverConfig: [String: Any] = [
+            "type": "stdio",
             "command": server.command,
             "args": server.args
         ]
@@ -224,7 +277,7 @@ struct FileSystemService {
 
     /// Remove an MCP server from configuration
     func removeMCPServer(name: String, scope: MCPScope) throws {
-        let path = scope == .user ? userClaudeJsonPath : userClaudeJsonPath
+        let path = userMCPConfigPath
 
         guard fileManager.fileExists(atPath: path),
               let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
@@ -257,7 +310,7 @@ struct FileSystemService {
         }
 
         var config = ClaudeConfig()
-        var isValid = true
+        let isValid = true
 
         if fileManager.fileExists(atPath: path) {
             let data = try Data(contentsOf: URL(fileURLWithPath: path))

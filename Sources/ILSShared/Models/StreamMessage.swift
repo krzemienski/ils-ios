@@ -280,7 +280,9 @@ public struct StreamError: Codable, Sendable {
 // MARK: - AnyCodable Helper
 
 /// Type-erased Codable wrapper for dynamic JSON content
-public struct AnyCodable: Codable, Sendable {
+/// Note: @unchecked Sendable because `Any` is non-Sendable but our actual values
+/// (Bool, Int, Double, String, Array, Dictionary) are all Sendable primitives
+public struct AnyCodable: Codable, @unchecked Sendable {
     public let value: Any
 
     public init(_ value: Any) {
