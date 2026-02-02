@@ -6,15 +6,30 @@ class SkillsViewModel: ObservableObject {
     @Published var skills: [SkillItem] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var searchText = ""
 
     private let client = APIClient()
 
-    func loadSkills() async {
+    /// Filtered skills based on search text (client-side filtering for responsiveness)
+    var filteredSkills: [SkillItem] {
+        guard !searchText.isEmpty else { return skills }
+        let query = searchText.lowercased()
+        return skills.filter { skill in
+            skill.name.lowercased().contains(query) ||
+            (skill.description?.lowercased().contains(query) ?? false) ||
+            skill.tags.contains { $0.lowercased().contains(query) }
+        }
+    }
+
+    /// Load skills from backend
+    /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
+    func loadSkills(refresh: Bool = false) async {
         isLoading = true
         error = nil
 
         do {
-            let response: APIResponse<ListResponse<SkillItem>> = try await client.get("/skills")
+            let path = refresh ? "/skills?refresh=true" : "/skills"
+            let response: APIResponse<ListResponse<SkillItem>> = try await client.get(path)
             if let data = response.data {
                 skills = data.items
             }
@@ -23,6 +38,11 @@ class SkillsViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    /// Refresh skills by rescanning ~/.claude directory
+    func refreshSkills() async {
+        await loadSkills(refresh: true)
     }
 
     func createSkill(name: String, description: String?, content: String) async -> SkillItem? {

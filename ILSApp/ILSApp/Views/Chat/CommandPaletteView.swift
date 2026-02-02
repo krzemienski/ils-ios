@@ -123,13 +123,43 @@ struct CommandRow: View {
     }
 }
 
-struct SkillItem: Identifiable, Decodable {
+struct SkillItem: Identifiable, Decodable, Hashable {
     let id: UUID
     let name: String
     let description: String?
+    let version: String?
+    let tags: [String]
     let isActive: Bool
     let path: String
+    let source: String?
     let content: String?
+
+    // Provide default values for backward compatibility
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        version = try container.decodeIfPresent(String.self, forKey: .version)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive) ?? true
+        path = try container.decode(String.self, forKey: .path)
+        source = try container.decodeIfPresent(String.self, forKey: .source)
+        content = try container.decodeIfPresent(String.self, forKey: .content)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, description, version, tags, isActive, path, source, content
+    }
+
+    // Hashable conformance (hash by id only for navigation)
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: SkillItem, rhs: SkillItem) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 struct SkillRow: View {

@@ -54,18 +54,36 @@ This phase brings Claude Code's extensibility to iOS—browsing skills, viewing 
   - Reads from ~/.mcp.json (primary) and ~/.claude.json (legacy fallback)
   - Masks sensitive environment variable values in responses
 
-- [ ] Update iOS SkillsListView and ViewModel:
+- [x] Update iOS SkillsListView and ViewModel:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Skills/SkillsListView.swift`
   - Fetch skills from backend on view appear
   - Display skills in searchable list with name and description
   - Implement pull-to-refresh to rescan ~/.claude
   - Navigate to skill detail on tap
 
-- [ ] Create SkillDetailView for viewing skill content:
+  **Completed 2026-02-02:** Updated SkillsListView and SkillsViewModel with:
+  - Added `.searchable()` modifier with client-side filtering by name, description, and tags
+  - Added `filteredSkills` computed property for responsive search
+  - Pull-to-refresh calls `refreshSkills()` which passes `?refresh=true` to bypass cache
+  - NavigationLink navigates to SkillDetailView on skill tap
+  - Updated SkillItem model to include `tags`, `version`, and `source` fields with backward-compatible decoding
+  - SkillRowView displays skill name, description, tags (as colored chips), and source path
+  - Added Hashable conformance to SkillItem for NavigationLink support
+
+- [x] Create SkillDetailView for viewing skill content:
   - Create view showing full skill markdown content
   - Render markdown with proper formatting (headers, code blocks, lists)
   - Show skill metadata (source file path, tags)
   - Add "Copy to Clipboard" action for skill content
+
+  **Completed 2026-02-02:** Created SkillDetailView with:
+  - Loads full skill content from backend via GET /skills/:name
+  - Displays skill header with description, tags (scrollable chips), version, and source
+  - Content rendered in monospaced font with text selection enabled
+  - "Copy to Clipboard" action in toolbar menu with toast confirmation
+  - "Edit Skill" action opens SkillEditorView sheet
+  - Loading state with ProgressView while fetching content
+  - ContentUnavailableView for skills with no content
 
 - [ ] Update iOS MCPServerListView and ViewModel:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/MCP/MCPServerListView.swift`
