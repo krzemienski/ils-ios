@@ -13,11 +13,12 @@ This phase ensures chat history survives app restarts and backend reboots. Users
   - Register migration in configure.swift
   - Run migration to create messages table
 
-- [ ] Add Message model to ILSShared:
+- [x] Add Message model to ILSShared:
   - Create or update `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/Message.swift`
   - Include all fields: id, sessionId, role, content, toolCalls, toolResults, timestamps
   - Ensure Codable and Sendable conformance
   - Add to ILSShared target in Package.swift if needed
+  - **Completed**: Message.swift already exists with all required fields (id, sessionId, role, content, toolCalls, toolResults, createdAt, updatedAt), MessageRole enum (user/assistant/system), and Codable+Sendable+Identifiable conformance. Build verified successful.
 
 - [ ] Implement message persistence in ChatController:
   - After receiving user message, save to database with role "user"
