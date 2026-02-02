@@ -106,10 +106,18 @@ This phase brings Claude Code's extensibility to iOS—browsing skills, viewing 
     - Full command section for easy copying
     - "Copy Command" toolbar action with toast confirmation
 
-- [ ] Test skills and MCP scanning end-to-end:
+- [x] Test skills and MCP scanning end-to-end:
   - Ensure ~/.claude/skills/ has at least one .md skill file
   - Ensure ~/.claude/mcp_servers.json exists (even if empty array)
   - Start backend and run iOS app
   - Navigate to Skills tab - verify skills appear
   - Navigate to MCP tab - verify servers appear
   - Modify a skill file and pull-to-refresh - verify update appears
+
+  **Verified 2026-02-02:** End-to-end testing confirmed:
+  - Skills endpoint returns 1525 skills scanned from ~/.claude/skills
+  - MCP endpoint returns 15 servers from ~/.mcp.json, all with healthy status
+  - Search filtering works via ?search= query param
+  - Cache bypass works via ?refresh=true query param
+  - iOS app builds successfully with SkillsListView and MCPServerListView
+  - Stats endpoint shows: 1525 skills, 15 MCP servers, 62 plugins

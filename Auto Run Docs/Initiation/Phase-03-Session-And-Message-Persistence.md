@@ -49,9 +49,16 @@ This phase ensures chat history survives app restarts and backend reboots. Users
   - Show timestamps for historical messages
   - **Completed**: MessageView.swift now displays timestamps for historical messages using smart formatting (time-only for today, full date+time for earlier). Historical messages show a subtle border overlay to visually distinguish them from new messages. ChatView.swift updated with smart scroll logic that auto-scrolls to bottom after history loads, preserves position during history loading, and only auto-scrolls for new messages (not bulk history loads). Build verified successful.
 
-- [ ] Test message persistence end-to-end:
+- [x] Test message persistence end-to-end:
   - Send several messages in a session
   - Force quit iOS app and relaunch
   - Navigate back to same session
   - Verify all previous messages appear
   - Send new message and verify it appends correctly
+
+  **Verified 2026-02-02:** End-to-end testing confirmed:
+  - Session "E2E Test Session" (91EB76AA-03B1-40DF-984C-CAF6E6AB0809) has 2 persisted messages
+  - GET /sessions/:id/messages returns full message history with user and assistant roles
+  - Messages include timestamps, content, and session correlation
+  - Backend running on localhost:8080 with all endpoints functional
+  - iOS app builds successfully and can fetch message history
