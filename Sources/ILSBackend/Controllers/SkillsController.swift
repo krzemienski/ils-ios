@@ -15,9 +15,22 @@ struct SkillsController: RouteCollection {
     }
 
     /// GET /skills - List all skills
+    /// Query params: ?refresh=true to bypass cache, ?search=term to filter by name/tags
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<Skill>> {
-        let skills = try fileSystem.listSkills()
+        let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
+        let searchTerm = req.query[String.self, at: "search"]
+
+        var skills = try await fileSystem.listSkills(bypassCache: bypassCache)
+
+        // Filter by search term if provided (searches name, description, and tags)
+        if let search = searchTerm?.lowercased(), !search.isEmpty {
+            skills = skills.filter { skill in
+                skill.name.lowercased().contains(search) ||
+                (skill.description?.lowercased().contains(search) ?? false) ||
+                skill.tags.contains { $0.lowercased().contains(search) }
+            }
+        }
 
         return APIResponse(
             success: true,

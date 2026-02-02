@@ -13,6 +13,7 @@ public struct Skill: Codable, Identifiable, Sendable {
     public var name: String
     public var description: String?
     public var version: String?
+    public var tags: [String]
     public var isActive: Bool
     public var path: String
     public var source: SkillSource
@@ -23,6 +24,7 @@ public struct Skill: Codable, Identifiable, Sendable {
         name: String,
         description: String? = nil,
         version: String? = nil,
+        tags: [String] = [],
         isActive: Bool = true,
         path: String,
         source: SkillSource = .local,
@@ -32,6 +34,7 @@ public struct Skill: Codable, Identifiable, Sendable {
         self.name = name
         self.description = description
         self.version = version
+        self.tags = tags
         self.isActive = isActive
         self.path = path
         self.source = source

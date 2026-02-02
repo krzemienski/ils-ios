@@ -13,14 +13,16 @@ struct MCPController: RouteCollection {
     }
 
     /// GET /mcp - List all MCP servers
+    /// Query params: ?scope=user|project, ?refresh=true to bypass cache
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<MCPServer>> {
         var scope: MCPScope?
         if let scopeString = req.query[String.self, at: "scope"] {
             scope = MCPScope(rawValue: scopeString)
         }
+        let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
 
-        let servers = try fileSystem.readMCPServers(scope: scope)
+        let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: bypassCache)
 
         return APIResponse(
             success: true,
