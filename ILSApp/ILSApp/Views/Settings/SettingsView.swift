@@ -1,4 +1,5 @@
 import SwiftUI
+import ILSShared
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -205,58 +206,8 @@ class ConfigEditorViewModel: ObservableObject {
 }
 
 // MARK: - Models
-
-struct StatsResponse: Decodable {
-    let projects: CountStat
-    let sessions: SessionStat
-    let skills: CountStat
-    let mcpServers: MCPStat
-    let plugins: PluginStat
-}
-
-struct CountStat: Decodable {
-    let total: Int
-    let active: Int?
-}
-
-struct SessionStat: Decodable {
-    let total: Int
-    let active: Int
-}
-
-struct MCPStat: Decodable {
-    let total: Int
-    let healthy: Int
-}
-
-struct PluginStat: Decodable {
-    let total: Int
-    let enabled: Int
-}
-
-struct ConfigInfo: Decodable {
-    let scope: String
-    let path: String
-    let content: ClaudeConfig
-    let isValid: Bool
-    let errors: [String]?
-}
-
-struct ClaudeConfig: Codable {
-    var model: String?
-    var permissions: PermissionsConfig?
-    var env: [String: String]?
-}
-
-struct PermissionsConfig: Codable {
-    var allow: [String]?
-    var deny: [String]?
-}
-
-struct UpdateConfigRequest: Encodable {
-    let scope: String
-    let content: ClaudeConfig
-}
+// Using models from ILSShared: StatsResponse, CountStat, SessionStat, MCPStat, PluginStat,
+// ConfigInfo, ClaudeConfig, PermissionsConfig, UpdateConfigRequest
 
 #Preview {
     NavigationStack {

@@ -19,11 +19,18 @@ This phase completes the app's configuration capabilities—reading and writing 
   - FileSystemService handles missing files by returning empty ClaudeConfig defaults
   - Supports user/project/local scopes via query parameter
 
-- [ ] Add config DTOs to ILSShared:
+- [x] Add config DTOs to ILSShared:
   - Review `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/ClaudeConfig.swift`
   - Ensure ClaudeConfig model covers: apiKey, defaultModel, permissions, theme
   - Add ConfigUpdateRequest DTO for partial updates
   - Ensure all fields are optional for partial update support
+
+  **Completed:** Enhanced ClaudeConfig model with:
+  - Added `ThemeConfig` struct with `colorScheme` and `accentColor` fields for UI preferences
+  - Added `APIKeyStatus` struct with `isConfigured`, `maskedKey`, and `source` for secure API key display
+  - `UpdateConfigRequest` DTO already existed in Requests.swift with scope + content
+  - All fields remain optional enabling partial update support
+  - iOS SettingsView.swift updated to import ILSShared, removing duplicate local model definitions
 
 - [ ] Update iOS SettingsView for config display:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift`
