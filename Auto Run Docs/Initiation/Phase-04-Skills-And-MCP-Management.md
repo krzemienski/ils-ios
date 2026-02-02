@@ -85,12 +85,26 @@ This phase brings Claude Code's extensibility to iOS—browsing skills, viewing 
   - Loading state with ProgressView while fetching content
   - ContentUnavailableView for skills with no content
 
-- [ ] Update iOS MCPServerListView and ViewModel:
+- [x] Update iOS MCPServerListView and ViewModel:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/MCP/MCPServerListView.swift`
   - Fetch MCP servers from backend on view appear
   - Display server name, command, and status indicator
   - Show configuration details (args, environment variables)
   - Implement pull-to-refresh to rescan
+
+  **Completed 2026-02-02:** Updated MCPServerListView and MCPViewModel with:
+  - Added `.searchable()` modifier with client-side filtering by name, command, scope, and args
+  - Added `filteredServers` computed property for responsive search
+  - Pull-to-refresh calls `refreshServers()` which passes `?refresh=true` to bypass cache
+  - NavigationLink navigates to new MCPServerDetailView on server tap
+  - Added Hashable conformance to MCPServerItem for NavigationLink support
+  - MCPServerRowView displays environment variable count badge when env vars present
+  - Created MCPServerDetailView with:
+    - Command section showing full command and arguments with text selection
+    - Environment variables section listing all env vars by key
+    - Configuration section showing scope, status (with colored indicator), and config path
+    - Full command section for easy copying
+    - "Copy Command" toolbar action with toast confirmation
 
 - [ ] Test skills and MCP scanning end-to-end:
   - Ensure ~/.claude/skills/ has at least one .md skill file
