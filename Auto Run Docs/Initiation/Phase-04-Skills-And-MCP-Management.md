@@ -22,12 +22,20 @@ This phase brings Claude Code's extensibility to iOS—browsing skills, viewing 
   - Controllers updated with `?refresh=true` query param to bypass cache
   - SkillsController supports `?search=term` to filter by name/description/tags
 
-- [ ] Complete SkillsController backend implementation:
+- [x] Complete SkillsController backend implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/SkillsController.swift`
   - Implement `index()` to return all scanned skills
   - Implement `show()` to return single skill with full content
   - Add search/filter by name or tags query param
   - Return skills in SkillDTO format matching ILSShared model
+
+  **Verified 2026-02-02:** SkillsController already fully implemented with:
+  - `list()` endpoint at GET /skills returns all skills with cache-aware scanning
+  - `get()` endpoint at GET /skills/:name returns single skill with full content
+  - `?search=term` query param filters by name, description, and tags
+  - `?refresh=true` query param bypasses FileSystemCache
+  - Full CRUD operations (create, update, delete) also implemented
+  - Uses Skill model from ILSShared with all required fields (name, description, version, tags, content, path, source)
 
 - [ ] Complete MCPController backend implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/MCPController.swift`
