@@ -8,13 +8,14 @@ struct SidebarView: View {
         List {
             Section {
                 ForEach(SidebarItem.allCases) { item in
-                    Button(action: { 
+                    Button(action: {
                         selectedItem = item
                     }) {
                         Label(item.rawValue, systemImage: item.icon)
                             .foregroundColor(selectedItem == item ? ILSTheme.accent : ILSTheme.primaryText)
                     }
                     .listRowBackground(selectedItem == item ? ILSTheme.accent.opacity(0.1) : Color.clear)
+                    .accessibilityIdentifier("sidebar_\(item.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
                 }
             }
 
@@ -46,6 +47,7 @@ struct SidebarView: View {
                 Button(action: { appState.checkConnection() }) {
                     Image(systemName: "arrow.clockwise")
                 }
+                .accessibilityIdentifier("refreshConnectionButton")
             }
         }
     }

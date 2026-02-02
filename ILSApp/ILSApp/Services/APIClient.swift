@@ -82,10 +82,12 @@ actor APIClient {
 
     private func validateResponse(_ response: URLResponse) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ API Error: Invalid response from server")
             throw APIError.invalidResponse
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
+            print("❌ API Error: HTTP \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
     }
@@ -115,15 +117,46 @@ enum APIError: Error, LocalizedError {
     case invalidResponse
     case httpError(statusCode: Int)
     case decodingError(Error)
+    case networkError(Error)
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
             return "Invalid response from server"
         case .httpError(let statusCode):
-            return "HTTP error: \(statusCode)"
+            let statusText = HTTPURLResponse.localizedString(forStatusCode: statusCode)
+            switch statusCode {
+            case 400:
+                return "Bad request - please check your input"
+            case 401:
+                return "Authentication required"
+            case 403:
+                return "Access forbidden"
+            case 404:
+                return "Resource not found"
+            case 500...599:
+                return "Server error (\(statusCode)) - please try again later"
+            default:
+                return "HTTP error: \(statusCode) - \(statusText)"
+            }
         case .decodingError(let error):
             return "Failed to decode response: \(error.localizedDescription)"
+        case .networkError(let error):
+            return "Network error: \(error.localizedDescription)"
+        }
+    }
+
+    var isRetriable: Bool {
+        switch self {
+        case .httpError(let statusCode):
+            // Retry on server errors (5xx) and rate limiting (429)
+            return statusCode >= 500 || statusCode == 429
+        case .networkError:
+            // Network errors are generally retriable
+            return true
+        case .invalidResponse, .decodingError:
+            // These indicate a fundamental problem, not retriable
+            return false
         }
     }
 }

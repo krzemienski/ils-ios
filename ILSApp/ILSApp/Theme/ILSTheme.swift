@@ -95,3 +95,144 @@ extension View {
         modifier(CardStyle())
     }
 }
+
+// MARK: - Error View Component
+
+/// Reusable error state view with retry button
+struct ErrorStateView: View {
+    let title: String
+    let message: String
+    let retryAction: () async -> Void
+
+    init(
+        title: String = "Something went wrong",
+        message: String,
+        retryAction: @escaping () async -> Void
+    ) {
+        self.title = title
+        self.message = message
+        self.retryAction = retryAction
+    }
+
+    init(error: Error, retryAction: @escaping () async -> Void) {
+        self.title = "Connection Error"
+        self.message = Self.userFriendlyMessage(from: error)
+        self.retryAction = retryAction
+    }
+
+    var body: some View {
+        ContentUnavailableView {
+            Label(title, systemImage: "exclamationmark.triangle")
+                .foregroundColor(ILSTheme.error)
+        } description: {
+            Text(message)
+                .foregroundColor(ILSTheme.secondaryText)
+        } actions: {
+            Button {
+                Task {
+                    await retryAction()
+                }
+            } label: {
+                Label("Retry", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+    }
+
+    private static func userFriendlyMessage(from error: Error) -> String {
+        let nsError = error as NSError
+
+        // Check for network-related errors
+        if nsError.domain == NSURLErrorDomain {
+            switch nsError.code {
+            case NSURLErrorNotConnectedToInternet:
+                return "No internet connection. Please check your network settings."
+            case NSURLErrorTimedOut:
+                return "Request timed out. Please try again."
+            case NSURLErrorCannotConnectToHost, NSURLErrorCannotFindHost:
+                return "Cannot connect to server. Make sure the backend is running."
+            case NSURLErrorNetworkConnectionLost:
+                return "Network connection was lost. Please try again."
+            default:
+                return "Network error: \(error.localizedDescription)"
+            }
+        }
+
+        // Generic error message
+        return error.localizedDescription
+    }
+}
+
+// MARK: - Loading Overlay Modifier
+
+struct LoadingOverlay: ViewModifier {
+    let isLoading: Bool
+    let message: String?
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if isLoading {
+                    ZStack {
+                        Color.black.opacity(0.1)
+                            .ignoresSafeArea()
+
+                        VStack(spacing: ILSTheme.spacingS) {
+                            ProgressView()
+                            if let message = message {
+                                Text(message)
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        }
+                        .padding(ILSTheme.spacingL)
+                        .background(ILSTheme.secondaryBackground)
+                        .cornerRadius(ILSTheme.cornerRadiusL)
+                    }
+                }
+            }
+    }
+}
+
+extension View {
+    func loadingOverlay(isLoading: Bool, message: String? = nil) -> some View {
+        modifier(LoadingOverlay(isLoading: isLoading, message: message))
+    }
+}
+
+// MARK: - Empty State with Action
+
+struct EmptyStateView: View {
+    let title: String
+    let systemImage: String
+    let description: String
+    let actionTitle: String?
+    let action: (() -> Void)?
+
+    init(
+        title: String,
+        systemImage: String,
+        description: String,
+        actionTitle: String? = nil,
+        action: (() -> Void)? = nil
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.description = description
+        self.actionTitle = actionTitle
+        self.action = action
+    }
+
+    var body: some View {
+        ContentUnavailableView {
+            Label(title, systemImage: systemImage)
+        } description: {
+            Text(description)
+        } actions: {
+            if let actionTitle = actionTitle, let action = action {
+                Button(actionTitle, action: action)
+                    .buttonStyle(PrimaryButtonStyle())
+            }
+        }
+    }
+}

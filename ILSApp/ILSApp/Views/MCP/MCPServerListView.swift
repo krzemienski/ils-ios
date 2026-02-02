@@ -7,13 +7,20 @@ struct MCPServerListView: View {
 
     var body: some View {
         List {
-            if viewModel.filteredServers.isEmpty && !viewModel.isLoading {
+            if let error = viewModel.error {
+                ErrorStateView(error: error) {
+                    await viewModel.loadServers()
+                }
+            } else if viewModel.filteredServers.isEmpty && !viewModel.isLoading {
                 if viewModel.servers.isEmpty {
-                    ContentUnavailableView(
-                        "No MCP Servers",
+                    EmptyStateView(
+                        title: "No MCP Servers",
                         systemImage: "server.rack",
-                        description: Text("Add MCP servers to extend Claude's capabilities")
-                    )
+                        description: "Add MCP servers to extend Claude's capabilities",
+                        actionTitle: "Add Server"
+                    ) {
+                        showingNewServer = true
+                    }
                 } else {
                     ContentUnavailableView.search(text: viewModel.searchText)
                 }
@@ -48,7 +55,7 @@ struct MCPServerListView: View {
         }
         .overlay {
             if viewModel.isLoading && viewModel.servers.isEmpty {
-                ProgressView()
+                ProgressView("Loading MCP servers...")
             }
         }
         .task {

@@ -7,13 +7,20 @@ struct SkillsListView: View {
 
     var body: some View {
         List {
-            if viewModel.filteredSkills.isEmpty && !viewModel.isLoading {
+            if let error = viewModel.error {
+                ErrorStateView(error: error) {
+                    await viewModel.retryLoadSkills()
+                }
+            } else if viewModel.filteredSkills.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty {
-                    ContentUnavailableView(
-                        "No Skills",
+                    EmptyStateView(
+                        title: "No Skills",
                         systemImage: "star",
-                        description: Text("Skills from ~/.claude/skills/ will appear here")
-                    )
+                        description: "Skills from ~/.claude/skills/ will appear here",
+                        actionTitle: "Create Skill"
+                    ) {
+                        showingNewSkill = true
+                    }
                 } else {
                     ContentUnavailableView.search(text: viewModel.searchText)
                 }
@@ -49,7 +56,7 @@ struct SkillsListView: View {
         }
         .overlay {
             if viewModel.isLoading && viewModel.skills.isEmpty {
-                ProgressView()
+                ProgressView("Loading skills...")
             }
         }
         .task {

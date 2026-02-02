@@ -81,6 +81,12 @@ struct ChatView: View {
                     scrollToBottom(proxy: proxy)
                 }
             }
+            .simultaneousGesture(
+                // Dismiss keyboard on scroll
+                DragGesture().onChanged { _ in
+                    isInputFocused = false
+                }
+            )
         }
     }
 
@@ -175,6 +181,7 @@ struct ChatInputView: View {
     let onSend: () -> Void
     let onCancel: () -> Void
     let onCommandPalette: () -> Void
+    @State private var sendButtonPressed = false
 
     var body: some View {
         HStack(spacing: ILSTheme.spacingS) {
@@ -188,6 +195,7 @@ struct ChatInputView: View {
                 .textFieldStyle(.plain)
                 .lineLimit(1...5)
                 .disabled(isDisabled)
+                .accessibilityIdentifier("chat-input-field")
                 .onSubmit {
                     if !text.isEmpty && !isDisabled {
                         onSend()
@@ -199,16 +207,34 @@ struct ChatInputView: View {
                     Image(systemName: "stop.circle.fill")
                         .foregroundColor(ILSTheme.error)
                 }
+                .accessibilityIdentifier("cancel-button")
             } else {
-                Button(action: onSend) {
+                Button(action: {
+                    // Haptic feedback on send
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+
+                    // Spring animation
+                    sendButtonPressed = true
+                    onSend()
+
+                    // Reset after animation
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        sendButtonPressed = false
+                    }
+                }) {
                     Image(systemName: "arrow.up.circle.fill")
                         .foregroundColor(text.isEmpty || isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
+                        .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
                 }
                 .disabled(text.isEmpty || isDisabled)
+                .accessibilityIdentifier("send-button")
             }
         }
         .padding()
         .background(ILSTheme.secondaryBackground)
+        .accessibilityIdentifier("chat-input-bar")
     }
 }
 
@@ -225,6 +251,7 @@ struct StreamingStatusView: View {
                 case .connecting, .connected:
                     ProgressView()
                         .scaleEffect(0.7)
+                        .accessibilityIdentifier("streaming-indicator")
                 case .reconnecting:
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .foregroundColor(ILSTheme.warning)
@@ -238,12 +265,14 @@ struct StreamingStatusView: View {
             Text(statusText)
                 .font(ILSTheme.captionFont)
                 .foregroundColor(ILSTheme.secondaryText)
+                .accessibilityIdentifier("streaming-status-text")
 
             Spacer()
         }
         .padding(.horizontal)
         .padding(.vertical, ILSTheme.spacingXS)
         .background(ILSTheme.secondaryBackground)
+        .accessibilityIdentifier("streaming-status-banner")
     }
 }
 
@@ -270,6 +299,7 @@ struct TypingIndicatorView: View {
 
             Spacer()
         }
+        .accessibilityIdentifier("typing-indicator")
         .onAppear {
             startAnimation()
         }

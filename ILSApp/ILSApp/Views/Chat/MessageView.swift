@@ -3,6 +3,7 @@ import ILSShared
 
 struct MessageView: View {
     let message: ChatMessage
+    @State private var showCopyConfirmation = false
 
     /// Formatter for displaying message timestamps
     private static let timeFormatter: DateFormatter = {
@@ -30,6 +31,22 @@ struct MessageView: View {
                         Text(message.text)
                             .font(ILSTheme.bodyFont)
                             .textSelection(.enabled)
+                            .accessibilityIdentifier(message.isUser ? "user-message-text" : "assistant-message-text")
+                            .contextMenu {
+                                Button(action: {
+                                    UIPasteboard.general.string = message.text
+                                    // Haptic feedback on copy
+                                    let generator = UINotificationFeedbackGenerator()
+                                    generator.notificationOccurred(.success)
+                                    showCopyConfirmation = true
+                                    // Hide confirmation after 2 seconds
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        showCopyConfirmation = false
+                                    }
+                                }) {
+                                    Label("Copy Message", systemImage: "doc.on.doc")
+                                }
+                            }
                     }
 
                     // Tool calls
@@ -46,6 +63,22 @@ struct MessageView: View {
                     if let thinking = message.thinking {
                         ThinkingView(thinking: thinking)
                     }
+
+                    // Copy confirmation overlay
+                    if showCopyConfirmation {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(ILSTheme.success)
+                            Text("Copied")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.success)
+                        }
+                        .padding(.horizontal, ILSTheme.spacingS)
+                        .padding(.vertical, ILSTheme.spacingXS)
+                        .background(ILSTheme.success.opacity(0.1))
+                        .cornerRadius(ILSTheme.cornerRadiusS)
+                        .transition(.scale.combined(with: .opacity))
+                    }
                 }
                 .padding()
                 .background(message.isUser ? ILSTheme.userBubble : ILSTheme.assistantBubble)
@@ -57,6 +90,7 @@ struct MessageView: View {
                             .strokeBorder(ILSTheme.tertiaryText.opacity(0.3), lineWidth: 1)
                         : nil
                 )
+                .accessibilityIdentifier(message.isUser ? "user-message-bubble" : "assistant-message-bubble")
 
                 if !message.isUser { Spacer() }
             }

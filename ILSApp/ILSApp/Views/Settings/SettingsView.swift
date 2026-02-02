@@ -7,6 +7,26 @@ struct SettingsView: View {
     @State private var serverHost: String = "localhost"
     @State private var serverPort: String = "8080"
 
+    // Editing state
+    @State private var isEditing = false
+    @State private var editedModel: String = ""
+    @State private var editedColorScheme: String = "system"
+
+    // Alert state
+    @State private var showSaveConfirmation = false
+    @State private var showSaveError = false
+    @State private var saveErrorMessage = ""
+    @State private var showSaveSuccess = false
+
+    // Available options
+    private let availableModels = [
+        "claude-sonnet-4-20250514",
+        "claude-opus-4-20250514",
+        "claude-haiku-3-5-20241022"
+    ]
+
+    private let availableColorSchemes = ["system", "light", "dark"]
+
     var body: some View {
         Form {
             // MARK: - Connection Section
@@ -39,11 +59,20 @@ struct SettingsView: View {
                     }
                 }
 
-                Button("Test Connection") {
-                    let url = "http://\(serverHost):\(serverPort)"
-                    appState.serverURL = url
-                    appState.checkConnection()
+                Button {
+                    testConnection()
+                } label: {
+                    HStack {
+                        if viewModel.isTestingConnection {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                        Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.bordered)
+                .disabled(viewModel.isTestingConnection)
             } header: {
                 Text("Backend Connection")
             } footer: {
@@ -60,21 +89,37 @@ struct SettingsView: View {
                             .foregroundColor(ILSTheme.secondaryText)
                     }
                 } else if let config = viewModel.config?.content {
-                    // Default Model
-                    LabeledContent("Default Model") {
-                        Text(config.model ?? "claude-sonnet-4-20250514")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-
-                    // Theme Color Scheme
-                    if let theme = config.theme {
-                        LabeledContent("Color Scheme") {
-                            Text(theme.colorScheme?.capitalized ?? "System")
+                    // Default Model - Editable
+                    if isEditing {
+                        Picker("Default Model", selection: $editedModel) {
+                            ForEach(availableModels, id: \.self) { model in
+                                Text(formatModelName(model))
+                                    .tag(model)
+                            }
+                        }
+                    } else {
+                        LabeledContent("Default Model") {
+                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
                     }
 
-                    // Auto Updates Channel
+                    // Theme Color Scheme - Editable
+                    if isEditing {
+                        Picker("Color Scheme", selection: $editedColorScheme) {
+                            ForEach(availableColorSchemes, id: \.self) { scheme in
+                                Text(scheme.capitalized)
+                                    .tag(scheme)
+                            }
+                        }
+                    } else {
+                        LabeledContent("Color Scheme") {
+                            Text((config.theme?.colorScheme ?? "system").capitalized)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Auto Updates Channel (read-only)
                     if let channel = config.autoUpdatesChannel {
                         LabeledContent("Updates Channel") {
                             Text(channel.capitalized)
@@ -82,27 +127,96 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Always Thinking
+                    // Always Thinking (read-only)
                     LabeledContent("Extended Thinking") {
                         Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
                     }
 
-                    // Co-authored by
+                    // Co-authored by (read-only)
                     LabeledContent("Include Co-Author") {
                         Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                    }
+
+                    // Save button when editing
+                    if isEditing {
+                        Button {
+                            showSaveConfirmation = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Save Changes")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(viewModel.isSaving)
                     }
                 } else {
                     Text("No configuration loaded")
                         .foregroundColor(ILSTheme.secondaryText)
                 }
             } header: {
-                Text("General")
+                HStack {
+                    Text("General")
+                    Spacer()
+                    if viewModel.config != nil && !viewModel.isLoadingConfig {
+                        Button(isEditing ? "Cancel" : "Edit") {
+                            if isEditing {
+                                // Cancel editing - reset to original values
+                                resetEditedValues()
+                            }
+                            isEditing.toggle()
+                        }
+                        .font(ILSTheme.captionFont)
+                        .textCase(nil)
+                    }
+                }
             } footer: {
                 if viewModel.config != nil {
                     Text("Scope: \(viewModel.config?.scope ?? "user") • \(viewModel.config?.path ?? "")")
                 }
+            }
+
+            // MARK: - API Key Section
+            Section {
+                if let config = viewModel.config?.content {
+                    if let apiKeyStatus = config.apiKeyStatus {
+                        HStack {
+                            Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
+                                .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
+                                    .font(ILSTheme.bodyFont)
+                                if let maskedKey = apiKeyStatus.maskedKey {
+                                    Text("Key: \(maskedKey)")
+                                        .font(ILSTheme.captionFont)
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                }
+                                if let source = apiKeyStatus.source {
+                                    Text("Source: \(source)")
+                                        .font(ILSTheme.captionFont)
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                }
+                            }
+                        }
+                    } else {
+                        HStack {
+                            Image(systemName: "key.fill")
+                                .foregroundColor(.orange)
+                            Text("API Key status unknown")
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+                } else if !viewModel.isLoadingConfig {
+                    Text("Loading API key status...")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                Text("API Key")
+            } footer: {
+                Text("For security, API keys cannot be edited through the iOS app. Use the terminal command: claude config set apiKey <your-key>")
             }
 
             // MARK: - Permissions Section
@@ -234,8 +348,84 @@ struct SettingsView: View {
             await viewModel.loadAll()
         }
         .task {
-            parseServerURL()
+            loadServerSettings()
             await viewModel.loadAll()
+            resetEditedValues()
+        }
+        .confirmationDialog("Save Configuration Changes?", isPresented: $showSaveConfirmation, titleVisibility: .visible) {
+            Button("Save Changes") {
+                saveConfigChanges()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will update your Claude Code configuration. Changes will take effect immediately.")
+        }
+        .alert("Save Failed", isPresented: $showSaveError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
+        .alert("Configuration Saved", isPresented: $showSaveSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your configuration has been updated successfully.")
+        }
+        .onChange(of: serverHost) { _, newValue in
+            saveServerSettings()
+        }
+        .onChange(of: serverPort) { _, newValue in
+            saveServerSettings()
+        }
+    }
+
+    // MARK: - Server Settings Persistence
+
+    private func loadServerSettings() {
+        // Load from UserDefaults
+        if let savedHost = UserDefaults.standard.string(forKey: "ils_server_host") {
+            serverHost = savedHost
+        }
+        if let savedPort = UserDefaults.standard.string(forKey: "ils_server_port") {
+            serverPort = savedPort
+        }
+        // Also parse from appState if available
+        parseServerURL()
+    }
+
+    private func saveServerSettings() {
+        // Save to UserDefaults
+        UserDefaults.standard.set(serverHost, forKey: "ils_server_host")
+        UserDefaults.standard.set(serverPort, forKey: "ils_server_port")
+
+        // Update appState serverURL
+        let url = "http://\(serverHost):\(serverPort)"
+        appState.serverURL = url
+    }
+
+    private func testConnection() {
+        Task {
+            let url = "http://\(serverHost):\(serverPort)"
+            appState.serverURL = url
+            await viewModel.testConnection()
+
+            // Save settings if connection successful
+            if appState.isConnected {
+                saveServerSettings()
+            }
+        }
+    }
+
+    private func saveConfigChanges() {
+        Task {
+            let result = await viewModel.saveConfig(model: editedModel, colorScheme: editedColorScheme)
+            if let error = result {
+                saveErrorMessage = error
+                showSaveError = true
+            } else {
+                isEditing = false
+                showSaveSuccess = true
+                await viewModel.loadConfig()
+            }
         }
     }
 
@@ -260,6 +450,26 @@ struct SettingsView: View {
         if let h = hooks.preToolUse { count += h.count }
         if let h = hooks.postToolUse { count += h.count }
         return count
+    }
+
+    private func formatModelName(_ model: String) -> String {
+        // Convert model ID to human-readable name
+        if model.contains("sonnet") {
+            return "Claude Sonnet"
+        } else if model.contains("opus") {
+            return "Claude Opus"
+        } else if model.contains("haiku") {
+            return "Claude Haiku"
+        }
+        return model
+    }
+
+    private func resetEditedValues() {
+        // Reset edited values to current config values
+        if let config = viewModel.config?.content {
+            editedModel = config.model ?? "claude-sonnet-4-20250514"
+            editedColorScheme = config.theme?.colorScheme ?? "system"
+        }
     }
 }
 
@@ -328,6 +538,8 @@ class SettingsViewModel: ObservableObject {
     @Published var config: ConfigInfo?
     @Published var isLoading = false
     @Published var isLoadingConfig = false
+    @Published var isSaving = false
+    @Published var isTestingConnection = false
     @Published var error: Error?
 
     private let client = APIClient()
@@ -362,6 +574,56 @@ class SettingsViewModel: ObservableObject {
         }
 
         isLoadingConfig = false
+    }
+
+    func testConnection() async {
+        isTestingConnection = true
+        defer { isTestingConnection = false }
+
+        do {
+            _ = try await client.healthCheck()
+        } catch {
+            self.error = error
+        }
+    }
+
+    func saveConfig(model: String, colorScheme: String) async -> String? {
+        isSaving = true
+        defer { isSaving = false }
+
+        // Build updated config from current config
+        guard var currentConfig = config?.content else {
+            return "No configuration loaded"
+        }
+
+        // Update model
+        currentConfig.model = model
+
+        // Update theme (create if doesn't exist)
+        if currentConfig.theme == nil {
+            currentConfig.theme = ThemeConfig(colorScheme: colorScheme, accentColor: nil)
+        } else {
+            currentConfig.theme?.colorScheme = colorScheme
+        }
+
+        do {
+            let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
+            let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
+
+            // Update local config with response
+            if let updatedConfig = response.data {
+                config = updatedConfig
+
+                // Check for validation errors
+                if !updatedConfig.isValid {
+                    return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
+                }
+            }
+
+            return nil // Success
+        } catch {
+            return "Failed to save: \(error.localizedDescription)"
+        }
     }
 }
 

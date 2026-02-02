@@ -7,17 +7,27 @@ struct SessionsListView: View {
 
     var body: some View {
         List {
-            if viewModel.sessions.isEmpty && !viewModel.isLoading {
-                ContentUnavailableView(
-                    "No Sessions",
+            if let error = viewModel.error {
+                ErrorStateView(error: error) {
+                    await viewModel.retryLoadSessions()
+                }
+            } else if viewModel.sessions.isEmpty && !viewModel.isLoading {
+                EmptyStateView(
+                    title: "No Sessions",
                     systemImage: "bubble.left.and.bubble.right",
-                    description: Text("Start a new chat session to begin")
-                )
+                    description: "Start a new chat session to begin",
+                    actionTitle: "New Chat"
+                ) {
+                    showingNewSession = true
+                }
+                .accessibilityIdentifier("empty-sessions-state")
             } else {
                 ForEach(viewModel.sessions) { session in
                     NavigationLink(destination: ChatView(session: session)) {
                         SessionRowView(session: session)
                     }
+                    .contentShape(Rectangle())
+                    .accessibilityIdentifier("session-\(session.id)")
                 }
                 .onDelete(perform: deleteSession)
             }
@@ -31,6 +41,7 @@ struct SessionsListView: View {
                 Button(action: { showingNewSession = true }) {
                     Image(systemName: "plus")
                 }
+                .accessibilityIdentifier("add-session-button")
             }
         }
         .sheet(isPresented: $showingNewSession) {
@@ -39,13 +50,15 @@ struct SessionsListView: View {
             }
         }
         .overlay {
-            if viewModel.isLoading {
-                ProgressView()
+            if viewModel.isLoading && viewModel.sessions.isEmpty {
+                ProgressView("Loading sessions...")
+                    .accessibilityIdentifier("loading-sessions-indicator")
             }
         }
         .task {
             await viewModel.loadSessions()
         }
+        .accessibilityIdentifier("sessions-list")
     }
 
     private func deleteSession(at offsets: IndexSet) {
@@ -110,19 +123,26 @@ struct SessionRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .shadow(color: ILSTheme.shadowLight, radius: 2, x: 0, y: 1)
     }
 
     @ViewBuilder
     private var statusBadge: some View {
         let (color, text) = statusInfo
 
-        Text(text)
-            .font(.caption2)
-            .foregroundColor(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color)
-            .cornerRadius(ILSTheme.cornerRadiusS)
+        if session.status == .active {
+            // Active badge with pulse animation
+            PulsingBadgeView(text: text, color: color)
+        } else {
+            // Static badge for other states
+            Text(text)
+                .font(.caption2)
+                .foregroundColor(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(color)
+                .cornerRadius(ILSTheme.cornerRadiusS)
+        }
     }
 
     private var statusInfo: (Color, String) {
@@ -142,6 +162,29 @@ struct SessionRowView: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+// MARK: - Pulsing Badge Component
+
+struct PulsingBadgeView: View {
+    let text: String
+    let color: Color
+    @State private var isPulsing = false
+
+    var body: some View {
+        Text(text)
+            .font(.caption2)
+            .foregroundColor(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color)
+            .cornerRadius(ILSTheme.cornerRadiusS)
+            .opacity(isPulsing ? 0.7 : 1.0)
+            .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isPulsing)
+            .onAppear {
+                isPulsing = true
+            }
     }
 }
 

@@ -74,6 +74,10 @@ struct ProjectDetailView: View {
             }
             .navigationTitle("Project Details")
             .navigationBarTitleDisplayMode(.inline)
+            .refreshable {
+                // Refresh project details from server
+                await viewModel.loadProjects()
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(isEditing ? "Cancel" : "Done") {

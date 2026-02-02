@@ -10,6 +10,9 @@ struct ILSAppApp: App {
             ContentView()
                 .environmentObject(appState)
                 .preferredColorScheme(.dark)
+                .onOpenURL { url in
+                    appState.handleURL(url)
+                }
         }
     }
 }
@@ -20,6 +23,7 @@ class AppState: ObservableObject {
     @Published var selectedProject: Project?
     @Published var isConnected: Bool = false
     @Published var serverURL: String = "http://localhost:8080"
+    @Published var selectedTab: String = "sessions"
 
     init() {
         checkConnection()
@@ -34,6 +38,27 @@ class AppState: ObservableObject {
             } catch {
                 isConnected = false
             }
+        }
+    }
+
+    func handleURL(_ url: URL) {
+        guard url.scheme == "ils" else { return }
+
+        switch url.host {
+        case "projects":
+            selectedTab = "projects"
+        case "plugins":
+            selectedTab = "plugins"
+        case "mcp":
+            selectedTab = "mcp"
+        case "sessions":
+            selectedTab = "sessions"
+        case "settings":
+            selectedTab = "settings"
+        case "skills":
+            selectedTab = "skills"
+        default:
+            break
         }
     }
 }

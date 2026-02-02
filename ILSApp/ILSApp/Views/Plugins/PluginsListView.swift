@@ -7,12 +7,19 @@ struct PluginsListView: View {
 
     var body: some View {
         List {
-            if viewModel.plugins.isEmpty && !viewModel.isLoading {
-                ContentUnavailableView(
-                    "No Plugins",
+            if let error = viewModel.error {
+                ErrorStateView(error: error) {
+                    await viewModel.loadPlugins()
+                }
+            } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
+                EmptyStateView(
+                    title: "No Plugins",
                     systemImage: "puzzlepiece.extension",
-                    description: Text("Install plugins from the marketplace")
-                )
+                    description: "Install plugins from the marketplace",
+                    actionTitle: "Browse Marketplace"
+                ) {
+                    showingMarketplace = true
+                }
             } else {
                 ForEach(viewModel.plugins) { plugin in
                     PluginRowView(plugin: plugin, viewModel: viewModel)
@@ -28,14 +35,25 @@ struct PluginsListView: View {
                 Button(action: { showingMarketplace = true }) {
                     Image(systemName: "bag")
                 }
+                .accessibilityIdentifier("marketplaceButton")
             }
         }
         .sheet(isPresented: $showingMarketplace) {
-            MarketplaceView(viewModel: viewModel)
+            NavigationStack {
+                MarketplaceView(viewModel: viewModel)
+                    .navigationTitle("Marketplace")
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                showingMarketplace = false
+                            }
+                        }
+                    }
+            }
         }
         .overlay {
-            if viewModel.isLoading {
-                ProgressView()
+            if viewModel.isLoading && viewModel.plugins.isEmpty {
+                ProgressView("Loading plugins...")
             }
         }
         .task {

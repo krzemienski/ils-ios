@@ -3,8 +3,26 @@ import ILSShared
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab: SidebarItem = .sessions
     @State private var showingSidebar = false
+
+    private var selectedTab: SidebarItem {
+        switch appState.selectedTab.lowercased() {
+        case "sessions":
+            return .sessions
+        case "projects":
+            return .projects
+        case "plugins":
+            return .plugins
+        case "mcp":
+            return .mcp
+        case "skills":
+            return .skills
+        case "settings":
+            return .settings
+        default:
+            return .sessions
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -14,16 +32,36 @@ struct ContentView: View {
                         Button(action: { showingSidebar = true }) {
                             Image(systemName: "sidebar.left")
                         }
+                        .accessibilityIdentifier("sidebarButton")
                     }
                 }
                 .sheet(isPresented: $showingSidebar) {
                     NavigationStack {
-                        SidebarView(selectedItem: $selectedTab)
+                        SidebarView(selectedItem: Binding(
+                            get: { selectedTab },
+                            set: { newItem in
+                                switch newItem {
+                                case .sessions:
+                                    appState.selectedTab = "sessions"
+                                case .projects:
+                                    appState.selectedTab = "projects"
+                                case .plugins:
+                                    appState.selectedTab = "plugins"
+                                case .mcp:
+                                    appState.selectedTab = "mcp"
+                                case .skills:
+                                    appState.selectedTab = "skills"
+                                case .settings:
+                                    appState.selectedTab = "settings"
+                                }
+                            }
+                        ))
                             .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                     Button("Done") {
                                         showingSidebar = false
                                     }
+                                    .accessibilityIdentifier("sidebarDoneButton")
                                 }
                             }
                     }

@@ -8,12 +8,19 @@ struct ProjectsListView: View {
 
     var body: some View {
         List {
-            if viewModel.projects.isEmpty && !viewModel.isLoading {
-                ContentUnavailableView(
-                    "No Projects",
+            if let error = viewModel.error {
+                ErrorStateView(error: error) {
+                    await viewModel.retryLoadProjects()
+                }
+            } else if viewModel.projects.isEmpty && !viewModel.isLoading {
+                EmptyStateView(
+                    title: "No Projects",
                     systemImage: "folder",
-                    description: Text("Add a project to organize your sessions")
-                )
+                    description: "Add a project to organize your sessions",
+                    actionTitle: "Create Project"
+                ) {
+                    showingNewProject = true
+                }
             } else {
                 ForEach(viewModel.projects) { project in
                     ProjectRowView(project: project)
@@ -45,8 +52,8 @@ struct ProjectsListView: View {
             ProjectDetailView(project: project, viewModel: viewModel)
         }
         .overlay {
-            if viewModel.isLoading {
-                ProgressView()
+            if viewModel.isLoading && viewModel.projects.isEmpty {
+                ProgressView("Loading projects...")
             }
         }
         .task {

@@ -20,6 +20,7 @@ struct NewSessionView: View {
             Form {
                 Section("Session Details") {
                     TextField("Session Name (optional)", text: $sessionName)
+                        .accessibilityIdentifier("session-name-field")
 
                     Picker("Project", selection: $selectedProject) {
                         Text("No Project").tag(nil as Project?)
@@ -27,6 +28,7 @@ struct NewSessionView: View {
                             Text(project.name).tag(project as Project?)
                         }
                     }
+                    .accessibilityIdentifier("project-picker")
                 }
 
                 Section("Model") {
@@ -57,12 +59,14 @@ struct NewSessionView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("cancel-new-session-button")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
                         createSession()
                     }
                     .disabled(isCreating)
+                    .accessibilityIdentifier("create-session-button")
                 }
             }
             .task {
