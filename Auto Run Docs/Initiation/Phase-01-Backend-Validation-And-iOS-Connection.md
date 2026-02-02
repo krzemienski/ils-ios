@@ -45,12 +45,19 @@ This phase validates the existing ILS infrastructure and delivers a working end-
   - Bonus: `fork()` endpoint for session cloning with forkedFrom tracking
   - Bonus: `scan()` endpoint for discovering external Claude Code sessions
 
-- [ ] Test backend API endpoints manually:
+- [x] Test backend API endpoints manually:
   - Create a project: `curl -X POST http://localhost:8080/api/v1/projects -H "Content-Type: application/json" -d '{"name":"Test Project","path":"/tmp/test"}'`
   - List projects: `curl http://localhost:8080/api/v1/projects`
   - Create a session: `curl -X POST http://localhost:8080/api/v1/sessions -H "Content-Type: application/json" -d '{"projectId":"<id-from-above>","name":"Test Session"}'`
   - List sessions: `curl http://localhost:8080/api/v1/sessions`
   - Verify JSON responses match expected DTO structure
+
+  **Completed 2026-02-02**: All API endpoints tested and verified via curl:
+  - Create project: Returns `APIResponse<Project>` with UUID, timestamps, defaultModel="sonnet", sessionCount=0
+  - List projects: Returns `APIResponse<ListResponse<Project>>` with items array and total count
+  - Create session: Returns `APIResponse<ChatSession>` with projectId association and projectName included
+  - List sessions: Returns `APIResponse<ListResponse<ChatSession>>` with items array and total count
+  - All JSON responses match ILSShared DTO structures (Project.swift, Session.swift, Requests.swift)
 
 - [ ] Verify iOS app APIClient connects to backend:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift`
