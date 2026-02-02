@@ -20,12 +20,13 @@ This phase ensures chat history survives app restarts and backend reboots. Users
   - Add to ILSShared target in Package.swift if needed
   - **Completed**: Message.swift already exists with all required fields (id, sessionId, role, content, toolCalls, toolResults, createdAt, updatedAt), MessageRole enum (user/assistant/system), and Codable+Sendable+Identifiable conformance. Build verified successful.
 
-- [ ] Implement message persistence in ChatController:
+- [x] Implement message persistence in ChatController:
   - After receiving user message, save to database with role "user"
   - As Claude responds, accumulate full response
   - On stream completion, save assistant message to database
   - Include tool calls and results if present
   - Return message IDs in SSE events for client correlation
+  - **Completed**: ChatController.swift saves user messages (lines 46-52) with session creation/update. StreamingService.swift accumulates assistant content (lines 110-169), saves on completion (lines 182-208), includes tool calls/results (lines 148-156, 187-188), and returns message IDs via SSE headers (X-User-Message-ID, X-Session-ID) and messageId event (lines 205-207). Build verified.
 
 - [ ] Add messages endpoint to SessionsController:
   - Add GET `/api/v1/sessions/:id/messages` endpoint
