@@ -17,13 +17,21 @@ This phase wires up the core chat functionality—the heart of the Claude Code i
   - Returns SSE via `StreamingService.createSSEResponse()` with proper `event:`/`data:` format
   - Error handling: `.serviceUnavailable` when Claude CLI unavailable, `.badRequest` for invalid params
 
-- [ ] Implement ClaudeExecutorService CLI execution:
+- [x] Implement ClaudeExecutorService CLI execution:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/ClaudeExecutorService.swift`
   - Implement `execute()` method that spawns Claude CLI process
   - Capture stdout/stderr streams from the process
   - Parse Claude's streaming JSON output format
   - Yield StreamMessage objects as Claude responds
   - Handle process termination and cleanup
+
+  **Verified Complete (2026-02-02):** Implementation uses ClaudeCodeSDK instead of raw Process spawning:
+  - `execute()` returns `AsyncThrowingStream<StreamMessage, Error>` for async streaming
+  - `runWithSDK()` integrates with ClaudeCodeSDK, handling both new and resumed sessions
+  - `convertChunk()` maps all SDK `ResponseChunk` types (initSystem, assistant, result, user) to ILSShared `StreamMessage`
+  - Content blocks fully mapped: text, toolUse, toolResult, thinking, serverToolUse, webSearchToolResult, codeExecutionToolResult
+  - Session lifecycle managed via `storeSession()`/`removeSession()` with Combine cancellables
+  - Build verification: `swift build` completes successfully
 
 - [ ] Complete StreamingService SSE implementation:
   - Read `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/StreamingService.swift`
