@@ -49,12 +49,22 @@ This phase wires up the core chat functionality—the heart of the Claude Code i
   - Error handling: catches CancellationError separately, logs disconnects, sends error events
   - Build verification: `swift build` completes successfully
 
-- [ ] Wire SSEClient to ChatView in iOS app:
+- [x] Wire SSEClient to ChatView in iOS app:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift`
   - Implement `connect()` method that opens URLSession stream
   - Parse incoming SSE events and decode JSON to StreamMessage
   - Publish messages to ChatViewModel via Combine or async stream
   - Handle reconnection on network errors
+
+  **Verified Complete (2026-02-02):** SSEClient already implemented with full streaming support, enhanced with reconnection:
+  - `startStream()` method opens URLSession async bytes stream to `/api/v1/chat/stream`
+  - Parses SSE format (`event:` and `data:` lines) and decodes JSON to `StreamMessage`
+  - Publishes via `@Published var messages: [StreamMessage]` consumed by ChatViewModel via Combine
+  - Added `ConnectionState` enum tracking: disconnected, connecting, connected, reconnecting(attempt)
+  - Added automatic reconnection with exponential backoff (2s × attempt#, max 3 attempts)
+  - Network error detection for: connection lost, no internet, timeout, host unreachable, DNS failure
+  - Heartbeat ping comments (`:`) from server are properly ignored
+  - Build verification: `xcodebuild` completes successfully
 
 - [ ] Update ChatViewModel to handle streaming messages:
   - Read `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`

@@ -8,9 +8,22 @@ class SSEClient: ObservableObject {
     @Published var messages: [StreamMessage] = []
     @Published var isStreaming: Bool = false
     @Published var error: Error?
+    @Published var connectionState: ConnectionState = .disconnected
+
+    enum ConnectionState: Equatable {
+        case disconnected
+        case connecting
+        case connected
+        case reconnecting(attempt: Int)
+    }
 
     private var task: URLSessionDataTask?
+    private var streamTask: Task<Void, Never>?
     private let baseURL: String
+    private var currentRequest: ChatStreamRequest?
+    private var reconnectAttempts = 0
+    private let maxReconnectAttempts = 3
+    private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
 
     init(baseURL: String = "http://localhost:8080") {
         self.baseURL = baseURL
@@ -23,8 +36,11 @@ class SSEClient: ObservableObject {
         isStreaming = true
         messages = []
         error = nil
+        currentRequest = request
+        reconnectAttempts = 0
+        connectionState = .connecting
 
-        Task {
+        streamTask = Task {
             await performStream(request: request)
         }
     }
@@ -53,6 +69,9 @@ class SSEClient: ObservableObject {
                 throw APIError.invalidResponse
             }
 
+            connectionState = .connected
+            reconnectAttempts = 0
+
             var currentEvent = ""
             var currentData = ""
 
@@ -68,13 +87,71 @@ class SSEClient: ObservableObject {
 
                     currentEvent = ""
                     currentData = ""
+                } else if line.hasPrefix(":") {
+                    // Heartbeat/ping comment - ignore
+                    continue
                 }
             }
+
+            // Stream completed normally
+            connectionState = .disconnected
+        } catch is CancellationError {
+            // Task was cancelled, don't reconnect
+            connectionState = .disconnected
         } catch {
+            // Network error - attempt reconnection
+            if await shouldReconnect(error: error) {
+                return
+            }
             self.error = error
+            connectionState = .disconnected
         }
 
         isStreaming = false
+    }
+
+    /// Determine if we should attempt reconnection
+    private func shouldReconnect(error: Error) async -> Bool {
+        guard let request = currentRequest,
+              reconnectAttempts < maxReconnectAttempts,
+              isNetworkError(error) else {
+            return false
+        }
+
+        reconnectAttempts += 1
+        connectionState = .reconnecting(attempt: reconnectAttempts)
+
+        print("SSEClient: Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)")
+
+        // Exponential backoff
+        let delay = reconnectDelay * UInt64(reconnectAttempts)
+        try? await Task.sleep(nanoseconds: delay)
+
+        // Check if cancelled during sleep
+        if Task.isCancelled {
+            return false
+        }
+
+        // Attempt reconnection
+        await performStream(request: request)
+        return true
+    }
+
+    /// Check if the error is a network-related error that warrants reconnection
+    private func isNetworkError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+
+        // URLError codes that indicate network issues
+        let networkErrorCodes: [Int] = [
+            NSURLErrorNetworkConnectionLost,
+            NSURLErrorNotConnectedToInternet,
+            NSURLErrorTimedOut,
+            NSURLErrorCannotConnectToHost,
+            NSURLErrorCannotFindHost,
+            NSURLErrorDNSLookupFailed
+        ]
+
+        return nsError.domain == NSURLErrorDomain && networkErrorCodes.contains(nsError.code)
     }
 
     private func parseAndAddMessage(event: String, data: String) async {
@@ -91,9 +168,14 @@ class SSEClient: ObservableObject {
 
     /// Cancel the current stream
     func cancel() {
+        streamTask?.cancel()
+        streamTask = nil
         task?.cancel()
         task = nil
         isStreaming = false
+        connectionState = .disconnected
+        currentRequest = nil
+        reconnectAttempts = 0
     }
 }
 
