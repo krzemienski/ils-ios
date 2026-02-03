@@ -1,0 +1,49 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Sources/**/*.swift'
+      - 'Tests/**/*.swift'
+      - 'Package.swift'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    paths:
+      - 'Sources/**/*.swift'
+      - 'Tests/**/*.swift'
+      - 'Package.swift'
+      - '.github/workflows/backend-tests.yml'
+
+concurrency:
+  group: backend-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift-tests:
+    name: Swift Tests on Ubuntu
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display Swift version
+        run: swift --version
+
+      - name: Build project
+        run: swift build
+
+      - name: Run tests
+        run: swift test
+
+      - name: Run tests with coverage
+        run: swift test --enable-code-coverage
+
+      - name: Generate coverage report
+        run: |
+          xcrun llvm-cov export -format="lcov" \
+            .build/debug/ILSBackendPackageTests.xctest \
+            -instr-profile .build/debug/codecov/default.profdata \
+            > coverage.lcov || echo "Coverage export skipped (may not be available on Linux)"
