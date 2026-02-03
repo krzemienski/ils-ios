@@ -397,6 +397,7 @@ struct MCPServerItem: Identifiable, Decodable, Hashable {
     let scope: String
     let status: String
     let configPath: String?
+    let disabled: Bool
 
     // Hashable conformance for NavigationLink
     func hash(into hasher: inout Hasher) {

@@ -105,6 +105,11 @@ class MCPViewModel: ObservableObject {
         return nil
     }
 
+    func toggleServer(_ server: MCPServerItem) async -> MCPServerItem? {
+        let newDisabledState = !server.disabled
+        return await updateServer(server, disabled: newDisabledState)
+    }
+
     func deleteServer(_ server: MCPServerItem) async {
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope)")
