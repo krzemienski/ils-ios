@@ -8,7 +8,7 @@ struct CreateAnalyticsEvents: AsyncMigration {
             .field("event_data", .string, .required)
             .field("device_id", .string)
             .field("user_id", .uuid)
-            .field("session_id", .uuid)
+            .field("session_id", .string)
             .field("created_at", .datetime)
             .create()
     }

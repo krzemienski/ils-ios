@@ -45,7 +45,7 @@ struct AnalyticsService {
     static func queryEvents(
         eventName: String? = nil,
         userId: UUID? = nil,
-        sessionId: UUID? = nil,
+        sessionId: String? = nil,
         deviceId: String? = nil,
         startDate: Date? = nil,
         endDate: Date? = nil,
@@ -142,7 +142,7 @@ struct AnalyticsService {
     ///   - db: Database instance for querying
     /// - Returns: Array of AnalyticsEventModels for the session
     static func getSessionAnalytics(
-        sessionId: UUID,
+        sessionId: String,
         on db: Database
     ) async throws -> [AnalyticsEventModel] {
         return try await queryEvents(

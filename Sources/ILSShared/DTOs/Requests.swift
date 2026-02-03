@@ -455,14 +455,14 @@ public struct CreateAnalyticsEventRequest: Codable, Sendable {
     public let eventData: String
     public let deviceId: String?
     public let userId: UUID?
-    public let sessionId: UUID?
+    public let sessionId: String?
 
     public init(
         eventName: String,
         eventData: String,
         deviceId: String? = nil,
         userId: UUID? = nil,
-        sessionId: UUID? = nil
+        sessionId: String? = nil
     ) {
         self.eventName = eventName
         self.eventData = eventData

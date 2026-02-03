@@ -21,7 +21,7 @@ final class AnalyticsEventModel: Model, Content, @unchecked Sendable {
     var userId: UUID?
 
     @OptionalField(key: "session_id")
-    var sessionId: UUID?
+    var sessionId: String?
 
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
@@ -34,7 +34,7 @@ final class AnalyticsEventModel: Model, Content, @unchecked Sendable {
         eventData: String,
         deviceId: String? = nil,
         userId: UUID? = nil,
-        sessionId: UUID? = nil
+        sessionId: String? = nil
     ) {
         self.id = id
         self.eventName = eventName
