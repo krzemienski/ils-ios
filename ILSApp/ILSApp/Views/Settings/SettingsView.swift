@@ -7,6 +7,9 @@ struct SettingsView: View {
     @State private var serverHost: String = "localhost"
     @State private var serverPort: String = "8080"
 
+    // Scope state
+    @State private var selectedScope: String = "user"
+
     // Editing state
     @State private var isEditing = false
     @State private var editedModel: String = ""
@@ -81,6 +84,13 @@ struct SettingsView: View {
 
             // MARK: - General Settings Section
             Section {
+                // Scope Picker
+                Picker("Scope", selection: $selectedScope) {
+                    Text("User").tag("user")
+                    Text("Project").tag("project")
+                }
+                .pickerStyle(.segmented)
+
                 if viewModel.isLoadingConfig {
                     HStack {
                         ProgressView()
@@ -376,6 +386,12 @@ struct SettingsView: View {
         .onChange(of: serverPort) { _, newValue in
             saveServerSettings()
         }
+        .onChange(of: selectedScope) { _, newScope in
+            Task {
+                await viewModel.loadConfig(scope: newScope)
+                resetEditedValues()
+            }
+        }
     }
 
     // MARK: - Server Settings Persistence
@@ -469,6 +485,10 @@ struct SettingsView: View {
         if let config = viewModel.config?.content {
             editedModel = config.model ?? "claude-sonnet-4-20250514"
             editedColorScheme = config.theme?.colorScheme ?? "system"
+        }
+        // Update selected scope from loaded config
+        if let scope = viewModel.config?.scope {
+            selectedScope = scope
         }
     }
 }
