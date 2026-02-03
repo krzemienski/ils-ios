@@ -126,57 +126,66 @@ struct PluginsController: RouteCollection {
     /// GET /plugins/marketplace - List available plugins from marketplaces
     @Sendable
     func marketplace(req: Request) async throws -> APIResponse<[PluginMarketplace]> {
+        // Extract query parameters
+        let searchQuery = req.query[String.self, at: "search"]?.lowercased()
+        let tagFilter = req.query[String.self, at: "tag"]?.lowercased()
+
         // Read known marketplaces from config
         let config = try? fileSystem.readConfig(scope: "user")
         var marketplaces: [PluginMarketplace] = []
 
         // Add official marketplace with richer plugin data
+        var officialPlugins = [
+            PluginInfo(
+                name: "github",
+                description: "GitHub integration for managing issues, PRs, and repositories",
+                author: "Anthropic",
+                installCount: 1250,
+                rating: 4.8,
+                reviewCount: 89,
+                tags: ["version-control", "collaboration", "popular"],
+                version: "1.2.0",
+                screenshots: [
+                    "https://example.com/screenshots/github-1.png",
+                    "https://example.com/screenshots/github-2.png"
+                ]
+            ),
+            PluginInfo(
+                name: "jira",
+                description: "Jira integration for project management and issue tracking",
+                author: "Anthropic",
+                installCount: 890,
+                rating: 4.5,
+                reviewCount: 67,
+                tags: ["project-management", "collaboration"],
+                version: "1.1.5",
+                screenshots: [
+                    "https://example.com/screenshots/jira-1.png"
+                ]
+            ),
+            PluginInfo(
+                name: "linear",
+                description: "Linear integration for streamlined issue tracking and project management",
+                author: "Anthropic",
+                installCount: 645,
+                rating: 4.7,
+                reviewCount: 52,
+                tags: ["project-management", "issue-tracking"],
+                version: "1.0.8",
+                screenshots: [
+                    "https://example.com/screenshots/linear-1.png",
+                    "https://example.com/screenshots/linear-2.png"
+                ]
+            )
+        ]
+
+        // Apply filters
+        officialPlugins = filterPlugins(officialPlugins, search: searchQuery, tag: tagFilter)
+
         marketplaces.append(PluginMarketplace(
             name: "claude-plugins-official",
             source: "anthropics/claude-code",
-            plugins: [
-                PluginInfo(
-                    name: "github",
-                    description: "GitHub integration for managing issues, PRs, and repositories",
-                    author: "Anthropic",
-                    installCount: 1250,
-                    rating: 4.8,
-                    reviewCount: 89,
-                    tags: ["version-control", "collaboration", "popular"],
-                    version: "1.2.0",
-                    screenshots: [
-                        "https://example.com/screenshots/github-1.png",
-                        "https://example.com/screenshots/github-2.png"
-                    ]
-                ),
-                PluginInfo(
-                    name: "jira",
-                    description: "Jira integration for project management and issue tracking",
-                    author: "Anthropic",
-                    installCount: 890,
-                    rating: 4.5,
-                    reviewCount: 67,
-                    tags: ["project-management", "collaboration"],
-                    version: "1.1.5",
-                    screenshots: [
-                        "https://example.com/screenshots/jira-1.png"
-                    ]
-                ),
-                PluginInfo(
-                    name: "linear",
-                    description: "Linear integration for streamlined issue tracking and project management",
-                    author: "Anthropic",
-                    installCount: 645,
-                    rating: 4.7,
-                    reviewCount: 52,
-                    tags: ["project-management", "issue-tracking"],
-                    version: "1.0.8",
-                    screenshots: [
-                        "https://example.com/screenshots/linear-1.png",
-                        "https://example.com/screenshots/linear-2.png"
-                    ]
-                )
-            ]
+            plugins: officialPlugins
         ))
 
         // Add custom marketplaces
@@ -193,6 +202,28 @@ struct PluginsController: RouteCollection {
             success: true,
             data: marketplaces
         )
+    }
+
+    /// Helper function to filter plugins based on search and tag parameters
+    private func filterPlugins(_ plugins: [PluginInfo], search: String?, tag: String?) -> [PluginInfo] {
+        var filtered = plugins
+
+        // Apply search filter (matches name or description)
+        if let searchQuery = search, !searchQuery.isEmpty {
+            filtered = filtered.filter { plugin in
+                plugin.name.lowercased().contains(searchQuery) ||
+                (plugin.description?.lowercased().contains(searchQuery) ?? false)
+            }
+        }
+
+        // Apply tag filter
+        if let tagQuery = tag, !tagQuery.isEmpty {
+            filtered = filtered.filter { plugin in
+                plugin.tags?.contains { $0.lowercased() == tagQuery } ?? false
+            }
+        }
+
+        return filtered
     }
 
     /// POST /plugins/install - Install a plugin
