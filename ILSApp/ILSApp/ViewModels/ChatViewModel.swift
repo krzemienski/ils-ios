@@ -57,7 +57,18 @@ class ChatViewModel: ObservableObject {
     private func setupBindings() {
         sseClient.$isStreaming
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isStreaming)
+            .sink { [weak self] streaming in
+                guard let self = self else { return }
+                self.isStreaming = streaming
+
+                // Manage timer lifecycle based on streaming state
+                if !streaming {
+                    // Streaming ended - flush remaining messages and stop timer
+                    self.flushPendingMessages()
+                    self.stopBatchTimer()
+                }
+            }
+            .store(in: &cancellables)
 
         sseClient.$error
             .receive(on: DispatchQueue.main)
@@ -91,6 +102,12 @@ class ChatViewModel: ObservableObject {
         ) { [weak self] _ in
             self?.flushPendingMessages()
         }
+    }
+
+    /// Stop the batch timer
+    private func stopBatchTimer() {
+        batchTimer?.invalidate()
+        batchTimer = nil
     }
 
     /// Flush pending messages to UI immediately
