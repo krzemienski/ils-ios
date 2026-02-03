@@ -98,6 +98,17 @@ public struct SessionScanResponse: Codable, Sendable {
     }
 }
 
+/// Response for recent sessions (for dashboard timeline)
+public struct RecentSessionsResponse: Codable, Sendable {
+    public let items: [ChatSession]
+    public let total: Int
+
+    public init(items: [ChatSession], total: Int? = nil) {
+        self.items = items
+        self.total = total ?? items.count
+    }
+}
+
 // MARK: - Chat Requests
 
 public struct ChatStreamRequest: Codable, Sendable {
