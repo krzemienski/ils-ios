@@ -41,14 +41,34 @@ class ChatViewModel: ObservableObject {
     private let apiClient = APIClient()
     private var cancellables = Set<AnyCancellable>()
 
+    // MARK: - Batching Properties
+    private var pendingStreamMessages: [StreamMessage] = []
+    private var batchTimer: Timer?
+    private let batchInterval: TimeInterval = 0.075
+
     init() {
         setupBindings()
+    }
+
+    deinit {
+        batchTimer?.invalidate()
     }
 
     private func setupBindings() {
         sseClient.$isStreaming
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isStreaming)
+            .sink { [weak self] streaming in
+                guard let self = self else { return }
+                self.isStreaming = streaming
+
+                // Manage timer lifecycle based on streaming state
+                if !streaming {
+                    // Streaming ended - flush remaining messages and stop timer
+                    self.flushPendingMessages()
+                    self.stopBatchTimer()
+                }
+            }
+            .store(in: &cancellables)
 
         sseClient.$error
             .receive(on: DispatchQueue.main)
@@ -61,9 +81,43 @@ class ChatViewModel: ObservableObject {
         sseClient.$messages
             .receive(on: DispatchQueue.main)
             .sink { [weak self] streamMessages in
-                self?.processStreamMessages(streamMessages)
+                guard let self = self else { return }
+
+                // Accumulate messages in pending buffer
+                self.pendingStreamMessages.append(contentsOf: streamMessages)
+
+                // Start batch timer if not already running
+                self.startBatchTimer()
             }
             .store(in: &cancellables)
+    }
+
+    /// Start the batch timer to flush pending messages at regular intervals
+    private func startBatchTimer() {
+        guard batchTimer == nil else { return }
+
+        batchTimer = Timer.scheduledTimer(
+            withTimeInterval: batchInterval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.flushPendingMessages()
+        }
+    }
+
+    /// Stop the batch timer
+    private func stopBatchTimer() {
+        batchTimer?.invalidate()
+        batchTimer = nil
+    }
+
+    /// Flush pending messages to UI immediately
+    private func flushPendingMessages() {
+        guard !pendingStreamMessages.isEmpty else { return }
+
+        let messagesToProcess = pendingStreamMessages
+        pendingStreamMessages.removeAll()
+
+        processStreamMessages(messagesToProcess)
     }
 
     /// Load message history for the current session from the backend
