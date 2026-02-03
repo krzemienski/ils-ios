@@ -5,6 +5,7 @@ public enum SkillSource: String, Codable, Sendable {
     case local
     case plugin
     case builtin
+    case remote
 }
 
 /// Represents a Claude Code skill
@@ -18,6 +19,7 @@ public struct Skill: Codable, Identifiable, Sendable {
     public var path: String
     public var source: SkillSource
     public var content: String?
+    public var remoteServerId: UUID?
 
     public init(
         id: UUID = UUID(),
@@ -28,7 +30,8 @@ public struct Skill: Codable, Identifiable, Sendable {
         isActive: Bool = true,
         path: String,
         source: SkillSource = .local,
-        content: String? = nil
+        content: String? = nil,
+        remoteServerId: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -39,5 +42,6 @@ public struct Skill: Codable, Identifiable, Sendable {
         self.path = path
         self.source = source
         self.content = content
+        self.remoteServerId = remoteServerId
     }
 }

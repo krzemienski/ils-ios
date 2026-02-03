@@ -24,6 +24,7 @@ public struct MCPServer: Codable, Identifiable, Sendable {
     public var scope: MCPScope
     public var status: MCPStatus
     public var configPath: String?
+    public var remoteServerId: UUID?
 
     public init(
         id: UUID = UUID(),
@@ -33,7 +34,8 @@ public struct MCPServer: Codable, Identifiable, Sendable {
         env: [String: String]? = nil,
         scope: MCPScope = .user,
         status: MCPStatus = .unknown,
-        configPath: String? = nil
+        configPath: String? = nil,
+        remoteServerId: UUID? = nil
     ) {
         self.id = id
         self.name = name
@@ -43,5 +45,6 @@ public struct MCPServer: Codable, Identifiable, Sendable {
         self.scope = scope
         self.status = status
         self.configPath = configPath
+        self.remoteServerId = remoteServerId
     }
 }

@@ -18,6 +18,8 @@ public struct ClaudeConfig: Codable, Sendable {
     // The actual API key is stored in environment variables, not in config
     public var apiKeyStatus: APIKeyStatus?
 
+    public var remoteServerId: UUID?
+
     public init(
         model: String? = nil,
         permissions: PermissionsConfig? = nil,
@@ -30,7 +32,8 @@ public struct ClaudeConfig: Codable, Sendable {
         alwaysThinkingEnabled: Bool? = nil,
         autoUpdatesChannel: String? = nil,
         theme: ThemeConfig? = nil,
-        apiKeyStatus: APIKeyStatus? = nil
+        apiKeyStatus: APIKeyStatus? = nil,
+        remoteServerId: UUID? = nil
     ) {
         self.model = model
         self.permissions = permissions
@@ -44,6 +47,7 @@ public struct ClaudeConfig: Codable, Sendable {
         self.autoUpdatesChannel = autoUpdatesChannel
         self.theme = theme
         self.apiKeyStatus = apiKeyStatus
+        self.remoteServerId = remoteServerId
     }
 }
 
