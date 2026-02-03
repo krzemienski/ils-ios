@@ -4,6 +4,7 @@ import ILSShared
 struct SkillsListView: View {
     @StateObject private var viewModel = SkillsViewModel()
     @State private var showingNewSkill = false
+    @State private var showingBrowser = false
 
     var body: some View {
         List {
@@ -40,6 +41,11 @@ struct SkillsListView: View {
             await viewModel.refreshSkills()
         }
         .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: { showingBrowser = true }) {
+                    Label("Browse Skills", systemImage: "magnifyingglass")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { showingNewSkill = true }) {
                     Image(systemName: "plus")
@@ -53,6 +59,9 @@ struct SkillsListView: View {
         }
         .navigationDestination(for: SkillItem.self) { skill in
             SkillDetailView(skill: skill, viewModel: viewModel)
+        }
+        .navigationDestination(isPresented: $showingBrowser) {
+            SkillBrowserView(viewModel: viewModel)
         }
         .overlay {
             if viewModel.isLoading && viewModel.skills.isEmpty {
