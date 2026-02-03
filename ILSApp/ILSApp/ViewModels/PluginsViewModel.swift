@@ -89,14 +89,3 @@ class PluginsViewModel: ObservableObject {
         }
     }
 }
-
-// MARK: - Request Types
-
-struct InstallPluginRequest: Encodable {
-    let pluginName: String
-    let marketplace: String
-}
-
-struct EnabledResponse: Decodable {
-    let enabled: Bool
-}
