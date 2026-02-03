@@ -12,6 +12,7 @@ func routes(_ app: Application) throws {
     // Register controllers
     try api.register(collection: ProjectsController())
     try api.register(collection: SessionsController())
+    try api.register(collection: TemplatesController())
     try api.register(collection: ChatController())
     try api.register(collection: SkillsController())
     try api.register(collection: MCPController())

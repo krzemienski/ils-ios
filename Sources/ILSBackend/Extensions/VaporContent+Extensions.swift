@@ -91,6 +91,9 @@ extension CreateProjectRequest: Content {}
 extension UpdateProjectRequest: Content {}
 extension CreateSessionRequest: Content {}
 extension SessionScanResponse: Content {}
+extension CreateTemplateRequest: Content {}
+extension UpdateTemplateRequest: Content {}
+extension CreateSessionFromTemplateRequest: Content {}
 extension ChatStreamRequest: Content {}
 extension ChatOptions: Content {}
 extension PermissionDecision: Content {}
@@ -116,6 +119,7 @@ extension EnabledResponse: Content {}
 // MARK: - Model Types
 extension Project: Content {}
 extension ChatSession: Content {}
+extension SessionTemplate: Content {}
 extension Message: Content {}
 extension MessageRole: Content {}
 extension ExternalSession: Content {}
