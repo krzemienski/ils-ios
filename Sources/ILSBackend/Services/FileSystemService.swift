@@ -504,6 +504,34 @@ struct FileSystemService {
         )
     }
 
+    /// Delete Claude settings (reset to defaults)
+    func deleteConfig(scope: String) throws -> ConfigInfo {
+        let path: String
+        switch scope {
+        case "user":
+            path = userSettingsPath
+        case "project":
+            path = ".claude/settings.json"
+        case "local":
+            path = ".claude/settings.local.json"
+        default:
+            throw Abort(.badRequest, reason: "Invalid scope")
+        }
+
+        // Delete the file if it exists
+        if fileManager.fileExists(atPath: path) {
+            try fileManager.removeItem(atPath: path)
+        }
+
+        // Return default (empty) config
+        return ConfigInfo(
+            scope: scope,
+            path: path,
+            content: ClaudeConfig(),
+            isValid: true
+        )
+    }
+
     // MARK: - Session Scanning
 
     /// Scan for external Claude Code sessions

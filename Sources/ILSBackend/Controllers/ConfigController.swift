@@ -9,6 +9,7 @@ struct ConfigController: RouteCollection {
 
         config.get(use: get)
         config.put(use: update)
+        config.delete(use: delete)
         config.post("validate", use: validate)
     }
 
@@ -31,6 +32,19 @@ struct ConfigController: RouteCollection {
         let input = try req.content.decode(UpdateConfigRequest.self)
 
         let config = try fileSystem.writeConfig(scope: input.scope, content: input.content)
+
+        return APIResponse(
+            success: true,
+            data: config
+        )
+    }
+
+    /// DELETE /config - Reset configuration to defaults
+    @Sendable
+    func delete(req: Request) async throws -> APIResponse<ConfigInfo> {
+        let scope = req.query[String.self, at: "scope"] ?? "user"
+
+        let config = try fileSystem.deleteConfig(scope: scope)
 
         return APIResponse(
             success: true,
