@@ -340,6 +340,8 @@ struct SkillEditorView: View {
     @State private var description = ""
     @State private var content = ""
     @State private var isSaving = false
+    @State private var error: Error?
+    @State private var showErrorAlert = false
 
     init(mode: Mode, viewModel: SkillsViewModel? = nil, onSave: @escaping (SkillItem) -> Void) {
         self.mode = mode
@@ -389,6 +391,14 @@ struct SkillEditorView: View {
                     await loadSkillContent(skill.name)
                 }
             }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    retryLastOperation()
+                }
+            } message: {
+                Text(error?.localizedDescription ?? "An error occurred while saving the skill.")
+            }
         }
     }
 
@@ -397,15 +407,27 @@ struct SkillEditorView: View {
         return false
     }
 
+    private func retryLastOperation() {
+        if isSaving {
+            saveSkill()
+        } else if case .edit(let skill) = mode, skill.content == nil {
+            Task {
+                await loadSkillContent(skill.name)
+            }
+        }
+    }
+
     private func loadSkillContent(_ name: String) async {
+        error = nil
         do {
             let client = APIClient()
             let response: APIResponse<SkillItem> = try await client.get("/skills/\(name)")
             if let skill = response.data, let skillContent = skill.content {
                 content = skillContent
             }
-        } catch {
-            print("Failed to load skill content: \(error)")
+        } catch let loadError {
+            error = loadError
+            showErrorAlert = true
         }
     }
 
@@ -414,6 +436,7 @@ struct SkillEditorView: View {
 
         Task {
             let client = APIClient()
+            error = nil
 
             do {
                 if case .create = mode {
@@ -439,11 +462,16 @@ struct SkillEditorView: View {
                         }
                     }
                 }
-            } catch {
-                print("Failed to save skill: \(error)")
+            } catch let saveError {
+                await MainActor.run {
+                    error = saveError
+                    showErrorAlert = true
+                }
             }
 
-            isSaving = false
+            await MainActor.run {
+                isSaving = false
+            }
         }
     }
 }
