@@ -14,17 +14,11 @@ struct AnalyticsController: RouteCollection {
     func createEvent(req: Request) async throws -> Response {
         let input = try req.content.decode(CreateAnalyticsEventRequest.self)
 
-        // Create analytics event model
-        let event = AnalyticsEventModel(
-            eventName: input.eventName,
-            eventData: input.eventData,
-            deviceId: input.deviceId,
-            userId: input.userId,
-            sessionId: input.sessionId
+        // Use AnalyticsService to create and persist event
+        let event = try await AnalyticsService.createEvent(
+            from: input,
+            on: req.db
         )
-
-        // Save to database
-        try await event.save(on: req.db)
 
         // Return 201 Created with event details
         let response = APIResponse(
