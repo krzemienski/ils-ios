@@ -45,6 +45,20 @@ struct PluginsController: RouteCollection {
             )
         }
 
+        // Fetch marketplace data to check for updates
+        let marketplaceResponse = try await marketplace(req: req)
+        var marketplaceVersions: [String: String] = [:]
+
+        if let marketplaces = marketplaceResponse.data {
+            for marketplace in marketplaces {
+                for plugin in marketplace.plugins {
+                    if let version = plugin.version {
+                        marketplaceVersions[plugin.name] = version
+                    }
+                }
+            }
+        }
+
         // Parse each plugin entry
         for (pluginKey, value) in pluginsDict {
             // pluginKey format: "plugin-name@marketplace"
@@ -101,6 +115,15 @@ struct PluginsController: RouteCollection {
                 }
             }
 
+            // Check for updates
+            var hasUpdate: Bool? = nil
+            var latestVersion: String? = nil
+            if let installedVersion = version,
+               let marketplaceVersion = marketplaceVersions[pluginName] {
+                latestVersion = marketplaceVersion
+                hasUpdate = compareVersions(installed: installedVersion, latest: marketplaceVersion)
+            }
+
             plugins.append(Plugin(
                 name: pluginName,
                 description: description,
@@ -110,7 +133,9 @@ struct PluginsController: RouteCollection {
                 version: version,
                 commands: commands.isEmpty ? nil : commands,
                 agents: agents.isEmpty ? nil : agents,
-                path: installPath
+                path: installPath,
+                hasUpdate: hasUpdate,
+                latestVersion: latestVersion
             ))
         }
 
@@ -121,6 +146,28 @@ struct PluginsController: RouteCollection {
             success: true,
             data: ListResponse(items: plugins)
         )
+    }
+
+    /// Compare version strings to determine if an update is available
+    /// Returns true if the latest version is newer than the installed version
+    private func compareVersions(installed: String, latest: String) -> Bool {
+        // Simple version comparison - handles semantic versioning (x.y.z)
+        let installedComponents = installed.split(separator: ".").compactMap { Int($0) }
+        let latestComponents = latest.split(separator: ".").compactMap { Int($0) }
+
+        // Compare each component
+        for i in 0..<max(installedComponents.count, latestComponents.count) {
+            let installedPart = i < installedComponents.count ? installedComponents[i] : 0
+            let latestPart = i < latestComponents.count ? latestComponents[i] : 0
+
+            if latestPart > installedPart {
+                return true
+            } else if latestPart < installedPart {
+                return false
+            }
+        }
+
+        return false // Versions are equal
     }
 
     /// GET /plugins/marketplace - List available plugins from marketplaces
