@@ -48,12 +48,16 @@ actor APIClient {
             if age < cacheTTL {
                 // Cache hit - return cached data
                 if let cachedData = entry.data as? T {
+                    print("✅ Cache HIT for \(path) (age: \(String(format: "%.1f", age))s)")
                     return cachedData
                 }
+            } else {
+                print("⏱️ Cache EXPIRED for \(path) (age: \(String(format: "%.1f", age))s, TTL: \(cacheTTL)s)")
             }
         }
 
         // Cache miss or expired - make network request
+        print("🌐 Network REQUEST for \(path)")
         let url = URL(string: "\(baseURL)/api/v1\(path)")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -66,6 +70,7 @@ actor APIClient {
 
         // Store in cache
         cache[path] = CacheEntry(data: decoded, timestamp: Date())
+        print("💾 Cached response for \(path)")
 
         return decoded
     }
@@ -140,6 +145,7 @@ actor APIClient {
     /// Manually clears all cached responses
     /// Call this method to force fresh data on the next GET request
     func clearCache() {
+        print("🗑️ Cache CLEARED (\(cache.count) entries removed)")
         cache.removeAll()
     }
 }
