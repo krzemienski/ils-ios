@@ -45,8 +45,10 @@ struct SessionsListView: View {
             }
         }
         .sheet(isPresented: $showingNewSession) {
-            NewSessionView { session in
-                viewModel.sessions.insert(session, at: 0)
+            NewSessionView { _ in
+                Task {
+                    await viewModel.loadSessions()
+                }
             }
         }
         .overlay {

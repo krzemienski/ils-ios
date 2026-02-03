@@ -2,81 +2,57 @@ import Foundation
 import ILSShared
 
 @MainActor
-class SessionsViewModel: ObservableObject {
-    @Published var sessions: [ChatSession] = []
-    @Published var isLoading = false
-    @Published var error: Error?
+class SessionsViewModel: BaseViewModel<ChatSession> {
+    /// Convenience accessor for sessions
+    var sessions: [ChatSession] {
+        items
+    }
 
-    private let client = APIClient()
+    override var resourcePath: String {
+        "/sessions"
+    }
 
-    /// Empty state text for UI display
-    var emptyStateText: String {
+    override var loadingStateText: String {
+        "Loading sessions..."
+    }
+
+    override var emptyStateText: String {
         if isLoading {
-            return "Loading sessions..."
+            return loadingStateText
         }
-        return sessions.isEmpty ? "No sessions" : ""
+        return items.isEmpty ? "No sessions" : ""
     }
 
     func loadSessions() async {
-        isLoading = true
-        error = nil
-
-        do {
-            let response: APIResponse<ListResponse<ChatSession>> = try await client.get("/sessions")
-            if let data = response.data {
-                sessions = data.items
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to load sessions: \(error.localizedDescription)")
-        }
-
-        isLoading = false
+        await loadItems()
     }
 
     func retryLoadSessions() async {
-        await loadSessions()
+        await retryLoad()
     }
 
     func createSession(projectId: UUID?, name: String?, model: String) async -> ChatSession? {
-        do {
-            let request = CreateSessionRequest(
-                projectId: projectId,
-                name: name,
-                model: model
-            )
-            let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
-            if let session = response.data {
-                sessions.insert(session, at: 0)
-                return session
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to create session: \(error.localizedDescription)")
-        }
-        return nil
+        let request = CreateSessionRequest(
+            projectId: projectId,
+            name: name,
+            model: model
+        )
+        return await self.createItem(body: request)
     }
 
     func deleteSession(_ session: ChatSession) async {
-        do {
-            let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
-            sessions.removeAll { $0.id == session.id }
-        } catch {
-            self.error = error
-            print("❌ Failed to delete session: \(error.localizedDescription)")
-        }
+        await self.deleteItem(id: session.id)
     }
 
     func forkSession(_ session: ChatSession) async -> ChatSession? {
         do {
             let response: APIResponse<ChatSession> = try await client.post("/sessions/\(session.id)/fork", body: EmptyBody())
             if let forked = response.data {
-                sessions.insert(forked, at: 0)
+                items.insert(forked, at: 0)
                 return forked
             }
         } catch {
             self.error = error
-            print("❌ Failed to fork session: \(error.localizedDescription)")
         }
         return nil
     }
