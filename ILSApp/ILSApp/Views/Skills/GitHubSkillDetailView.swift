@@ -7,10 +7,11 @@ struct GitHubSkillDetailView: View {
 
     @State private var skillDetail: GitHubSkillDetail?
     @State private var isLoading = true
+    @State private var loadError: Error?
     @State private var isInstalling = false
     @State private var showSuccessAlert = false
-    @State private var showErrorAlert = false
-    @State private var errorMessage = ""
+    @State private var showInstallErrorAlert = false
+    @State private var installErrorMessage = ""
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -20,6 +21,14 @@ struct GitHubSkillDetailView: View {
                     ProgressView("Loading skill details...")
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, ILSTheme.spacingXL)
+                } else if let error = loadError {
+                    // Show error state with retry for loading failures
+                    VStack(spacing: ILSTheme.spacingM) {
+                        ErrorStateView(error: error) {
+                            await loadSkillDetail()
+                        }
+                    }
+                    .padding(.vertical, ILSTheme.spacingXL)
                 } else if let detail = skillDetail {
                     // Repository info
                     VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
@@ -92,13 +101,13 @@ struct GitHubSkillDetailView: View {
         } message: {
             Text("The skill has been installed successfully and is now available in your skills list.")
         }
-        .alert("Installation Failed", isPresented: $showErrorAlert) {
+        .alert("Installation Failed", isPresented: $showInstallErrorAlert) {
             Button("OK", role: .cancel) {}
             Button("Retry") {
                 installSkill()
             }
         } message: {
-            Text(errorMessage)
+            Text(installErrorMessage)
         }
         .task {
             await loadSkillDetail()
@@ -107,10 +116,18 @@ struct GitHubSkillDetailView: View {
 
     private func loadSkillDetail() async {
         isLoading = true
+        loadError = nil
+
         skillDetail = await viewModel.loadGitHubSkillDetail(
             owner: repository.owner.login,
             repo: repository.name
         )
+
+        // If loading failed and we have no skill detail, capture the error
+        if skillDetail == nil, let error = viewModel.error {
+            loadError = error
+        }
+
         isLoading = false
     }
 
@@ -130,10 +147,37 @@ struct GitHubSkillDetailView: View {
                 if success {
                     showSuccessAlert = true
                 } else {
-                    errorMessage = viewModel.error?.localizedDescription ?? "Failed to install skill. Please try again."
-                    showErrorAlert = true
+                    // Provide detailed error messages for different failure scenarios
+                    installErrorMessage = errorMessage(from: viewModel.error)
+                    showInstallErrorAlert = true
                 }
             }
+        }
+    }
+
+    /// Generate user-friendly error messages for installation failures
+    private func errorMessage(from error: Error?) -> String {
+        guard let error = error else {
+            return "Failed to install skill. Please try again."
+        }
+
+        let errorDescription = error.localizedDescription.lowercased()
+
+        // Provide specific messages for common failure scenarios
+        if errorDescription.contains("network") || errorDescription.contains("connection") {
+            return "Network connection failed. Please check your internet connection and try again."
+        } else if errorDescription.contains("permission") || errorDescription.contains("denied") {
+            return "Permission denied. Please check your file system permissions."
+        } else if errorDescription.contains("already exists") || errorDescription.contains("conflict") {
+            return "This skill is already installed. Please uninstall it first if you want to reinstall."
+        } else if errorDescription.contains("not found") || errorDescription.contains("404") {
+            return "Repository not found or SKILL.md file is missing. Please verify the repository."
+        } else if errorDescription.contains("git") || errorDescription.contains("clone") {
+            return "Git clone failed. Please check the repository URL and try again."
+        } else if errorDescription.contains("rate limit") {
+            return "GitHub API rate limit exceeded. Please try again later."
+        } else {
+            return "Failed to install skill: \(error.localizedDescription)"
         }
     }
 }
