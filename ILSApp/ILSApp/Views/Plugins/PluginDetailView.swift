@@ -7,6 +7,7 @@ struct PluginDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var isInstalling = false
+    @State private var isUpdating = false
     @State private var showingUninstallConfirmation = false
 
     var body: some View {
@@ -111,6 +112,27 @@ struct PluginDetailView: View {
                             set: { _ in togglePlugin() }
                         ))
 
+                        // Update button (shown only when update is available)
+                        if plugin.hasUpdate == true {
+                            Button {
+                                Task {
+                                    isUpdating = true
+                                    await updatePlugin()
+                                    isUpdating = false
+                                }
+                            } label: {
+                                HStack {
+                                    if isUpdating {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                    } else {
+                                        Label("Update Plugin", systemImage: "arrow.down.circle.fill")
+                                    }
+                                }
+                            }
+                            .disabled(isUpdating)
+                        }
+
                         Button(role: .destructive) {
                             showingUninstallConfirmation = true
                         } label: {
@@ -181,6 +203,11 @@ struct PluginDetailView: View {
         guard let pluginItem = plugin.pluginItem else { return }
         await viewModel.uninstallPlugin(pluginItem)
     }
+
+    private func updatePlugin() async {
+        guard let marketplace = plugin.marketplace else { return }
+        await viewModel.installPlugin(name: plugin.name, marketplace: marketplace)
+    }
 }
 
 // MARK: - Plugin Detail Data
@@ -203,6 +230,8 @@ struct PluginDetailData: Identifiable {
     let agents: [String]?
     let isInstalled: Bool
     let isEnabled: Bool
+    let hasUpdate: Bool?
+    let latestVersion: String?
 
     // Keep reference to original plugin for actions
     let pluginItem: PluginItem?
@@ -222,6 +251,8 @@ struct PluginDetailData: Identifiable {
         self.agents = pluginItem.agents
         self.isInstalled = true
         self.isEnabled = pluginItem.isEnabled
+        self.hasUpdate = pluginItem.hasUpdate
+        self.latestVersion = pluginItem.latestVersion
         self.pluginItem = pluginItem
     }
 
@@ -240,6 +271,8 @@ struct PluginDetailData: Identifiable {
         self.agents = nil
         self.isInstalled = false
         self.isEnabled = false
+        self.hasUpdate = nil
+        self.latestVersion = nil
         self.pluginItem = nil
     }
 }
