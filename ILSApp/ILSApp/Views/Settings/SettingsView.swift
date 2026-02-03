@@ -136,6 +136,7 @@ struct SettingsView: View {
                 Picker("Scope", selection: $selectedScope) {
                     Text("User").tag("user")
                     Text("Project").tag("project")
+                    Text("Local").tag("local")
                 }
                 .pickerStyle(.segmented)
                 .disabled(viewModel.isLoadingConfig)
@@ -762,6 +763,7 @@ struct SettingsView: View {
     private func saveConfigChanges() {
         Task {
             let result = await viewModel.saveConfig(
+                scope: selectedScope,
                 model: editedModel,
                 colorScheme: editedColorScheme,
                 alwaysThinkingEnabled: editedAlwaysThinkingEnabled,
@@ -775,7 +777,7 @@ struct SettingsView: View {
             } else {
                 isEditing = false
                 showSaveSuccess = true
-                await viewModel.loadConfig()
+                await viewModel.loadConfig(scope: selectedScope)
             }
         }
     }
@@ -1019,7 +1021,7 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
-    func saveConfig(model: String, colorScheme: String, alwaysThinkingEnabled: Bool, includeCoAuthoredBy: Bool, permissions: PermissionsConfig, environment: [String: String]) async -> String? {
+    func saveConfig(scope: String, model: String, colorScheme: String, alwaysThinkingEnabled: Bool, includeCoAuthoredBy: Bool, permissions: PermissionsConfig, environment: [String: String]) async -> String? {
         isSaving = true
         defer { isSaving = false }
 
@@ -1066,7 +1068,8 @@ class SettingsViewModel: ObservableObject {
         currentConfig.env = environment.isEmpty ? nil : environment
 
         do {
-            let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
+            // Use the provided scope parameter to ensure we write to the correct file
+            let request = UpdateConfigRequest(scope: scope, content: currentConfig)
             let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
 
             // Update local config with response
