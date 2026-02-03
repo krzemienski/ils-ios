@@ -105,6 +105,7 @@ struct SettingsView: View {
                     Text("Project").tag("project")
                 }
                 .pickerStyle(.segmented)
+                .disabled(viewModel.isLoadingConfig)
 
                 if viewModel.isLoadingConfig {
                     HStack {
@@ -482,6 +483,8 @@ struct SettingsView: View {
             saveServerSettings()
         }
         .onChange(of: selectedScope) { _, newScope in
+            // Cancel editing mode when switching scopes
+            isEditing = false
             Task {
                 await viewModel.loadConfig(scope: newScope)
                 resetEditedValues()
