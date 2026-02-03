@@ -316,6 +316,19 @@ struct PluginGridCard: View {
                 }
             }
 
+            // Author
+            if let author = plugin.author {
+                HStack(spacing: 2) {
+                    Image(systemName: "person")
+                        .font(.caption2)
+                        .foregroundColor(ILSTheme.secondaryText)
+                    Text(author)
+                        .font(.caption2)
+                        .foregroundColor(ILSTheme.secondaryText)
+                        .lineLimit(1)
+                }
+            }
+
             // Tags
             if let tags = plugin.tags, !tags.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
