@@ -25,6 +25,9 @@ struct SettingsView: View {
     @State private var saveErrorMessage = ""
     @State private var showSaveSuccess = false
 
+    // Validation state
+    @State private var validationErrors: [String] = []
+
     // Available options
     private let availableModels = [
         "claude-sonnet-4-20250514",
@@ -169,6 +172,25 @@ struct SettingsView: View {
                         }
                     }
 
+                    // Validation errors display
+                    if isEditing && !validationErrors.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(validationErrors, id: \.self) { error in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.red)
+                                        .font(.caption)
+                                    Text(error)
+                                        .font(ILSTheme.captionFont)
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+
                     // Save button when editing
                     if isEditing {
                         Button {
@@ -181,7 +203,7 @@ struct SettingsView: View {
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
-                        .disabled(viewModel.isSaving)
+                        .disabled(viewModel.isSaving || !validationErrors.isEmpty)
                     }
                 } else {
                     Text("No configuration loaded")
@@ -445,6 +467,15 @@ struct SettingsView: View {
                 resetEditedValues()
             }
         }
+        .onChange(of: isEditing) { _, _ in
+            updateValidationErrors()
+        }
+        .onChange(of: editedModel) { _, _ in
+            updateValidationErrors()
+        }
+        .onChange(of: editedColorScheme) { _, _ in
+            updateValidationErrors()
+        }
     }
 
     // MARK: - Server Settings Persistence
@@ -500,6 +531,34 @@ struct SettingsView: View {
                 showSaveSuccess = true
                 await viewModel.loadConfig()
             }
+        }
+    }
+
+    // MARK: - Validation
+
+    private func validateConfigChanges() -> [String] {
+        var errors: [String] = []
+
+        // Validate model
+        if editedModel.trimmingCharacters(in: .whitespaces).isEmpty {
+            errors.append("Model cannot be empty")
+        } else if !availableModels.contains(editedModel) {
+            errors.append("Invalid model selected")
+        }
+
+        // Validate color scheme
+        if !availableColorSchemes.contains(editedColorScheme) {
+            errors.append("Invalid color scheme selected")
+        }
+
+        return errors
+    }
+
+    private func updateValidationErrors() {
+        if isEditing {
+            validationErrors = validateConfigChanges()
+        } else {
+            validationErrors = []
         }
     }
 
