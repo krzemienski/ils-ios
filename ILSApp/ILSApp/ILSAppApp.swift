@@ -5,6 +5,14 @@ import ILSShared
 struct ILSAppApp: App {
     @StateObject private var appState = AppState()
 
+    init() {
+        // Configure crash reporting as early as possible
+        Task {
+            await CrashReporter.shared.configure()
+            await CrashReporter.shared.checkForPreviousCrashes()
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

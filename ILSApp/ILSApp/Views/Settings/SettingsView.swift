@@ -328,6 +328,37 @@ struct SettingsView: View {
                 }
             }
 
+            // MARK: - Debug Section
+            Section {
+                Button(role: .destructive) {
+                    // Trigger test crash
+                    fatalError("Test crash triggered by user")
+                } label: {
+                    Label("Test Crash Reporter", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                }
+
+                Button {
+                    Task {
+                        await clearCrashReports()
+                    }
+                } label: {
+                    Label("Clear Crash Reports", systemImage: "trash")
+                }
+
+                Button {
+                    Task {
+                        await checkForCrashes()
+                    }
+                } label: {
+                    Label("Check Crash Reports", systemImage: "doc.text.magnifyingglass")
+                }
+            } header: {
+                Text("Debug Tools")
+            } footer: {
+                Text("Use Test Crash to verify crash reporting. The app will crash and restart. Check logs on next launch.")
+            }
+
             // MARK: - About Section
             Section("About") {
                 LabeledContent("Version", value: "1.0.0")
@@ -470,6 +501,17 @@ struct SettingsView: View {
             editedModel = config.model ?? "claude-sonnet-4-20250514"
             editedColorScheme = config.theme?.colorScheme ?? "system"
         }
+    }
+
+    // MARK: - Crash Reporting Helpers
+
+    private func clearCrashReports() async {
+        await CrashReporter.shared.clearPendingReports()
+    }
+
+    private func checkForCrashes() async {
+        let reports = await CrashReporter.shared.getPendingReports()
+        Logger.shared.info("Found \(reports.count) pending crash report(s)")
     }
 }
 
