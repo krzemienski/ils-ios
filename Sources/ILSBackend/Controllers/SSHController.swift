@@ -17,6 +17,7 @@ struct SSHController: RouteCollection {
         ssh.post("test", use: testConnection)
         ssh.post(":id", "execute", use: executeCommand)
         ssh.get(":id", "claude-version", use: detectClaudeVersion)
+        ssh.get(":id", "sessions", use: listRemoteSessions)
     }
 
     /// GET /ssh - List all SSH servers
@@ -248,6 +249,31 @@ struct SSHController: RouteCollection {
                 version: version,
                 installed: version != nil
             )
+        )
+    }
+
+    /// GET /ssh/:id/sessions - List Claude Code sessions on remote server
+    @Sendable
+    func listRemoteSessions(req: Request) async throws -> APIResponse<ListResponse<ChatSession>> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid server ID")
+        }
+
+        // Credential needs to be passed in the X-SSH-Credential header for GET request
+        guard let credential = req.headers.first(name: "X-SSH-Credential") else {
+            throw Abort(.badRequest, reason: "Missing X-SSH-Credential header")
+        }
+
+        let sshService = SSHService()
+        let sessions = try await sshService.listRemoteSessions(
+            serverId: id,
+            credential: credential,
+            on: req.db
+        )
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: sessions)
         )
     }
 }

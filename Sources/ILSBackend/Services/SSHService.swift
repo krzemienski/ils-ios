@@ -261,4 +261,100 @@ struct SSHService {
             .map { String($0).trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
     }
+
+    // MARK: - Remote Session Management
+
+    /// List Claude Code sessions on remote server
+    /// - Parameters:
+    ///   - server: SSH server configuration
+    ///   - credential: Password or private key string
+    /// - Returns: Array of ChatSession objects from remote server
+    func listRemoteSessions(
+        server: SSHServer,
+        credential: String
+    ) async throws -> [ChatSession] {
+        // Execute 'claude sessions list' command
+        let (output, exitCode) = try await executeCommand(
+            server: server,
+            credential: credential,
+            command: "claude sessions list"
+        )
+
+        // If command fails, return empty array (Claude Code might not be installed)
+        guard exitCode == 0 else {
+            return []
+        }
+
+        // Parse the output to extract session information
+        // Expected format (example):
+        // ID                                    NAME            PROJECT         LAST ACTIVE
+        // abc-123-def                          My Session      /path/to/proj   2 hours ago
+        // xyz-456-ghi                          Another One     /other/path     1 day ago
+
+        var sessions: [ChatSession] = []
+        let lines = output.split(separator: "\n").map { String($0) }
+
+        // Skip header line(s) and parse each session line
+        for (index, line) in lines.enumerated() {
+            // Skip header line (first line typically contains column names)
+            guard index > 0, !line.isEmpty else { continue }
+
+            // Simple parsing - extract session ID from first column
+            // In production, this would need more robust parsing based on actual CLI output format
+            let columns = line.split(separator: " ", omittingEmptySubsequences: true)
+            guard columns.count > 0 else { continue }
+
+            let sessionId = String(columns[0])
+
+            // Create a ChatSession with available information
+            // Most fields will be nil/default since remote CLI output is limited
+            let session = ChatSession(
+                id: UUID(), // Generate new UUID for local tracking
+                claudeSessionId: sessionId,
+                name: columns.count > 1 ? String(columns[1]) : nil,
+                projectId: nil,
+                projectName: columns.count > 2 ? String(columns[2]) : nil,
+                model: "sonnet", // Default, not available from CLI output
+                permissionMode: .default,
+                status: .active,
+                messageCount: 0,
+                totalCostUSD: nil,
+                source: .external, // Mark as external since it's from remote server
+                forkedFrom: nil,
+                createdAt: Date(), // Default, not available from CLI output
+                lastActiveAt: Date() // Default, would need to parse from CLI output
+            )
+
+            sessions.append(session)
+        }
+
+        return sessions
+    }
+
+    /// List Claude Code sessions on remote server by server ID
+    /// - Parameters:
+    ///   - serverId: SSH server UUID
+    ///   - credential: Password or private key string
+    ///   - db: Database connection
+    /// - Returns: Array of ChatSession objects from remote server
+    func listRemoteSessions(
+        serverId: UUID,
+        credential: String,
+        on db: Database
+    ) async throws -> [ChatSession] {
+        // Fetch server from database
+        guard let serverModel = try await SSHServerModel.query(on: db)
+            .filter(\.$id == serverId)
+            .first() else {
+            throw SSHServiceError.serverNotFound
+        }
+
+        let server = serverModel.toShared()
+
+        // List remote sessions
+        return try await listRemoteSessions(
+            server: server,
+            credential: credential
+        )
+    }
 }
