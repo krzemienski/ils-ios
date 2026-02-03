@@ -16,6 +16,9 @@ struct SidebarView: View {
                     }
                     .listRowBackground(selectedItem == item ? ILSTheme.accent.opacity(0.1) : Color.clear)
                     .accessibilityIdentifier("sidebar_\(item.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                    .accessibilityLabel(item.rawValue)
+                    .accessibilityHint("Navigate to \(item.rawValue) section")
+                    .accessibilityAddTraits(selectedItem == item ? .isSelected : [])
                 }
             }
 
@@ -28,6 +31,8 @@ struct SidebarView: View {
                         .font(ILSTheme.captionFont)
                         .foregroundColor(ILSTheme.secondaryText)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(appState.isConnected ? "Connected to server" : "Disconnected from server")
 
                 if let project = appState.selectedProject {
                     VStack(alignment: .leading, spacing: 4) {
@@ -37,6 +42,8 @@ struct SidebarView: View {
                         Text(project.name)
                             .font(ILSTheme.bodyFont)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Active project: \(project.name)")
                 }
             }
         }
@@ -48,6 +55,8 @@ struct SidebarView: View {
                     Image(systemName: "arrow.clockwise")
                 }
                 .accessibilityIdentifier("refreshConnectionButton")
+                .accessibilityLabel("Refresh connection")
+                .accessibilityHint("Check server connection status")
             }
         }
     }
