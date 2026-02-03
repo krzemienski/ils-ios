@@ -7,6 +7,16 @@ public enum SkillSource: String, Codable, Sendable {
     case builtin
 }
 
+/// Installation status of the skill
+public enum SkillInstallationStatus: String, Codable, Sendable {
+    case pending
+    case cloning
+    case parsing
+    case installing
+    case completed
+    case failed
+}
+
 /// Represents a Claude Code skill
 public struct Skill: Codable, Identifiable, Sendable {
     public let id: UUID
@@ -18,6 +28,7 @@ public struct Skill: Codable, Identifiable, Sendable {
     public var path: String
     public var source: SkillSource
     public var content: String?
+    public var installationStatus: SkillInstallationStatus?
 
     public init(
         id: UUID = UUID(),
@@ -28,7 +39,8 @@ public struct Skill: Codable, Identifiable, Sendable {
         isActive: Bool = true,
         path: String,
         source: SkillSource = .local,
-        content: String? = nil
+        content: String? = nil,
+        installationStatus: SkillInstallationStatus? = nil
     ) {
         self.id = id
         self.name = name
@@ -39,5 +51,6 @@ public struct Skill: Codable, Identifiable, Sendable {
         self.path = path
         self.source = source
         self.content = content
+        self.installationStatus = installationStatus
     }
 }
