@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var isEditing = false
     @State private var editedModel: String = ""
     @State private var editedColorScheme: String = "system"
+    @State private var editedPermissions: PermissionsConfig = PermissionsConfig()
 
     // Alert state
     @State private var showSaveConfirmation = false
@@ -231,41 +232,59 @@ struct SettingsView: View {
 
             // MARK: - Permissions Section
             Section {
-                if let config = viewModel.config?.content, let permissions = config.permissions {
-                    // Default Permission Mode
-                    LabeledContent("Default Mode") {
-                        Text(permissions.defaultMode?.capitalized ?? "Prompt")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
+                if let config = viewModel.config?.content {
+                    let permissions = config.permissions ?? PermissionsConfig()
 
-                    // Allowed Commands
-                    if let allowed = permissions.allow, !allowed.isEmpty {
-                        DisclosureGroup {
-                            ForEach(allowed, id: \.self) { item in
-                                Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                    NavigationLink {
+                        PermissionsEditorView(permissions: $editedPermissions)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            // Default Permission Mode
+                            HStack {
+                                Text("Default Mode")
+                                    .foregroundColor(ILSTheme.primaryText)
+                                Spacer()
+                                HStack(spacing: 6) {
+                                    Image(systemName: iconForPermissionMode(permissions.defaultMode ?? "prompt"))
+                                        .foregroundColor(colorForPermissionMode(permissions.defaultMode ?? "prompt"))
+                                    Text((permissions.defaultMode ?? "prompt").capitalized)
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                }
                             }
-                        } label: {
-                            LabeledContent("Allowed", value: "\(allowed.count) rules")
-                        }
-                    } else {
-                        LabeledContent("Allowed", value: "None")
-                    }
 
-                    // Denied Commands
-                    if let denied = permissions.deny, !denied.isEmpty {
-                        DisclosureGroup {
-                            ForEach(denied, id: \.self) { item in
-                                Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                            Divider()
+
+                            // Allowed Rules Summary
+                            HStack {
+                                Label("Allow Rules", systemImage: "checkmark.shield")
+                                    .foregroundColor(ILSTheme.primaryText)
+                                Spacer()
+                                if let allowed = permissions.allow, !allowed.isEmpty {
+                                    Text("\(allowed.count) rules")
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                } else {
+                                    Text("None")
+                                        .foregroundColor(ILSTheme.tertiaryText)
+                                }
                             }
-                        } label: {
-                            LabeledContent("Denied", value: "\(denied.count) rules")
+
+                            Divider()
+
+                            // Denied Rules Summary
+                            HStack {
+                                Label("Deny Rules", systemImage: "xmark.shield")
+                                    .foregroundColor(ILSTheme.primaryText)
+                                Spacer()
+                                if let denied = permissions.deny, !denied.isEmpty {
+                                    Text("\(denied.count) rules")
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                } else {
+                                    Text("None")
+                                        .foregroundColor(ILSTheme.tertiaryText)
+                                }
+                            }
                         }
-                    } else {
-                        LabeledContent("Denied", value: "None")
+                        .padding(.vertical, 4)
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
@@ -273,6 +292,8 @@ struct SettingsView: View {
                 }
             } header: {
                 Text("Permissions")
+            } footer: {
+                Text("Tap to edit permission rules and default mode")
             }
 
             // MARK: - Advanced Section
@@ -480,11 +501,38 @@ struct SettingsView: View {
         return model
     }
 
+    private func iconForPermissionMode(_ mode: String) -> String {
+        switch mode {
+        case "allow":
+            return "checkmark.shield.fill"
+        case "deny":
+            return "xmark.shield.fill"
+        case "prompt":
+            return "questionmark.circle.fill"
+        default:
+            return "shield"
+        }
+    }
+
+    private func colorForPermissionMode(_ mode: String) -> Color {
+        switch mode {
+        case "allow":
+            return .green
+        case "deny":
+            return .red
+        case "prompt":
+            return .orange
+        default:
+            return ILSTheme.secondaryText
+        }
+    }
+
     private func resetEditedValues() {
         // Reset edited values to current config values
         if let config = viewModel.config?.content {
             editedModel = config.model ?? "claude-sonnet-4-20250514"
             editedColorScheme = config.theme?.colorScheme ?? "system"
+            editedPermissions = config.permissions ?? PermissionsConfig()
         }
         // Update selected scope from loaded config
         if let scope = viewModel.config?.scope {
