@@ -447,3 +447,37 @@ public struct EnabledResponse: Codable, Sendable {
         self.enabled = enabled
     }
 }
+
+// MARK: - Analytics Requests
+
+public struct CreateAnalyticsEventRequest: Codable, Sendable {
+    public let eventName: String
+    public let eventData: String
+    public let deviceId: String?
+    public let userId: UUID?
+    public let sessionId: UUID?
+
+    public init(
+        eventName: String,
+        eventData: String,
+        deviceId: String? = nil,
+        userId: UUID? = nil,
+        sessionId: UUID? = nil
+    ) {
+        self.eventName = eventName
+        self.eventData = eventData
+        self.deviceId = deviceId
+        self.userId = userId
+        self.sessionId = sessionId
+    }
+}
+
+public struct CreatedResponse: Codable, Sendable {
+    public let id: UUID
+    public let createdAt: Date
+
+    public init(id: UUID, createdAt: Date) {
+        self.id = id
+        self.createdAt = createdAt
+    }
+}

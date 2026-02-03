@@ -100,6 +100,7 @@ extension CreateMCPRequest: Content {}
 extension InstallPluginRequest: Content {}
 extension UpdateConfigRequest: Content {}
 extension ValidateConfigRequest: Content {}
+extension CreateAnalyticsEventRequest: Content {}
 
 // MARK: - Response Types
 extension ConfigValidationResult: Content {}
@@ -112,6 +113,7 @@ extension DeletedResponse: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
+extension CreatedResponse: Content {}
 
 // MARK: - Model Types
 extension Project: Content {}
