@@ -91,6 +91,7 @@ extension CreateProjectRequest: Content {}
 extension UpdateProjectRequest: Content {}
 extension CreateSessionRequest: Content {}
 extension SessionScanResponse: Content {}
+extension RecentSessionsResponse: Content {}
 extension ChatStreamRequest: Content {}
 extension ChatOptions: Content {}
 extension PermissionDecision: Content {}
