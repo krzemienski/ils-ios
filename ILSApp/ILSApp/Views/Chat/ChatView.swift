@@ -7,6 +7,7 @@ struct ChatView: View {
     @State private var inputText = ""
     @State private var showCommandPalette = false
     @State private var showErrorAlert = false
+    @State private var showSaveAsTemplate = false
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -25,6 +26,9 @@ struct ChatView: View {
                 showCommandPalette = false
                 isInputFocused = true
             }
+        }
+        .sheet(isPresented: $showSaveAsTemplate) {
+            SaveAsTemplateView(session: session, messages: viewModel.messages)
         }
         .onAppear {
             viewModel.sessionId = session.id
@@ -131,6 +135,9 @@ struct ChatView: View {
             Menu {
                 Button(action: {}) {
                     Label("Fork Session", systemImage: "arrow.branch")
+                }
+                Button(action: { showSaveAsTemplate = true }) {
+                    Label("Save as Template", systemImage: "doc.badge.plus")
                 }
                 Button(action: {}) {
                     Label("Session Info", systemImage: "info.circle")
@@ -311,6 +318,269 @@ struct TypingIndicatorView: View {
                 animationPhase = (animationPhase + 1) % 3
             }
         }
+    }
+}
+
+// MARK: - Save as Template View
+
+struct SaveAsTemplateView: View {
+    let session: ChatSession
+    let messages: [ChatMessage]
+
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel = TemplatesViewModel()
+    @State private var templateName: String
+    @State private var description = ""
+    @State private var initialPrompt: String
+    @State private var selectedModel: String
+    @State private var permissionMode: PermissionMode
+    @State private var tagsInput = ""
+    @State private var isFavorite = false
+    @State private var isCreating = false
+
+    private let models = ["sonnet", "opus", "haiku"]
+
+    init(session: ChatSession, messages: [ChatMessage]) {
+        self.session = session
+        self.messages = messages
+
+        // Pre-fill form with session data
+        _templateName = State(initialValue: session.name ?? "Untitled Template")
+        _selectedModel = State(initialValue: session.model)
+        _permissionMode = State(initialValue: session.permissionMode)
+
+        // Use first user message as initial prompt if available
+        let firstUserMessage = messages.first(where: { $0.isUser })
+        _initialPrompt = State(initialValue: firstUserMessage?.text ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                templateDetailsSection
+                initialPromptSection
+                modelSection
+                permissionsSection
+                permissionDescriptionSection
+                tagsSection
+                favoriteSection
+            }
+            .navigationTitle("Save as Template")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbarContent }
+        }
+    }
+
+    // MARK: - Form Sections
+
+    private var templateDetailsSection: some View {
+        Section("Template Details") {
+            TextField("Template Name", text: $templateName)
+                .accessibilityIdentifier("template-name-field")
+
+            TextField("Description (optional)", text: $description)
+                .accessibilityIdentifier("template-description-field")
+        }
+    }
+
+    private var initialPromptSection: some View {
+        Section("Initial Prompt") {
+            TextEditor(text: $initialPrompt)
+                .frame(minHeight: 100)
+                .accessibilityIdentifier("template-initial-prompt-field")
+        }
+        .help("The default prompt that will be used when creating a session from this template")
+    }
+
+    private var modelSection: some View {
+        Section("Model") {
+            Picker("Model", selection: $selectedModel) {
+                ForEach(models, id: \.self) { model in
+                    Text(model.capitalized).tag(model)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("template-model-picker")
+        }
+    }
+
+    private var permissionsSection: some View {
+        Section("Permissions") {
+            Picker("Permission Mode", selection: $permissionMode) {
+                Text("Default").tag(PermissionMode.default)
+                Text("Accept Edits").tag(PermissionMode.acceptEdits)
+                Text("Plan Mode").tag(PermissionMode.plan)
+                Text("Bypass All").tag(PermissionMode.bypassPermissions)
+            }
+            .accessibilityIdentifier("template-permission-picker")
+        }
+    }
+
+    private var permissionDescriptionSection: some View {
+        Section {
+            Text(permissionDescription)
+                .font(ILSTheme.captionFont)
+                .foregroundColor(ILSTheme.secondaryText)
+        }
+    }
+
+    private var tagsSection: some View {
+        Section("Tags") {
+            TextField("Tags (comma-separated)", text: $tagsInput)
+                .accessibilityIdentifier("template-tags-field")
+
+            if !parsedTags.isEmpty {
+                FlowLayout(spacing: 8) {
+                    ForEach(parsedTags, id: \.self) { tag in
+                        Text(tag)
+                            .font(ILSTheme.captionFont)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(ILSTheme.accent.opacity(0.1))
+                            .foregroundColor(ILSTheme.accent)
+                            .cornerRadius(4)
+                    }
+                }
+            }
+        }
+        .help("Add tags to help organize and search for this template")
+    }
+
+    private var favoriteSection: some View {
+        Section {
+            Toggle("Mark as Favorite", isOn: $isFavorite)
+                .accessibilityIdentifier("template-favorite-toggle")
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") { dismiss() }
+                .accessibilityIdentifier("cancel-save-template-button")
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            Button("Save") {
+                saveTemplate()
+            }
+            .disabled(isCreating || templateName.isEmpty)
+            .accessibilityIdentifier("save-template-button")
+        }
+    }
+
+    private var parsedTags: [String] {
+        tagsInput
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    private var permissionDescription: String {
+        switch permissionMode {
+        case .default:
+            return "Standard permission behavior - Claude will ask before executing tools."
+        case .acceptEdits:
+            return "Automatically approve file edits without prompting."
+        case .plan:
+            return "Planning mode - Claude will plan but not execute changes."
+        case .bypassPermissions:
+            return "Skip all permission checks. Use with caution."
+        }
+    }
+
+    private func saveTemplate() {
+        isCreating = true
+
+        Task {
+            let template = await viewModel.createTemplate(
+                name: templateName,
+                description: description.isEmpty ? nil : description,
+                initialPrompt: initialPrompt.isEmpty ? nil : initialPrompt,
+                model: selectedModel,
+                permissionMode: permissionMode,
+                tags: parsedTags.isEmpty ? nil : parsedTags
+            )
+
+            await MainActor.run {
+                isCreating = false
+                if let template = template {
+                    // Update favorite status if needed
+                    if isFavorite && !template.isFavorite {
+                        Task {
+                            await viewModel.toggleFavorite(template)
+                            dismiss()
+                        }
+                    } else {
+                        dismiss()
+                    }
+                } else if let error = viewModel.error {
+                    print("Failed to save template: \(error)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - FlowLayout Helper
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+
+        let height = rows.reduce(0) { $0 + $1.maxHeight } + CGFloat(max(0, rows.count - 1)) * spacing
+        let width = proposal.width ?? 0
+
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+
+        var y = bounds.minY
+        for row in rows {
+            var x = bounds.minX
+            for index in row.subviewIndices {
+                let subview = subviews[index]
+                let size = subview.sizeThatFits(.unspecified)
+                subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
+                x += size.width + spacing
+            }
+            y += row.maxHeight + spacing
+        }
+    }
+
+    private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [Row] {
+        var rows: [Row] = []
+        var currentRow = Row()
+        var x: CGFloat = 0
+        let maxWidth = proposal.width ?? .infinity
+
+        for (index, subview) in subviews.enumerated() {
+            let size = subview.sizeThatFits(.unspecified)
+
+            if x + size.width > maxWidth && !currentRow.subviewIndices.isEmpty {
+                rows.append(currentRow)
+                currentRow = Row()
+                x = 0
+            }
+
+            currentRow.subviewIndices.append(index)
+            currentRow.maxHeight = max(currentRow.maxHeight, size.height)
+            x += size.width + spacing
+        }
+
+        if !currentRow.subviewIndices.isEmpty {
+            rows.append(currentRow)
+        }
+
+        return rows
+    }
+
+    private struct Row {
+        var subviewIndices: [Int] = []
+        var maxHeight: CGFloat = 0
     }
 }
 
