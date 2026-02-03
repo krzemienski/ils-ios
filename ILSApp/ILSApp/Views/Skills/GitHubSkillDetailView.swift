@@ -120,7 +120,8 @@ struct GitHubSkillDetailView: View {
         Task {
             let success = await viewModel.installGitHubSkill(
                 owner: repository.owner.login,
-                repo: repository.name
+                repo: repository.name,
+                htmlUrl: repository.htmlUrl
             )
 
             await MainActor.run {

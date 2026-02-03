@@ -9,6 +9,7 @@ class SkillsViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var githubSkills: [GitHubRepository] = []
     @Published var isSearchingGitHub = false
+    @Published var installingRepositories: Set<String> = [] // Track repositories being installed by htmlUrl
 
     private let client = APIClient()
 
@@ -156,17 +157,37 @@ class SkillsViewModel: ObservableObject {
 
     // MARK: - GitHub Installation
 
+    /// Check if a GitHub repository is already installed
+    /// - Parameter repository: GitHub repository to check
+    /// - Returns: True if the repository is already installed
+    func isRepositoryInstalled(_ repository: GitHubRepository) -> Bool {
+        return skills.contains(where: { skill in
+            skill.githubUrl == repository.htmlUrl
+        })
+    }
+
+    /// Check if a GitHub repository is currently being installed
+    /// - Parameter repository: GitHub repository to check
+    /// - Returns: True if the repository is being installed
+    func isRepositoryInstalling(_ repository: GitHubRepository) -> Bool {
+        return installingRepositories.contains(repository.htmlUrl)
+    }
+
     /// Install a skill from GitHub
     /// - Parameters:
     ///   - owner: Repository owner
     ///   - repo: Repository name
+    ///   - htmlUrl: Repository HTML URL for tracking installation state
     /// - Returns: True if installation succeeded, false otherwise
-    func installGitHubSkill(owner: String, repo: String) async -> Bool {
+    func installGitHubSkill(owner: String, repo: String, htmlUrl: String) async -> Bool {
         error = nil
+        installingRepositories.insert(htmlUrl)
 
         do {
             let request = InstallSkillFromGitHubRequest(owner: owner, repo: repo)
             let response: APIResponse<SkillItem> = try await client.post("/skills/github/install", body: request)
+
+            installingRepositories.remove(htmlUrl)
 
             if let skill = response.data {
                 skills.append(skill)
@@ -174,6 +195,7 @@ class SkillsViewModel: ObservableObject {
             }
             return false
         } catch {
+            installingRepositories.remove(htmlUrl)
             self.error = error
             print("❌ Failed to install GitHub skill '\(owner)/\(repo)': \(error.localizedDescription)")
             return false

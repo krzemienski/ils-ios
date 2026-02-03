@@ -134,6 +134,11 @@ struct SkillItem: Identifiable, Decodable, Hashable {
     let source: String?
     let content: String?
 
+    // GitHub-specific fields (populated when source is .github)
+    let githubUrl: String?
+    let stargazersCount: Int?
+    let lastUpdated: String?
+
     // Provide default values for backward compatibility
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -146,10 +151,14 @@ struct SkillItem: Identifiable, Decodable, Hashable {
         path = try container.decode(String.self, forKey: .path)
         source = try container.decodeIfPresent(String.self, forKey: .source)
         content = try container.decodeIfPresent(String.self, forKey: .content)
+        githubUrl = try container.decodeIfPresent(String.self, forKey: .githubUrl)
+        stargazersCount = try container.decodeIfPresent(Int.self, forKey: .stargazersCount)
+        lastUpdated = try container.decodeIfPresent(String.self, forKey: .lastUpdated)
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, description, version, tags, isActive, path, source, content
+        case githubUrl, stargazersCount, lastUpdated
     }
 
     // Hashable conformance (hash by id only for navigation)

@@ -30,7 +30,7 @@ struct SkillBrowserView: View {
                             viewModel: viewModel
                         )
                     } label: {
-                        GitHubSkillRowView(repository: repo)
+                        GitHubSkillRowView(repository: repo, viewModel: viewModel)
                     }
                 }
             }
@@ -57,6 +57,7 @@ struct SkillBrowserView: View {
 
 struct GitHubSkillRowView: View {
     let repository: GitHubRepository
+    @ObservedObject var viewModel: SkillsViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
@@ -66,6 +67,18 @@ struct GitHubSkillRowView: View {
                     .font(ILSTheme.headlineFont)
 
                 Spacer()
+
+                // Installation status indicator
+                if viewModel.isRepositoryInstalling(repository) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .padding(.trailing, ILSTheme.spacingXS)
+                } else if viewModel.isRepositoryInstalled(repository) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.body)
+                        .padding(.trailing, ILSTheme.spacingXS)
+                }
 
                 // Star count
                 HStack(spacing: 4) {
