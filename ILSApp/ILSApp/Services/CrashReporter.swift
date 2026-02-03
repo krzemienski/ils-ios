@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Crash reporting service for capturing and persisting app crashes
 actor CrashReporter {
@@ -157,8 +158,8 @@ actor CrashReporter {
         }
     }
 
-    /// Check for and log any pending crash reports from previous session
-    func checkForPreviousCrashes() {
+    /// Check for and send any pending crash reports from previous session
+    func checkForPreviousCrashes() async {
         let reports = getPendingReports()
 
         if reports.isEmpty {
@@ -168,9 +169,49 @@ actor CrashReporter {
 
         Logger.shared.warning("Found \(reports.count) crash report(s) from previous session")
 
+        // Get device info for analytics
+        let deviceId = await AnalyticsService.shared.getDeviceId()
+        let osVersion = await MainActor.run { UIDevice.current.systemVersion }
+
+        // Send each crash report to analytics backend
         for report in reports {
             Logger.shared.error("Previous crash: \(report.type.rawValue) - \(report.name): \(report.reason)")
+
+            // Format stack trace for analytics
+            let stackTrace = formatStackTrace(report)
+
+            // Create and track crash analytics event
+            let crashEvent = AnalyticsEvent.crash(
+                stackTrace: stackTrace,
+                deviceId: deviceId,
+                osVersion: osVersion
+            )
+
+            await AnalyticsService.shared.track(crashEvent)
+            Logger.shared.info("Sent crash report to analytics backend")
         }
+
+        // Clear crash reports after successfully sending
+        clearPendingReports()
+    }
+
+    /// Format crash report into a readable stack trace string
+    private func formatStackTrace(_ report: CrashReport) -> String {
+        var trace = "Type: \(report.type.rawValue)\n"
+        trace += "Name: \(report.name)\n"
+        trace += "Reason: \(report.reason)\n"
+        trace += "Timestamp: \(report.timestamp.ISO8601Format())\n"
+
+        if !report.userInfo.isEmpty {
+            trace += "UserInfo: \(report.userInfo)\n"
+        }
+
+        trace += "\nCall Stack:\n"
+        trace += report.callStack.enumerated().map { index, frame in
+            "\(index): \(frame)"
+        }.joined(separator: "\n")
+
+        return trace
     }
 
     // MARK: - Helpers
