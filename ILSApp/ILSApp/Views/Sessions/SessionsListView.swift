@@ -5,6 +5,10 @@ struct SessionsListView: View {
     @StateObject private var viewModel = SessionsViewModel()
     @State private var showingNewSession = false
 
+    // Delete confirmation state
+    @State private var showDeleteConfirmation = false
+    @State private var sessionToDelete: IndexSet?
+
     var body: some View {
         List {
             if let error = viewModel.error {
@@ -58,15 +62,30 @@ struct SessionsListView: View {
         .task {
             await viewModel.loadSessions()
         }
+        .confirmationDialog("Delete Session?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                confirmDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This action cannot be undone. All messages and history for this session will be permanently deleted.")
+        }
         .accessibilityIdentifier("sessions-list")
     }
 
     private func deleteSession(at offsets: IndexSet) {
+        sessionToDelete = offsets
+        showDeleteConfirmation = true
+    }
+
+    private func confirmDelete() {
+        guard let offsets = sessionToDelete else { return }
         Task {
             for index in offsets {
                 let session = viewModel.sessions[index]
                 await viewModel.deleteSession(session)
             }
+            sessionToDelete = nil
         }
     }
 }
