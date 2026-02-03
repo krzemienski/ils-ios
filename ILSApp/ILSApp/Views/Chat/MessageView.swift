@@ -36,8 +36,7 @@ struct MessageView: View {
                                 Button(action: {
                                     UIPasteboard.general.string = message.text
                                     // Haptic feedback on copy
-                                    let generator = UINotificationFeedbackGenerator()
-                                    generator.notificationOccurred(.success)
+                                    HapticService.shared.success()
                                     showCopyConfirmation = true
                                     // Hide confirmation after 2 seconds
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
