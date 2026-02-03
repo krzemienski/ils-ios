@@ -91,6 +91,19 @@ public struct PluginInfo: Codable, Sendable {
     public var version: String?
     public var screenshots: [String]?
 
+    // Explicit CodingKeys to ensure all properties are encoded
+    enum CodingKeys: String, CodingKey {
+        case name
+        case description
+        case author
+        case installCount
+        case rating
+        case reviewCount
+        case tags
+        case version
+        case screenshots
+    }
+
     public init(
         name: String,
         description: String? = nil,

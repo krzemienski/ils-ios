@@ -150,7 +150,7 @@ struct PluginsController: RouteCollection {
 
     /// Compare version strings to determine if an update is available
     /// Returns true if the latest version is newer than the installed version
-    private func compareVersions(installed: String, latest: String) -> Bool {
+    internal func compareVersions(installed: String, latest: String) -> Bool {
         // Simple version comparison - handles semantic versioning (x.y.z)
         let installedComponents = installed.split(separator: ".").compactMap { Int($0) }
         let latestComponents = latest.split(separator: ".").compactMap { Int($0) }
@@ -252,14 +252,15 @@ struct PluginsController: RouteCollection {
     }
 
     /// Helper function to filter plugins based on search and tag parameters
-    private func filterPlugins(_ plugins: [PluginInfo], search: String?, tag: String?) -> [PluginInfo] {
+    internal func filterPlugins(_ plugins: [PluginInfo], search: String?, tag: String?) -> [PluginInfo] {
         var filtered = plugins
 
         // Apply search filter (matches name or description)
         if let searchQuery = search, !searchQuery.isEmpty {
+            let lowercasedQuery = searchQuery.lowercased()
             filtered = filtered.filter { plugin in
-                plugin.name.lowercased().contains(searchQuery) ||
-                (plugin.description?.lowercased().contains(searchQuery) ?? false)
+                plugin.name.lowercased().contains(lowercasedQuery) ||
+                (plugin.description?.lowercased().contains(lowercasedQuery) ?? false)
             }
         }
 
