@@ -96,6 +96,16 @@ struct PluginRowView: View {
                 Text(plugin.name)
                     .font(ILSTheme.headlineFont)
 
+                if plugin.hasUpdate == true {
+                    Text("Update Available")
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(ILSTheme.accent)
+                        .foregroundColor(.white)
+                        .cornerRadius(ILSTheme.cornerRadiusS)
+                }
+
                 Spacer()
 
                 Toggle("", isOn: Binding(
@@ -103,6 +113,12 @@ struct PluginRowView: View {
                     set: { _ in togglePlugin() }
                 ))
                 .labelsHidden()
+            }
+
+            if plugin.hasUpdate == true, let currentVersion = plugin.version, let latestVersion = plugin.latestVersion {
+                Text("v\(currentVersion) → v\(latestVersion)")
+                    .font(.caption2)
+                    .foregroundColor(ILSTheme.accent)
             }
 
             if let description = plugin.description {
@@ -267,6 +283,8 @@ struct PluginItem: Identifiable, Decodable {
     let version: String?
     let commands: [String]?
     let agents: [String]?
+    let hasUpdate: Bool?
+    let latestVersion: String?
 }
 
 #Preview {
