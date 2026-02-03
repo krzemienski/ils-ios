@@ -284,6 +284,54 @@ public struct UpdateSkillRequest: Codable, Sendable {
     }
 }
 
+public enum SkillInstallDestination: String, Codable, Sendable {
+    case local
+    case remote
+}
+
+public struct InstallSkillRequest: Codable, Sendable {
+    public let url: String
+    public let destination: SkillInstallDestination
+    public let sshHost: String?
+    public let sshUser: String?
+
+    public init(
+        url: String,
+        destination: SkillInstallDestination = .local,
+        sshHost: String? = nil,
+        sshUser: String? = nil
+    ) {
+        self.url = url
+        self.destination = destination
+        self.sshHost = sshHost
+        self.sshUser = sshUser
+    }
+}
+
+public struct InstallSkillResponse: Codable, Sendable {
+    public let skill: Skill?
+    public let status: String
+    public let progress: InstallProgressMessage?
+
+    public init(skill: Skill? = nil, status: String, progress: InstallProgressMessage? = nil) {
+        self.skill = skill
+        self.status = status
+        self.progress = progress
+    }
+}
+
+public struct InstallProgressMessage: Codable, Sendable {
+    public let step: String
+    public let percentage: Int?
+    public let message: String
+
+    public init(step: String, percentage: Int? = nil, message: String) {
+        self.step = step
+        self.percentage = percentage
+        self.message = message
+    }
+}
+
 // MARK: - MCP Requests
 
 public struct CreateMCPRequest: Codable, Sendable {
