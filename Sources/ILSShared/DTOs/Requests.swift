@@ -36,6 +36,11 @@ public struct ListResponse<T: Codable>: Codable where T: Sendable {
     }
 }
 
+/// Empty request body for endpoints that don't require parameters
+public struct EmptyBody: Codable, Sendable {
+    public init() {}
+}
+
 // MARK: - Project Requests
 
 public struct CreateProjectRequest: Codable, Sendable {
