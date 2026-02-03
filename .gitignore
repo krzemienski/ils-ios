@@ -22,6 +22,10 @@ ils.sqlite
 ils.sqlite-shm
 ils.sqlite-wal
 
+# Log files
+server.log
+*.log
+
 # Swift Package Manager
 .swiftpm/
 
