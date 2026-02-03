@@ -1,0 +1,9 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme ILSApp -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 15" clean build
+
+Build settings from command line:
+    SDKROOT = iphonesimulator26.2
+
+2026-02-03 14:43:25.109 xcodebuild[8977:1653836] Writing error result bundle to /var/folders/x9/t9mpdpkn4wn6mj59k7b48l9w0000gn/T/ResultBundle_2026-03-02_14-43-0025.xcresult
+xcodebuild: error: The directory /Users/nick/Desktop/ils-ios/.auto-claude/worktrees/tasks/041-implement-equatable-for-chatmessage-to-optimize-sw/ILSApp/ILSApp does not contain an Xcode project, workspace or package.
+
