@@ -6,6 +6,44 @@ A native iOS client for Claude Code with a Swift backend. This monorepo contains
 
 ILS provides a mobile interface for interacting with Claude Code sessions, managing projects, viewing skills, and configuring MCP servers - all from your iPhone or iPad.
 
+## Features
+
+- 📱 **Native iOS Interface** - SwiftUI-based mobile client for Claude Code
+- 💬 **Real-Time Chat** - Server-Sent Events (SSE) for streaming responses
+- 📂 **Project Management** - Create and manage Claude Code projects
+- 🎯 **Session Management** - Start, track, and resume chat sessions
+- 🛠️ **Skills Browser** - View and manage available Claude Code skills
+- 🔌 **Plugin Management** - Browse and configure installed plugins
+- 🌐 **MCP Server Config** - Manage Model Context Protocol servers
+- 📊 **Usage Statistics** - Track API usage and session metrics
+- 🔄 **Cross-Platform Sync** - Shared Swift models between iOS and backend
+
+## Project Status
+
+**Current Version:** 0.1.0 (Active Development)
+**Completion:** ~65% - Core infrastructure functional
+
+✅ **Completed:**
+- Vapor REST API backend with 11 endpoints
+- SQLite database with Fluent ORM
+- iOS app with 9 major views (tested on simulator)
+- Real-time chat streaming via SSE
+- Design system with dark theme + hot orange accent
+- Shared model library (8 core models)
+
+🚧 **In Progress:**
+- Integration testing (Phase 4)
+- Physical device deployment
+- Error handling improvements
+
+📋 **Planned:**
+- GitHub API integration for plugin discovery
+- Push notifications for chat responses
+- Multi-device sync
+- Advanced search and filtering
+
+> For detailed progress tracking, see [docs/evidence/VALIDATION_SUMMARY.md](docs/evidence/VALIDATION_SUMMARY.md)
+
 ### Architecture
 
 ```
@@ -231,6 +269,53 @@ xcodebuild clean
 | Architecture | MVVM |
 | Networking | URLSession + SSE |
 | Claude Integration | [ClaudeCodeSDK](https://github.com/krzemienski/ClaudeCodeSDK) |
+
+## Documentation
+
+This README provides a quick start guide. For comprehensive documentation:
+
+- **[docs/evidence/README.md](docs/evidence/README.md)** - Documentation index and navigation
+- **[docs/evidence/VALIDATION_SUMMARY.md](docs/evidence/VALIDATION_SUMMARY.md)** - Executive dashboard with metrics, phase completion, and project status
+- **[docs/evidence/implementation_progress.md](docs/evidence/implementation_progress.md)** - Detailed phase-by-phase implementation breakdown
+- **[docs/ils-spec.md](docs/ils-spec.md)** - Complete technical specification and architecture details
+- **[docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md)** - Advanced backend deployment options (launchd, Docker, systemd)
+- **[docs/CLAUDE.md](docs/CLAUDE.md)** - Project instructions for Claude Code agents
+
+### Testing & Validation Evidence
+
+- **[docs/evidence/test_report.md](docs/evidence/test_report.md)** - iOS simulator testing results (7 views tested)
+- **[docs/evidence/backend_validation.md](docs/evidence/backend_validation.md)** - API endpoint validation with cURL examples
+- **[docs/evidence/chat_validation.md](docs/evidence/chat_validation.md)** - Real-time messaging and WebSocket tests
+
+## Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository** and create a feature branch
+2. **Follow existing patterns** - Study the codebase structure
+3. **Run tests** before submitting:
+   ```bash
+   swift test                    # Backend tests
+   cd ILSApp && xcodebuild test  # iOS tests
+   ```
+4. **Commit conventions**:
+   - Use descriptive messages
+   - Prefix with component: `backend:`, `ios:`, `shared:`, `docs:`
+   - Example: `backend: Add session timeout handling`
+5. **Submit a Pull Request** with:
+   - Clear description of changes
+   - Testing evidence (screenshots for UI changes)
+   - Updated documentation if needed
+
+### Development Guidelines
+
+- **Swift Style**: Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
+- **Architecture**: MVVM for iOS, service-oriented for backend
+- **Models**: Keep `ILSShared` dependency-free (no Vapor/SwiftUI imports)
+- **Testing**: Write tests for new backend endpoints and view models
+- **Documentation**: Update relevant docs when adding features
+
+For questions or discussions, open an issue on GitHub.
 
 ## License
 
