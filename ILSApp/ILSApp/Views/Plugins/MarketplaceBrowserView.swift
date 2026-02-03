@@ -5,29 +5,75 @@ struct MarketplaceBrowserView: View {
     @ObservedObject var viewModel: PluginsViewModel
     @State private var searchText = ""
     @State private var displayMode: DisplayMode = .grid
+    @State private var showingFilterSheet = false
+    @State private var selectedTags: Set<String> = []
+    @State private var sortOption: SortOption = .name
 
     enum DisplayMode {
         case grid
         case list
     }
 
-    private var filteredMarketplaces: [MarketplaceInfo] {
-        if searchText.isEmpty {
-            return viewModel.marketplaces
+    enum SortOption: String, CaseIterable {
+        case name = "Name"
+        case rating = "Rating"
+        case installs = "Most Installed"
+        case newest = "Newest"
+    }
+
+    private var availableTags: [String] {
+        let allTags = viewModel.marketplaces.flatMap { marketplace in
+            marketplace.plugins.flatMap { $0.tags ?? [] }
         }
+        return Array(Set(allTags)).sorted()
+    }
+
+    private var filteredMarketplaces: [MarketplaceInfo] {
         return viewModel.marketplaces.compactMap { marketplace in
-            let filteredPlugins = marketplace.plugins.filter { plugin in
-                plugin.name.localizedCaseInsensitiveContains(searchText) ||
-                plugin.description?.localizedCaseInsensitiveContains(searchText) == true
+            var plugins = marketplace.plugins
+
+            // Apply search filter
+            if !searchText.isEmpty {
+                plugins = plugins.filter { plugin in
+                    plugin.name.localizedCaseInsensitiveContains(searchText) ||
+                    plugin.description?.localizedCaseInsensitiveContains(searchText) == true
+                }
             }
-            if filteredPlugins.isEmpty {
+
+            // Apply tag filter
+            if !selectedTags.isEmpty {
+                plugins = plugins.filter { plugin in
+                    guard let tags = plugin.tags else { return false }
+                    return !selectedTags.isDisjoint(with: tags)
+                }
+            }
+
+            // Apply sorting
+            plugins = sortPlugins(plugins)
+
+            if plugins.isEmpty {
                 return nil
             }
+
             return MarketplaceInfo(
                 name: marketplace.name,
                 source: marketplace.source,
-                plugins: filteredPlugins
+                plugins: plugins
             )
+        }
+    }
+
+    private func sortPlugins(_ plugins: [MarketplacePlugin]) -> [MarketplacePlugin] {
+        switch sortOption {
+        case .name:
+            return plugins.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .rating:
+            return plugins.sorted { ($0.rating ?? 0) > ($1.rating ?? 0) }
+        case .installs:
+            return plugins.sorted { ($0.installCount ?? 0) > ($1.installCount ?? 0) }
+        case .newest:
+            // If we had a createdDate, we'd sort by that. For now, keep original order
+            return plugins
         }
     }
 
@@ -70,12 +116,27 @@ struct MarketplaceBrowserView: View {
         .navigationTitle("Browse Marketplace")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    displayMode = displayMode == .grid ? .list : .grid
-                } label: {
-                    Image(systemName: displayMode == .grid ? "list.bullet" : "square.grid.2x2")
+                HStack(spacing: ILSTheme.spacingS) {
+                    Button {
+                        showingFilterSheet = true
+                    } label: {
+                        Image(systemName: selectedTags.isEmpty && sortOption == .name ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                    }
+
+                    Button {
+                        displayMode = displayMode == .grid ? .list : .grid
+                    } label: {
+                        Image(systemName: displayMode == .grid ? "list.bullet" : "square.grid.2x2")
+                    }
                 }
             }
+        }
+        .sheet(isPresented: $showingFilterSheet) {
+            FilterSheet(
+                availableTags: availableTags,
+                selectedTags: $selectedTags,
+                sortOption: $sortOption
+            )
         }
         .searchable(text: $searchText, prompt: "Search marketplace")
         .refreshable {
@@ -123,6 +184,80 @@ struct MarketplaceBrowserView: View {
                 Section(marketplace.name) {
                     ForEach(marketplace.plugins, id: \.name) { plugin in
                         PluginListRow(plugin: plugin, marketplace: marketplace.name, viewModel: viewModel)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Filter Sheet
+
+struct FilterSheet: View {
+    let availableTags: [String]
+    @Binding var selectedTags: Set<String>
+    @Binding var sortOption: MarketplaceBrowserView.SortOption
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                // Sort Section
+                Section("Sort By") {
+                    ForEach(MarketplaceBrowserView.SortOption.allCases, id: \.self) { option in
+                        Button {
+                            sortOption = option
+                        } label: {
+                            HStack {
+                                Text(option.rawValue)
+                                    .foregroundColor(ILSTheme.primaryText)
+                                Spacer()
+                                if sortOption == option {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Tags Section
+                if !availableTags.isEmpty {
+                    Section("Tags") {
+                        ForEach(availableTags, id: \.self) { tag in
+                            Button {
+                                if selectedTags.contains(tag) {
+                                    selectedTags.remove(tag)
+                                } else {
+                                    selectedTags.insert(tag)
+                                }
+                            } label: {
+                                HStack {
+                                    Text(tag)
+                                        .foregroundColor(ILSTheme.primaryText)
+                                    Spacer()
+                                    if selectedTags.contains(tag) {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Filter & Sort")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Reset") {
+                        selectedTags.removeAll()
+                        sortOption = .name
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
                     }
                 }
             }
