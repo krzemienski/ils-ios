@@ -5,9 +5,17 @@ import ILSShared
 actor WebSocketService {
     private var connections: [String: WebSocket] = [:]
     private let executor: ClaudeExecutorService
+    private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
 
     init(executor: ClaudeExecutorService) {
         self.executor = executor
+
+        self.decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        self.encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
     }
 
     /// Handle a new WebSocket connection
@@ -42,7 +50,7 @@ actor WebSocketService {
         guard let data = text.data(using: .utf8) else { return }
 
         do {
-            let message = try JSONDecoder().decode(WSClientMessage.self, from: data)
+            let message = try decoder.decode(WSClientMessage.self, from: data)
 
             switch message {
             case .message(let prompt):
@@ -105,7 +113,6 @@ actor WebSocketService {
     }
 
     private func sendMessage(_ message: WSServerMessage, to ws: WebSocket) async throws {
-        let encoder = JSONEncoder()
         let data = try encoder.encode(message)
         guard let text = String(data: data, encoding: .utf8) else {
             throw Abort(.internalServerError, reason: "Failed to encode message")
