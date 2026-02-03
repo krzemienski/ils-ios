@@ -32,6 +32,18 @@ actor APIClient {
     // MARK: - Generic Request Methods
 
     func get<T: Decodable>(_ path: String) async throws -> T {
+        // Check cache first
+        if let entry = cache[path] {
+            let age = Date().timeIntervalSince(entry.timestamp)
+            if age < cacheTTL {
+                // Cache hit - return cached data
+                if let cachedData = entry.data as? T {
+                    return cachedData
+                }
+            }
+        }
+
+        // Cache miss or expired - make network request
         let url = URL(string: "\(baseURL)/api/v1\(path)")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -40,7 +52,12 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        return try decoder.decode(T.self, from: data)
+        let decoded = try decoder.decode(T.self, from: data)
+
+        // Store in cache
+        cache[path] = CacheEntry(data: decoded, timestamp: Date())
+
+        return decoded
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
