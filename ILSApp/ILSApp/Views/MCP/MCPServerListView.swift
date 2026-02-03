@@ -126,15 +126,7 @@ struct MCPServerRowView: View {
     @ViewBuilder
     private var statusBadge: some View {
         let (color, text) = statusInfo
-
-        HStack(spacing: 4) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(text)
-                .font(.caption2)
-                .foregroundColor(color)
-        }
+        StatusBadge(color: color, text: text)
     }
 
     private var statusInfo: (Color, String) {
