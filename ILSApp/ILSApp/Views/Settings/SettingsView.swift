@@ -25,6 +25,10 @@ struct SettingsView: View {
     @State private var saveErrorMessage = ""
     @State private var showSaveSuccess = false
     @State private var showDangerousPermissionWarning = false
+    @State private var showResetConfirmation = false
+    @State private var showResetSuccess = false
+    @State private var showResetError = false
+    @State private var resetErrorMessage = ""
 
     // Validation state
     @State private var validationErrors: [String] = []
@@ -398,10 +402,22 @@ struct SettingsView: View {
                 NavigationLink("Edit Project Settings") {
                     ConfigEditorView(scope: "project")
                 }
+
+                // Reset to Defaults Button
+                Button(role: .destructive) {
+                    showResetConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise")
+                        Text("Reset to Defaults")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
             } header: {
                 Text("Advanced")
             } footer: {
-                Text("Edit raw JSON configuration files")
+                Text("Edit raw JSON configuration files or reset settings to defaults")
             }
 
             // MARK: - Statistics Section
@@ -495,6 +511,24 @@ struct SettingsView: View {
         } message: {
             Text("Setting default mode to 'allow' will automatically approve all operations without prompting. This can be dangerous and may allow unintended actions. Are you sure you want to continue?")
         }
+        .confirmationDialog("Reset Configuration to Defaults?", isPresented: $showResetConfirmation, titleVisibility: .visible) {
+            Button("Reset to Defaults", role: .destructive) {
+                resetToDefaults()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will reset all \(selectedScope) settings to their default values. This action cannot be undone.")
+        }
+        .alert("Configuration Reset", isPresented: $showResetSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your configuration has been reset to default values successfully.")
+        }
+        .alert("Reset Failed", isPresented: $showResetError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(resetErrorMessage)
+        }
     }
 
     // MARK: - Server Settings Persistence
@@ -549,6 +583,21 @@ struct SettingsView: View {
                 isEditing = false
                 showSaveSuccess = true
                 await viewModel.loadConfig()
+            }
+        }
+    }
+
+    private func resetToDefaults() {
+        Task {
+            let result = await viewModel.resetConfig(scope: selectedScope)
+            if let error = result {
+                resetErrorMessage = error
+                showResetError = true
+            } else {
+                isEditing = false
+                showResetSuccess = true
+                await viewModel.loadConfig(scope: selectedScope)
+                resetEditedValues()
             }
         }
     }
@@ -815,6 +864,29 @@ class SettingsViewModel: ObservableObject {
             return nil // Success
         } catch {
             return "Failed to save: \(error.localizedDescription)"
+        }
+    }
+
+    func resetConfig(scope: String) async -> String? {
+        isSaving = true
+        defer { isSaving = false }
+
+        do {
+            let response: APIResponse<ConfigInfo> = try await client.delete("/config?scope=\(scope)")
+
+            // Update local config with response
+            if let updatedConfig = response.data {
+                config = updatedConfig
+
+                // Check for validation errors
+                if !updatedConfig.isValid {
+                    return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration reset failed"
+                }
+            }
+
+            return nil // Success
+        } catch {
+            return "Failed to reset: \(error.localizedDescription)"
         }
     }
 }
