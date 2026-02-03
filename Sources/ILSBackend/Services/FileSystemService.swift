@@ -429,6 +429,38 @@ struct FileSystemService {
         try data.write(to: URL(fileURLWithPath: path))
     }
 
+    /// Update an MCP server in configuration (~/.mcp.json)
+    func updateMCPServer(_ server: MCPServer) throws {
+        let path = userMCPConfigPath
+
+        guard fileManager.fileExists(atPath: path),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+              var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw Abort(.notFound, reason: "MCP configuration not found")
+        }
+
+        var mcpServers = json["mcpServers"] as? [String: Any] ?? [:]
+
+        guard mcpServers[server.name] != nil else {
+            throw Abort(.notFound, reason: "MCP server not found")
+        }
+
+        var serverConfig: [String: Any] = [
+            "type": "stdio",
+            "command": server.command,
+            "args": server.args
+        ]
+        if let env = server.env {
+            serverConfig["env"] = env
+        }
+
+        mcpServers[server.name] = serverConfig
+        json["mcpServers"] = mcpServers
+
+        let newData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+        try newData.write(to: URL(fileURLWithPath: path))
+    }
+
     /// Remove an MCP server from configuration
     func removeMCPServer(name: String, scope: MCPScope) throws {
         let path = userMCPConfigPath
