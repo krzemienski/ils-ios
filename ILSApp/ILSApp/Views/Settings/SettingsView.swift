@@ -38,6 +38,9 @@ struct SettingsView: View {
                         .textContentType(.URL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
+                        .accessibilityLabel("Server host")
+                        .accessibilityValue(serverHost.isEmpty ? "empty" : serverHost)
+                        .accessibilityHint("Enter the hostname or IP address of the ILS backend server")
                 }
 
                 HStack {
@@ -45,6 +48,9 @@ struct SettingsView: View {
                         .frame(width: 50, alignment: .leading)
                     TextField("8080", text: $serverPort)
                         .keyboardType(.numberPad)
+                        .accessibilityLabel("Server port")
+                        .accessibilityValue(serverPort.isEmpty ? "empty" : serverPort)
+                        .accessibilityHint("Enter the port number for the ILS backend server")
                 }
 
                 HStack {
@@ -54,9 +60,12 @@ struct SettingsView: View {
                         Circle()
                             .fill(appState.isConnected ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
                             .foregroundColor(ILSTheme.secondaryText)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Connection status: \(appState.isConnected ? "Connected" : "Disconnected")")
                 }
 
                 Button {
@@ -66,6 +75,7 @@ struct SettingsView: View {
                         if viewModel.isTestingConnection {
                             ProgressView()
                                 .scaleEffect(0.8)
+                                .accessibilityHidden(true)
                         }
                         Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
                     }
@@ -73,6 +83,8 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.isTestingConnection)
+                .accessibilityLabel(viewModel.isTestingConnection ? "Testing connection" : "Test connection")
+                .accessibilityHint("Verifies connection to the ILS backend server")
             } header: {
                 Text("Backend Connection")
             } footer: {
@@ -97,11 +109,15 @@ struct SettingsView: View {
                                     .tag(model)
                             }
                         }
+                        .accessibilityLabel("Default model")
+                        .accessibilityValue(formatModelName(editedModel))
+                        .accessibilityHint("Select the default AI model for conversations")
                     } else {
                         LabeledContent("Default Model") {
                             Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
+                        .accessibilityLabel("Default model: \(formatModelName(config.model ?? "claude-sonnet-4-20250514"))")
                     }
 
                     // Theme Color Scheme - Editable
@@ -112,11 +128,15 @@ struct SettingsView: View {
                                     .tag(scheme)
                             }
                         }
+                        .accessibilityLabel("Color scheme")
+                        .accessibilityValue(editedColorScheme.capitalized)
+                        .accessibilityHint("Select the app's color scheme: system, light, or dark mode")
                     } else {
                         LabeledContent("Color Scheme") {
                             Text((config.theme?.colorScheme ?? "system").capitalized)
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
+                        .accessibilityLabel("Color scheme: \((config.theme?.colorScheme ?? "system").capitalized)")
                     }
 
                     // Auto Updates Channel (read-only)
@@ -125,19 +145,24 @@ struct SettingsView: View {
                             Text(channel.capitalized)
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
+                        .accessibilityLabel("Updates channel: \(channel.capitalized)")
                     }
 
                     // Always Thinking (read-only)
                     LabeledContent("Extended Thinking") {
                         Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                            .accessibilityHidden(true)
                     }
+                    .accessibilityLabel("Extended thinking: \(config.alwaysThinkingEnabled == true ? "enabled" : "disabled")")
 
                     // Co-authored by (read-only)
                     LabeledContent("Include Co-Author") {
                         Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                            .accessibilityHidden(true)
                     }
+                    .accessibilityLabel("Include co-author: \(config.includeCoAuthoredBy == true ? "enabled" : "disabled")")
 
                     // Save button when editing
                     if isEditing {
@@ -146,12 +171,15 @@ struct SettingsView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "square.and.arrow.down")
+                                    .accessibilityHidden(true)
                                 Text("Save Changes")
                             }
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(viewModel.isSaving)
+                        .accessibilityLabel(viewModel.isSaving ? "Saving changes" : "Save changes")
+                        .accessibilityHint("Saves your configuration changes to the backend")
                     }
                 } else {
                     Text("No configuration loaded")
@@ -171,6 +199,8 @@ struct SettingsView: View {
                         }
                         .font(ILSTheme.captionFont)
                         .textCase(nil)
+                        .accessibilityLabel(isEditing ? "Cancel editing" : "Edit settings")
+                        .accessibilityHint(isEditing ? "Discards changes and exits edit mode" : "Enter edit mode to modify default model and color scheme")
                     }
                 }
             } footer: {
@@ -186,6 +216,7 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
                                 .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                                .accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
                                     .font(ILSTheme.bodyFont)
@@ -201,17 +232,23 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(buildAPIKeyAccessibilityLabel(apiKeyStatus))
                     } else {
                         HStack {
                             Image(systemName: "key.fill")
                                 .foregroundColor(.orange)
+                                .accessibilityHidden(true)
                             Text("API Key status unknown")
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("API Key status unknown")
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
                         .foregroundColor(ILSTheme.secondaryText)
+                        .accessibilityLabel("Loading API key status")
                 }
             } header: {
                 Text("API Key")
@@ -227,6 +264,7 @@ struct SettingsView: View {
                         Text(permissions.defaultMode?.capitalized ?? "Prompt")
                             .foregroundColor(ILSTheme.secondaryText)
                     }
+                    .accessibilityLabel("Default permission mode: \(permissions.defaultMode?.capitalized ?? "Prompt")")
 
                     // Allowed Commands
                     if let allowed = permissions.allow, !allowed.isEmpty {
@@ -239,8 +277,11 @@ struct SettingsView: View {
                         } label: {
                             LabeledContent("Allowed", value: "\(allowed.count) rules")
                         }
+                        .accessibilityLabel("Allowed commands: \(allowed.count) rules")
+                        .accessibilityHint("Double tap to expand and view all allowed permission rules")
                     } else {
                         LabeledContent("Allowed", value: "None")
+                            .accessibilityLabel("Allowed commands: None")
                     }
 
                     // Denied Commands
@@ -254,8 +295,11 @@ struct SettingsView: View {
                         } label: {
                             LabeledContent("Denied", value: "\(denied.count) rules")
                         }
+                        .accessibilityLabel("Denied commands: \(denied.count) rules")
+                        .accessibilityHint("Double tap to expand and view all denied permission rules")
                     } else {
                         LabeledContent("Denied", value: "None")
+                            .accessibilityLabel("Denied commands: None")
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
@@ -272,16 +316,20 @@ struct SettingsView: View {
                     if let hooks = config.hooks {
                         let hookCount = countHooks(hooks)
                         LabeledContent("Hooks Configured", value: "\(hookCount)")
+                            .accessibilityLabel("Hooks configured: \(hookCount)")
                     } else {
                         LabeledContent("Hooks Configured", value: "0")
+                            .accessibilityLabel("Hooks configured: 0")
                     }
 
                     // Enabled Plugins Count
                     if let plugins = config.enabledPlugins {
                         let enabledCount = plugins.filter { $0.value }.count
                         LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                            .accessibilityLabel("Enabled plugins: \(enabledCount)")
                     } else {
                         LabeledContent("Enabled Plugins", value: "0")
+                            .accessibilityLabel("Enabled plugins: 0")
                     }
 
                     // Status Line
@@ -290,11 +338,13 @@ struct SettingsView: View {
                             Text(statusLine.type ?? "disabled")
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
+                        .accessibilityLabel("Status line: \(statusLine.type ?? "disabled")")
                     }
 
                     // Environment Variables
                     if let env = config.env, !env.isEmpty {
                         LabeledContent("Environment Vars", value: "\(env.count)")
+                            .accessibilityLabel("Environment variables: \(env.count)")
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
@@ -305,10 +355,14 @@ struct SettingsView: View {
                 NavigationLink("Edit User Settings") {
                     ConfigEditorView(scope: "user")
                 }
+                .accessibilityLabel("Edit user settings")
+                .accessibilityHint("Opens the raw JSON configuration editor for user-level settings")
 
                 NavigationLink("Edit Project Settings") {
                     ConfigEditorView(scope: "project")
                 }
+                .accessibilityLabel("Edit project settings")
+                .accessibilityHint("Opens the raw JSON configuration editor for project-level settings")
             } header: {
                 Text("Advanced")
             } footer: {
@@ -319,19 +373,27 @@ struct SettingsView: View {
             Section("Statistics") {
                 if viewModel.isLoading {
                     ProgressView()
+                        .accessibilityLabel("Loading statistics")
                 } else if let stats = viewModel.stats {
                     LabeledContent("Projects", value: "\(stats.projects.total)")
+                        .accessibilityLabel("Projects: \(stats.projects.total)")
                     LabeledContent("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
+                        .accessibilityLabel("Sessions: \(stats.sessions.total) total, \(stats.sessions.active) active")
                     LabeledContent("Skills", value: "\(stats.skills.total)")
+                        .accessibilityLabel("Skills: \(stats.skills.total)")
                     LabeledContent("MCP Servers", value: "\(stats.mcpServers.total) (\(stats.mcpServers.healthy) healthy)")
+                        .accessibilityLabel("MCP Servers: \(stats.mcpServers.total) total, \(stats.mcpServers.healthy) healthy")
                     LabeledContent("Plugins", value: "\(stats.plugins.total) (\(stats.plugins.enabled) enabled)")
+                        .accessibilityLabel("Plugins: \(stats.plugins.total) total, \(stats.plugins.enabled) enabled")
                 }
             }
 
             // MARK: - About Section
             Section("About") {
                 LabeledContent("Version", value: "1.0.0")
+                    .accessibilityLabel("Version: 1.0.0")
                 LabeledContent("Build", value: "1")
+                    .accessibilityLabel("Build: 1")
 
                 Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                     HStack {
@@ -339,8 +401,11 @@ struct SettingsView: View {
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
                             .foregroundColor(ILSTheme.secondaryText)
+                            .accessibilityHidden(true)
                     }
                 }
+                .accessibilityLabel("Claude Code Documentation")
+                .accessibilityHint("Opens external link in browser")
             }
         }
         .navigationTitle("Settings")
@@ -471,6 +536,17 @@ struct SettingsView: View {
             editedColorScheme = config.theme?.colorScheme ?? "system"
         }
     }
+
+    private func buildAPIKeyAccessibilityLabel(_ apiKeyStatus: APIKeyStatus) -> String {
+        var label = apiKeyStatus.isConfigured ? "API Key configured" : "No API Key"
+        if let maskedKey = apiKeyStatus.maskedKey {
+            label += ", Key: \(maskedKey)"
+        }
+        if let source = apiKeyStatus.source {
+            label += ", Source: \(source)"
+        }
+        return label
+    }
 }
 
 struct ConfigEditorView: View {
@@ -484,10 +560,13 @@ struct ConfigEditorView: View {
         VStack {
             if viewModel.isLoading {
                 ProgressView()
+                    .accessibilityLabel("Loading configuration")
             } else {
                 TextEditor(text: $configText)
                     .font(ILSTheme.codeFont)
                     .padding()
+                    .accessibilityLabel("Configuration JSON editor")
+                    .accessibilityHint("Edit the raw JSON configuration for \(scope) settings")
 
                 if !validationErrors.isEmpty {
                     VStack(alignment: .leading) {
@@ -499,6 +578,8 @@ struct ConfigEditorView: View {
                     }
                     .padding()
                     .background(ILSTheme.error.opacity(0.1))
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Validation errors: \(validationErrors.joined(separator: ", "))")
                 }
             }
         }
@@ -510,6 +591,8 @@ struct ConfigEditorView: View {
                     saveConfig()
                 }
                 .disabled(isSaving)
+                .accessibilityLabel(isSaving ? "Saving configuration" : "Save configuration")
+                .accessibilityHint("Saves the edited JSON configuration")
             }
         }
         .task {
