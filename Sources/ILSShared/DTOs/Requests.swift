@@ -284,6 +284,51 @@ public struct UpdateSkillRequest: Codable, Sendable {
     }
 }
 
+// MARK: - Skill Discovery Requests
+
+public struct SkillBrowseRequest: Codable, Sendable {
+    public let category: SkillCategory?
+    public let limit: Int?
+    public let offset: Int?
+
+    public init(
+        category: SkillCategory? = nil,
+        limit: Int? = nil,
+        offset: Int? = nil
+    ) {
+        self.category = category
+        self.limit = limit
+        self.offset = offset
+    }
+}
+
+public struct SkillSearchRequest: Codable, Sendable {
+    public let query: String
+    public let category: SkillCategory?
+    public let limit: Int?
+    public let offset: Int?
+
+    public init(
+        query: String,
+        category: SkillCategory? = nil,
+        limit: Int? = nil,
+        offset: Int? = nil
+    ) {
+        self.query = query
+        self.category = category
+        self.limit = limit
+        self.offset = offset
+    }
+}
+
+public struct SkillCategoryFilter: Codable, Sendable {
+    public let categories: [SkillCategory]
+
+    public init(categories: [SkillCategory]) {
+        self.categories = categories
+    }
+}
+
 // MARK: - MCP Requests
 
 public struct CreateMCPRequest: Codable, Sendable {
