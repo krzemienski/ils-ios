@@ -42,6 +42,7 @@ struct ChatView: View {
         }
         .onReceive(viewModel.$error) { error in
             if error != nil {
+                HapticService.shared.error()
                 showErrorAlert = true
             }
         }
