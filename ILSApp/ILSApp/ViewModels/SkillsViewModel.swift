@@ -7,6 +7,8 @@ class SkillsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
+    @Published var githubSkills: [GitHubRepository] = []
+    @Published var isSearchingGitHub = false
 
     private let client = APIClient()
 
@@ -104,6 +106,51 @@ class SkillsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to delete skill '\(skill.name)': \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - GitHub Search
+
+    /// Search GitHub for Claude Code skills
+    /// - Parameter query: Search query string
+    func searchGitHubSkills(query: String) async {
+        guard !query.isEmpty else {
+            githubSkills = []
+            return
+        }
+
+        isSearchingGitHub = true
+        error = nil
+
+        do {
+            let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+            let path = "/skills/github/search?q=\(encodedQuery)"
+            let response: APIResponse<ListResponse<GitHubRepository>> = try await client.get(path)
+            if let data = response.data {
+                githubSkills = data.items
+            }
+        } catch {
+            self.error = error
+            print("❌ Failed to search GitHub skills: \(error.localizedDescription)")
+        }
+
+        isSearchingGitHub = false
+    }
+
+    /// Load detailed information for a GitHub skill
+    /// - Parameters:
+    ///   - owner: Repository owner
+    ///   - repo: Repository name
+    /// - Returns: Detailed skill information including SKILL.md content
+    func loadGitHubSkillDetail(owner: String, repo: String) async -> GitHubSkillDetail? {
+        do {
+            let path = "/skills/github/\(owner)/\(repo)"
+            let response: APIResponse<GitHubSkillDetail> = try await client.get(path)
+            return response.data
+        } catch {
+            self.error = error
+            print("❌ Failed to load GitHub skill detail '\(owner)/\(repo)': \(error.localizedDescription)")
+            return nil
         }
     }
 }
