@@ -17,7 +17,6 @@ class SSEClient: ObservableObject {
         case reconnecting(attempt: Int)
     }
 
-    private var task: URLSessionDataTask?
     private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
@@ -170,8 +169,6 @@ class SSEClient: ObservableObject {
     func cancel() {
         streamTask?.cancel()
         streamTask = nil
-        task?.cancel()
-        task = nil
         isStreaming = false
         connectionState = .disconnected
         currentRequest = nil
