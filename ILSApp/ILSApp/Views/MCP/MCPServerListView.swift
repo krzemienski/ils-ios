@@ -50,7 +50,9 @@ struct MCPServerListView: View {
         }
         .sheet(isPresented: $showingNewServer) {
             NewMCPServerView { server in
-                viewModel.servers.append(server)
+                Task {
+                    await viewModel.loadServers()
+                }
             }
         }
         .overlay {
@@ -406,13 +408,6 @@ struct MCPServerItem: Identifiable, Decodable, Hashable {
     static func == (lhs: MCPServerItem, rhs: MCPServerItem) -> Bool {
         lhs.id == rhs.id
     }
-}
-
-struct CreateMCPRequest: Encodable {
-    let name: String
-    let command: String
-    let args: [String]
-    let scope: String
 }
 
 #Preview {

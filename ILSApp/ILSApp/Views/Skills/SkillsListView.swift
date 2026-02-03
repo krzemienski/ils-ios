@@ -48,7 +48,9 @@ struct SkillsListView: View {
         }
         .sheet(isPresented: $showingNewSkill) {
             SkillEditorView(mode: .create) { skill in
-                viewModel.skills.append(skill)
+                Task {
+                    await viewModel.loadSkills()
+                }
             }
         }
         .navigationDestination(for: SkillItem.self) { skill in
@@ -431,18 +433,6 @@ struct SkillEditorView: View {
             isSaving = false
         }
     }
-}
-
-// MARK: - Request Types
-
-struct CreateSkillRequest: Encodable {
-    let name: String
-    let description: String?
-    let content: String
-}
-
-struct UpdateSkillRequest: Encodable {
-    let content: String
 }
 
 #Preview {
