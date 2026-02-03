@@ -3,7 +3,9 @@ import Fluent
 import ILSShared
 
 struct StatsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let configService = ClaudeConfigService()
+    let skillsService = SkillsService()
+    let mcpService = MCPConfigService()
 
     func boot(routes: RoutesBuilder) throws {
         routes.get("stats", use: stats)
@@ -54,20 +56,20 @@ struct StatsController: RouteCollection {
         }
 
         // Count skills (use cached data for performance)
-        let skills = try await fileSystem.listSkills()
+        let skills = try await skillsService.listSkills()
         let activeSkills = skills.filter { $0.isActive }.count
 
         // Count MCP servers (use cached data for performance)
-        let mcpServers = try await fileSystem.readMCPServers()
+        let mcpServers = try await mcpService.readMCPServers()
         let healthyServers = mcpServers.filter { $0.status == .healthy }.count
 
         // Count plugins from FILESYSTEM (same as PluginsController)
         var totalPlugins = 0
         var enabledCount = 0
-        let installedPluginsPath = "\(fileSystem.claudeDirectory)/plugins/installed_plugins.json"
+        let installedPluginsPath = "\(configService.claudeDirectory)/plugins/installed_plugins.json"
 
         // Read enabled status from settings.json
-        let settingsPath = fileSystem.userSettingsPath
+        let settingsPath = configService.userSettingsPath
         var enabledPlugins: [String: Bool] = [:]
         if fm.fileExists(atPath: settingsPath),
            let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
@@ -107,7 +109,7 @@ struct StatsController: RouteCollection {
     /// GET /settings - Get raw settings from ~/.claude/settings.json
     @Sendable
     func settings(req: Request) async throws -> APIResponse<ClaudeConfig> {
-        let config = try fileSystem.readConfig(scope: "user")
+        let config = try configService.readConfig(scope: "user")
         return APIResponse(
             success: true,
             data: config.content

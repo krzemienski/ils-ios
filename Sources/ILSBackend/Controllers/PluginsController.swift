@@ -2,7 +2,7 @@ import Vapor
 import ILSShared
 
 struct PluginsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let configService = ClaudeConfigService()
 
     func boot(routes: RoutesBuilder) throws {
         let plugins = routes.grouped("plugins")
@@ -20,8 +20,8 @@ struct PluginsController: RouteCollection {
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<Plugin>> {
         let fm = FileManager.default
-        let installedPluginsPath = "\(fileSystem.claudeDirectory)/plugins/installed_plugins.json"
-        let settingsPath = fileSystem.userSettingsPath
+        let installedPluginsPath = "\(configService.claudeDirectory)/plugins/installed_plugins.json"
+        let settingsPath = configService.userSettingsPath
 
         var plugins: [Plugin] = []
 
@@ -127,7 +127,7 @@ struct PluginsController: RouteCollection {
     @Sendable
     func marketplace(req: Request) async throws -> APIResponse<[PluginMarketplace]> {
         // Read known marketplaces from config
-        let config = try? fileSystem.readConfig(scope: "user")
+        let config = try? configService.readConfig(scope: "user")
         var marketplaces: [PluginMarketplace] = []
 
         // Add official marketplace
@@ -185,12 +185,12 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        var config = (try? configService.readConfig(scope: "user"))?.content ?? ClaudeConfig()
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = true
         config.enabledPlugins = enabled
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try configService.writeConfig(scope: "user", content: config)
 
         return APIResponse(
             success: true,
@@ -206,12 +206,12 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        var config = (try? configService.readConfig(scope: "user"))?.content ?? ClaudeConfig()
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = false
         config.enabledPlugins = enabled
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try configService.writeConfig(scope: "user", content: config)
 
         return APIResponse(
             success: true,
@@ -226,7 +226,7 @@ struct PluginsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid plugin name")
         }
 
-        let pluginPath = "\(fileSystem.claudeDirectory)/plugins/\(name)"
+        let pluginPath = "\(configService.claudeDirectory)/plugins/\(name)"
         let fm = FileManager.default
 
         if fm.fileExists(atPath: pluginPath) {
