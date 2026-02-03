@@ -162,13 +162,90 @@ struct PluginsController: RouteCollection {
     func install(req: Request) async throws -> APIResponse<Plugin> {
         let input = try req.content.decode(InstallPluginRequest.self)
 
-        // In a real implementation, this would clone from the marketplace
-        // For now, return a placeholder
+        // Execute claude CLI to install the plugin
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+
+        // Build the install command
+        let installCommand = "claude plugin install \(input.pluginName) --marketplace \(input.marketplace)"
+        process.arguments = ["-l", "-c", installCommand]
+
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+
+        try process.run()
+        process.waitUntilExit()
+
+        // Check if installation succeeded
+        guard process.terminationStatus == 0 else {
+            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorMessage = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown error"
+            throw Abort(.internalServerError, reason: "Plugin installation failed: \(errorMessage)")
+        }
+
+        // Read the installed plugin info from installed_plugins.json
+        let fm = FileManager.default
+        let installedPluginsPath = "\(fileSystem.claudeDirectory)/plugins/installed_plugins.json"
+        let pluginKey = "\(input.pluginName)@\(input.marketplace)"
+
+        var version: String?
+        var installPath: String?
+        var description: String?
+        var commands: [String] = []
+        var agents: [String] = []
+
+        if fm.fileExists(atPath: installedPluginsPath),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let pluginsDict = json["plugins"] as? [String: Any],
+           let installsArray = pluginsDict[pluginKey] as? [[String: Any]],
+           let latestInstall = installsArray.first {
+
+            version = latestInstall["version"] as? String
+            installPath = latestInstall["installPath"] as? String
+
+            // Try to read plugin manifest for additional details
+            if let path = installPath {
+                let manifestPath = "\(path)/.claude-plugin/plugin.json"
+                let altManifestPath = "\(path)/plugin.json"
+
+                if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
+                   let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
+                          let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                }
+
+                // Check for commands directory
+                let commandsPath = "\(path)/commands"
+                if let cmdContents = try? fm.contentsOfDirectory(atPath: commandsPath) {
+                    commands = cmdContents.filter { $0.hasSuffix(".md") }
+                        .map { "/\(input.pluginName):\($0.replacingOccurrences(of: ".md", with: ""))" }
+                }
+
+                // Check for agents directory
+                let agentsPath = "\(path)/agents"
+                if let agentContents = try? fm.contentsOfDirectory(atPath: agentsPath) {
+                    agents = agentContents.filter { $0.hasSuffix(".md") }
+                        .map { $0.replacingOccurrences(of: ".md", with: "") }
+                }
+            }
+        }
+
+        // Build plugin response
         let plugin = Plugin(
             name: input.pluginName,
+            description: description,
             marketplace: input.marketplace,
             isInstalled: true,
-            isEnabled: true
+            isEnabled: true,
+            version: version,
+            commands: commands.isEmpty ? nil : commands,
+            agents: agents.isEmpty ? nil : agents,
+            path: installPath
         )
 
         return APIResponse(
