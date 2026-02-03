@@ -6,13 +6,30 @@ class PluginsViewModel: ObservableObject {
     @Published var plugins: [PluginItem] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var searchText = ""
 
     private let client = APIClient()
+
+    /// Filtered plugins based on search text (client-side filtering for responsiveness)
+    var filteredPlugins: [PluginItem] {
+        guard !searchText.isEmpty else { return plugins }
+        let query = searchText.lowercased()
+        return plugins.filter { plugin in
+            plugin.name.lowercased().contains(query) ||
+            (plugin.description?.lowercased().contains(query) ?? false) ||
+            (plugin.marketplace?.lowercased().contains(query) ?? false) ||
+            (plugin.commands?.contains { $0.lowercased().contains(query) } ?? false) ||
+            (plugin.agents?.contains { $0.lowercased().contains(query) } ?? false)
+        }
+    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
         if isLoading {
             return "Loading plugins..."
+        }
+        if !searchText.isEmpty && filteredPlugins.isEmpty {
+            return "No plugins found"
         }
         return plugins.isEmpty ? "No plugins installed" : ""
     }
