@@ -15,6 +15,8 @@ struct SettingsView: View {
     @State private var editedModel: String = ""
     @State private var editedColorScheme: String = "system"
     @State private var editedPermissions: PermissionsConfig = PermissionsConfig()
+    @State private var editedAlwaysThinkingEnabled: Bool = false
+    @State private var editedIncludeCoAuthoredBy: Bool = false
 
     // Alert state
     @State private var showSaveConfirmation = false
@@ -138,16 +140,32 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Always Thinking (read-only)
-                    LabeledContent("Extended Thinking") {
-                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                    // Always Thinking - Editable
+                    if isEditing {
+                        BooleanSettingsView(
+                            label: "Extended Thinking",
+                            value: $editedAlwaysThinkingEnabled,
+                            description: "Enable extended thinking mode for complex tasks"
+                        )
+                    } else {
+                        LabeledContent("Extended Thinking") {
+                            Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                        }
                     }
 
-                    // Co-authored by (read-only)
-                    LabeledContent("Include Co-Author") {
-                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                    // Co-authored by - Editable
+                    if isEditing {
+                        BooleanSettingsView(
+                            label: "Include Co-Author",
+                            value: $editedIncludeCoAuthoredBy,
+                            description: "Add Claude as co-author in git commits"
+                        )
+                    } else {
+                        LabeledContent("Include Co-Author") {
+                            Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                        }
                     }
 
                     // Save button when editing
@@ -454,7 +472,12 @@ struct SettingsView: View {
 
     private func saveConfigChanges() {
         Task {
-            let result = await viewModel.saveConfig(model: editedModel, colorScheme: editedColorScheme)
+            let result = await viewModel.saveConfig(
+                model: editedModel,
+                colorScheme: editedColorScheme,
+                alwaysThinkingEnabled: editedAlwaysThinkingEnabled,
+                includeCoAuthoredBy: editedIncludeCoAuthoredBy
+            )
             if let error = result {
                 saveErrorMessage = error
                 showSaveError = true
@@ -533,6 +556,8 @@ struct SettingsView: View {
             editedModel = config.model ?? "claude-sonnet-4-20250514"
             editedColorScheme = config.theme?.colorScheme ?? "system"
             editedPermissions = config.permissions ?? PermissionsConfig()
+            editedAlwaysThinkingEnabled = config.alwaysThinkingEnabled ?? false
+            editedIncludeCoAuthoredBy = config.includeCoAuthoredBy ?? false
         }
         // Update selected scope from loaded config
         if let scope = viewModel.config?.scope {
@@ -655,7 +680,7 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
-    func saveConfig(model: String, colorScheme: String) async -> String? {
+    func saveConfig(model: String, colorScheme: String, alwaysThinkingEnabled: Bool, includeCoAuthoredBy: Bool) async -> String? {
         isSaving = true
         defer { isSaving = false }
 
@@ -673,6 +698,10 @@ class SettingsViewModel: ObservableObject {
         } else {
             currentConfig.theme?.colorScheme = colorScheme
         }
+
+        // Update boolean fields
+        currentConfig.alwaysThinkingEnabled = alwaysThinkingEnabled
+        currentConfig.includeCoAuthoredBy = includeCoAuthoredBy
 
         do {
             let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
