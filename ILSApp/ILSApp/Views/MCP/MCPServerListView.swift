@@ -408,13 +408,6 @@ struct MCPServerItem: Identifiable, Decodable, Hashable {
     }
 }
 
-struct CreateMCPRequest: Encodable {
-    let name: String
-    let command: String
-    let args: [String]
-    let scope: String
-}
-
 #Preview {
     NavigationStack {
         MCPServerListView()

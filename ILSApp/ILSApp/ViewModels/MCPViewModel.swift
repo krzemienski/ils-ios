@@ -68,7 +68,7 @@ class MCPViewModel: ObservableObject {
                 name: name,
                 command: command,
                 args: args,
-                scope: scope
+                scope: MCPScope(rawValue: scope)
             )
             let response: APIResponse<MCPServerItem> = try await client.post("/mcp", body: request)
             if let server = response.data {
