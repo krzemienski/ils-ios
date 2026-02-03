@@ -275,14 +275,37 @@ struct FileSystemService {
     }
 
     /// Delete a skill
-    func deleteSkill(name: String) throws {
+    func deleteSkill(name: String) async throws {
+        // Try directory-based skill first (name/SKILL.md format)
         let skillPath = "\(skillsDirectory)/\(name)"
 
-        guard fileManager.fileExists(atPath: skillPath) else {
-            throw Abort(.notFound, reason: "Skill not found")
+        if fileManager.fileExists(atPath: skillPath) {
+            // Check if this is a directory
+            var isDirectory: ObjCBool = false
+            fileManager.fileExists(atPath: skillPath, isDirectory: &isDirectory)
+
+            if isDirectory.boolValue {
+                // Remove entire directory (works for both local and GitHub skills)
+                try fileManager.removeItem(atPath: skillPath)
+
+                // Invalidate cache after deletion
+                await invalidateSkillsCache()
+                return
+            }
         }
 
-        try fileManager.removeItem(atPath: skillPath)
+        // Try standalone .md file (name.md format)
+        let standalonePath = "\(skillsDirectory)/\(name).md"
+        if fileManager.fileExists(atPath: standalonePath) {
+            try fileManager.removeItem(atPath: standalonePath)
+
+            // Invalidate cache after deletion
+            await invalidateSkillsCache()
+            return
+        }
+
+        // Skill not found in either format
+        throw Abort(.notFound, reason: "Skill not found")
     }
 
     // MARK: - MCP Servers

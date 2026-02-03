@@ -110,7 +110,7 @@ struct SkillsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid skill name")
         }
 
-        try fileSystem.deleteSkill(name: name)
+        try await fileSystem.deleteSkill(name: name)
 
         return APIResponse(
             success: true,
