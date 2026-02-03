@@ -11,7 +11,11 @@ struct PluginsListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.loadPlugins()
                 }
-            } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
+            } else if viewModel.isLoading && viewModel.plugins.isEmpty {
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonPluginRow()
+                }
+            } else if viewModel.plugins.isEmpty {
                 EmptyStateView(
                     title: "No Plugins",
                     systemImage: "puzzlepiece.extension",
@@ -49,11 +53,6 @@ struct PluginsListView: View {
                             }
                         }
                     }
-            }
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.plugins.isEmpty {
-                ProgressView("Loading plugins...")
             }
         }
         .task {

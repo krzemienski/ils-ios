@@ -243,6 +243,28 @@ struct SkeletonMCPServerRow: View {
     }
 }
 
+/// Skeleton loading view matching PluginRowView layout
+struct SkeletonPluginRow: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                SkeletonText(width: 140, height: 16)
+                Spacer()
+                SkeletonCircle(size: 24)
+            }
+
+            SkeletonText(width: 220, height: 12)
+
+            HStack {
+                SkeletonText(width: 70, height: 18)
+                SkeletonText(width: 65, height: 18)
+                SkeletonText(width: 60, height: 18)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Shimmer Components") {
@@ -301,6 +323,11 @@ struct SkeletonMCPServerRow: View {
         Section("MCP Server Skeleton") {
             SkeletonMCPServerRow()
             SkeletonMCPServerRow()
+        }
+
+        Section("Plugin Skeleton") {
+            SkeletonPluginRow()
+            SkeletonPluginRow()
         }
     }
 }
