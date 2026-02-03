@@ -71,6 +71,7 @@ struct NewProjectView: View {
                 let response: APIResponse<Project> = try await client.post("/projects", body: request)
                 if let project = response.data {
                     await MainActor.run {
+                        HapticService.shared.success()
                         onCreated(project)
                         dismiss()
                     }
