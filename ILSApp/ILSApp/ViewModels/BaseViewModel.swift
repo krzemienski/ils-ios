@@ -1,4 +1,5 @@
 import Foundation
+import ILSShared
 
 /// Generic base ViewModel that provides common CRUD operations and state management
 /// for list-based ViewModels that interact with the ILS API.

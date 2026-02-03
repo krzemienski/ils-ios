@@ -90,8 +90,4 @@ struct CreateSessionRequest: Encodable {
     let model: String
 }
 
-struct DeletedResponse: Decodable {
-    let deleted: Bool
-}
-
 struct EmptyBody: Encodable {}

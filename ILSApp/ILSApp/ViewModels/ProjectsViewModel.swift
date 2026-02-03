@@ -2,91 +2,56 @@ import Foundation
 import ILSShared
 
 @MainActor
-class ProjectsViewModel: ObservableObject {
-    @Published var projects: [Project] = []
-    @Published var isLoading = false
-    @Published var error: Error?
+class ProjectsViewModel: BaseViewModel<Project> {
+    /// Convenience accessor for projects
+    var projects: [Project] {
+        items
+    }
 
-    private let client = APIClient()
+    override var resourcePath: String {
+        "/projects"
+    }
 
-    /// Empty state text for UI display
-    var emptyStateText: String {
+    override var loadingStateText: String {
+        "Loading projects..."
+    }
+
+    override var emptyStateText: String {
         if isLoading {
-            return "Loading projects..."
+            return loadingStateText
         }
-        return projects.isEmpty ? "No projects yet" : ""
+        return items.isEmpty ? "No projects yet" : ""
     }
 
     func loadProjects() async {
-        isLoading = true
-        error = nil
-
-        do {
-            let response: APIResponse<ListResponse<Project>> = try await client.get("/projects")
-            if let data = response.data {
-                projects = data.items
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to load projects: \(error.localizedDescription)")
-        }
-
-        isLoading = false
+        await loadItems()
     }
 
     func retryLoadProjects() async {
-        await loadProjects()
+        await retryLoad()
     }
 
     func createProject(name: String, path: String, defaultModel: String, description: String?) async -> Project? {
-        do {
-            let request = CreateProjectRequest(
-                name: name,
-                path: path,
-                defaultModel: defaultModel,
-                description: description
-            )
-            let response: APIResponse<Project> = try await client.post("/projects", body: request)
-            if let project = response.data {
-                projects.append(project)
-                return project
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to create project: \(error.localizedDescription)")
-        }
-        return nil
+        let request = CreateProjectRequest(
+            name: name,
+            path: path,
+            defaultModel: defaultModel,
+            description: description
+        )
+        return await self.createItem(body: request)
     }
 
     func updateProject(_ project: Project, name: String?, defaultModel: String?, description: String?) async -> Project? {
-        do {
-            let request = UpdateProjectRequest(
-                name: name,
-                defaultModel: defaultModel,
-                description: description
-            )
-            let response: APIResponse<Project> = try await client.put("/projects/\(project.id)", body: request)
-            if let updated = response.data {
-                if let index = projects.firstIndex(where: { $0.id == project.id }) {
-                    projects[index] = updated
-                }
-                return updated
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to update project: \(error.localizedDescription)")
-        }
-        return nil
+        let request = UpdateProjectRequest(
+            name: name,
+            defaultModel: defaultModel,
+            description: description
+        )
+        return await self.updateItem(id: project.id, body: request)
     }
 
     func deleteProject(_ project: Project) async {
-        do {
-            let _: APIResponse<DeletedResponse> = try await client.delete("/projects/\(project.id)")
-            projects.removeAll { $0.id == project.id }
-        } catch {
-            self.error = error
-            print("❌ Failed to delete project: \(error.localizedDescription)")
-        }
+        await self.deleteItem(id: project.id)
     }
 }
 

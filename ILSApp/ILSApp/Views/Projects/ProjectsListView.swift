@@ -45,7 +45,7 @@ struct ProjectsListView: View {
         }
         .sheet(isPresented: $showingNewProject) {
             NewProjectView { project in
-                viewModel.projects.append(project)
+                viewModel.items.append(project)
             }
         }
         .sheet(item: $selectedProject) { project in
