@@ -311,6 +311,8 @@ struct NewMCPServerView: View {
     @State private var args = ""
     @State private var scope = "user"
     @State private var isCreating = false
+    @State private var showErrorAlert = false
+    @State private var error: Error?
 
     let onCreated: (MCPServerItem) -> Void
 
@@ -353,6 +355,14 @@ struct NewMCPServerView: View {
                     .disabled(name.isEmpty || command.isEmpty || isCreating)
                 }
             }
+            .alert("Creation Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    createServer()
+                }
+            } message: {
+                Text(error?.localizedDescription ?? "An error occurred while creating the MCP server.")
+            }
         }
     }
 
@@ -378,10 +388,17 @@ struct NewMCPServerView: View {
                     }
                 }
             } catch {
-                print("Failed to create MCP server: \(error)")
+                await MainActor.run {
+                    self.error = error
+                    showErrorAlert = true
+                    isCreating = false
+                }
+                return
             }
 
-            isCreating = false
+            await MainActor.run {
+                isCreating = false
+            }
         }
     }
 }
