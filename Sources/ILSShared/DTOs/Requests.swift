@@ -98,6 +98,77 @@ public struct SessionScanResponse: Codable, Sendable {
     }
 }
 
+// MARK: - Template Requests
+
+public struct CreateTemplateRequest: Codable, Sendable {
+    public let name: String
+    public let description: String?
+    public let initialPrompt: String?
+    public let model: String?
+    public let permissionMode: PermissionMode?
+    public let tags: [String]?
+
+    public init(
+        name: String,
+        description: String? = nil,
+        initialPrompt: String? = nil,
+        model: String? = nil,
+        permissionMode: PermissionMode? = nil,
+        tags: [String]? = nil
+    ) {
+        self.name = name
+        self.description = description
+        self.initialPrompt = initialPrompt
+        self.model = model
+        self.permissionMode = permissionMode
+        self.tags = tags
+    }
+}
+
+public struct UpdateTemplateRequest: Codable, Sendable {
+    public let name: String?
+    public let description: String?
+    public let initialPrompt: String?
+    public let model: String?
+    public let permissionMode: PermissionMode?
+    public let tags: [String]?
+    public let isFavorite: Bool?
+
+    public init(
+        name: String? = nil,
+        description: String? = nil,
+        initialPrompt: String? = nil,
+        model: String? = nil,
+        permissionMode: PermissionMode? = nil,
+        tags: [String]? = nil,
+        isFavorite: Bool? = nil
+    ) {
+        self.name = name
+        self.description = description
+        self.initialPrompt = initialPrompt
+        self.model = model
+        self.permissionMode = permissionMode
+        self.tags = tags
+        self.isFavorite = isFavorite
+    }
+}
+
+public struct CreateSessionFromTemplateRequest: Codable, Sendable {
+    public let templateId: UUID
+    public let projectId: UUID?
+    public let name: String?
+
+    public init(
+        templateId: UUID,
+        projectId: UUID? = nil,
+        name: String? = nil
+    ) {
+        self.templateId = templateId
+        self.projectId = projectId
+        self.name = name
+    }
+}
+
 // MARK: - Chat Requests
 
 public struct ChatStreamRequest: Codable, Sendable {
