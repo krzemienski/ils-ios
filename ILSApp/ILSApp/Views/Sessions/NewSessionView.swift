@@ -9,6 +9,8 @@ struct NewSessionView: View {
     @State private var selectedModel = "sonnet"
     @State private var permissionMode = "default"
     @State private var isCreating = false
+    @State private var error: Error?
+    @State private var showErrorAlert = false
 
     let onCreated: (ChatSession) -> Void
 
@@ -72,6 +74,14 @@ struct NewSessionView: View {
             .task {
                 await projectsViewModel.loadProjects()
             }
+            .alert("Error Creating Session", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    retryCreateSession()
+                }
+            } message: {
+                Text(error?.localizedDescription ?? "An error occurred while creating the session.")
+            }
         }
     }
 
@@ -120,11 +130,22 @@ struct NewSessionView: View {
                     }
                 }
             } catch {
-                print("Failed to create session: \(error)")
+                await MainActor.run {
+                    self.error = error
+                    self.showErrorAlert = true
+                    self.isCreating = false
+                }
+                return
             }
 
-            isCreating = false
+            await MainActor.run {
+                isCreating = false
+            }
         }
+    }
+
+    private func retryCreateSession() {
+        createSession()
     }
 }
 
