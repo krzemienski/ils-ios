@@ -4,6 +4,17 @@ import ILSShared
 struct PluginsListView: View {
     @StateObject private var viewModel = PluginsViewModel()
     @State private var selectedTab = 0
+    @State private var searchText = ""
+
+    private var filteredPlugins: [PluginItem] {
+        if searchText.isEmpty {
+            return viewModel.plugins
+        }
+        return viewModel.plugins.filter { plugin in
+            plugin.name.localizedCaseInsensitiveContains(searchText) ||
+            plugin.description?.localizedCaseInsensitiveContains(searchText) == true
+        }
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -13,21 +24,33 @@ struct PluginsListView: View {
                     ErrorStateView(error: error) {
                         await viewModel.loadPlugins()
                     }
-                } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
-                    EmptyStateView(
-                        title: "No Plugins",
-                        systemImage: "puzzlepiece.extension",
-                        description: "Install plugins from the marketplace",
-                        actionTitle: "Browse Marketplace"
-                    ) {
-                        selectedTab = 1
+                } else if filteredPlugins.isEmpty && !viewModel.isLoading {
+                    if searchText.isEmpty {
+                        EmptyStateView(
+                            title: "No Plugins",
+                            systemImage: "puzzlepiece.extension",
+                            description: "Install plugins from the marketplace",
+                            actionTitle: "Browse Marketplace"
+                        ) {
+                            selectedTab = 1
+                        }
+                    } else {
+                        EmptyStateView(
+                            title: "No Results",
+                            systemImage: "magnifyingglass",
+                            description: "No plugins match your search",
+                            actionTitle: nil
+                        ) {
+                            // No action
+                        }
                     }
                 } else {
-                    ForEach(viewModel.plugins) { plugin in
+                    ForEach(filteredPlugins) { plugin in
                         PluginRowView(plugin: plugin, viewModel: viewModel)
                     }
                 }
             }
+            .searchable(text: $searchText, prompt: "Search plugins")
             .refreshable {
                 await viewModel.loadPlugins()
             }
@@ -45,7 +68,7 @@ struct PluginsListView: View {
             .tag(0)
 
             // Browse Tab
-            MarketplaceView(viewModel: viewModel)
+            MarketplaceView(viewModel: viewModel, searchText: $searchText)
                 .tabItem {
                     Label("Browse", systemImage: "bag")
                 }
@@ -123,15 +146,56 @@ struct PluginRowView: View {
 
 struct MarketplaceView: View {
     @ObservedObject var viewModel: PluginsViewModel
+    @Binding var searchText: String
     @State private var marketplaces: [MarketplaceInfo] = []
     @State private var isLoading = true
+
+    private var filteredMarketplaces: [MarketplaceInfo] {
+        if searchText.isEmpty {
+            return marketplaces
+        }
+        return marketplaces.compactMap { marketplace in
+            let filteredPlugins = marketplace.plugins.filter { plugin in
+                plugin.name.localizedCaseInsensitiveContains(searchText) ||
+                plugin.description?.localizedCaseInsensitiveContains(searchText) == true
+            }
+            if filteredPlugins.isEmpty {
+                return nil
+            }
+            return MarketplaceInfo(
+                name: marketplace.name,
+                source: marketplace.source,
+                plugins: filteredPlugins
+            )
+        }
+    }
 
     var body: some View {
         List {
             if isLoading {
                 ProgressView()
+            } else if filteredMarketplaces.isEmpty {
+                if searchText.isEmpty {
+                    EmptyStateView(
+                        title: "No Plugins Available",
+                        systemImage: "bag",
+                        description: "No marketplace plugins found",
+                        actionTitle: nil
+                    ) {
+                        // No action
+                    }
+                } else {
+                    EmptyStateView(
+                        title: "No Results",
+                        systemImage: "magnifyingglass",
+                        description: "No plugins match your search",
+                        actionTitle: nil
+                    ) {
+                        // No action
+                    }
+                }
             } else {
-                ForEach(marketplaces, id: \.name) { marketplace in
+                ForEach(filteredMarketplaces, id: \.name) { marketplace in
                     Section(marketplace.name) {
                         ForEach(marketplace.plugins, id: \.name) { plugin in
                             HStack {
@@ -162,6 +226,7 @@ struct MarketplaceView: View {
                 }
             }
         }
+        .searchable(text: $searchText, prompt: "Search marketplace")
         .task {
             await loadMarketplaces()
         }
