@@ -2,13 +2,31 @@ import Foundation
 import ILSShared
 
 @MainActor
-class MCPViewModel: ObservableObject {
-    @Published var servers: [MCPServerItem] = []
-    @Published var isLoading = false
-    @Published var error: Error?
+class MCPViewModel: BaseViewModel<MCPServerItem> {
     @Published var searchText = ""
 
-    private let client = APIClient()
+    /// Convenience accessor for servers
+    var servers: [MCPServerItem] {
+        items
+    }
+
+    override var resourcePath: String {
+        "/mcp"
+    }
+
+    override var loadingStateText: String {
+        "Loading MCP servers..."
+    }
+
+    override var emptyStateText: String {
+        if isLoading {
+            return loadingStateText
+        }
+        if !searchText.isEmpty && filteredServers.isEmpty {
+            return "No MCP servers found"
+        }
+        return items.isEmpty ? "No MCP servers configured" : ""
+    }
 
     /// Filtered servers based on search text (client-side filtering for responsiveness)
     var filteredServers: [MCPServerItem] {
@@ -22,17 +40,6 @@ class MCPViewModel: ObservableObject {
         }
     }
 
-    /// Empty state text for UI display
-    var emptyStateText: String {
-        if isLoading {
-            return "Loading MCP servers..."
-        }
-        if !searchText.isEmpty && filteredServers.isEmpty {
-            return "No MCP servers found"
-        }
-        return servers.isEmpty ? "No MCP servers configured" : ""
-    }
-
     /// Load servers from backend
     /// - Parameter refresh: If true, bypasses server cache to rescan configuration files
     func loadServers(refresh: Bool = false) async {
@@ -43,7 +50,7 @@ class MCPViewModel: ObservableObject {
             let path = refresh ? "/mcp?refresh=true" : "/mcp"
             let response: APIResponse<ListResponse<MCPServerItem>> = try await client.get(path)
             if let data = response.data {
-                servers = data.items
+                items = data.items
             }
         } catch {
             self.error = error
@@ -63,32 +70,31 @@ class MCPViewModel: ObservableObject {
     }
 
     func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
-        do {
-            let request = CreateMCPRequest(
-                name: name,
-                command: command,
-                args: args,
-                scope: scope
-            )
-            let response: APIResponse<MCPServerItem> = try await client.post("/mcp", body: request)
-            if let server = response.data {
-                servers.append(server)
-                return server
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to add MCP server '\(name)': \(error.localizedDescription)")
-        }
-        return nil
+        let request = CreateMCPRequest(
+            name: name,
+            command: command,
+            args: args,
+            scope: scope
+        )
+        return await self.createItem(body: request)
     }
 
     func deleteServer(_ server: MCPServerItem) async {
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope)")
-            servers.removeAll { $0.id == server.id }
+            items.removeAll { $0.id == server.id }
         } catch {
             self.error = error
             print("❌ Failed to delete MCP server '\(server.name)': \(error.localizedDescription)")
         }
     }
+}
+
+// MARK: - Request Types
+
+struct CreateMCPRequest: Encodable {
+    let name: String
+    let command: String
+    let args: [String]
+    let scope: String
 }
