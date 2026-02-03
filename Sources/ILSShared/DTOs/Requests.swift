@@ -447,3 +447,96 @@ public struct EnabledResponse: Codable, Sendable {
         self.enabled = enabled
     }
 }
+
+// MARK: - SSH Requests
+
+public struct CreateSSHServerRequest: Codable, Sendable {
+    public let name: String
+    public let host: String
+    public let port: Int
+    public let username: String
+    public let authType: SSHAuthType
+    public let description: String?
+
+    public init(
+        name: String,
+        host: String,
+        port: Int = 22,
+        username: String,
+        authType: SSHAuthType = .password,
+        description: String? = nil
+    ) {
+        self.name = name
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authType = authType
+        self.description = description
+    }
+}
+
+public struct UpdateSSHServerRequest: Codable, Sendable {
+    public let name: String?
+    public let host: String?
+    public let port: Int?
+    public let username: String?
+    public let authType: SSHAuthType?
+    public let description: String?
+
+    public init(
+        name: String? = nil,
+        host: String? = nil,
+        port: Int? = nil,
+        username: String? = nil,
+        authType: SSHAuthType? = nil,
+        description: String? = nil
+    ) {
+        self.name = name
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authType = authType
+        self.description = description
+    }
+}
+
+public struct TestSSHConnectionRequest: Codable, Sendable {
+    public let host: String
+    public let port: Int
+    public let username: String
+    public let authType: SSHAuthType
+
+    public init(
+        host: String,
+        port: Int = 22,
+        username: String,
+        authType: SSHAuthType
+    ) {
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authType = authType
+    }
+}
+
+public struct ExecuteRemoteCommandRequest: Codable, Sendable {
+    public let serverId: UUID
+    public let command: String
+
+    public init(serverId: UUID, command: String) {
+        self.serverId = serverId
+        self.command = command
+    }
+}
+
+public struct ExecuteRemoteCommandResponse: Codable, Sendable {
+    public let output: String
+    public let exitCode: Int
+    public let error: String?
+
+    public init(output: String, exitCode: Int, error: String? = nil) {
+        self.output = output
+        self.exitCode = exitCode
+        self.error = error
+    }
+}
