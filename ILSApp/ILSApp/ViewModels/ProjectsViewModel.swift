@@ -89,18 +89,3 @@ class ProjectsViewModel: ObservableObject {
         }
     }
 }
-
-// MARK: - Request Types
-
-struct CreateProjectRequest: Encodable {
-    let name: String
-    let path: String
-    let defaultModel: String
-    let description: String?
-}
-
-struct UpdateProjectRequest: Encodable {
-    let name: String?
-    let defaultModel: String?
-    let description: String?
-}
