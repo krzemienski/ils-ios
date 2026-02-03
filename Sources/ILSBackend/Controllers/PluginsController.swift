@@ -10,6 +10,7 @@ struct PluginsController: RouteCollection {
         plugins.get(use: list)
         plugins.get("marketplace", use: marketplace)
         plugins.post("install", use: install)
+        plugins.post(":name", "update", use: update)
         plugins.post(":name", "enable", use: enable)
         plugins.post(":name", "disable", use: disable)
         plugins.delete(":name", use: uninstall)
@@ -242,6 +243,117 @@ struct PluginsController: RouteCollection {
             marketplace: input.marketplace,
             isInstalled: true,
             isEnabled: true,
+            version: version,
+            commands: commands.isEmpty ? nil : commands,
+            agents: agents.isEmpty ? nil : agents,
+            path: installPath
+        )
+
+        return APIResponse(
+            success: true,
+            data: plugin
+        )
+    }
+
+    /// POST /plugins/:name/update - Update a plugin
+    @Sendable
+    func update(req: Request) async throws -> APIResponse<Plugin> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid plugin name")
+        }
+
+        let input = try req.content.decode(UpdatePluginRequest.self)
+
+        // Execute claude CLI to update the plugin
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+
+        // Build the update command
+        let updateCommand = "claude plugin update \(name) --marketplace \(input.marketplace)"
+        process.arguments = ["-l", "-c", updateCommand]
+
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+
+        try process.run()
+        process.waitUntilExit()
+
+        // Check if update succeeded
+        guard process.terminationStatus == 0 else {
+            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorMessage = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "Unknown error"
+            throw Abort(.internalServerError, reason: "Plugin update failed: \(errorMessage)")
+        }
+
+        // Read the updated plugin info from installed_plugins.json
+        let fm = FileManager.default
+        let installedPluginsPath = "\(fileSystem.claudeDirectory)/plugins/installed_plugins.json"
+        let pluginKey = "\(name)@\(input.marketplace)"
+
+        var version: String?
+        var installPath: String?
+        var description: String?
+        var commands: [String] = []
+        var agents: [String] = []
+
+        if fm.fileExists(atPath: installedPluginsPath),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let pluginsDict = json["plugins"] as? [String: Any],
+           let installsArray = pluginsDict[pluginKey] as? [[String: Any]],
+           let latestInstall = installsArray.first {
+
+            version = latestInstall["version"] as? String
+            installPath = latestInstall["installPath"] as? String
+
+            // Try to read plugin manifest for additional details
+            if let path = installPath {
+                let manifestPath = "\(path)/.claude-plugin/plugin.json"
+                let altManifestPath = "\(path)/plugin.json"
+
+                if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
+                   let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
+                          let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                }
+
+                // Check for commands directory
+                let commandsPath = "\(path)/commands"
+                if let cmdContents = try? fm.contentsOfDirectory(atPath: commandsPath) {
+                    commands = cmdContents.filter { $0.hasSuffix(".md") }
+                        .map { "/\(name):\($0.replacingOccurrences(of: ".md", with: ""))" }
+                }
+
+                // Check for agents directory
+                let agentsPath = "\(path)/agents"
+                if let agentContents = try? fm.contentsOfDirectory(atPath: agentsPath) {
+                    agents = agentContents.filter { $0.hasSuffix(".md") }
+                        .map { $0.replacingOccurrences(of: ".md", with: "") }
+                }
+            }
+        }
+
+        // Read enabled status from settings
+        let settingsPath = fileSystem.userSettingsPath
+        var isEnabled = true
+        if fm.fileExists(atPath: settingsPath),
+           let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
+           let settingsJson = try? JSONSerialization.jsonObject(with: settingsData) as? [String: Any],
+           let enabledPlugins = settingsJson["enabledPlugins"] as? [String: Bool] {
+            isEnabled = enabledPlugins[pluginKey] ?? true
+        }
+
+        // Build plugin response
+        let plugin = Plugin(
+            name: name,
+            description: description,
+            marketplace: input.marketplace,
+            isInstalled: true,
+            isEnabled: isEnabled,
             version: version,
             commands: commands.isEmpty ? nil : commands,
             agents: agents.isEmpty ? nil : agents,

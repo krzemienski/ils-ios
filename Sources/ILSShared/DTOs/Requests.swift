@@ -320,6 +320,14 @@ public struct InstallPluginRequest: Codable, Sendable {
     }
 }
 
+public struct UpdatePluginRequest: Codable, Sendable {
+    public let marketplace: String
+
+    public init(marketplace: String) {
+        self.marketplace = marketplace
+    }
+}
+
 // MARK: - Config Requests
 
 public struct UpdateConfigRequest: Codable, Sendable {
