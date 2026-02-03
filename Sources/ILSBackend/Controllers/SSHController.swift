@@ -18,6 +18,7 @@ struct SSHController: RouteCollection {
         ssh.post(":id", "execute", use: executeCommand)
         ssh.get(":id", "claude-version", use: detectClaudeVersion)
         ssh.get(":id", "sessions", use: listRemoteSessions)
+        ssh.get(":id", "config", use: getRemoteConfig)
     }
 
     /// GET /ssh - List all SSH servers
@@ -274,6 +275,34 @@ struct SSHController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: sessions)
+        )
+    }
+
+    /// GET /ssh/:id/config - Get Claude Code configuration from remote server
+    @Sendable
+    func getRemoteConfig(req: Request) async throws -> APIResponse<ConfigInfo> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid server ID")
+        }
+
+        // Credential needs to be passed in the X-SSH-Credential header for GET request
+        guard let credential = req.headers.first(name: "X-SSH-Credential") else {
+            throw Abort(.badRequest, reason: "Missing X-SSH-Credential header")
+        }
+
+        let scope = req.query[String.self, at: "scope"] ?? "user"
+
+        let sshService = SSHService()
+        let config = try await sshService.readRemoteConfig(
+            serverId: id,
+            credential: credential,
+            scope: scope,
+            on: req.db
+        )
+
+        return APIResponse(
+            success: true,
+            data: config
         )
     }
 }

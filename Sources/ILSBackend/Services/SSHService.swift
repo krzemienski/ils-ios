@@ -357,4 +357,91 @@ struct SSHService {
             credential: credential
         )
     }
+
+    // MARK: - Remote Configuration
+
+    /// Read Claude Code configuration from remote server
+    /// - Parameters:
+    ///   - server: SSH server configuration
+    ///   - credential: Password or private key string
+    ///   - scope: Configuration scope (user, project, workspace)
+    /// - Returns: ConfigInfo object with remote configuration
+    func readRemoteConfig(
+        server: SSHServer,
+        credential: String,
+        scope: String
+    ) async throws -> ConfigInfo {
+        // Determine config file path based on scope
+        let configPath: String
+        switch scope {
+        case "user":
+            configPath = "~/.config/claude/config.json"
+        case "project":
+            configPath = "./.claude/config.json"
+        case "workspace":
+            configPath = "./.claude/workspace.json"
+        default:
+            configPath = "~/.config/claude/config.json"
+        }
+
+        // Read the remote config file
+        do {
+            let content = try await readRemoteFile(
+                server: server,
+                credential: credential,
+                path: configPath
+            )
+
+            // Parse JSON into ClaudeConfig
+            let decoder = JSONDecoder()
+            let config = try decoder.decode(ClaudeConfig.self, from: Data(content.utf8))
+
+            return ConfigInfo(
+                scope: scope,
+                path: configPath,
+                content: config,
+                isValid: true,
+                errors: nil
+            )
+        } catch {
+            // If file doesn't exist or can't be parsed, return empty config
+            return ConfigInfo(
+                scope: scope,
+                path: configPath,
+                content: ClaudeConfig(),
+                isValid: false,
+                errors: ["Failed to read config: \(error.localizedDescription)"]
+            )
+        }
+    }
+
+    /// Read Claude Code configuration from remote server by server ID
+    /// - Parameters:
+    ///   - serverId: SSH server UUID
+    ///   - credential: Password or private key string
+    ///   - scope: Configuration scope (user, project, workspace)
+    ///   - db: Database connection
+    /// - Returns: ConfigInfo object with remote configuration
+    func readRemoteConfig(
+        serverId: UUID,
+        credential: String,
+        scope: String,
+        on db: Database
+    ) async throws -> ConfigInfo {
+        // Fetch server from database
+        guard let serverModel = try await SSHServerModel.query(on: db)
+            .filter(\.$id == serverId)
+            .first() else {
+            throw SSHServiceError.serverNotFound
+        }
+
+        let server = serverModel.toShared()
+
+        // Read remote config
+        return try await readRemoteConfig(
+            server: server,
+            credential: credential,
+            scope: scope
+        )
+    }
 }
