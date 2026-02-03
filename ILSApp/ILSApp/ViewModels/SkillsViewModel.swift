@@ -7,14 +7,34 @@ class SkillsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
+    @Published var filterStatus: SkillFilterStatus = .all
 
     private let client = APIClient()
 
-    /// Filtered skills based on search text (client-side filtering for responsiveness)
+    enum SkillFilterStatus {
+        case all
+        case enabled
+        case disabled
+    }
+
+    /// Filtered skills based on search text and status filter (client-side filtering for responsiveness)
     var filteredSkills: [SkillItem] {
-        guard !searchText.isEmpty else { return skills }
+        var result = skills
+
+        // Apply status filter
+        switch filterStatus {
+        case .all:
+            break
+        case .enabled:
+            result = result.filter { $0.isActive }
+        case .disabled:
+            result = result.filter { !$0.isActive }
+        }
+
+        // Apply search filter
+        guard !searchText.isEmpty else { return result }
         let query = searchText.lowercased()
-        return skills.filter { skill in
+        return result.filter { skill in
             skill.name.lowercased().contains(query) ||
             (skill.description?.lowercased().contains(query) ?? false) ||
             skill.tags.contains { $0.lowercased().contains(query) }
@@ -26,10 +46,13 @@ class SkillsViewModel: ObservableObject {
         if isLoading {
             return "Loading skills..."
         }
-        if !searchText.isEmpty && filteredSkills.isEmpty {
-            return "No skills found"
+        if filteredSkills.isEmpty {
+            if !searchText.isEmpty || filterStatus != .all {
+                return "No skills found"
+            }
+            return skills.isEmpty ? "No skills found" : ""
         }
-        return skills.isEmpty ? "No skills found" : ""
+        return ""
     }
 
     /// Load skills from backend
