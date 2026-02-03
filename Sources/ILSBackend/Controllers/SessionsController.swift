@@ -10,6 +10,7 @@ struct SessionsController: RouteCollection {
 
         sessions.get(use: list)
         sessions.post(use: create)
+        sessions.post("from-template", use: createFromTemplate)
         sessions.get("scan", use: scan)
         sessions.get(":id", use: get)
         sessions.delete(":id", use: delete)
@@ -59,6 +60,37 @@ struct SessionsController: RouteCollection {
             projectId: input.projectId,
             model: input.model ?? "sonnet",
             permissionMode: input.permissionMode ?? .default
+        )
+
+        try await session.save(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: session.toShared(projectName: projectName)
+        )
+    }
+
+    /// POST /sessions/from-template - Create a session from a template
+    @Sendable
+    func createFromTemplate(req: Request) async throws -> APIResponse<ChatSession> {
+        let input = try req.content.decode(CreateSessionFromTemplateRequest.self)
+
+        guard let template = try await SessionTemplateModel.find(input.templateId, on: req.db) else {
+            throw Abort(.notFound, reason: "Template not found")
+        }
+
+        var projectName: String?
+        if let projectId = input.projectId {
+            if let project = try await ProjectModel.find(projectId, on: req.db) {
+                projectName = project.name
+            }
+        }
+
+        let session = SessionModel(
+            name: input.name ?? template.name,
+            projectId: input.projectId,
+            model: template.model,
+            permissionMode: PermissionMode(rawValue: template.permissionMode) ?? .default
         )
 
         try await session.save(on: req.db)
