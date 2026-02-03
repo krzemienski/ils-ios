@@ -8,6 +8,8 @@ struct NewProjectView: View {
     @State private var defaultModel = "sonnet"
     @State private var description = ""
     @State private var isCreating = false
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String?
 
     let onCreated: (Project) -> Void
 
@@ -52,6 +54,14 @@ struct NewProjectView: View {
                     .disabled(name.isEmpty || path.isEmpty || isCreating)
                 }
             }
+            .alert("Error Creating Project", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    createProject()
+                }
+            } message: {
+                Text(errorMessage ?? "An error occurred while creating the project.")
+            }
         }
     }
 
@@ -76,10 +86,17 @@ struct NewProjectView: View {
                     }
                 }
             } catch {
-                print("Failed to create project: \(error)")
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showErrorAlert = true
+                    isCreating = false
+                }
+                return
             }
 
-            isCreating = false
+            await MainActor.run {
+                isCreating = false
+            }
         }
     }
 }
