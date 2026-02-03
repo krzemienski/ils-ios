@@ -240,7 +240,7 @@ struct ThinkingView: View {
 
 // MARK: - Data Models
 
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     let isUser: Bool
     var text: String
