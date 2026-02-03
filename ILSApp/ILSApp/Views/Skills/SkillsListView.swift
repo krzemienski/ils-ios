@@ -143,6 +143,8 @@ struct SkillDetailView: View {
     @State private var isLoading = true
     @State private var showingEditor = false
     @State private var showCopiedToast = false
+    @State private var error: Error?
+    @State private var showErrorAlert = false
 
     var body: some View {
         ScrollView {
@@ -208,6 +210,16 @@ struct SkillDetailView: View {
         }
         .task {
             await loadFullSkill()
+        }
+        .alert("Error Loading Skill", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {}
+            Button("Retry") {
+                Task {
+                    await loadFullSkill()
+                }
+            }
+        } message: {
+            Text(error?.localizedDescription ?? "An error occurred while loading the skill.")
         }
     }
 
@@ -282,14 +294,17 @@ struct SkillDetailView: View {
 
     private func loadFullSkill() async {
         isLoading = true
+        error = nil
+        showErrorAlert = false
         do {
             let client = APIClient()
             let response: APIResponse<SkillItem> = try await client.get("/skills/\(skill.name)")
             if let loadedSkill = response.data {
                 fullSkill = loadedSkill
             }
-        } catch {
-            print("Failed to load full skill: \(error)")
+        } catch let loadError {
+            error = loadError
+            showErrorAlert = true
         }
         isLoading = false
     }
