@@ -350,6 +350,28 @@ public struct ConfigValidationResult: Codable, Sendable {
     }
 }
 
+/// Field source tracking for configuration values
+public struct FieldSource: Codable, Sendable {
+    public let scope: String
+    public let path: String
+
+    public init(scope: String, path: String) {
+        self.scope = scope
+        self.path = path
+    }
+}
+
+/// Consolidated configuration response with per-field source tracking
+public struct ConsolidatedConfigResponse: Codable, Sendable {
+    public let config: ClaudeConfig
+    public let sources: [String: FieldSource]
+
+    public init(config: ClaudeConfig, sources: [String: FieldSource]) {
+        self.config = config
+        self.sources = sources
+    }
+}
+
 // MARK: - Stats Response
 
 public struct StatsResponse: Codable, Sendable {
