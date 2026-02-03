@@ -200,11 +200,22 @@ struct SettingsView: View {
 
                     // Always Thinking - Editable
                     if isEditing {
-                        BooleanSettingsView(
-                            label: "Extended Thinking",
-                            value: $editedAlwaysThinkingEnabled,
-                            description: "Enable extended thinking mode for complex tasks"
-                        )
+                        VStack(alignment: .leading, spacing: 4) {
+                            BooleanSettingsView(
+                                label: "Extended Thinking",
+                                value: $editedAlwaysThinkingEnabled,
+                                description: "Enable extended thinking mode for complex tasks"
+                            )
+                            HStack(alignment: .top, spacing: 6) {
+                                Image(systemName: "info.circle")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text("Allows Claude to spend more time reasoning through complex problems, improving accuracy for difficult tasks")
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                            .padding(.leading, 8)
+                        }
                     } else {
                         LabeledContent("Extended Thinking") {
                             Image(systemName: currentAlwaysThinkingEnabled ? "checkmark.circle.fill" : "circle")
@@ -214,11 +225,22 @@ struct SettingsView: View {
 
                     // Co-authored by - Editable
                     if isEditing {
-                        BooleanSettingsView(
-                            label: "Include Co-Author",
-                            value: $editedIncludeCoAuthoredBy,
-                            description: "Add Claude as co-author in git commits"
-                        )
+                        VStack(alignment: .leading, spacing: 4) {
+                            BooleanSettingsView(
+                                label: "Include Co-Author",
+                                value: $editedIncludeCoAuthoredBy,
+                                description: "Add Claude as co-author in git commits"
+                            )
+                            HStack(alignment: .top, spacing: 6) {
+                                Image(systemName: "info.circle")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text("Adds 'Co-Authored-By: Claude' to git commit messages to acknowledge AI assistance")
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                            .padding(.leading, 8)
+                        }
                     } else {
                         LabeledContent("Include Co-Author") {
                             Image(systemName: currentIncludeCoAuthoredBy ? "checkmark.circle.fill" : "circle")
@@ -402,7 +424,53 @@ struct SettingsView: View {
             } header: {
                 Text("Permissions")
             } footer: {
-                Text("Tap to edit permission rules and default mode")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Control how Claude handles tool operations:")
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "checkmark.shield.fill")
+                            .foregroundColor(.green)
+                            .frame(width: 16)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Allow")
+                                .fontWeight(.medium)
+                            Text("Automatically approve all operations")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "questionmark.circle.fill")
+                            .foregroundColor(.orange)
+                            .frame(width: 16)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Prompt")
+                                .fontWeight(.medium)
+                            Text("Ask for confirmation before operations")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "xmark.shield.fill")
+                            .foregroundColor(.red)
+                            .frame(width: 16)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Deny")
+                                .fontWeight(.medium)
+                            Text("Block all operations")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    Text("Tap to edit permission rules and default mode")
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.secondaryText)
+                        .padding(.top, 4)
+                }
             }
 
             // MARK: - Advanced Section
@@ -497,7 +565,48 @@ struct SettingsView: View {
             } header: {
                 Text("Advanced")
             } footer: {
-                Text("Edit raw JSON configuration files or reset settings to defaults")
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Hooks:")
+                                .fontWeight(.medium)
+                            Text("Custom scripts that run at specific points in Claude's execution lifecycle")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Plugins:")
+                                .fontWeight(.medium)
+                            Text("Extensions that add new capabilities to Claude Code")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Environment Variables:")
+                                .fontWeight(.medium)
+                            Text("Custom environment variables available to Claude during execution")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    Text("Edit raw JSON configuration files or reset settings to defaults")
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.secondaryText)
+                        .padding(.top, 4)
+                }
             }
 
             // MARK: - Statistics Section
