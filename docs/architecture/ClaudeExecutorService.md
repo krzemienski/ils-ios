@@ -377,6 +377,442 @@ let cancellable = publisher.sink(
 - **Error**: Publisher fails → `removeSession()` called
 - **Cancellation**: User cancels → `cancel()` removes session → publisher completion fires → `removeSession()` called (idempotent)
 
+### Session Management and Cancellation
+
+`ClaudeExecutorService` maintains active session state to support long-running conversations and graceful cancellation. The actor tracks each active streaming session using Combine's cancellation mechanism, ensuring resources are properly cleaned up whether sessions complete successfully, fail, or are explicitly cancelled.
+
+#### activeSessions Dictionary Structure
+
+The service uses a simple dictionary to map session IDs to their Combine cancellables:
+
+```swift
+actor ClaudeExecutorService {
+    private var activeSessions: [String: AnyCancellable] = [:]
+
+    // Helper methods for session management
+    private func storeSession(_ sessionId: String, cancellable: AnyCancellable) async {
+        activeSessions[sessionId] = cancellable
+    }
+
+    private func removeSession(_ sessionId: String) async {
+        activeSessions.removeValue(forKey: sessionId)
+    }
+}
+```
+
+**Design Rationale:**
+
+| Aspect | Choice | Reasoning |
+|--------|--------|-----------|
+| **Key Type** | `String` (Session ID) | Matches SDK's session identifier format, client-controlled |
+| **Value Type** | `AnyCancellable` | Combine's type-erased cancellable, stores publisher subscription |
+| **Access Level** | `private` | Implementation detail, only accessed within actor |
+| **Actor Isolation** | Yes (implicit) | Dictionary mutations protected by actor synchronization |
+
+**Why not `Set<AnyCancellable>`?**
+
+The service also declares `private var cancellables = Set<AnyCancellable>()`, which is currently unused. The `activeSessions` dictionary was chosen instead because:
+
+1. **Selective Cancellation**: Need to cancel specific sessions by ID, not all at once
+2. **Session Lookup**: Can check if a session is active: `activeSessions[sessionId] != nil`
+3. **Explicit Lifecycle**: Dictionary clearly maps session ID → subscription
+4. **Cleanup Verification**: Can verify session was removed after cancellation
+
+The `Set<AnyCancellable>` pattern is common for "fire-and-forget" publishers where you don't need per-subscription control.
+
+#### Combine Cancellables Usage
+
+When the SDK returns a streaming result, the service creates a Combine subscription that produces `ResponseChunk` events:
+
+```swift
+case .stream(let publisher):
+    let sessionId = options.sessionId ?? UUID().uuidString
+
+    let cancellable = publisher.sink(
+        receiveCompletion: { completion in
+            switch completion {
+            case .finished:
+                continuation.finish()
+            case .failure(let error):
+                continuation.yield(.error(StreamError(code: "STREAM_ERROR", message: error.localizedDescription)))
+                continuation.finish()
+            }
+            Task {
+                await self.removeSession(sessionId)  // Cleanup on completion
+            }
+        },
+        receiveValue: { chunk in
+            let message = self.convertChunk(chunk)
+            continuation.yield(message)
+        }
+    )
+
+    await storeSession(sessionId, cancellable: cancellable)
+```
+
+**What is `AnyCancellable`?**
+
+`AnyCancellable` is Combine's mechanism for managing publisher subscriptions:
+
+- **Subscription Handle**: Represents the active connection between publisher and subscriber
+- **Automatic Cleanup**: When deallocated, automatically calls `cancel()` on the subscription
+- **Manual Cancellation**: Can explicitly call `cancellable.cancel()` to stop receiving events
+- **Reference Type**: Class-based, can be stored and passed around
+
+**Publisher Lifecycle:**
+
+1. **Subscription Created**: `publisher.sink(...)` creates the subscription
+2. **Events Flow**: `receiveValue` closure called for each chunk from SDK
+3. **Completion**: `receiveCompletion` called when publisher finishes or fails
+4. **Cancellation**: Either automatic (dealloc) or manual (`cancel()` method)
+
+**Memory Management:**
+
+```swift
+// ✅ Stored in actor-isolated dictionary
+await storeSession(sessionId, cancellable: cancellable)
+
+// ✅ Strongly referenced by dictionary, won't be deallocated
+// Publisher keeps sending chunks
+
+// ✅ Removed after completion (automatic cleanup)
+Task {
+    await self.removeSession(sessionId)  // Removes strong reference
+}
+// ⚠️ If cancellable isn't removed, dictionary retains it forever
+```
+
+**Critical Ordering:**
+
+The cancellable is stored **after** creating the `sink()`, not before:
+
+```swift
+// ✅ Correct: Create sink first, then store
+let cancellable = publisher.sink(...)  // No suspension points
+await storeSession(sessionId, cancellable: cancellable)
+
+// ❌ Wrong: Race condition if stored before sink
+await storeSession(sessionId, cancellable: nil)  // Can't store yet
+let cancellable = publisher.sink(...)  // Might receive cancel() before storage
+```
+
+This prevents a race where `cancel()` is called between storage and sink creation.
+
+#### cancel() Method Flow
+
+The `cancel()` method provides explicit cancellation of active sessions:
+
+```swift
+func cancel(sessionId: String) async {
+    if let cancellable = activeSessions[sessionId] {
+        cancellable.cancel()
+        activeSessions.removeValue(forKey: sessionId)
+    }
+    client?.cancel()
+}
+```
+
+**Execution Flow:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      cancel(sessionId:)                         │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │ Lookup Session       │
+                  │ activeSessions[id]   │
+                  └──────────┬───────────┘
+                             │
+                   ┌─────────┴─────────┐
+                   │                   │
+                   ▼                   ▼
+          ┌────────────────┐    ┌──────────────┐
+          │ Session Found  │    │ Not Found    │
+          └───────┬────────┘    │ Return Early │
+                  │             └──────────────┘
+                  ▼
+       ┌────────────────────────┐
+       │ Call cancellable.cancel()│
+       │ (stops publisher)        │
+       └──────────┬───────────────┘
+                  │
+                  ▼
+       ┌────────────────────────┐
+       │ Remove from Dictionary │
+       │ activeSessions[id] = nil│
+       └──────────┬───────────────┘
+                  │
+                  ▼
+       ┌────────────────────────┐
+       │ Cancel SDK Client      │
+       │ client?.cancel()       │
+       └────────────────────────┘
+```
+
+**Step-by-Step Breakdown:**
+
+1. **Session Lookup** (`if let cancellable = activeSessions[sessionId]`):
+   - Checks if session exists in active sessions
+   - Thread-safe due to actor isolation
+   - Returns early if session not found (already completed or invalid ID)
+
+2. **Cancel Subscription** (`cancellable.cancel()`):
+   - Stops the Combine publisher from emitting further events
+   - `receiveValue` closure will not be called again
+   - `receiveCompletion` **will** be called with `.finished` (Combine guarantee)
+   - SDK's underlying process may continue briefly, but chunks are ignored
+
+3. **Remove from Dictionary** (`activeSessions.removeValue(forKey: sessionId)`):
+   - Removes strong reference to cancellable
+   - Prevents future cancellation attempts on same session
+   - If `receiveCompletion` later calls `removeSession()`, it's idempotent (no-op)
+
+4. **SDK-Level Cancellation** (`client?.cancel()`):
+   - Calls ClaudeCodeSDK's `cancel()` method
+   - Terminates the underlying `claude` CLI process
+   - Closes PTY and releases system resources
+   - **Note**: This cancels **all** SDK operations, not just this session
+
+**Concurrency Considerations:**
+
+```swift
+// ✅ Thread-safe: Actor serializes access
+Task {
+    await executor.cancel(sessionId: "session-1")
+}
+Task {
+    await executor.cancel(sessionId: "session-2")
+}
+// Both cancellations execute safely, no dictionary corruption
+```
+
+**Idempotency:**
+
+```swift
+await executor.cancel(sessionId: "session-1")  // Cancels and removes
+await executor.cancel(sessionId: "session-1")  // No-op, already removed
+```
+
+The method is safe to call multiple times on the same session ID.
+
+**Why call `client?.cancel()` every time?**
+
+This is a current implementation quirk:
+
+- ⚠️ **Global Effect**: Cancels all SDK operations, not scoped to session
+- ⚠️ **Multi-Session Risk**: Cancelling session A might stop session B
+- ✅ **Fail-Safe**: Ensures SDK resources are released
+- 🔄 **Potential Improvement**: SDK could expose per-session cancellation
+
+In practice, this works because:
+1. Most deployments run one session at a time
+2. ClaudeCodeSDK manages process lifecycle robustly
+3. Completion handlers clean up activeSessions correctly
+
+**Error Handling:**
+
+The method has no error handling because:
+- `cancellable.cancel()` never throws
+- `activeSessions.removeValue()` is always safe
+- `client?.cancel()` failure is logged internally by SDK
+- Cancellation is best-effort; failures don't block caller
+
+#### Session Lifecycle
+
+A session progresses through these stages:
+
+```
+┌──────────────┐
+│   Creation   │  execute() called with sessionId or generates UUID
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Waiting    │  Task scheduled, waiting for actor to run runWithSDK()
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Storage    │  storeSession() adds to activeSessions dictionary
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────────────────────────────────┐
+│              Active Streaming                │
+│  • receiveValue called for each chunk        │
+│  • convertChunk() transforms SDK → ILS types │
+│  • continuation.yield() sends to caller      │
+└──────┬───────────────────────────────────────┘
+       │
+       ├─────────────┬─────────────┬────────────┐
+       ▼             ▼             ▼            ▼
+┌─────────────┐ ┌─────────┐ ┌──────────┐ ┌──────────┐
+│  Completed  │ │  Error  │ │ Canceled │ │ Timeout  │
+│  (success)  │ │ (failed)│ │ (manual) │ │ (budget) │
+└──────┬──────┘ └────┬────┘ └────┬─────┘ └────┬─────┘
+       │             │            │            │
+       └─────────────┴────────────┴────────────┘
+                     │
+                     ▼
+            ┌─────────────────┐
+            │    Cleanup      │
+            │ removeSession() │
+            └─────────────────┘
+```
+
+**Phase Details:**
+
+**1. Creation** (execute() method):
+```swift
+nonisolated func execute(
+    prompt: String,
+    workingDirectory: String?,
+    options: ExecutionOptions
+) -> AsyncThrowingStream<StreamMessage, Error> {
+    // Session ID provided by caller or generated
+    let sessionId = options.sessionId ?? UUID().uuidString
+
+    AsyncThrowingStream { continuation in
+        Task {
+            await self.runWithSDK(...)  // Schedules actor-isolated work
+        }
+    }
+}
+```
+
+- Session ID determined: Use `options.sessionId` or generate with `UUID()`
+- Stream returned immediately to caller
+- No actor access yet (nonisolated method)
+
+**2. Waiting** (Task scheduling):
+```swift
+Task {
+    await self.runWithSDK(...)  // Waits for actor to become available
+}
+```
+
+- `Task` enqueued on actor's executor
+- If actor is busy with other sessions, waits in queue
+- Actor processes one task at a time (serialized execution)
+
+**3. Storage** (storeSession):
+```swift
+case .stream(let publisher):
+    let cancellable = publisher.sink(...)
+    await storeSession(sessionId, cancellable: cancellable)
+```
+
+- Happens only for streaming results (not `.text` or `.json`)
+- Cancellable stored in `activeSessions[sessionId]`
+- Session now visible to `cancel()` method
+- Publisher starts emitting chunks
+
+**4. Active Streaming**:
+```swift
+receiveValue: { chunk in
+    let message = self.convertChunk(chunk)  // Transform chunk
+    continuation.yield(message)             // Send to caller
+}
+```
+
+- SDK produces `ResponseChunk` events as CLI outputs JSON
+- Each chunk converted to `StreamMessage` via `convertChunk()`
+- Caller's `for try await` loop receives messages in real-time
+- Can last seconds to hours depending on Claude's task
+
+**5. Termination** (four paths):
+
+| Path | Trigger | Flow |
+|------|---------|------|
+| **Completed** | SDK finishes successfully | `receiveCompletion(.finished)` → `continuation.finish()` → `removeSession()` |
+| **Error** | SDK error or exception | `receiveCompletion(.failure(error))` → yield error → `continuation.finish()` → `removeSession()` |
+| **Canceled** | Client calls `cancel()` | `cancel()` removes session → `cancellable.cancel()` → `receiveCompletion(.finished)` → `removeSession()` (idempotent) |
+| **Timeout** | SDK budget/turn limit | SDK stops publisher → `receiveCompletion(.finished)` → `continuation.finish()` → `removeSession()` |
+
+All paths eventually call `removeSession()` via the completion handler.
+
+**6. Cleanup** (removeSession):
+```swift
+receiveCompletion: { completion in
+    continuation.finish()  // Close stream
+
+    Task {
+        await self.removeSession(sessionId)  // Remove from activeSessions
+    }
+}
+```
+
+- Session removed from `activeSessions` dictionary
+- Cancellable reference released (may dealloc if no other refs)
+- Session ID can be reused for future requests
+- No memory leaks; guaranteed cleanup
+
+**Cleanup Guarantees:**
+
+✅ **Always Cleaned Up:**
+- Combine's `receiveCompletion` is **always** called exactly once
+- Even if publisher is cancelled, completion fires with `.finished`
+- `Task { await removeSession() }` always executes
+- Actor ensures `removeSession()` eventually runs
+
+✅ **Idempotent Cleanup:**
+- `removeSession()` safe to call multiple times
+- `cancel()` might call it, then completion handler calls it again
+- Dictionary's `removeValue(forKey:)` is idempotent
+- No double-free or corruption issues
+
+⚠️ **Not Cleaned If:**
+- Actor is deallocated before completion (app termination)
+- Extremely rare: `Task` is cancelled before `removeSession()` runs
+- In practice, never happens in normal operation
+
+**Session Resumption:**
+
+For multi-turn conversations, sessions can be resumed:
+
+```swift
+// First request
+let options1 = ExecutionOptions(...)
+options1.sessionId = "session-123"
+let stream1 = executor.execute(prompt: "Hello", options: options1)
+
+// Later request (resume)
+let options2 = ExecutionOptions(...)
+options2.resume = "session-123"  // Resume previous session
+let stream2 = executor.execute(prompt: "Continue", options: options2)
+```
+
+**Resume vs. Active Sessions:**
+
+- `options.resume`: Tells SDK to continue a previous conversation (SDK manages history)
+- `activeSessions`: Tracks currently streaming requests (service manages lifecycle)
+- These are **orthogonal**: Can resume a completed session (new entry in `activeSessions`)
+
+**Why Separate `resume` and `sessionId`?**
+
+```swift
+if let resume = options.resume {
+    result = try await client.resumeConversation(
+        sessionId: resume,  // SDK's session ID (history lookup)
+        prompt: prompt,
+        ...
+    )
+} else {
+    result = try await client.runSinglePrompt(...)
+}
+
+// Later...
+let sessionId = options.sessionId ?? UUID().uuidString  // Our tracking ID
+await storeSession(sessionId, cancellable: cancellable)
+```
+
+- `options.resume`: SDK's session ID for conversation history
+- `options.sessionId`: Our tracking ID for cancellation
+- Can be different: Resuming old conversation with new tracking ID
+- Allows multiple concurrent requests to same historical session
+
 ### Data Flow
 
 ```
