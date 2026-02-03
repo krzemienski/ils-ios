@@ -24,9 +24,13 @@ struct SettingsView: View {
     @State private var showSaveError = false
     @State private var saveErrorMessage = ""
     @State private var showSaveSuccess = false
+    @State private var showDangerousPermissionWarning = false
 
     // Validation state
     @State private var validationErrors: [String] = []
+
+    // Permission tracking for dangerous changes
+    @State private var previousDefaultMode: String = "prompt"
 
     // Available options
     private let availableModels = [
@@ -476,6 +480,21 @@ struct SettingsView: View {
         .onChange(of: editedColorScheme) { _, _ in
             updateValidationErrors()
         }
+        .onChange(of: editedPermissions.defaultMode) { oldValue, newValue in
+            // Check for dangerous permission change
+            if let newMode = newValue, newMode == "allow", oldValue != "allow" {
+                showDangerousPermissionWarning = true
+            }
+        }
+        .alert("Dangerous Permission Change", isPresented: $showDangerousPermissionWarning) {
+            Button("I Understand", role: .none) {}
+            Button("Revert", role: .cancel) {
+                // Revert to previous safe mode
+                editedPermissions.defaultMode = previousDefaultMode
+            }
+        } message: {
+            Text("Setting default mode to 'allow' will automatically approve all operations without prompting. This can be dangerous and may allow unintended actions. Are you sure you want to continue?")
+        }
     }
 
     // MARK: - Server Settings Persistence
@@ -632,6 +651,8 @@ struct SettingsView: View {
             editedAlwaysThinkingEnabled = config.alwaysThinkingEnabled ?? false
             editedIncludeCoAuthoredBy = config.includeCoAuthoredBy ?? false
             editedEnvironment = config.env ?? [:]
+            // Track the initial default mode for dangerous change detection
+            previousDefaultMode = editedPermissions.defaultMode ?? "prompt"
         }
         // Update selected scope from loaded config
         if let scope = viewModel.config?.scope {
