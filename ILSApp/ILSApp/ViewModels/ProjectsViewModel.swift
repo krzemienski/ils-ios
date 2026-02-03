@@ -29,6 +29,15 @@ class ProjectsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to load projects: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "load_projects",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
 
         isLoading = false
@@ -49,11 +58,26 @@ class ProjectsViewModel: ObservableObject {
             let response: APIResponse<Project> = try await client.post("/projects", body: request)
             if let project = response.data {
                 projects.append(project)
+
+                // Track project creation analytics
+                let deviceId = await AnalyticsService.shared.getDeviceId()
+                let event = AnalyticsEvent.projectCreated(projectId: project.id, deviceId: deviceId)
+                await AnalyticsService.shared.track(event)
+
                 return project
             }
         } catch {
             self.error = error
             print("❌ Failed to create project: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "create_project",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
         return nil
     }
@@ -75,6 +99,15 @@ class ProjectsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to update project: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "update_project",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
         return nil
     }
@@ -86,6 +119,15 @@ class ProjectsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to delete project: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "delete_project",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
     }
 }

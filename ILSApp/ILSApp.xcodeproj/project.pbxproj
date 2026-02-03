@@ -15,6 +15,8 @@
 		000000000000000000000022 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
 		000000000000000000000100 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000101 /* Logger.swift */; };
 		000000000000000000000102 /* CrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000103 /* CrashReporter.swift */; };
+		000000000000000000000104 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000105 /* AnalyticsService.swift */; };
+		000000000000000000000106 /* AnalyticsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000107 /* AnalyticsEvent.swift */; };
 		000000000000000000000023 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
 		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
 		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
@@ -62,6 +64,8 @@
 		000000000000000000000032 /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
 		000000000000000000000101 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		000000000000000000000103 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
+		000000000000000000000105 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		000000000000000000000107 /* AnalyticsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsEvent.swift; sourceTree = "<group>"; };
 		000000000000000000000033 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
@@ -130,6 +134,7 @@
 			children = (
 				000000000000000000000011 /* ILSAppApp.swift */,
 				000000000000000000000012 /* ContentView.swift */,
+				000000000000000000000064 /* Models */,
 				000000000000000000000060 /* Theme */,
 				000000000000000000000061 /* Services */,
 				000000000000000000000062 /* Views */,
@@ -138,6 +143,14 @@
 				000000000000000000000014 /* ILSApp.entitlements */,
 			);
 			path = ILSApp;
+			sourceTree = "<group>";
+		};
+		000000000000000000000064 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000107 /* AnalyticsEvent.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		000000000000000000000060 /* Theme */ = {
@@ -151,6 +164,7 @@
 		000000000000000000000061 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				000000000000000000000105 /* AnalyticsService.swift */,
 				000000000000000000000031 /* APIClient.swift */,
 				000000000000000000000103 /* CrashReporter.swift */,
 				000000000000000000000101 /* Logger.swift */,
@@ -367,6 +381,8 @@
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
 				000000000000000000000002 /* ContentView.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
+				000000000000000000000104 /* AnalyticsService.swift in Sources */,
+				000000000000000000000106 /* AnalyticsEvent.swift in Sources */,
 				000000000000000000000021 /* APIClient.swift in Sources */,
 				000000000000000000000022 /* SSEClient.swift in Sources */,
 				000000000000000000000100 /* Logger.swift in Sources */,

@@ -29,6 +29,15 @@ class SessionsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to load sessions: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "load_sessions",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
 
         isLoading = false
@@ -48,11 +57,30 @@ class SessionsViewModel: ObservableObject {
             let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
             if let session = response.data {
                 sessions.insert(session, at: 0)
+
+                // Track chat started analytics
+                let deviceId = await AnalyticsService.shared.getDeviceId()
+                let event = AnalyticsEvent.chatStarted(
+                    sessionId: session.id,
+                    projectId: projectId,
+                    deviceId: deviceId
+                )
+                await AnalyticsService.shared.track(event)
+
                 return session
             }
         } catch {
             self.error = error
             print("❌ Failed to create session: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "create_session",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
         return nil
     }
@@ -64,6 +92,15 @@ class SessionsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to delete session: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "delete_session",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
     }
 
@@ -77,6 +114,15 @@ class SessionsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to fork session: \(error.localizedDescription)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "fork_session",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
         }
         return nil
     }

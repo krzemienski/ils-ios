@@ -103,6 +103,16 @@ class ChatViewModel: ObservableObject {
         } catch {
             self.error = error
             print("Failed to load message history: \(error)")
+
+            // Track error analytics
+            let deviceId = await AnalyticsService.shared.getDeviceId()
+            let errorEvent = AnalyticsEvent.errorOccurred(
+                error: error.localizedDescription,
+                context: "load_message_history",
+                deviceId: deviceId
+            )
+            await AnalyticsService.shared.track(errorEvent)
+
             // Show welcome message on error as fallback for new sessions
             if messages.isEmpty {
                 showWelcomeMessage()
@@ -173,6 +183,19 @@ class ChatViewModel: ObservableObject {
         )
 
         sseClient.startStream(request: request)
+
+        // Track message sent analytics
+        if let sessionId = sessionId {
+            Task {
+                let deviceId = await AnalyticsService.shared.getDeviceId()
+                let event = AnalyticsEvent.messageSent(
+                    sessionId: sessionId,
+                    messageLength: prompt.count,
+                    deviceId: deviceId
+                )
+                await AnalyticsService.shared.track(event)
+            }
+        }
     }
 
     func cancel() {
@@ -229,6 +252,17 @@ class ChatViewModel: ObservableObject {
 
             case .error(let errorMsg):
                 currentMessage.text += "\n\nError: \(errorMsg.message)"
+
+                // Track error analytics
+                Task {
+                    let deviceId = await AnalyticsService.shared.getDeviceId()
+                    let errorEvent = AnalyticsEvent.errorOccurred(
+                        error: errorMsg.message,
+                        context: "chat_stream",
+                        deviceId: deviceId
+                    )
+                    await AnalyticsService.shared.track(errorEvent)
+                }
             }
         }
 
