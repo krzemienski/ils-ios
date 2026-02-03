@@ -2,13 +2,31 @@ import Foundation
 import ILSShared
 
 @MainActor
-class SkillsViewModel: ObservableObject {
-    @Published var skills: [SkillItem] = []
-    @Published var isLoading = false
-    @Published var error: Error?
+class SkillsViewModel: BaseViewModel<SkillItem> {
     @Published var searchText = ""
 
-    private let client = APIClient()
+    /// Convenience accessor for skills
+    var skills: [SkillItem] {
+        items
+    }
+
+    override var resourcePath: String {
+        "/skills"
+    }
+
+    override var loadingStateText: String {
+        "Loading skills..."
+    }
+
+    override var emptyStateText: String {
+        if isLoading {
+            return loadingStateText
+        }
+        if !searchText.isEmpty && filteredSkills.isEmpty {
+            return "No skills found"
+        }
+        return items.isEmpty ? "No skills found" : ""
+    }
 
     /// Filtered skills based on search text (client-side filtering for responsiveness)
     var filteredSkills: [SkillItem] {
@@ -21,17 +39,6 @@ class SkillsViewModel: ObservableObject {
         }
     }
 
-    /// Empty state text for UI display
-    var emptyStateText: String {
-        if isLoading {
-            return "Loading skills..."
-        }
-        if !searchText.isEmpty && filteredSkills.isEmpty {
-            return "No skills found"
-        }
-        return skills.isEmpty ? "No skills found" : ""
-    }
-
     /// Load skills from backend
     /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
     func loadSkills(refresh: Bool = false) async {
@@ -42,11 +49,10 @@ class SkillsViewModel: ObservableObject {
             let path = refresh ? "/skills?refresh=true" : "/skills"
             let response: APIResponse<ListResponse<SkillItem>> = try await client.get(path)
             if let data = response.data {
-                skills = data.items
+                items = data.items
             }
         } catch {
             self.error = error
-            print("❌ Failed to load skills: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -62,48 +68,50 @@ class SkillsViewModel: ObservableObject {
     }
 
     func createSkill(name: String, description: String?, content: String) async -> SkillItem? {
-        do {
-            let request = CreateSkillRequest(
-                name: name,
-                description: description,
-                content: content
-            )
-            let response: APIResponse<SkillItem> = try await client.post("/skills", body: request)
-            if let skill = response.data {
-                skills.append(skill)
-                return skill
-            }
-        } catch {
-            self.error = error
-            print("❌ Failed to create skill '\(name)': \(error.localizedDescription)")
-        }
-        return nil
+        let request = CreateSkillRequest(
+            name: name,
+            description: description,
+            content: content
+        )
+        return await self.createItem(body: request)
     }
 
     func updateSkill(_ skill: SkillItem, content: String) async -> SkillItem? {
+        // Skills API uses name as identifier, not id
         do {
             let request = UpdateSkillRequest(content: content)
             let response: APIResponse<SkillItem> = try await client.put("/skills/\(skill.name)", body: request)
             if let updated = response.data {
-                if let index = skills.firstIndex(where: { $0.id == skill.id }) {
-                    skills[index] = updated
+                if let index = items.firstIndex(where: { $0.id == skill.id }) {
+                    items[index] = updated
                 }
                 return updated
             }
         } catch {
             self.error = error
-            print("❌ Failed to update skill '\(skill.name)': \(error.localizedDescription)")
         }
         return nil
     }
 
     func deleteSkill(_ skill: SkillItem) async {
+        // Skills API uses name as identifier, not id
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/skills/\(skill.name)")
-            skills.removeAll { $0.id == skill.id }
+            items.removeAll { $0.id == skill.id }
         } catch {
             self.error = error
-            print("❌ Failed to delete skill '\(skill.name)': \(error.localizedDescription)")
         }
     }
+}
+
+// MARK: - Request Types
+
+struct CreateSkillRequest: Encodable {
+    let name: String
+    let description: String?
+    let content: String
+}
+
+struct UpdateSkillRequest: Encodable {
+    let content: String
 }
