@@ -133,6 +133,8 @@ struct MarketplaceView: View {
     @ObservedObject var viewModel: PluginsViewModel
     @State private var marketplaces: [MarketplaceInfo] = []
     @State private var isLoading = true
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -181,6 +183,16 @@ struct MarketplaceView: View {
             .task {
                 await loadMarketplaces()
             }
+            .alert("Connection Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    Task {
+                        await loadMarketplaces()
+                    }
+                }
+            } message: {
+                Text(errorMessage ?? "An error occurred while loading the marketplace.")
+            }
         }
     }
 
@@ -193,7 +205,8 @@ struct MarketplaceView: View {
                 marketplaces = data
             }
         } catch {
-            print("Failed to load marketplaces: \(error)")
+            errorMessage = error.localizedDescription
+            showErrorAlert = true
         }
         isLoading = false
     }
