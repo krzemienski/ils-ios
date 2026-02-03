@@ -64,8 +64,7 @@ struct SettingsView: View {
                 } label: {
                     HStack {
                         if viewModel.isTestingConnection {
-                            ProgressView()
-                                .scaleEffect(0.8)
+                            SkeletonCircle(size: 16)
                         }
                         Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
                     }
@@ -82,12 +81,24 @@ struct SettingsView: View {
             // MARK: - General Settings Section
             Section {
                 if viewModel.isLoadingConfig {
-                    HStack {
-                        ProgressView()
-                            .padding(.trailing, 8)
-                        Text("Loading configuration...")
-                            .foregroundColor(ILSTheme.secondaryText)
+                    VStack(spacing: ILSTheme.spacingS) {
+                        HStack {
+                            SkeletonText(width: 100, height: 14)
+                            Spacer()
+                            SkeletonText(width: 150, height: 14)
+                        }
+                        HStack {
+                            SkeletonText(width: 100, height: 14)
+                            Spacer()
+                            SkeletonText(width: 80, height: 14)
+                        }
+                        HStack {
+                            SkeletonText(width: 120, height: 14)
+                            Spacer()
+                            SkeletonText(width: 100, height: 14)
+                        }
                     }
+                    .padding(.vertical, ILSTheme.spacingXS)
                 } else if let config = viewModel.config?.content {
                     // Default Model - Editable
                     if isEditing {
@@ -318,7 +329,34 @@ struct SettingsView: View {
             // MARK: - Statistics Section
             Section("Statistics") {
                 if viewModel.isLoading {
-                    ProgressView()
+                    VStack(spacing: ILSTheme.spacingS) {
+                        HStack {
+                            SkeletonText(width: 80, height: 14)
+                            Spacer()
+                            SkeletonText(width: 40, height: 14)
+                        }
+                        HStack {
+                            SkeletonText(width: 80, height: 14)
+                            Spacer()
+                            SkeletonText(width: 60, height: 14)
+                        }
+                        HStack {
+                            SkeletonText(width: 80, height: 14)
+                            Spacer()
+                            SkeletonText(width: 40, height: 14)
+                        }
+                        HStack {
+                            SkeletonText(width: 100, height: 14)
+                            Spacer()
+                            SkeletonText(width: 50, height: 14)
+                        }
+                        HStack {
+                            SkeletonText(width: 80, height: 14)
+                            Spacer()
+                            SkeletonText(width: 50, height: 14)
+                        }
+                    }
+                    .padding(.vertical, ILSTheme.spacingXS)
                 } else if let stats = viewModel.stats {
                     LabeledContent("Projects", value: "\(stats.projects.total)")
                     LabeledContent("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
@@ -483,7 +521,17 @@ struct ConfigEditorView: View {
     var body: some View {
         VStack {
             if viewModel.isLoading {
-                ProgressView()
+                VStack(spacing: ILSTheme.spacingM) {
+                    SkeletonText(width: 300, height: 14)
+                    SkeletonText(width: 250, height: 14)
+                    SkeletonText(width: 280, height: 14)
+                    SkeletonText(width: 200, height: 14)
+                    SkeletonText(width: 320, height: 14)
+                    SkeletonText(width: 260, height: 14)
+                    SkeletonText(width: 290, height: 14)
+                    SkeletonText(width: 240, height: 14)
+                }
+                .padding()
             } else {
                 TextEditor(text: $configText)
                     .font(ILSTheme.codeFont)
