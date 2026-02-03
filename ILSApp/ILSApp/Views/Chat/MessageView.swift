@@ -280,7 +280,7 @@ struct ToolCall: Identifiable {
     let inputPreview: String?
 }
 
-struct ToolResult {
+struct ToolResult: Equatable {
     let toolUseId: String
     let content: String
     let isError: Bool
