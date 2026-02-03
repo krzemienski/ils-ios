@@ -3,62 +3,55 @@ import ILSShared
 
 struct PluginsListView: View {
     @StateObject private var viewModel = PluginsViewModel()
-    @State private var showingMarketplace = false
+    @State private var selectedTab = 0
 
     var body: some View {
-        List {
-            if let error = viewModel.error {
-                ErrorStateView(error: error) {
-                    await viewModel.loadPlugins()
-                }
-            } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    title: "No Plugins",
-                    systemImage: "puzzlepiece.extension",
-                    description: "Install plugins from the marketplace",
-                    actionTitle: "Browse Marketplace"
-                ) {
-                    showingMarketplace = true
-                }
-            } else {
-                ForEach(viewModel.plugins) { plugin in
-                    PluginRowView(plugin: plugin, viewModel: viewModel)
+        TabView(selection: $selectedTab) {
+            // Installed Tab
+            List {
+                if let error = viewModel.error {
+                    ErrorStateView(error: error) {
+                        await viewModel.loadPlugins()
+                    }
+                } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
+                    EmptyStateView(
+                        title: "No Plugins",
+                        systemImage: "puzzlepiece.extension",
+                        description: "Install plugins from the marketplace",
+                        actionTitle: "Browse Marketplace"
+                    ) {
+                        selectedTab = 1
+                    }
+                } else {
+                    ForEach(viewModel.plugins) { plugin in
+                        PluginRowView(plugin: plugin, viewModel: viewModel)
+                    }
                 }
             }
+            .refreshable {
+                await viewModel.loadPlugins()
+            }
+            .overlay {
+                if viewModel.isLoading && viewModel.plugins.isEmpty {
+                    ProgressView("Loading plugins...")
+                }
+            }
+            .task {
+                await viewModel.loadPlugins()
+            }
+            .tabItem {
+                Label("Installed", systemImage: "puzzlepiece.extension")
+            }
+            .tag(0)
+
+            // Browse Tab
+            MarketplaceView(viewModel: viewModel)
+                .tabItem {
+                    Label("Browse", systemImage: "bag")
+                }
+                .tag(1)
         }
         .navigationTitle("Plugins")
-        .refreshable {
-            await viewModel.loadPlugins()
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { showingMarketplace = true }) {
-                    Image(systemName: "bag")
-                }
-                .accessibilityIdentifier("marketplaceButton")
-            }
-        }
-        .sheet(isPresented: $showingMarketplace) {
-            NavigationStack {
-                MarketplaceView(viewModel: viewModel)
-                    .navigationTitle("Marketplace")
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                showingMarketplace = false
-                            }
-                        }
-                    }
-            }
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.plugins.isEmpty {
-                ProgressView("Loading plugins...")
-            }
-        }
-        .task {
-            await viewModel.loadPlugins()
-        }
     }
 }
 
@@ -129,58 +122,48 @@ struct PluginRowView: View {
 }
 
 struct MarketplaceView: View {
-    @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: PluginsViewModel
     @State private var marketplaces: [MarketplaceInfo] = []
     @State private var isLoading = true
 
     var body: some View {
-        NavigationStack {
-            List {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    ForEach(marketplaces, id: \.name) { marketplace in
-                        Section(marketplace.name) {
-                            ForEach(marketplace.plugins, id: \.name) { plugin in
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(plugin.name)
-                                            .font(ILSTheme.headlineFont)
-                                        if let desc = plugin.description {
-                                            Text(desc)
-                                                .font(ILSTheme.captionFont)
-                                                .foregroundColor(ILSTheme.secondaryText)
-                                        }
+        List {
+            if isLoading {
+                ProgressView()
+            } else {
+                ForEach(marketplaces, id: \.name) { marketplace in
+                    Section(marketplace.name) {
+                        ForEach(marketplace.plugins, id: \.name) { plugin in
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(plugin.name)
+                                        .font(ILSTheme.headlineFont)
+                                    if let desc = plugin.description {
+                                        Text(desc)
+                                            .font(ILSTheme.captionFont)
+                                            .foregroundColor(ILSTheme.secondaryText)
                                     }
-
-                                    Spacer()
-
-                                    Button("Install") {
-                                        Task {
-                                            await viewModel.installPlugin(
-                                                name: plugin.name,
-                                                marketplace: marketplace.name
-                                            )
-                                        }
-                                    }
-                                    .buttonStyle(.bordered)
                                 }
+
+                                Spacer()
+
+                                Button("Install") {
+                                    Task {
+                                        await viewModel.installPlugin(
+                                            name: plugin.name,
+                                            marketplace: marketplace.name
+                                        )
+                                    }
+                                }
+                                .buttonStyle(.bordered)
                             }
                         }
                     }
                 }
             }
-            .navigationTitle("Marketplace")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-            .task {
-                await loadMarketplaces()
-            }
+        }
+        .task {
+            await loadMarketplaces()
         }
     }
 
