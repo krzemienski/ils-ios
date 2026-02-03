@@ -17,6 +17,7 @@ struct SettingsView: View {
     @State private var editedPermissions: PermissionsConfig = PermissionsConfig()
     @State private var editedAlwaysThinkingEnabled: Bool = false
     @State private var editedIncludeCoAuthoredBy: Bool = false
+    @State private var editedEnvironment: [String: String] = [:]
 
     // Alert state
     @State private var showSaveConfirmation = false
@@ -342,8 +343,21 @@ struct SettingsView: View {
                     }
 
                     // Environment Variables
-                    if let env = config.env, !env.isEmpty {
-                        LabeledContent("Environment Vars", value: "\(env.count)")
+                    NavigationLink {
+                        EnvironmentEditorView(environment: $editedEnvironment)
+                    } label: {
+                        HStack {
+                            Label("Environment Variables", systemImage: "gearshape.2")
+                                .foregroundColor(ILSTheme.primaryText)
+                            Spacer()
+                            if let env = config.env, !env.isEmpty {
+                                Text("\(env.count)")
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            } else {
+                                Text("0")
+                                    .foregroundColor(ILSTheme.tertiaryText)
+                            }
+                        }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
@@ -558,6 +572,7 @@ struct SettingsView: View {
             editedPermissions = config.permissions ?? PermissionsConfig()
             editedAlwaysThinkingEnabled = config.alwaysThinkingEnabled ?? false
             editedIncludeCoAuthoredBy = config.includeCoAuthoredBy ?? false
+            editedEnvironment = config.env ?? [:]
         }
         // Update selected scope from loaded config
         if let scope = viewModel.config?.scope {

@@ -37,6 +37,10 @@
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
+		COMPONENT00000000000000B1 /* BooleanSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = COMPONENT00000000000000F1 /* BooleanSettingsView.swift */; };
+		COMPONENT00000000000000B2 /* PermissionsEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = COMPONENT00000000000000F2 /* PermissionsEditorView.swift */; };
+		COMPONENT00000000000000B3 /* EnvironmentEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = COMPONENT00000000000000F3 /* EnvironmentEditorView.swift */; };
+		COMPONENT00000000000000B4 /* ScopePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = COMPONENT00000000000000F4 /* ScopePickerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +86,10 @@
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
+		COMPONENT00000000000000F1 /* BooleanSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BooleanSettingsView.swift"; sourceTree = "<group>"; };
+		COMPONENT00000000000000F2 /* PermissionsEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PermissionsEditorView.swift"; sourceTree = "<group>"; };
+		COMPONENT00000000000000F3 /* EnvironmentEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EnvironmentEditorView.swift"; sourceTree = "<group>"; };
+		COMPONENT00000000000000F4 /* ScopePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScopePickerView.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -245,6 +253,7 @@
 		000000000000000000000077 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+								COMPONENT00000000000000GG /* Components */,
 				000000000000000000000052 /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -259,6 +268,17 @@
 				UITEST0000000000000000A4 /* NavigationTests.swift */,
 			);
 			path = ILSAppUITests;
+			sourceTree = "<group>";
+		};
+		COMPONENT00000000000000GG /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				COMPONENT00000000000000F1 /* BooleanSettingsView.swift */,
+				COMPONENT00000000000000F2 /* PermissionsEditorView.swift */,
+				COMPONENT00000000000000F3 /* EnvironmentEditorView.swift */,
+				COMPONENT00000000000000F4 /* ScopePickerView.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -358,6 +378,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+								COMPONENT00000000000000B1 /* BooleanSettingsView.swift in Sources */,
+								COMPONENT00000000000000B2 /* PermissionsEditorView.swift in Sources */,
+								COMPONENT00000000000000B3 /* EnvironmentEditorView.swift in Sources */,
+								COMPONENT00000000000000B4 /* ScopePickerView.swift in Sources */,
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
 				000000000000000000000002 /* ContentView.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
