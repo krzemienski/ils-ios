@@ -274,7 +274,7 @@ struct ChatMessage: Identifiable {
     }
 }
 
-struct ToolCall: Identifiable {
+struct ToolCall: Identifiable, Equatable {
     let id: String
     let name: String
     let inputPreview: String?
