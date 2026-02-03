@@ -21,6 +21,9 @@ struct SkillsListView: View {
                     ) {
                         showingNewSkill = true
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("No skills, Skills from ~/.claude/skills/ will appear here")
+                    .accessibilityIdentifier("empty-skills-state")
                 } else {
                     ContentUnavailableView.search(text: viewModel.searchText)
                 }
@@ -29,6 +32,7 @@ struct SkillsListView: View {
                     NavigationLink(value: skill) {
                         SkillRowView(skill: skill)
                     }
+                    .accessibilityIdentifier("skill-\(skill.id)")
                 }
                 .onDelete(perform: deleteSkill)
             }
@@ -44,6 +48,9 @@ struct SkillsListView: View {
                 Button(action: { showingNewSkill = true }) {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("New skill")
+                .accessibilityHint("Creates a new skill")
+                .accessibilityIdentifier("add-skill-button")
             }
         }
         .sheet(isPresented: $showingNewSkill) {
@@ -57,11 +64,14 @@ struct SkillsListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.skills.isEmpty {
                 ProgressView("Loading skills...")
+                    .accessibilityLabel("Loading skills")
+                    .accessibilityIdentifier("loading-skills-indicator")
             }
         }
         .task {
             await viewModel.loadSkills()
         }
+        .accessibilityIdentifier("skills-list")
     }
 
     private func deleteSkill(at offsets: IndexSet) {
@@ -89,6 +99,7 @@ struct SkillRowView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(ILSTheme.success)
                         .font(.caption)
+                        .accessibilityLabel("Active")
                 }
             }
 
@@ -130,6 +141,32 @@ struct SkillRowView: View {
             }
         }
         .padding(.vertical, ILSTheme.spacingXS)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        let name = "/\(skill.name)"
+        let active = skill.isActive ? "Active" : "Inactive"
+
+        var components = [name, active]
+
+        // Add description if present
+        if let description = skill.description {
+            components.append(description)
+        }
+
+        // Add tag count if present
+        if !skill.tags.isEmpty {
+            components.append("\(skill.tags.count) tags")
+        }
+
+        // Add source if present
+        if let source = skill.source {
+            components.append("Source: \(source)")
+        }
+
+        return components.joined(separator: ", ")
     }
 }
 

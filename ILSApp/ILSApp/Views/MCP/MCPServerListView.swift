@@ -21,6 +21,9 @@ struct MCPServerListView: View {
                     ) {
                         showingNewServer = true
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("No MCP Servers, Add MCP servers to extend Claude's capabilities")
+                    .accessibilityIdentifier("empty-mcp-state")
                 } else {
                     ContentUnavailableView.search(text: viewModel.searchText)
                 }
@@ -29,6 +32,7 @@ struct MCPServerListView: View {
                     NavigationLink(value: server) {
                         MCPServerRowView(server: server)
                     }
+                    .accessibilityIdentifier("mcp-server-\(server.id)")
                 }
                 .onDelete(perform: deleteServer)
             }
@@ -46,6 +50,9 @@ struct MCPServerListView: View {
                 Button(action: { showingNewServer = true }) {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("Add MCP server")
+                .accessibilityHint("Creates a new MCP server configuration")
+                .accessibilityIdentifier("add-mcp-server-button")
             }
         }
         .sheet(isPresented: $showingNewServer) {
@@ -56,11 +63,14 @@ struct MCPServerListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.servers.isEmpty {
                 ProgressView("Loading MCP servers...")
+                    .accessibilityLabel("Loading MCP servers")
+                    .accessibilityIdentifier("loading-mcp-servers-indicator")
             }
         }
         .task {
             await viewModel.loadServers()
         }
+        .accessibilityIdentifier("mcp-servers-list")
     }
 
     private func deleteServer(at offsets: IndexSet) {
@@ -121,6 +131,8 @@ struct MCPServerRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
     }
 
     @ViewBuilder
@@ -135,6 +147,7 @@ struct MCPServerRowView: View {
                 .font(.caption2)
                 .foregroundColor(color)
         }
+        .accessibilityLabel(statusAccessibilityLabel)
     }
 
     private var statusInfo: (Color, String) {
@@ -146,6 +159,33 @@ struct MCPServerRowView: View {
         default:
             return (ILSTheme.warning, "Unknown")
         }
+    }
+
+    private var statusAccessibilityLabel: String {
+        switch server.status {
+        case "healthy":
+            return "Status: Healthy"
+        case "unhealthy":
+            return "Status: Unhealthy"
+        default:
+            return "Status: Unknown"
+        }
+    }
+
+    private var accessibilityText: String {
+        let name = server.name
+        let status = statusAccessibilityLabel
+        let command = "Command: \(server.command)"
+        let scope = "Scope: \(server.scope)"
+
+        var components = [name, status, command, scope]
+
+        // Add environment variable count if present
+        if let env = server.env, !env.isEmpty {
+            components.append("\(env.count) environment variables")
+        }
+
+        return components.joined(separator: ", ")
     }
 }
 

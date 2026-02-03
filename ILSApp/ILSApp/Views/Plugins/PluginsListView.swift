@@ -20,9 +20,13 @@ struct PluginsListView: View {
                 ) {
                     showingMarketplace = true
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("No plugins, Install plugins from the marketplace")
+                .accessibilityIdentifier("empty-plugins-state")
             } else {
                 ForEach(viewModel.plugins) { plugin in
                     PluginRowView(plugin: plugin, viewModel: viewModel)
+                        .accessibilityIdentifier("plugin-\(plugin.id)")
                 }
             }
         }
@@ -35,6 +39,8 @@ struct PluginsListView: View {
                 Button(action: { showingMarketplace = true }) {
                     Image(systemName: "bag")
                 }
+                .accessibilityLabel("Browse marketplace")
+                .accessibilityHint("Opens the plugin marketplace")
                 .accessibilityIdentifier("marketplaceButton")
             }
         }
@@ -54,11 +60,14 @@ struct PluginsListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.plugins.isEmpty {
                 ProgressView("Loading plugins...")
+                    .accessibilityLabel("Loading plugins")
+                    .accessibilityIdentifier("loading-plugins-indicator")
             }
         }
         .task {
             await viewModel.loadPlugins()
         }
+        .accessibilityIdentifier("plugins-list")
     }
 }
 
@@ -79,6 +88,8 @@ struct PluginRowView: View {
                     set: { _ in togglePlugin() }
                 ))
                 .labelsHidden()
+                .accessibilityLabel(plugin.isEnabled ? "Enabled" : "Disabled")
+                .accessibilityHint("Double tap to \(plugin.isEnabled ? "disable" : "enable") this plugin")
             }
 
             if let description = plugin.description {
@@ -115,6 +126,28 @@ struct PluginRowView: View {
                 Label("Uninstall", systemImage: "trash")
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+        .accessibilityValue(plugin.isEnabled ? "Enabled" : "Disabled")
+    }
+
+    private var accessibilityText: String {
+        let name = plugin.name
+        let status = plugin.isEnabled ? "enabled" : "disabled"
+
+        var components = [name, status]
+
+        // Add description if present
+        if let description = plugin.description {
+            components.append(description)
+        }
+
+        // Add command count if present
+        if let commands = plugin.commands, !commands.isEmpty {
+            components.append("\(commands.count) commands")
+        }
+
+        return components.joined(separator: ", ")
     }
 
     private func togglePlugin() {
