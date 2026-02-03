@@ -27,6 +27,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateProjects())
     app.migrations.add(CreateSessions())
     app.migrations.add(CreateMessages())
+    app.migrations.add(CreateSessionTemplates())
 
     // Run migrations
     try await app.autoMigrate()
