@@ -92,9 +92,9 @@ struct ChatView: View {
 
     private var messagesContent: some View {
         LazyVStack(alignment: .leading, spacing: ILSTheme.spacingM) {
-            ForEach(Array(viewModel.messages.enumerated()), id: \.offset) { index, message in
+            ForEach(viewModel.messages) { message in
                 MessageView(message: message)
-                    .id(index)
+                    .id(message.id)
             }
 
             if shouldShowTypingIndicator {
