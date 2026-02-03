@@ -82,12 +82,12 @@ actor APIClient {
 
     private func validateResponse(_ response: URLResponse) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("❌ API Error: Invalid response from server")
+            Logger.shared.error("Invalid response from server")
             throw APIError.invalidResponse
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            print("❌ API Error: HTTP \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+            Logger.shared.error("HTTP \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
     }
