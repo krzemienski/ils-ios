@@ -81,17 +81,3 @@ class SessionsViewModel: ObservableObject {
         return nil
     }
 }
-
-// MARK: - Request Types
-
-struct CreateSessionRequest: Encodable {
-    let projectId: UUID?
-    let name: String?
-    let model: String
-}
-
-struct DeletedResponse: Decodable {
-    let deleted: Bool
-}
-
-struct EmptyBody: Encodable {}
