@@ -1,0 +1,144 @@
+name: iOS Release & Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0, v1.2.3, etc.
+
+concurrency:
+  group: ios-release-${{ github.ref }}
+  cancel-in-progress: false  # Don't cancel release builds
+
+jobs:
+  ios-release:
+    name: Build & Deploy iOS Release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+
+      - name: Display Xcode version
+        run: xcodebuild -version
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      # TODO: Import certificates and provisioning profiles
+      # This requires setting up repository secrets:
+      # - APPLE_CERTIFICATE_BASE64: Base64-encoded .p12 certificate
+      # - APPLE_CERTIFICATE_PASSWORD: Certificate password
+      # - APPLE_PROVISIONING_PROFILE_BASE64: Base64-encoded provisioning profile
+      #
+      # - name: Import signing certificate
+      #   env:
+      #     CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      #     CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      #   run: |
+      #     CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
+      #     KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+      #     echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+      #     security create-keychain -p "" $KEYCHAIN_PATH
+      #     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+      #     security unlock-keychain -p "" $KEYCHAIN_PATH
+      #     security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+      #     security list-keychain -d user -s $KEYCHAIN_PATH
+      #
+      # - name: Install provisioning profile
+      #   env:
+      #     PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+      #   run: |
+      #     PP_PATH=$RUNNER_TEMP/provisioning.mobileprovision
+      #     echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+      #     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+      #     cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: Build release archive
+        run: |
+          xcodebuild archive \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/ILSApp.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      # TODO: Export IPA with proper signing
+      # This step requires provisioning profile and export options
+      #
+      # - name: Export IPA
+      #   run: |
+      #     cat > $RUNNER_TEMP/ExportOptions.plist <<EOF
+      #     <?xml version="1.0" encoding="UTF-8"?>
+      #     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      #     <plist version="1.0">
+      #     <dict>
+      #       <key>method</key>
+      #       <string>app-store</string>
+      #       <key>teamID</key>
+      #       <string>YOUR_TEAM_ID</string>
+      #       <key>uploadBitcode</key>
+      #       <false/>
+      #       <key>uploadSymbols</key>
+      #       <true/>
+      #     </dict>
+      #     </plist>
+      #     EOF
+      #     xcodebuild -exportArchive \
+      #       -archivePath $RUNNER_TEMP/ILSApp.xcarchive \
+      #       -exportPath $RUNNER_TEMP/IPA \
+      #       -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist
+
+      - name: Archive release build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-${{ steps.version.outputs.version }}
+          path: ${{ runner.temp }}/ILSApp.xcarchive
+          retention-days: 90
+
+      # TODO: Upload to TestFlight
+      # This requires App Store Connect API key in repository secrets:
+      # - APP_STORE_CONNECT_KEY_ID: API Key ID
+      # - APP_STORE_CONNECT_ISSUER_ID: Issuer ID
+      # - APP_STORE_CONNECT_KEY_BASE64: Base64-encoded .p8 key
+      #
+      # - name: Upload to TestFlight
+      #   env:
+      #     APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      #     APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+      #   run: |
+      #     KEY_PATH=$RUNNER_TEMP/AuthKey.p8
+      #     echo -n "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode -o $KEY_PATH
+      #     xcrun altool --upload-app \
+      #       --type ios \
+      #       --file "$RUNNER_TEMP/IPA/ILSApp.ipa" \
+      #       --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+      #       --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            iOS App Release ${{ steps.version.outputs.version }}
+
+            ## Changes
+            - See commit history for detailed changes
+
+            ## Deployment
+            - Archive available as workflow artifact
+            - TestFlight deployment: Manual (requires Apple Developer account setup)
+          draft: false
+          prerelease: false
