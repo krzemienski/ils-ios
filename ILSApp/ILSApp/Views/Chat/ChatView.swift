@@ -120,7 +120,10 @@ struct ChatView: View {
             isDisabled: viewModel.isLoadingHistory,
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
-            onCommandPalette: { showCommandPalette = true }
+            onCommandPalette: {
+                HapticService.shared.light()
+                showCommandPalette = true
+            }
         )
         .focused($isInputFocused)
     }
