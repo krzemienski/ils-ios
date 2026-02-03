@@ -284,6 +284,92 @@ public struct UpdateSkillRequest: Codable, Sendable {
     }
 }
 
+// MARK: - GitHub Skill Requests
+
+/// GitHub repository owner information
+public struct GitHubOwner: Codable, Sendable {
+    public let login: String
+    public let avatarUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case login
+        case avatarUrl = "avatar_url"
+    }
+
+    public init(login: String, avatarUrl: String? = nil) {
+        self.login = login
+        self.avatarUrl = avatarUrl
+    }
+}
+
+/// GitHub repository information for skill search results
+public struct GitHubRepository: Codable, Sendable {
+    public let id: Int
+    public let name: String
+    public let fullName: String
+    public let description: String?
+    public let htmlUrl: String
+    public let stargazersCount: Int
+    public let language: String?
+    public let updatedAt: String
+    public let owner: GitHubOwner
+    public let topics: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, description, language, topics, owner
+        case fullName = "full_name"
+        case htmlUrl = "html_url"
+        case stargazersCount = "stargazers_count"
+        case updatedAt = "updated_at"
+    }
+
+    public init(
+        id: Int,
+        name: String,
+        fullName: String,
+        description: String? = nil,
+        htmlUrl: String,
+        stargazersCount: Int,
+        language: String? = nil,
+        updatedAt: String,
+        owner: GitHubOwner,
+        topics: [String]? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.fullName = fullName
+        self.description = description
+        self.htmlUrl = htmlUrl
+        self.stargazersCount = stargazersCount
+        self.language = language
+        self.updatedAt = updatedAt
+        self.owner = owner
+        self.topics = topics
+    }
+}
+
+/// Detailed GitHub skill information including SKILL.md content
+public struct GitHubSkillDetail: Codable, Sendable {
+    public let repository: GitHubRepository
+    public let skillContent: String
+
+    public init(repository: GitHubRepository, skillContent: String) {
+        self.repository = repository
+        self.skillContent = skillContent
+    }
+}
+
+/// Request to install a skill from GitHub
+public struct InstallSkillFromGitHubRequest: Codable, Sendable {
+    public let owner: String
+    public let repo: String
+
+    public init(owner: String, repo: String) {
+        self.owner = owner
+        self.repo = repo
+    }
+}
+
 // MARK: - MCP Requests
 
 public struct CreateMCPRequest: Codable, Sendable {
