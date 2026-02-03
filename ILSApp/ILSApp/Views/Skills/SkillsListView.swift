@@ -433,18 +433,6 @@ struct SkillEditorView: View {
     }
 }
 
-// MARK: - Request Types
-
-struct CreateSkillRequest: Encodable {
-    let name: String
-    let description: String?
-    let content: String
-}
-
-struct UpdateSkillRequest: Encodable {
-    let content: String
-}
-
 #Preview {
     NavigationStack {
         SkillsListView()
