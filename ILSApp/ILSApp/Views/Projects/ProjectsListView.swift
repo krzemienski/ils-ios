@@ -62,6 +62,7 @@ struct ProjectsListView: View {
     }
 
     private func deleteProject(at offsets: IndexSet) {
+        HapticService.shared.warning()
         Task {
             for index in offsets {
                 let project = viewModel.projects[index]
