@@ -54,6 +54,30 @@ struct DashboardView: View {
                         }
                     }
                     .padding()
+
+                    // Recent Activity Section
+                    VStack(alignment: .leading, spacing: ILSTheme.spacingM) {
+                        Text("Recent Activity")
+                            .font(ILSTheme.titleFont)
+                            .foregroundColor(ILSTheme.primaryText)
+                            .padding(.horizontal)
+
+                        if viewModel.recentSessions.isEmpty {
+                            EmptyStateView(
+                                title: "No Recent Activity",
+                                systemImage: "clock",
+                                description: "Your recent sessions will appear here"
+                            )
+                            .padding()
+                        } else {
+                            VStack(spacing: ILSTheme.spacingXS) {
+                                ForEach(viewModel.recentSessions.prefix(10)) { session in
+                                    RecentActivityRowView(session: session)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
                 } else if viewModel.isLoading {
                     ProgressView("Loading dashboard...")
                         .padding()
@@ -123,6 +147,60 @@ struct StatCardView: View {
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
         .cornerRadius(ILSTheme.cornerRadiusL)
+    }
+}
+
+// MARK: - Recent Activity Row Component
+
+struct RecentActivityRowView: View {
+    let session: ChatSession
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(session.name ?? "Unnamed Session")
+                    .font(ILSTheme.headlineFont)
+                    .foregroundColor(ILSTheme.primaryText)
+
+                Spacer()
+
+                Text(session.model)
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.secondaryText)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(ILSTheme.tertiaryBackground)
+                    .cornerRadius(ILSTheme.cornerRadiusS)
+            }
+
+            if let projectName = session.projectName {
+                Text(projectName)
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.secondaryText)
+                    .lineLimit(1)
+            }
+
+            HStack {
+                Label("\(session.messageCount) messages", systemImage: "bubble.left.and.bubble.right")
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.tertiaryText)
+
+                Spacer()
+
+                Text(formattedDate(session.lastActiveAt))
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.tertiaryText)
+            }
+        }
+        .padding(ILSTheme.spacingM)
+        .background(ILSTheme.secondaryBackground)
+        .cornerRadius(ILSTheme.cornerRadiusM)
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
