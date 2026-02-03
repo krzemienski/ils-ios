@@ -314,9 +314,13 @@ public enum WSServerMessage: Codable, Sendable {
 
 // MARK: - Skill Requests
 
+/// Request to create a new skill
 public struct CreateSkillRequest: Codable, Sendable {
+    /// Unique name for the skill
     public let name: String
+    /// Optional description of what the skill does
     public let description: String?
+    /// Skill content (prompt/instructions text)
     public let content: String
 
     public init(name: String, description: String? = nil, content: String) {
@@ -326,7 +330,9 @@ public struct CreateSkillRequest: Codable, Sendable {
     }
 }
 
+/// Request to update an existing skill's content
 public struct UpdateSkillRequest: Codable, Sendable {
+    /// Updated skill content (prompt/instructions text)
     public let content: String
 
     public init(content: String) {
@@ -336,11 +342,17 @@ public struct UpdateSkillRequest: Codable, Sendable {
 
 // MARK: - MCP Requests
 
+/// Request to create a new MCP (Model Context Protocol) server configuration
 public struct CreateMCPRequest: Codable, Sendable {
+    /// Unique name for the MCP server
     public let name: String
+    /// Command to execute to start the MCP server
     public let command: String
+    /// Optional command-line arguments to pass to the server
     public let args: [String]?
+    /// Optional environment variables for the server process
     public let env: [String: String]?
+    /// Configuration scope (global, project, or session level)
     public let scope: MCPScope?
 
     public init(
@@ -360,8 +372,11 @@ public struct CreateMCPRequest: Codable, Sendable {
 
 // MARK: - Plugin Requests
 
+/// Request to install a plugin from a marketplace
 public struct InstallPluginRequest: Codable, Sendable {
+    /// Name of the plugin to install
     public let pluginName: String
+    /// Marketplace identifier where the plugin is hosted
     public let marketplace: String
 
     public init(pluginName: String, marketplace: String) {
@@ -372,8 +387,11 @@ public struct InstallPluginRequest: Codable, Sendable {
 
 // MARK: - Config Requests
 
+/// Request to update Claude configuration at a specific scope
 public struct UpdateConfigRequest: Codable, Sendable {
+    /// Configuration scope (global, project, or session level)
     public let scope: String
+    /// Updated configuration content
     public let content: ClaudeConfig
 
     public init(scope: String, content: ClaudeConfig) {
@@ -382,7 +400,9 @@ public struct UpdateConfigRequest: Codable, Sendable {
     }
 }
 
+/// Request to validate Claude configuration without saving it
 public struct ValidateConfigRequest: Codable, Sendable {
+    /// Configuration content to validate
     public let content: ClaudeConfig
 
     public init(content: ClaudeConfig) {
@@ -390,8 +410,11 @@ public struct ValidateConfigRequest: Codable, Sendable {
     }
 }
 
+/// Result of configuration validation operation
 public struct ConfigValidationResult: Codable, Sendable {
+    /// Whether the configuration is valid
     public let isValid: Bool
+    /// Array of validation error messages (empty if valid)
     public let errors: [String]
 
     public init(isValid: Bool, errors: [String] = []) {
@@ -402,11 +425,17 @@ public struct ConfigValidationResult: Codable, Sendable {
 
 // MARK: - Stats Response
 
+/// Response containing statistics about the ILS system
 public struct StatsResponse: Codable, Sendable {
+    /// Project statistics
     public let projects: CountStat
+    /// Session statistics
     public let sessions: SessionStat
+    /// Skill statistics
     public let skills: CountStat
+    /// MCP server statistics
     public let mcpServers: MCPStat
+    /// Plugin statistics
     public let plugins: PluginStat
 
     public init(
@@ -424,8 +453,11 @@ public struct StatsResponse: Codable, Sendable {
     }
 }
 
+/// Generic statistics with total and optional active count
 public struct CountStat: Codable, Sendable {
+    /// Total count of items
     public let total: Int
+    /// Optional count of active items
     public let active: Int?
 
     public init(total: Int, active: Int? = nil) {
@@ -434,8 +466,11 @@ public struct CountStat: Codable, Sendable {
     }
 }
 
+/// Session statistics with total and active counts
 public struct SessionStat: Codable, Sendable {
+    /// Total number of sessions
     public let total: Int
+    /// Number of currently active sessions
     public let active: Int
 
     public init(total: Int, active: Int) {
@@ -444,8 +479,11 @@ public struct SessionStat: Codable, Sendable {
     }
 }
 
+/// MCP server statistics with health information
 public struct MCPStat: Codable, Sendable {
+    /// Total number of configured MCP servers
     public let total: Int
+    /// Number of healthy (responsive) MCP servers
     public let healthy: Int
 
     public init(total: Int, healthy: Int) {
@@ -454,8 +492,11 @@ public struct MCPStat: Codable, Sendable {
     }
 }
 
+/// Plugin statistics with enabled status
 public struct PluginStat: Codable, Sendable {
+    /// Total number of installed plugins
     public let total: Int
+    /// Number of currently enabled plugins
     public let enabled: Int
 
     public init(total: Int, enabled: Int) {
