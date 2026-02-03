@@ -5,6 +5,7 @@ struct PluginsListView: View {
     @StateObject private var viewModel = PluginsViewModel()
     @State private var selectedTab = 0
     @State private var searchText = ""
+    @State private var selectedPlugin: PluginDetailData?
 
     private var filteredPlugins: [PluginItem] {
         if searchText.isEmpty {
@@ -47,6 +48,10 @@ struct PluginsListView: View {
                 } else {
                     ForEach(filteredPlugins) { plugin in
                         PluginRowView(plugin: plugin, viewModel: viewModel)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedPlugin = PluginDetailData(pluginItem: plugin)
+                            }
                     }
                 }
             }
@@ -75,6 +80,9 @@ struct PluginsListView: View {
                 .tag(1)
         }
         .navigationTitle("Plugins")
+        .sheet(item: $selectedPlugin) { pluginDetail in
+            PluginDetailView(plugin: pluginDetail, viewModel: viewModel)
+        }
     }
 }
 

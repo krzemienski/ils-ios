@@ -187,7 +187,9 @@ struct PluginDetailView: View {
 
 /// Unified data structure for displaying plugin details
 /// Supports both installed plugins (PluginItem) and marketplace plugins (MarketplacePlugin)
-struct PluginDetailData {
+struct PluginDetailData: Identifiable {
+    var id: String { name }
+
     let name: String
     let description: String?
     let version: String?

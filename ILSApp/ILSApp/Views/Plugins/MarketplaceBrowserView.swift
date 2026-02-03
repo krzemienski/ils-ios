@@ -8,6 +8,7 @@ struct MarketplaceBrowserView: View {
     @State private var showingFilterSheet = false
     @State private var selectedTags: Set<String> = []
     @State private var sortOption: SortOption = .name
+    @State private var selectedPlugin: PluginDetailData?
 
     enum DisplayMode {
         case grid
@@ -147,6 +148,9 @@ struct MarketplaceBrowserView: View {
                 await viewModel.loadMarketplaces()
             }
         }
+        .sheet(item: $selectedPlugin) { pluginDetail in
+            PluginDetailView(plugin: pluginDetail, viewModel: viewModel)
+        }
     }
 
     // MARK: - Grid View
@@ -166,6 +170,10 @@ struct MarketplaceBrowserView: View {
                         ], spacing: ILSTheme.spacingM) {
                             ForEach(marketplace.plugins, id: \.name) { plugin in
                                 PluginGridCard(plugin: plugin, marketplace: marketplace.name, viewModel: viewModel)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        selectedPlugin = PluginDetailData(marketplacePlugin: plugin, marketplace: marketplace.name)
+                                    }
                             }
                         }
                         .padding(.horizontal, ILSTheme.spacingM)
@@ -184,6 +192,10 @@ struct MarketplaceBrowserView: View {
                 Section(marketplace.name) {
                     ForEach(marketplace.plugins, id: \.name) { plugin in
                         PluginListRow(plugin: plugin, marketplace: marketplace.name, viewModel: viewModel)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedPlugin = PluginDetailData(marketplacePlugin: plugin, marketplace: marketplace.name)
+                            }
                     }
                 }
             }
