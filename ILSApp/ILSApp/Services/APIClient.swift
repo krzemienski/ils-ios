@@ -31,9 +31,19 @@ actor APIClient {
 
     // MARK: - Generic Request Methods
 
-    func get<T: Decodable>(_ path: String) async throws -> T {
-        // Check cache first
-        if let entry = cache[path] {
+    /// Performs a GET request with optional cache bypass
+    /// - Parameters:
+    ///   - path: The API endpoint path
+    ///   - clearCache: If true, clears cache and bypasses it for this request. Use for pull-to-refresh operations.
+    /// - Returns: Decoded response of type T
+    func get<T: Decodable>(_ path: String, clearCache: Bool = false) async throws -> T {
+        // Clear cache if requested (for pull-to-refresh operations)
+        if clearCache {
+            self.clearCache()
+        }
+
+        // Check cache first (unless clearCache was requested)
+        if !clearCache, let entry = cache[path] {
             let age = Date().timeIntervalSince(entry.timestamp)
             if age < cacheTTL {
                 // Cache hit - return cached data
@@ -127,7 +137,9 @@ actor APIClient {
         }
     }
 
-    private func clearCache() {
+    /// Manually clears all cached responses
+    /// Call this method to force fresh data on the next GET request
+    func clearCache() {
         cache.removeAll()
     }
 }
