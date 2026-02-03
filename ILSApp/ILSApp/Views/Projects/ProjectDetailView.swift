@@ -11,6 +11,8 @@ struct ProjectDetailView: View {
     @State private var description: String
     @State private var isEditing = false
     @State private var isSaving = false
+    @State private var showErrorAlert = false
+    @State private var lastOperation: (() -> Void)?
 
     init(project: Project, viewModel: ProjectsViewModel) {
         self.project = project
@@ -62,10 +64,7 @@ struct ProjectDetailView: View {
                 if !isEditing {
                     Section {
                         Button(role: .destructive) {
-                            Task {
-                                await viewModel.deleteProject(project)
-                                dismiss()
-                            }
+                            deleteProjectWithRetry()
                         } label: {
                             Label("Delete Project", systemImage: "trash")
                         }
@@ -105,6 +104,19 @@ struct ProjectDetailView: View {
                     }
                 }
             }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    lastOperation?()
+                }
+            } message: {
+                Text(viewModel.error?.localizedDescription ?? "An error occurred.")
+            }
+            .onReceive(viewModel.$error) { error in
+                if error != nil {
+                    showErrorAlert = true
+                }
+            }
         }
     }
 
@@ -116,6 +128,7 @@ struct ProjectDetailView: View {
     }
 
     private func saveChanges() {
+        lastOperation = { saveChanges() }
         isSaving = true
 
         Task {
@@ -128,6 +141,16 @@ struct ProjectDetailView: View {
 
             isSaving = false
             isEditing = false
+        }
+    }
+
+    private func deleteProjectWithRetry() {
+        lastOperation = { deleteProjectWithRetry() }
+        Task {
+            await viewModel.deleteProject(project)
+            if viewModel.error == nil {
+                dismiss()
+            }
         }
     }
 }
