@@ -2,7 +2,7 @@ import Vapor
 import ILSShared
 
 struct SkillsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let skillsService = SkillsService()
 
     func boot(routes: RoutesBuilder) throws {
         let skills = routes.grouped("skills")
@@ -21,7 +21,7 @@ struct SkillsController: RouteCollection {
         let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
         let searchTerm = req.query[String.self, at: "search"]
 
-        var skills = try await fileSystem.listSkills(bypassCache: bypassCache)
+        var skills = try await skillsService.listSkills(bypassCache: bypassCache)
 
         // Filter by search term if provided (searches name, description, and tags)
         if let search = searchTerm?.lowercased(), !search.isEmpty {
@@ -55,7 +55,7 @@ struct SkillsController: RouteCollection {
             """
         }
 
-        let skill = try fileSystem.createSkill(name: input.name, content: content)
+        let skill = try skillsService.createSkill(name: input.name, content: content)
 
         return APIResponse(
             success: true,
@@ -70,7 +70,7 @@ struct SkillsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid skill name")
         }
 
-        guard let skill = try fileSystem.getSkill(name: name) else {
+        guard let skill = try skillsService.getSkill(name: name) else {
             throw Abort(.notFound, reason: "Skill not found")
         }
 
@@ -89,7 +89,7 @@ struct SkillsController: RouteCollection {
 
         let input = try req.content.decode(UpdateSkillRequest.self)
 
-        let skill = try fileSystem.updateSkill(name: name, content: input.content)
+        let skill = try skillsService.updateSkill(name: name, content: input.content)
 
         return APIResponse(
             success: true,
@@ -104,7 +104,7 @@ struct SkillsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid skill name")
         }
 
-        try fileSystem.deleteSkill(name: name)
+        try skillsService.deleteSkill(name: name)
 
         return APIResponse(
             success: true,
