@@ -75,22 +75,26 @@ class ChatViewModel: ObservableObject {
                 // Accumulate messages in pending buffer
                 self.pendingStreamMessages.append(contentsOf: streamMessages)
 
-                // Invalidate existing timer if present
-                self.batchTimer?.invalidate()
-
-                // Schedule batch processing
-                self.batchTimer = Timer.scheduledTimer(
-                    withTimeInterval: self.batchInterval,
-                    repeats: false
-                ) { [weak self] _ in
-                    self?.processBatch()
-                }
+                // Start batch timer if not already running
+                self.startBatchTimer()
             }
             .store(in: &cancellables)
     }
 
-    /// Process accumulated messages in batch
-    private func processBatch() {
+    /// Start the batch timer to flush pending messages at regular intervals
+    private func startBatchTimer() {
+        guard batchTimer == nil else { return }
+
+        batchTimer = Timer.scheduledTimer(
+            withTimeInterval: batchInterval,
+            repeats: true
+        ) { [weak self] _ in
+            self?.flushPendingMessages()
+        }
+    }
+
+    /// Flush pending messages to UI immediately
+    private func flushPendingMessages() {
         guard !pendingStreamMessages.isEmpty else { return }
 
         let messagesToProcess = pendingStreamMessages
