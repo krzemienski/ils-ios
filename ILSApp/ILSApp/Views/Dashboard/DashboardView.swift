@@ -3,6 +3,7 @@ import ILSShared
 
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
+    @State private var selectedSection: DashboardSection?
 
     var body: some View {
         ScrollView {
@@ -24,6 +25,10 @@ struct DashboardView: View {
                                 icon: "folder.fill",
                                 color: .blue
                             )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedSection = .projects
+                            }
 
                             StatCardView(
                                 title: "Sessions",
@@ -32,6 +37,10 @@ struct DashboardView: View {
                                 icon: "bubble.left.and.bubble.right.fill",
                                 color: .green
                             )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedSection = .sessions
+                            }
                         }
 
                         // Row 2: Skills & MCP
@@ -43,6 +52,10 @@ struct DashboardView: View {
                                 icon: "wand.and.stars.fill",
                                 color: .purple
                             )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedSection = .skills
+                            }
 
                             StatCardView(
                                 title: "MCP Servers",
@@ -51,6 +64,10 @@ struct DashboardView: View {
                                 icon: "server.rack",
                                 color: ILSTheme.accent
                             )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedSection = .mcpServers
+                            }
                         }
                     }
                     .padding()
@@ -98,6 +115,11 @@ struct DashboardView: View {
         .navigationTitle("Dashboard")
         .refreshable {
             await viewModel.loadAll()
+        }
+        .sheet(item: $selectedSection) { section in
+            NavigationStack {
+                section.destinationView
+            }
         }
         .task {
             await viewModel.loadAll()
@@ -301,6 +323,38 @@ struct SkeletonActivityRowView: View {
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
         .cornerRadius(ILSTheme.cornerRadiusM)
+    }
+}
+
+// MARK: - Dashboard Section Navigation
+
+enum DashboardSection: Identifiable {
+    case projects
+    case sessions
+    case skills
+    case mcpServers
+
+    var id: String {
+        switch self {
+        case .projects: return "projects"
+        case .sessions: return "sessions"
+        case .skills: return "skills"
+        case .mcpServers: return "mcpServers"
+        }
+    }
+
+    @ViewBuilder
+    var destinationView: some View {
+        switch self {
+        case .projects:
+            ProjectsListView()
+        case .sessions:
+            SessionsListView()
+        case .skills:
+            SkillsListView()
+        case .mcpServers:
+            MCPServerListView()
+        }
     }
 }
 
