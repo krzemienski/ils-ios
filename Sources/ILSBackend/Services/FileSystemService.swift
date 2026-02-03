@@ -447,6 +447,55 @@ struct FileSystemService {
         try newData.write(to: URL(fileURLWithPath: path))
     }
 
+    /// Enable an MCP server by adding it to the enabledMcpjsonServers list
+    func enableMCPServer(name: String) throws {
+        let path = "\(claudeDirectory)/settings.local.json"
+
+        // Ensure directory exists
+        try fileManager.createDirectory(atPath: claudeDirectory, withIntermediateDirectories: true)
+
+        var json: [String: Any] = [:]
+        if fileManager.fileExists(atPath: path),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+           let existing = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            json = existing
+        }
+
+        var enabledServers = json["enabledMcpjsonServers"] as? [String] ?? []
+
+        // Add server name if not already enabled
+        if !enabledServers.contains(name) {
+            enabledServers.append(name)
+            json["enabledMcpjsonServers"] = enabledServers
+
+            let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+            try data.write(to: URL(fileURLWithPath: path))
+        }
+    }
+
+    /// Disable an MCP server by removing it from the enabledMcpjsonServers list
+    func disableMCPServer(name: String) throws {
+        let path = "\(claudeDirectory)/settings.local.json"
+
+        guard fileManager.fileExists(atPath: path),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+              var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            // If file doesn't exist or is empty, server is already disabled
+            return
+        }
+
+        var enabledServers = json["enabledMcpjsonServers"] as? [String] ?? []
+
+        // Remove server name if present
+        if let index = enabledServers.firstIndex(of: name) {
+            enabledServers.remove(at: index)
+            json["enabledMcpjsonServers"] = enabledServers
+
+            let newData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+            try newData.write(to: URL(fileURLWithPath: path))
+        }
+    }
+
     // MARK: - Config
 
     /// Read Claude settings
