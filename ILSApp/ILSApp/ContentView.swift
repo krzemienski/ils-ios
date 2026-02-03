@@ -15,6 +15,8 @@ struct ContentView: View {
             return .plugins
         case "mcp":
             return .mcp
+        case "ssh":
+            return .ssh
         case "skills":
             return .skills
         case "settings":
@@ -49,6 +51,8 @@ struct ContentView: View {
                                     appState.selectedTab = "plugins"
                                 case .mcp:
                                     appState.selectedTab = "mcp"
+                                case .ssh:
+                                    appState.selectedTab = "ssh"
                                 case .skills:
                                     appState.selectedTab = "skills"
                                 case .settings:
@@ -81,6 +85,8 @@ struct ContentView: View {
             PluginsListView()
         case .mcp:
             MCPServerListView()
+        case .ssh:
+            SSHServersListView()
         case .skills:
             SkillsListView()
         case .settings:
@@ -94,6 +100,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     case projects = "Projects"
     case plugins = "Plugins"
     case mcp = "MCP Servers"
+    case ssh = "SSH Servers"
     case skills = "Skills"
     case settings = "Settings"
 
@@ -105,6 +112,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .projects: return "folder"
         case .plugins: return "puzzlepiece.extension"
         case .mcp: return "server.rack"
+        case .ssh: return "network"
         case .skills: return "star"
         case .settings: return "gear"
         }
