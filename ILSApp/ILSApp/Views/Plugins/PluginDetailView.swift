@@ -291,7 +291,9 @@ struct PluginDetailData: Identifiable {
                 isEnabled: true,
                 version: "1.0.0",
                 commands: ["/github-pr", "/github-issue", "/github-commit"],
-                agents: ["github-agent", "pr-reviewer"]
+                agents: ["github-agent", "pr-reviewer"],
+                hasUpdate: false,
+                latestVersion: nil
             )
         ),
         viewModel: PluginsViewModel()

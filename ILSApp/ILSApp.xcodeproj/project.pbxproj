@@ -32,6 +32,8 @@
 		000000000000000000000043 /* SessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000053 /* SessionsListView.swift */; };
 		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
 		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
+		000000000000000000000046 /* MarketplaceBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* MarketplaceBrowserView.swift */; };
+		000000000000000000000047 /* PluginDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* PluginDetailView.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
@@ -77,6 +79,8 @@
 		000000000000000000000053 /* SessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
+		000000000000000000000056 /* MarketplaceBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketplaceBrowserView.swift; sourceTree = "<group>"; };
+		000000000000000000000057 /* PluginDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -213,6 +217,8 @@
 			isa = PBXGroup;
 			children = (
 				00000000000000000000003C /* PluginsListView.swift */,
+				000000000000000000000056 /* MarketplaceBrowserView.swift */,
+				000000000000000000000057 /* PluginDetailView.swift */,
 			);
 			path = Plugins;
 			sourceTree = "<group>";
@@ -373,6 +379,8 @@
 				00000000000000000000002A /* ProjectDetailView.swift in Sources */,
 				00000000000000000000002B /* ProjectsViewModel.swift in Sources */,
 				00000000000000000000002C /* PluginsListView.swift in Sources */,
+				000000000000000000000046 /* MarketplaceBrowserView.swift in Sources */,
+				000000000000000000000047 /* PluginDetailView.swift in Sources */,
 				00000000000000000000002D /* PluginsViewModel.swift in Sources */,
 				00000000000000000000002E /* MCPServerListView.swift in Sources */,
 				00000000000000000000002F /* MCPViewModel.swift in Sources */,
