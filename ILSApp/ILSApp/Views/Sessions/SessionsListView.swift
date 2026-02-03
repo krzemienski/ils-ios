@@ -11,7 +11,12 @@ struct SessionsListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.retryLoadSessions()
                 }
-            } else if viewModel.sessions.isEmpty && !viewModel.isLoading {
+            } else if viewModel.isLoading && viewModel.sessions.isEmpty {
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonSessionRow()
+                }
+                .accessibilityIdentifier("loading-sessions-indicator")
+            } else if viewModel.sessions.isEmpty {
                 EmptyStateView(
                     title: "No Sessions",
                     systemImage: "bubble.left.and.bubble.right",
@@ -47,12 +52,6 @@ struct SessionsListView: View {
         .sheet(isPresented: $showingNewSession) {
             NewSessionView { session in
                 viewModel.sessions.insert(session, at: 0)
-            }
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.sessions.isEmpty {
-                ProgressView("Loading sessions...")
-                    .accessibilityIdentifier("loading-sessions-indicator")
             }
         }
         .task {
