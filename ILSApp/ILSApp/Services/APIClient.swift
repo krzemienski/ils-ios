@@ -71,7 +71,12 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        return try decoder.decode(T.self, from: data)
+        let decoded = try decoder.decode(T.self, from: data)
+
+        // Invalidate cache after mutation
+        clearCache()
+
+        return decoded
     }
 
     func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
@@ -85,7 +90,12 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        return try decoder.decode(T.self, from: data)
+        let decoded = try decoder.decode(T.self, from: data)
+
+        // Invalidate cache after mutation
+        clearCache()
+
+        return decoded
     }
 
     func delete<T: Decodable>(_ path: String) async throws -> T {
@@ -97,7 +107,12 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
-        return try decoder.decode(T.self, from: data)
+        let decoded = try decoder.decode(T.self, from: data)
+
+        // Invalidate cache after mutation
+        clearCache()
+
+        return decoded
     }
 
     private func validateResponse(_ response: URLResponse) throws {
@@ -110,6 +125,10 @@ actor APIClient {
             print("❌ API Error: HTTP \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
+    }
+
+    private func clearCache() {
+        cache.removeAll()
     }
 }
 
