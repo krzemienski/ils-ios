@@ -11,22 +11,27 @@ struct PluginsListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.loadPlugins()
                 }
-            } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    title: "No Plugins",
-                    systemImage: "puzzlepiece.extension",
-                    description: "Install plugins from the marketplace",
-                    actionTitle: "Browse Marketplace"
-                ) {
-                    showingMarketplace = true
+            } else if viewModel.filteredPlugins.isEmpty && !viewModel.isLoading {
+                if viewModel.plugins.isEmpty {
+                    EmptyStateView(
+                        title: "No Plugins",
+                        systemImage: "puzzlepiece.extension",
+                        description: "Install plugins from the marketplace",
+                        actionTitle: "Browse Marketplace"
+                    ) {
+                        showingMarketplace = true
+                    }
+                } else {
+                    ContentUnavailableView.search(text: viewModel.searchText)
                 }
             } else {
-                ForEach(viewModel.plugins) { plugin in
+                ForEach(viewModel.filteredPlugins) { plugin in
                     PluginRowView(plugin: plugin, viewModel: viewModel)
                 }
             }
         }
         .navigationTitle("Plugins")
+        .searchable(text: $viewModel.searchText, prompt: "Search plugins...")
         .refreshable {
             await viewModel.loadPlugins()
         }
