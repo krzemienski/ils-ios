@@ -574,7 +574,9 @@ struct SettingsView: View {
                 model: editedModel,
                 colorScheme: editedColorScheme,
                 alwaysThinkingEnabled: editedAlwaysThinkingEnabled,
-                includeCoAuthoredBy: editedIncludeCoAuthoredBy
+                includeCoAuthoredBy: editedIncludeCoAuthoredBy,
+                permissions: editedPermissions,
+                environment: editedEnvironment
             )
             if let error = result {
                 saveErrorMessage = error
@@ -824,7 +826,7 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
-    func saveConfig(model: String, colorScheme: String, alwaysThinkingEnabled: Bool, includeCoAuthoredBy: Bool) async -> String? {
+    func saveConfig(model: String, colorScheme: String, alwaysThinkingEnabled: Bool, includeCoAuthoredBy: Bool, permissions: PermissionsConfig, environment: [String: String]) async -> String? {
         isSaving = true
         defer { isSaving = false }
 
@@ -846,6 +848,12 @@ class SettingsViewModel: ObservableObject {
         // Update boolean fields
         currentConfig.alwaysThinkingEnabled = alwaysThinkingEnabled
         currentConfig.includeCoAuthoredBy = includeCoAuthoredBy
+
+        // Update permissions
+        currentConfig.permissions = permissions
+
+        // Update environment variables
+        currentConfig.env = environment.isEmpty ? nil : environment
 
         do {
             let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
