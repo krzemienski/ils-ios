@@ -13,6 +13,16 @@ public struct Plugin: Codable, Identifiable, Sendable {
     public var agents: [String]?
     public var path: String?
 
+    // Marketplace fields
+    public var author: String?
+    public var installCount: Int?
+    public var rating: Double?
+    public var reviewCount: Int?
+    public var tags: [String]?
+    public var hasUpdate: Bool?
+    public var latestVersion: String?
+    public var screenshots: [String]?
+
     public init(
         id: UUID = UUID(),
         name: String,
@@ -23,7 +33,15 @@ public struct Plugin: Codable, Identifiable, Sendable {
         version: String? = nil,
         commands: [String]? = nil,
         agents: [String]? = nil,
-        path: String? = nil
+        path: String? = nil,
+        author: String? = nil,
+        installCount: Int? = nil,
+        rating: Double? = nil,
+        reviewCount: Int? = nil,
+        tags: [String]? = nil,
+        hasUpdate: Bool? = nil,
+        latestVersion: String? = nil,
+        screenshots: [String]? = nil
     ) {
         self.id = id
         self.name = name
@@ -35,6 +53,14 @@ public struct Plugin: Codable, Identifiable, Sendable {
         self.commands = commands
         self.agents = agents
         self.path = path
+        self.author = author
+        self.installCount = installCount
+        self.rating = rating
+        self.reviewCount = reviewCount
+        self.tags = tags
+        self.hasUpdate = hasUpdate
+        self.latestVersion = latestVersion
+        self.screenshots = screenshots
     }
 }
 
@@ -56,8 +82,34 @@ public struct PluginInfo: Codable, Sendable {
     public let name: String
     public let description: String?
 
-    public init(name: String, description: String? = nil) {
+    // Enhanced marketplace fields
+    public var author: String?
+    public var installCount: Int?
+    public var rating: Double?
+    public var reviewCount: Int?
+    public var tags: [String]?
+    public var version: String?
+    public var screenshots: [String]?
+
+    public init(
+        name: String,
+        description: String? = nil,
+        author: String? = nil,
+        installCount: Int? = nil,
+        rating: Double? = nil,
+        reviewCount: Int? = nil,
+        tags: [String]? = nil,
+        version: String? = nil,
+        screenshots: [String]? = nil
+    ) {
         self.name = name
         self.description = description
+        self.author = author
+        self.installCount = installCount
+        self.rating = rating
+        self.reviewCount = reviewCount
+        self.tags = tags
+        self.version = version
+        self.screenshots = screenshots
     }
 }
