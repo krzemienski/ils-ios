@@ -9,6 +9,8 @@ struct ContentView: View {
         switch appState.selectedTab.lowercased() {
         case "sessions":
             return .sessions
+        case "templates":
+            return .templates
         case "projects":
             return .projects
         case "plugins":
@@ -43,6 +45,8 @@ struct ContentView: View {
                                 switch newItem {
                                 case .sessions:
                                     appState.selectedTab = "sessions"
+                                case .templates:
+                                    appState.selectedTab = "templates"
                                 case .projects:
                                     appState.selectedTab = "projects"
                                 case .plugins:
@@ -75,6 +79,8 @@ struct ContentView: View {
         switch selectedTab {
         case .sessions:
             SessionsListView()
+        case .templates:
+            TemplatesListView()
         case .projects:
             ProjectsListView()
         case .plugins:
@@ -91,6 +97,7 @@ struct ContentView: View {
 
 enum SidebarItem: String, CaseIterable, Identifiable {
     case sessions = "Sessions"
+    case templates = "Templates"
     case projects = "Projects"
     case plugins = "Plugins"
     case mcp = "MCP Servers"
@@ -102,6 +109,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .sessions: return "bubble.left.and.bubble.right"
+        case .templates: return "doc.text.magnifyingglass"
         case .projects: return "folder"
         case .plugins: return "puzzlepiece.extension"
         case .mcp: return "server.rack"
