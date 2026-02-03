@@ -350,6 +350,119 @@ public struct ConfigValidationResult: Codable, Sendable {
     }
 }
 
+// MARK: - Remote Server Requests
+
+public struct CreateRemoteServerRequest: Codable, Sendable {
+    public let name: String
+    public let host: String
+    public let port: Int
+    public let username: String
+    public let authType: RemoteAuthType
+    public let password: String?
+    public let privateKeyPath: String?
+
+    public init(
+        name: String,
+        host: String,
+        port: Int = 22,
+        username: String,
+        authType: RemoteAuthType = .key,
+        password: String? = nil,
+        privateKeyPath: String? = nil
+    ) {
+        self.name = name
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authType = authType
+        self.password = password
+        self.privateKeyPath = privateKeyPath
+    }
+}
+
+public struct UpdateRemoteServerRequest: Codable, Sendable {
+    public let name: String?
+    public let host: String?
+    public let port: Int?
+    public let username: String?
+    public let authType: RemoteAuthType?
+    public let password: String?
+    public let privateKeyPath: String?
+
+    public init(
+        name: String? = nil,
+        host: String? = nil,
+        port: Int? = nil,
+        username: String? = nil,
+        authType: RemoteAuthType? = nil,
+        password: String? = nil,
+        privateKeyPath: String? = nil
+    ) {
+        self.name = name
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authType = authType
+        self.password = password
+        self.privateKeyPath = privateKeyPath
+    }
+}
+
+public struct RemoteConnectionTestRequest: Codable, Sendable {
+    public let serverId: UUID
+
+    public init(serverId: UUID) {
+        self.serverId = serverId
+    }
+}
+
+public struct RemoteConnectionTestResponse: Codable, Sendable {
+    public let success: Bool
+    public let message: String
+    public let latencyMs: Int?
+
+    public init(success: Bool, message: String, latencyMs: Int? = nil) {
+        self.success = success
+        self.message = message
+        self.latencyMs = latencyMs
+    }
+}
+
+public struct RemoteFileOperationRequest: Codable, Sendable {
+    public let serverId: UUID
+    public let operation: RemoteFileOperation
+    public let path: String
+    public let content: String?
+
+    public init(serverId: UUID, operation: RemoteFileOperation, path: String, content: String? = nil) {
+        self.serverId = serverId
+        self.operation = operation
+        self.path = path
+        self.content = content
+    }
+}
+
+public enum RemoteFileOperation: String, Codable, Sendable {
+    case read
+    case write
+    case delete
+    case list
+}
+
+public struct RemoteFileOperationResponse: Codable, Sendable {
+    public let success: Bool
+    public let content: String?
+    public let files: [String]?
+    public let error: String?
+
+    public init(success: Bool, content: String? = nil, files: [String]? = nil, error: String? = nil) {
+        self.success = success
+        self.content = content
+        self.files = files
+        self.error = error
+    }
+}
+
 // MARK: - Stats Response
 
 public struct StatsResponse: Codable, Sendable {
