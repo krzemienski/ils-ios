@@ -153,4 +153,30 @@ class SkillsViewModel: ObservableObject {
             return nil
         }
     }
+
+    // MARK: - GitHub Installation
+
+    /// Install a skill from GitHub
+    /// - Parameters:
+    ///   - owner: Repository owner
+    ///   - repo: Repository name
+    /// - Returns: True if installation succeeded, false otherwise
+    func installGitHubSkill(owner: String, repo: String) async -> Bool {
+        error = nil
+
+        do {
+            let request = InstallSkillFromGitHubRequest(owner: owner, repo: repo)
+            let response: APIResponse<SkillItem> = try await client.post("/skills/github/install", body: request)
+
+            if let skill = response.data {
+                skills.append(skill)
+                return true
+            }
+            return false
+        } catch {
+            self.error = error
+            print("❌ Failed to install GitHub skill '\(owner)/\(repo)': \(error.localizedDescription)")
+            return false
+        }
+    }
 }
