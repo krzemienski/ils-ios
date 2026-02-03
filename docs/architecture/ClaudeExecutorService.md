@@ -2828,50 +2828,844 @@ init() {
   }
   ```
 
-## Usage Example
+## Integration Points and Usage Examples
 
-### In ChatController
+This section demonstrates how other ILS backend services integrate with `ClaudeExecutorService`, provides complete code examples for common scenarios, and documents patterns and gotchas.
+
+### Integration Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                      ILS Backend Services                        │
+│                                                                  │
+│  ┌────────────────────┐                                         │
+│  │  ChatController    │  HTTP/SSE endpoint for chat requests     │
+│  └─────────┬──────────┘                                         │
+│            │ execute()                                           │
+│            ▼                                                     │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │           ClaudeExecutorService                          │  │
+│  │  • Spawns Claude CLI                                     │  │
+│  │  • Returns AsyncThrowingStream<StreamMessage>            │  │
+│  └───────────────────────┬──────────────────────────────────┘  │
+│                          │ AsyncThrowingStream                  │
+│                          ▼                                       │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │           StreamingService                               │  │
+│  │  • Converts stream to SSE format                         │  │
+│  │  • Handles heartbeats and disconnections                 │  │
+│  │  • Persists messages to database                         │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 1. ChatController Integration
+
+The `ChatController` is the primary consumer of `ClaudeExecutorService`. It handles HTTP requests from the iOS app and streams responses back via Server-Sent Events (SSE).
+
+#### Basic Usage (Without Persistence)
+
+```swift
+import Vapor
+import ILSShared
+
+struct ChatController: RouteCollection {
+    func boot(routes: RoutesBuilder) throws {
+        routes.post("send", use: send)
+    }
+
+    func send(_ req: Request) async throws -> Response {
+        // 1. Decode request
+        let sendReq = try req.content.decode(ChatSendRequest.self)
+
+        // 2. Get executor service from app (singleton)
+        let executor = req.application.services.claudeExecutor
+
+        // 3. Build execution options
+        var options = ExecutionOptions()
+        options.maxTurns = sendReq.options?.maxTurns ?? 1
+        options.model = sendReq.options?.model ?? "claude-sonnet-4"
+        options.sessionId = UUID().uuidString
+        options.allowedTools = sendReq.options?.allowedTools
+        options.disallowedTools = sendReq.options?.disallowedTools
+
+        // 4. Execute - Returns immediately with stream
+        let stream = executor.execute(
+            prompt: sendReq.message,
+            workingDirectory: sendReq.workingDirectory,
+            options: options
+        )
+
+        // 5. Convert stream to SSE response (manual approach)
+        let response = Response(status: .ok)
+        response.headers.contentType = HTTPMediaType(type: "text", subType: "event-stream")
+        response.headers.add(name: .cacheControl, value: "no-cache")
+        response.headers.add(name: .connection, value: "keep-alive")
+        response.headers.add(name: "X-Accel-Buffering", value: "no") // Disable nginx buffering
+
+        response.body = .init(asyncStream: { writer in
+            do {
+                // 6. Iterate over stream messages
+                for try await message in stream {
+                    // 7. Encode message to JSON
+                    let json = try JSONEncoder().encode(message)
+                    guard let jsonString = String(data: json, encoding: .utf8) else {
+                        continue
+                    }
+
+                    // 8. Format as SSE event
+                    let eventType: String
+                    switch message {
+                    case .system: eventType = "system"
+                    case .assistant: eventType = "assistant"
+                    case .result: eventType = "result"
+                    case .permission: eventType = "permission"
+                    case .error: eventType = "error"
+                    }
+
+                    let eventData = "event: \(eventType)\ndata: \(jsonString)\n\n"
+
+                    // 9. Write to response
+                    try await writer.write(.buffer(ByteBuffer(string: eventData)))
+                }
+
+                // 10. Send completion event
+                try await writer.write(.buffer(ByteBuffer(string: "event: done\ndata: {}\n\n")))
+                try await writer.write(.end)
+            } catch {
+                // 11. Handle errors
+                req.logger.error("Stream error: \(error)")
+                try? await writer.write(.end)
+            }
+        })
+
+        return response
+    }
+}
+```
+
+**Flow Explanation:**
+
+1. **Request Decoding**: Parse incoming JSON with user's message and options
+2. **Service Access**: Retrieve singleton `ClaudeExecutorService` from app
+3. **Options Configuration**: Build `ExecutionOptions` from request parameters
+4. **Stream Creation**: Call `execute()` - returns immediately, no blocking
+5. **SSE Setup**: Configure response headers for Server-Sent Events
+6. **Stream Consumption**: Use `for try await` to iterate over messages
+7. **JSON Encoding**: Serialize each `StreamMessage` to JSON
+8. **Event Formatting**: Wrap JSON in SSE format (`event: type\ndata: json\n\n`)
+9. **Response Writing**: Write each event to HTTP response body
+10. **Completion**: Send `done` event when stream finishes
+11. **Error Handling**: Catch stream errors and close response gracefully
+
+### 2. StreamingService Integration (Recommended)
+
+Instead of manually creating SSE responses, use `StreamingService` which handles formatting, heartbeats, and error cases:
+
+#### Using StreamingService.createSSEResponse()
+
+```swift
+func send(_ req: Request) async throws -> Response {
+    let sendReq = try req.content.decode(ChatSendRequest.self)
+    let executor = req.application.services.claudeExecutor
+
+    var options = ExecutionOptions()
+    options.maxTurns = sendReq.options?.maxTurns ?? 1
+    options.sessionId = UUID().uuidString
+
+    // Get stream from executor
+    let stream = executor.execute(
+        prompt: sendReq.message,
+        workingDirectory: sendReq.workingDirectory,
+        options: options
+    )
+
+    // ✅ Use StreamingService for SSE response
+    // Handles: event formatting, heartbeats, error handling, disconnections
+    return StreamingService.createSSEResponse(from: stream, on: req)
+}
+```
+
+**Benefits:**
+
+- ✅ **Automatic heartbeats**: Sends `: ping\n\n` every 15 seconds to keep connection alive
+- ✅ **Disconnect detection**: Stops streaming if client disconnects
+- ✅ **Error formatting**: Converts exceptions to SSE error events
+- ✅ **Logging**: Logs disconnections and errors via Vapor logger
+- ✅ **Completion event**: Automatically sends `event: done` when finished
+
+#### Using StreamingService.createSSEResponseWithPersistence()
+
+For production use, persist messages to database while streaming:
 
 ```swift
 func send(_ req: Request) async throws -> Response {
     let sendReq = try req.content.decode(ChatSendRequest.self)
 
-    // Get executor service from app
+    // 1. Validate and get session from database
+    guard let sessionId = sendReq.sessionId,
+          let session = try await SessionModel.find(sessionId, on: req.db) else {
+        throw Abort(.notFound, reason: "Session not found")
+    }
+
+    // 2. Save user message to database
+    let userMessage = MessageModel(
+        sessionId: sessionId,
+        role: .user,
+        content: sendReq.message
+    )
+    try await userMessage.save(on: req.db)
+    guard let userMessageId = userMessage.id else {
+        throw Abort(.internalServerError, reason: "Failed to save user message")
+    }
+
+    // 3. Get executor and create stream
     let executor = req.application.services.claudeExecutor
+    var options = ExecutionOptions()
+    options.maxTurns = sendReq.options?.maxTurns ?? 1
+    options.sessionId = sessionId.uuidString
+    options.resume = session.claudeSessionId // Resume if multi-turn conversation
 
-    // Build execution options
-    let options = ExecutionOptions(from: sendReq.options)
-    options.sessionId = session.id?.uuidString
-
-    // Execute and get stream
     let stream = executor.execute(
         prompt: sendReq.message,
-        workingDirectory: project.directory,
+        workingDirectory: session.project?.directory,
         options: options
     )
 
-    // Create SSE response
-    let response = Response()
-    response.headers.contentType = .init(type: "text", subType: "event-stream")
-    response.headers.cacheControl = .init(noCache: true, noStore: true)
-    response.headers.add(name: "X-Accel-Buffering", value: "no")
-
-    response.body = .init(asyncStream: { writer in
-        do {
-            for try await message in stream {
-                let json = try JSONEncoder().encode(message)
-                let data = "data: \(String(data: json, encoding: .utf8)!)\n\n"
-                try await writer.write(.buffer(ByteBuffer(string: data)))
-            }
-        } catch {
-            // Handle errors
-        }
-        try await writer.write(.end)
-    })
-
-    return response
+    // 4. Use persistence-enabled SSE response
+    // Automatically saves assistant response when stream completes
+    return StreamingService.createSSEResponseWithPersistence(
+        from: stream,
+        sessionId: sessionId,
+        userMessageId: userMessageId,
+        on: req
+    )
 }
 ```
+
+**What `createSSEResponseWithPersistence()` Does:**
+
+1. **Accumulates Content**: Collects all text blocks from assistant messages
+2. **Tracks Tool Calls**: Saves tool use blocks as JSON array
+3. **Tracks Tool Results**: Saves tool result blocks as JSON array
+4. **Extracts Metadata**: Captures Claude session ID and cost from result message
+5. **Persists on Completion**: Saves `MessageModel` to database when stream finishes
+6. **Updates Session**: Increments message count and total cost
+7. **Sends Message ID**: Emits custom SSE event with saved message ID for client correlation
+8. **Handles Errors**: Still saves partial content if stream fails or is cancelled
+
+**Database Schema:**
+
+```swift
+final class MessageModel: Model {
+    @ID(key: .id) var id: UUID?
+    @Parent(key: "session_id") var session: SessionModel
+    @Field(key: "role") var role: MessageRole  // .user or .assistant
+    @Field(key: "content") var content: String
+    @Field(key: "tool_calls") var toolCalls: String?  // JSON array
+    @Field(key: "tool_results") var toolResults: String?  // JSON array
+    @Timestamp(key: "created_at", on: .create) var createdAt: Date?
+}
+```
+
+### 3. Session Resumption (Multi-Turn Conversations)
+
+Claude Code SDK supports multi-turn conversations by resuming previous sessions:
+
+```swift
+func send(_ req: Request) async throws -> Response {
+    let sendReq = try req.content.decode(ChatSendRequest.self)
+
+    // Load session from database
+    guard let sessionId = sendReq.sessionId,
+          let session = try await SessionModel.find(sessionId, on: req.db) else {
+        throw Abort(.notFound)
+    }
+
+    let executor = req.application.services.claudeExecutor
+    var options = ExecutionOptions()
+    options.maxTurns = 5  // Allow multiple turns
+
+    // ✅ Key: Resume previous Claude session
+    if let claudeSessionId = session.claudeSessionId {
+        options.resume = claudeSessionId  // Resume conversation history
+    }
+
+    let stream = executor.execute(
+        prompt: sendReq.message,
+        workingDirectory: session.project?.directory,
+        options: options
+    )
+
+    return StreamingService.createSSEResponseWithPersistence(
+        from: stream,
+        sessionId: sessionId,
+        userMessageId: userMessageId,
+        on: req
+    )
+}
+```
+
+**Session Resumption Flow:**
+
+```
+First Message:
+  User: "Create a function to validate emails"
+  → options.resume = nil
+  → SDK creates new Claude session with ID "ses_abc123"
+  → Save "ses_abc123" to session.claudeSessionId
+
+Second Message:
+  User: "Add unit tests for that function"
+  → options.resume = "ses_abc123"  // ✅ Resume previous conversation
+  → Claude remembers the email validation function from before
+  → Can reference previous code without re-explaining context
+
+Third Message:
+  User: "Now add error handling"
+  → options.resume = "ses_abc123"
+  → Claude continues with full conversation history
+```
+
+**Important:**
+
+- `options.resume`: SDK session ID (for conversation history)
+- `options.sessionId`: Our tracking ID (for cancellation)
+- These can be different values
+
+### 4. Cancellation Example
+
+Cancel long-running operations when user stops them:
+
+```swift
+struct ChatController: RouteCollection {
+    func boot(routes: RoutesBuilder) throws {
+        routes.post("send", use: send)
+        routes.post("cancel", use: cancel)  // Cancellation endpoint
+    }
+
+    func cancel(_ req: Request) async throws -> HTTPStatus {
+        let cancelReq = try req.content.decode(CancelRequest.self)
+
+        // Get executor
+        let executor = req.application.services.claudeExecutor
+
+        // Cancel the session
+        await executor.cancel(sessionId: cancelReq.sessionId)
+
+        req.logger.info("Cancelled session: \(cancelReq.sessionId)")
+
+        return .ok
+    }
+}
+
+struct CancelRequest: Content {
+    let sessionId: String
+}
+```
+
+**Cancellation Flow:**
+
+```
+Client                  Backend                     ClaudeExecutorService
+──────                  ───────                     ─────────────────────
+POST /send              →
+  sessionId: "abc123"     Create stream
+                          Start streaming ──────────→ execute() spawns Task
+                                                      runWithSDK() calls SDK
+                                                      SDK spawns claude CLI
+                          ← SSE events ←────────────── Chunks streaming
+User clicks "Stop"
+POST /cancel            →
+  sessionId: "abc123"     await cancel("abc123") ───→ Look up cancellable
+                                                      cancellable.cancel()
+                                                      Remove from activeSessions
+                                                      client.cancel() kills CLI
+                          ← 200 OK
+                          SSE stream finishes ←────── receiveCompletion fires
+                                                      continuation.finish()
+```
+
+**Cancellation Guarantees:**
+
+- **Immediate**: Cancel request returns immediately (doesn't wait for cleanup)
+- **Idempotent**: Safe to call multiple times on same session ID
+- **Resource Cleanup**: Publisher completion handler still runs, removing session from dictionary
+- **Process Termination**: Underlying `claude` CLI process is killed
+
+### 5. Error Handling Patterns
+
+#### Handling Stream Errors
+
+```swift
+let stream = executor.execute(prompt: "...", workingDirectory: nil, options: options)
+
+do {
+    for try await message in stream {
+        switch message {
+        case .error(let error):
+            // ⚠️ Errors are yielded as messages, not thrown!
+            req.logger.error("Claude error: \(error.code) - \(error.message)")
+            // Stream continues or finishes after this
+
+        case .assistant(let msg):
+            // Process assistant response
+            break
+
+        case .result(let res):
+            if res.isError {
+                // Result indicates error (failure, timeout, etc.)
+                req.logger.error("Execution failed")
+            }
+            break
+
+        default:
+            break
+        }
+    }
+} catch {
+    // ⚠️ Exceptions from stream iteration (rare)
+    // Usually only happens if continuation.finish(throwing:) is called
+    req.logger.error("Stream threw exception: \(error)")
+}
+```
+
+**Error Sources:**
+
+| Error Type | How It Appears | When | Recovery |
+|------------|----------------|------|----------|
+| **SDK Execution Error** | `.error` message in stream | SDK fails to start CLI, invalid arguments | Log error, return to user |
+| **CLI Error** | `.result` message with `isError: true` | Claude CLI returns non-zero exit code | Check result subtype, return error |
+| **Stream Error** | `.error` message in stream | Publisher fails | Usually terminal, stream will finish |
+| **Client Not Initialized** | `.error` message (first chunk) | ClaudeCodeClient failed to initialize | Check CLI installation, restart service |
+| **Cancellation** | Stream finishes gracefully | User or timeout cancels | Normal flow, no error |
+
+#### Handling Missing CLI
+
+```swift
+// Check if Claude CLI is available before accepting requests
+func boot(routes: RoutesBuilder) throws {
+    // Health check endpoint
+    routes.get("health") { req async -> HTTPStatus in
+        let executor = req.application.services.claudeExecutor
+        let available = await executor.isAvailable()
+        return available ? .ok : .serviceUnavailable
+    }
+}
+```
+
+### 6. Working Directory Management
+
+Claude Code CLI needs a working directory to execute commands:
+
+```swift
+// ✅ GOOD: Provide working directory
+let stream = executor.execute(
+    prompt: "List all Swift files",
+    workingDirectory: "/path/to/project",
+    options: options
+)
+
+// ⚠️ WORKS: Uses ClaudeCodeClient's default working directory
+let stream = executor.execute(
+    prompt: "List all Swift files",
+    workingDirectory: nil,
+    options: options
+)
+// Default is usually the directory where backend was launched
+```
+
+**Working Directory Usage:**
+
+- **File Operations**: CLI tools (Bash, Read, Edit, Write) operate relative to this directory
+- **Security**: Limit to project directories, never system directories
+- **Validation**: Ensure directory exists and is accessible
+- **Project Isolation**: Each project should have its own directory
+
+```swift
+// Validate working directory before execution
+guard let project = try await ProjectModel.find(projectId, on: req.db),
+      let directory = project.directory,
+      FileManager.default.fileExists(atPath: directory) else {
+    throw Abort(.badRequest, reason: "Invalid project directory")
+}
+
+let stream = executor.execute(
+    prompt: sendReq.message,
+    workingDirectory: directory,  // ✅ Validated path
+    options: options
+)
+```
+
+### Common Patterns
+
+#### Pattern 1: Stream Transformation
+
+Transform stream messages before sending to client:
+
+```swift
+func transformStream(
+    _ stream: AsyncThrowingStream<StreamMessage, Error>
+) -> AsyncThrowingStream<StreamMessage, Error> {
+    AsyncThrowingStream { continuation in
+        Task {
+            do {
+                for try await message in stream {
+                    // Transform or filter messages
+                    switch message {
+                    case .assistant(var assistantMsg):
+                        // Example: Filter out thinking blocks
+                        assistantMsg.content = assistantMsg.content.filter { block in
+                            if case .thinking = block { return false }
+                            return true
+                        }
+                        continuation.yield(.assistant(assistantMsg))
+
+                    default:
+                        continuation.yield(message)
+                    }
+                }
+                continuation.finish()
+            } catch {
+                continuation.finish(throwing: error)
+            }
+        }
+    }
+}
+
+// Usage:
+let stream = executor.execute(...)
+let filteredStream = transformStream(stream)
+return StreamingService.createSSEResponse(from: filteredStream, on: req)
+```
+
+#### Pattern 2: Stream Tee (Multiple Consumers)
+
+Send stream to multiple consumers (e.g., SSE + WebSocket):
+
+```swift
+func teeStream(
+    _ stream: AsyncThrowingStream<StreamMessage, Error>,
+    consumers: [AsyncThrowingStream<StreamMessage, Error>.Continuation]
+) {
+    Task {
+        do {
+            for try await message in stream {
+                // Yield to all consumers
+                for continuation in consumers {
+                    continuation.yield(message)
+                }
+            }
+            // Finish all consumers
+            consumers.forEach { $0.finish() }
+        } catch {
+            consumers.forEach { $0.finish(throwing: error) }
+        }
+    }
+}
+```
+
+⚠️ **Warning**: Stream can only be consumed once! Tee pattern requires manual distribution.
+
+#### Pattern 3: Timeout Wrapper
+
+Add timeout to execution:
+
+```swift
+func executeWithTimeout(
+    executor: ClaudeExecutorService,
+    prompt: String,
+    workingDirectory: String?,
+    options: ExecutionOptions,
+    timeout: Duration = .seconds(300)  // 5 minutes
+) -> AsyncThrowingStream<StreamMessage, Error> {
+    AsyncThrowingStream { continuation in
+        let timeoutTask = Task {
+            try await Task.sleep(for: timeout)
+            if let sessionId = options.sessionId {
+                await executor.cancel(sessionId: sessionId)
+            }
+            continuation.yield(.error(StreamError(
+                code: "TIMEOUT",
+                message: "Execution exceeded \(timeout.components.seconds) seconds"
+            )))
+            continuation.finish()
+        }
+
+        let streamTask = Task {
+            let stream = executor.execute(
+                prompt: prompt,
+                workingDirectory: workingDirectory,
+                options: options
+            )
+
+            do {
+                for try await message in stream {
+                    continuation.yield(message)
+                }
+                timeoutTask.cancel()
+                continuation.finish()
+            } catch {
+                timeoutTask.cancel()
+                continuation.finish(throwing: error)
+            }
+        }
+    }
+}
+```
+
+### Common Gotchas and Solutions
+
+#### Gotcha 1: Stream Can Only Be Consumed Once
+
+```swift
+// ❌ WRONG: Can't iterate stream multiple times
+let stream = executor.execute(...)
+for try await msg in stream { print(msg) }  // First iteration
+for try await msg in stream { print(msg) }  // ❌ Second iteration will get nothing!
+```
+
+**Solution**: Store messages in array if you need to process multiple times:
+
+```swift
+var messages: [StreamMessage] = []
+for try await msg in stream {
+    messages.append(msg)
+}
+// Now can process messages multiple times
+```
+
+#### Gotcha 2: Forgetting to Consume Stream
+
+```swift
+// ❌ WRONG: Stream created but never consumed
+let stream = executor.execute(...)
+return .ok  // Stream is abandoned, Task never runs!
+```
+
+**Solution**: Always consume the stream:
+
+```swift
+let stream = executor.execute(...)
+return StreamingService.createSSEResponse(from: stream, on: req)  // ✅ Consumed
+```
+
+#### Gotcha 3: Blocking Actor with Synchronous execute()
+
+```swift
+// ❌ WRONG: If execute() were actor-isolated
+// func execute(...) async -> AsyncThrowingStream { ... }
+
+// Would require:
+let stream = await executor.execute(...)  // Blocks until actor available
+```
+
+**Current Design (Correct):**
+
+```swift
+// ✅ CORRECT: Nonisolated execute()
+let stream = executor.execute(...)  // Returns immediately, no await
+```
+
+#### Gotcha 4: Not Handling Cancellation
+
+```swift
+// ⚠️ PARTIAL: No way for user to stop long-running tasks
+routes.post("send", use: send)
+```
+
+**Solution**: Add cancellation endpoint:
+
+```swift
+routes.post("send", use: send)
+routes.post("cancel", use: cancel)  // ✅ Allow cancellation
+```
+
+#### Gotcha 5: Ignoring .error Messages
+
+```swift
+// ❌ WRONG: Assuming stream only has assistant/result messages
+for try await message in stream {
+    if case .assistant(let msg) = message {
+        // Process...
+    }
+    // ❌ Ignores .error messages!
+}
+```
+
+**Solution**: Always handle .error case:
+
+```swift
+for try await message in stream {
+    switch message {
+    case .error(let error):
+        req.logger.error("Error: \(error.message)")
+        // Return error to user
+    case .assistant(let msg):
+        // Process
+    // ... handle other cases
+    }
+}
+```
+
+#### Gotcha 6: Assuming sessionId == resume
+
+```swift
+// ❌ WRONG: Confusing session tracking ID with Claude session ID
+options.sessionId = claudeSessionId  // Wrong field!
+```
+
+**Correct Usage:**
+
+```swift
+// ✅ Two different IDs with different purposes
+options.sessionId = UUID().uuidString      // Our tracking ID (for cancellation)
+options.resume = session.claudeSessionId   // Claude's session ID (for history)
+```
+
+| Field | Purpose | Source | Example |
+|-------|---------|--------|---------|
+| `options.sessionId` | Cancel tracking | Generated by us | `"f47ac10b-58cc-4372-a567-0e02b2c3d479"` |
+| `options.resume` | Conversation history | Previous `ResultMessage.sessionId` | `"ses_abc123def456"` |
+
+### Service Initialization
+
+Register `ClaudeExecutorService` in your Vapor app:
+
+```swift
+// Configure.swift
+import Vapor
+import ILSBackend
+
+public func configure(_ app: Application) throws {
+    // Initialize ClaudeExecutorService as singleton
+    app.services.claudeExecutor = ClaudeExecutorService()
+
+    // ... other configuration
+}
+
+// Extend Application.Services for type-safe access
+extension Application {
+    struct Services {
+        struct Key: StorageKey {
+            typealias Value = ClaudeExecutorService
+        }
+
+        var claudeExecutor: ClaudeExecutorService {
+            get {
+                guard let service = app.storage[Key.self] else {
+                    fatalError("ClaudeExecutorService not initialized")
+                }
+                return service
+            }
+            set {
+                app.storage[Key.self] = newValue
+            }
+        }
+
+        let app: Application
+    }
+
+    var services: Services {
+        Services(app: self)
+    }
+}
+```
+
+**Usage in Routes:**
+
+```swift
+func boot(routes: RoutesBuilder) throws {
+    routes.post("send") { req async throws -> Response in
+        let executor = req.application.services.claudeExecutor  // ✅ Type-safe access
+        // ...
+    }
+}
+```
+
+### Testing Integration
+
+#### Unit Testing execute()
+
+```swift
+import XCTest
+@testable import ILSBackend
+
+final class ClaudeExecutorServiceTests: XCTestCase {
+    func testExecuteReturnsStream() async throws {
+        let executor = ClaudeExecutorService()
+        let options = ExecutionOptions(maxTurns: 1)
+
+        let stream = executor.execute(
+            prompt: "Hello",
+            workingDirectory: nil,
+            options: options
+        )
+
+        var messageCount = 0
+        for try await message in stream {
+            messageCount += 1
+            print("Received: \(message)")
+        }
+
+        XCTAssertGreaterThan(messageCount, 0, "Should receive at least one message")
+    }
+}
+```
+
+#### Integration Testing with StreamingService
+
+```swift
+func testStreamingServiceSSE() async throws {
+    let app = Application(.testing)
+    defer { app.shutdown() }
+    try configure(app)
+
+    let executor = app.services.claudeExecutor
+    let options = ExecutionOptions(maxTurns: 1)
+
+    let stream = executor.execute(
+        prompt: "Print hello world",
+        workingDirectory: nil,
+        options: options
+    )
+
+    let response = StreamingService.createSSEResponse(
+        from: stream,
+        on: app.make()
+    )
+
+    XCTAssertEqual(response.status, .ok)
+    XCTAssertEqual(response.headers.contentType?.subType, "event-stream")
+}
+```
+
+### Summary
+
+**Key Integration Points:**
+
+1. **ChatController → ClaudeExecutorService**: Calls `execute()` to get message stream
+2. **ClaudeExecutorService → StreamingService**: Passes `AsyncThrowingStream` for SSE conversion
+3. **StreamingService → Database**: Persists messages during streaming
+4. **StreamingService → HTTP Response**: Converts stream to SSE format for client
+
+**Common Patterns:**
+
+- ✅ Use `StreamingService.createSSEResponse()` for automatic SSE handling
+- ✅ Use `createSSEResponseWithPersistence()` for production with database
+- ✅ Always provide cancellation endpoint for long-running tasks
+- ✅ Use `options.resume` for multi-turn conversations
+- ✅ Validate working directories before execution
+- ✅ Handle `.error` messages in stream processing
+
+**Common Gotchas:**
+
+- ❌ Don't consume stream multiple times (it's single-use)
+- ❌ Don't forget to consume stream (or Task never runs)
+- ❌ Don't confuse `sessionId` (tracking) with `resume` (conversation history)
+- ❌ Don't ignore `.error` messages in stream
+- ❌ Don't block actor with synchronous `execute()` (use nonisolated)
 
 ## Thread Safety Considerations
 
