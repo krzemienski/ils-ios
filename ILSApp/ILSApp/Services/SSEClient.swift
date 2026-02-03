@@ -24,9 +24,17 @@ class SSEClient: ObservableObject {
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
+    private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
 
     init(baseURL: String = "http://localhost:8080") {
         self.baseURL = baseURL
+
+        self.decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        self.encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
     }
 
     /// Start streaming a chat request
@@ -53,7 +61,6 @@ class SSEClient: ObservableObject {
         urlRequest.addValue("text/event-stream", forHTTPHeaderField: "Accept")
 
         do {
-            let encoder = JSONEncoder()
             urlRequest.httpBody = try encoder.encode(request)
         } catch {
             self.error = error
@@ -158,7 +165,6 @@ class SSEClient: ObservableObject {
         guard let jsonData = data.data(using: .utf8) else { return }
 
         do {
-            let decoder = JSONDecoder()
             let message = try decoder.decode(StreamMessage.self, from: jsonData)
             messages.append(message)
         } catch {
