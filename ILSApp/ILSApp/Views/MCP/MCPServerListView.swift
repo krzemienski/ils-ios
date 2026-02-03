@@ -153,8 +153,16 @@ struct MCPServerRowView: View {
 
 struct MCPServerDetailView: View {
     let server: MCPServerItem
+    @StateObject private var viewModel: MCPViewModel
     @State private var showCopiedToast = false
     @State private var showingEditSheet = false
+    @State private var isEnabled: Bool
+
+    init(server: MCPServerItem) {
+        self.server = server
+        self._viewModel = StateObject(wrappedValue: MCPViewModel())
+        self._isEnabled = State(initialValue: !server.disabled)
+    }
 
     var body: some View {
         List {
@@ -204,6 +212,13 @@ struct MCPServerDetailView: View {
                     Text(server.scope.capitalized)
                         .foregroundColor(ILSTheme.secondaryText)
                 }
+
+                Toggle("Enabled", isOn: $isEnabled)
+                    .onChange(of: isEnabled) { _, newValue in
+                        Task {
+                            await viewModel.toggleServer(server)
+                        }
+                    }
 
                 LabeledContent("Status") {
                     HStack(spacing: 4) {

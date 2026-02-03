@@ -25,6 +25,8 @@
 		00000000000000000000002C /* PluginsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003C /* PluginsListView.swift */; };
 		00000000000000000000002D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
 		00000000000000000000002E /* MCPServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003E /* MCPServerListView.swift */; };
+		0A4CF95B19C6E81552E4AEAD /* EditMCPServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditMCPServerView.swift; sourceTree = "<group>"; };
+		73BA8795E2CE84AF28020EDE /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4CF95B19C6E81552E4AEAD /* EditMCPServerView.swift */; };
 		00000000000000000000002F /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
 		000000000000000000000040 /* SkillsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000050 /* SkillsListView.swift */; };
 		000000000000000000000041 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
@@ -221,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				00000000000000000000003E /* MCPServerListView.swift */,
+				0A4CF95B19C6E81552E4AEAD /* EditMCPServerView.swift */,
 			);
 			path = MCP;
 			sourceTree = "<group>";
@@ -375,6 +378,7 @@
 				00000000000000000000002C /* PluginsListView.swift in Sources */,
 				00000000000000000000002D /* PluginsViewModel.swift in Sources */,
 				00000000000000000000002E /* MCPServerListView.swift in Sources */,
+				73BA8795E2CE84AF28020EDE /* EditMCPServerView.swift in Sources */,
 				00000000000000000000002F /* MCPViewModel.swift in Sources */,
 				000000000000000000000040 /* SkillsListView.swift in Sources */,
 				000000000000000000000041 /* SkillsViewModel.swift in Sources */,
