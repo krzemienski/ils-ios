@@ -32,6 +32,8 @@ struct ContentView: View {
                         Button(action: { showingSidebar = true }) {
                             Image(systemName: "sidebar.left")
                         }
+                        .accessibilityLabel("Show Sidebar")
+                        .accessibilityHint("Opens the navigation menu")
                         .accessibilityIdentifier("sidebarButton")
                     }
                 }
@@ -61,6 +63,7 @@ struct ContentView: View {
                                     Button("Done") {
                                         showingSidebar = false
                                     }
+                                    .accessibilityHint("Closes the sidebar")
                                     .accessibilityIdentifier("sidebarDoneButton")
                                 }
                             }
