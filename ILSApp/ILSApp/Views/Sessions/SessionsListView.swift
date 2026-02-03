@@ -20,6 +20,8 @@ struct SessionsListView: View {
                 ) {
                     showingNewSession = true
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("No sessions, Start a new chat session to begin")
                 .accessibilityIdentifier("empty-sessions-state")
             } else {
                 ForEach(viewModel.sessions) { session in
@@ -41,6 +43,8 @@ struct SessionsListView: View {
                 Button(action: { showingNewSession = true }) {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("New session")
+                .accessibilityHint("Creates a new chat session")
                 .accessibilityIdentifier("add-session-button")
             }
         }
@@ -52,6 +56,7 @@ struct SessionsListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.sessions.isEmpty {
                 ProgressView("Loading sessions...")
+                    .accessibilityLabel("Loading sessions")
                     .accessibilityIdentifier("loading-sessions-indicator")
             }
         }
@@ -124,6 +129,8 @@ struct SessionRowView: View {
         }
         .padding(.vertical, 4)
         .shadow(color: ILSTheme.shadowLight, radius: 2, x: 0, y: 1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
     }
 
     @ViewBuilder
@@ -133,6 +140,8 @@ struct SessionRowView: View {
         if session.status == .active {
             // Active badge with pulse animation
             PulsingBadgeView(text: text, color: color)
+                .accessibilityLabel("Active session")
+                .accessibilityAddTraits(.updatesFrequently)
         } else {
             // Static badge for other states
             Text(text)
@@ -142,6 +151,7 @@ struct SessionRowView: View {
                 .padding(.vertical, 2)
                 .background(color)
                 .cornerRadius(ILSTheme.cornerRadiusS)
+                .accessibilityLabel(statusAccessibilityLabel)
         }
     }
 
@@ -162,6 +172,41 @@ struct SessionRowView: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private var accessibilityText: String {
+        let name = session.name ?? "Unnamed Session"
+        let model = session.model
+        let messageCount = "\(session.messageCount) messages"
+        let status = statusAccessibilityLabel
+        let lastActive = "Last active \(formattedDate(session.lastActiveAt))"
+
+        var components = [name, model, messageCount, status, lastActive]
+
+        // Add project name if exists
+        if let projectName = session.projectName {
+            components.insert("Project: \(projectName)", at: 1)
+        }
+
+        // Add cost if exists
+        if let cost = session.totalCostUSD {
+            components.insert("Cost: $\(String(format: "%.4f", cost))", at: components.count - 1)
+        }
+
+        return components.joined(separator: ", ")
+    }
+
+    private var statusAccessibilityLabel: String {
+        switch session.status {
+        case .active:
+            return "Active session"
+        case .completed:
+            return "Completed session"
+        case .error:
+            return "Session error"
+        case .cancelled:
+            return "Cancelled session"
+        }
     }
 }
 
