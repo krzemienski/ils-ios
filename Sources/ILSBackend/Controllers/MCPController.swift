@@ -11,6 +11,7 @@ struct MCPController: RouteCollection {
         mcp.get(":name", use: show)
         mcp.post(use: create)
         mcp.put(":name", use: update)
+        mcp.patch(":name", "toggle", use: toggle)
         mcp.delete(":name", use: delete)
     }
 
@@ -108,6 +109,39 @@ struct MCPController: RouteCollection {
         if let env = input.env {
             server.env = env
         }
+
+        // Update the server in the configuration file
+        try fileSystem.updateMCPServer(server)
+
+        // Invalidate cache
+        await fileSystem.invalidateMCPServersCache()
+
+        return APIResponse(
+            success: true,
+            data: server
+        )
+    }
+
+    /// PATCH /mcp/:name/toggle - Toggle enabled/disabled state of an MCP server
+    /// Query params: ?scope=user|project
+    @Sendable
+    func toggle(req: Request) async throws -> APIResponse<MCPServer> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid MCP server name")
+        }
+
+        let scopeString = req.query[String.self, at: "scope"] ?? "user"
+        let scope = MCPScope(rawValue: scopeString) ?? .user
+
+        // Read existing servers to find the one to toggle
+        let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: true)
+
+        guard var server = servers.first(where: { $0.name == name }) else {
+            throw Abort(.notFound, reason: "MCP server '\(name)' not found")
+        }
+
+        // Toggle the disabled state
+        server.disabled.toggle()
 
         // Update the server in the configuration file
         try fileSystem.updateMCPServer(server)

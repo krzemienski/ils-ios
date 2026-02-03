@@ -388,6 +388,8 @@ struct FileSystemService {
                 }
             }
 
+            let disabled = configDict["disabled"] as? Bool ?? false
+
             return MCPServer(
                 name: name,
                 command: command,
@@ -395,7 +397,8 @@ struct FileSystemService {
                 env: env,
                 scope: scope,
                 status: .unknown,
-                configPath: path
+                configPath: path,
+                disabled: disabled
             )
         }
     }
@@ -420,6 +423,9 @@ struct FileSystemService {
         ]
         if let env = server.env {
             serverConfig["env"] = env
+        }
+        if server.disabled {
+            serverConfig["disabled"] = server.disabled
         }
 
         mcpServers[server.name] = serverConfig
@@ -452,6 +458,9 @@ struct FileSystemService {
         ]
         if let env = server.env {
             serverConfig["env"] = env
+        }
+        if server.disabled {
+            serverConfig["disabled"] = server.disabled
         }
 
         mcpServers[server.name] = serverConfig
