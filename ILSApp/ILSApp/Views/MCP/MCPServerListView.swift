@@ -154,6 +154,7 @@ struct MCPServerRowView: View {
 struct MCPServerDetailView: View {
     let server: MCPServerItem
     @State private var showCopiedToast = false
+    @State private var showingEditSheet = false
 
     var body: some View {
         List {
@@ -236,6 +237,13 @@ struct MCPServerDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingEditSheet = true
+                } label: {
+                    Text("Edit")
+                }
+            }
+            ToolbarItem(placement: .secondaryAction) {
                 Menu {
                     Button {
                         copyToClipboard()
@@ -245,6 +253,11 @@ struct MCPServerDetailView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
+            }
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            EditMCPServerView(server: server) { _ in
+                // Optional: handle updated server
             }
         }
         .overlay(alignment: .bottom) {
