@@ -154,9 +154,12 @@ struct SkillDetailView: View {
 
                 // Content section
                 if isLoading {
-                    ProgressView("Loading skill content...")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, ILSTheme.spacingXL)
+                    // Skeleton matching skillContent layout
+                    VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
+                        SkeletonText(width: 80, height: 16)
+
+                        SkeletonRectangle(height: 200)
+                    }
                 } else if let content = fullSkill?.content ?? skill.content {
                     skillContent(content)
                 } else {
