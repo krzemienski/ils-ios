@@ -178,18 +178,3 @@ class SSEClient: ObservableObject {
         reconnectAttempts = 0
     }
 }
-
-// MARK: - Chat Request
-
-struct ChatStreamRequest: Encodable {
-    let prompt: String
-    let sessionId: UUID?
-    let projectId: UUID?
-    let options: ChatOptions?
-}
-
-struct ChatOptions: Encodable {
-    let model: String?
-    let permissionMode: String?
-    let maxTurns: Int?
-}
