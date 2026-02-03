@@ -27,10 +27,9 @@ struct SkillsListView: View {
             } else {
                 ForEach(viewModel.filteredSkills) { skill in
                     NavigationLink(value: skill) {
-                        SkillRowView(skill: skill)
+                        SkillRowView(skill: skill, viewModel: viewModel)
                     }
                 }
-                .onDelete(perform: deleteSkill)
             }
         }
         .navigationTitle("Skills")
@@ -63,19 +62,11 @@ struct SkillsListView: View {
             await viewModel.loadSkills()
         }
     }
-
-    private func deleteSkill(at offsets: IndexSet) {
-        let skillsToDelete = offsets.map { viewModel.filteredSkills[$0] }
-        Task {
-            for skill in skillsToDelete {
-                await viewModel.deleteSkill(skill)
-            }
-        }
-    }
 }
 
 struct SkillRowView: View {
     let skill: SkillItem
+    @ObservedObject var viewModel: SkillsViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
@@ -130,6 +121,15 @@ struct SkillRowView: View {
             }
         }
         .padding(.vertical, ILSTheme.spacingXS)
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                Task {
+                    await viewModel.deleteSkill(skill)
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
     }
 }
 
