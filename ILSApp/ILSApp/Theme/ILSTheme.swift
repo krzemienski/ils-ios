@@ -236,3 +236,22 @@ struct EmptyStateView: View {
         }
     }
 }
+
+// MARK: - Status Badge Component
+
+/// Reusable status badge with colored indicator and text
+struct StatusBadge: View {
+    let color: Color
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(text)
+                .font(.caption2)
+                .foregroundColor(color)
+        }
+    }
+}
