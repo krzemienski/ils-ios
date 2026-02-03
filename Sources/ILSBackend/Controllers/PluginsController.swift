@@ -130,14 +130,52 @@ struct PluginsController: RouteCollection {
         let config = try? fileSystem.readConfig(scope: "user")
         var marketplaces: [PluginMarketplace] = []
 
-        // Add official marketplace
+        // Add official marketplace with richer plugin data
         marketplaces.append(PluginMarketplace(
             name: "claude-plugins-official",
             source: "anthropics/claude-code",
             plugins: [
-                PluginInfo(name: "github", description: "GitHub integration"),
-                PluginInfo(name: "jira", description: "Jira integration"),
-                PluginInfo(name: "linear", description: "Linear integration")
+                PluginInfo(
+                    name: "github",
+                    description: "GitHub integration for managing issues, PRs, and repositories",
+                    author: "Anthropic",
+                    installCount: 1250,
+                    rating: 4.8,
+                    reviewCount: 89,
+                    tags: ["version-control", "collaboration", "popular"],
+                    version: "1.2.0",
+                    screenshots: [
+                        "https://example.com/screenshots/github-1.png",
+                        "https://example.com/screenshots/github-2.png"
+                    ]
+                ),
+                PluginInfo(
+                    name: "jira",
+                    description: "Jira integration for project management and issue tracking",
+                    author: "Anthropic",
+                    installCount: 890,
+                    rating: 4.5,
+                    reviewCount: 67,
+                    tags: ["project-management", "collaboration"],
+                    version: "1.1.5",
+                    screenshots: [
+                        "https://example.com/screenshots/jira-1.png"
+                    ]
+                ),
+                PluginInfo(
+                    name: "linear",
+                    description: "Linear integration for streamlined issue tracking and project management",
+                    author: "Anthropic",
+                    installCount: 645,
+                    rating: 4.7,
+                    reviewCount: 52,
+                    tags: ["project-management", "issue-tracking"],
+                    version: "1.0.8",
+                    screenshots: [
+                        "https://example.com/screenshots/linear-1.png",
+                        "https://example.com/screenshots/linear-2.png"
+                    ]
+                )
             ]
         ))
 
