@@ -12,6 +12,11 @@ struct SSHController: RouteCollection {
         ssh.get(":id", use: show)
         ssh.put(":id", use: update)
         ssh.delete(":id", use: delete)
+
+        // SSH-specific operations
+        ssh.post("test", use: testConnection)
+        ssh.post(":id", "execute", use: executeCommand)
+        ssh.get(":id", "claude-version", use: detectClaudeVersion)
     }
 
     /// GET /ssh - List all SSH servers
@@ -141,4 +146,119 @@ struct SSHController: RouteCollection {
             data: DeletedResponse()
         )
     }
+
+    // MARK: - SSH Operations
+
+    /// POST /ssh/test - Test SSH connection with credentials
+    @Sendable
+    func testConnection(req: Request) async throws -> APIResponse<TestConnectionResponse> {
+        // Define request structure with credential field
+        struct TestConnectionRequestWithCredential: Codable {
+            let host: String
+            let port: Int
+            let username: String
+            let authType: SSHAuthType
+            let credential: String
+        }
+
+        let input = try req.content.decode(TestConnectionRequestWithCredential.self)
+
+        let sshService = SSHService()
+        let success = try await sshService.testConnection(
+            host: input.host,
+            port: input.port,
+            username: input.username,
+            authType: input.authType,
+            credential: input.credential
+        )
+
+        return APIResponse(
+            success: true,
+            data: TestConnectionResponse(success: success)
+        )
+    }
+
+    /// POST /ssh/:id/execute - Execute remote command on SSH server
+    @Sendable
+    func executeCommand(req: Request) async throws -> APIResponse<ExecuteRemoteCommandResponse> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid server ID")
+        }
+
+        // Define request structure with credential field
+        struct ExecuteCommandRequestWithCredential: Codable {
+            let command: String
+            let credential: String
+        }
+
+        let input = try req.content.decode(ExecuteCommandRequestWithCredential.self)
+
+        let sshService = SSHService()
+        do {
+            let (output, exitCode) = try await sshService.executeCommand(
+                serverId: id,
+                credential: input.credential,
+                command: input.command,
+                on: req.db
+            )
+
+            return APIResponse(
+                success: true,
+                data: ExecuteRemoteCommandResponse(
+                    output: output,
+                    exitCode: exitCode,
+                    error: nil
+                )
+            )
+        } catch {
+            return APIResponse(
+                success: false,
+                data: ExecuteRemoteCommandResponse(
+                    output: "",
+                    exitCode: -1,
+                    error: error.localizedDescription
+                )
+            )
+        }
+    }
+
+    /// GET /ssh/:id/claude-version - Detect Claude Code CLI version on remote server
+    @Sendable
+    func detectClaudeVersion(req: Request) async throws -> APIResponse<ClaudeVersionResponse> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid server ID")
+        }
+
+        // Credential needs to be passed as query parameter or header for GET request
+        // For security, we'll require it in the Authorization header or as a query param
+        guard let credential = req.headers.first(name: "X-SSH-Credential") else {
+            throw Abort(.badRequest, reason: "Missing X-SSH-Credential header")
+        }
+
+        let sshService = SSHService()
+        let version = try await sshService.detectClaudeCode(
+            serverId: id,
+            credential: credential,
+            on: req.db
+        )
+
+        return APIResponse(
+            success: true,
+            data: ClaudeVersionResponse(
+                version: version,
+                installed: version != nil
+            )
+        )
+    }
+}
+
+// MARK: - Response Types
+
+struct TestConnectionResponse: Content, Sendable {
+    let success: Bool
+}
+
+struct ClaudeVersionResponse: Content, Sendable {
+    let version: String?
+    let installed: Bool
 }
