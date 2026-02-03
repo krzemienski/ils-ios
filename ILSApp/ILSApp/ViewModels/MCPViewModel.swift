@@ -82,6 +82,29 @@ class MCPViewModel: ObservableObject {
         return nil
     }
 
+    func updateServer(_ server: MCPServerItem, name: String? = nil, command: String? = nil, args: [String]? = nil, env: [String: String]? = nil, disabled: Bool? = nil) async -> MCPServerItem? {
+        do {
+            let request = UpdateMCPRequest(
+                name: name,
+                command: command,
+                args: args,
+                env: env,
+                disabled: disabled
+            )
+            let response: APIResponse<MCPServerItem> = try await client.put("/mcp/\(server.name)?scope=\(server.scope)", body: request)
+            if let updatedServer = response.data {
+                if let index = servers.firstIndex(where: { $0.id == server.id }) {
+                    servers[index] = updatedServer
+                }
+                return updatedServer
+            }
+        } catch {
+            self.error = error
+            print("❌ Failed to update MCP server '\(server.name)': \(error.localizedDescription)")
+        }
+        return nil
+    }
+
     func deleteServer(_ server: MCPServerItem) async {
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope)")
