@@ -7,6 +7,7 @@ struct ConfigController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let config = routes.grouped("config")
 
+        config.get("defaults", use: defaults)
         config.get(use: get)
         config.put(use: update)
         config.delete(use: delete)
@@ -49,6 +50,22 @@ struct ConfigController: RouteCollection {
         return APIResponse(
             success: true,
             data: config
+        )
+    }
+
+    /// GET /config/defaults - Get default configuration values
+    @Sendable
+    func defaults(req: Request) async throws -> APIResponse<ConfigInfo> {
+        let defaultConfig = ConfigInfo(
+            scope: "defaults",
+            path: "",
+            content: ClaudeConfig(),
+            isValid: true
+        )
+
+        return APIResponse(
+            success: true,
+            data: defaultConfig
         )
     }
 
