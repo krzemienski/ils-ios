@@ -16,6 +16,7 @@ struct SkillsController: RouteCollection {
 
         // GitHub search endpoint
         skills.get("github", "search", use: githubSearch)
+        skills.get("github", ":owner", ":repo", use: githubDetail)
     }
 
     /// GET /skills - List all skills
@@ -129,6 +130,25 @@ struct SkillsController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: repositories)
+        )
+    }
+
+    /// GET /skills/github/:owner/:repo - Get GitHub skill details
+    @Sendable
+    func githubDetail(req: Request) async throws -> APIResponse<GitHubRepository> {
+        guard let owner = req.parameters.get("owner") else {
+            throw Abort(.badRequest, reason: "Invalid repository owner")
+        }
+
+        guard let repo = req.parameters.get("repo") else {
+            throw Abort(.badRequest, reason: "Invalid repository name")
+        }
+
+        let repository = try await githubService.getRepoInfo(owner: owner, repo: repo)
+
+        return APIResponse(
+            success: true,
+            data: repository
         )
     }
 }
