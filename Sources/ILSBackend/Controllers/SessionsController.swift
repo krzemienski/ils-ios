@@ -3,7 +3,7 @@ import Fluent
 import ILSShared
 
 struct SessionsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let sessionScanning = SessionScanningService()
 
     func boot(routes: RoutesBuilder) throws {
         let sessions = routes.grouped("sessions")
@@ -72,7 +72,7 @@ struct SessionsController: RouteCollection {
     /// GET /sessions/scan - Scan for external Claude Code sessions
     @Sendable
     func scan(req: Request) async throws -> APIResponse<SessionScanResponse> {
-        let externalSessions = try fileSystem.scanExternalSessions()
+        let externalSessions = try sessionScanning.scanExternalSessions()
 
         return APIResponse(
             success: true,
