@@ -261,17 +261,6 @@ struct PluginItem: Identifiable, Decodable {
     let agents: [String]?
 }
 
-struct MarketplaceInfo: Decodable {
-    let name: String
-    let source: String
-    let plugins: [MarketplacePlugin]
-}
-
-struct MarketplacePlugin: Decodable {
-    let name: String
-    let description: String?
-}
-
 #Preview {
     NavigationStack {
         PluginsListView()

@@ -6,6 +6,10 @@ class PluginsViewModel: ObservableObject {
     @Published var plugins: [PluginItem] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var searchText: String = ""
+    @Published var selectedTags: [String] = []
+    @Published var marketplaces: [MarketplaceInfo] = []
+    @Published var isLoadingMarketplace = false
 
     private let client = APIClient()
 
@@ -15,6 +19,62 @@ class PluginsViewModel: ObservableObject {
             return "Loading plugins..."
         }
         return plugins.isEmpty ? "No plugins installed" : ""
+    }
+
+    /// Filtered installed plugins based on search text
+    var filteredPlugins: [PluginItem] {
+        if searchText.isEmpty {
+            return plugins
+        }
+        return plugins.filter { plugin in
+            plugin.name.localizedCaseInsensitiveContains(searchText) ||
+            plugin.description?.localizedCaseInsensitiveContains(searchText) == true
+        }
+    }
+
+    /// Filtered marketplace plugins based on search text and selected tags
+    var filteredMarketplaces: [MarketplaceInfo] {
+        var filtered = marketplaces
+
+        // Filter by search text
+        if !searchText.isEmpty {
+            filtered = filtered.compactMap { marketplace in
+                let filteredPlugins = marketplace.plugins.filter { plugin in
+                    plugin.name.localizedCaseInsensitiveContains(searchText) ||
+                    plugin.description?.localizedCaseInsensitiveContains(searchText) == true
+                }
+                if filteredPlugins.isEmpty {
+                    return nil
+                }
+                return MarketplaceInfo(
+                    name: marketplace.name,
+                    source: marketplace.source,
+                    plugins: filteredPlugins
+                )
+            }
+        }
+
+        // Filter by selected tags
+        if !selectedTags.isEmpty {
+            filtered = filtered.compactMap { marketplace in
+                let filteredPlugins = marketplace.plugins.filter { plugin in
+                    guard let tags = plugin.tags else { return false }
+                    return selectedTags.allSatisfy { selectedTag in
+                        tags.contains(selectedTag)
+                    }
+                }
+                if filteredPlugins.isEmpty {
+                    return nil
+                }
+                return MarketplaceInfo(
+                    name: marketplace.name,
+                    source: marketplace.source,
+                    plugins: filteredPlugins
+                )
+            }
+        }
+
+        return filtered
     }
 
     func loadPlugins() async {
@@ -88,6 +148,45 @@ class PluginsViewModel: ObservableObject {
             print("❌ Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
+
+    func loadMarketplaces() async {
+        isLoadingMarketplace = true
+        error = nil
+
+        do {
+            // Build query parameters for search and tag filtering
+            var queryItems: [URLQueryItem] = []
+            if !searchText.isEmpty {
+                queryItems.append(URLQueryItem(name: "search", value: searchText))
+            }
+            for tag in selectedTags {
+                queryItems.append(URLQueryItem(name: "tag", value: tag))
+            }
+
+            let endpoint: String
+            if queryItems.isEmpty {
+                endpoint = "/plugins/marketplace"
+            } else {
+                var components = URLComponents(string: "/plugins/marketplace")
+                components?.queryItems = queryItems
+                endpoint = components?.string ?? "/plugins/marketplace"
+            }
+
+            let response: APIResponse<[MarketplaceInfo]> = try await client.get(endpoint)
+            if let data = response.data {
+                marketplaces = data
+            }
+        } catch {
+            self.error = error
+            print("❌ Failed to load marketplaces: \(error.localizedDescription)")
+        }
+
+        isLoadingMarketplace = false
+    }
+
+    func retryLoadMarketplaces() async {
+        await loadMarketplaces()
+    }
 }
 
 // MARK: - Request Types
@@ -99,4 +198,24 @@ struct InstallPluginRequest: Encodable {
 
 struct EnabledResponse: Decodable {
     let enabled: Bool
+}
+
+// MARK: - Marketplace Types
+
+struct MarketplaceInfo: Decodable {
+    let name: String
+    let source: String
+    let plugins: [MarketplacePlugin]
+}
+
+struct MarketplacePlugin: Decodable {
+    let name: String
+    let description: String?
+    let author: String?
+    let installCount: Int?
+    let rating: Double?
+    let reviewCount: Int?
+    let tags: [String]?
+    let version: String?
+    let screenshots: [String]?
 }
