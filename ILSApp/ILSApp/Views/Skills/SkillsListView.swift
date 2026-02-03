@@ -7,7 +7,12 @@ struct SkillsListView: View {
 
     var body: some View {
         List {
-            if let error = viewModel.error {
+            if viewModel.isLoading && viewModel.skills.isEmpty {
+                // Show skeleton rows during initial load
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonSkillRow()
+                }
+            } else if let error = viewModel.error {
                 ErrorStateView(error: error) {
                     await viewModel.retryLoadSkills()
                 }
@@ -53,11 +58,6 @@ struct SkillsListView: View {
         }
         .navigationDestination(for: SkillItem.self) { skill in
             SkillDetailView(skill: skill, viewModel: viewModel)
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.skills.isEmpty {
-                ProgressView("Loading skills...")
-            }
         }
         .task {
             await viewModel.loadSkills()
