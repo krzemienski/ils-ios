@@ -248,7 +248,7 @@ struct FileSystemService {
     }
 
     /// Create a new skill
-    func createSkill(name: String, content: String) throws -> Skill {
+    func createSkill(name: String, content: String) async throws -> Skill {
         let skillPath = "\(skillsDirectory)/\(name)"
         let skillMdPath = "\(skillPath)/SKILL.md"
 
@@ -257,6 +257,9 @@ struct FileSystemService {
 
         // Write SKILL.md
         try content.write(toFile: skillMdPath, atomically: true, encoding: .utf8)
+
+        // Invalidate cache after creation
+        await invalidateSkillsCache()
 
         return try parseSkillFile(at: skillMdPath, name: name)
     }

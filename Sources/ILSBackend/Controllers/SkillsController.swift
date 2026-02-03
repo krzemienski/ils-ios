@@ -61,7 +61,7 @@ struct SkillsController: RouteCollection {
             """
         }
 
-        let skill = try fileSystem.createSkill(name: input.name, content: content)
+        let skill = try await fileSystem.createSkill(name: input.name, content: content)
 
         return APIResponse(
             success: true,
@@ -162,7 +162,7 @@ struct SkillsController: RouteCollection {
         let content = try await githubService.fetchSkillContent(owner: input.owner, repo: input.repo)
 
         // Create skill locally (using repo name as skill name)
-        let skill = try fileSystem.createSkill(name: input.repo, content: content)
+        let skill = try await fileSystem.createSkill(name: input.repo, content: content)
 
         // Return 201 Created with skill data
         let apiResponse = APIResponse(
