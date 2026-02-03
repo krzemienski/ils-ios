@@ -6,7 +6,10 @@ struct StatsController: RouteCollection {
     let fileSystem = FileSystemService()
 
     func boot(routes: RoutesBuilder) throws {
-        routes.get("stats", use: stats)
+        let stats = routes.grouped("stats")
+        stats.get(use: self.stats)
+        stats.get("recent", use: recentSessions)
+
         routes.get("settings", use: settings)
     }
 
@@ -111,6 +114,30 @@ struct StatsController: RouteCollection {
         return APIResponse(
             success: true,
             data: config.content
+        )
+    }
+
+    /// GET /stats/recent - Get recent sessions for dashboard timeline
+    @Sendable
+    func recentSessions(req: Request) async throws -> APIResponse<RecentSessionsResponse> {
+        // Query database for the 10 most recently active sessions
+        let sessions = try await SessionModel.query(on: req.db)
+            .sort(\.$lastActiveAt, .descending)
+            .limit(10)
+            .all()
+
+        // Convert SessionModel to ChatSession
+        let chatSessions = sessions.map { $0.toShared() }
+
+        // Get total count for response
+        let totalCount = try await SessionModel.query(on: req.db).count()
+
+        return APIResponse(
+            success: true,
+            data: RecentSessionsResponse(
+                items: chatSessions,
+                total: totalCount
+            )
         )
     }
 }
