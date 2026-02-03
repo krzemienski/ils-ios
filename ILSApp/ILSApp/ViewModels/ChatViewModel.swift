@@ -41,8 +41,17 @@ class ChatViewModel: ObservableObject {
     private let apiClient = APIClient()
     private var cancellables = Set<AnyCancellable>()
 
+    // MARK: - Batching Properties
+    private var pendingStreamMessages: [StreamMessage] = []
+    private var batchTimer: Timer?
+    private let batchInterval: TimeInterval = 0.075
+
     init() {
         setupBindings()
+    }
+
+    deinit {
+        batchTimer?.invalidate()
     }
 
     private func setupBindings() {
