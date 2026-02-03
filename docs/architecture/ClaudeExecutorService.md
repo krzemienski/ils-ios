@@ -31,9 +31,351 @@ actor ClaudeExecutorService {
 ```
 
 **Why an Actor?**
-- **Thread Safety**: Multiple concurrent requests can safely access the service
-- **Session Isolation**: `activeSessions` dictionary is protected from race conditions
-- **Async/Await Native**: Integrates seamlessly with Vapor's async request handlers
+
+Swift actors provide automatic synchronization and data-race safety, making them ideal for services managing shared mutable state across concurrent requests:
+
+1. **Thread Safety**: Multiple concurrent requests can safely access the service
+   - Actor ensures only one task can access mutable state at a time
+   - All property mutations are serialized through the actor's executor
+   - Prevents data races without manual locking mechanisms
+
+2. **Session Isolation**: `activeSessions` dictionary is protected from race conditions
+   - Concurrent cancellation requests won't corrupt the dictionary
+   - Session cleanup (removeSession) is guaranteed atomic
+   - Multiple simultaneous execute() calls safely modify the shared dictionary
+
+3. **Async/Await Native**: Integrates seamlessly with Vapor's async request handlers
+   - Actor methods marked `async` automatically suspend when waiting for actor access
+   - No callback hell or completion handlers needed
+   - Cooperative cancellation works naturally with Swift's structured concurrency
+
+4. **Memory Safety**: Actor isolation prevents data races at compile time
+   - Swift compiler enforces actor isolation rules
+   - Sendable conformance checked for data crossing actor boundaries
+   - Reference cycles automatically managed through actor context
+
+**Alternative Approaches Considered:**
+
+| Approach | Pros | Cons | Why Not Used |
+|----------|------|------|--------------|
+| **Serial DispatchQueue** | Simple, familiar | Manual synchronization, error-prone | No compile-time safety, can deadlock |
+| **NSLock/OSAllocatedUnfairLock** | Fine-grained control | Verbose, manual lock/unlock | Easy to forget unlock, no async/await support |
+| **Class with @MainActor** | Simple annotation | Ties to main thread | Unnecessary main thread blocking for I/O |
+| **Struct (no shared state)** | No synchronization needed | Can't manage sessions | Need to track active sessions globally |
+
+### Concurrency Model & Best Practices
+
+#### Actor Isolation Strategy
+
+The service uses a **hybrid isolation model**:
+
+```swift
+actor ClaudeExecutorService {
+    // ACTOR-ISOLATED (requires await):
+    private var client: ClaudeCodeClient?
+    private var activeSessions: [String: AnyCancellable] = [:]
+
+    // NONISOLATED (callable without await):
+    nonisolated func execute(...) -> AsyncThrowingStream<StreamMessage, Error>
+    nonisolated private func convertChunk(...) -> StreamMessage
+}
+```
+
+**Isolation Decisions:**
+
+| Member | Isolation | Rationale |
+|--------|-----------|-----------|
+| `client` | Actor-isolated | Mutable state accessed by multiple methods |
+| `activeSessions` | Actor-isolated | Shared dictionary modified during session lifecycle |
+| `execute()` | **Nonisolated** | Must return stream immediately without blocking |
+| `convertChunk()` | **Nonisolated** | Pure function, no state access, called from non-isolated context |
+| `runWithSDK()` | Actor-isolated | Accesses `client` and calls `storeSession()` |
+| `cancel()` | Actor-isolated | Mutates `activeSessions` dictionary |
+
+#### Thread Safety Guarantees
+
+**What is Protected:**
+
+✅ **Guaranteed Thread-Safe:**
+- Concurrent modifications to `activeSessions` dictionary
+- Multiple simultaneous calls to `cancel(sessionId:)`
+- Session ID generation and storage during `execute()`
+- `ClaudeCodeClient` configuration updates in `runWithSDK()`
+
+✅ **Data Race Free:**
+- Reading/writing `client` property
+- Adding sessions via `storeSession()`
+- Removing sessions via `removeSession()`
+- Checking session existence in `cancel()`
+
+**What is NOT Protected:**
+
+❌ **Caller Responsibility:**
+- Session ID uniqueness (caller must provide unique IDs)
+- Consuming `AsyncThrowingStream` (caller manages iteration)
+- Error handling on stream (caller's `for try await` handles errors)
+
+**Sendable Conformance:**
+
+Data crossing actor boundaries must be `Sendable` (thread-safe):
+
+```swift
+// ✅ Sendable - can safely cross actor boundary
+func execute(
+    prompt: String,              // String is Sendable
+    workingDirectory: String?,   // Optional<String> is Sendable
+    options: ExecutionOptions    // Struct with Sendable fields
+) -> AsyncThrowingStream<...>    // AsyncThrowingStream is Sendable
+
+// ✅ Sendable - continuation is Sendable
+continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
+
+// ✅ Sendable - all StreamMessage cases contain Sendable types
+continuation.yield(.assistant(message))
+```
+
+#### Nonisolated Function Usage
+
+##### Why `execute()` is Nonisolated
+
+```swift
+nonisolated func execute(
+    prompt: String,
+    workingDirectory: String?,
+    options: ExecutionOptions
+) -> AsyncThrowingStream<StreamMessage, Error> {
+    AsyncThrowingStream { continuation in
+        Task {
+            await self.runWithSDK(
+                prompt: prompt,
+                workingDirectory: workingDirectory,
+                options: options,
+                continuation: continuation
+            )
+        }
+    }
+}
+```
+
+**Critical Design Choice:**
+
+1. **Immediate Return**: Stream creation must not wait for actor availability
+   - Caller gets stream immediately, can start consuming
+   - No blocking on actor's executor queue
+
+2. **Asynchronous Execution**: Work happens inside `Task { await ... }`
+   - `Task` schedules work on actor's executor
+   - Stream yields happen asynchronously as SDK produces chunks
+
+3. **Backpressure Handling**: AsyncThrowingStream naturally handles slow consumers
+   - If caller iterates slowly, `continuation.yield()` suspends
+   - Prevents memory buildup from fast SDK producing to slow consumer
+
+**What if it was actor-isolated?**
+
+```swift
+// ❌ BAD: Would require await to get stream
+func execute(...) async -> AsyncThrowingStream<...> {
+    // Caller must: let stream = await executor.execute(...)
+    // Adds unnecessary latency before streaming can begin
+}
+```
+
+##### Why `convertChunk()` is Nonisolated
+
+```swift
+nonisolated private func convertChunk(_ chunk: ResponseChunk) -> StreamMessage {
+    // Pure transformation, no actor state access
+}
+```
+
+**Rationale:**
+
+1. **Pure Function**: No access to `client`, `activeSessions`, or any mutable state
+   - Input: `ResponseChunk` (from SDK, Sendable)
+   - Output: `StreamMessage` (to ILSShared, Sendable)
+   - No side effects
+
+2. **Called from Non-Isolated Context**:
+   ```swift
+   publisher.sink(
+       receiveValue: { chunk in
+           // This closure runs on Combine's scheduler (not actor-isolated)
+           let message = self.convertChunk(chunk)  // No await needed
+           continuation.yield(message)
+       }
+   )
+   ```
+
+3. **Performance**: Avoids unnecessary actor hop
+   - If actor-isolated, would require `await` inside `receiveValue`
+   - Adds latency to every chunk conversion
+   - No benefit since no state is accessed
+
+**Pattern:**
+
+> Mark methods `nonisolated` if they:
+> 1. Don't access actor-isolated properties
+> 2. Are called from non-isolated contexts (closures, publishers)
+> 3. Are pure transformations
+
+#### Combining Actors with Combine
+
+**Challenge**: Combine publishers run on arbitrary schedulers, not actor-isolated.
+
+**Solution**: Use `Task { await ... }` to hop back to actor context:
+
+```swift
+let cancellable = publisher.sink(
+    receiveCompletion: { completion in
+        // ⚠️ This closure is NOT actor-isolated
+        // ⚠️ Cannot directly access self.activeSessions
+
+        switch completion {
+        case .finished:
+            continuation.finish()
+        case .failure(let error):
+            continuation.yield(.error(...))
+            continuation.finish()
+        }
+
+        // ✅ Use Task to re-enter actor context
+        Task {
+            await self.removeSession(sessionId)  // Now actor-isolated
+        }
+    },
+    receiveValue: { chunk in
+        // ⚠️ This closure is also NOT actor-isolated
+
+        // ✅ Call nonisolated method directly
+        let message = self.convertChunk(chunk)
+
+        // ✅ continuation.yield is thread-safe (Sendable)
+        continuation.yield(message)
+    }
+)
+```
+
+**Key Points:**
+
+1. **Combine closures are non-isolated**: `sink(receiveCompletion:receiveValue:)` runs on publisher's scheduler
+2. **Use `Task` for actor calls**: Wrapping in `Task { await ... }` schedules work on actor
+3. **Nonisolated methods are safe**: Can call `self.convertChunk()` without `await`
+4. **Continuation is thread-safe**: `yield()` and `finish()` are `Sendable`, safe to call anywhere
+
+#### Best Practices Applied
+
+**1. Minimize Actor Surface Area**
+
+Only actor-isolate what needs protection:
+
+```swift
+// ✅ Good: Only mutable state is actor-isolated
+actor ClaudeExecutorService {
+    private var client: ClaudeCodeClient?           // Needs protection
+    private var activeSessions: [String: ...] = [:] // Needs protection
+
+    nonisolated func execute(...) { ... }           // No state access
+    nonisolated private func convertChunk(...) { ... } // Pure function
+}
+
+// ❌ Bad: Over-isolation hurts performance
+actor ClaudeExecutorService {
+    func execute(...) async { ... }  // Unnecessary actor hop
+    func convertChunk(...) async { ... } // Unnecessary await
+}
+```
+
+**2. Avoid Actor Reentrancy Issues**
+
+Actor reentrancy occurs when an actor-isolated method awaits, allowing other tasks to interleave:
+
+```swift
+private func runWithSDK(...) async {
+    // Point A: Actor-isolated
+
+    let result = try await client.runSinglePrompt(...)  // Suspension point
+
+    // Point B: Actor-isolated again
+    // ⚠️ Another task could have run between A and B
+    // ⚠️ activeSessions might have changed
+}
+```
+
+**Mitigation:**
+
+- **Atomic operations**: `storeSession()` and `removeSession()` are single statements
+- **Immutable captures**: Session ID captured in closure, not re-read from state
+- **Careful ordering**: Store cancellable AFTER creating sink (no suspension point between)
+
+**3. Structured Concurrency**
+
+Use `Task` for unstructured work from non-isolated contexts:
+
+```swift
+receiveCompletion: { completion in
+    // Create unstructured Task to enter actor context
+    Task {
+        await self.removeSession(sessionId)
+    }
+    // Task continues in background, doesn't block completion handler
+}
+```
+
+**Why unstructured?**
+- Completion handler can't be `async`, so can't directly `await`
+- `Task` creates detached async context
+- Cleanup (removeSession) happens asynchronously after stream finishes
+
+**4. Error Isolation**
+
+Errors are yielded to stream, never thrown from nonisolated methods:
+
+```swift
+nonisolated func execute(...) -> AsyncThrowingStream<StreamMessage, Error> {
+    // Never throws, always returns stream
+    AsyncThrowingStream { continuation in
+        Task {
+            // Errors caught inside runWithSDK, yielded to continuation
+            await self.runWithSDK(..., continuation: continuation)
+        }
+    }
+}
+
+private func runWithSDK(...) async {
+    do {
+        // ...
+    } catch {
+        // ✅ Yield error to stream
+        continuation.yield(.error(...))
+        continuation.finish()
+        // ❌ Never re-throw, caller can't catch (nonisolated execute doesn't throw)
+    }
+}
+```
+
+**5. Session Cleanup Guarantees**
+
+Every session is guaranteed cleanup through Combine's completion:
+
+```swift
+let cancellable = publisher.sink(
+    receiveCompletion: { completion in
+        // ✅ ALWAYS called, even on cancellation or error
+        continuation.finish()
+
+        Task {
+            await self.removeSession(sessionId)  // Guaranteed cleanup
+        }
+    },
+    receiveValue: { ... }
+)
+```
+
+**Cleanup Paths:**
+- **Success**: Publisher finishes → `removeSession()` called
+- **Error**: Publisher fails → `removeSession()` called
+- **Cancellation**: User cancels → `cancel()` removes session → publisher completion fires → `removeSession()` called (idempotent)
 
 ### Data Flow
 
@@ -447,54 +789,106 @@ func send(_ req: Request) async throws -> Response {
 
 ## Thread Safety Considerations
 
-### Actor Isolation
+> **Note**: For comprehensive concurrency architecture details, see the [Concurrency Model & Best Practices](#concurrency-model--best-practices) section above. This section provides a quick reference for developers.
 
-**Actor-Isolated (Requires `await`):**
-- `isAvailable()`
-- `getVersion()`
-- `runWithSDK()`
-- `storeSession()`
-- `removeSession()`
-- `cancel()`
+### Actor Isolation Quick Reference
 
-**Nonisolated (No `await` needed):**
-- `execute()` - Returns stream immediately
-- `convertChunk()` - Pure function, no state access
+**Actor-Isolated Methods (Requires `await`):**
 
-### Why `convertChunk()` is Nonisolated
+| Method | Purpose | Why Isolated |
+|--------|---------|--------------|
+| `isAvailable()` | Check CLI availability | Accesses `client` property |
+| `getVersion()` | Get CLI version | Spawns process (safe to serialize) |
+| `runWithSDK()` | Execute SDK calls | Accesses `client`, calls `storeSession()` |
+| `storeSession()` | Store cancellable | Mutates `activeSessions` dictionary |
+| `removeSession()` | Remove cancellable | Mutates `activeSessions` dictionary |
+| `cancel()` | Cancel active session | Reads/mutates `activeSessions`, calls `client.cancel()` |
+
+**Nonisolated Methods (No `await` needed):**
+
+| Method | Purpose | Why Nonisolated |
+|--------|---------|-----------------|
+| `execute()` | Start execution stream | No state access, returns immediately |
+| `convertChunk()` | Transform chunk types | Pure function, called from non-isolated context |
+
+### Concurrency Patterns Summary
+
+**Pattern 1: Nonisolated Stream Creation**
 
 ```swift
-nonisolated private func convertChunk(_ chunk: ResponseChunk) -> StreamMessage
+nonisolated func execute(...) -> AsyncThrowingStream<...> {
+    // ✅ Returns immediately, no actor wait
+    AsyncThrowingStream { continuation in
+        Task { await self.runWithSDK(...) }  // Actor work happens async
+    }
+}
 ```
 
-**Rationale:**
-- Pure transformation function
-- No access to actor state (`client`, `activeSessions`, etc.)
-- Called from Combine's `sink(receiveValue:)` which is nonisolated
-- Reduces actor reentrancy complexity
-
-### Combine Sink and Actor Interaction
+**Pattern 2: Actor Re-Entry from Combine**
 
 ```swift
-let cancellable = publisher.sink(
+publisher.sink(
     receiveCompletion: { completion in
-        // This closure is NOT actor-isolated
-        Task {
-            await self.removeSession(sessionId)  // Requires await
-        }
+        Task { await self.removeSession(sessionId) }  // ✅ Hop to actor
     },
     receiveValue: { chunk in
-        // This closure is NOT actor-isolated
-        let message = self.convertChunk(chunk)  // Nonisolated - no await
-        continuation.yield(message)             // Thread-safe
+        let message = self.convertChunk(chunk)  // ✅ Nonisolated, no await
+        continuation.yield(message)
     }
 )
 ```
 
-**Pattern:**
-- Combine closures run on arbitrary threads
-- Use `Task { await ... }` for actor-isolated calls
-- Mark pure functions as `nonisolated` to avoid unnecessary `await`
+**Pattern 3: Atomic Session Management**
+
+```swift
+// ✅ Atomic: No suspension between creation and storage
+let cancellable = publisher.sink(...)
+await storeSession(sessionId, cancellable: cancellable)
+```
+
+### Common Concurrency Pitfalls Avoided
+
+**❌ Pitfall 1: Blocking execute() on actor**
+
+```swift
+// BAD: Would require await, delaying stream creation
+func execute(...) async -> AsyncThrowingStream<...> { ... }
+
+// GOOD: Returns immediately
+nonisolated func execute(...) -> AsyncThrowingStream<...> { ... }
+```
+
+**❌ Pitfall 2: Accessing actor state from Combine closures**
+
+```swift
+publisher.sink(
+    receiveCompletion: { completion in
+        // BAD: Can't access activeSessions directly
+        self.activeSessions.removeValue(forKey: sessionId)  // ❌ Compile error
+
+        // GOOD: Use Task to enter actor context
+        Task { await self.removeSession(sessionId) }  // ✅ Works
+    }
+)
+```
+
+**❌ Pitfall 3: Over-isolating pure functions**
+
+```swift
+// BAD: Adds unnecessary await to every chunk
+private func convertChunk(...) async -> StreamMessage { ... }
+
+// GOOD: No await needed, called from non-isolated context
+nonisolated private func convertChunk(...) -> StreamMessage { ... }
+```
+
+### Thread Safety Guarantees
+
+See [Thread Safety Guarantees](#thread-safety-guarantees) in the Concurrency Model section for comprehensive details on:
+- What mutations are protected
+- Sendable conformance requirements
+- Data race prevention
+- Actor reentrancy handling
 
 ## Error Handling
 
