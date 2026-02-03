@@ -56,6 +56,7 @@ public enum StreamMessage: Codable, Sendable {
 
 // MARK: - System Message
 
+/// System message containing session initialization data
 public struct SystemMessage: Codable, Sendable {
     public let type: String
     public let subtype: String
@@ -68,6 +69,7 @@ public struct SystemMessage: Codable, Sendable {
     }
 }
 
+/// Session initialization data containing available plugins, commands, and tools
 public struct SystemData: Codable, Sendable {
     public let sessionId: String
     public let plugins: [String]?
@@ -89,6 +91,7 @@ public struct SystemData: Codable, Sendable {
 
 // MARK: - Assistant Message
 
+/// Message from Claude containing response content blocks
 public struct AssistantMessage: Codable, Sendable {
     public let type: String
     public let content: [ContentBlock]
@@ -101,6 +104,7 @@ public struct AssistantMessage: Codable, Sendable {
 
 // MARK: - Content Blocks
 
+/// Content block within an assistant message (text, tool use, tool result, or thinking)
 public enum ContentBlock: Codable, Sendable {
     case text(TextBlock)
     case toolUse(ToolUseBlock)
@@ -144,6 +148,7 @@ public enum ContentBlock: Codable, Sendable {
     }
 }
 
+/// Text content block containing plain text response
 public struct TextBlock: Codable, Sendable {
     public let type: String
     public let text: String
@@ -154,6 +159,7 @@ public struct TextBlock: Codable, Sendable {
     }
 }
 
+/// Tool invocation block containing tool name and input parameters
 public struct ToolUseBlock: Codable, Sendable {
     public let type: String
     public let id: String
@@ -168,6 +174,7 @@ public struct ToolUseBlock: Codable, Sendable {
     }
 }
 
+/// Tool result block containing output from a tool invocation
 public struct ToolResultBlock: Codable, Sendable {
     public let type: String
     public let toolUseId: String
@@ -182,6 +189,7 @@ public struct ToolResultBlock: Codable, Sendable {
     }
 }
 
+/// Thinking block containing Claude's internal reasoning process
 public struct ThinkingBlock: Codable, Sendable {
     public let type: String
     public let thinking: String
@@ -194,6 +202,7 @@ public struct ThinkingBlock: Codable, Sendable {
 
 // MARK: - Result Message
 
+/// Result message containing session completion metrics and usage statistics
 public struct ResultMessage: Codable, Sendable {
     public let type: String
     public let subtype: String
@@ -228,6 +237,7 @@ public struct ResultMessage: Codable, Sendable {
     }
 }
 
+/// Token usage statistics for input, output, and cache operations
 public struct UsageInfo: Codable, Sendable {
     public let inputTokens: Int
     public let outputTokens: Int
@@ -249,6 +259,7 @@ public struct UsageInfo: Codable, Sendable {
 
 // MARK: - Permission Request
 
+/// Permission request for tool execution requiring user approval
 public struct PermissionRequest: Codable, Sendable {
     public let type: String
     public let requestId: String
@@ -265,6 +276,7 @@ public struct PermissionRequest: Codable, Sendable {
 
 // MARK: - Stream Error
 
+/// Error message from streaming session with error code and description
 public struct StreamError: Codable, Sendable {
     public let type: String
     public let code: String
