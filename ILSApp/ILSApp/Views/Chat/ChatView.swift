@@ -143,6 +143,8 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
+            .accessibilityLabel("Session options")
+            .accessibilityHint("View session information and options")
         }
     }
 
@@ -190,12 +192,16 @@ struct ChatInputView: View {
                     .foregroundColor(isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
             }
             .disabled(isDisabled)
+            .accessibilityLabel("Command palette")
+            .accessibilityHint("Opens command palette to insert commands")
 
             TextField("Message Claude...", text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...5)
                 .disabled(isDisabled)
                 .accessibilityIdentifier("chat-input-field")
+                .accessibilityLabel("Message input")
+                .accessibilityHint("Type your message to Claude")
                 .onSubmit {
                     if !text.isEmpty && !isDisabled {
                         onSend()
@@ -208,6 +214,8 @@ struct ChatInputView: View {
                         .foregroundColor(ILSTheme.error)
                 }
                 .accessibilityIdentifier("cancel-button")
+                .accessibilityLabel("Stop streaming")
+                .accessibilityHint("Stops Claude's current response")
             } else {
                 Button(action: {
                     // Haptic feedback on send
@@ -230,6 +238,8 @@ struct ChatInputView: View {
                 }
                 .disabled(text.isEmpty || isDisabled)
                 .accessibilityIdentifier("send-button")
+                .accessibilityLabel("Send message")
+                .accessibilityHint("Sends your message to Claude")
             }
         }
         .padding()
@@ -243,6 +253,19 @@ struct ChatInputView: View {
 struct StreamingStatusView: View {
     let statusText: String
     let connectionState: SSEClient.ConnectionState
+
+    private var accessibilityStatusLabel: String {
+        switch connectionState {
+        case .connecting:
+            return "Connecting to Claude"
+        case .connected:
+            return "Connected to Claude"
+        case .reconnecting:
+            return "Reconnecting to Claude"
+        case .disconnected:
+            return "Disconnected from Claude"
+        }
+    }
 
     var body: some View {
         HStack(spacing: ILSTheme.spacingS) {
@@ -273,6 +296,9 @@ struct StreamingStatusView: View {
         .padding(.vertical, ILSTheme.spacingXS)
         .background(ILSTheme.secondaryBackground)
         .accessibilityIdentifier("streaming-status-banner")
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityStatusLabel)
+        .accessibilityValue(statusText)
     }
 }
 
@@ -300,6 +326,8 @@ struct TypingIndicatorView: View {
             Spacer()
         }
         .accessibilityIdentifier("typing-indicator")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Claude is typing")
         .onAppear {
             startAnimation()
         }
