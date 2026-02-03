@@ -28,6 +28,8 @@ let package = Package(
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
         // Claude Code SDK for CLI integration (forked for customization)
         .package(url: "https://github.com/krzemienski/ClaudeCodeSDK.git", branch: "main"),
+        // SSH client library for remote server connections
+        .package(url: "https://github.com/apple/swift-nio-ssh.git", from: "0.6.0"),
     ],
     targets: [
         // Shared models between iOS and backend
@@ -47,6 +49,7 @@ let package = Package(
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Yams", package: "Yams"),
                 .product(name: "ClaudeCodeSDK", package: "ClaudeCodeSDK"),
+                .product(name: "NIOSSH", package: "swift-nio-ssh"),
             ],
             path: "Sources/ILSBackend",
             exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"]
