@@ -1702,114 +1702,919 @@ This architecture ensures:
 - **Resource management**: Automatic cleanup via Combine completion handlers
 - **Cancellation support**: Manual cancellation via stored `AnyCancellable`
 
-## Message Type Conversion
+## Message Type Conversion (convertChunk)
 
-The `convertChunk()` method maps ClaudeCodeSDK's `ResponseChunk` enum to ILSShared's `StreamMessage` enum.
+The `convertChunk()` method is the critical bridge between ClaudeCodeSDK's types and ILSShared's types. It's a nonisolated, pure function that transforms streaming chunks from the SDK into messages our backend and iOS app can consume.
 
-### ResponseChunk Types (from ClaudeCodeSDK)
+### convertChunk() Overview
 
-| Chunk Type | Description |
-|------------|-------------|
-| `.initSystem(msg)` | Initial system message with session info and tools |
-| `.assistant(msg)` | Assistant's response with content blocks |
-| `.result(msg)` | Final result with usage stats and duration |
-| `.user(msg)` | User message echo (skipped) |
+```swift
+nonisolated private func convertChunk(_ chunk: ResponseChunk) -> StreamMessage {
+    switch chunk {
+    case .initSystem(let msg):   // → .system(SystemMessage)
+    case .assistant(let msg):    // → .assistant(AssistantMessage)
+    case .result(let msg):       // → .result(ResultMessage)
+    case .user:                  // → .system(SystemMessage) with "user_echo"
+    }
+}
+```
 
-### StreamMessage Types (ILSShared)
+**Function Characteristics:**
 
-| Message Type | Description |
-|--------------|-------------|
-| `.system(SystemMessage)` | System notifications (init, user_echo) |
-| `.assistant(AssistantMessage)` | Assistant responses with content blocks |
-| `.result(ResultMessage)` | Final result with metadata |
-| `.error(StreamError)` | Error messages |
+- **Nonisolated**: Can be called from Combine's publisher callbacks without `await`
+- **Pure**: No side effects, no state access, deterministic output
+- **Synchronous**: Returns immediately, no async operations
+- **Sendable**: Input and output types are both `Sendable` (thread-safe)
+- **Exhaustive**: Handles all `ResponseChunk` cases from ClaudeCodeSDK
+- **Location**: Lines 180-270 in `ClaudeExecutorService.swift`
 
-### Content Block Conversion
+**Why Nonisolated?**
 
-The most complex conversion happens for `.assistant` chunks, which contain an array of `Content` types from SwiftAnthropic:
+The function is called from Combine's `receiveValue` closure, which runs on an arbitrary scheduler (not actor-isolated):
+
+```swift
+publisher.sink(
+    receiveValue: { chunk in
+        // ⚠️ Non-isolated context
+        let message = self.convertChunk(chunk)  // ✅ No await needed
+        continuation.yield(message)
+    }
+)
+```
+
+If it were actor-isolated, we'd need to `await` inside a non-async closure (impossible).
+
+### Top-Level ResponseChunk to StreamMessage Mapping
+
+| ClaudeCodeSDK Input | ILSShared Output | When Emitted | Description |
+|---------------------|------------------|--------------|-------------|
+| `ResponseChunk.initSystem(InitSystemMessage)` | `StreamMessage.system(SystemMessage)` | First chunk | Session initialization with tools list |
+| `ResponseChunk.assistant(AssistantChunk)` | `StreamMessage.assistant(AssistantMessage)` | During streaming | Assistant's response with content blocks |
+| `ResponseChunk.result(ResultChunk)` | `StreamMessage.result(ResultMessage)` | Last chunk | Final result with usage/cost/duration |
+| `ResponseChunk.user(UserChunk)` | `StreamMessage.system(SystemMessage)` | After user input | Echo of user's message (informational) |
+
+**Type Sources:**
+
+- **ResponseChunk**: Defined in ClaudeCodeSDK (wraps SwiftAnthropic types)
+- **StreamMessage**: Defined in `ILSShared/Models/StreamMessage.swift`
+
+### Conversion Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ClaudeCodeSDK (Input)                        │
+│                     ResponseChunk enum                          │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │  convertChunk()      │  Nonisolated pure function
+                  │  (lines 180-270)     │
+                  └──────────┬───────────┘
+                             │
+            ┌────────────────┼────────────────┬──────────────┐
+            │                │                │              │
+            ▼                ▼                ▼              ▼
+    ┌───────────────┐ ┌───────────────┐ ┌──────────┐ ┌──────────┐
+    │ .initSystem   │ │ .assistant    │ │ .result  │ │ .user    │
+    └───────┬───────┘ └───────┬───────┘ └─────┬────┘ └────┬─────┘
+            │                 │                │           │
+            │                 │                │           │
+            │         ┌───────┴────────┐       │           │
+            │         │ Content Block  │       │           │
+            │         │  Conversion    │       │           │
+            │         │  (7 types)     │       │           │
+            │         └────────────────┘       │           │
+            │                                  │           │
+            ▼                                  ▼           ▼
+    ┌───────────────┐                  ┌──────────┐ ┌──────────────┐
+    │ .system       │                  │ .result  │ │ .system      │
+    │ (init)        │                  │          │ │ (user_echo)  │
+    └───────┬───────┘                  └─────┬────┘ └──────┬───────┘
+            │                                │              │
+            └────────────────────────────────┴──────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      ILSShared (Output)                         │
+│                     StreamMessage enum                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Detailed Conversion: .initSystem
+
+**Input:** `ResponseChunk.initSystem(InitSystemMessage)`
+
+```swift
+case .initSystem(let msg):
+    let systemData = SystemData(
+        sessionId: msg.sessionId,    // Pass through session ID
+        plugins: nil,                // Not used currently
+        slashCommands: nil,          // Not used currently
+        tools: msg.tools             // Array of tool names ["Bash", "Read", "Edit", ...]
+    )
+    return .system(SystemMessage(subtype: "init", data: systemData))
+```
+
+**Output:** `StreamMessage.system(SystemMessage)`
+
+**Field Mapping:**
+
+| SDK Field (InitSystemMessage) | ILS Field (SystemMessage) | Transform | Notes |
+|-------------------------------|---------------------------|-----------|-------|
+| `msg.sessionId` | `data.sessionId` | Direct copy | Session identifier for tracking |
+| `msg.tools` | `data.tools` | Direct copy | List of available tools (optional) |
+| - | `subtype` | Hardcoded `"init"` | Identifies initialization message |
+| - | `plugins` | Hardcoded `nil` | Reserved for future use |
+| - | `slashCommands` | Hardcoded `nil` | Reserved for future use |
+
+**Example:**
+
+```swift
+// SDK Input:
+ResponseChunk.initSystem(InitSystemMessage(
+    sessionId: "ses_abc123",
+    tools: ["Bash", "Read", "Edit", "Write"]
+))
+
+// ILS Output:
+StreamMessage.system(SystemMessage(
+    type: "system",
+    subtype: "init",
+    data: SystemData(
+        sessionId: "ses_abc123",
+        plugins: nil,
+        slashCommands: nil,
+        tools: ["Bash", "Read", "Edit", "Write"]
+    )
+))
+```
+
+**When Received:** Always the first chunk emitted when a session starts.
+
+### Detailed Conversion: .assistant (Content Blocks)
+
+**Input:** `ResponseChunk.assistant(AssistantChunk)`
+
+The assistant chunk contains a `message` with an array of `Content` items from SwiftAnthropic. Each `Content` item represents a different type of content block:
 
 ```swift
 case .assistant(let msg):
     var contentBlocks: [ContentBlock] = []
 
+    // Iterate over msg.message.content (SwiftAnthropic.Content array)
     for content in msg.message.content {
         switch content {
-        case .text(let text, _):
-            contentBlocks.append(.text(TextBlock(text: text)))
-
-        case .toolUse(let toolUse):
-            contentBlocks.append(.toolUse(ToolUseBlock(
-                id: toolUse.id,
-                name: toolUse.name,
-                input: AnyCodable(toolUse.input)
-            )))
-
-        case .toolResult(let toolResult):
-            let resultContent: String
-            switch toolResult.content {
-            case .string(let text):
-                resultContent = text
-            case .items(let items):
-                resultContent = items.compactMap { $0.text }.joined(separator: "\n")
-            }
-            contentBlocks.append(.toolResult(ToolResultBlock(
-                toolUseId: toolResult.toolUseId ?? "",
-                content: resultContent,
-                isError: toolResult.isError ?? false
-            )))
-
-        case .thinking(let thinking):
-            // Map thinking to text with prefix
-            contentBlocks.append(.text(TextBlock(text: "[thinking] \(thinking.thinking)")))
-
-        case .serverToolUse(let serverTool):
-            contentBlocks.append(.toolUse(ToolUseBlock(
-                id: serverTool.id,
-                name: serverTool.name,
-                input: AnyCodable(serverTool.input)
-            )))
-
-        case .webSearchToolResult(let webResult):
-            let text = webResult.content.compactMap { $0.text }.joined(separator: "\n")
-            contentBlocks.append(.toolResult(ToolResultBlock(
-                toolUseId: webResult.toolUseId ?? "",
-                content: text,
-                isError: false
-            )))
-
-        case .codeExecutionToolResult(let codeResult):
-            let text: String
-            switch codeResult.content {
-            case .string(let s): text = s
-            default: text = "[code execution result]"
-            }
-            contentBlocks.append(.toolResult(ToolResultBlock(
-                toolUseId: codeResult.toolUseId ?? "",
-                content: text,
-                isError: false
-            )))
+            // ... 7 content type cases
         }
     }
 
     return .assistant(ILSShared.AssistantMessage(content: contentBlocks))
 ```
 
-**Content Block Types Handled (6 total):**
+**Output:** `StreamMessage.assistant(AssistantMessage)`
 
-1. **`.text`** - Plain text assistant responses
-2. **`.toolUse`** - Tool invocations (Bash, Read, Edit, etc.)
-3. **`.toolResult`** - Results from tool executions
-4. **`.thinking`** - Extended thinking blocks (mapped to text with `[thinking]` prefix)
-5. **`.serverToolUse`** - Server-side tool usage
-6. **`.webSearchToolResult`** - Web search results (if web search enabled)
+#### Content Block Type Mappings (7 Total)
 
-### Why This Conversion?
+The service handles **7 different content types** from SwiftAnthropic's `Content` enum, mapping them to **4 ILSShared ContentBlock types**:
 
-The conversion layer exists to:
-1. **Decouple Dependencies**: ILS models don't depend on ClaudeCodeSDK types
-2. **Simplify iOS Client**: iOS app only needs ILSShared, not ClaudeCodeSDK
-3. **Type Safety**: Explicit mapping catches breaking changes in SDK updates
-4. **Flexibility**: Can enrich or transform data during conversion
+##### 1. Text Content (.text)
+
+```swift
+case .text(let text, _):
+    // SwiftAnthropic returns (String, Citations?) tuple
+    contentBlocks.append(.text(TextBlock(text: text)))
+```
+
+| SDK Type | ILS Type | Transform | Notes |
+|----------|----------|-----------|-------|
+| `Content.text(String, Citations?)` | `ContentBlock.text(TextBlock)` | Extract string, ignore citations | Citations not currently used |
+
+**Example:**
+
+```swift
+// SDK Input:
+Content.text("Here's how to implement authentication:", nil)
+
+// ILS Output:
+ContentBlock.text(TextBlock(
+    type: "text",
+    text: "Here's how to implement authentication:"
+))
+```
+
+##### 2. Tool Use Content (.toolUse)
+
+```swift
+case .toolUse(let toolUse):
+    contentBlocks.append(.toolUse(ToolUseBlock(
+        id: toolUse.id,
+        name: toolUse.name,
+        input: AnyCodable(toolUse.input)
+    )))
+```
+
+| SDK Field | ILS Field | Transform | Notes |
+|-----------|-----------|-----------|-------|
+| `toolUse.id` | `id` | Direct copy | Unique ID like "toolu_abc123" |
+| `toolUse.name` | `name` | Direct copy | Tool name like "Bash", "Read", "Edit" |
+| `toolUse.input` | `input` | Wrap in `AnyCodable` | Tool parameters (dictionary) |
+
+**Example:**
+
+```swift
+// SDK Input:
+Content.toolUse(ToolUse(
+    id: "toolu_01ABC",
+    name: "Bash",
+    input: ["command": "ls -la"]
+))
+
+// ILS Output:
+ContentBlock.toolUse(ToolUseBlock(
+    type: "toolUse",
+    id: "toolu_01ABC",
+    name: "Bash",
+    input: AnyCodable(["command": "ls -la"])
+))
+```
+
+##### 3. Tool Result Content (.toolResult)
+
+```swift
+case .toolResult(let toolResult):
+    let resultContent: String
+    switch toolResult.content {
+    case .string(let text):
+        resultContent = text
+    case .items(let items):
+        resultContent = items.compactMap { $0.text }.joined(separator: "\n")
+    }
+    contentBlocks.append(.toolResult(ToolResultBlock(
+        toolUseId: toolResult.toolUseId ?? "",
+        content: resultContent,
+        isError: toolResult.isError ?? false
+    )))
+```
+
+**Special Handling:** Tool result content can be either a simple string or an array of items. The service normalizes both to a single string.
+
+| SDK Field | ILS Field | Transform | Notes |
+|-----------|-----------|-----------|-------|
+| `toolResult.toolUseId` | `toolUseId` | Direct copy (or `""` if nil) | References the tool use ID |
+| `toolResult.content` (string) | `content` | Direct copy | Simple string result |
+| `toolResult.content` (items) | `content` | Join with `\n` | Extract `.text` from each item |
+| `toolResult.isError` | `isError` | Direct copy (or `false` if nil) | Whether tool failed |
+
+**Example (String Content):**
+
+```swift
+// SDK Input:
+Content.toolResult(ToolResult(
+    toolUseId: "toolu_01ABC",
+    content: .string("total 48\ndrwxr-xr-x  12 user  staff  384 Jan 15 10:30 .\n"),
+    isError: false
+))
+
+// ILS Output:
+ContentBlock.toolResult(ToolResultBlock(
+    type: "toolResult",
+    toolUseId: "toolu_01ABC",
+    content: "total 48\ndrwxr-xr-x  12 user  staff  384 Jan 15 10:30 .\n",
+    isError: false
+))
+```
+
+**Example (Items Content):**
+
+```swift
+// SDK Input:
+Content.toolResult(ToolResult(
+    toolUseId: "toolu_02XYZ",
+    content: .items([
+        ToolResultItem(text: "Line 1"),
+        ToolResultItem(text: "Line 2")
+    ]),
+    isError: false
+))
+
+// ILS Output:
+ContentBlock.toolResult(ToolResultBlock(
+    type: "toolResult",
+    toolUseId: "toolu_02XYZ",
+    content: "Line 1\nLine 2",  // Joined with newlines
+    isError: false
+))
+```
+
+##### 4. Thinking Content (.thinking)
+
+```swift
+case .thinking(let thinking):
+    // Map thinking to text with prefix
+    contentBlocks.append(.text(TextBlock(text: "[thinking] \(thinking.thinking)")))
+```
+
+**Special Handling:** Thinking blocks are mapped to text blocks with a `[thinking]` prefix. This is because ILSShared's `ContentBlock` enum doesn't have a dedicated `.thinking` case (though `ThinkingBlock` struct exists for future use).
+
+| SDK Type | ILS Type | Transform | Notes |
+|----------|----------|-----------|-------|
+| `Content.thinking(Thinking)` | `ContentBlock.text(TextBlock)` | Prefix with `"[thinking] "` | Preserves thinking content as text |
+
+**Example:**
+
+```swift
+// SDK Input:
+Content.thinking(Thinking(
+    thinking: "I need to check if the user has authentication set up before proceeding."
+))
+
+// ILS Output:
+ContentBlock.text(TextBlock(
+    type: "text",
+    text: "[thinking] I need to check if the user has authentication set up before proceeding."
+))
+```
+
+**Why Not `.thinking(ThinkingBlock)`?**
+
+While `ThinkingBlock` is defined in ILSShared, the conversion currently maps to `.text` to ensure compatibility with existing UI code that may not handle thinking blocks separately. This can be changed to:
+
+```swift
+// Future improvement:
+contentBlocks.append(.thinking(ThinkingBlock(thinking: thinking.thinking)))
+```
+
+##### 5. Server Tool Use Content (.serverToolUse)
+
+```swift
+case .serverToolUse(let serverTool):
+    contentBlocks.append(.toolUse(ToolUseBlock(
+        id: serverTool.id,
+        name: serverTool.name,
+        input: AnyCodable(serverTool.input)
+    )))
+```
+
+**Special Handling:** Server tool use (server-side tool execution) is mapped to the same `ToolUseBlock` type as regular tool use.
+
+| SDK Type | ILS Type | Transform | Notes |
+|----------|----------|-----------|-------|
+| `Content.serverToolUse(ServerToolUse)` | `ContentBlock.toolUse(ToolUseBlock)` | Identical to `.toolUse` | No distinction in ILS types |
+
+**Example:**
+
+```swift
+// SDK Input:
+Content.serverToolUse(ServerToolUse(
+    id: "toolu_server_123",
+    name: "WebSearch",
+    input: ["query": "Swift actors documentation"]
+))
+
+// ILS Output:
+ContentBlock.toolUse(ToolUseBlock(
+    type: "toolUse",
+    id: "toolu_server_123",
+    name: "WebSearch",
+    input: AnyCodable(["query": "Swift actors documentation"])
+))
+```
+
+##### 6. Web Search Tool Result Content (.webSearchToolResult)
+
+```swift
+case .webSearchToolResult(let webResult):
+    let text = webResult.content.compactMap { $0.text }.joined(separator: "\n")
+    contentBlocks.append(.toolResult(ToolResultBlock(
+        toolUseId: webResult.toolUseId ?? "",
+        content: text,
+        isError: false
+    )))
+```
+
+**Special Handling:** Web search results have structured content (array of items). We extract text from all items and join with newlines.
+
+| SDK Field | ILS Field | Transform | Notes |
+|-----------|-----------|-----------|-------|
+| `webResult.toolUseId` | `toolUseId` | Direct copy (or `""`) | References web search invocation |
+| `webResult.content` (array) | `content` | Extract `.text`, join with `\n` | Flattens array to string |
+| - | `isError` | Hardcoded `false` | Web search results aren't errors |
+
+**Example:**
+
+```swift
+// SDK Input:
+Content.webSearchToolResult(WebSearchToolResult(
+    toolUseId: "toolu_websearch_456",
+    content: [
+        WebSearchItem(text: "Result 1: Swift actors provide thread safety"),
+        WebSearchItem(text: "Result 2: Actors serialize access to mutable state")
+    ]
+))
+
+// ILS Output:
+ContentBlock.toolResult(ToolResultBlock(
+    type: "toolResult",
+    toolUseId: "toolu_websearch_456",
+    content: "Result 1: Swift actors provide thread safety\nResult 2: Actors serialize access to mutable state",
+    isError: false
+))
+```
+
+##### 7. Code Execution Tool Result Content (.codeExecutionToolResult)
+
+```swift
+case .codeExecutionToolResult(let codeResult):
+    let text: String
+    switch codeResult.content {
+    case .string(let s): text = s
+    default: text = "[code execution result]"
+    }
+    contentBlocks.append(.toolResult(ToolResultBlock(
+        toolUseId: codeResult.toolUseId ?? "",
+        content: text,
+        isError: false
+    )))
+```
+
+**Special Handling:** Code execution results can have different content types. If not a string, we use a placeholder.
+
+| SDK Field | ILS Field | Transform | Notes |
+|-----------|-----------|-----------|-------|
+| `codeResult.toolUseId` | `toolUseId` | Direct copy (or `""`) | References code execution |
+| `codeResult.content` (string) | `content` | Direct copy | Actual code output |
+| `codeResult.content` (other) | `content` | Placeholder `"[code execution result]"` | Fallback for non-string content |
+| - | `isError` | Hardcoded `false` | Not treated as errors |
+
+**Example:**
+
+```swift
+// SDK Input:
+Content.codeExecutionToolResult(CodeExecutionToolResult(
+    toolUseId: "toolu_code_789",
+    content: .string("Hello, World!\n42\n")
+))
+
+// ILS Output:
+ContentBlock.toolResult(ToolResultBlock(
+    type: "toolResult",
+    toolUseId: "toolu_code_789",
+    content: "Hello, World!\n42\n",
+    isError: false
+))
+```
+
+#### Content Block Mapping Summary Table
+
+| SwiftAnthropic Content Type | Count | ILS ContentBlock Type | Special Handling |
+|-----------------------------|-------|----------------------|------------------|
+| `.text(String, Citations?)` | 1 | `.text(TextBlock)` | Ignore citations |
+| `.toolUse(ToolUse)` | 1 | `.toolUse(ToolUseBlock)` | Wrap input in `AnyCodable` |
+| `.toolResult(ToolResult)` | 1 | `.toolResult(ToolResultBlock)` | Handle string vs items content |
+| `.thinking(Thinking)` | 1 | `.text(TextBlock)` | Add `"[thinking] "` prefix |
+| `.serverToolUse(ServerToolUse)` | 1 | `.toolUse(ToolUseBlock)` | Same as regular tool use |
+| `.webSearchToolResult(WebSearchToolResult)` | 1 | `.toolResult(ToolResultBlock)` | Join array items with newlines |
+| `.codeExecutionToolResult(CodeExecutionToolResult)` | 1 | `.toolResult(ToolResultBlock)` | Fallback to placeholder if not string |
+| **Total:** | **7** | **3 unique types** | Multiple SDK types map to same ILS type |
+
+**Key Observations:**
+
+1. **Many-to-Few Mapping**: 7 SDK content types map to only 3 ILS types (`.text`, `.toolUse`, `.toolResult`)
+2. **Normalization**: Different tool result formats (toolResult, webSearch, codeExecution) all become `.toolResult`
+3. **Loss of Fidelity**: Thinking blocks lose their semantic meaning (become text)
+4. **Type Erasure**: Server tools indistinguishable from regular tools in ILS types
+5. **String-Centric**: Complex content structures flattened to strings
+
+### Detailed Conversion: .result
+
+**Input:** `ResponseChunk.result(ResultChunk)`
+
+```swift
+case .result(let msg):
+    let result = ResultMessage(
+        subtype: msg.isError ? "error" : "success",
+        sessionId: msg.sessionId,
+        durationMs: msg.durationMs,
+        durationApiMs: msg.durationApiMs,
+        isError: msg.isError,
+        numTurns: msg.numTurns,
+        totalCostUSD: msg.totalCostUsd,
+        usage: nil  // Not populated currently
+    )
+    return .result(result)
+```
+
+**Output:** `StreamMessage.result(ResultMessage)`
+
+**Field Mapping:**
+
+| SDK Field (ResultChunk) | ILS Field (ResultMessage) | Transform | Notes |
+|-------------------------|---------------------------|-----------|-------|
+| `msg.isError` | `subtype` | `"error"` if true, else `"success"` | Semantic indicator |
+| `msg.sessionId` | `sessionId` | Direct copy | Session identifier |
+| `msg.durationMs` | `durationMs` | Direct copy (optional) | Total duration milliseconds |
+| `msg.durationApiMs` | `durationApiMs` | Direct copy (optional) | API call duration |
+| `msg.isError` | `isError` | Direct copy | Boolean error flag |
+| `msg.numTurns` | `numTurns` | Direct copy (optional) | Number of conversation turns |
+| `msg.totalCostUsd` | `totalCostUSD` | Direct copy (optional) | Cost in USD (note case difference) |
+| - | `usage` | Hardcoded `nil` | Token usage (not populated by SDK) |
+
+**Example (Success):**
+
+```swift
+// SDK Input:
+ResponseChunk.result(ResultChunk(
+    sessionId: "ses_abc123",
+    durationMs: 5432,
+    durationApiMs: 4100,
+    isError: false,
+    numTurns: 3,
+    totalCostUsd: 0.0042
+))
+
+// ILS Output:
+StreamMessage.result(ResultMessage(
+    type: "result",
+    subtype: "success",
+    sessionId: "ses_abc123",
+    durationMs: 5432,
+    durationApiMs: 4100,
+    isError: false,
+    numTurns: 3,
+    totalCostUSD: 0.0042,
+    usage: nil
+))
+```
+
+**Example (Error):**
+
+```swift
+// SDK Input:
+ResponseChunk.result(ResultChunk(
+    sessionId: "ses_xyz789",
+    durationMs: 1200,
+    durationApiMs: 800,
+    isError: true,
+    numTurns: 1,
+    totalCostUsd: 0.0001
+))
+
+// ILS Output:
+StreamMessage.result(ResultMessage(
+    type: "result",
+    subtype: "error",  // Changed based on isError
+    sessionId: "ses_xyz789",
+    durationMs: 1200,
+    durationApiMs: 800,
+    isError: true,
+    numTurns: 1,
+    totalCostUSD: 0.0001,
+    usage: nil
+))
+```
+
+**When Received:** Always the last chunk emitted when a session completes (success or failure).
+
+### Detailed Conversion: .user
+
+**Input:** `ResponseChunk.user(UserChunk)`
+
+```swift
+case .user:
+    // User messages are echoed back, we can skip or include
+    return .system(SystemMessage(
+        subtype: "user_echo",
+        data: SystemData(sessionId: chunk.sessionId)
+    ))
+```
+
+**Output:** `StreamMessage.system(SystemMessage)` with `subtype: "user_echo"`
+
+**Field Mapping:**
+
+| SDK Field | ILS Field | Transform | Notes |
+|-----------|-----------|-----------|-------|
+| `chunk.sessionId` | `data.sessionId` | Direct copy | Session identifier |
+| - | `subtype` | Hardcoded `"user_echo"` | Identifies this as user echo |
+| - | `plugins` | Hardcoded `nil` | Not used |
+| - | `slashCommands` | Hardcoded `nil` | Not used |
+| - | `tools` | Hardcoded `nil` | Not used |
+
+**Example:**
+
+```swift
+// SDK Input:
+ResponseChunk.user(UserChunk(
+    sessionId: "ses_abc123",
+    message: "Implement user authentication"
+))
+
+// ILS Output:
+StreamMessage.system(SystemMessage(
+    type: "system",
+    subtype: "user_echo",
+    data: SystemData(
+        sessionId: "ses_abc123",
+        plugins: nil,
+        slashCommands: nil,
+        tools: nil
+    )
+))
+```
+
+**Why Map to .system?**
+
+User echoes are informational only (not actionable content), so they're treated as system messages rather than creating a separate message type.
+
+**When Received:** After the user sends a message in a multi-turn conversation.
+
+### Why This Conversion Layer Exists
+
+**1. Dependency Decoupling**
+
+```
+┌─────────────┐      ┌──────────────────┐      ┌─────────────┐
+│  iOS App    │──────│  ILSShared      │      │ ILSBackend  │
+│ (SwiftUI)   │      │  (Models Only)  │      │ (Service)   │
+└─────────────┘      └──────────────────┘      └──────┬──────┘
+                                                       │
+                                                       │ Uses
+                                                       ▼
+                                         ┌──────────────────────────┐
+                                         │  ClaudeCodeSDK           │
+                                         │  (External Dependency)   │
+                                         └──────────────────────────┘
+```
+
+Without conversion, iOS would need to depend on ClaudeCodeSDK (adds 50+ MB, unnecessary complexity).
+
+**2. Type Safety**
+
+Explicit mapping catches breaking changes:
+
+```swift
+// If SDK adds new Content case:
+case .newContentType(let data):
+    // ❌ Compile error here forces us to handle it
+    // ✅ Can't accidentally ignore new types
+```
+
+**3. Simplification**
+
+SDK types have complexity iOS doesn't need:
+
+```swift
+// SDK: Complex nested enum
+Content.toolResult(ToolResult(
+    content: .items([Item(text: "a"), Item(text: "b")])
+))
+
+// ILS: Simple string
+ContentBlock.toolResult(ToolResultBlock(
+    content: "a\nb"
+))
+```
+
+**4. Flexibility**
+
+Can enrich or transform during conversion:
+
+```swift
+// Add prefix to thinking blocks
+case .thinking(let thinking):
+    contentBlocks.append(.text(TextBlock(text: "[thinking] \(thinking.thinking)")))
+
+// Could also add metadata:
+// contentBlocks.append(.text(TextBlock(text: thinking.thinking, metadata: ["source": "thinking"])))
+```
+
+**5. Stability**
+
+ILS types evolve independently from SDK:
+
+- SDK updates don't force iOS app updates
+- Can maintain backward compatibility with older clients
+- Bridge layer absorbs breaking changes
+
+### AnyCodable Usage
+
+Tool inputs are arbitrary JSON, requiring type-erased storage:
+
+```swift
+// Tool input can be any structure:
+["command": "ls -la"]
+["file_path": "/path/to/file", "offset": 100, "limit": 50]
+["old_string": "foo", "new_string": "bar"]
+
+// AnyCodable wraps this:
+input: AnyCodable(toolUse.input)
+```
+
+**AnyCodable Implementation:**
+
+```swift
+public struct AnyCodable: Codable, @unchecked Sendable {
+    public let value: Any  // Type-erased storage
+
+    // Decodes: Bool, Int, Double, String, [Any], [String: Any]
+    // Encodes: Same types back to JSON
+}
+```
+
+**Why @unchecked Sendable?**
+
+`Any` is not `Sendable`, but the actual values stored (primitives, arrays, dictionaries) are. The annotation tells the compiler "trust me, this is thread-safe."
+
+### Conversion Performance
+
+**Time Complexity:**
+
+- **initSystem, result, user**: O(1) - Simple field copying
+- **assistant**: O(n) where n = number of content blocks (typically 1-10)
+  - Each content block: O(1) to O(m) where m = text length or array size
+  - Typical: 5-10 content blocks × 10-1000 chars each = ~5-10 KB processed
+
+**Space Complexity:**
+
+- **O(n)** where n = total content size
+- Creates new `ContentBlock` array (no in-place modification)
+- Short-lived allocations (immediately yielded to stream)
+
+**Typical Latency:**
+
+- **Per chunk**: < 1ms (pure in-memory transformation)
+- **Total overhead**: Negligible compared to network/SDK overhead (10-50ms per chunk)
+
+### Conversion Best Practices
+
+**DO:**
+
+✅ **Make conversion functions nonisolated**
+```swift
+nonisolated private func convertChunk(_ chunk: ResponseChunk) -> StreamMessage {
+    // Can call from non-isolated contexts
+}
+```
+
+✅ **Handle all enum cases exhaustively**
+```swift
+switch content {
+case .text: ...
+case .toolUse: ...
+case .toolResult: ...
+// Compiler ensures we handle all cases
+}
+```
+
+✅ **Provide fallback for optional fields**
+```swift
+toolUseId: toolResult.toolUseId ?? ""  // Never crash on nil
+```
+
+✅ **Normalize complex structures**
+```swift
+// Flatten items array to single string
+items.compactMap { $0.text }.joined(separator: "\n")
+```
+
+**DON'T:**
+
+❌ **Don't crash on unexpected data**
+```swift
+// BAD
+toolUseId: toolResult.toolUseId!  // Force unwrap
+
+// GOOD
+toolUseId: toolResult.toolUseId ?? ""  // Safe default
+```
+
+❌ **Don't lose information silently**
+```swift
+// BAD (ignores items)
+case .items(let items): resultContent = ""
+
+// GOOD (preserves all text)
+case .items(let items): resultContent = items.compactMap { $0.text }.joined(separator: "\n")
+```
+
+❌ **Don't make conversion async**
+```swift
+// BAD
+private func convertChunk(_ chunk: ResponseChunk) async -> StreamMessage { ... }
+
+// GOOD
+nonisolated private func convertChunk(_ chunk: ResponseChunk) -> StreamMessage { ... }
+```
+
+### Future Improvements
+
+**Potential Enhancements:**
+
+1. **Preserve Thinking Semantics**
+   ```swift
+   // Current:
+   case .thinking(let thinking):
+       contentBlocks.append(.text(TextBlock(text: "[thinking] \(thinking.thinking)")))
+
+   // Future:
+   case .thinking(let thinking):
+       contentBlocks.append(.thinking(ThinkingBlock(thinking: thinking.thinking)))
+   ```
+
+2. **Add Usage Stats**
+   ```swift
+   case .result(let msg):
+       let usage = UsageInfo(
+           inputTokens: msg.usage.inputTokens,
+           outputTokens: msg.usage.outputTokens,
+           cacheReadInputTokens: msg.usage.cacheReadTokens,
+           cacheCreationInputTokens: msg.usage.cacheCreationTokens
+       )
+       return .result(ResultMessage(..., usage: usage))
+   ```
+
+3. **Distinguish Server Tools**
+   ```swift
+   // Add metadata to track server vs client tools
+   case .serverToolUse(let serverTool):
+       contentBlocks.append(.toolUse(ToolUseBlock(
+           ...,
+           metadata: ["source": "server"]
+       )))
+   ```
+
+4. **Preserve Citations**
+   ```swift
+   case .text(let text, let citations):
+       if let cites = citations {
+           // Include citation metadata
+       }
+   ```
+
+### Conversion Testing Strategies
+
+**Unit Testing:**
+
+```swift
+func testConvertTextBlock() {
+    let chunk = ResponseChunk.assistant(AssistantChunk(
+        message: Message(content: [.text("Hello", nil)])
+    ))
+
+    let result = executor.convertChunk(chunk)
+
+    guard case .assistant(let msg) = result else {
+        XCTFail("Expected assistant message")
+        return
+    }
+
+    XCTAssertEqual(msg.content.count, 1)
+    guard case .text(let textBlock) = msg.content[0] else {
+        XCTFail("Expected text block")
+        return
+    }
+    XCTAssertEqual(textBlock.text, "Hello")
+}
+```
+
+**Integration Testing:**
+
+Test full streaming pipeline:
+
+```swift
+func testFullStreamConversion() async throws {
+    let stream = executor.execute(prompt: "Hello", workingDirectory: nil, options: options)
+
+    var messages: [StreamMessage] = []
+    for try await message in stream {
+        messages.append(message)
+    }
+
+    // Verify: initSystem → assistant → result
+    XCTAssertEqual(messages.count, 3)
+    XCTAssert(messages[0].isSystem)
+    XCTAssert(messages[1].isAssistant)
+    XCTAssert(messages[2].isResult)
+}
+```
+
+### Summary
+
+The `convertChunk()` method is a critical component that:
+
+- **Transforms** 4 top-level chunk types and 7 content block types from SDK to ILS
+- **Normalizes** complex structures (items arrays, citations) to simple strings
+- **Decouples** iOS app from ClaudeCodeSDK dependency
+- **Enables** type-safe evolution of ILS models independently
+- **Runs** synchronously and nonisolated for performance
+- **Handles** all edge cases gracefully (nil values, unknown types)
+
+Understanding this conversion is essential for:
+- **Debugging** streaming issues (what chunk types are received?)
+- **Adding** new content block types (extend switch statement)
+- **Optimizing** performance (minimize allocations)
+- **Evolving** the API (add new fields without breaking clients)
 
 ## Session Management
 
