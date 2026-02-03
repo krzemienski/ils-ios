@@ -2,10 +2,13 @@ import Foundation
 
 // MARK: - API Response Wrapper
 
-/// Standard API response wrapper
+/// Standard API response wrapper for all backend requests
 public struct APIResponse<T: Codable>: Codable where T: Sendable {
+    /// Indicates whether the request was successful
     public let success: Bool
+    /// Response data when successful
     public let data: T?
+    /// Error details when unsuccessful
     public let error: APIError?
 
     public init(success: Bool, data: T? = nil, error: APIError? = nil) {
@@ -15,8 +18,11 @@ public struct APIResponse<T: Codable>: Codable where T: Sendable {
     }
 }
 
+/// Error details returned by the backend API
 public struct APIError: Codable, Sendable {
+    /// Error code for programmatic handling
     public let code: String
+    /// Human-readable error message
     public let message: String
 
     public init(code: String, message: String) {
@@ -25,9 +31,11 @@ public struct APIError: Codable, Sendable {
     }
 }
 
-/// List response with items and total
+/// List response with items and total count for paginated endpoints
 public struct ListResponse<T: Codable>: Codable where T: Sendable {
+    /// Array of items returned by the query
     public let items: [T]
+    /// Total count of items available
     public let total: Int
 
     public init(items: [T], total: Int? = nil) {
@@ -38,10 +46,15 @@ public struct ListResponse<T: Codable>: Codable where T: Sendable {
 
 // MARK: - Project Requests
 
+/// Request to create a new project
 public struct CreateProjectRequest: Codable, Sendable {
+    /// Project display name
     public let name: String
+    /// Absolute filesystem path to the project directory
     public let path: String
+    /// Default AI model to use for sessions in this project
     public let defaultModel: String?
+    /// Optional project description
     public let description: String?
 
     public init(name: String, path: String, defaultModel: String? = nil, description: String? = nil) {
@@ -52,9 +65,13 @@ public struct CreateProjectRequest: Codable, Sendable {
     }
 }
 
+/// Request to update an existing project (all fields optional)
 public struct UpdateProjectRequest: Codable, Sendable {
+    /// Updated project display name
     public let name: String?
+    /// Updated default AI model for sessions in this project
     public let defaultModel: String?
+    /// Updated project description
     public let description: String?
 
     public init(name: String? = nil, defaultModel: String? = nil, description: String? = nil) {
@@ -66,10 +83,15 @@ public struct UpdateProjectRequest: Codable, Sendable {
 
 // MARK: - Session Requests
 
+/// Request to create a new chat session
 public struct CreateSessionRequest: Codable, Sendable {
+    /// Optional project ID to associate this session with
     public let projectId: UUID?
+    /// Optional custom session name
     public let name: String?
+    /// AI model to use for this session (defaults to project or global setting)
     public let model: String?
+    /// Permission handling mode for tool usage
     public let permissionMode: PermissionMode?
 
     public init(
@@ -85,10 +107,13 @@ public struct CreateSessionRequest: Codable, Sendable {
     }
 }
 
-/// Response from session scan
+/// Response from session scan operation that discovers external Claude.ai sessions
 public struct SessionScanResponse: Codable, Sendable {
+    /// External sessions discovered during scan
     public let items: [ExternalSession]
+    /// File paths that were scanned for sessions
     public let scannedPaths: [String]
+    /// Total count of sessions found
     public let total: Int
 
     public init(items: [ExternalSession], scannedPaths: [String], total: Int? = nil) {
