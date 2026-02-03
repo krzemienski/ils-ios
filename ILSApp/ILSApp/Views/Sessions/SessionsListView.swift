@@ -62,6 +62,7 @@ struct SessionsListView: View {
     }
 
     private func deleteSession(at offsets: IndexSet) {
+        HapticService.shared.warning()
         Task {
             for index in offsets {
                 let session = viewModel.sessions[index]
