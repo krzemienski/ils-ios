@@ -141,6 +141,108 @@ struct SkeletonRectangle: View {
     }
 }
 
+// MARK: - Skeleton Row Variants
+
+/// Skeleton loading view matching ProjectRowView layout
+struct SkeletonProjectRow: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                SkeletonText(width: 150, height: 16)
+                Spacer()
+                SkeletonText(width: 60, height: 14)
+            }
+
+            SkeletonText(width: 200, height: 12)
+
+            SkeletonText(width: 180, height: 12)
+
+            HStack {
+                SkeletonText(width: 80, height: 12)
+                Spacer()
+                SkeletonText(width: 60, height: 12)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Skeleton loading view matching SkillRowView layout
+struct SkeletonSkillRow: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
+            HStack {
+                SkeletonText(width: 120, height: 16)
+                Spacer()
+                SkeletonCircle(size: 12)
+            }
+
+            SkeletonText(width: 220, height: 12)
+
+            HStack(spacing: ILSTheme.spacingXS) {
+                SkeletonText(width: 50, height: 18)
+                SkeletonText(width: 60, height: 18)
+                SkeletonText(width: 55, height: 18)
+            }
+
+            HStack(spacing: ILSTheme.spacingXS) {
+                SkeletonText(width: 80, height: 10)
+                SkeletonText(width: 150, height: 10)
+            }
+        }
+        .padding(.vertical, ILSTheme.spacingXS)
+    }
+}
+
+/// Skeleton loading view matching SessionRowView layout
+struct SkeletonSessionRow: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                SkeletonText(width: 140, height: 16)
+                Spacer()
+                SkeletonText(width: 70, height: 14)
+            }
+
+            HStack {
+                SkeletonText(width: 100, height: 12)
+                Spacer()
+                SkeletonText(width: 60, height: 12)
+            }
+
+            HStack {
+                SkeletonText(width: 90, height: 12)
+                SkeletonText(width: 50, height: 12)
+                Spacer()
+                SkeletonText(width: 50, height: 16)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Skeleton loading view matching MCPServerRowView layout
+struct SkeletonMCPServerRow: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                SkeletonText(width: 130, height: 16)
+                Spacer()
+                SkeletonText(width: 60, height: 12)
+            }
+
+            SkeletonText(width: 200, height: 14)
+
+            HStack(spacing: 8) {
+                SkeletonText(width: 60, height: 18)
+                SkeletonText(width: 50, height: 18)
+                Spacer()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Shimmer Components") {
@@ -177,4 +279,28 @@ struct SkeletonRectangle: View {
             .shimmer()
     }
     .padding()
+}
+
+#Preview("Skeleton Rows") {
+    List {
+        Section("Project Skeleton") {
+            SkeletonProjectRow()
+            SkeletonProjectRow()
+        }
+
+        Section("Skill Skeleton") {
+            SkeletonSkillRow()
+            SkeletonSkillRow()
+        }
+
+        Section("Session Skeleton") {
+            SkeletonSessionRow()
+            SkeletonSessionRow()
+        }
+
+        Section("MCP Server Skeleton") {
+            SkeletonMCPServerRow()
+            SkeletonMCPServerRow()
+        }
+    }
 }
