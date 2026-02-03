@@ -109,6 +109,9 @@ struct MCPController: RouteCollection {
         if let env = input.env {
             server.env = env
         }
+        if let disabled = input.disabled {
+            server.disabled = disabled
+        }
 
         // Update the server in the configuration file
         try fileSystem.updateMCPServer(server)
