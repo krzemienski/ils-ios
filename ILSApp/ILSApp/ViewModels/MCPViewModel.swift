@@ -34,14 +34,14 @@ class MCPViewModel: ObservableObject {
     }
 
     /// Load servers from backend
-    /// - Parameter refresh: If true, bypasses server cache to rescan configuration files
-    func loadServers(refresh: Bool = false) async {
+    /// - Parameter clearCache: If true, clears APIClient cache before fetching fresh data
+    func loadServers(clearCache: Bool = false) async {
         isLoading = true
         error = nil
 
         do {
-            let path = refresh ? "/mcp?refresh=true" : "/mcp"
-            let response: APIResponse<ListResponse<MCPServerItem>> = try await client.get(path)
+            // Use clearCache parameter to bypass cache on refresh
+            let response: APIResponse<ListResponse<MCPServerItem>> = try await client.get("/mcp", clearCache: clearCache)
             if let data = response.data {
                 servers = data.items
             }
@@ -53,9 +53,10 @@ class MCPViewModel: ObservableObject {
         isLoading = false
     }
 
-    /// Refresh servers by rescanning configuration files
+    /// Refresh servers by clearing cache and fetching fresh data
     func refreshServers() async {
-        await loadServers(refresh: true)
+        // Clear cache and reload with fresh data
+        await loadServers(clearCache: true)
     }
 
     func retryLoadServers() async {

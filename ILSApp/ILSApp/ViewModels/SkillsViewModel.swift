@@ -33,14 +33,14 @@ class SkillsViewModel: ObservableObject {
     }
 
     /// Load skills from backend
-    /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
-    func loadSkills(refresh: Bool = false) async {
+    /// - Parameter clearCache: If true, clears APIClient cache before fetching fresh data
+    func loadSkills(clearCache: Bool = false) async {
         isLoading = true
         error = nil
 
         do {
-            let path = refresh ? "/skills?refresh=true" : "/skills"
-            let response: APIResponse<ListResponse<SkillItem>> = try await client.get(path)
+            // Use clearCache parameter to bypass cache on refresh
+            let response: APIResponse<ListResponse<SkillItem>> = try await client.get("/skills", clearCache: clearCache)
             if let data = response.data {
                 skills = data.items
             }
@@ -52,9 +52,10 @@ class SkillsViewModel: ObservableObject {
         isLoading = false
     }
 
-    /// Refresh skills by rescanning ~/.claude directory
+    /// Refresh skills by clearing cache and fetching fresh data
     func refreshSkills() async {
-        await loadSkills(refresh: true)
+        // Clear cache and reload with fresh data
+        await loadSkills(clearCache: true)
     }
 
     func retryLoadSkills() async {

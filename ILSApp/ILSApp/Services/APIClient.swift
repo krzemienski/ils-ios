@@ -144,7 +144,7 @@ actor APIClient {
 
     /// Manually clears all cached responses
     /// Call this method to force fresh data on the next GET request
-    func clearCache() {
+    public func clearCache() {
         print("🗑️ Cache CLEARED (\(cache.count) entries removed)")
         cache.removeAll()
     }
