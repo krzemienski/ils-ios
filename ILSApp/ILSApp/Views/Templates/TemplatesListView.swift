@@ -270,7 +270,11 @@ struct TemplateDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditor) {
-            EditTemplateView(template: template, viewModel: viewModel)
+            EditTemplateView(template: template) { updatedTemplate in
+                Task {
+                    await viewModel.loadTemplates()
+                }
+            }
         }
         .alert("Delete Template", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) {}
@@ -364,97 +368,6 @@ struct TemplateDetailView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
-    }
-}
-
-// MARK: - Placeholder Views
-
-struct NewTemplateView: View {
-    var onCreate: (SessionTemplate) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            Text("New Template Form")
-                .navigationTitle("New Template")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                    }
-                }
-        }
-    }
-}
-
-struct EditTemplateView: View {
-    let template: SessionTemplate
-    @ObservedObject var viewModel: TemplatesViewModel
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            Text("Edit Template Form")
-                .navigationTitle("Edit Template")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                    }
-                }
-        }
-    }
-}
-
-// MARK: - Flow Layout Helper
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.replacingUnspecifiedDimensions().width, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x, y: bounds.minY + result.positions[index].y), proposal: .unspecified)
-        }
-    }
-
-    struct FlowResult {
-        var size: CGSize
-        var positions: [CGPoint]
-
-        init(in width: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var positions: [CGPoint] = []
-            var size: CGSize = .zero
-            var currentX: CGFloat = 0
-            var currentY: CGFloat = 0
-            var lineHeight: CGFloat = 0
-
-            for subview in subviews {
-                let subviewSize = subview.sizeThatFits(.unspecified)
-
-                if currentX + subviewSize.width > width && currentX > 0 {
-                    currentX = 0
-                    currentY += lineHeight + spacing
-                    lineHeight = 0
-                }
-
-                positions.append(CGPoint(x: currentX, y: currentY))
-                currentX += subviewSize.width + spacing
-                lineHeight = max(lineHeight, subviewSize.height)
-                size.width = max(size.width, currentX - spacing)
-            }
-
-            size.height = currentY + lineHeight
-            self.size = size
-            self.positions = positions
-        }
     }
 }
 

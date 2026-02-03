@@ -22,7 +22,8 @@ struct TemplatesController: RouteCollection {
         // Optional search filter
         if let search = req.query[String.self, at: "search"] {
             query = query.group(.or) { group in
-                group.filter(\.$name, .custom("ILIKE"), "%\(search)%")
+                group.filter(\.$name ~~ "%\(search)%")
+                group.filter(\.$description ~~ "%\(search)%")
             }
         }
 

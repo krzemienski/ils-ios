@@ -33,6 +33,9 @@
 		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
 		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
 		000000000000000000000046 /* TemplatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* TemplatesViewModel.swift */; };
+		000000000000000000000047 /* TemplatesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* TemplatesListView.swift */; };
+		000000000000000000000048 /* NewTemplateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000058 /* NewTemplateView.swift */; };
+		000000000000000000000049 /* EditTemplateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000059 /* EditTemplateView.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
@@ -79,6 +82,9 @@
 		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000056 /* TemplatesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesViewModel.swift; sourceTree = "<group>"; };
+		000000000000000000000057 /* TemplatesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesListView.swift; sourceTree = "<group>"; };
+		000000000000000000000058 /* NewTemplateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewTemplateView.swift; sourceTree = "<group>"; };
+		000000000000000000000059 /* EditTemplateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTemplateView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -166,6 +172,7 @@
 				000000000000000000000075 /* Skills */,
 				000000000000000000000076 /* Sessions */,
 				000000000000000000000077 /* Settings */,
+				000000000000000000000078 /* Templates */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -251,6 +258,16 @@
 				000000000000000000000052 /* SettingsView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		000000000000000000000078 /* Templates */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000057 /* TemplatesListView.swift */,
+				000000000000000000000058 /* NewTemplateView.swift */,
+				000000000000000000000059 /* EditTemplateView.swift */,
+			);
+			path = Templates;
 			sourceTree = "<group>";
 		};
 		UITEST00000000000000GRP1 /* ILSAppUITests */ = {
@@ -386,6 +403,9 @@
 				000000000000000000000044 /* NewSessionView.swift in Sources */,
 				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
 				000000000000000000000046 /* TemplatesViewModel.swift in Sources */,
+				000000000000000000000047 /* TemplatesListView.swift in Sources */,
+				000000000000000000000048 /* NewTemplateView.swift in Sources */,
+				000000000000000000000049 /* EditTemplateView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

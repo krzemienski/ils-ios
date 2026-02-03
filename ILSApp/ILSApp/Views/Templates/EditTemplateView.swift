@@ -39,7 +39,7 @@ struct EditTemplateView: View {
                     Section {
                         HStack {
                             Image(systemName: "info.circle")
-                                .foregroundColor(ILSTheme.accentColor)
+                                .foregroundColor(ILSTheme.accent)
                             Text("Default templates cannot be edited")
                                 .font(ILSTheme.bodyFont)
                                 .foregroundColor(ILSTheme.secondaryText)
@@ -105,8 +105,8 @@ struct EditTemplateView: View {
                                     .font(ILSTheme.captionFont)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(ILSTheme.accentColor.opacity(0.1))
-                                    .foregroundColor(ILSTheme.accentColor)
+                                    .background(ILSTheme.accent.opacity(0.1))
+                                    .foregroundColor(ILSTheme.accent)
                                     .cornerRadius(4)
                             }
                         }
@@ -197,6 +197,7 @@ struct EditTemplateView: View {
             isFavorite: false,
             isDefault: false,
             tags: ["ios", "swift"]
-        )
-    ) { _ in }
+        ),
+        onUpdated: { _ in }
+    )
 }

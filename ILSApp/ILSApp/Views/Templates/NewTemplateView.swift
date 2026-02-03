@@ -72,8 +72,8 @@ struct NewTemplateView: View {
                                     .font(ILSTheme.captionFont)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(ILSTheme.accentColor.opacity(0.1))
-                                    .foregroundColor(ILSTheme.accentColor)
+                                    .background(ILSTheme.accent.opacity(0.1))
+                                    .foregroundColor(ILSTheme.accent)
                                     .cornerRadius(4)
                             }
                         }
@@ -160,69 +160,6 @@ struct NewTemplateView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - FlowLayout Helper
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let rows = computeRows(proposal: proposal, subviews: subviews)
-
-        let height = rows.reduce(0) { $0 + $1.maxHeight } + CGFloat(max(0, rows.count - 1)) * spacing
-        let width = proposal.width ?? 0
-
-        return CGSize(width: width, height: height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let rows = computeRows(proposal: proposal, subviews: subviews)
-
-        var y = bounds.minY
-        for row in rows {
-            var x = bounds.minX
-            for index in row.subviewIndices {
-                let subview = subviews[index]
-                let size = subview.sizeThatFits(.unspecified)
-                subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-                x += size.width + spacing
-            }
-            y += row.maxHeight + spacing
-        }
-    }
-
-    private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [Row] {
-        var rows: [Row] = []
-        var currentRow = Row()
-        var x: CGFloat = 0
-        let maxWidth = proposal.width ?? .infinity
-
-        for (index, subview) in subviews.enumerated() {
-            let size = subview.sizeThatFits(.unspecified)
-
-            if x + size.width > maxWidth && !currentRow.subviewIndices.isEmpty {
-                rows.append(currentRow)
-                currentRow = Row()
-                x = 0
-            }
-
-            currentRow.subviewIndices.append(index)
-            currentRow.maxHeight = max(currentRow.maxHeight, size.height)
-            x += size.width + spacing
-        }
-
-        if !currentRow.subviewIndices.isEmpty {
-            rows.append(currentRow)
-        }
-
-        return rows
-    }
-
-    private struct Row {
-        var subviewIndices: [Int] = []
-        var maxHeight: CGFloat = 0
     }
 }
 
