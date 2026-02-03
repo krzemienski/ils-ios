@@ -115,6 +115,7 @@ struct NewSessionView: View {
                 let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
                 if let session = response.data {
                     await MainActor.run {
+                        HapticService.shared.success()
                         onCreated(session)
                         dismiss()
                     }
