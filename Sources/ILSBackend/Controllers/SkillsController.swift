@@ -17,6 +17,7 @@ struct SkillsController: RouteCollection {
         // GitHub search endpoint
         skills.get("github", "search", use: githubSearch)
         skills.get("github", ":owner", ":repo", use: githubDetail)
+        skills.post("github", "install", use: githubInstall)
     }
 
     /// GET /skills - List all skills
@@ -150,5 +151,27 @@ struct SkillsController: RouteCollection {
             success: true,
             data: repository
         )
+    }
+
+    /// POST /skills/github/install - Install a skill from GitHub
+    @Sendable
+    func githubInstall(req: Request) async throws -> Response {
+        let input = try req.content.decode(InstallSkillFromGitHubRequest.self)
+
+        // Fetch SKILL.md content from GitHub
+        let content = try await githubService.fetchSkillContent(owner: input.owner, repo: input.repo)
+
+        // Create skill locally (using repo name as skill name)
+        let skill = try fileSystem.createSkill(name: input.repo, content: content)
+
+        // Return 201 Created with skill data
+        let apiResponse = APIResponse(
+            success: true,
+            data: skill
+        )
+
+        let response = Response(status: .created)
+        try response.content.encode(apiResponse, as: .json)
+        return response
     }
 }
