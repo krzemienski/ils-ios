@@ -125,10 +125,15 @@ public struct SessionScanResponse: Codable, Sendable {
 
 // MARK: - Chat Requests
 
+/// Request to stream a chat message via WebSocket connection
 public struct ChatStreamRequest: Codable, Sendable {
+    /// User message prompt to send to the AI model
     public let prompt: String
+    /// Optional session ID to continue an existing conversation
     public let sessionId: UUID?
+    /// Optional project ID for context and permissions
     public let projectId: UUID?
+    /// Optional chat configuration options
     public let options: ChatOptions?
 
     public init(
@@ -144,14 +149,23 @@ public struct ChatStreamRequest: Codable, Sendable {
     }
 }
 
+/// Optional configuration for chat behavior and constraints
 public struct ChatOptions: Codable, Sendable {
+    /// AI model to use for this chat (e.g., "sonnet", "opus", "haiku")
     public let model: String?
+    /// Permission handling mode for tool usage requests
     public let permissionMode: PermissionMode?
+    /// Maximum number of AI turns (API round-trips) before stopping
     public let maxTurns: Int?
+    /// Maximum cost budget in USD for this chat session
     public let maxBudgetUSD: Double?
+    /// Whitelist of tool names the AI is allowed to use
     public let allowedTools: [String]?
+    /// Blacklist of tool names the AI is not allowed to use
     public let disallowedTools: [String]?
+    /// Agent ID to resume from a previous execution
     public let resume: String?
+    /// Whether to fork the current session instead of continuing it
     public let forkSession: Bool?
 
     public init(
@@ -175,9 +189,11 @@ public struct ChatOptions: Codable, Sendable {
     }
 }
 
-/// Permission decision from client
+/// Permission decision response from client for tool usage requests
 public struct PermissionDecision: Codable, Sendable {
-    public let decision: String // "allow" or "deny"
+    /// Decision outcome - either "allow" or "deny"
+    public let decision: String
+    /// Optional reason or explanation for the decision
     public let reason: String?
 
     public init(decision: String, reason: String? = nil) {
@@ -188,9 +204,13 @@ public struct PermissionDecision: Codable, Sendable {
 
 // MARK: - WebSocket Messages
 
+/// Messages sent from client to server via WebSocket connection
 public enum WSClientMessage: Codable, Sendable {
+    /// Send a user message prompt to the AI
     case message(prompt: String)
+    /// Respond to a permission request with allow/deny decision
     case permission(requestId: String, decision: String, reason: String?)
+    /// Cancel the current AI operation or stream
     case cancel
 
     private enum CodingKeys: String, CodingKey {
@@ -235,10 +255,15 @@ public enum WSClientMessage: Codable, Sendable {
     }
 }
 
+/// Messages sent from server to client via WebSocket connection
 public enum WSServerMessage: Codable, Sendable {
+    /// Streaming content chunk from the AI response
     case stream(StreamMessage)
+    /// Request for client permission to use a tool
     case permission(PermissionRequest)
+    /// Error occurred during processing
     case error(StreamError)
+    /// AI operation completed successfully with final results
     case complete(ResultMessage)
 
     private enum CodingKeys: String, CodingKey {
