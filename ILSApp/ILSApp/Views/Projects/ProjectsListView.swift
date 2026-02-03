@@ -12,7 +12,11 @@ struct ProjectsListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.retryLoadProjects()
                 }
-            } else if viewModel.projects.isEmpty && !viewModel.isLoading {
+            } else if viewModel.isLoading && viewModel.projects.isEmpty {
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonProjectRow()
+                }
+            } else if viewModel.projects.isEmpty {
                 EmptyStateView(
                     title: "No Projects",
                     systemImage: "folder",
@@ -50,11 +54,6 @@ struct ProjectsListView: View {
         }
         .sheet(item: $selectedProject) { project in
             ProjectDetailView(project: project, viewModel: viewModel)
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.projects.isEmpty {
-                ProgressView("Loading projects...")
-            }
         }
         .task {
             await viewModel.loadProjects()
