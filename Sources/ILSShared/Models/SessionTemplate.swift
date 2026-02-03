@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a session template with predefined configurations
-public struct SessionTemplate: Codable, Identifiable, Sendable {
+public struct SessionTemplate: Codable, Identifiable, Sendable, Hashable, Equatable {
     public let id: UUID
     public var name: String
     public var description: String?

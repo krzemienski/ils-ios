@@ -4,8 +4,10 @@ import ILSShared
 struct NewSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var projectsViewModel = ProjectsViewModel()
+    @StateObject private var templatesViewModel = TemplatesViewModel()
     @State private var sessionName = ""
     @State private var selectedProject: Project?
+    @State private var selectedTemplate: SessionTemplate?
     @State private var selectedModel = "sonnet"
     @State private var permissionMode = "default"
     @State private var isCreating = false
@@ -18,6 +20,19 @@ struct NewSessionView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Template") {
+                    Picker("Start from Template", selection: $selectedTemplate) {
+                        Text("None").tag(nil as SessionTemplate?)
+                        ForEach(templatesViewModel.templates) { template in
+                            Text(template.name).tag(template as SessionTemplate?)
+                        }
+                    }
+                    .accessibilityIdentifier("template-picker")
+                    .onChange(of: selectedTemplate) { _, newTemplate in
+                        applyTemplate(newTemplate)
+                    }
+                }
+
                 Section("Session Details") {
                     TextField("Session Name (optional)", text: $sessionName)
                         .accessibilityIdentifier("session-name-field")
@@ -71,6 +86,7 @@ struct NewSessionView: View {
             }
             .task {
                 await projectsViewModel.loadProjects()
+                await templatesViewModel.loadTemplates()
             }
         }
     }
@@ -98,6 +114,17 @@ struct NewSessionView: View {
         default:
             return ""
         }
+    }
+
+    private func applyTemplate(_ template: SessionTemplate?) {
+        guard let template = template else { return }
+
+        // Pre-fill fields from template
+        if let name = template.name.isEmpty ? nil : template.name {
+            sessionName = name
+        }
+        selectedModel = template.model
+        permissionMode = template.permissionMode.rawValue
     }
 
     private func createSession() {

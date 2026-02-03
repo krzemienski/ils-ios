@@ -150,11 +150,3 @@ class TemplatesViewModel: ObservableObject {
         searchQuery = query
     }
 }
-
-// MARK: - Request Types
-
-struct DeletedResponse: Decodable {
-    let deleted: Bool
-}
-
-struct EmptyBody: Encodable {}
