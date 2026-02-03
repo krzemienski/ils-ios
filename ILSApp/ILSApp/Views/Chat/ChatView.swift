@@ -211,8 +211,7 @@ struct ChatInputView: View {
             } else {
                 Button(action: {
                     // Haptic feedback on send
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
+                    HapticService.shared.medium()
 
                     // Spring animation
                     sendButtonPressed = true
