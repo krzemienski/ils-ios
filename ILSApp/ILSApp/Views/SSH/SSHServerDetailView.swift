@@ -16,6 +16,10 @@ struct SSHServerDetailView: View {
     @State private var isSaving = false
     @State private var isTesting = false
     @State private var testResult: TestResult?
+    @State private var remoteSessions: [ChatSession] = []
+    @State private var remoteConfig: ClaudeConfig?
+    @State private var isLoadingRemoteData = false
+    @State private var remoteDataError: String?
 
     init(server: SSHServer, viewModel: SSHViewModel) {
         self.server = server
@@ -94,6 +98,124 @@ struct SSHServerDetailView: View {
                 }
 
                 if !isEditing {
+                    // Remote Sessions Section
+                    Section {
+                        if isLoadingRemoteData {
+                            HStack {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                Text("Loading remote sessions...")
+                            }
+                        } else if let error = remoteDataError {
+                            Label(error, systemImage: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                                .font(ILSTheme.bodyFont)
+                        } else if remoteSessions.isEmpty {
+                            Label("No remote sessions found", systemImage: "bubble.left.and.bubble.right")
+                                .foregroundColor(ILSTheme.secondaryText)
+                                .font(ILSTheme.bodyFont)
+                        } else {
+                            ForEach(remoteSessions.prefix(5)) { session in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(session.name ?? "Unnamed Session")
+                                            .font(ILSTheme.bodyFont)
+                                            .lineLimit(1)
+
+                                        Spacer()
+
+                                        Text(session.model)
+                                            .font(ILSTheme.captionFont)
+                                            .foregroundColor(ILSTheme.secondaryText)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(ILSTheme.tertiaryBackground)
+                                            .cornerRadius(ILSTheme.cornerRadiusS)
+                                    }
+
+                                    HStack {
+                                        Label("\(session.messageCount) messages", systemImage: "bubble.left")
+                                            .font(ILSTheme.captionFont)
+                                            .foregroundColor(ILSTheme.tertiaryText)
+
+                                        Spacer()
+
+                                        Text(formattedRelativeDate(session.lastActiveAt))
+                                            .font(ILSTheme.captionFont)
+                                            .foregroundColor(ILSTheme.tertiaryText)
+                                    }
+                                }
+                                .padding(.vertical, 2)
+                            }
+
+                            if remoteSessions.count > 5 {
+                                Text("+ \(remoteSessions.count - 5) more sessions")
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        }
+                    } header: {
+                        HStack {
+                            Text("Remote Sessions")
+                            Spacer()
+                            Button {
+                                loadRemoteData()
+                            } label: {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.caption)
+                            }
+                            .disabled(isLoadingRemoteData)
+                        }
+                    }
+
+                    // Remote Config Section
+                    Section("Remote Configuration") {
+                        if isLoadingRemoteData {
+                            HStack {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                Text("Loading remote config...")
+                            }
+                        } else if let config = remoteConfig {
+                            if let model = config.model {
+                                LabeledContent("Default Model", value: model)
+                            }
+
+                            if let apiKeyStatus = config.apiKeyStatus {
+                                HStack {
+                                    Text("API Key")
+                                    Spacer()
+                                    Label(
+                                        apiKeyStatus.isConfigured ? "Configured" : "Not configured",
+                                        systemImage: apiKeyStatus.isConfigured ? "checkmark.circle.fill" : "xmark.circle.fill"
+                                    )
+                                    .foregroundColor(apiKeyStatus.isConfigured ? .green : .red)
+                                    .font(ILSTheme.captionFont)
+                                }
+                            }
+
+                            if let theme = config.theme {
+                                if let colorScheme = theme.colorScheme {
+                                    LabeledContent("Theme", value: colorScheme.capitalized)
+                                }
+                            }
+
+                            if let includeCoAuthor = config.includeCoAuthoredBy {
+                                LabeledContent("Co-authored By", value: includeCoAuthor ? "Enabled" : "Disabled")
+                            }
+
+                            if let alwaysThinking = config.alwaysThinkingEnabled {
+                                LabeledContent("Always Thinking", value: alwaysThinking ? "Enabled" : "Disabled")
+                            }
+                        } else if remoteDataError == nil {
+                            Label("No remote config found", systemImage: "doc.text")
+                                .foregroundColor(ILSTheme.secondaryText)
+                                .font(ILSTheme.bodyFont)
+                        }
+                    }
+                }
+
+                if !isEditing {
                     Section {
                         Button {
                             testConnection()
@@ -128,6 +250,12 @@ struct SSHServerDetailView: View {
             .refreshable {
                 // Refresh server details from backend
                 await viewModel.loadServers()
+            }
+            .task {
+                // Load remote data when view appears
+                if !isEditing {
+                    loadRemoteData()
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -209,6 +337,66 @@ struct SSHServerDetailView: View {
 
             isTesting = false
         }
+    }
+
+    private func loadRemoteData() {
+        isLoadingRemoteData = true
+        remoteDataError = nil
+
+        Task {
+            // Retrieve credentials from keychain
+            let keychainService = KeychainService()
+            let credential: String?
+
+            do {
+                if server.authType == .password {
+                    credential = try await keychainService.loadPassword(serverId: server.id.uuidString)
+                } else {
+                    credential = try await keychainService.loadKey(serverId: server.id.uuidString)
+                }
+
+                guard let credential = credential else {
+                    remoteDataError = "No credentials found in keychain"
+                    isLoadingRemoteData = false
+                    return
+                }
+
+                // Load remote sessions and config in parallel
+                async let sessionsTask = viewModel.loadRemoteSessions(
+                    serverId: server.id,
+                    credential: credential
+                )
+                async let configTask = viewModel.loadRemoteConfig(
+                    serverId: server.id,
+                    credential: credential
+                )
+
+                let (sessions, config) = await (sessionsTask, configTask)
+
+                if let sessions = sessions {
+                    remoteSessions = sessions
+                }
+
+                if let config = config {
+                    remoteConfig = config
+                }
+
+                // If both failed, show error
+                if sessions == nil && config == nil {
+                    remoteDataError = "Failed to load remote data"
+                }
+            } catch {
+                remoteDataError = "Credential error: \(error.localizedDescription)"
+            }
+
+            isLoadingRemoteData = false
+        }
+    }
+
+    private func formattedRelativeDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
 

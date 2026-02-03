@@ -40,6 +40,35 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
+    func get<T: Decodable>(_ path: String, query: [String: String]? = nil, headers: [String: String]? = nil) async throws -> T {
+        var urlComponents = URLComponents(string: "\(baseURL)/api/v1\(path)")!
+
+        // Add query parameters if provided
+        if let query = query, !query.isEmpty {
+            urlComponents.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
+        }
+
+        guard let url = urlComponents.url else {
+            throw APIError.invalidResponse
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+
+        // Add custom headers if provided
+        if let headers = headers {
+            for (key, value) in headers {
+                request.addValue(value, forHTTPHeaderField: key)
+            }
+        }
+
+        let (data, response) = try await session.data(for: request)
+        try validateResponse(response)
+
+        return try decoder.decode(T.self, from: data)
+    }
+
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
         let url = URL(string: "\(baseURL)/api/v1\(path)")!
         var request = URLRequest(url: url)

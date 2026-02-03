@@ -89,4 +89,33 @@ class SSHViewModel: ObservableObject {
             self.error = error
         }
     }
+
+    /// Load remote sessions from the SSH server
+    func loadRemoteSessions(serverId: UUID, credential: String) async -> [ChatSession]? {
+        do {
+            let response: APIResponse<ListResponse<ChatSession>> = try await client.get(
+                "/ssh/\(serverId)/sessions",
+                headers: ["X-SSH-Credential": credential]
+            )
+            return response.data?.items
+        } catch {
+            self.error = error
+            return nil
+        }
+    }
+
+    /// Load remote Claude Code config from the SSH server
+    func loadRemoteConfig(serverId: UUID, credential: String, scope: String = "user") async -> ClaudeConfig? {
+        do {
+            let response: APIResponse<ClaudeConfig> = try await client.get(
+                "/ssh/\(serverId)/config",
+                query: ["scope": scope],
+                headers: ["X-SSH-Credential": credential]
+            )
+            return response.data
+        } catch {
+            self.error = error
+            return nil
+        }
+    }
 }
