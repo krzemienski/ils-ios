@@ -100,6 +100,11 @@ extension CreateMCPRequest: Content {}
 extension InstallPluginRequest: Content {}
 extension UpdateConfigRequest: Content {}
 extension ValidateConfigRequest: Content {}
+extension CreateSSHServerRequest: Content {}
+extension UpdateSSHServerRequest: Content {}
+extension TestSSHConnectionRequest: Content {}
+extension ExecuteRemoteCommandRequest: Content {}
+extension ExecuteRemoteCommandResponse: Content {}
 
 // MARK: - Response Types
 extension ConfigValidationResult: Content {}
@@ -129,6 +134,10 @@ extension PermissionsConfig: Content {}
 extension HooksConfig: Content {}
 extension HookDefinition: Content {}
 extension ConfigInfo: Content {}
+extension SSHServer: Content {}
+extension SSHAuthType: Content {}
+extension SSHConnection: Content {}
+extension SSHConnectionStatus: Content {}
 
 // MARK: - Stream Types
 extension StreamMessage: Content {}
