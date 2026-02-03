@@ -21,6 +21,9 @@ struct ProjectsListView: View {
                 ) {
                     showingNewProject = true
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("No projects, Add a project to organize your sessions")
+                .accessibilityIdentifier("empty-projects-state")
             } else {
                 ForEach(viewModel.projects) { project in
                     ProjectRowView(project: project)
@@ -28,6 +31,7 @@ struct ProjectsListView: View {
                         .onTapGesture {
                             selectedProject = project
                         }
+                        .accessibilityIdentifier("project-\(project.id)")
                 }
                 .onDelete(perform: deleteProject)
             }
@@ -41,6 +45,9 @@ struct ProjectsListView: View {
                 Button(action: { showingNewProject = true }) {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("New project")
+                .accessibilityHint("Creates a new project")
+                .accessibilityIdentifier("add-project-button")
             }
         }
         .sheet(isPresented: $showingNewProject) {
@@ -54,11 +61,14 @@ struct ProjectsListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.projects.isEmpty {
                 ProgressView("Loading projects...")
+                    .accessibilityLabel("Loading projects")
+                    .accessibilityIdentifier("loading-projects-indicator")
             }
         }
         .task {
             await viewModel.loadProjects()
         }
+        .accessibilityIdentifier("projects-list")
     }
 
     private func deleteProject(at offsets: IndexSet) {
@@ -118,12 +128,39 @@ struct ProjectRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
     }
 
     private func formattedDate(_ date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private var accessibilityText: String {
+        let name = project.name
+        let model = "\(project.defaultModel) model"
+        let path = "Project path: \(project.path)"
+        let lastAccessed = "Last accessed \(formattedDate(project.lastAccessedAt))"
+
+        var components = [name, model]
+
+        // Add session count if exists
+        if let count = project.sessionCount {
+            components.append("\(count) sessions")
+        }
+
+        // Add description if exists
+        if let description = project.description {
+            components.append(description)
+        }
+
+        // Add path and last accessed
+        components.append(path)
+        components.append(lastAccessed)
+
+        return components.joined(separator: ", ")
     }
 }
 
