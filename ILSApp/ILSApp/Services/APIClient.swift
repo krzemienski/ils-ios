@@ -6,10 +6,13 @@ actor APIClient {
     private let session: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
+    private let cacheTTL: TimeInterval
+    private var cache: [String: CacheEntry] = [:]
 
-    init(baseURL: String = "http://localhost:8080") {
+    init(baseURL: String = "http://localhost:8080", cacheTTL: TimeInterval = 60) {
         self.baseURL = baseURL
         self.session = URLSession.shared
+        self.cacheTTL = cacheTTL
 
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -91,6 +94,13 @@ actor APIClient {
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
     }
+}
+
+// MARK: - Cache Support
+
+private struct CacheEntry {
+    let data: Any
+    let timestamp: Date
 }
 
 // MARK: - API Response Types
