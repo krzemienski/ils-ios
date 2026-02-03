@@ -3,6 +3,7 @@ import ILSShared
 
 struct SkillsController: RouteCollection {
     let fileSystem = FileSystemService()
+    let githubService = GitHubService()
 
     func boot(routes: RoutesBuilder) throws {
         let skills = routes.grouped("skills")
@@ -12,6 +13,9 @@ struct SkillsController: RouteCollection {
         skills.get(":name", use: get)
         skills.put(":name", use: update)
         skills.delete(":name", use: delete)
+
+        // GitHub search endpoint
+        skills.get("github", "search", use: githubSearch)
     }
 
     /// GET /skills - List all skills
@@ -109,6 +113,22 @@ struct SkillsController: RouteCollection {
         return APIResponse(
             success: true,
             data: DeletedResponse()
+        )
+    }
+
+    /// GET /skills/github/search - Search GitHub for Claude Code skills
+    /// Query params: ?q=search term (required)
+    @Sendable
+    func githubSearch(req: Request) async throws -> APIResponse<ListResponse<GitHubRepository>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'q' is required")
+        }
+
+        let repositories = try await githubService.searchSkills(query: query)
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: repositories)
         )
     }
 }

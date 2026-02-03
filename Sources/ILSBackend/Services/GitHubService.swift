@@ -2,7 +2,7 @@ import Foundation
 import Vapor
 
 /// Response structure for GitHub repository search
-struct GitHubSearchResponse: Codable {
+struct GitHubSearchResponse: Codable, Sendable {
     let items: [GitHubRepository]
     let totalCount: Int?
 
@@ -13,17 +13,17 @@ struct GitHubSearchResponse: Codable {
 }
 
 /// GitHub repository information
-struct GitHubRepository: Codable {
-    let id: Int
-    let name: String
-    let fullName: String
-    let description: String?
-    let htmlUrl: String
-    let stargazersCount: Int
-    let language: String?
-    let updatedAt: String
-    let owner: GitHubOwner
-    let topics: [String]?
+public struct GitHubRepository: Content, Sendable {
+    public let id: Int
+    public let name: String
+    public let fullName: String
+    public let description: String?
+    public let htmlUrl: String
+    public let stargazersCount: Int
+    public let language: String?
+    public let updatedAt: String
+    public let owner: GitHubOwner
+    public let topics: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id, name, description, language, topics, owner
@@ -35,9 +35,9 @@ struct GitHubRepository: Codable {
 }
 
 /// GitHub repository owner information
-struct GitHubOwner: Codable {
-    let login: String
-    let avatarUrl: String?
+public struct GitHubOwner: Content, Sendable {
+    public let login: String
+    public let avatarUrl: String?
 
     enum CodingKeys: String, CodingKey {
         case login
