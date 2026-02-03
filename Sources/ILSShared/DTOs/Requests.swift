@@ -308,6 +308,28 @@ public struct CreateMCPRequest: Codable, Sendable {
     }
 }
 
+public struct UpdateMCPRequest: Codable, Sendable {
+    public let name: String?
+    public let command: String?
+    public let args: [String]?
+    public let env: [String: String]?
+    public let disabled: Bool?
+
+    public init(
+        name: String? = nil,
+        command: String? = nil,
+        args: [String]? = nil,
+        env: [String: String]? = nil,
+        disabled: Bool? = nil
+    ) {
+        self.name = name
+        self.command = command
+        self.args = args
+        self.env = env
+        self.disabled = disabled
+    }
+}
+
 // MARK: - Plugin Requests
 
 public struct InstallPluginRequest: Codable, Sendable {
