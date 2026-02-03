@@ -32,6 +32,7 @@ struct MessageView: View {
                             .font(ILSTheme.bodyFont)
                             .textSelection(.enabled)
                             .accessibilityIdentifier(message.isUser ? "user-message-text" : "assistant-message-text")
+                            .accessibilityLabel("\(message.isUser ? "You" : "Assistant") said: \(message.text)")
                             .contextMenu {
                                 Button(action: {
                                     UIPasteboard.general.string = message.text
@@ -91,6 +92,8 @@ struct MessageView: View {
                         : nil
                 )
                 .accessibilityIdentifier(message.isUser ? "user-message-bubble" : "assistant-message-bubble")
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(message.isFromHistory ? "Historical message" : "")
 
                 if !message.isUser { Spacer() }
             }
@@ -104,6 +107,7 @@ struct MessageView: View {
                     Text(formattedTimestamp(timestamp))
                         .font(ILSTheme.captionFont)
                         .foregroundColor(ILSTheme.tertiaryText)
+                        .accessibilityLabel("Sent at \(formattedTimestamp(timestamp))")
                 }
 
                 // Cost display
@@ -112,14 +116,17 @@ struct MessageView: View {
                         Text("•")
                             .font(ILSTheme.captionFont)
                             .foregroundColor(ILSTheme.tertiaryText)
+                            .accessibilityHidden(true)
                     }
                     Text("$\(cost, specifier: "%.4f")")
                         .font(ILSTheme.captionFont)
                         .foregroundColor(ILSTheme.tertiaryText)
+                        .accessibilityLabel("Cost: $\(cost, specifier: "%.4f")")
                 }
 
                 if !message.isUser { Spacer() }
             }
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -151,6 +158,10 @@ struct ToolCallView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Tool call: \(toolCall.name)")
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand") tool details")
+            .accessibilityAddTraits(.isButton)
 
             if isExpanded, let input = toolCall.inputPreview {
                 Text(input)
@@ -159,11 +170,13 @@ struct ToolCallView: View {
                     .padding(ILSTheme.spacingS)
                     .background(ILSTheme.tertiaryBackground)
                     .cornerRadius(ILSTheme.cornerRadiusS)
+                    .accessibilityLabel("Tool input: \(input)")
             }
         }
         .padding(ILSTheme.spacingS)
         .background(ILSTheme.tertiaryBackground.opacity(0.5))
         .cornerRadius(ILSTheme.cornerRadiusM)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -185,6 +198,10 @@ struct ToolResultView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Tool result: \(result.isError ? "Error" : "Success")")
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand") result details")
+            .accessibilityAddTraits(.isButton)
 
             if isExpanded {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -196,11 +213,13 @@ struct ToolResultView: View {
                 .padding(ILSTheme.spacingS)
                 .background(ILSTheme.tertiaryBackground)
                 .cornerRadius(ILSTheme.cornerRadiusS)
+                .accessibilityLabel("Result content: \(result.content)")
             }
         }
         .padding(ILSTheme.spacingS)
         .background(ILSTheme.tertiaryBackground.opacity(0.5))
         .cornerRadius(ILSTheme.cornerRadiusM)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -222,6 +241,10 @@ struct ThinkingView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Assistant thinking")
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+            .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand") thinking content")
+            .accessibilityAddTraits(.isButton)
 
             if isExpanded {
                 Text(thinking)
@@ -230,11 +253,13 @@ struct ThinkingView: View {
                     .padding(ILSTheme.spacingS)
                     .background(ILSTheme.tertiaryBackground)
                     .cornerRadius(ILSTheme.cornerRadiusS)
+                    .accessibilityLabel("Thinking: \(thinking)")
             }
         }
         .padding(ILSTheme.spacingS)
         .background(ILSTheme.info.opacity(0.1))
         .cornerRadius(ILSTheme.cornerRadiusM)
+        .accessibilityElement(children: .contain)
     }
 }
 
