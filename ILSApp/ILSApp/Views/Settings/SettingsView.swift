@@ -18,6 +18,9 @@ struct SettingsView: View {
     @State private var saveErrorMessage = ""
     @State private var showSaveSuccess = false
 
+    // Privacy settings
+    @AppStorage("analyticsEnabled") private var analyticsEnabled = true
+
     // Available options
     private let availableModels = [
         "claude-sonnet-4-20250514",
@@ -313,6 +316,27 @@ struct SettingsView: View {
                 Text("Advanced")
             } footer: {
                 Text("Edit raw JSON configuration files")
+            }
+
+            // MARK: - Privacy Section
+            Section {
+                Toggle(isOn: $analyticsEnabled) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "chart.bar")
+                            .foregroundColor(analyticsEnabled ? .blue : ILSTheme.secondaryText)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Analytics")
+                                .font(ILSTheme.bodyFont)
+                            Text(analyticsEnabled ? "Enabled" : "Disabled")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+                }
+            } header: {
+                Text("Privacy")
+            } footer: {
+                Text("Help improve the app by sharing anonymous usage data. We collect app events like feature usage and errors, but never collect personal information. You can opt out at any time.")
             }
 
             // MARK: - Statistics Section
