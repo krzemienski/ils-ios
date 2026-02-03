@@ -55,9 +55,39 @@ public struct PluginMarketplace: Codable, Sendable {
 public struct PluginInfo: Codable, Sendable {
     public let name: String
     public let description: String?
+    public var author: String?
+    public var version: String?
+    public var category: String?
+    public var tags: [String]
+    public var rating: Double?
+    public var installCount: Int?
+    public var compatibility: String?
+    public var homepage: String?
+    public var repository: String?
 
-    public init(name: String, description: String? = nil) {
+    public init(
+        name: String,
+        description: String? = nil,
+        author: String? = nil,
+        version: String? = nil,
+        category: String? = nil,
+        tags: [String] = [],
+        rating: Double? = nil,
+        installCount: Int? = nil,
+        compatibility: String? = nil,
+        homepage: String? = nil,
+        repository: String? = nil
+    ) {
         self.name = name
         self.description = description
+        self.author = author
+        self.version = version
+        self.category = category
+        self.tags = tags
+        self.rating = rating
+        self.installCount = installCount
+        self.compatibility = compatibility
+        self.homepage = homepage
+        self.repository = repository
     }
 }
