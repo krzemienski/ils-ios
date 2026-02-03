@@ -70,9 +70,33 @@ class ChatViewModel: ObservableObject {
         sseClient.$messages
             .receive(on: DispatchQueue.main)
             .sink { [weak self] streamMessages in
-                self?.processStreamMessages(streamMessages)
+                guard let self = self else { return }
+
+                // Accumulate messages in pending buffer
+                self.pendingStreamMessages.append(contentsOf: streamMessages)
+
+                // Invalidate existing timer if present
+                self.batchTimer?.invalidate()
+
+                // Schedule batch processing
+                self.batchTimer = Timer.scheduledTimer(
+                    withTimeInterval: self.batchInterval,
+                    repeats: false
+                ) { [weak self] _ in
+                    self?.processBatch()
+                }
             }
             .store(in: &cancellables)
+    }
+
+    /// Process accumulated messages in batch
+    private func processBatch() {
+        guard !pendingStreamMessages.isEmpty else { return }
+
+        let messagesToProcess = pendingStreamMessages
+        pendingStreamMessages.removeAll()
+
+        processStreamMessages(messagesToProcess)
     }
 
     /// Load message history for the current session from the backend
