@@ -13,6 +13,115 @@ The `ClaudeExecutorService` is a Swift actor that wraps the [ClaudeCodeSDK](http
 - Manage active sessions with cancellation support
 - Ensure thread-safe access using Swift's actor model
 
+### High-Level Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ILS iOS App (SwiftUI)                               │
+│  • User interface                                                           │
+│  • Consumes StreamMessage                                                   │
+└────────────────────────────────┬────────────────────────────────────────────┘
+                                 │ HTTP/SSE
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ILS Backend (Vapor)                                 │
+│                                                                             │
+│  ┌─────────────────────┐                                                   │
+│  │  ChatController     │  Handles HTTP requests, creates SSE responses     │
+│  └──────────┬──────────┘                                                   │
+│             │                                                               │
+│             │ execute(prompt, dir, options)                                │
+│             ▼                                                               │
+│  ┌─────────────────────────────────────────────────────────────────┐      │
+│  │           ClaudeExecutorService (Actor)                         │      │
+│  │                                                                  │      │
+│  │  State (Actor-Isolated):                                        │      │
+│  │    • client: ClaudeCodeClient?                                  │      │
+│  │    • activeSessions: [String: AnyCancellable]                   │      │
+│  │                                                                  │      │
+│  │  Methods:                                                        │      │
+│  │    • execute() → AsyncThrowingStream  [nonisolated]             │      │
+│  │    • runWithSDK()                     [actor-isolated]          │      │
+│  │    • convertChunk()                   [nonisolated]             │      │
+│  │    • cancel(sessionId:)               [actor-isolated]          │      │
+│  │    • storeSession/removeSession       [actor-isolated]          │      │
+│  └───────────────────────┬──────────────────────────────────────────┘      │
+│                          │                                                  │
+└──────────────────────────┼──────────────────────────────────────────────────┘
+                           │ ClaudeCodeClient API
+                           ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      ClaudeCodeSDK (External Library)                       │
+│                                                                             │
+│  • Spawns PTY process                                                       │
+│  • Executes `claude` CLI                                                    │
+│  • Parses stream-json output                                               │
+│  • Publishes Combine stream: Publisher<ResponseChunk, Error>               │
+│                                                                             │
+│  Types:                                                                     │
+│    • ResponseChunk enum (.initSystem, .assistant, .result, .user)          │
+│    • Content enum (.text, .toolUse, .toolResult, .thinking, ...)           │
+└────────────────────────────┬────────────────────────────────────────────────┘
+                             │ Process spawn
+                             ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Claude Code CLI                                     │
+│                                                                             │
+│  • Anthropic's command-line tool                                           │
+│  • Executes AI-powered coding tasks                                        │
+│  • Outputs JSON lines (--output-format stream-json)                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+Data Flow (Top to Bottom):
+──────────────────────────────
+
+1. iOS App → Backend:     HTTP request with user prompt
+2. ChatController → Service:  execute(prompt, dir, options)
+3. Service → SDK:        ClaudeCodeClient.runSinglePrompt()
+4. SDK → CLI:            Spawns `claude` process with arguments
+5. CLI → SDK:            JSON lines via PTY stdout
+6. SDK → Service:        Combine Publisher<ResponseChunk>
+7. Service → Controller: AsyncThrowingStream<StreamMessage>
+8. Controller → iOS:     Server-Sent Events (SSE)
+
+
+Key Design Patterns:
+────────────────────
+
+┌───────────────────────────────────────────────────────────────┐
+│  Pattern: Actor Isolation                                     │
+│  ─────────────────────────                                    │
+│  • Protects mutable state (client, activeSessions)            │
+│  • Serializes access across concurrent requests               │
+│  • Prevents data races at compile time                        │
+└───────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│  Pattern: Nonisolated Stream Creation                         │
+│  ──────────────────────────────────────                       │
+│  • execute() returns stream immediately (no await)            │
+│  • Actual work happens in background Task                     │
+│  • Enables immediate consumption without blocking             │
+└───────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│  Pattern: Bridge Two Async Models                             │
+│  ──────────────────────────────                               │
+│  • Combine Publisher (push-based, no backpressure)            │
+│    → AsyncThrowingStream (pull-based, automatic backpressure) │
+│  • Continuation links publisher events to stream consumers    │
+└───────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│  Pattern: Type Conversion Layer                               │
+│  ───────────────────────────────                              │
+│  • SDK types (ResponseChunk) → ILS types (StreamMessage)      │
+│  • Decouples iOS app from SDK dependency                      │
+│  • Enables independent evolution of type systems              │
+└───────────────────────────────────────────────────────────────┘
+```
+
 ## Architecture
 
 ### Actor Model
