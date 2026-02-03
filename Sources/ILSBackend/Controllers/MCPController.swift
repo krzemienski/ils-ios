@@ -2,7 +2,7 @@ import Vapor
 import ILSShared
 
 struct MCPController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let mcpConfigService = MCPConfigService()
 
     func boot(routes: RoutesBuilder) throws {
         let mcp = routes.grouped("mcp")
@@ -26,7 +26,7 @@ struct MCPController: RouteCollection {
             scope = MCPScope(rawValue: scopeString)
         }
 
-        let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: false)
+        let servers = try await mcpConfigService.readMCPServers(scope: scope, bypassCache: false)
 
         guard let server = servers.first(where: { $0.name == name }) else {
             throw Abort(.notFound, reason: "MCP server '\(name)' not found")
@@ -48,7 +48,7 @@ struct MCPController: RouteCollection {
         }
         let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
 
-        let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: bypassCache)
+        let servers = try await mcpConfigService.readMCPServers(scope: scope, bypassCache: bypassCache)
 
         return APIResponse(
             success: true,
@@ -69,7 +69,7 @@ struct MCPController: RouteCollection {
             scope: input.scope ?? .user
         )
 
-        try fileSystem.addMCPServer(server)
+        try mcpConfigService.addMCPServer(server)
 
         return APIResponse(
             success: true,
@@ -87,7 +87,7 @@ struct MCPController: RouteCollection {
         let scopeString = req.query[String.self, at: "scope"] ?? "user"
         let scope = MCPScope(rawValue: scopeString) ?? .user
 
-        try fileSystem.removeMCPServer(name: name, scope: scope)
+        try mcpConfigService.removeMCPServer(name: name, scope: scope)
 
         return APIResponse(
             success: true,
