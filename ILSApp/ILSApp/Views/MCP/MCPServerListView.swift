@@ -11,7 +11,11 @@ struct MCPServerListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.loadServers()
                 }
-            } else if viewModel.filteredServers.isEmpty && !viewModel.isLoading {
+            } else if viewModel.isLoading && viewModel.servers.isEmpty {
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonMCPServerRow()
+                }
+            } else if viewModel.filteredServers.isEmpty {
                 if viewModel.servers.isEmpty {
                     EmptyStateView(
                         title: "No MCP Servers",
@@ -51,11 +55,6 @@ struct MCPServerListView: View {
         .sheet(isPresented: $showingNewServer) {
             NewMCPServerView { server in
                 viewModel.servers.append(server)
-            }
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.servers.isEmpty {
-                ProgressView("Loading MCP servers...")
             }
         }
         .task {
