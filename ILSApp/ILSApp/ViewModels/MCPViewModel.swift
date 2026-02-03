@@ -62,13 +62,14 @@ class MCPViewModel: ObservableObject {
         await loadServers()
     }
 
-    func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
+    func addServer(name: String, command: String, args: [String], scope: String, env: [String: String]? = nil) async -> MCPServerItem? {
         do {
             let request = CreateMCPRequest(
                 name: name,
                 command: command,
                 args: args,
-                scope: scope
+                scope: scope,
+                env: env
             )
             let response: APIResponse<MCPServerItem> = try await client.post("/mcp", body: request)
             if let server = response.data {
