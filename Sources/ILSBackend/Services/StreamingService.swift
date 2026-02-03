@@ -7,6 +7,13 @@ struct StreamingService {
     /// Heartbeat interval in seconds
     private static let heartbeatInterval: UInt64 = 15_000_000_000 // 15 seconds in nanoseconds
 
+    /// Shared JSON encoder for all streaming operations
+    private static let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+
     /// Create an SSE response from an async stream of messages
     /// Includes automatic heartbeat events to keep connection alive
     static func createSSEResponse(
@@ -145,12 +152,12 @@ struct StreamingService {
                             case .text(let textBlock):
                                 accumulatedContent += textBlock.text
                             case .toolUse(let toolUseBlock):
-                                if let jsonData = try? JSONEncoder().encode(toolUseBlock),
+                                if let jsonData = try? encoder.encode(toolUseBlock),
                                    let jsonString = String(data: jsonData, encoding: .utf8) {
                                     toolCalls.append(jsonString)
                                 }
                             case .toolResult(let toolResultBlock):
-                                if let jsonData = try? JSONEncoder().encode(toolResultBlock),
+                                if let jsonData = try? encoder.encode(toolResultBlock),
                                    let jsonString = String(data: jsonData, encoding: .utf8) {
                                     toolResults.append(jsonString)
                                 }
@@ -263,7 +270,6 @@ struct StreamingService {
 
     /// Format a StreamMessage as an SSE event
     private static func formatSSEEvent(_ message: StreamMessage) throws -> String {
-        let encoder = JSONEncoder()
         let data = try encoder.encode(message)
         guard let jsonString = String(data: data, encoding: .utf8) else {
             throw Abort(.internalServerError, reason: "Failed to encode message")
