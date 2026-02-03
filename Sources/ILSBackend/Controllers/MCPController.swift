@@ -10,6 +10,7 @@ struct MCPController: RouteCollection {
         mcp.get(use: list)
         mcp.get(":name", use: show)
         mcp.post(use: create)
+        mcp.put(":name", use: update)
         mcp.delete(":name", use: delete)
     }
 
@@ -70,6 +71,49 @@ struct MCPController: RouteCollection {
         )
 
         try fileSystem.addMCPServer(server)
+
+        return APIResponse(
+            success: true,
+            data: server
+        )
+    }
+
+    /// PUT /mcp/:name - Update an existing MCP server
+    /// Query params: ?scope=user|project
+    @Sendable
+    func update(req: Request) async throws -> APIResponse<MCPServer> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid MCP server name")
+        }
+
+        let scopeString = req.query[String.self, at: "scope"] ?? "user"
+        let scope = MCPScope(rawValue: scopeString) ?? .user
+
+        // Read existing servers to find the one to update
+        let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: true)
+
+        guard var server = servers.first(where: { $0.name == name }) else {
+            throw Abort(.notFound, reason: "MCP server '\(name)' not found")
+        }
+
+        let input = try req.content.decode(UpdateMCPRequest.self)
+
+        // Update only provided fields
+        if let command = input.command {
+            server.command = command
+        }
+        if let args = input.args {
+            server.args = args
+        }
+        if let env = input.env {
+            server.env = env
+        }
+
+        // Update the server in the configuration file
+        try fileSystem.updateMCPServer(server)
+
+        // Invalidate cache
+        await fileSystem.invalidateMCPServersCache()
 
         return APIResponse(
             success: true,
