@@ -45,6 +45,39 @@ struct SettingsView: View {
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
+    // Default values when config is missing
+    private var defaultModel: String { "claude-sonnet-4-20250514" }
+    private var defaultColorScheme: String { "system" }
+    private var defaultAlwaysThinkingEnabled: Bool { false }
+    private var defaultIncludeCoAuthoredBy: Bool { false }
+    private var defaultPermissions: PermissionsConfig { PermissionsConfig() }
+    private var defaultEnvironment: [String: String] { [:] }
+
+    // Helper to get current or default config values
+    private var currentModel: String {
+        viewModel.config?.content.model ?? defaultModel
+    }
+
+    private var currentColorScheme: String {
+        viewModel.config?.content.theme?.colorScheme ?? defaultColorScheme
+    }
+
+    private var currentAlwaysThinkingEnabled: Bool {
+        viewModel.config?.content.alwaysThinkingEnabled ?? defaultAlwaysThinkingEnabled
+    }
+
+    private var currentIncludeCoAuthoredBy: Bool {
+        viewModel.config?.content.includeCoAuthoredBy ?? defaultIncludeCoAuthoredBy
+    }
+
+    private var currentPermissions: PermissionsConfig {
+        viewModel.config?.content.permissions ?? defaultPermissions
+    }
+
+    private var currentEnvironment: [String: String] {
+        viewModel.config?.content.env ?? defaultEnvironment
+    }
+
     var body: some View {
         Form {
             // MARK: - Connection Section
@@ -114,7 +147,19 @@ struct SettingsView: View {
                         Text("Loading configuration...")
                             .foregroundColor(ILSTheme.secondaryText)
                     }
-                } else if let config = viewModel.config?.content {
+                } else {
+                    // Show config missing notice if applicable
+                    if viewModel.config == nil {
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.orange)
+                            Text("No configuration file found. Showing defaults.")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                        .padding(.vertical, 4)
+                    }
+
                     // Default Model - Editable
                     if isEditing {
                         Picker("Default Model", selection: $editedModel) {
@@ -125,7 +170,7 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Default Model") {
-                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
+                            Text(formatModelName(currentModel))
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
                     }
@@ -140,13 +185,13 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Color Scheme") {
-                            Text((config.theme?.colorScheme ?? "system").capitalized)
+                            Text(currentColorScheme.capitalized)
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
                     }
 
-                    // Auto Updates Channel (read-only)
-                    if let channel = config.autoUpdatesChannel {
+                    // Auto Updates Channel (read-only) - only show if config exists and has channel
+                    if let config = viewModel.config?.content, let channel = config.autoUpdatesChannel {
                         LabeledContent("Updates Channel") {
                             Text(channel.capitalized)
                                 .foregroundColor(ILSTheme.secondaryText)
@@ -162,8 +207,8 @@ struct SettingsView: View {
                         )
                     } else {
                         LabeledContent("Extended Thinking") {
-                            Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                            Image(systemName: currentAlwaysThinkingEnabled ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(currentAlwaysThinkingEnabled ? .green : ILSTheme.secondaryText)
                         }
                     }
 
@@ -176,8 +221,8 @@ struct SettingsView: View {
                         )
                     } else {
                         LabeledContent("Include Co-Author") {
-                            Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                            Image(systemName: currentIncludeCoAuthoredBy ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(currentIncludeCoAuthoredBy ? .green : ILSTheme.secondaryText)
                         }
                     }
 
@@ -214,15 +259,12 @@ struct SettingsView: View {
                         .buttonStyle(.borderedProminent)
                         .disabled(viewModel.isSaving || !validationErrors.isEmpty)
                     }
-                } else {
-                    Text("No configuration loaded")
-                        .foregroundColor(ILSTheme.secondaryText)
                 }
             } header: {
                 HStack {
                     Text("General")
                     Spacer()
-                    if viewModel.config != nil && !viewModel.isLoadingConfig {
+                    if !viewModel.isLoadingConfig {
                         Button(isEditing ? "Cancel" : "Edit") {
                             if isEditing {
                                 // Cancel editing - reset to original values
@@ -235,14 +277,23 @@ struct SettingsView: View {
                     }
                 }
             } footer: {
-                if viewModel.config != nil {
-                    Text("Scope: \(viewModel.config?.scope ?? "user") • \(viewModel.config?.path ?? "")")
+                if let config = viewModel.config {
+                    Text("Scope: \(config.scope) • \(config.path)")
+                } else if !viewModel.isLoadingConfig {
+                    Text("Changes will create a new configuration file")
                 }
             }
 
             // MARK: - API Key Section
             Section {
-                if let config = viewModel.config?.content {
+                if viewModel.isLoadingConfig {
+                    HStack {
+                        ProgressView()
+                            .padding(.trailing, 8)
+                        Text("Loading API key status...")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                } else if let config = viewModel.config?.content {
                     if let apiKeyStatus = config.apiKeyStatus {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
@@ -270,9 +321,13 @@ struct SettingsView: View {
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
                     }
-                } else if !viewModel.isLoadingConfig {
-                    Text("Loading API key status...")
-                        .foregroundColor(ILSTheme.secondaryText)
+                } else {
+                    HStack {
+                        Image(systemName: "shield.slash")
+                            .foregroundColor(.orange)
+                        Text("No configuration - API key status unavailable")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
                 }
             } header: {
                 Text("API Key")
@@ -282,8 +337,15 @@ struct SettingsView: View {
 
             // MARK: - Permissions Section
             Section {
-                if let config = viewModel.config?.content {
-                    let permissions = config.permissions ?? PermissionsConfig()
+                if viewModel.isLoadingConfig {
+                    HStack {
+                        ProgressView()
+                            .padding(.trailing, 8)
+                        Text("Loading permissions...")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                } else {
+                    let permissions = currentPermissions
 
                     NavigationLink {
                         PermissionsEditorView(permissions: $editedPermissions)
@@ -336,9 +398,6 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                     }
-                } else if !viewModel.isLoadingConfig {
-                    Text("No permissions configured")
-                        .foregroundColor(ILSTheme.secondaryText)
                 }
             } header: {
                 Text("Permissions")
@@ -348,7 +407,14 @@ struct SettingsView: View {
 
             // MARK: - Advanced Section
             Section {
-                if let config = viewModel.config?.content {
+                if viewModel.isLoadingConfig {
+                    HStack {
+                        ProgressView()
+                            .padding(.trailing, 8)
+                        Text("Loading advanced settings...")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                } else if let config = viewModel.config?.content {
                     // Hooks Summary
                     if let hooks = config.hooks {
                         let hookCount = countHooks(hooks)
@@ -390,9 +456,22 @@ struct SettingsView: View {
                             }
                         }
                     }
-                } else if !viewModel.isLoadingConfig {
-                    Text("No advanced settings")
-                        .foregroundColor(ILSTheme.secondaryText)
+                } else {
+                    // Show defaults when no config exists
+                    LabeledContent("Hooks Configured", value: "0")
+                    LabeledContent("Enabled Plugins", value: "0")
+
+                    NavigationLink {
+                        EnvironmentEditorView(environment: $editedEnvironment)
+                    } label: {
+                        HStack {
+                            Label("Environment Variables", systemImage: "gearshape.2")
+                                .foregroundColor(ILSTheme.primaryText)
+                            Spacer()
+                            Text("0")
+                                .foregroundColor(ILSTheme.tertiaryText)
+                        }
+                    }
                 }
 
                 // Raw Config Editor Links
@@ -697,17 +776,16 @@ struct SettingsView: View {
     }
 
     private func resetEditedValues() {
-        // Reset edited values to current config values
-        if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-sonnet-4-20250514"
-            editedColorScheme = config.theme?.colorScheme ?? "system"
-            editedPermissions = config.permissions ?? PermissionsConfig()
-            editedAlwaysThinkingEnabled = config.alwaysThinkingEnabled ?? false
-            editedIncludeCoAuthoredBy = config.includeCoAuthoredBy ?? false
-            editedEnvironment = config.env ?? [:]
-            // Track the initial default mode for dangerous change detection
-            previousDefaultMode = editedPermissions.defaultMode ?? "prompt"
-        }
+        // Reset edited values to current config values or defaults
+        editedModel = currentModel
+        editedColorScheme = currentColorScheme
+        editedPermissions = currentPermissions
+        editedAlwaysThinkingEnabled = currentAlwaysThinkingEnabled
+        editedIncludeCoAuthoredBy = currentIncludeCoAuthoredBy
+        editedEnvironment = currentEnvironment
+        // Track the initial default mode for dangerous change detection
+        previousDefaultMode = editedPermissions.defaultMode ?? "prompt"
+
         // Update selected scope from loaded config
         if let scope = viewModel.config?.scope {
             selectedScope = scope
@@ -812,7 +890,10 @@ class SettingsViewModel: ObservableObject {
             let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
             config = response.data
         } catch {
-            self.error = error
+            // If config doesn't exist, set to nil to show defaults
+            // Don't set error for missing config files - this is expected
+            config = nil
+            self.error = nil
         }
 
         isLoadingConfig = false
@@ -833,9 +914,26 @@ class SettingsViewModel: ObservableObject {
         isSaving = true
         defer { isSaving = false }
 
-        // Build updated config from current config
-        guard var currentConfig = config?.content else {
-            return "No configuration loaded"
+        // Build updated config from current config or create new from defaults
+        var currentConfig: ClaudeConfig
+        if let existingConfig = config?.content {
+            currentConfig = existingConfig
+        } else {
+            // Create new config with defaults
+            currentConfig = ClaudeConfig(
+                model: model,
+                permissions: permissions,
+                env: environment.isEmpty ? nil : environment,
+                hooks: nil,
+                enabledPlugins: nil,
+                extraKnownMarketplaces: nil,
+                includeCoAuthoredBy: includeCoAuthoredBy,
+                statusLine: nil,
+                alwaysThinkingEnabled: alwaysThinkingEnabled,
+                autoUpdatesChannel: nil,
+                theme: ThemeConfig(colorScheme: colorScheme, accentColor: nil),
+                apiKeyStatus: nil
+            )
         }
 
         // Update model
