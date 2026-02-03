@@ -2,6 +2,7 @@ import Foundation
 import Vapor
 import ILSShared
 import ClaudeCodeSDK
+import SwiftAnthropic
 import Combine
 
 /// Service for executing Claude Code CLI commands using ClaudeCodeSDK
@@ -176,6 +177,78 @@ actor ClaudeExecutorService {
         }
     }
 
+    // MARK: - Content Conversion Helpers
+
+    /// Convert text content to ContentBlock
+    nonisolated private func convertTextContent(_ text: String) -> ContentBlock {
+        return .text(TextBlock(text: text))
+    }
+
+    /// Convert tool use content to ContentBlock
+    nonisolated private func convertToolUseContent(_ toolUse: MessageResponse.Content.ToolUse) -> ContentBlock {
+        return .toolUse(ToolUseBlock(
+            id: toolUse.id,
+            name: toolUse.name,
+            input: AnyCodable(toolUse.input)
+        ))
+    }
+
+    /// Convert tool result content to ContentBlock
+    nonisolated private func convertToolResultContent(_ toolResult: MessageResponse.Content.ToolResult) -> ContentBlock {
+        let resultContent: String
+        switch toolResult.content {
+        case .string(let text):
+            resultContent = text
+        case .items(let items):
+            resultContent = items.compactMap { $0.text }.joined(separator: "\n")
+        }
+        return .toolResult(ToolResultBlock(
+            toolUseId: toolResult.toolUseId ?? "",
+            content: resultContent,
+            isError: toolResult.isError ?? false
+        ))
+    }
+
+    /// Convert thinking content to ContentBlock
+    nonisolated private func convertThinkingContent(_ thinking: MessageResponse.Content.Thinking) -> ContentBlock {
+        return .text(TextBlock(text: "[thinking] \(thinking.thinking)"))
+    }
+
+    /// Convert server tool use content to ContentBlock
+    nonisolated private func convertServerToolUseContent(_ serverTool: MessageResponse.Content.ServerToolUse) -> ContentBlock {
+        return .toolUse(ToolUseBlock(
+            id: serverTool.id,
+            name: serverTool.name,
+            input: AnyCodable(serverTool.input)
+        ))
+    }
+
+    /// Convert web search result content to ContentBlock
+    nonisolated private func convertWebSearchResultContent(_ webResult: MessageResponse.Content.WebSearchToolResult) -> ContentBlock {
+        let text = webResult.content.compactMap { $0.text }.joined(separator: "\n")
+        return .toolResult(ToolResultBlock(
+            toolUseId: webResult.toolUseId ?? "",
+            content: text,
+            isError: false
+        ))
+    }
+
+    /// Convert code execution result content to ContentBlock
+    nonisolated private func convertCodeExecutionResultContent(_ codeResult: MessageResponse.Content.CodeExecutionToolResult) -> ContentBlock {
+        let text: String
+        switch codeResult.content {
+        case .string(let s): text = s
+        default: text = "[code execution result]"
+        }
+        return .toolResult(ToolResultBlock(
+            toolUseId: codeResult.toolUseId ?? "",
+            content: text,
+            isError: false
+        ))
+    }
+
+    // MARK: - Chunk Conversion
+
     /// Convert SDK ResponseChunk to our StreamMessage
     nonisolated private func convertChunk(_ chunk: ResponseChunk) -> StreamMessage {
         switch chunk {
@@ -194,54 +267,19 @@ actor ClaudeExecutorService {
             for content in msg.message.content {
                 switch content {
                 case .text(let text, _):
-                    // SwiftAnthropic returns (String, Citations?) tuple
-                    contentBlocks.append(.text(TextBlock(text: text)))
+                    contentBlocks.append(convertTextContent(text))
                 case .toolUse(let toolUse):
-                    contentBlocks.append(.toolUse(ToolUseBlock(
-                        id: toolUse.id,
-                        name: toolUse.name,
-                        input: AnyCodable(toolUse.input)
-                    )))
+                    contentBlocks.append(convertToolUseContent(toolUse))
                 case .toolResult(let toolResult):
-                    let resultContent: String
-                    switch toolResult.content {
-                    case .string(let text):
-                        resultContent = text
-                    case .items(let items):
-                        resultContent = items.compactMap { $0.text }.joined(separator: "\n")
-                    }
-                    contentBlocks.append(.toolResult(ToolResultBlock(
-                        toolUseId: toolResult.toolUseId ?? "",
-                        content: resultContent,
-                        isError: toolResult.isError ?? false
-                    )))
+                    contentBlocks.append(convertToolResultContent(toolResult))
                 case .thinking(let thinking):
-                    // Map thinking to text for now
-                    contentBlocks.append(.text(TextBlock(text: "[thinking] \(thinking.thinking)")))
+                    contentBlocks.append(convertThinkingContent(thinking))
                 case .serverToolUse(let serverTool):
-                    contentBlocks.append(.toolUse(ToolUseBlock(
-                        id: serverTool.id,
-                        name: serverTool.name,
-                        input: AnyCodable(serverTool.input)
-                    )))
+                    contentBlocks.append(convertServerToolUseContent(serverTool))
                 case .webSearchToolResult(let webResult):
-                    let text = webResult.content.compactMap { $0.text }.joined(separator: "\n")
-                    contentBlocks.append(.toolResult(ToolResultBlock(
-                        toolUseId: webResult.toolUseId ?? "",
-                        content: text,
-                        isError: false
-                    )))
+                    contentBlocks.append(convertWebSearchResultContent(webResult))
                 case .codeExecutionToolResult(let codeResult):
-                    let text: String
-                    switch codeResult.content {
-                    case .string(let s): text = s
-                    default: text = "[code execution result]"
-                    }
-                    contentBlocks.append(.toolResult(ToolResultBlock(
-                        toolUseId: codeResult.toolUseId ?? "",
-                        content: text,
-                        isError: false
-                    )))
+                    contentBlocks.append(convertCodeExecutionResultContent(codeResult))
                 }
             }
 
