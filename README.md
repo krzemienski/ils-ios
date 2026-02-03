@@ -43,8 +43,11 @@ ILS provides a mobile interface for interacting with Claude Code sessions, manag
 - Advanced search and filtering
 
 > For detailed progress tracking, see [docs/evidence/VALIDATION_SUMMARY.md](docs/evidence/VALIDATION_SUMMARY.md)
+> For comprehensive testing evidence and validation reports, browse [docs/evidence/](docs/evidence/)
 
 ### Architecture
+
+> **Detailed Architecture:** For complete technical specifications, design patterns, and system architecture, see [docs/ils-spec.md](docs/ils-spec.md)
 
 ```
 ils-ios/
@@ -101,7 +104,7 @@ curl http://localhost:8080/health
 # Returns: OK
 ```
 
-> **Want to run as a service?** See [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md) for launchd, Homebrew services, Docker, and other options.
+> **Advanced Deployment:** For production deployment options including launchd services, Docker containers, systemd units, and more, see [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md)
 
 ### 2. Run the iOS App
 
@@ -272,20 +275,27 @@ xcodebuild clean
 
 ## Documentation
 
-This README provides a quick start guide. For comprehensive documentation:
+This README provides a quick start guide. For comprehensive documentation, see the **[docs/evidence/](docs/evidence/)** directory and the following resources:
 
-- **[docs/evidence/README.md](docs/evidence/README.md)** - Documentation index and navigation
+### Core Documentation
+
+- **[docs/ils-spec.md](docs/ils-spec.md)** - 📋 Complete technical specification, architecture details, and design patterns
+- **[docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md)** - 🚀 Advanced backend deployment options (launchd, Docker, systemd, Homebrew services)
+- **[docs/CLAUDE.md](docs/CLAUDE.md)** - 🤖 Project instructions for Claude Code agents
+
+### Progress Tracking & Validation
+
+The **[docs/evidence/](docs/evidence/)** directory contains comprehensive testing and validation documentation:
+
+- **[docs/evidence/README.md](docs/evidence/README.md)** - Documentation index with navigation guide for PMs, developers, and QA
 - **[docs/evidence/VALIDATION_SUMMARY.md](docs/evidence/VALIDATION_SUMMARY.md)** - Executive dashboard with metrics, phase completion, and project status
-- **[docs/evidence/implementation_progress.md](docs/evidence/implementation_progress.md)** - Detailed phase-by-phase implementation breakdown
-- **[docs/ils-spec.md](docs/ils-spec.md)** - Complete technical specification and architecture details
-- **[docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md)** - Advanced backend deployment options (launchd, Docker, systemd)
-- **[docs/CLAUDE.md](docs/CLAUDE.md)** - Project instructions for Claude Code agents
+- **[docs/evidence/implementation_progress.md](docs/evidence/implementation_progress.md)** - Detailed phase-by-phase implementation breakdown with file inventory
 
 ### Testing & Validation Evidence
 
-- **[docs/evidence/test_report.md](docs/evidence/test_report.md)** - iOS simulator testing results (7 views tested)
-- **[docs/evidence/backend_validation.md](docs/evidence/backend_validation.md)** - API endpoint validation with cURL examples
-- **[docs/evidence/chat_validation.md](docs/evidence/chat_validation.md)** - Real-time messaging and WebSocket tests
+- **[docs/evidence/test_report.md](docs/evidence/test_report.md)** - iOS simulator testing results (7 views tested with screenshots)
+- **[docs/evidence/backend_validation.md](docs/evidence/backend_validation.md)** - API endpoint validation with cURL command examples
+- **[docs/evidence/chat_validation.md](docs/evidence/chat_validation.md)** - Real-time messaging and WebSocket integration tests
 
 ## Contributing
 
