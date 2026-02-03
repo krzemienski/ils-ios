@@ -203,7 +203,11 @@ struct ChatInputView: View {
                 }
 
             if isStreaming {
-                Button(action: onCancel) {
+                Button(action: {
+                    // Haptic feedback on cancel
+                    HapticService.shared.light()
+                    onCancel()
+                }) {
                     Image(systemName: "stop.circle.fill")
                         .foregroundColor(ILSTheme.error)
                 }
