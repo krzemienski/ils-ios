@@ -6,6 +6,10 @@ struct ProjectsListView: View {
     @State private var showingNewProject = false
     @State private var selectedProject: Project?
 
+    // Delete confirmation state
+    @State private var showDeleteConfirmation = false
+    @State private var projectToDelete: IndexSet?
+
     var body: some View {
         List {
             if let error = viewModel.error {
@@ -59,14 +63,29 @@ struct ProjectsListView: View {
         .task {
             await viewModel.loadProjects()
         }
+        .confirmationDialog("Delete Project?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                confirmDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This action cannot be undone. The project and all associated sessions will be permanently deleted.")
+        }
     }
 
     private func deleteProject(at offsets: IndexSet) {
+        projectToDelete = offsets
+        showDeleteConfirmation = true
+    }
+
+    private func confirmDelete() {
+        guard let offsets = projectToDelete else { return }
         Task {
             for index in offsets {
                 let project = viewModel.projects[index]
                 await viewModel.deleteProject(project)
             }
+            projectToDelete = nil
         }
     }
 }
