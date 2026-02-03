@@ -2,7 +2,7 @@ import Vapor
 import ILSShared
 
 struct ConfigController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let configService = ClaudeConfigService()
 
     func boot(routes: RoutesBuilder) throws {
         let config = routes.grouped("config")
@@ -17,7 +17,7 @@ struct ConfigController: RouteCollection {
     func get(req: Request) async throws -> APIResponse<ConfigInfo> {
         let scope = req.query[String.self, at: "scope"] ?? "user"
 
-        let config = try fileSystem.readConfig(scope: scope)
+        let config = try configService.readConfig(scope: scope)
 
         return APIResponse(
             success: true,
@@ -30,7 +30,7 @@ struct ConfigController: RouteCollection {
     func update(req: Request) async throws -> APIResponse<ConfigInfo> {
         let input = try req.content.decode(UpdateConfigRequest.self)
 
-        let config = try fileSystem.writeConfig(scope: input.scope, content: input.content)
+        let config = try configService.writeConfig(scope: input.scope, content: input.content)
 
         return APIResponse(
             success: true,
