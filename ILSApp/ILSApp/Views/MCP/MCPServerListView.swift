@@ -27,10 +27,9 @@ struct MCPServerListView: View {
             } else {
                 ForEach(viewModel.filteredServers) { server in
                     NavigationLink(value: server) {
-                        MCPServerRowView(server: server)
+                        MCPServerRowView(server: server, viewModel: viewModel)
                     }
                 }
-                .onDelete(perform: deleteServer)
             }
         }
         .navigationTitle("MCP Servers")
@@ -62,19 +61,11 @@ struct MCPServerListView: View {
             await viewModel.loadServers()
         }
     }
-
-    private func deleteServer(at offsets: IndexSet) {
-        Task {
-            let serversToDelete = offsets.map { viewModel.filteredServers[$0] }
-            for server in serversToDelete {
-                await viewModel.deleteServer(server)
-            }
-        }
-    }
 }
 
 struct MCPServerRowView: View {
     let server: MCPServerItem
+    @ObservedObject var viewModel: MCPViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -121,6 +112,15 @@ struct MCPServerRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                Task {
+                    await viewModel.deleteServer(server)
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
     }
 
     @ViewBuilder
