@@ -84,7 +84,7 @@ actor AnalyticsService {
                 eventData: event.eventDataJSON(),
                 deviceId: event.deviceId,
                 userId: event.userId,
-                sessionId: event.sessionId
+                sessionId: event.sessionId?.uuidString
             )
 
             // Send to backend
@@ -141,7 +141,7 @@ private struct CreateAnalyticsEventRequest: Codable, Sendable {
     let eventData: String
     let deviceId: String?
     let userId: UUID?
-    let sessionId: UUID?
+    let sessionId: String?
 }
 
 /// Response from creating an analytics event
