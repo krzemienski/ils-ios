@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct SkillsListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SkillsViewModel()
     @State private var showingNewSkill = false
 
@@ -47,12 +48,12 @@ struct SkillsListView: View {
             }
         }
         .sheet(isPresented: $showingNewSkill) {
-            SkillEditorView(mode: .create) { skill in
+            SkillEditorView(mode: .create, apiClient: appState.apiClient) { skill in
                 viewModel.skills.append(skill)
             }
         }
         .navigationDestination(for: SkillItem.self) { skill in
-            SkillDetailView(skill: skill, viewModel: viewModel)
+            SkillDetailView(skill: skill, viewModel: viewModel, apiClient: appState.apiClient)
         }
         .overlay {
             if viewModel.isLoading && viewModel.skills.isEmpty {
@@ -60,12 +61,14 @@ struct SkillsListView: View {
             }
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadSkills()
         }
     }
 
     private func deleteSkill(at offsets: IndexSet) {
-        let skillsToDelete = offsets.map { viewModel.filteredSkills[$0] }
+        let filtered = viewModel.filteredSkills
+        let skillsToDelete = offsets.map { filtered[$0] }
         Task {
             for skill in skillsToDelete {
                 await viewModel.deleteSkill(skill)
@@ -138,6 +141,7 @@ struct SkillRowView: View {
 struct SkillDetailView: View {
     let skill: SkillItem
     @ObservedObject var viewModel: SkillsViewModel
+    let apiClient: APIClient
 
     @State private var fullSkill: SkillItem?
     @State private var isLoading = true
@@ -191,7 +195,7 @@ struct SkillDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditor) {
-            SkillEditorView(mode: .edit(fullSkill ?? skill), viewModel: viewModel) { _ in }
+            SkillEditorView(mode: .edit(fullSkill ?? skill), apiClient: apiClient, viewModel: viewModel) { _ in }
         }
         .overlay(alignment: .bottom) {
             if showCopiedToast {
@@ -283,8 +287,7 @@ struct SkillDetailView: View {
     private func loadFullSkill() async {
         isLoading = true
         do {
-            let client = APIClient()
-            let response: APIResponse<SkillItem> = try await client.get("/skills/\(skill.name)")
+            let response: APIResponse<SkillItem> = try await apiClient.get("/skills/\(skill.name)")
             if let loadedSkill = response.data {
                 fullSkill = loadedSkill
             }
@@ -317,6 +320,7 @@ struct SkillEditorView: View {
     }
 
     let mode: Mode
+    let apiClient: APIClient
     var viewModel: SkillsViewModel?
     let onSave: (SkillItem) -> Void
 
@@ -326,8 +330,9 @@ struct SkillEditorView: View {
     @State private var content = ""
     @State private var isSaving = false
 
-    init(mode: Mode, viewModel: SkillsViewModel? = nil, onSave: @escaping (SkillItem) -> Void) {
+    init(mode: Mode, apiClient: APIClient, viewModel: SkillsViewModel? = nil, onSave: @escaping (SkillItem) -> Void) {
         self.mode = mode
+        self.apiClient = apiClient
         self.viewModel = viewModel
         self.onSave = onSave
 
@@ -384,8 +389,7 @@ struct SkillEditorView: View {
 
     private func loadSkillContent(_ name: String) async {
         do {
-            let client = APIClient()
-            let response: APIResponse<SkillItem> = try await client.get("/skills/\(name)")
+            let response: APIResponse<SkillItem> = try await apiClient.get("/skills/\(name)")
             if let skill = response.data, let skillContent = skill.content {
                 content = skillContent
             }
@@ -398,8 +402,6 @@ struct SkillEditorView: View {
         isSaving = true
 
         Task {
-            let client = APIClient()
-
             do {
                 if case .create = mode {
                     let request = CreateSkillRequest(
@@ -407,7 +409,7 @@ struct SkillEditorView: View {
                         description: description.isEmpty ? nil : description,
                         content: content
                     )
-                    let response: APIResponse<SkillItem> = try await client.post("/skills", body: request)
+                    let response: APIResponse<SkillItem> = try await apiClient.post("/skills", body: request)
                     if let skill = response.data {
                         await MainActor.run {
                             onSave(skill)
@@ -416,7 +418,7 @@ struct SkillEditorView: View {
                     }
                 } else {
                     let request = UpdateSkillRequest(content: content)
-                    let response: APIResponse<SkillItem> = try await client.put("/skills/\(name)", body: request)
+                    let response: APIResponse<SkillItem> = try await apiClient.put("/skills/\(name)", body: request)
                     if response.data != nil {
                         await viewModel?.loadSkills()
                         await MainActor.run {

@@ -7,7 +7,13 @@ class PluginsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -18,6 +24,7 @@ class PluginsViewModel: ObservableObject {
     }
 
     func loadPlugins() async {
+        guard let client else { return }
         isLoading = true
         error = nil
 
@@ -39,6 +46,7 @@ class PluginsViewModel: ObservableObject {
     }
 
     func installPlugin(name: String, marketplace: String) async {
+        guard let client else { return }
         do {
             let request = InstallPluginRequest(pluginName: name, marketplace: marketplace)
             let response: APIResponse<PluginItem> = try await client.post("/plugins/install", body: request)
@@ -52,6 +60,7 @@ class PluginsViewModel: ObservableObject {
     }
 
     func uninstallPlugin(_ plugin: PluginItem) async {
+        guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/plugins/\(plugin.name)")
             plugins.removeAll { $0.id == plugin.id }
@@ -62,6 +71,7 @@ class PluginsViewModel: ObservableObject {
     }
 
     func enablePlugin(_ plugin: PluginItem) async {
+        guard let client else { return }
         do {
             let _: APIResponse<EnabledResponse> = try await client.post("/plugins/\(plugin.name)/enable", body: EmptyBody())
             if let index = plugins.firstIndex(where: { $0.id == plugin.id }) {
@@ -76,6 +86,7 @@ class PluginsViewModel: ObservableObject {
     }
 
     func disablePlugin(_ plugin: PluginItem) async {
+        guard let client else { return }
         do {
             let _: APIResponse<EnabledResponse> = try await client.post("/plugins/\(plugin.name)/disable", body: EmptyBody())
             if let index = plugins.firstIndex(where: { $0.id == plugin.id }) {

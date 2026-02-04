@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct PluginsListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = PluginsViewModel()
     @State private var showingMarketplace = false
 
@@ -40,7 +41,7 @@ struct PluginsListView: View {
         }
         .sheet(isPresented: $showingMarketplace) {
             NavigationStack {
-                MarketplaceView(viewModel: viewModel)
+                MarketplaceView(viewModel: viewModel, apiClient: appState.apiClient)
                     .navigationTitle("Marketplace")
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
@@ -57,6 +58,7 @@ struct PluginsListView: View {
             }
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadPlugins()
         }
     }
@@ -131,6 +133,7 @@ struct PluginRowView: View {
 struct MarketplaceView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: PluginsViewModel
+    let apiClient: APIClient
     @State private var marketplaces: [MarketplaceInfo] = []
     @State private var isLoading = true
 
@@ -187,8 +190,7 @@ struct MarketplaceView: View {
     private func loadMarketplaces() async {
         isLoading = true
         do {
-            let client = APIClient()
-            let response: APIResponse<[MarketplaceInfo]> = try await client.get("/plugins/marketplace")
+            let response: APIResponse<[MarketplaceInfo]> = try await apiClient.get("/plugins/marketplace")
             if let data = response.data {
                 marketplaces = data
             }

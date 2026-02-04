@@ -174,8 +174,8 @@ struct SettingsView: View {
                     }
                 }
             } footer: {
-                if viewModel.config != nil {
-                    Text("Scope: \(viewModel.config?.scope ?? "user") • \(viewModel.config?.path ?? "")")
+                if let config = viewModel.config {
+                    Text("Scope: \(config.scope) • \(config.path)")
                 }
             }
 
@@ -303,11 +303,11 @@ struct SettingsView: View {
 
                 // Raw Config Editor Links
                 NavigationLink("Edit User Settings") {
-                    ConfigEditorView(scope: "user")
+                    ConfigEditorView(scope: "user", apiClient: appState.apiClient)
                 }
 
                 NavigationLink("Edit Project Settings") {
-                    ConfigEditorView(scope: "project")
+                    ConfigEditorView(scope: "project", apiClient: appState.apiClient)
                 }
             } header: {
                 Text("Advanced")
@@ -348,6 +348,7 @@ struct SettingsView: View {
             await viewModel.loadAll()
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             loadServerSettings()
             await viewModel.loadAll()
             resetEditedValues()
@@ -475,6 +476,7 @@ struct SettingsView: View {
 
 struct ConfigEditorView: View {
     let scope: String
+    let apiClient: APIClient
     @StateObject private var viewModel = ConfigEditorViewModel()
     @State private var configText = ""
     @State private var isSaving = false
@@ -513,6 +515,7 @@ struct ConfigEditorView: View {
             }
         }
         .task {
+            viewModel.configure(client: apiClient)
             await viewModel.loadConfig(scope: scope)
             configText = viewModel.configJson
         }
@@ -542,7 +545,13 @@ class SettingsViewModel: ObservableObject {
     @Published var isTestingConnection = false
     @Published var error: Error?
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     func loadAll() async {
         async let statsTask: () = loadStats()
@@ -551,6 +560,7 @@ class SettingsViewModel: ObservableObject {
     }
 
     func loadStats() async {
+        guard let client else { return }
         isLoading = true
 
         do {
@@ -564,6 +574,7 @@ class SettingsViewModel: ObservableObject {
     }
 
     func loadConfig(scope: String = "user") async {
+        guard let client else { return }
         isLoadingConfig = true
 
         do {
@@ -577,6 +588,7 @@ class SettingsViewModel: ObservableObject {
     }
 
     func testConnection() async {
+        guard let client else { return }
         isTestingConnection = true
         defer { isTestingConnection = false }
 
@@ -588,6 +600,7 @@ class SettingsViewModel: ObservableObject {
     }
 
     func saveConfig(model: String, colorScheme: String) async -> String? {
+        guard let client else { return "Client not configured" }
         isSaving = true
         defer { isSaving = false }
 
@@ -633,9 +646,16 @@ class ConfigEditorViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     func loadConfig(scope: String) async {
+        guard let client else { return }
         isLoading = true
 
         do {
@@ -656,6 +676,7 @@ class ConfigEditorViewModel: ObservableObject {
     }
 
     func saveConfig(scope: String, json: String) async -> [String] {
+        guard let client else { return ["Client not configured"] }
         guard let data = json.data(using: .utf8),
               let content = try? JSONDecoder().decode(ClaudeConfig.self, from: data) else {
             return ["Invalid JSON format"]

@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct SessionsListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SessionsViewModel()
     @State private var showingNewSession = false
 
@@ -42,6 +43,28 @@ struct SessionsListView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityIdentifier("add-session-button")
+                .accessibilityLabel("Add new session")
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            // Floating action button for accessibility testing
+            // This provides a tappable target that idb can hit
+            HStack {
+                Spacer()
+                Button(action: { showingNewSession = true }) {
+                    Image(systemName: "plus")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(ILSTheme.accent)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                }
+                .accessibilityIdentifier("fab-add-session")
+                .accessibilityLabel("Add new session")
+                .padding(.trailing, 20)
+                .padding(.bottom, 20)
             }
         }
         .sheet(isPresented: $showingNewSession) {
@@ -56,6 +79,7 @@ struct SessionsListView: View {
             }
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadSessions()
         }
         .accessibilityIdentifier("sessions-list")
@@ -73,6 +97,12 @@ struct SessionsListView: View {
 
 struct SessionRowView: View {
     let session: ChatSession
+
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
+    }()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -159,9 +189,7 @@ struct SessionRowView: View {
     }
 
     private func formattedDate(_ date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
@@ -172,6 +200,10 @@ struct PulsingBadgeView: View {
     let color: Color
     @State private var isPulsing = false
 
+    private var shouldAnimate: Bool {
+        !UIAccessibility.isReduceMotionEnabled
+    }
+
     var body: some View {
         Text(text)
             .font(.caption2)
@@ -180,10 +212,12 @@ struct PulsingBadgeView: View {
             .padding(.vertical, 2)
             .background(color)
             .cornerRadius(ILSTheme.cornerRadiusS)
-            .opacity(isPulsing ? 0.7 : 1.0)
-            .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isPulsing)
+            .opacity(shouldAnimate && isPulsing ? 0.7 : 1.0)
+            .animation(shouldAnimate ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil, value: isPulsing)
             .onAppear {
-                isPulsing = true
+                if shouldAnimate {
+                    isPulsing = true
+                }
             }
     }
 }

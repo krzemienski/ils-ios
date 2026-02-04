@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct ProjectsListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ProjectsViewModel()
     @State private var showingNewProject = false
     @State private var selectedProject: Project?
@@ -57,6 +58,7 @@ struct ProjectsListView: View {
             }
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadProjects()
         }
     }
@@ -73,6 +75,12 @@ struct ProjectsListView: View {
 
 struct ProjectRowView: View {
     let project: Project
+
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
+    }()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -121,9 +129,7 @@ struct ProjectRowView: View {
     }
 
     private func formattedDate(_ date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 

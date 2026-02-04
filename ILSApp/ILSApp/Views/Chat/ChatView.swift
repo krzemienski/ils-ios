@@ -1,12 +1,18 @@
 import SwiftUI
 import ILSShared
+import Combine
 
 struct ChatView: View {
     let session: ChatSession
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ChatViewModel()
     @State private var inputText = ""
     @State private var showCommandPalette = false
+    @State private var showSessionInfo = false
     @State private var showErrorAlert = false
+    @State private var errorId: UUID?
+    @State private var showForkAlert = false
+    @State private var forkedSession: ChatSession?
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -26,11 +32,24 @@ struct ChatView: View {
                 isInputFocused = true
             }
         }
-        .onAppear {
+        .sheet(isPresented: $showSessionInfo) {
+            SessionInfoView(session: session)
+        }
+        .task {
+            viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
             viewModel.sessionId = session.id
-            Task {
-                await viewModel.loadMessageHistory()
+
+            // Monitor error changes
+            Task { @MainActor in
+                for await _ in viewModel.$error.values {
+                    if viewModel.error != nil {
+                        errorId = UUID()
+                        showErrorAlert = true
+                    }
+                }
             }
+
+            await viewModel.loadMessageHistory()
         }
         .alert("Connection Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
@@ -40,9 +59,11 @@ struct ChatView: View {
         } message: {
             Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
         }
-        .onReceive(viewModel.$error) { error in
-            if error != nil {
-                showErrorAlert = true
+        .alert("Session Forked", isPresented: $showForkAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let forked = forkedSession {
+                Text("Created new session: \(forked.name ?? "Unnamed")")
             }
         }
     }
@@ -129,12 +150,23 @@ struct ChatView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                Button(action: {}) {
+                Button(action: {
+                    Task {
+                        if let forked = await viewModel.forkSession() {
+                            forkedSession = forked
+                            showForkAlert = true
+                        }
+                    }
+                }) {
                     Label("Fork Session", systemImage: "arrow.branch")
                 }
-                Button(action: {}) {
+                .accessibilityIdentifier("fork-session-button")
+
+                Button(action: { showSessionInfo = true }) {
                     Label("Session Info", systemImage: "info.circle")
                 }
+                .accessibilityIdentifier("session-info-button")
+
                 Divider()
                 if let cost = session.totalCostUSD {
                     Text("Cost: $\(cost, specifier: "%.4f")")
@@ -143,6 +175,8 @@ struct ChatView: View {
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
+            .accessibilityIdentifier("chat-menu-button")
+            .accessibilityLabel("Chat options menu")
         }
     }
 
@@ -214,19 +248,23 @@ struct ChatInputView: View {
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
 
-                    // Spring animation
-                    sendButtonPressed = true
+                    // Spring animation (respects reduce motion)
+                    if !UIAccessibility.isReduceMotionEnabled {
+                        sendButtonPressed = true
+                    }
                     onSend()
 
                     // Reset after animation
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        sendButtonPressed = false
+                    if !UIAccessibility.isReduceMotionEnabled {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            sendButtonPressed = false
+                        }
                     }
                 }) {
                     Image(systemName: "arrow.up.circle.fill")
                         .foregroundColor(text.isEmpty || isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
                         .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
+                        .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
                 }
                 .disabled(text.isEmpty || isDisabled)
                 .accessibilityIdentifier("send-button")
@@ -280,6 +318,11 @@ struct StreamingStatusView: View {
 
 struct TypingIndicatorView: View {
     @State private var animationPhase = 0
+    @State private var timer: Timer?
+
+    private var shouldAnimate: Bool {
+        !UIAccessibility.isReduceMotionEnabled
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -288,8 +331,8 @@ struct TypingIndicatorView: View {
                     Circle()
                         .fill(ILSTheme.tertiaryText)
                         .frame(width: 8, height: 8)
-                        .scaleEffect(animationPhase == index ? 1.2 : 0.8)
-                        .opacity(animationPhase == index ? 1.0 : 0.5)
+                        .scaleEffect(shouldAnimate ? (animationPhase == index ? 1.2 : 0.8) : 1.0)
+                        .opacity(shouldAnimate ? (animationPhase == index ? 1.0 : 0.5) : 0.7)
                 }
             }
             .padding(.horizontal, ILSTheme.spacingM)
@@ -303,14 +346,23 @@ struct TypingIndicatorView: View {
         .onAppear {
             startAnimation()
         }
+        .onDisappear {
+            stopAnimation()
+        }
     }
 
     private func startAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
+        guard shouldAnimate else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
             withAnimation(.easeInOut(duration: 0.3)) {
                 animationPhase = (animationPhase + 1) % 3
             }
         }
+    }
+
+    private func stopAnimation() {
+        timer?.invalidate()
+        timer = nil
     }
 }
 

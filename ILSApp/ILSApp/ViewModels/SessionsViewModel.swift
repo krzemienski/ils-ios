@@ -7,7 +7,13 @@ class SessionsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -18,6 +24,7 @@ class SessionsViewModel: ObservableObject {
     }
 
     func loadSessions() async {
+        guard let client else { return }
         isLoading = true
         error = nil
 
@@ -39,6 +46,7 @@ class SessionsViewModel: ObservableObject {
     }
 
     func createSession(projectId: UUID?, name: String?, model: String) async -> ChatSession? {
+        guard let client else { return nil }
         do {
             let request = CreateSessionRequest(
                 projectId: projectId,
@@ -58,6 +66,7 @@ class SessionsViewModel: ObservableObject {
     }
 
     func deleteSession(_ session: ChatSession) async {
+        guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
             sessions.removeAll { $0.id == session.id }
@@ -68,6 +77,7 @@ class SessionsViewModel: ObservableObject {
     }
 
     func forkSession(_ session: ChatSession) async -> ChatSession? {
+        guard let client else { return nil }
         do {
             let response: APIResponse<ChatSession> = try await client.post("/sessions/\(session.id)/fork", body: EmptyBody())
             if let forked = response.data {

@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct DashboardView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = DashboardViewModel()
     @State private var selectedSection: DashboardSection?
 
@@ -122,6 +123,7 @@ struct DashboardView: View {
             }
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadAll()
         }
     }
@@ -177,6 +179,12 @@ struct StatCardView: View {
 struct RecentActivityRowView: View {
     let session: ChatSession
 
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
+    }()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
@@ -220,9 +228,7 @@ struct RecentActivityRowView: View {
     }
 
     private func formattedDate(_ date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 

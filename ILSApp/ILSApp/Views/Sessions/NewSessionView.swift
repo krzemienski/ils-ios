@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct NewSessionView: View {
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
     @StateObject private var projectsViewModel = ProjectsViewModel()
     @State private var sessionName = ""
@@ -70,6 +71,7 @@ struct NewSessionView: View {
                 }
             }
             .task {
+                projectsViewModel.configure(client: appState.apiClient)
                 await projectsViewModel.loadProjects()
             }
         }
@@ -104,7 +106,6 @@ struct NewSessionView: View {
         isCreating = true
 
         Task {
-            let client = APIClient()
             let request = CreateSessionRequest(
                 projectId: selectedProject?.id,
                 name: sessionName.isEmpty ? nil : sessionName,
@@ -112,7 +113,7 @@ struct NewSessionView: View {
             )
 
             do {
-                let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
+                let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
                 if let session = response.data {
                     await MainActor.run {
                         onCreated(session)

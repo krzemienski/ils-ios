@@ -8,7 +8,13 @@ class MCPViewModel: ObservableObject {
     @Published var error: Error?
     @Published var searchText = ""
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     /// Filtered servers based on search text (client-side filtering for responsiveness)
     var filteredServers: [MCPServerItem] {
@@ -36,6 +42,7 @@ class MCPViewModel: ObservableObject {
     /// Load servers from backend
     /// - Parameter refresh: If true, bypasses server cache to rescan configuration files
     func loadServers(refresh: Bool = false) async {
+        guard let client else { return }
         isLoading = true
         error = nil
 
@@ -63,6 +70,7 @@ class MCPViewModel: ObservableObject {
     }
 
     func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
+        guard let client else { return nil }
         do {
             let request = CreateMCPRequest(
                 name: name,
@@ -83,6 +91,7 @@ class MCPViewModel: ObservableObject {
     }
 
     func deleteServer(_ server: MCPServerItem) async {
+        guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope)")
             servers.removeAll { $0.id == server.id }

@@ -22,10 +22,26 @@ struct ILSAppApp: App {
 class AppState: ObservableObject {
     @Published var selectedProject: Project?
     @Published var isConnected: Bool = false
-    @Published var serverURL: String = "http://localhost:8080"
+    @Published var serverURL: String = "http://localhost:8080" {
+        didSet {
+            apiClient = APIClient(baseURL: serverURL)
+            sseClient = SSEClient(baseURL: serverURL)
+            checkConnection()
+        }
+    }
     @Published var selectedTab: String = "sessions"
 
+    var apiClient: APIClient
+    var sseClient: SSEClient
+
     init() {
+        let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
+        let port = UserDefaults.standard.integer(forKey: "serverPort")
+        let actualPort = port > 0 ? port : 9090
+        let url = "http://\(host):\(actualPort)"
+        self.serverURL = url
+        self.apiClient = APIClient(baseURL: url)
+        self.sseClient = SSEClient(baseURL: url)
         checkConnection()
     }
 

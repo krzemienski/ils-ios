@@ -30,12 +30,25 @@ struct ContentView: View {
         NavigationStack {
             detailView
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarItem(placement: .topBarLeading) {
                         Button(action: { showingSidebar = true }) {
                             Image(systemName: "sidebar.left")
+                                .imageScale(.large)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         .accessibilityIdentifier("sidebarButton")
+                        .accessibilityLabel("Open Sidebar")
                     }
+                }
+                .overlay(alignment: .topLeading) {
+                    Button(action: { showingSidebar = true }) {
+                        Color.clear
+                            .frame(width: 60, height: 60)
+                    }
+                    .accessibilityIdentifier("sidebarTapTarget")
+                    .accessibilityLabel("Open Sidebar")
+                    .offset(x: 4, y: -8)
                 }
                 .sheet(isPresented: $showingSidebar) {
                     NavigationStack {
@@ -58,6 +71,7 @@ struct ContentView: View {
                                 case .settings:
                                     appState.selectedTab = "settings"
                                 }
+                                showingSidebar = false
                             }
                         ))
                             .toolbar {
@@ -67,6 +81,15 @@ struct ContentView: View {
                                     }
                                     .accessibilityIdentifier("sidebarDoneButton")
                                 }
+                            }
+                            .overlay(alignment: .topTrailing) {
+                                Button(action: { showingSidebar = false }) {
+                                    Color.clear
+                                        .frame(width: 80, height: 44)
+                                }
+                                .accessibilityIdentifier("doneTapTarget")
+                                .accessibilityLabel("Done")
+                                .offset(x: -16, y: 12)
                             }
                     }
                 }

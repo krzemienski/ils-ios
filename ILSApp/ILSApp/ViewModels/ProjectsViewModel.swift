@@ -7,7 +7,13 @@ class ProjectsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -18,6 +24,7 @@ class ProjectsViewModel: ObservableObject {
     }
 
     func loadProjects() async {
+        guard let client else { return }
         isLoading = true
         error = nil
 
@@ -39,6 +46,7 @@ class ProjectsViewModel: ObservableObject {
     }
 
     func createProject(name: String, path: String, defaultModel: String, description: String?) async -> Project? {
+        guard let client else { return nil }
         do {
             let request = CreateProjectRequest(
                 name: name,
@@ -59,6 +67,7 @@ class ProjectsViewModel: ObservableObject {
     }
 
     func updateProject(_ project: Project, name: String?, defaultModel: String?, description: String?) async -> Project? {
+        guard let client else { return nil }
         do {
             let request = UpdateProjectRequest(
                 name: name,
@@ -80,6 +89,7 @@ class ProjectsViewModel: ObservableObject {
     }
 
     func deleteProject(_ project: Project) async {
+        guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/projects/\(project.id)")
             projects.removeAll { $0.id == project.id }

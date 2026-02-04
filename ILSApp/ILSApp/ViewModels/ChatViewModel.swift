@@ -37,8 +37,8 @@ class ChatViewModel: ObservableObject {
 
     var sessionId: UUID?
 
-    private let sseClient = SSEClient()
-    private let apiClient = APIClient()
+    private var sseClient: SSEClient?
+    private var apiClient: APIClient?
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Batching Properties
@@ -46,7 +46,11 @@ class ChatViewModel: ObservableObject {
     private var batchTimer: Timer?
     private let batchInterval: TimeInterval = 0.075
 
-    init() {
+    init() {}
+
+    func configure(client: APIClient, sseClient: SSEClient) {
+        self.apiClient = client
+        self.sseClient = sseClient
         setupBindings()
     }
 
@@ -55,6 +59,8 @@ class ChatViewModel: ObservableObject {
     }
 
     private func setupBindings() {
+        guard let sseClient else { return }
+
         sseClient.$isStreaming
             .receive(on: DispatchQueue.main)
             .sink { [weak self] streaming in
@@ -122,7 +128,7 @@ class ChatViewModel: ObservableObject {
 
     /// Load message history for the current session from the backend
     func loadMessageHistory() async {
-        guard let sessionId = sessionId else { return }
+        guard let sessionId = sessionId, let apiClient else { return }
 
         isLoadingHistory = true
         error = nil
@@ -219,6 +225,7 @@ class ChatViewModel: ObservableObject {
     }
 
     func sendMessage(prompt: String, projectId: UUID?) {
+        guard let sseClient else { return }
         let request = ChatStreamRequest(
             prompt: prompt,
             sessionId: sessionId,
@@ -230,7 +237,21 @@ class ChatViewModel: ObservableObject {
     }
 
     func cancel() {
-        sseClient.cancel()
+        sseClient?.cancel()
+    }
+
+    /// Fork the current session
+    func forkSession() async -> ChatSession? {
+        guard let sessionId = sessionId, let apiClient else { return nil }
+
+        do {
+            let response: APIResponse<ChatSession> = try await apiClient.post("/sessions/\(sessionId.uuidString)/fork", body: EmptyBody())
+            return response.data
+        } catch {
+            self.error = error
+            print("Failed to fork session: \(error)")
+            return nil
+        }
     }
 
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
@@ -289,3 +310,4 @@ class ChatViewModel: ObservableObject {
         messages.append(currentMessage)
     }
 }
+

@@ -8,7 +8,13 @@ class SkillsViewModel: ObservableObject {
     @Published var error: Error?
     @Published var searchText = ""
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     /// Filtered skills based on search text (client-side filtering for responsiveness)
     var filteredSkills: [SkillItem] {
@@ -35,6 +41,7 @@ class SkillsViewModel: ObservableObject {
     /// Load skills from backend
     /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
     func loadSkills(refresh: Bool = false) async {
+        guard let client else { return }
         isLoading = true
         error = nil
 
@@ -62,6 +69,7 @@ class SkillsViewModel: ObservableObject {
     }
 
     func createSkill(name: String, description: String?, content: String) async -> SkillItem? {
+        guard let client else { return nil }
         do {
             let request = CreateSkillRequest(
                 name: name,
@@ -81,6 +89,7 @@ class SkillsViewModel: ObservableObject {
     }
 
     func updateSkill(_ skill: SkillItem, content: String) async -> SkillItem? {
+        guard let client else { return nil }
         do {
             let request = UpdateSkillRequest(content: content)
             let response: APIResponse<SkillItem> = try await client.put("/skills/\(skill.name)", body: request)
@@ -98,6 +107,7 @@ class SkillsViewModel: ObservableObject {
     }
 
     func deleteSkill(_ skill: SkillItem) async {
+        guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/skills/\(skill.name)")
             skills.removeAll { $0.id == skill.id }

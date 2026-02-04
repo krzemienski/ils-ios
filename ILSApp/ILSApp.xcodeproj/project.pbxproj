@@ -35,6 +35,7 @@
 		000000000000000000000046 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* DashboardView.swift */; };
 		000000000000000000000047 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
+		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
@@ -81,6 +82,7 @@
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000056 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -205,14 +207,6 @@
 			path = Chat;
 			sourceTree = "<group>";
 		};
-		000000000000000000000078 /* Dashboard */ = {
-			isa = PBXGroup;
-			children = (
-				000000000000000000000056 /* DashboardView.swift */,
-			);
-			path = Dashboard;
-			sourceTree = "<group>";
-		};
 		000000000000000000000072 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
@@ -252,6 +246,7 @@
 			children = (
 				000000000000000000000053 /* SessionsListView.swift */,
 				000000000000000000000054 /* NewSessionView.swift */,
+				D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -262,6 +257,14 @@
 				000000000000000000000052 /* SettingsView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		000000000000000000000078 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000056 /* DashboardView.swift */,
+			);
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		UITEST00000000000000GRP1 /* ILSAppUITests */ = {
@@ -398,6 +401,7 @@
 				000000000000000000000043 /* SessionsListView.swift in Sources */,
 				000000000000000000000044 /* NewSessionView.swift in Sources */,
 				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
+				76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,7 +8,13 @@ class DashboardViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
 
-    private let client = APIClient()
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -20,6 +26,7 @@ class DashboardViewModel: ObservableObject {
 
     /// Load all dashboard data (stats + recent activity)
     func loadAll() async {
+        guard let client else { return }
         isLoading = true
         error = nil
 
@@ -31,6 +38,7 @@ class DashboardViewModel: ObservableObject {
 
     /// Load dashboard stats
     func loadStats() async {
+        guard let client else { return }
         do {
             let response: APIResponse<StatsResponse> = try await client.get("/stats")
             if let data = response.data {
@@ -44,6 +52,7 @@ class DashboardViewModel: ObservableObject {
 
     /// Load recent activity timeline
     func loadRecentActivity() async {
+        guard let client else { return }
         do {
             let response: APIResponse<RecentSessionsResponse> = try await client.get("/stats/recent")
             if let data = response.data {

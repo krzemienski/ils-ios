@@ -108,11 +108,15 @@ struct ProjectDetailView: View {
         }
     }
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.dateFormatter.string(from: date)
     }
 
     private func saveChanges() {
@@ -133,7 +137,8 @@ struct ProjectDetailView: View {
 }
 
 #Preview {
-    ProjectDetailView(
+    let viewModel = ProjectsViewModel()
+    return ProjectDetailView(
         project: Project(
             id: UUID(),
             name: "Test Project",
@@ -144,6 +149,6 @@ struct ProjectDetailView: View {
             lastAccessedAt: Date(),
             sessionCount: 5
         ),
-        viewModel: ProjectsViewModel()
+        viewModel: viewModel
     )
 }

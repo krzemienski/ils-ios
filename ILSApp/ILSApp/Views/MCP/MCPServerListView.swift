@@ -2,6 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct MCPServerListView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = MCPViewModel()
     @State private var showingNewServer = false
 
@@ -49,7 +50,7 @@ struct MCPServerListView: View {
             }
         }
         .sheet(isPresented: $showingNewServer) {
-            NewMCPServerView { server in
+            NewMCPServerView(apiClient: appState.apiClient) { server in
                 viewModel.servers.append(server)
             }
         }
@@ -59,13 +60,15 @@ struct MCPServerListView: View {
             }
         }
         .task {
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadServers()
         }
     }
 
     private func deleteServer(at offsets: IndexSet) {
         Task {
-            let serversToDelete = offsets.map { viewModel.filteredServers[$0] }
+            let filtered = viewModel.filteredServers
+            let serversToDelete = offsets.map { filtered[$0] }
             for server in serversToDelete {
                 await viewModel.deleteServer(server)
             }
@@ -305,14 +308,15 @@ struct MCPServerDetailView: View {
 }
 
 struct NewMCPServerView: View {
+    let apiClient: APIClient
+    let onCreated: (MCPServerItem) -> Void
+
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var command = ""
     @State private var args = ""
     @State private var scope = "user"
     @State private var isCreating = false
-
-    let onCreated: (MCPServerItem) -> Void
 
     private let scopes = ["user", "project", "local"]
 
@@ -360,7 +364,6 @@ struct NewMCPServerView: View {
         isCreating = true
 
         Task {
-            let client = APIClient()
             let argsArray = args.split(separator: " ").map(String.init)
             let request = CreateMCPRequest(
                 name: name,
@@ -370,7 +373,7 @@ struct NewMCPServerView: View {
             )
 
             do {
-                let response: APIResponse<MCPServerItem> = try await client.post("/mcp", body: request)
+                let response: APIResponse<MCPServerItem> = try await apiClient.post("/mcp", body: request)
                 if let server = response.data {
                     await MainActor.run {
                         onCreated(server)

@@ -1,12 +1,33 @@
 # ILS - Intelligent Language System
 
-A native iOS client for Claude Code with a Swift backend. This monorepo contains both the Vapor-based REST API backend and the SwiftUI iOS application, sharing common models through the `ILSShared` library.
+> A native iOS client for [Claude Code](https://claude.ai/claude-code) with a Swift backend
 
-## Project Overview
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![iOS](https://img.shields.io/badge/iOS-17.0+-blue.svg)](https://developer.apple.com/ios/)
+[![Vapor](https://img.shields.io/badge/Vapor-4.0-purple.svg)](https://vapor.codes)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ILS provides a mobile interface for interacting with Claude Code sessions, managing projects, viewing skills, and configuring MCP servers - all from your iPhone or iPad.
 
-### Architecture
+## Features
+
+- **Chat with Claude** - Real-time streaming responses via SSE
+- **Session Management** - Create, view, and fork chat sessions
+- **Project Browser** - Browse and manage Claude Code projects
+- **Skills Explorer** - View 1,500+ available Claude Code skills
+- **Plugin Management** - Enable/disable Claude Code plugins
+- **MCP Server Status** - Monitor Model Context Protocol servers
+- **Dark Mode** - Native iOS dark theme throughout
+
+## Screenshots
+
+| Dashboard | Sessions | Chat |
+|-----------|----------|------|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Sessions](docs/screenshots/sessions.png) | ![Chat](docs/screenshots/chat.png) |
+
+## Architecture
+
+This monorepo contains both the Vapor-based REST API backend and the SwiftUI iOS application, sharing common models through the `ILSShared` library.
 
 ```
 ils-ios/
@@ -19,7 +40,7 @@ ils-ios/
 │       ├── Controllers/       # API endpoint handlers
 │       ├── Models/            # Fluent ORM database models
 │       ├── Migrations/        # Database schema migrations
-│       └── Services/          # Business logic (Claude, streaming)
+│       └── Services/          # Business logic (streaming, filesystem)
 ├── ILSApp/                    # iOS Application (Xcode project)
 │   └── ILSApp/
 │       ├── Views/             # SwiftUI views by feature
@@ -28,7 +49,7 @@ ils-ios/
 │       └── Theme/             # Design system
 ├── Tests/                     # Backend tests
 ├── Package.swift              # Swift Package manifest
-└── ils.sqlite                 # SQLite database (created on first run)
+└── ils.sqlite                 # SQLite database (auto-created)
 ```
 
 ## Prerequisites
@@ -36,130 +57,125 @@ ils-ios/
 - **macOS** 14.0+ (Sonoma or later)
 - **Xcode** 15.0+ with iOS 17 SDK
 - **Swift** 5.9+
-- **Claude Code CLI** installed and configured
+- **Claude Code CLI** installed and configured (optional, for full functionality)
 
 ## Quick Start
 
-### 1. Start the Backend
+### 1. Clone the Repository
 
 ```bash
-cd /path/to/ils-ios
+git clone https://github.com/yourusername/ils-ios.git
+cd ils-ios
+```
 
-# First run - resolves dependencies and runs migrations
+### 2. Start the Backend
+
+```bash
+# Build and run the backend server
 swift run ILSBackend
 
 # You should see:
-# ILS Backend starting on http://0.0.0.0:8080
+# [ NOTICE ] Server started on http://0.0.0.0:9090
 ```
 
 The backend will:
 - Create `ils.sqlite` database on first run
 - Run database migrations automatically
-- Start listening on port 8080
+- Start listening on port 9090
 
 **Verify it's running:**
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:9090/health
 # Returns: OK
 ```
 
-> **Want to run as a service?** See [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md) for launchd, Homebrew services, Docker, and other options.
-
-### 2. Run the iOS App
+### 3. Run the iOS App
 
 **Option A: Xcode (Recommended)**
 ```bash
 open ILSApp/ILSApp.xcodeproj
 ```
-Then press `Cmd+R` to build and run on Simulator.
+Press `Cmd+R` to build and run on Simulator.
 
 **Option B: Command Line**
 ```bash
-cd ILSApp
-xcodebuild -scheme ILSApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
+xcodebuild -project ILSApp/ILSApp.xcodeproj \
+  -scheme ILSApp \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  build
 ```
 
-### 3. Connect iOS to Backend
+### 4. Configure Connection
 
-The iOS app connects to `http://localhost:8080` by default. When running on:
+The iOS app connects to `http://localhost:9090` by default.
 
 - **Simulator**: Works automatically (shares localhost with Mac)
-- **Physical Device**: Change `baseURL` in `APIClient.swift` to your Mac's IP address
+- **Physical Device**: Go to Settings in the app and update the host to your Mac's IP address
 
-## How It Works
+## iOS App Structure
 
-### Communication Flow
+The iOS app follows MVVM architecture with feature-based organization:
 
 ```
-┌─────────────┐     HTTP/REST      ┌─────────────┐     PTY/Exec     ┌─────────────┐
-│   iOS App   │ ◄────────────────► │   Backend   │ ◄──────────────► │ Claude Code │
-│  (SwiftUI)  │    localhost:8080  │   (Vapor)   │                  │    (CLI)    │
-└─────────────┘                    └─────────────┘                  └─────────────┘
-       │                                  │
-       │                                  │
-       ▼                                  ▼
-   ILSShared                         ILSShared
-   (Models)                      (Models + Fluent)
+ILSApp/
+├── ILSAppApp.swift           # App entry point & global state
+├── ContentView.swift         # Root navigation container
+├── Views/
+│   ├── Chat/                 # Chat interface with streaming
+│   │   ├── ChatView.swift    # Main chat screen
+│   │   ├── MessageView.swift # Individual message bubbles
+│   │   └── CommandPaletteView.swift
+│   ├── Dashboard/            # Stats overview
+│   ├── Sessions/             # Session list & creation
+│   ├── Projects/             # Project browser
+│   ├── Plugins/              # Plugin management
+│   ├── MCP/                  # MCP server status
+│   ├── Skills/               # Skills explorer
+│   ├── Settings/             # App configuration
+│   └── Sidebar/              # Navigation sidebar
+├── ViewModels/               # Business logic per feature
+├── Services/
+│   ├── APIClient.swift       # REST API communication
+│   └── SSEClient.swift       # Server-Sent Events for streaming
+└── Theme/
+    └── ILSTheme.swift        # Colors, fonts, spacing
 ```
 
-1. **iOS App** sends REST requests to the backend
-2. **Backend** persists data to SQLite and executes Claude Code CLI
-3. **Chat streaming** uses Server-Sent Events (SSE) for real-time responses
-4. **Shared models** ensure type-safe communication between layers
+## API Endpoints
 
-### Shared Models (ILSShared)
+Base URL: `http://localhost:9090/api/v1`
 
-Both the iOS app and backend use the same model definitions:
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/projects` | List all projects |
+| `GET` | `/sessions` | List all sessions |
+| `POST` | `/sessions` | Create a new session |
+| `GET` | `/sessions/:id/messages` | Get session messages |
+| `POST` | `/sessions/:id/fork` | Fork a session |
+| `POST` | `/chat/stream` | Send message (SSE streaming) |
+| `GET` | `/skills` | List available skills |
+| `GET` | `/mcp` | List MCP servers |
+| `GET` | `/plugins` | List installed plugins |
+| `GET` | `/config` | Get Claude configuration |
+| `GET` | `/stats` | Dashboard statistics |
+
+## Shared Models
+
+Both the iOS app and backend use the same model definitions from `ILSShared`:
 
 | Model | Purpose |
 |-------|---------|
-| `Project` | Claude Code project with directory path |
-| `Session` | Chat session within a project |
+| `ChatSession` | Chat session with metadata |
 | `Message` | Individual chat message |
-| `Skill` | Claude Code skill definition |
-| `MCPServer` | Model Context Protocol server config |
+| `Project` | Claude Code project with path |
+| `Skill` | Skill definition and metadata |
+| `MCPServer` | MCP server configuration |
 | `Plugin` | Installed plugin information |
-| `ClaudeConfig` | Claude Code configuration |
-| `StreamMessage` | Real-time chat streaming events |
-
-### API Endpoints
-
-Base URL: `http://localhost:8080/api/v1`
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /projects` | List all projects |
-| `POST /projects` | Create a project |
-| `GET /sessions` | List sessions |
-| `POST /sessions` | Create a session |
-| `POST /chat/send` | Send a chat message |
-| `GET /chat/stream/:sessionId` | SSE stream for responses |
-| `GET /skills` | List available skills |
-| `GET /mcp/servers` | List MCP servers |
-| `GET /plugins` | List installed plugins |
-| `GET /config` | Get Claude configuration |
-| `GET /stats` | Usage statistics |
+| `ClaudeConfig` | Claude Code settings |
+| `StreamMessage` | Real-time streaming events |
 
 ## Development
-
-### Project Structure Details
-
-**Backend (`Sources/ILSBackend/`)**
-- Built with [Vapor](https://vapor.codes) web framework
-- Uses [Fluent](https://docs.vapor.codes/fluent/overview/) ORM with SQLite
-- Executes Claude Code CLI via `ClaudeExecutorService`
-- Streams responses via `StreamingService`
-
-**iOS App (`ILSApp/`)**
-- SwiftUI with MVVM architecture
-- `APIClient` - REST API communication
-- `SSEClient` - Server-Sent Events for streaming
-- Feature-based view organization (Chat, Projects, Settings, etc.)
-
-**Shared Library (`Sources/ILSShared/`)**
-- Pure Swift models with Codable conformance
-- No external dependencies
-- Used by both backend and iOS via Swift Package Manager
 
 ### Running Tests
 
@@ -168,13 +184,15 @@ Base URL: `http://localhost:8080/api/v1`
 swift test
 ```
 
-**iOS UI Tests:**
+**iOS App (Xcode):**
 ```bash
-cd ILSApp
-xcodebuild test -scheme ILSApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+xcodebuild test \
+  -project ILSApp/ILSApp.xcodeproj \
+  -scheme ILSApp \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
 ```
 
-### Database
+### Database Management
 
 The backend uses SQLite stored at `ils.sqlite` in the project root.
 
@@ -184,20 +202,39 @@ rm ils.sqlite
 swift run ILSBackend  # Recreates with fresh migrations
 ```
 
-**View database:**
+**Inspect database:**
 ```bash
-sqlite3 ils.sqlite
-.tables
-.schema projects
+sqlite3 ils.sqlite ".tables"
+sqlite3 ils.sqlite ".schema sessions"
 ```
+
+### Adding New Features
+
+1. **Add shared model** in `Sources/ILSShared/Models/`
+2. **Add backend controller** in `Sources/ILSBackend/Controllers/`
+3. **Add iOS view model** in `ILSApp/ViewModels/`
+4. **Add iOS view** in `ILSApp/Views/`
+
+## URL Schemes
+
+The app supports deep linking via the `ils://` URL scheme:
+
+| URL | Action |
+|-----|--------|
+| `ils://sessions` | Open Sessions tab |
+| `ils://projects` | Open Projects tab |
+| `ils://plugins` | Open Plugins tab |
+| `ils://mcp` | Open MCP Servers tab |
+| `ils://skills` | Open Skills tab |
+| `ils://settings` | Open Settings tab |
 
 ## Troubleshooting
 
 ### Backend won't start
 
 ```bash
-# Check if port 8080 is in use
-lsof -i :8080
+# Check if port 9090 is in use
+lsof -i :9090
 
 # Kill existing process if needed
 kill -9 <PID>
@@ -205,9 +242,9 @@ kill -9 <PID>
 
 ### iOS can't connect to backend
 
-1. Ensure backend is running (`curl http://localhost:8080/health`)
-2. For physical device, use Mac's IP instead of localhost
-3. Check that CORS is configured (it is by default)
+1. Verify backend is running: `curl http://localhost:9090/health`
+2. For physical device, use your Mac's IP address in Settings
+3. Ensure both devices are on the same network
 
 ### Build errors
 
@@ -217,8 +254,7 @@ rm -rf .build
 swift package resolve
 
 # Clean Xcode build
-cd ILSApp
-xcodebuild clean
+rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*
 ```
 
 ## Tech Stack
@@ -230,8 +266,22 @@ xcodebuild clean
 | iOS UI | SwiftUI (iOS 17+) |
 | Architecture | MVVM |
 | Networking | URLSession + SSE |
-| Claude Integration | [ClaudeCodeSDK](https://github.com/krzemienski/ClaudeCodeSDK) |
+| Streaming | Server-Sent Events |
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- [Claude Code](https://claude.ai/claude-code) by Anthropic
+- [Vapor](https://vapor.codes) Swift web framework
+- [SwiftUI](https://developer.apple.com/xcode/swiftui/) by Apple
