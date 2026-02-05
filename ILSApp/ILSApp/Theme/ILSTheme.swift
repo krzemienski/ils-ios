@@ -4,28 +4,31 @@ import SwiftUI
 enum ILSTheme {
     // MARK: - Colors
 
-    /// Primary accent color - hot orange
-    static let accent = Color(red: 1.0, green: 0.4, blue: 0.0)
+    /// Primary accent color - Hot Orange (#FF6600)
+    static let accent = Color(red: 1.0, green: 102.0/255.0, blue: 0.0)
 
-    /// Background colors
-    static let background = Color(uiColor: .systemBackground)
-    static let secondaryBackground = Color(uiColor: .secondarySystemBackground)
-    static let tertiaryBackground = Color(uiColor: .tertiarySystemBackground)
+    /// Background colors - hardcoded dark theme per DESIGN.md
+    static let background = Color(red: 0, green: 0, blue: 0)                                      // #000000 Deep Black
+    static let secondaryBackground = Color(red: 28.0/255.0, green: 28.0/255.0, blue: 30.0/255.0)  // #1C1C1E Charcoal Surface
+    static let tertiaryBackground = Color(red: 44.0/255.0, green: 44.0/255.0, blue: 46.0/255.0)   // #2C2C2E Dark Gray Elevation
 
-    /// Text colors
-    static let primaryText = Color(uiColor: .label)
-    static let secondaryText = Color(uiColor: .secondaryLabel)
-    static let tertiaryText = Color(uiColor: .tertiaryLabel)
+    /// Text colors - hardcoded per DESIGN.md
+    static let primaryText = Color.white                                                            // #FFFFFF Pure White
+    static let secondaryText = Color(red: 142.0/255.0, green: 142.0/255.0, blue: 147.0/255.0)     // #8E8E93 Silver Gray
+    static let tertiaryText = Color(red: 72.0/255.0, green: 72.0/255.0, blue: 74.0/255.0)         // #48484A Ash Gray
 
-    /// Status colors
-    static let success = Color.green
-    static let warning = Color.orange
-    static let error = Color.red
-    static let info = Color.blue
+    /// Status colors - exact DESIGN.md values
+    static let success = Color(red: 52.0/255.0, green: 199.0/255.0, blue: 89.0/255.0)             // #34C759 Signal Green
+    static let warning = Color(red: 255.0/255.0, green: 149.0/255.0, blue: 0.0)                   // #FF9500 Caution Orange
+    static let error = Color(red: 255.0/255.0, green: 59.0/255.0, blue: 48.0/255.0)               // #FF3B30 Alert Red
+    static let info = Color(red: 0.0, green: 122.0/255.0, blue: 255.0/255.0)                      // #007AFF Ocean Blue
 
     /// Message bubble colors
-    static let userBubble = accent.opacity(0.15)
-    static let assistantBubble = Color(uiColor: .secondarySystemBackground)
+    static let userBubble = Color(red: 1.0, green: 102.0/255.0, blue: 0.0).opacity(0.15)          // Ember Orange Glow
+    static let assistantBubble = Color(red: 28.0/255.0, green: 28.0/255.0, blue: 30.0/255.0)      // Charcoal Surface
+
+    /// List separator color - very dark gray per DESIGN.md
+    static let separator = Color(red: 38.0/255.0, green: 38.0/255.0, blue: 40.0/255.0)            // #262628
 
     // MARK: - Typography
 
@@ -52,8 +55,8 @@ enum ILSTheme {
 
     // MARK: - Shadows
 
-    static let shadowLight = Color.black.opacity(0.1)
-    static let shadowMedium = Color.black.opacity(0.2)
+    static let shadowLight = Color.clear  // No shadows on dark theme per DESIGN.md
+    // shadowMedium removed - unused
 }
 
 // MARK: - View Modifiers
@@ -63,6 +66,18 @@ struct CardStyle: ViewModifier {
         content
             .background(ILSTheme.secondaryBackground)
             .cornerRadius(ILSTheme.cornerRadiusL)
+    }
+}
+
+// IMPORTANT: All .sheet() content must include .presentationBackground(Color.black)
+// to prevent system dark gray showing behind sheet chrome rounded corners.
+// Apply to the outermost view inside the .sheet {} closure.
+
+struct DarkListStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .scrollContentBackground(.hidden)
+            .background(ILSTheme.background)
     }
 }
 
@@ -93,6 +108,10 @@ struct SecondaryButtonStyle: ButtonStyle {
 extension View {
     func cardStyle() -> some View {
         modifier(CardStyle())
+    }
+
+    func darkListStyle() -> some View {
+        modifier(DarkListStyle())
     }
 }
 
@@ -174,7 +193,7 @@ struct LoadingOverlay: ViewModifier {
             .overlay {
                 if isLoading {
                     ZStack {
-                        Color.black.opacity(0.1)
+                        Color.white.opacity(0.05)
                             .ignoresSafeArea()
 
                         VStack(spacing: ILSTheme.spacingS) {

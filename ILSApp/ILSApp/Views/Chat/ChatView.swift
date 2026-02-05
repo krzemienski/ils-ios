@@ -22,8 +22,11 @@ struct ChatView: View {
             Divider()
             inputBar
         }
+        .background(ILSTheme.background)
         .navigationTitle(session.name ?? "Chat")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .toolbar { toolbarContent }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteView { command in
@@ -31,9 +34,12 @@ struct ChatView: View {
                 showCommandPalette = false
                 isInputFocused = true
             }
+            .presentationBackground(Color.black)
         }
         .sheet(isPresented: $showSessionInfo) {
             SessionInfoView(session: session)
+                .environmentObject(appState)
+                .presentationBackground(Color.black)
         }
         .task {
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)

@@ -24,7 +24,7 @@ struct DashboardView: View {
                                 count: stats.projects.total,
                                 subtitle: activeText(stats.projects.active),
                                 icon: "folder.fill",
-                                color: .blue
+                                color: ILSTheme.info
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -36,7 +36,7 @@ struct DashboardView: View {
                                 count: stats.sessions.total,
                                 subtitle: "\(stats.sessions.active) active",
                                 icon: "bubble.left.and.bubble.right.fill",
-                                color: .green
+                                color: ILSTheme.success
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -51,7 +51,7 @@ struct DashboardView: View {
                                 count: stats.skills.total,
                                 subtitle: activeText(stats.skills.active),
                                 icon: "wand.and.stars.fill",
-                                color: .purple
+                                color: Color(red: 175.0/255.0, green: 82.0/255.0, blue: 222.0/255.0)
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -113,7 +113,10 @@ struct DashboardView: View {
                 }
             }
         }
+        .background(ILSTheme.background.ignoresSafeArea())
         .navigationTitle("Dashboard")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadAll()
         }
@@ -121,10 +124,16 @@ struct DashboardView: View {
             NavigationStack {
                 section.destinationView
             }
+            .presentationBackground(Color.black)
         }
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadAll()
+        }
+        .onChange(of: appState.isConnected) { _, isConnected in
+            if isConnected && viewModel.error != nil {
+                Task { await viewModel.retryLoad() }
+            }
         }
     }
 

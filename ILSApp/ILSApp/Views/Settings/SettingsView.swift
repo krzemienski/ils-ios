@@ -52,7 +52,7 @@ struct SettingsView: View {
                     Spacer()
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(appState.isConnected ? Color.green : Color.red)
+                            .fill(appState.isConnected ? ILSTheme.success : ILSTheme.error)
                             .frame(width: 8, height: 8)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
                             .foregroundColor(ILSTheme.secondaryText)
@@ -130,13 +130,13 @@ struct SettingsView: View {
                     // Always Thinking (read-only)
                     LabeledContent("Extended Thinking") {
                         Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                            .foregroundColor(config.alwaysThinkingEnabled == true ? ILSTheme.success : ILSTheme.secondaryText)
                     }
 
                     // Co-authored by (read-only)
                     LabeledContent("Include Co-Author") {
                         Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                            .foregroundColor(config.includeCoAuthoredBy == true ? ILSTheme.success : ILSTheme.secondaryText)
                     }
 
                     // Save button when editing
@@ -185,7 +185,7 @@ struct SettingsView: View {
                     if let apiKeyStatus = config.apiKeyStatus {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
-                                .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                                .foregroundColor(apiKeyStatus.isConfigured ? ILSTheme.success : ILSTheme.warning)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
                                     .font(ILSTheme.bodyFont)
@@ -204,7 +204,7 @@ struct SettingsView: View {
                     } else {
                         HStack {
                             Image(systemName: "key.fill")
-                                .foregroundColor(.orange)
+                                .foregroundColor(ILSTheme.warning)
                             Text("API Key status unknown")
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
@@ -343,7 +343,11 @@ struct SettingsView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(ILSTheme.background)
         .navigationTitle("Settings")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadAll()
         }

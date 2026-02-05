@@ -55,6 +55,8 @@ struct NewSessionView: View {
                         .foregroundColor(ILSTheme.secondaryText)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(ILSTheme.background)
             .navigationTitle("New Session")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

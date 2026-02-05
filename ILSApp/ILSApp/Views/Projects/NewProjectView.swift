@@ -39,6 +39,8 @@ struct NewProjectView: View {
                         .foregroundColor(ILSTheme.secondaryText)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(ILSTheme.background)
             .navigationTitle("New Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

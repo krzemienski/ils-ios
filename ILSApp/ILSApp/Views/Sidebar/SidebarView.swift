@@ -22,7 +22,7 @@ struct SidebarView: View {
             Section("Connection") {
                 HStack {
                     Circle()
-                        .fill(appState.isConnected ? Color.green : Color.red)
+                        .fill(appState.isConnected ? ILSTheme.success : ILSTheme.error)
                         .frame(width: 8, height: 8)
                     Text(appState.isConnected ? "Connected" : "Disconnected")
                         .font(ILSTheme.captionFont)
@@ -40,6 +40,8 @@ struct SidebarView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(ILSTheme.background)
         .listStyle(.sidebar)
         .navigationTitle("ILS")
         .toolbar {

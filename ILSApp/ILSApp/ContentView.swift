@@ -29,6 +29,8 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             detailView
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarBackground(Color.black, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: { showingSidebar = true }) {
@@ -92,8 +94,10 @@ struct ContentView: View {
                                 .offset(x: -16, y: 12)
                             }
                     }
+                    .presentationBackground(Color.black)
                 }
         }
+        .background(ILSTheme.background)
         .tint(ILSTheme.accent)
     }
 

@@ -34,7 +34,10 @@ struct SkillsListView: View {
                 .onDelete(perform: deleteSkill)
             }
         }
+        .darkListStyle()
         .navigationTitle("Skills")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .searchable(text: $viewModel.searchText, prompt: "Search skills...")
         .refreshable {
             // Pull-to-refresh rescans ~/.claude directory
@@ -51,6 +54,7 @@ struct SkillsListView: View {
             SkillEditorView(mode: .create, apiClient: appState.apiClient) { skill in
                 viewModel.skills.append(skill)
             }
+            .presentationBackground(Color.black)
         }
         .navigationDestination(for: SkillItem.self) { skill in
             SkillDetailView(skill: skill, viewModel: viewModel, apiClient: appState.apiClient)
@@ -63,6 +67,11 @@ struct SkillsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadSkills()
+        }
+        .onChange(of: appState.isConnected) { _, isConnected in
+            if isConnected && viewModel.error != nil {
+                Task { await viewModel.retryLoadSkills() }
+            }
         }
     }
 
@@ -173,6 +182,7 @@ struct SkillDetailView: View {
             }
             .padding(ILSTheme.spacingM)
         }
+        .background(ILSTheme.background)
         .navigationTitle("/\(skill.name)")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -196,6 +206,7 @@ struct SkillDetailView: View {
         }
         .sheet(isPresented: $showingEditor) {
             SkillEditorView(mode: .edit(fullSkill ?? skill), apiClient: apiClient, viewModel: viewModel) { _ in }
+                .presentationBackground(Color.black)
         }
         .overlay(alignment: .bottom) {
             if showCopiedToast {
@@ -361,6 +372,8 @@ struct SkillEditorView: View {
                         .frame(minHeight: 300)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(ILSTheme.background)
             .navigationTitle(isCreating ? "New Skill" : "Edit Skill")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -34,7 +34,10 @@ struct MCPServerListView: View {
                 .onDelete(perform: deleteServer)
             }
         }
+        .darkListStyle()
         .navigationTitle("MCP Servers")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .navigationDestination(for: MCPServerItem.self) { server in
             MCPServerDetailView(server: server)
         }
@@ -53,6 +56,7 @@ struct MCPServerListView: View {
             NewMCPServerView(apiClient: appState.apiClient) { server in
                 viewModel.servers.append(server)
             }
+            .presentationBackground(Color.black)
         }
         .overlay {
             if viewModel.isLoading && viewModel.servers.isEmpty {
@@ -62,6 +66,11 @@ struct MCPServerListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadServers()
+        }
+        .onChange(of: appState.isConnected) { _, isConnected in
+            if isConnected && viewModel.error != nil {
+                Task { await viewModel.loadServers() }
+            }
         }
     }
 
@@ -235,6 +244,7 @@ struct MCPServerDetailView: View {
                     .textSelection(.enabled)
             }
         }
+        .darkListStyle()
         .navigationTitle(server.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -257,7 +267,7 @@ struct MCPServerDetailView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(Color.black.opacity(0.75))
+                    .background(ILSTheme.tertiaryBackground)
                     .cornerRadius(ILSTheme.cornerRadiusM)
                     .padding(.bottom, 20)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -344,6 +354,8 @@ struct NewMCPServerView: View {
                         .foregroundColor(ILSTheme.secondaryText)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(ILSTheme.background)
             .navigationTitle("Add MCP Server")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

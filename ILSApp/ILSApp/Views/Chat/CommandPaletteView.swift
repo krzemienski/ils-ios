@@ -3,6 +3,7 @@ import ILSShared
 
 struct CommandPaletteView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
     @State private var searchText = ""
     @State private var skills: [SkillItem] = []
     @State private var isLoading = true
@@ -45,6 +46,7 @@ struct CommandPaletteView: View {
                     }
                 }
             }
+            .darkListStyle()
             .searchable(text: $searchText, prompt: "Search commands...")
             .navigationTitle("Commands")
             .navigationBarTitleDisplayMode(.inline)
@@ -80,7 +82,7 @@ struct CommandPaletteView: View {
     private func loadSkills() async {
         isLoading = true
         do {
-            let client = APIClient()
+            let client = appState.apiClient
             let response: APIResponse<ListResponse<SkillItem>> = try await client.get("/skills")
             if let data = response.data {
                 skills = data.items

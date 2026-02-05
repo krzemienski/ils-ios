@@ -27,7 +27,10 @@ struct PluginsListView: View {
                 }
             }
         }
+        .darkListStyle()
         .navigationTitle("Plugins")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadPlugins()
         }
@@ -51,6 +54,8 @@ struct PluginsListView: View {
                         }
                     }
             }
+            .background(ILSTheme.background)
+            .presentationBackground(Color.black)
         }
         .overlay {
             if viewModel.isLoading && viewModel.plugins.isEmpty {
@@ -60,6 +65,11 @@ struct PluginsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadPlugins()
+        }
+        .onChange(of: appState.isConnected) { _, isConnected in
+            if isConnected && viewModel.error != nil {
+                Task { await viewModel.loadPlugins() }
+            }
         }
     }
 }
@@ -94,9 +104,10 @@ struct PluginRowView: View {
                     ForEach(commands.prefix(3), id: \.self) { command in
                         Text(command)
                             .font(.caption2)
+                            .foregroundColor(ILSTheme.accent)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(ILSTheme.tertiaryBackground)
+                            .background(ILSTheme.accent.opacity(0.15))
                             .cornerRadius(ILSTheme.cornerRadiusS)
                     }
                     if commands.count > 3 {
@@ -167,13 +178,14 @@ struct MarketplaceView: View {
                                             )
                                         }
                                     }
-                                    .buttonStyle(.bordered)
+                                    .buttonStyle(PrimaryButtonStyle())
                                 }
                             }
                         }
                     }
                 }
             }
+            .darkListStyle()
             .navigationTitle("Marketplace")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

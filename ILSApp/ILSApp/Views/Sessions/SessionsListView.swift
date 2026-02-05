@@ -33,7 +33,10 @@ struct SessionsListView: View {
                 .onDelete(perform: deleteSession)
             }
         }
+        .darkListStyle()
         .navigationTitle("Sessions")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadSessions()
         }
@@ -59,7 +62,7 @@ struct SessionsListView: View {
                         .frame(width: 56, height: 56)
                         .background(ILSTheme.accent)
                         .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)
                 }
                 .accessibilityIdentifier("fab-add-session")
                 .accessibilityLabel("Add new session")
@@ -71,6 +74,7 @@ struct SessionsListView: View {
             NewSessionView { session in
                 viewModel.sessions.insert(session, at: 0)
             }
+            .presentationBackground(Color.black)
         }
         .overlay {
             if viewModel.isLoading && viewModel.sessions.isEmpty {
@@ -81,6 +85,11 @@ struct SessionsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadSessions()
+        }
+        .onChange(of: appState.isConnected) { _, isConnected in
+            if isConnected && viewModel.error != nil {
+                Task { await viewModel.retryLoadSessions() }
+            }
         }
         .accessibilityIdentifier("sessions-list")
     }

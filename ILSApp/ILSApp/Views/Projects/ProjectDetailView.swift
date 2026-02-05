@@ -72,6 +72,8 @@ struct ProjectDetailView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(ILSTheme.background)
             .navigationTitle("Project Details")
             .navigationBarTitleDisplayMode(.inline)
             .refreshable {

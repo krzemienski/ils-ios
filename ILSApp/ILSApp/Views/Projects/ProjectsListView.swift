@@ -33,7 +33,10 @@ struct ProjectsListView: View {
                 .onDelete(perform: deleteProject)
             }
         }
+        .darkListStyle()
         .navigationTitle("Projects")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadProjects()
         }
@@ -48,9 +51,11 @@ struct ProjectsListView: View {
             NewProjectView { project in
                 viewModel.projects.append(project)
             }
+            .presentationBackground(Color.black)
         }
         .sheet(item: $selectedProject) { project in
             ProjectDetailView(project: project, viewModel: viewModel)
+                .presentationBackground(Color.black)
         }
         .overlay {
             if viewModel.isLoading && viewModel.projects.isEmpty {
@@ -60,6 +65,11 @@ struct ProjectsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadProjects()
+        }
+        .onChange(of: appState.isConnected) { _, isConnected in
+            if isConnected && viewModel.error != nil {
+                Task { await viewModel.retryLoadProjects() }
+            }
         }
     }
 
@@ -100,7 +110,7 @@ struct ProjectRowView: View {
             }
 
             Text(project.path)
-                .font(ILSTheme.captionFont)
+                .font(Font.system(.caption, design: .monospaced))
                 .foregroundColor(ILSTheme.secondaryText)
                 .lineLimit(1)
 
