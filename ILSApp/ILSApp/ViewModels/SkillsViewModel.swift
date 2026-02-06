@@ -21,9 +21,11 @@ class SkillsViewModel: ObservableObject {
         guard !searchText.isEmpty else { return skills }
         let query = searchText.lowercased()
         return skills.filter { skill in
-            skill.name.lowercased().contains(query) ||
-            (skill.description?.lowercased().contains(query) ?? false) ||
-            skill.tags.contains { $0.lowercased().contains(query) }
+            let nameLower = skill.name.lowercased()
+            let descLower = skill.description?.lowercased()
+            return nameLower.contains(query) ||
+                (descLower?.contains(query) ?? false) ||
+                skill.tags.contains { $0.lowercased().contains(query) }
         }
     }
 

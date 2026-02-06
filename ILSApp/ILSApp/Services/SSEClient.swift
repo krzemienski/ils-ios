@@ -17,21 +17,31 @@ class SSEClient: ObservableObject {
         case reconnecting(attempt: Int)
     }
 
-    private var task: URLSessionDataTask?
     private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
+    private let session: URLSession
 
-    init(baseURL: String = "http://localhost:8080") {
+    init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
+
+        // Configure custom URLSession with longer timeouts for SSE streaming
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
+        config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
+        self.session = URLSession(configuration: config)
     }
 
     /// Start streaming a chat request
     func startStream(request: ChatStreamRequest) {
-        guard !isStreaming else { return }
+        // Cancel any existing stream before starting a new one
+        if isStreaming {
+            print("[SSEClient] Cancelling previous stream before starting new one")
+            cancel()
+        }
 
         isStreaming = true
         messages = []
@@ -47,6 +57,7 @@ class SSEClient: ObservableObject {
 
     private func performStream(request: ChatStreamRequest) async {
         let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
+        print("[SSEClient] Request URL: \(url)")
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -56,13 +67,34 @@ class SSEClient: ObservableObject {
             let encoder = JSONEncoder()
             urlRequest.httpBody = try encoder.encode(request)
         } catch {
+            print("[SSEClient] Encode error: \(error)")
             self.error = error
             self.isStreaming = false
             return
         }
 
         do {
-            let (asyncBytes, response) = try await URLSession.shared.bytes(for: urlRequest)
+            // Race connection against 60s timeout
+            let (asyncBytes, response) = try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
+                // Connection task
+                group.addTask {
+                    try await self.session.bytes(for: urlRequest)
+                }
+
+                // Timeout task
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+                    throw URLError(.timedOut)
+                }
+
+                // Return first to complete, cancel the other
+                let result = try await group.next()!
+                group.cancelAll()
+                return result
+            }
+
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            print("[SSEClient] Response status: \(statusCode)")
 
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
@@ -76,6 +108,7 @@ class SSEClient: ObservableObject {
             var currentData = ""
 
             for try await line in asyncBytes.lines {
+                print("[SSEClient] Line: \(line.prefix(120))")
                 if line.hasPrefix("event:") {
                     currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
                 } else if line.hasPrefix("data:") {
@@ -94,12 +127,13 @@ class SSEClient: ObservableObject {
             }
 
             // Stream completed normally
+            print("[SSEClient] Stream completed normally")
             connectionState = .disconnected
         } catch is CancellationError {
-            // Task was cancelled, don't reconnect
+            print("[SSEClient] Stream cancelled")
             connectionState = .disconnected
         } catch {
-            // Network error - attempt reconnection
+            print("[SSEClient] Stream error: \(error)")
             if await shouldReconnect(error: error) {
                 return
             }
@@ -155,14 +189,20 @@ class SSEClient: ObservableObject {
     }
 
     private func parseAndAddMessage(event: String, data: String) async {
-        guard let jsonData = data.data(using: .utf8) else { return }
+        print("[SSEClient] Parsing event=\(event) data=\(data.prefix(120))")
+        guard let jsonData = data.data(using: .utf8) else {
+            print("[SSEClient] Failed to convert data to UTF8")
+            return
+        }
 
         do {
             let decoder = JSONDecoder()
             let message = try decoder.decode(StreamMessage.self, from: jsonData)
             messages.append(message)
+            print("[SSEClient] Parsed message successfully, total messages: \(messages.count)")
         } catch {
-            print("Failed to parse SSE message: \(error)")
+            print("[SSEClient] DECODE ERROR: \(error)")
+            print("[SSEClient] Raw data: \(data)")
         }
     }
 
@@ -170,26 +210,9 @@ class SSEClient: ObservableObject {
     func cancel() {
         streamTask?.cancel()
         streamTask = nil
-        task?.cancel()
-        task = nil
         isStreaming = false
         connectionState = .disconnected
         currentRequest = nil
         reconnectAttempts = 0
     }
-}
-
-// MARK: - Chat Request
-
-struct ChatStreamRequest: Encodable {
-    let prompt: String
-    let sessionId: UUID?
-    let projectId: UUID?
-    let options: ChatOptions?
-}
-
-struct ChatOptions: Encodable {
-    let model: String?
-    let permissionMode: String?
-    let maxTurns: Int?
 }
