@@ -73,6 +73,13 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.isTestingConnection)
+
+                NavigationLink {
+                    ServerConnectionView()
+                        .environmentObject(appState)
+                } label: {
+                    Label("SSH Server Connection", systemImage: "network")
+                }
             } header: {
                 Text("Backend Connection")
             } footer: {
@@ -177,6 +184,51 @@ struct SettingsView: View {
                 if let config = viewModel.config {
                     Text("Scope: \(config.scope) • \(config.path)")
                 }
+            }
+
+            // MARK: - Quick Settings Section
+            Section {
+                if let config = viewModel.config?.content {
+                    // Model Picker
+                    Picker("Model", selection: Binding(
+                        get: { config.model ?? "claude-sonnet-4-20250514" },
+                        set: { newModel in
+                            Task {
+                                _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
+                                await viewModel.loadConfig()
+                            }
+                        }
+                    )) {
+                        ForEach(availableModels, id: \.self) { model in
+                            Text(formatModelName(model)).tag(model)
+                        }
+                    }
+
+                    // Extended Thinking Toggle
+                    Toggle("Extended Thinking", isOn: Binding(
+                        get: { config.alwaysThinkingEnabled ?? false },
+                        set: { _ in
+                            // Read-only for now - toggle display only
+                        }
+                    ))
+                    .disabled(true)
+
+                    // Co-authored-by Toggle
+                    Toggle("Include Co-Author", isOn: Binding(
+                        get: { config.includeCoAuthoredBy ?? false },
+                        set: { _ in
+                            // Read-only for now - toggle display only
+                        }
+                    ))
+                    .disabled(true)
+                } else if !viewModel.isLoadingConfig {
+                    Text("Load settings to see quick actions")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                Text("Quick Settings")
+            } footer: {
+                Text("Change common settings without editing raw JSON")
             }
 
             // MARK: - API Key Section
@@ -506,6 +558,25 @@ struct ConfigEditorView: View {
                     .font(ILSTheme.codeFont)
                     .padding()
 
+                // JSON validation indicator
+                HStack {
+                    if isValidJSON(configText) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(ILSTheme.success)
+                        Text("Valid JSON")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.success)
+                    } else {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(ILSTheme.error)
+                        Text("Invalid JSON")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.error)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+
                 if !validationErrors.isEmpty {
                     VStack(alignment: .leading) {
                         ForEach(validationErrors, id: \.self) { error in
@@ -545,6 +616,11 @@ struct ConfigEditorView: View {
             validationErrors = errors
             isSaving = false
         }
+    }
+
+    private func isValidJSON(_ text: String) -> Bool {
+        guard let data = text.data(using: .utf8) else { return false }
+        return (try? JSONSerialization.jsonObject(with: data)) != nil
     }
 }
 
