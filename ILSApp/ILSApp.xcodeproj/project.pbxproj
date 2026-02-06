@@ -21,6 +21,7 @@
 		000000000000000000000028 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000038 /* ProjectsListView.swift */; };
 		000000000000000000000029 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000039 /* NewProjectView.swift */; };
 		00000000000000000000002A /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003A /* ProjectDetailView.swift */; };
+		0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000E2 /* ProjectSessionsListView.swift */; };
 		00000000000000000000002B /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
 		00000000000000000000002C /* PluginsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003C /* PluginsListView.swift */; };
 		00000000000000000000002D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
@@ -69,6 +70,7 @@
 		000000000000000000000038 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000039 /* NewProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewProjectView.swift; sourceTree = "<group>"; };
 		00000000000000000000003A /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		0000000000000000000000E2 /* ProjectSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionsListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003B /* ProjectsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsViewModel.swift; sourceTree = "<group>"; };
 		00000000000000000000003C /* PluginsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003D /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
@@ -213,6 +215,7 @@
 				000000000000000000000038 /* ProjectsListView.swift */,
 				000000000000000000000039 /* NewProjectView.swift */,
 				00000000000000000000003A /* ProjectDetailView.swift */,
+				0000000000000000000000E2 /* ProjectSessionsListView.swift */,
 			);
 			path = Projects;
 			sourceTree = "<group>";
@@ -390,6 +393,7 @@
 				000000000000000000000028 /* ProjectsListView.swift in Sources */,
 				000000000000000000000029 /* NewProjectView.swift in Sources */,
 				00000000000000000000002A /* ProjectDetailView.swift in Sources */,
+				0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */,
 				00000000000000000000002B /* ProjectsViewModel.swift in Sources */,
 				00000000000000000000002C /* PluginsListView.swift in Sources */,
 				00000000000000000000002D /* PluginsViewModel.swift in Sources */,

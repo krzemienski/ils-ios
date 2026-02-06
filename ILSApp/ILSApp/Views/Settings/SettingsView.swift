@@ -330,8 +330,19 @@ struct SettingsView: View {
 
             // MARK: - About Section
             Section("About") {
-                LabeledContent("Version", value: "1.0.0")
+                LabeledContent("App Version", value: "1.0.0")
                 LabeledContent("Build", value: "1")
+
+                if let claudeVersion = viewModel.claudeVersion {
+                    LabeledContent("Claude CLI", value: claudeVersion)
+                } else {
+                    LabeledContent("Claude CLI") {
+                        Text("Checking...")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+
+                LabeledContent("Backend Port", value: serverPort)
 
                 Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                     HStack {
@@ -543,6 +554,7 @@ struct ConfigEditorView: View {
 class SettingsViewModel: ObservableObject {
     @Published var stats: StatsResponse?
     @Published var config: ConfigInfo?
+    @Published var claudeVersion: String?
     @Published var isLoading = false
     @Published var isLoadingConfig = false
     @Published var isSaving = false
@@ -560,7 +572,19 @@ class SettingsViewModel: ObservableObject {
     func loadAll() async {
         async let statsTask: () = loadStats()
         async let configTask: () = loadConfig()
-        _ = await (statsTask, configTask)
+        async let healthTask: () = loadHealth()
+        _ = await (statsTask, configTask, healthTask)
+    }
+
+    func loadHealth() async {
+        guard let client else { return }
+        do {
+            let response: HealthResponse = try await client.get("/health")
+            claudeVersion = response.claudeVersion
+        } catch {
+            // Health endpoint might return plain string — try alternate
+            claudeVersion = nil
+        }
     }
 
     func loadStats() async {

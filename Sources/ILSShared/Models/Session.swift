@@ -20,6 +20,8 @@ public enum PermissionMode: String, Codable, Sendable {
     case acceptEdits = "acceptEdits"
     case plan = "plan"
     case bypassPermissions = "bypassPermissions"
+    case delegate = "delegate"
+    case dontAsk = "dontAsk"
 }
 
 /// Represents a chat session with Claude Code

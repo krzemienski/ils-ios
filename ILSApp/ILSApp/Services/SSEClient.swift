@@ -188,8 +188,25 @@ class SSEClient: ObservableObject {
         return nsError.domain == NSURLErrorDomain && networkErrorCodes.contains(nsError.code)
     }
 
+    /// Message IDs sent by server for client correlation
+    @Published var userMessageId: String?
+    @Published var assistantMessageId: String?
+
     private func parseAndAddMessage(event: String, data: String) async {
         print("[SSEClient] Parsing event=\(event) data=\(data.prefix(120))")
+
+        // Handle special event types
+        switch event {
+        case "done":
+            print("[SSEClient] Received done event — stream complete")
+            return
+        case "messageId":
+            parseMessageIdEvent(data: data)
+            return
+        default:
+            break
+        }
+
         guard let jsonData = data.data(using: .utf8) else {
             print("[SSEClient] Failed to convert data to UTF8")
             return
@@ -206,6 +223,16 @@ class SSEClient: ObservableObject {
         }
     }
 
+    private func parseMessageIdEvent(data: String) {
+        guard let jsonData = data.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String] else {
+            return
+        }
+        userMessageId = json["userMessageId"]
+        assistantMessageId = json["assistantMessageId"]
+        print("[SSEClient] Message IDs: user=\(userMessageId ?? "nil"), assistant=\(assistantMessageId ?? "nil")")
+    }
+
     /// Cancel the current stream
     func cancel() {
         streamTask?.cancel()
@@ -214,5 +241,7 @@ class SSEClient: ObservableObject {
         connectionState = .disconnected
         currentRequest = nil
         reconnectAttempts = 0
+        userMessageId = nil
+        assistantMessageId = nil
     }
 }

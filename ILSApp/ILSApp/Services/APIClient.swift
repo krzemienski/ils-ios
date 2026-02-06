@@ -26,6 +26,14 @@ actor APIClient {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
+    /// Fetch structured health info (enhanced endpoint)
+    func getHealth() async throws -> HealthResponse {
+        let url = URL(string: "\(baseURL)/health")!
+        let (data, response) = try await session.data(from: url)
+        try validateResponse(response)
+        return try decoder.decode(HealthResponse.self, from: data)
+    }
+
     // MARK: - Generic Request Methods
 
     func get<T: Decodable>(_ path: String) async throws -> T {
@@ -109,6 +117,16 @@ struct APIErrorResponse: Decodable {
 struct ListResponse<T: Decodable>: Decodable {
     let items: [T]
     let total: Int
+}
+
+// MARK: - Health Response
+
+struct HealthResponse: Decodable {
+    let status: String
+    let version: String?
+    let claudeAvailable: Bool?
+    let claudeVersion: String?
+    let port: Int?
 }
 
 // MARK: - Error Types

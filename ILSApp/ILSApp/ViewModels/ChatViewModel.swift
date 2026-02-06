@@ -294,13 +294,13 @@ class ChatViewModel: ObservableObject {
         messages.append(ChatMessage(isUser: true, text: text))
     }
 
-    func sendMessage(prompt: String, projectId: UUID?) {
+    func sendMessage(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
         guard let sseClient else { return }
         let request = ChatStreamRequest(
             prompt: prompt,
             sessionId: sessionId,
             projectId: projectId,
-            options: nil
+            options: options
         )
 
         sseClient.startStream(request: request)

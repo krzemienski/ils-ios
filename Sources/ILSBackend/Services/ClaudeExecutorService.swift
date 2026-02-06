@@ -280,12 +280,28 @@ actor ClaudeExecutorService {
             args.append(model)
         }
 
+        // Fallback model
+        if let fallbackModel = options.fallbackModel {
+            args.append("--fallback-model")
+            args.append(fallbackModel)
+        }
+
         // Setting sources: skip user settings for backend (faster startup)
         args.append("--setting-sources")
         args.append("project,local")
 
-        // Permission mode: always skip for non-interactive backend
-        args.append("--dangerously-skip-permissions")
+        // Permission mode: use specified mode or default to bypass for non-interactive
+        if let mode = options.permissionMode {
+            switch mode {
+            case .bypassPermissions:
+                args.append("--dangerously-skip-permissions")
+            default:
+                args.append("--permission-mode")
+                args.append(mode.rawValue)
+            }
+        } else {
+            args.append("--dangerously-skip-permissions")
+        }
 
         // Resume existing session
         if let resume = options.resume {
@@ -293,9 +309,56 @@ actor ClaudeExecutorService {
             args.append(resume)
         }
 
+        // Continue conversation (resume most recent)
+        if options.continueConversation == true {
+            args.append("--continue")
+        }
+
         // Fork session
         if options.forkSession == true {
             args.append("--fork-session")
+        }
+
+        // Session ID (specific UUID)
+        if let sessionId = options.sessionId {
+            args.append("--session-id")
+            args.append(sessionId)
+        }
+
+        // System prompt
+        if let systemPrompt = options.systemPrompt, !systemPrompt.isEmpty {
+            args.append("--system-prompt")
+            args.append(shellEscape(systemPrompt))
+        }
+
+        // Append system prompt
+        if let appendSystemPrompt = options.appendSystemPrompt, !appendSystemPrompt.isEmpty {
+            args.append("--append-system-prompt")
+            args.append(shellEscape(appendSystemPrompt))
+        }
+
+        // Max budget
+        if let maxBudget = options.maxBudgetUSD {
+            args.append("--max-budget-usd")
+            args.append(String(format: "%.2f", maxBudget))
+        }
+
+        // Include partial messages (character-by-character streaming)
+        if options.includePartialMessages == true {
+            args.append("--include-partial-messages")
+        }
+
+        // No session persistence
+        if options.noSessionPersistence == true {
+            args.append("--no-session-persistence")
+        }
+
+        // Additional directories
+        if let addDirs = options.addDirs, !addDirs.isEmpty {
+            for dir in addDirs {
+                args.append("--add-dir")
+                args.append(dir)
+            }
         }
 
         // Allowed tools
@@ -310,7 +373,43 @@ actor ClaudeExecutorService {
             args.append("\"\(disallowedTools.joined(separator: ","))\"")
         }
 
+        // Tools (built-in tool list)
+        if let tools = options.tools, !tools.isEmpty {
+            args.append("--tools")
+            args.append("\"\(tools.joined(separator: ","))\"")
+        }
+
+        // JSON schema for structured output
+        if let jsonSchema = options.jsonSchema, !jsonSchema.isEmpty {
+            args.append("--json-schema")
+            args.append(shellEscape(jsonSchema))
+        }
+
+        // MCP config file
+        if let mcpConfig = options.mcpConfig, !mcpConfig.isEmpty {
+            args.append("--mcp-config")
+            args.append(mcpConfig)
+        }
+
+        // Custom agents JSON
+        if let customAgents = options.customAgents, !customAgents.isEmpty {
+            args.append("--agents")
+            args.append(shellEscape(customAgents))
+        }
+
+        // Input format
+        if let inputFormat = options.inputFormat, !inputFormat.isEmpty {
+            args.append("--input-format")
+            args.append(inputFormat)
+        }
+
         return args.joined(separator: " ")
+    }
+
+    /// Shell-escape a string by wrapping in single quotes
+    private static func shellEscape(_ value: String) -> String {
+        let escaped = value.replacingOccurrences(of: "'", with: "'\\''")
+        return "'\(escaped)'"
     }
 
     // MARK: - JSON Line Processing
@@ -349,7 +448,9 @@ actor ClaudeExecutorService {
         }
     }
 
-    /// Parse system/init message from CLI JSON
+    /// Parse system message from CLI JSON.
+    ///
+    /// Handles subtypes: "init" (session start with tools), "completion" (token usage updates)
     private static func processSystemMessage(
         _ json: [String: Any],
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
@@ -360,6 +461,7 @@ actor ClaudeExecutorService {
 
         debugLog("System message: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), tools=\(tools?.count ?? 0)")
 
+        // Handle all known subtypes — init, completion, etc.
         let systemData = SystemData(
             sessionId: sessionId,
             tools: tools
@@ -432,7 +534,9 @@ actor ClaudeExecutorService {
                 }
 
             default:
-                debugLog("Unknown content type: \(itemType)")
+                // Gracefully handle unknown content block types (e.g. future CLI additions)
+                debugLog("Unknown content type '\(itemType)' — forwarding as text note")
+                contentBlocks.append(.text(TextBlock(text: "[unsupported block: \(itemType)]")))
             }
         }
 
@@ -461,6 +565,22 @@ actor ClaudeExecutorService {
 
         debugLog("Result: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), cost=\(totalCostUSD ?? 0), turns=\(numTurns ?? 0)")
 
+        // Parse usage stats if present
+        var usageInfo: UsageInfo?
+        if let usage = json["usage"] as? [String: Any],
+           let inputTokens = usage["input_tokens"] as? Int,
+           let outputTokens = usage["output_tokens"] as? Int {
+            let cacheRead = usage["cache_read_input_tokens"] as? Int
+            let cacheCreation = usage["cache_creation_input_tokens"] as? Int
+            usageInfo = UsageInfo(
+                inputTokens: inputTokens,
+                outputTokens: outputTokens,
+                cacheReadInputTokens: cacheRead,
+                cacheCreationInputTokens: cacheCreation
+            )
+            debugLog("Usage: input=\(inputTokens), output=\(outputTokens)")
+        }
+
         let result = ResultMessage(
             subtype: subtype,
             sessionId: sessionId,
@@ -468,7 +588,8 @@ actor ClaudeExecutorService {
             durationApiMs: durationApiMs,
             isError: isError,
             numTurns: numTurns,
-            totalCostUSD: totalCostUSD
+            totalCostUSD: totalCostUSD,
+            usage: usageInfo
         )
         continuation.yield(.result(result))
     }
@@ -476,7 +597,7 @@ actor ClaudeExecutorService {
 
 // MARK: - Execution Options
 
-/// Options for Claude CLI execution
+/// Options for Claude CLI execution — mirrors ChatOptions from ILSShared
 struct ExecutionOptions {
     var sessionId: String?
     var model: String?
@@ -488,6 +609,20 @@ struct ExecutionOptions {
     var resume: String?
     var forkSession: Bool?
 
+    // Claude Code CLI parity fields
+    var systemPrompt: String?
+    var appendSystemPrompt: String?
+    var addDirs: [String]?
+    var continueConversation: Bool?
+    var includePartialMessages: Bool?
+    var fallbackModel: String?
+    var jsonSchema: String?
+    var mcpConfig: String?
+    var customAgents: String?
+    var tools: [String]?
+    var noSessionPersistence: Bool?
+    var inputFormat: String?
+
     init(from chatOptions: ChatOptions? = nil) {
         self.model = chatOptions?.model
         self.permissionMode = chatOptions?.permissionMode
@@ -497,5 +632,18 @@ struct ExecutionOptions {
         self.disallowedTools = chatOptions?.disallowedTools
         self.resume = chatOptions?.resume
         self.forkSession = chatOptions?.forkSession
+        self.systemPrompt = chatOptions?.systemPrompt
+        self.appendSystemPrompt = chatOptions?.appendSystemPrompt
+        self.addDirs = chatOptions?.addDirs
+        self.continueConversation = chatOptions?.continueConversation
+        self.includePartialMessages = chatOptions?.includePartialMessages
+        self.fallbackModel = chatOptions?.fallbackModel
+        self.jsonSchema = chatOptions?.jsonSchema
+        self.mcpConfig = chatOptions?.mcpConfig
+        self.customAgents = chatOptions?.customAgents
+        self.sessionId = chatOptions?.sessionId
+        self.tools = chatOptions?.tools
+        self.noSessionPersistence = chatOptions?.noSessionPersistence
+        self.inputFormat = chatOptions?.inputFormat
     }
 }

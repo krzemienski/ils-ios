@@ -131,6 +131,7 @@ public struct ChatStreamRequest: Codable, Sendable {
 }
 
 public struct ChatOptions: Codable, Sendable {
+    // Existing fields
     public let model: String?
     public let permissionMode: PermissionMode?
     public let maxTurns: Int?
@@ -140,6 +141,21 @@ public struct ChatOptions: Codable, Sendable {
     public let resume: String?
     public let forkSession: Bool?
 
+    // Claude Code CLI parity fields
+    public let systemPrompt: String?
+    public let appendSystemPrompt: String?
+    public let addDirs: [String]?
+    public let continueConversation: Bool?
+    public let includePartialMessages: Bool?
+    public let fallbackModel: String?
+    public let jsonSchema: String?
+    public let mcpConfig: String?
+    public let customAgents: String?
+    public let sessionId: String?
+    public let tools: [String]?
+    public let noSessionPersistence: Bool?
+    public let inputFormat: String?
+
     public init(
         model: String? = nil,
         permissionMode: PermissionMode? = nil,
@@ -148,7 +164,20 @@ public struct ChatOptions: Codable, Sendable {
         allowedTools: [String]? = nil,
         disallowedTools: [String]? = nil,
         resume: String? = nil,
-        forkSession: Bool? = nil
+        forkSession: Bool? = nil,
+        systemPrompt: String? = nil,
+        appendSystemPrompt: String? = nil,
+        addDirs: [String]? = nil,
+        continueConversation: Bool? = nil,
+        includePartialMessages: Bool? = nil,
+        fallbackModel: String? = nil,
+        jsonSchema: String? = nil,
+        mcpConfig: String? = nil,
+        customAgents: String? = nil,
+        sessionId: String? = nil,
+        tools: [String]? = nil,
+        noSessionPersistence: Bool? = nil,
+        inputFormat: String? = nil
     ) {
         self.model = model
         self.permissionMode = permissionMode
@@ -158,6 +187,19 @@ public struct ChatOptions: Codable, Sendable {
         self.disallowedTools = disallowedTools
         self.resume = resume
         self.forkSession = forkSession
+        self.systemPrompt = systemPrompt
+        self.appendSystemPrompt = appendSystemPrompt
+        self.addDirs = addDirs
+        self.continueConversation = continueConversation
+        self.includePartialMessages = includePartialMessages
+        self.fallbackModel = fallbackModel
+        self.jsonSchema = jsonSchema
+        self.mcpConfig = mcpConfig
+        self.customAgents = customAgents
+        self.sessionId = sessionId
+        self.tools = tools
+        self.noSessionPersistence = noSessionPersistence
+        self.inputFormat = inputFormat
     }
 }
 

@@ -11,10 +11,21 @@ struct NewSessionView: View {
     @State private var permissionMode = "default"
     @State private var isCreating = false
 
+    // New config fields for CLI parity
+    @State private var systemPrompt = ""
+    @State private var maxBudget = ""
+    @State private var maxTurns = ""
+    @State private var showAdvanced = false
+    @State private var fallbackModel = ""
+    @State private var includePartialMessages = false
+    @State private var continueConversation = false
+
     let onCreated: (ChatSession) -> Void
 
     private let models = ["sonnet", "opus", "haiku"]
-    private let permissionModes = ["default", "acceptEdits", "plan", "bypassPermissions"]
+    private let permissionModes = [
+        "default", "acceptEdits", "plan", "bypassPermissions", "delegate", "dontAsk"
+    ]
 
     var body: some View {
         NavigationStack {
@@ -47,12 +58,56 @@ struct NewSessionView: View {
                             Text(formattedMode(mode)).tag(mode)
                         }
                     }
-                }
 
-                Section {
                     Text(permissionDescription)
                         .font(ILSTheme.captionFont)
                         .foregroundColor(ILSTheme.secondaryText)
+                }
+
+                Section("System Prompt") {
+                    TextEditor(text: $systemPrompt)
+                        .font(ILSTheme.codeFont)
+                        .frame(minHeight: 80)
+                        .overlay(alignment: .topLeading) {
+                            if systemPrompt.isEmpty {
+                                Text("Custom instructions for Claude (optional)")
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .padding(.top, 8)
+                                    .padding(.leading, 4)
+                                    .allowsHitTesting(false)
+                            }
+                        }
+                }
+
+                Section("Limits") {
+                    HStack {
+                        Text("Max Budget (USD)")
+                        Spacer()
+                        TextField("No limit", text: $maxBudget)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
+                    }
+
+                    HStack {
+                        Text("Max Turns")
+                        Spacer()
+                        TextField("1", text: $maxTurns)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 100)
+                    }
+                }
+
+                Section {
+                    DisclosureGroup("Advanced Options", isExpanded: $showAdvanced) {
+                        TextField("Fallback Model", text: $fallbackModel)
+
+                        Toggle("Include Partial Messages", isOn: $includePartialMessages)
+
+                        Toggle("Continue Previous Session", isOn: $continueConversation)
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -85,6 +140,8 @@ struct NewSessionView: View {
         case "acceptEdits": return "Accept Edits"
         case "plan": return "Plan Mode"
         case "bypassPermissions": return "Bypass All"
+        case "delegate": return "Delegate"
+        case "dontAsk": return "Don't Ask"
         default: return mode
         }
     }
@@ -92,13 +149,17 @@ struct NewSessionView: View {
     private var permissionDescription: String {
         switch permissionMode {
         case "default":
-            return "Standard permission behavior - Claude will ask before executing tools."
+            return "Standard permission behavior — Claude will ask before executing tools."
         case "acceptEdits":
             return "Automatically approve file edits without prompting."
         case "plan":
-            return "Planning mode - Claude will plan but not execute changes."
+            return "Planning mode — Claude will plan but not execute changes."
         case "bypassPermissions":
             return "Skip all permission checks. Use with caution."
+        case "delegate":
+            return "Delegate permission decisions to the calling process."
+        case "dontAsk":
+            return "Never prompt — deny any action that requires permission."
         default:
             return ""
         }
@@ -128,6 +189,20 @@ struct NewSessionView: View {
 
             isCreating = false
         }
+    }
+
+    /// Build ChatOptions from the form state for use when sending the first message
+    func buildChatOptions() -> ChatOptions {
+        ChatOptions(
+            model: selectedModel,
+            permissionMode: PermissionMode(rawValue: permissionMode),
+            maxTurns: Int(maxTurns),
+            maxBudgetUSD: Double(maxBudget),
+            systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
+            continueConversation: continueConversation ? true : nil,
+            includePartialMessages: includePartialMessages ? true : nil,
+            fallbackModel: fallbackModel.isEmpty ? nil : fallbackModel
+        )
     }
 }
 
