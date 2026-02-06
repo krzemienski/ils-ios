@@ -4,6 +4,7 @@ import ILSShared
 @main
 struct ILSAppApp: App {
     @StateObject private var appState = AppState()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -13,6 +14,9 @@ struct ILSAppApp: App {
                 .onOpenURL { url in
                     appState.handleURL(url)
                 }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            appState.handleScenePhase(newPhase)
         }
     }
 }
@@ -37,6 +41,7 @@ class AppState: ObservableObject {
     var sseClient: SSEClient
 
     private var retryTask: Task<Void, Never>?
+    private var healthPollTask: Task<Void, Never>?
 
     init() {
         let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
@@ -57,12 +62,14 @@ class AppState: ObservableObject {
                 let wasDisconnected = !isConnected
                 isConnected = true
                 stopRetryPolling()
+                startHealthPolling()
                 if wasDisconnected {
                     // Notify views to reload after recovery
                     objectWillChange.send()
                 }
             } catch {
                 isConnected = false
+                stopHealthPolling()
                 startRetryPolling()
             }
         }
@@ -81,6 +88,7 @@ class AppState: ObservableObject {
                     _ = try await client.healthCheck()
                     self.isConnected = true
                     self.stopRetryPolling()
+                    self.startHealthPolling()
                     break
                 } catch {
                     // Still disconnected, continue polling
@@ -93,6 +101,49 @@ class AppState: ObservableObject {
     private func stopRetryPolling() {
         retryTask?.cancel()
         retryTask = nil
+    }
+
+    /// Start periodic health check when connected (every 30 seconds)
+    private func startHealthPolling() {
+        guard healthPollTask == nil else { return }
+        healthPollTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                guard !Task.isCancelled else { break }
+                guard let self else { break }
+                do {
+                    let client = APIClient(baseURL: self.serverURL)
+                    _ = try await client.healthCheck()
+                    // Still connected
+                } catch {
+                    self.isConnected = false
+                    self.stopHealthPolling()
+                    self.startRetryPolling()
+                    break
+                }
+            }
+        }
+    }
+
+    /// Stop health polling
+    private func stopHealthPolling() {
+        healthPollTask?.cancel()
+        healthPollTask = nil
+    }
+
+    /// Handle scene phase changes - stop polling in background, reconnect in foreground
+    func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .active:
+            checkConnection()
+        case .background:
+            stopHealthPolling()
+            stopRetryPolling()
+        case .inactive:
+            break
+        @unknown default:
+            break
+        }
     }
 
     func handleURL(_ url: URL) {
