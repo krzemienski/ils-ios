@@ -113,6 +113,11 @@ extension DeletedResponse: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
+extension ConnectionResponse: Content {}
+extension ServerInfo: Content {}
+extension ClaudeConfigPaths: Content {}
+extension ServerStatus: Content {}
+extension ConnectRequest: Content {}
 
 // MARK: - Model Types
 extension Project: Content {}

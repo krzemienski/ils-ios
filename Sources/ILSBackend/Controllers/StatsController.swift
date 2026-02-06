@@ -11,6 +11,9 @@ struct StatsController: RouteCollection {
         stats.get("recent", use: recentSessions)
 
         routes.get("settings", use: settings)
+
+        let server = routes.grouped("server")
+        server.get("status", use: serverStatus)
     }
 
     /// GET /stats - Get overall statistics using same data sources as individual controllers
@@ -139,5 +142,12 @@ struct StatsController: RouteCollection {
                 total: totalCount
             )
         )
+    }
+
+    /// GET /server/status - Get remote server connection status
+    @Sendable
+    func serverStatus(req: Request) async throws -> APIResponse<ServerStatus> {
+        let status = try await req.application.sshService.getServerStatus()
+        return APIResponse(success: true, data: status)
     }
 }

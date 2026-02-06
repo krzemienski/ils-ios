@@ -96,7 +96,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 - _Requirements: FR-13, FR-1_
 - _Design: SSHService (P0)_
 
-### 1.5 Create AuthController and wire server/status
+### 1.5 Create AuthController and wire server/status [x]
 
 - **Do**:
   1. Create `Sources/ILSBackend/Controllers/AuthController.swift` implementing `RouteCollection`
