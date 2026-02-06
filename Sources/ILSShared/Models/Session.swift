@@ -38,6 +38,8 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
     public var forkedFrom: UUID?
     public let createdAt: Date
     public var lastActiveAt: Date
+    public var encodedProjectPath: String?
+    public var firstPrompt: String?
 
     public init(
         id: UUID = UUID(),
@@ -53,7 +55,9 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         source: SessionSource = .ils,
         forkedFrom: UUID? = nil,
         createdAt: Date = Date(),
-        lastActiveAt: Date = Date()
+        lastActiveAt: Date = Date(),
+        encodedProjectPath: String? = nil,
+        firstPrompt: String? = nil
     ) {
         self.id = id
         self.claudeSessionId = claudeSessionId
@@ -69,28 +73,52 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         self.forkedFrom = forkedFrom
         self.createdAt = createdAt
         self.lastActiveAt = lastActiveAt
+        self.encodedProjectPath = encodedProjectPath
+        self.firstPrompt = firstPrompt
     }
 }
 
 /// External session discovered from Claude Code storage
-public struct ExternalSession: Codable, Sendable {
+public struct ExternalSession: Codable, Identifiable, Sendable {
+    public var id: String { claudeSessionId }
     public let claudeSessionId: String
     public var name: String?
     public let projectPath: String?
+    public let encodedProjectPath: String?
+    public let projectName: String?
     public let source: SessionSource
     public let lastActiveAt: Date?
+    public let createdAt: Date?
+    public let messageCount: Int?
+    public let firstPrompt: String?
+    public let summary: String?
+    public let gitBranch: String?
 
     public init(
         claudeSessionId: String,
         name: String? = nil,
         projectPath: String? = nil,
+        encodedProjectPath: String? = nil,
+        projectName: String? = nil,
         source: SessionSource = .external,
-        lastActiveAt: Date? = nil
+        lastActiveAt: Date? = nil,
+        createdAt: Date? = nil,
+        messageCount: Int? = nil,
+        firstPrompt: String? = nil,
+        summary: String? = nil,
+        gitBranch: String? = nil
     ) {
         self.claudeSessionId = claudeSessionId
         self.name = name
         self.projectPath = projectPath
+        self.encodedProjectPath = encodedProjectPath
+        self.projectName = projectName
         self.source = source
         self.lastActiveAt = lastActiveAt
+        self.createdAt = createdAt
+        self.messageCount = messageCount
+        self.firstPrompt = firstPrompt
+        self.summary = summary
+        self.gitBranch = gitBranch
     }
 }

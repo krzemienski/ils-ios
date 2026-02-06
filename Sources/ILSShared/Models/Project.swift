@@ -10,6 +10,7 @@ public struct Project: Codable, Identifiable, Sendable, Hashable {
     public let createdAt: Date
     public var lastAccessedAt: Date
     public var sessionCount: Int?
+    public var encodedPath: String?
 
     public init(
         id: UUID = UUID(),
@@ -19,7 +20,8 @@ public struct Project: Codable, Identifiable, Sendable, Hashable {
         description: String? = nil,
         createdAt: Date = Date(),
         lastAccessedAt: Date = Date(),
-        sessionCount: Int? = nil
+        sessionCount: Int? = nil,
+        encodedPath: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -29,5 +31,6 @@ public struct Project: Codable, Identifiable, Sendable, Hashable {
         self.createdAt = createdAt
         self.lastAccessedAt = lastAccessedAt
         self.sessionCount = sessionCount
+        self.encodedPath = encodedPath
     }
 }

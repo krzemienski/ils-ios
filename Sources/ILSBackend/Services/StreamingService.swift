@@ -2,6 +2,14 @@ import Vapor
 import Fluent
 import ILSShared
 
+/// Unbuffered stderr logging for SSE debugging
+private func debugLog(_ message: String) {
+    let msg = message + "\n"
+    if let data = msg.data(using: .utf8) {
+        FileHandle.standardError.write(data)
+    }
+}
+
 /// Service for handling SSE streaming responses
 struct StreamingService {
     /// Heartbeat interval in seconds
@@ -131,8 +139,17 @@ struct StreamingService {
             }
 
             do {
+                let log: (String) -> Void = { msg in
+                    let m = msg + "\n"
+                    if let d = m.data(using: .utf8) { FileHandle.standardError.write(d) }
+                }
+                log("[SSE-WRITER] Starting to iterate stream...")
                 for try await message in stream {
-                    guard isConnected else { break }
+                    log("[SSE-WRITER] Received message from stream")
+                    guard isConnected else {
+                        log("[SSE-WRITER] Client disconnected, breaking")
+                        break
+                    }
 
                     // Accumulate content based on message type
                     switch message {

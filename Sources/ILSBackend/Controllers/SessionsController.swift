@@ -15,6 +15,9 @@ struct SessionsController: RouteCollection {
         sessions.delete(":id", use: delete)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "messages", use: messages)
+
+        let transcriptGroup = sessions.grouped("transcript")
+        transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
     }
 
     /// GET /sessions - List all sessions
@@ -189,6 +192,30 @@ struct SessionsController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: messages, total: total)
+        )
+    }
+
+    /// GET /sessions/transcript/:encodedProjectPath/:sessionId - Read messages from JSONL transcript
+    @Sendable
+    func transcript(req: Request) async throws -> APIResponse<ListResponse<Message>> {
+        guard let encodedProjectPath = req.parameters.get("encodedProjectPath"),
+              let sessionId = req.parameters.get("sessionId") else {
+            throw Abort(.badRequest, reason: "Missing project path or session ID")
+        }
+
+        let limit = req.query[Int.self, at: "limit"] ?? 200
+        let offset = req.query[Int.self, at: "offset"] ?? 0
+
+        let messages = try fileSystem.readTranscriptMessages(
+            encodedProjectPath: encodedProjectPath,
+            sessionId: sessionId,
+            limit: limit,
+            offset: offset
+        )
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: messages)
         )
     }
 }

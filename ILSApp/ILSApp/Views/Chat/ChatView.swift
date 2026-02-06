@@ -15,12 +15,21 @@ struct ChatView: View {
     @State private var forkedSession: ChatSession?
     @FocusState private var isInputFocused: Bool
 
+    /// Whether this is an external (read-only) session
+    private var isExternalSession: Bool {
+        session.source == .external && session.encodedProjectPath != nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             statusBanner
             messagesScrollView
             Divider()
-            inputBar
+            if isExternalSession {
+                externalSessionBanner
+            } else {
+                inputBar
+            }
         }
         .background(ILSTheme.background)
         .navigationTitle(session.name ?? "Chat")
@@ -44,6 +53,8 @@ struct ChatView: View {
         .task {
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
             viewModel.sessionId = session.id
+            viewModel.encodedProjectPath = session.encodedProjectPath
+            viewModel.claudeSessionId = session.claudeSessionId
 
             // Monitor error changes
             Task { @MainActor in
@@ -59,8 +70,10 @@ struct ChatView: View {
         }
         .alert("Connection Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
-            Button("Retry") {
-                retryLastMessage()
+            if !isExternalSession {
+                Button("Retry") {
+                    retryLastMessage()
+                }
             }
         } message: {
             Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
@@ -152,21 +165,42 @@ struct ChatView: View {
         .focused($isInputFocused)
     }
 
+    /// Banner shown for external (read-only) sessions
+    private var externalSessionBanner: some View {
+        HStack(spacing: ILSTheme.spacingS) {
+            Image(systemName: "terminal")
+                .foregroundColor(ILSTheme.accent)
+            Text("Read-only Claude Code session")
+                .font(ILSTheme.captionFont)
+                .foregroundColor(ILSTheme.secondaryText)
+            Spacer()
+            if let count = session.messageCount as Int?, count > 0 {
+                Text("\(count) messages")
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.tertiaryText)
+            }
+        }
+        .padding()
+        .background(ILSTheme.secondaryBackground)
+    }
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                Button(action: {
-                    Task {
-                        if let forked = await viewModel.forkSession() {
-                            forkedSession = forked
-                            showForkAlert = true
+                if !isExternalSession {
+                    Button(action: {
+                        Task {
+                            if let forked = await viewModel.forkSession() {
+                                forkedSession = forked
+                                showForkAlert = true
+                            }
                         }
+                    }) {
+                        Label("Fork Session", systemImage: "arrow.branch")
                     }
-                }) {
-                    Label("Fork Session", systemImage: "arrow.branch")
+                    .accessibilityIdentifier("fork-session-button")
                 }
-                .accessibilityIdentifier("fork-session-button")
 
                 Button(action: { showSessionInfo = true }) {
                     Label("Session Info", systemImage: "info.circle")
@@ -178,6 +212,14 @@ struct ChatView: View {
                     Text("Cost: $\(cost, specifier: "%.4f")")
                 }
                 Text("Model: \(session.model)")
+
+                if isExternalSession {
+                    Divider()
+                    if let projectName = session.projectName {
+                        Text("Project: \(projectName)")
+                    }
+                    Text("Source: Claude Code")
+                }
             } label: {
                 Image(systemName: "ellipsis.circle")
             }

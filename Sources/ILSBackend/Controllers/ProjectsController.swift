@@ -3,21 +3,9 @@ import Fluent
 import ILSShared
 import Foundation
 
-/// Structure matching sessions-index.json format from ~/.claude/projects/
-private struct SessionsIndex: Codable {
-    let version: Int
-    let entries: [SessionEntry]
-}
-
-private struct SessionEntry: Codable {
-    let sessionId: String
-    let projectPath: String
-    let summary: String?
-    let created: Date
-    let modified: Date
-}
-
 struct ProjectsController: RouteCollection {
+    private let fileSystem = FileSystemService()
+
     func boot(routes: RoutesBuilder) throws {
         let projects = routes.grouped("projects")
 
@@ -29,51 +17,60 @@ struct ProjectsController: RouteCollection {
         projects.get(":id", "sessions", use: getSessions)
     }
 
+    /// Flexible ISO8601 date parsers for fractional seconds
+    private static let flexibleISO8601: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let fallbackISO8601: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private func parseDate(_ s: String) -> Date? {
+        Self.flexibleISO8601.date(from: s) ?? Self.fallbackISO8601.date(from: s)
+    }
+
     /// GET /projects - List all projects from ~/.claude/projects/
     @Sendable
     func index(req: Request) async throws -> APIResponse<ListResponse<Project>> {
         var projects: [Project] = []
 
-        // Get Claude home directory
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser
-        let claudeProjectsDir = homeDir.appendingPathComponent(".claude/projects")
+        let claudeProjectsDir = fileSystem.claudeProjectsPath
 
-        // Check if directory exists
-        guard FileManager.default.fileExists(atPath: claudeProjectsDir.path) else {
+        guard FileManager.default.fileExists(atPath: claudeProjectsDir) else {
             return APIResponse(
                 success: true,
                 data: ListResponse(items: projects)
             )
         }
 
-        // Scan project directories
         do {
-            let projectDirs = try FileManager.default.contentsOfDirectory(
-                at: claudeProjectsDir,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
-            )
+            let contents = try FileManager.default.contentsOfDirectory(atPath: claudeProjectsDir)
 
-            for projectDir in projectDirs {
-                // Check if it's a directory
+            for encodedDir in contents {
+                let projectDirPath = "\(claudeProjectsDir)/\(encodedDir)"
                 var isDirectory: ObjCBool = false
-                guard FileManager.default.fileExists(atPath: projectDir.path, isDirectory: &isDirectory),
+                guard FileManager.default.fileExists(atPath: projectDirPath, isDirectory: &isDirectory),
                       isDirectory.boolValue else {
                     continue
                 }
 
-                // Read sessions-index.json
-                let sessionsIndexPath = projectDir.appendingPathComponent("sessions-index.json")
-                guard FileManager.default.fileExists(atPath: sessionsIndexPath.path) else {
+                let indexPath = "\(projectDirPath)/sessions-index.json"
+                guard FileManager.default.fileExists(atPath: indexPath) else {
                     continue
                 }
 
-                let data = try Data(contentsOf: sessionsIndexPath)
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                let index = try decoder.decode(SessionsIndex.self, from: data)
+                guard let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)) else {
+                    continue
+                }
+                guard let index: FileSystemService.SessionsIndex = try? JSONDecoder().decode(FileSystemService.SessionsIndex.self, from: data) else {
+                    continue
+                }
 
-                // Extract project info from first entry (all entries should have same projectPath)
                 guard let firstEntry = index.entries.first else {
                     continue
                 }
@@ -82,25 +79,25 @@ struct ProjectsController: RouteCollection {
                 let projectName = URL(fileURLWithPath: projectPath).lastPathComponent
                 let sessionCount = index.entries.count
 
-                // Get last modified date from entries
-                let lastModified = index.entries.map { $0.modified }.max() ?? firstEntry.created
+                // Parse dates with fractional seconds support
+                let createdDate = parseDate(firstEntry.created) ?? Date()
+                let lastModified = index.entries.compactMap { parseDate($0.modified) }.max() ?? createdDate
 
-                // Create Project struct
                 let project = Project(
-                    id: UUID(), // Generate a deterministic UUID from path later if needed
+                    id: UUID(),
                     name: projectName,
                     path: projectPath,
                     defaultModel: "sonnet",
                     description: "Claude Code project",
-                    createdAt: firstEntry.created,
+                    createdAt: createdDate,
                     lastAccessedAt: lastModified,
-                    sessionCount: sessionCount
+                    sessionCount: sessionCount,
+                    encodedPath: encodedDir
                 )
 
                 projects.append(project)
             }
 
-            // Sort by last accessed date (most recent first)
             projects.sort { $0.lastAccessedAt > $1.lastAccessedAt }
 
         } catch {

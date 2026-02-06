@@ -7,7 +7,7 @@ actor APIClient {
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
 
-    init(baseURL: String = "http://localhost:8080") {
+    init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
         self.session = URLSession.shared
 

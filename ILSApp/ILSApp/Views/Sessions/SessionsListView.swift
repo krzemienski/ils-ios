@@ -113,10 +113,32 @@ struct SessionRowView: View {
         return formatter
     }()
 
+    /// Whether this is an external Claude Code session
+    private var isExternal: Bool {
+        session.source == .external
+    }
+
+    /// Display name: use session name, fall back to firstPrompt truncated, then "Claude Code Session"
+    private var displayName: String {
+        if let name = session.name, !name.isEmpty {
+            return name
+        }
+        if let prompt = session.firstPrompt, !prompt.isEmpty, prompt != "No prompt" {
+            return String(prompt.prefix(60))
+        }
+        return isExternal ? "Claude Code Session" : "Unnamed Session"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(session.name ?? "Unnamed Session")
+                if isExternal {
+                    Image(systemName: "terminal")
+                        .font(.caption)
+                        .foregroundColor(ILSTheme.accent)
+                }
+
+                Text(displayName)
                     .font(ILSTheme.headlineFont)
                     .lineLimit(1)
 
@@ -158,7 +180,17 @@ struct SessionRowView: View {
 
                 Spacer()
 
-                statusBadge
+                if isExternal {
+                    Text("Claude Code")
+                        .font(.caption2)
+                        .foregroundColor(ILSTheme.accent)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(ILSTheme.accent.opacity(0.15))
+                        .cornerRadius(ILSTheme.cornerRadiusS)
+                } else {
+                    statusBadge
+                }
             }
         }
         .padding(.vertical, 4)

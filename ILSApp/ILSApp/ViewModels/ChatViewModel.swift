@@ -9,6 +9,7 @@ class ChatViewModel: ObservableObject {
     @Published var isLoadingHistory = false
     @Published var error: Error?
     @Published var connectionState: SSEClient.ConnectionState = .disconnected
+    @Published var connectingTooLong = false
 
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
@@ -27,7 +28,7 @@ class ChatViewModel: ObservableObject {
         case .disconnected:
             return nil
         case .connecting:
-            return "Connecting..."
+            return connectingTooLong ? "Taking longer than expected..." : "Connecting..."
         case .connected:
             return isStreaming ? "Claude is responding..." : nil
         case .reconnecting(let attempt):
@@ -36,15 +37,21 @@ class ChatViewModel: ObservableObject {
     }
 
     var sessionId: UUID?
+    /// For external sessions: the encoded project path (e.g. "-Users-nick-Desktop-project")
+    var encodedProjectPath: String?
+    /// For external sessions: the claude session ID string
+    var claudeSessionId: String?
 
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
     private var cancellables = Set<AnyCancellable>()
+    private var connectingTimer: Task<Void, Never>?
 
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
     private var batchTimer: Timer?
     private let batchInterval: TimeInterval = 0.075
+    private var lastProcessedMessageIndex = 0
 
     init() {}
 
@@ -56,6 +63,7 @@ class ChatViewModel: ObservableObject {
 
     deinit {
         batchTimer?.invalidate()
+        connectingTimer?.cancel()
     }
 
     private func setupBindings() {
@@ -72,6 +80,8 @@ class ChatViewModel: ObservableObject {
                     // Streaming ended - flush remaining messages and stop timer
                     self.flushPendingMessages()
                     self.stopBatchTimer()
+                    // Reset index tracker for next stream
+                    self.lastProcessedMessageIndex = 0
                 }
             }
             .store(in: &cancellables)
@@ -82,18 +92,34 @@ class ChatViewModel: ObservableObject {
 
         sseClient.$connectionState
             .receive(on: DispatchQueue.main)
-            .assign(to: &$connectionState)
+            .sink { [weak self] state in
+                guard let self = self else { return }
+                self.connectionState = state
+                if case .connecting = state {
+                    self.startConnectingTimer()
+                } else {
+                    self.connectingTimer?.cancel()
+                    self.connectingTimer = nil
+                    self.connectingTooLong = false
+                }
+            }
+            .store(in: &cancellables)
 
         sseClient.$messages
             .receive(on: DispatchQueue.main)
             .sink { [weak self] streamMessages in
                 guard let self = self else { return }
 
-                // Accumulate messages in pending buffer
-                self.pendingStreamMessages.append(contentsOf: streamMessages)
+                // Only process NEW messages since last index
+                let newMessages = Array(streamMessages.dropFirst(self.lastProcessedMessageIndex))
+                if !newMessages.isEmpty {
+                    // Accumulate only new messages in pending buffer
+                    self.pendingStreamMessages.append(contentsOf: newMessages)
+                    self.lastProcessedMessageIndex = streamMessages.count
 
-                // Start batch timer if not already running
-                self.startBatchTimer()
+                    // Start batch timer if not already running
+                    self.startBatchTimer()
+                }
             }
             .store(in: &cancellables)
     }
@@ -116,6 +142,16 @@ class ChatViewModel: ObservableObject {
         batchTimer = nil
     }
 
+    private func startConnectingTimer() {
+        connectingTimer?.cancel()
+        connectingTooLong = false
+        connectingTimer = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            guard !Task.isCancelled else { return }
+            self.connectingTooLong = true
+        }
+    }
+
     /// Flush pending messages to UI immediately
     private func flushPendingMessages() {
         guard !pendingStreamMessages.isEmpty else { return }
@@ -128,44 +164,68 @@ class ChatViewModel: ObservableObject {
 
     /// Load message history for the current session from the backend
     func loadMessageHistory() async {
-        guard let sessionId = sessionId, let apiClient else { return }
+        guard let apiClient else { return }
 
         isLoadingHistory = true
         error = nil
 
         do {
-            let response: APIResponse<ListResponse<Message>> = try await apiClient.get("/sessions/\(sessionId.uuidString)/messages")
+            // Branch: external sessions load from JSONL transcript, ILS sessions from DB
+            if let encodedProjectPath = encodedProjectPath, let claudeSessionId = claudeSessionId {
+                let path = "/sessions/transcript/\(encodedProjectPath)/\(claudeSessionId)"
+                let response: APIResponse<ListResponse<Message>> = try await apiClient.get(path)
 
-            if let data = response.data {
-                // Convert backend Messages to local ChatMessages
-                let loadedMessages = data.items.map { message -> ChatMessage in
-                    ChatMessage(
-                        id: message.id,
-                        isUser: message.role == .user,
-                        text: message.content,
-                        toolCalls: parseToolCalls(from: message.toolCalls),
-                        toolResults: parseToolResults(from: message.toolResults),
-                        thinking: nil,
-                        cost: nil,
-                        timestamp: message.createdAt,
-                        isFromHistory: true
-                    )
+                if let data = response.data {
+                    let loadedMessages = data.items.map { message -> ChatMessage in
+                        ChatMessage(
+                            id: message.id,
+                            isUser: message.role == .user,
+                            text: message.content,
+                            toolCalls: parseToolCalls(from: message.toolCalls),
+                            timestamp: message.createdAt,
+                            isFromHistory: true
+                        )
+                    }
+                    messages = loadedMessages
+
+                    if messages.isEmpty {
+                        showEmptyTranscriptMessage()
+                    }
                 }
+            } else if let sessionId = sessionId {
+                let response: APIResponse<ListResponse<Message>> = try await apiClient.get("/sessions/\(sessionId.uuidString)/messages")
 
-                // Replace messages with loaded history
-                messages = loadedMessages
+                if let data = response.data {
+                    let loadedMessages = data.items.map { message -> ChatMessage in
+                        ChatMessage(
+                            id: message.id,
+                            isUser: message.role == .user,
+                            text: message.content,
+                            toolCalls: parseToolCalls(from: message.toolCalls),
+                            toolResults: parseToolResults(from: message.toolResults),
+                            thinking: nil,
+                            cost: nil,
+                            timestamp: message.createdAt,
+                            isFromHistory: true
+                        )
+                    }
 
-                // Show welcome message for empty sessions
-                if messages.isEmpty {
-                    showWelcomeMessage()
+                    messages = loadedMessages
+
+                    if messages.isEmpty {
+                        showWelcomeMessage()
+                    }
                 }
             }
         } catch {
             self.error = error
             print("Failed to load message history: \(error)")
-            // Show welcome message on error as fallback for new sessions
             if messages.isEmpty {
-                showWelcomeMessage()
+                if encodedProjectPath != nil {
+                    showEmptyTranscriptMessage()
+                } else {
+                    showWelcomeMessage()
+                }
             }
         }
 
@@ -180,6 +240,16 @@ class ChatViewModel: ObservableObject {
             isFromHistory: true
         )
         messages = [welcomeMessage]
+    }
+
+    /// Display message when transcript has no readable messages
+    private func showEmptyTranscriptMessage() {
+        let emptyMessage = ChatMessage(
+            isUser: false,
+            text: "This session transcript contains no readable messages.",
+            isFromHistory: true
+        )
+        messages = [emptyMessage]
     }
 
     /// Parse tool calls JSON string into ToolCall array
@@ -310,4 +380,3 @@ class ChatViewModel: ObservableObject {
         messages.append(currentMessage)
     }
 }
-

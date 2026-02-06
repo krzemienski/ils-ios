@@ -43,3 +43,5 @@ ils.sqlite-wal
 # Temporary files
 *.log
 *.tmp
+specs/.current-spec
+**/.progress.md

@@ -22,7 +22,7 @@ struct ILSAppApp: App {
 class AppState: ObservableObject {
     @Published var selectedProject: Project?
     @Published var isConnected: Bool = false
-    @Published var serverURL: String = "http://localhost:8080" {
+    @Published var serverURL: String = "http://localhost:9090" {
         didSet {
             apiClient = APIClient(baseURL: serverURL)
             sseClient = SSEClient(baseURL: serverURL)
@@ -33,6 +33,8 @@ class AppState: ObservableObject {
 
     var apiClient: APIClient
     var sseClient: SSEClient
+
+    private var retryTask: Task<Void, Never>?
 
     init() {
         let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
@@ -50,11 +52,45 @@ class AppState: ObservableObject {
             do {
                 let client = APIClient(baseURL: serverURL)
                 _ = try await client.healthCheck()
+                let wasDisconnected = !isConnected
                 isConnected = true
+                stopRetryPolling()
+                if wasDisconnected {
+                    // Notify views to reload after recovery
+                    objectWillChange.send()
+                }
             } catch {
                 isConnected = false
+                startRetryPolling()
             }
         }
+    }
+
+    /// Start periodic polling to detect backend recovery
+    private func startRetryPolling() {
+        guard retryTask == nil else { return }
+        retryTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+                guard !Task.isCancelled else { break }
+                guard let self else { break }
+                do {
+                    let client = APIClient(baseURL: self.serverURL)
+                    _ = try await client.healthCheck()
+                    self.isConnected = true
+                    self.stopRetryPolling()
+                    break
+                } catch {
+                    // Still disconnected, continue polling
+                }
+            }
+        }
+    }
+
+    /// Stop the retry polling timer
+    private func stopRetryPolling() {
+        retryTask?.cancel()
+        retryTask = nil
     }
 
     func handleURL(_ url: URL) {

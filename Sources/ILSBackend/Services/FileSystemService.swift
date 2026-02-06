@@ -506,7 +506,47 @@ struct FileSystemService {
 
     // MARK: - Session Scanning
 
-    /// Scan for external Claude Code sessions
+    /// Flexible ISO8601 date formatter that handles fractional seconds
+    private static let flexibleISO8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    /// Fallback ISO8601 formatter without fractional seconds
+    private static let fallbackISO8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    /// Parse an ISO8601 date string, handling both with and without fractional seconds
+    private func parseISO8601Date(_ string: String) -> Date? {
+        Self.flexibleISO8601Formatter.date(from: string)
+            ?? Self.fallbackISO8601Formatter.date(from: string)
+    }
+
+    /// Structure matching sessions-index.json from ~/.claude/projects/
+    struct SessionsIndex: Codable {
+        let version: Int
+        let entries: [SessionEntry]
+    }
+
+    struct SessionEntry: Codable {
+        let sessionId: String
+        let projectPath: String
+        let summary: String?
+        let created: String   // ISO8601 string — decoded manually for fractional seconds
+        let modified: String  // ISO8601 string
+        let fullPath: String?
+        let firstPrompt: String?
+        let messageCount: Int?
+        let gitBranch: String?
+        let isSidechain: Bool?
+        let fileMtime: Int64?
+    }
+
+    /// Scan for external Claude Code sessions by reading sessions-index.json files
     func scanExternalSessions() throws -> [ExternalSession] {
         var sessions: [ExternalSession] = []
 
@@ -516,33 +556,163 @@ struct FileSystemService {
 
         let contents = try fileManager.contentsOfDirectory(atPath: claudeProjectsPath)
 
-        for item in contents {
-            let projectPath = "\(claudeProjectsPath)/\(item)"
+        for encodedDir in contents {
+            let projectDirPath = "\(claudeProjectsPath)/\(encodedDir)"
             var isDirectory: ObjCBool = false
 
-            if fileManager.fileExists(atPath: projectPath, isDirectory: &isDirectory), isDirectory.boolValue {
-                // Look for session files
-                let projectContents = try? fileManager.contentsOfDirectory(atPath: projectPath)
-                for sessionFile in projectContents ?? [] {
-                    if sessionFile.hasSuffix(".json") {
-                        let sessionId = sessionFile.replacingOccurrences(of: ".json", with: "")
-                        let fullPath = "\(projectPath)/\(sessionFile)"
+            guard fileManager.fileExists(atPath: projectDirPath, isDirectory: &isDirectory),
+                  isDirectory.boolValue else {
+                continue
+            }
 
-                        // Get file modification date
-                        let attrs = try? fileManager.attributesOfItem(atPath: fullPath)
-                        let modDate = attrs?[.modificationDate] as? Date
+            let indexPath = "\(projectDirPath)/sessions-index.json"
+            guard fileManager.fileExists(atPath: indexPath) else {
+                continue
+            }
 
-                        sessions.append(ExternalSession(
-                            claudeSessionId: sessionId,
-                            projectPath: item,
-                            source: .external,
-                            lastActiveAt: modDate
-                        ))
+            guard let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)),
+                  let index = try? JSONDecoder().decode(SessionsIndex.self, from: data) else {
+                continue
+            }
+
+            let projectName = index.entries.first.map {
+                URL(fileURLWithPath: $0.projectPath).lastPathComponent
+            }
+
+            for entry in index.entries {
+                let createdDate = parseISO8601Date(entry.created)
+                let modifiedDate = parseISO8601Date(entry.modified)
+
+                // Use summary as name, fall back to firstPrompt truncated
+                let displayName: String? = entry.summary
+                    ?? entry.firstPrompt.flatMap { prompt in
+                        let clean = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+                        return clean.isEmpty || clean == "No prompt" ? nil : String(clean.prefix(80))
                     }
-                }
+
+                sessions.append(ExternalSession(
+                    claudeSessionId: entry.sessionId,
+                    name: displayName,
+                    projectPath: entry.projectPath,
+                    encodedProjectPath: encodedDir,
+                    projectName: projectName,
+                    source: .external,
+                    lastActiveAt: modifiedDate,
+                    createdAt: createdDate,
+                    messageCount: entry.messageCount,
+                    firstPrompt: entry.firstPrompt,
+                    summary: entry.summary,
+                    gitBranch: entry.gitBranch
+                ))
             }
         }
 
+        // Sort by last active date, most recent first
+        sessions.sort { ($0.lastActiveAt ?? .distantPast) > ($1.lastActiveAt ?? .distantPast) }
+
         return sessions
+    }
+
+    // MARK: - Transcript Reading
+
+    /// Read messages from a JSONL transcript file
+    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
+        let transcriptPath = "\(claudeProjectsPath)/\(encodedProjectPath)/\(sessionId).jsonl"
+
+        guard fileManager.fileExists(atPath: transcriptPath) else {
+            throw Vapor.Abort(.notFound, reason: "Transcript not found")
+        }
+
+        let content = try String(contentsOfFile: transcriptPath, encoding: .utf8)
+        let lines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
+
+        var messages: [Message] = []
+        // Use a deterministic UUID based on session so IDs are stable
+        let sessionUUID = UUID(uuidString: sessionId) ?? UUID()
+
+        for line in lines {
+            guard let lineData = line.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any] else {
+                continue
+            }
+
+            guard let type = json["type"] as? String,
+                  type == "user" || type == "assistant" else {
+                continue
+            }
+
+            guard let messageObj = json["message"] as? [String: Any],
+                  let roleStr = messageObj["role"] as? String else {
+                continue
+            }
+
+            let role: MessageRole = roleStr == "user" ? .user : .assistant
+            var textContent = ""
+            var toolCallsJSON: String?
+
+            let rawContent = messageObj["content"]
+
+            if let stringContent = rawContent as? String {
+                // User messages can be plain strings
+                textContent = stringContent
+            } else if let blocks = rawContent as? [[String: Any]] {
+                // Array of content blocks (text, tool_use, etc.)
+                var textParts: [String] = []
+                var toolCalls: [[String: Any]] = []
+
+                for block in blocks {
+                    guard let blockType = block["type"] as? String else { continue }
+                    if blockType == "text", let text = block["text"] as? String {
+                        textParts.append(text)
+                    } else if blockType == "tool_use" {
+                        let toolCall: [String: Any] = [
+                            "id": block["id"] as? String ?? "",
+                            "name": block["name"] as? String ?? "",
+                            "type": "tool_use"
+                        ]
+                        toolCalls.append(toolCall)
+                    }
+                }
+
+                textContent = textParts.joined(separator: "\n")
+                if !toolCalls.isEmpty,
+                   let tcData = try? JSONSerialization.data(withJSONObject: toolCalls),
+                   let tcString = String(data: tcData, encoding: .utf8) {
+                    toolCallsJSON = tcString
+                }
+            }
+
+            // Skip empty messages and internal command messages
+            let trimmed = textContent.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty { continue }
+
+            // Parse timestamp if available
+            let timestamp: Date?
+            if let ts = json["timestamp"] as? String {
+                timestamp = parseISO8601Date(ts)
+            } else {
+                timestamp = nil
+            }
+
+            let messageId = UUID(uuidString: (json["uuid"] as? String) ?? "") ?? UUID()
+
+            let message = Message(
+                id: messageId,
+                sessionId: sessionUUID,
+                role: role,
+                content: textContent,
+                toolCalls: toolCallsJSON,
+                createdAt: timestamp ?? Date(),
+                updatedAt: timestamp ?? Date()
+            )
+
+            messages.append(message)
+        }
+
+        // Apply pagination
+        let total = messages.count
+        let start = min(offset, total)
+        let end = min(start + limit, total)
+        return Array(messages[start..<end])
     }
 }

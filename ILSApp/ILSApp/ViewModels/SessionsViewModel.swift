@@ -29,10 +29,45 @@ class SessionsViewModel: ObservableObject {
         error = nil
 
         do {
+            // Load ILS database sessions
             let response: APIResponse<ListResponse<ChatSession>> = try await client.get("/sessions")
-            if let data = response.data {
-                sessions = data.items
+            var allSessions = response.data?.items ?? []
+
+            // Also load external Claude Code sessions
+            do {
+                let scanResponse: APIResponse<SessionScanResponse> = try await client.get("/sessions/scan")
+                if let externalSessions = scanResponse.data?.items {
+                    let converted = externalSessions.compactMap { ext -> ChatSession? in
+                        // Skip if already in ILS sessions (by claudeSessionId)
+                        let isDuplicate = allSessions.contains { $0.claudeSessionId == ext.claudeSessionId }
+                        guard !isDuplicate else { return nil }
+
+                        return ChatSession(
+                            id: UUID(),
+                            claudeSessionId: ext.claudeSessionId,
+                            name: ext.name ?? ext.summary,
+                            projectName: ext.projectName,
+                            model: "sonnet",
+                            permissionMode: .default,
+                            status: .completed,
+                            messageCount: ext.messageCount ?? 0,
+                            source: .external,
+                            createdAt: ext.createdAt ?? ext.lastActiveAt ?? Date(),
+                            lastActiveAt: ext.lastActiveAt ?? Date(),
+                            encodedProjectPath: ext.encodedProjectPath,
+                            firstPrompt: ext.firstPrompt
+                        )
+                    }
+                    allSessions.append(contentsOf: converted)
+                }
+            } catch {
+                // External session scan is best-effort — don't fail the whole load
+                print("⚠️ External session scan failed: \(error.localizedDescription)")
             }
+
+            // Sort by last active date, most recent first
+            allSessions.sort { $0.lastActiveAt > $1.lastActiveAt }
+            sessions = allSessions
         } catch {
             self.error = error
             print("❌ Failed to load sessions: \(error.localizedDescription)")
@@ -67,6 +102,13 @@ class SessionsViewModel: ObservableObject {
 
     func deleteSession(_ session: ChatSession) async {
         guard let client else { return }
+
+        // External sessions can't be deleted from ILS DB
+        if session.source == .external {
+            sessions.removeAll { $0.id == session.id }
+            return
+        }
+
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
             sessions.removeAll { $0.id == session.id }

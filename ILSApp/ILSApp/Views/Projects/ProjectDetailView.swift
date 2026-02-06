@@ -51,12 +51,28 @@ struct ProjectDetailView: View {
                     }
                 }
 
-                Section("Statistics") {
+                Section("Sessions") {
                     if let count = project.sessionCount {
-                        LabeledContent("Sessions", value: "\(count)")
+                        NavigationLink {
+                            ProjectSessionsListView(project: project)
+                        } label: {
+                            HStack {
+                                Label("\(count) sessions", systemImage: "bubble.left.and.bubble.right")
+                                Spacer()
+                            }
+                        }
+                    } else {
+                        Text("No sessions")
+                            .foregroundColor(ILSTheme.tertiaryText)
                     }
+                }
+
+                Section("Details") {
                     LabeledContent("Created", value: formattedDate(project.createdAt))
                     LabeledContent("Last Accessed", value: formattedDate(project.lastAccessedAt))
+                    if let encodedPath = project.encodedPath {
+                        LabeledContent("Directory", value: encodedPath)
+                    }
                 }
 
                 if !isEditing {
@@ -149,7 +165,8 @@ struct ProjectDetailView: View {
             description: "A test project",
             createdAt: Date(),
             lastAccessedAt: Date(),
-            sessionCount: 5
+            sessionCount: 5,
+            encodedPath: "-Users-nick-projects-test"
         ),
         viewModel: viewModel
     )

@@ -18,9 +18,11 @@ struct ChatController: RouteCollection {
     @Sendable
     func stream(req: Request) async throws -> Response {
         let input = try req.content.decode(ChatStreamRequest.self)
+        req.logger.error("[STREAM] Received stream request, prompt: \(input.prompt.prefix(50))")
 
         // Check if Claude CLI is available
         let claudeAvailable = await executor.isAvailable()
+        req.logger.error("[STREAM] Claude available: \(claudeAvailable)")
 
         // If Claude CLI is not available, return an error (NO MOCKING)
         guard claudeAvailable else {
@@ -72,8 +74,11 @@ struct ChatController: RouteCollection {
         if let existingSessionId = input.sessionId {
             if let session = try await SessionModel.find(existingSessionId, on: req.db) {
                 options.resume = session.claudeSessionId
+                req.logger.error("[STREAM] Resume session: \(session.claudeSessionId ?? "nil")")
             }
         }
+
+        req.logger.error("[STREAM] Calling executor.execute()")
 
         // Execute Claude CLI
         let stream = executor.execute(
@@ -81,6 +86,8 @@ struct ChatController: RouteCollection {
             workingDirectory: projectPath,
             options: options
         )
+
+        req.logger.error("[STREAM] executor.execute() returned stream, creating SSE response")
 
         // Return SSE response with message persistence
         return StreamingService.createSSEResponseWithPersistence(
