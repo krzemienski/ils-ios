@@ -6,6 +6,9 @@ class SessionsViewModel: ObservableObject {
     @Published var sessions: [ChatSession] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var hasMore = true
+    private var currentOffset = 0
+    private let pageSize = 50
 
     private var client: APIClient?
 
@@ -23,15 +26,22 @@ class SessionsViewModel: ObservableObject {
         return sessions.isEmpty ? "No sessions" : ""
     }
 
-    func loadSessions() async {
+    func loadSessions(refresh: Bool = false) async {
         guard let client else { return }
         isLoading = true
         error = nil
 
+        if refresh {
+            currentOffset = 0
+            hasMore = true
+        }
+
         do {
             // Load ILS database sessions
-            let response: APIResponse<ListResponse<ChatSession>> = try await client.get("/sessions")
+            let path = "/sessions?limit=\(pageSize)&offset=\(currentOffset)" + (refresh ? "&refresh=true" : "")
+            let response: APIResponse<ListResponse<ChatSession>> = try await client.get(path)
             var allSessions = response.data?.items ?? []
+            hasMore = allSessions.count == pageSize
 
             // Also load external Claude Code sessions
             do {
@@ -67,7 +77,12 @@ class SessionsViewModel: ObservableObject {
 
             // Sort by last active date, most recent first
             allSessions.sort { $0.lastActiveAt > $1.lastActiveAt }
-            sessions = allSessions
+
+            if currentOffset == 0 {
+                sessions = allSessions
+            } else {
+                sessions.append(contentsOf: allSessions)
+            }
         } catch {
             self.error = error
             print("❌ Failed to load sessions: \(error.localizedDescription)")
@@ -77,6 +92,12 @@ class SessionsViewModel: ObservableObject {
     }
 
     func retryLoadSessions() async {
+        await loadSessions()
+    }
+
+    func loadMore() async {
+        guard hasMore, !isLoading else { return }
+        currentOffset += pageSize
         await loadSessions()
     }
 
@@ -133,17 +154,3 @@ class SessionsViewModel: ObservableObject {
         return nil
     }
 }
-
-// MARK: - Request Types
-
-struct CreateSessionRequest: Encodable {
-    let projectId: UUID?
-    let name: String?
-    let model: String
-}
-
-struct DeletedResponse: Decodable {
-    let deleted: Bool
-}
-
-struct EmptyBody: Encodable {}

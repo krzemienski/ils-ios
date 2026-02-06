@@ -24,6 +24,8 @@ class SSEClient: ObservableObject {
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
+    private let jsonEncoder = JSONEncoder()
+    private let jsonDecoder = JSONDecoder()
 
     init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
@@ -64,8 +66,7 @@ class SSEClient: ObservableObject {
         urlRequest.addValue("text/event-stream", forHTTPHeaderField: "Accept")
 
         do {
-            let encoder = JSONEncoder()
-            urlRequest.httpBody = try encoder.encode(request)
+            urlRequest.httpBody = try jsonEncoder.encode(request)
         } catch {
             print("[SSEClient] Encode error: \(error)")
             self.error = error
@@ -213,8 +214,7 @@ class SSEClient: ObservableObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            let message = try decoder.decode(StreamMessage.self, from: jsonData)
+            let message = try jsonDecoder.decode(StreamMessage.self, from: jsonData)
             messages.append(message)
             print("[SSEClient] Parsed message successfully, total messages: \(messages.count)")
         } catch {

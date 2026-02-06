@@ -52,6 +52,28 @@ struct ContentView: View {
                     .accessibilityLabel("Open Sidebar")
                     .offset(x: 4, y: -8)
                 }
+                .safeAreaInset(edge: .top) {
+                    if !appState.isConnected {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wifi.slash")
+                                .font(.caption)
+                            Text("No connection to backend")
+                                .font(ILSTheme.captionFont)
+                            Spacer()
+                            Button("Retry") {
+                                Task {
+                                    try? await appState.apiClient.healthCheck()
+                                }
+                            }
+                            .font(ILSTheme.captionFont.weight(.semibold))
+                            .foregroundColor(ILSTheme.accent)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, ILSTheme.spacingM)
+                        .padding(.vertical, ILSTheme.spacingS)
+                        .background(ILSTheme.error.opacity(0.9))
+                    }
+                }
                 .sheet(isPresented: $showingSidebar) {
                     NavigationStack {
                         SidebarView(selectedItem: Binding(

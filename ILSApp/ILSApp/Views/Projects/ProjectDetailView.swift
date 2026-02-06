@@ -11,6 +11,7 @@ struct ProjectDetailView: View {
     @State private var description: String
     @State private var isEditing = false
     @State private var isSaving = false
+    @State private var showCopiedToast = false
 
     init(project: Project, viewModel: ProjectsViewModel) {
         self.project = project
@@ -117,12 +118,36 @@ struct ProjectDetailView: View {
                         }
                         .disabled(isSaving)
                     } else {
-                        Button("Edit") {
-                            isEditing = true
+                        Menu {
+                            Button {
+                                UIPasteboard.general.string = project.path
+                                showCopiedToast = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    showCopiedToast = false
+                                }
+                            } label: {
+                                Label("Copy Path", systemImage: "doc.on.doc")
+                            }
+                            Button {
+                                UIPasteboard.general.string = project.name
+                                showCopiedToast = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    showCopiedToast = false
+                                }
+                            } label: {
+                                Label("Copy Name", systemImage: "doc.on.doc")
+                            }
+                            Divider()
+                            Button("Edit") {
+                                isEditing = true
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
                         }
                     }
                 }
             }
+            .toast(isPresented: $showCopiedToast, message: "Copied to clipboard")
         }
     }
 

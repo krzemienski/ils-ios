@@ -5,6 +5,7 @@ struct SessionsListView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SessionsViewModel()
     @State private var showingNewSession = false
+    @State private var sessionToDelete: ChatSession?
 
     var body: some View {
         List {
@@ -29,8 +30,27 @@ struct SessionsListView: View {
                     }
                     .contentShape(Rectangle())
                     .accessibilityIdentifier("session-\(session.id)")
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            sessionToDelete = session
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                    .contextMenu {
+                        Button {
+                            UIPasteboard.general.string = session.id.uuidString
+                        } label: {
+                            Label("Copy Session ID", systemImage: "doc.on.doc")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            sessionToDelete = session
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
-                .onDelete(perform: deleteSession)
             }
         }
         .darkListStyle()
@@ -38,7 +58,7 @@ struct SessionsListView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
-            await viewModel.loadSessions()
+            await viewModel.loadSessions(refresh: true)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -54,7 +74,10 @@ struct SessionsListView: View {
             // This provides a tappable target that idb can hit
             HStack {
                 Spacer()
-                Button(action: { showingNewSession = true }) {
+                Button(action: {
+                    HapticManager.impact(.light)
+                    showingNewSession = true
+                }) {
                     Image(systemName: "plus")
                         .font(.title2)
                         .fontWeight(.semibold)
@@ -76,10 +99,54 @@ struct SessionsListView: View {
             }
             .presentationBackground(Color.black)
         }
+        .alert("Delete Session?", isPresented: Binding(
+            get: { sessionToDelete != nil },
+            set: { if !$0 { sessionToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let session = sessionToDelete {
+                    Task { await viewModel.deleteSession(session) }
+                    sessionToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { sessionToDelete = nil }
+        } message: {
+            Text("This will permanently delete this session and all its messages.")
+        }
         .overlay {
             if viewModel.isLoading && viewModel.sessions.isEmpty {
-                ProgressView("Loading sessions...")
-                    .accessibilityIdentifier("loading-sessions-indicator")
+                List {
+                    ForEach(0..<6, id: \.self) { _ in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Session Name Here")
+                                    .font(ILSTheme.headlineFont)
+                                Spacer()
+                                Text("sonnet")
+                                    .font(ILSTheme.captionFont)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(ILSTheme.tertiaryBackground)
+                                    .cornerRadius(ILSTheme.cornerRadiusXS)
+                            }
+                            HStack {
+                                Label("project/name", systemImage: "folder")
+                                    .font(ILSTheme.captionFont)
+                                Spacer()
+                                Text("2 min ago")
+                                    .font(ILSTheme.captionFont)
+                            }
+                            HStack {
+                                Label("12 messages", systemImage: "bubble.left")
+                                    .font(ILSTheme.captionFont)
+                                Spacer()
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .darkListStyle()
+                .redacted(reason: .placeholder)
             }
         }
         .task {
@@ -92,15 +159,6 @@ struct SessionsListView: View {
             }
         }
         .accessibilityIdentifier("sessions-list")
-    }
-
-    private func deleteSession(at offsets: IndexSet) {
-        Task {
-            for index in offsets {
-                let session = viewModel.sessions[index]
-                await viewModel.deleteSession(session)
-            }
-        }
     }
 }
 

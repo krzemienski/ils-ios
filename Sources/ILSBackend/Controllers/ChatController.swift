@@ -2,6 +2,13 @@ import Vapor
 import Fluent
 import ILSShared
 
+/// Controller for chat operations including streaming responses and WebSocket connections.
+///
+/// Routes:
+/// - `POST /chat/stream`: Stream Claude CLI responses via Server-Sent Events
+/// - `WS /chat/ws/:sessionId`: WebSocket connection for bidirectional chat
+/// - `POST /chat/permission/:requestId`: Submit permission decisions
+/// - `POST /chat/cancel/:sessionId`: Cancel active chat execution
 struct ChatController: RouteCollection {
     let executor = ClaudeExecutorService()
 
@@ -14,7 +21,13 @@ struct ChatController: RouteCollection {
         chat.post("cancel", ":sessionId", use: cancel)
     }
 
-    /// POST /chat/stream - Stream chat response via SSE
+    /// Stream chat response via Server-Sent Events.
+    ///
+    /// Executes Claude CLI with the provided prompt and streams responses as SSE events.
+    /// Automatically persists messages to database on completion.
+    ///
+    /// - Parameter req: Vapor Request containing ChatStreamRequest body
+    /// - Returns: SSE Response with streaming events
     @Sendable
     func stream(req: Request) async throws -> Response {
         let input = try req.content.decode(ChatStreamRequest.self)
@@ -98,7 +111,10 @@ struct ChatController: RouteCollection {
         )
     }
 
-    /// WebSocket handler for /chat/ws/:sessionId
+    /// Handle WebSocket connection for bidirectional chat.
+    /// - Parameters:
+    ///   - req: Vapor Request with sessionId parameter
+    ///   - ws: WebSocket connection
     @Sendable
     func handleWebSocket(req: Request, ws: WebSocket) async {
         guard let sessionIdString = req.parameters.get("sessionId"),
@@ -125,7 +141,9 @@ struct ChatController: RouteCollection {
         )
     }
 
-    /// POST /chat/permission/:requestId - Submit permission decision
+    /// Submit permission decision for a pending request.
+    /// - Parameter req: Vapor Request with requestId parameter and PermissionDecision body
+    /// - Returns: APIResponse with acknowledgment
     @Sendable
     func permission(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
         guard let requestId = req.parameters.get("requestId") else {
@@ -143,7 +161,9 @@ struct ChatController: RouteCollection {
         )
     }
 
-    /// POST /chat/cancel/:sessionId - Cancel an active chat
+    /// Cancel an active chat session's Claude CLI process.
+    /// - Parameter req: Vapor Request with sessionId parameter
+    /// - Returns: APIResponse with cancellation confirmation
     @Sendable
     func cancel(req: Request) async throws -> APIResponse<CancelledResponse> {
         guard let sessionId = req.parameters.get("sessionId") else {

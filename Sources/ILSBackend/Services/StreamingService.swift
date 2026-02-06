@@ -10,13 +10,28 @@ private func debugLog(_ message: String) {
     }
 }
 
-/// Service for handling SSE streaming responses
+/// Service for handling Server-Sent Events (SSE) streaming responses.
+///
+/// Converts AsyncThrowingStream of StreamMessage into HTTP SSE responses with:
+/// - Automatic heartbeat/ping events (every 15s)
+/// - Error handling and propagation
+/// - Optional message persistence to database
+/// - Client disconnection detection
 struct StreamingService {
-    /// Heartbeat interval in seconds
-    private static let heartbeatInterval: UInt64 = 15_000_000_000 // 15 seconds in nanoseconds
+    /// Shared JSON encoder for all SSE formatting
+    private static let jsonEncoder = JSONEncoder()
 
-    /// Create an SSE response from an async stream of messages
-    /// Includes automatic heartbeat events to keep connection alive
+    /// Heartbeat interval in nanoseconds (15 seconds)
+    private static let heartbeatInterval: UInt64 = 15_000_000_000
+
+    /// Create an SSE response from an async stream of messages.
+    ///
+    /// Automatically sends heartbeat pings every 15 seconds to keep connection alive.
+    ///
+    /// - Parameters:
+    ///   - stream: AsyncThrowingStream of StreamMessage events
+    ///   - request: Vapor Request for logging and context
+    /// - Returns: Vapor Response with SSE content type
     static func createSSEResponse(
         from stream: AsyncThrowingStream<StreamMessage, Error>,
         on request: Request
@@ -96,8 +111,17 @@ struct StreamingService {
         return response
     }
 
-    /// Create an SSE response with message persistence
-    /// Accumulates assistant response content and saves to database on stream completion
+    /// Create an SSE response with message persistence to database.
+    ///
+    /// Accumulates assistant response content (text, tool calls, tool results) during streaming
+    /// and saves to database on stream completion. Updates session metadata (message count, cost).
+    ///
+    /// - Parameters:
+    ///   - stream: AsyncThrowingStream of StreamMessage events
+    ///   - sessionId: Session UUID for database association
+    ///   - userMessageId: User message UUID for correlation
+    ///   - request: Vapor Request for database access and logging
+    /// - Returns: Vapor Response with SSE content type and message ID headers
     static func createSSEResponseWithPersistence(
         from stream: AsyncThrowingStream<StreamMessage, Error>,
         sessionId: UUID,
@@ -162,12 +186,12 @@ struct StreamingService {
                             case .text(let textBlock):
                                 accumulatedContent += textBlock.text
                             case .toolUse(let toolUseBlock):
-                                if let jsonData = try? JSONEncoder().encode(toolUseBlock),
+                                if let jsonData = try? Self.jsonEncoder.encode(toolUseBlock),
                                    let jsonString = String(data: jsonData, encoding: .utf8) {
                                     toolCalls.append(jsonString)
                                 }
                             case .toolResult(let toolResultBlock):
-                                if let jsonData = try? JSONEncoder().encode(toolResultBlock),
+                                if let jsonData = try? Self.jsonEncoder.encode(toolResultBlock),
                                    let jsonString = String(data: jsonData, encoding: .utf8) {
                                     toolResults.append(jsonString)
                                 }
@@ -278,10 +302,11 @@ struct StreamingService {
         return response
     }
 
-    /// Format a StreamMessage as an SSE event
+    /// Format a StreamMessage as an SSE event with event type and JSON data.
+    /// - Parameter message: StreamMessage to format
+    /// - Returns: SSE-formatted string (e.g., "event: assistant\ndata: {...}\n\n")
     private static func formatSSEEvent(_ message: StreamMessage) throws -> String {
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(message)
+        let data = try jsonEncoder.encode(message)
         guard let jsonString = String(data: data, encoding: .utf8) else {
             throw Abort(.internalServerError, reason: "Failed to encode message")
         }
@@ -303,7 +328,8 @@ struct StreamingService {
         return "event: \(eventType)\ndata: \(jsonString)\n\n"
     }
 
-    /// Send a keep-alive ping (SSE comment format)
+    /// Create a keep-alive ping event in SSE comment format.
+    /// - Returns: SSE comment string (": ping\n\n")
     static func createPingEvent() -> String {
         return ": ping\n\n"
     }

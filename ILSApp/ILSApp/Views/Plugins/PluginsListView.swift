@@ -12,22 +12,27 @@ struct PluginsListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.loadPlugins()
                 }
-            } else if viewModel.plugins.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    title: "No Plugins",
-                    systemImage: "puzzlepiece.extension",
-                    description: "Install plugins from the marketplace",
-                    actionTitle: "Browse Marketplace"
-                ) {
-                    showingMarketplace = true
+            } else if viewModel.filteredPlugins.isEmpty && !viewModel.isLoading {
+                if viewModel.searchText.isEmpty {
+                    EmptyStateView(
+                        title: "No Plugins",
+                        systemImage: "puzzlepiece.extension",
+                        description: "Install plugins from the marketplace",
+                        actionTitle: "Browse Marketplace"
+                    ) {
+                        showingMarketplace = true
+                    }
+                } else {
+                    ContentUnavailableView.search(text: viewModel.searchText)
                 }
             } else {
-                ForEach(viewModel.plugins) { plugin in
+                ForEach(viewModel.filteredPlugins) { plugin in
                     PluginRowView(plugin: plugin, viewModel: viewModel)
                 }
             }
         }
         .darkListStyle()
+        .searchable(text: $viewModel.searchText, prompt: "Search plugins...")
         .navigationTitle("Plugins")
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(Color.black, for: .navigationBar)
@@ -119,6 +124,8 @@ struct PluginRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "enabled" : "disabled")")
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 Task {
@@ -131,6 +138,7 @@ struct PluginRowView: View {
     }
 
     private func togglePlugin() {
+        HapticManager.impact(.light)
         Task {
             if plugin.isEnabled {
                 await viewModel.disablePlugin(plugin)

@@ -269,3 +269,73 @@ struct EmptyStateView: View {
         }
     }
 }
+
+// MARK: - Status Badge Component
+
+struct StatusBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(text)
+                .font(.caption2)
+                .foregroundColor(color)
+        }
+    }
+}
+
+// MARK: - Haptic Feedback Manager
+
+enum HapticManager {
+    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
+    }
+
+    static func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        UINotificationFeedbackGenerator().notificationOccurred(type)
+    }
+}
+
+// MARK: - Toast Component
+
+struct ToastModifier: ViewModifier {
+    @Binding var isPresented: Bool
+    let message: String
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if isPresented {
+                    Text(message)
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, ILSTheme.spacingM)
+                        .padding(.vertical, ILSTheme.spacingS)
+                        .background(ILSTheme.tertiaryBackground)
+                        .cornerRadius(ILSTheme.cornerRadiusSmall)
+                        .shadow(color: .black.opacity(0.3), radius: 4)
+                        .padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: isPresented)
+    }
+}
+
+extension View {
+    func toast(isPresented: Binding<Bool>, message: String) -> some View {
+        modifier(ToastModifier(isPresented: isPresented, message: message))
+    }
+
+    /// Show toast then auto-dismiss after duration
+    func showToast(_ binding: Binding<Bool>, duration: TimeInterval = 2) {
+        binding.wrappedValue = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+            binding.wrappedValue = false
+        }
+    }
+}

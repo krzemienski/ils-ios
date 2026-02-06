@@ -6,6 +6,17 @@ actor APIClient {
     private let session: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
+    private var cache: [String: CacheEntry] = [:]
+    private let defaultCacheTTL: TimeInterval = 30 // 30 seconds
+
+    private struct CacheEntry {
+        let data: Data
+        let timestamp: Date
+
+        func isValid(ttl: TimeInterval) -> Bool {
+            Date().timeIntervalSince(timestamp) < ttl
+        }
+    }
 
     init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
@@ -36,7 +47,15 @@ actor APIClient {
 
     // MARK: - Generic Request Methods
 
-    func get<T: Decodable>(_ path: String) async throws -> T {
+    func get<T: Decodable>(_ path: String, cacheTTL: TimeInterval? = nil) async throws -> T {
+        let cacheKey = path
+        let ttl = cacheTTL ?? defaultCacheTTL
+
+        // Check cache
+        if let entry = cache[cacheKey], entry.isValid(ttl: ttl) {
+            return try decoder.decode(T.self, from: entry.data)
+        }
+
         let url = URL(string: "\(baseURL)/api/v1\(path)")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -44,6 +63,9 @@ actor APIClient {
 
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
+
+        // Cache the raw data
+        cache[cacheKey] = CacheEntry(data: data, timestamp: Date())
 
         return try decoder.decode(T.self, from: data)
     }
@@ -59,6 +81,10 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
+        // Invalidate GET cache for the base path
+        let basePath = path.split(separator: "/").prefix(2).joined(separator: "/")
+        cache.removeValue(forKey: "/\(basePath)")
+
         return try decoder.decode(T.self, from: data)
     }
 
@@ -73,6 +99,10 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
+        // Invalidate GET cache for the base path
+        let basePath = path.split(separator: "/").prefix(2).joined(separator: "/")
+        cache.removeValue(forKey: "/\(basePath)")
+
         return try decoder.decode(T.self, from: data)
     }
 
@@ -85,7 +115,19 @@ actor APIClient {
         let (data, response) = try await session.data(for: request)
         try validateResponse(response)
 
+        // Invalidate GET cache for the base path
+        let basePath = path.split(separator: "/").prefix(2).joined(separator: "/")
+        cache.removeValue(forKey: "/\(basePath)")
+
         return try decoder.decode(T.self, from: data)
+    }
+
+    func invalidateCache(for path: String? = nil) {
+        if let path = path {
+            cache.removeValue(forKey: path)
+        } else {
+            cache.removeAll()
+        }
     }
 
     private func validateResponse(_ response: URLResponse) throws {

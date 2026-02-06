@@ -42,6 +42,8 @@
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
 		7B685E368FAAAB1726A112F1 /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81D47EAE6EBAE3D55FC6D68 /* ConfigurationManager.swift */; };
 		9557D153A9312C3A089C5D30 /* ServerConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E47D6F26D29AFF98D336052 /* ServerConnectionView.swift */; };
+		FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */; };
+		FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8864999F593F3FBA35FE5962 /* SessionTemplate.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
@@ -90,9 +92,11 @@
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		0000000000000000000000E2 /* ProjectSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionsListView.swift; sourceTree = "<group>"; };
 		0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditMCPServerView.swift; sourceTree = "<group>"; };
+		16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplatesView.swift; sourceTree = "<group>"; };
 		1E47D6F26D29AFF98D336052 /* ServerConnectionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServerConnectionView.swift; sourceTree = "<group>"; };
 		428319AD18184D7B92DE7F61 /* ServerConnectionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServerConnectionViewModel.swift; sourceTree = "<group>"; };
 		7707100E4F96375256BF886C /* KeychainService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		A81D47EAE6EBAE3D55FC6D68 /* ConfigurationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -150,6 +154,7 @@
 				000000000000000000000063 /* ViewModels */,
 				000000000000000000000013 /* Assets.xcassets */,
 				000000000000000000000014 /* ILSApp.entitlements */,
+				2F5AAE5FE7854694374E1A23 /* Models */,
 			);
 			path = ILSApp;
 			sourceTree = "<group>";
@@ -265,6 +270,7 @@
 				000000000000000000000053 /* SessionsListView.swift */,
 				000000000000000000000054 /* NewSessionView.swift */,
 				D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */,
+				16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -283,6 +289,15 @@
 				000000000000000000000056 /* DashboardView.swift */,
 			);
 			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		2F5AAE5FE7854694374E1A23 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				8864999F593F3FBA35FE5962 /* SessionTemplate.swift */,
+			);
+			name = Models;
+			path = Models;
 			sourceTree = "<group>";
 		};
 		5E6482F0DAE42DA0FC678C1F /* ServerConnection */ = {
@@ -435,6 +450,8 @@
 				9557D153A9312C3A089C5D30 /* ServerConnectionView.swift in Sources */,
 				210FD21F9B885EE639ACB070 /* ServerConnectionViewModel.swift in Sources */,
 				7B685E368FAAAB1726A112F1 /* ConfigurationManager.swift in Sources */,
+				FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */,
+				FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

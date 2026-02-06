@@ -14,6 +14,7 @@ struct ChatView: View {
     @State private var showForkAlert = false
     @State private var forkedSession: ChatSession?
     @FocusState private var isInputFocused: Bool
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Whether this is an external (read-only) session
     private var isExternalSession: Bool {
@@ -83,6 +84,13 @@ struct ChatView: View {
         } message: {
             if let forked = forkedSession {
                 Text("Created new session: \(forked.name ?? "Unnamed")")
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task {
+                    await viewModel.refreshMessages()
+                }
             }
         }
     }

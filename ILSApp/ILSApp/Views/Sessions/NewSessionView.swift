@@ -19,6 +19,7 @@ struct NewSessionView: View {
     @State private var fallbackModel = ""
     @State private var includePartialMessages = false
     @State private var continueConversation = false
+    @State private var showTemplates = false
 
     let onCreated: (ChatSession) -> Void
 
@@ -30,6 +31,22 @@ struct NewSessionView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Button {
+                        showTemplates = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "doc.on.doc")
+                                .foregroundColor(ILSTheme.accent)
+                            Text("Start from Template")
+                                .foregroundColor(ILSTheme.primaryText)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(ILSTheme.tertiaryText)
+                        }
+                    }
+                }
+
                 Section("Session Details") {
                     TextField("Session Name (optional)", text: $sessionName)
                         .accessibilityIdentifier("session-name-field")
@@ -120,16 +137,26 @@ struct NewSessionView: View {
                         .accessibilityIdentifier("cancel-new-session-button")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        createSession()
+                    if isCreating {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Button("Create") {
+                            createSession()
+                        }
+                        .accessibilityIdentifier("create-session-button")
                     }
-                    .disabled(isCreating)
-                    .accessibilityIdentifier("create-session-button")
                 }
             }
             .task {
                 projectsViewModel.configure(client: appState.apiClient)
                 await projectsViewModel.loadProjects()
+            }
+            .sheet(isPresented: $showTemplates) {
+                SessionTemplatesView { template in
+                    applyTemplate(template)
+                }
+                .presentationBackground(Color.black)
             }
         }
     }
@@ -203,6 +230,15 @@ struct NewSessionView: View {
             includePartialMessages: includePartialMessages ? true : nil,
             fallbackModel: fallbackModel.isEmpty ? nil : fallbackModel
         )
+    }
+
+    private func applyTemplate(_ template: SessionTemplate) {
+        sessionName = ""
+        selectedModel = template.model
+        permissionMode = template.permissionMode
+        systemPrompt = template.systemPrompt
+        maxBudget = template.maxBudget
+        maxTurns = template.maxTurns
     }
 }
 

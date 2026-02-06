@@ -6,6 +6,9 @@ class ProjectsViewModel: ObservableObject {
     @Published var projects: [Project] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var hasMore = true
+    private var currentOffset = 0
+    private let pageSize = 50
 
     private var client: APIClient?
 
@@ -23,15 +26,26 @@ class ProjectsViewModel: ObservableObject {
         return projects.isEmpty ? "No projects yet" : ""
     }
 
-    func loadProjects() async {
+    func loadProjects(refresh: Bool = false) async {
         guard let client else { return }
         isLoading = true
         error = nil
 
+        if refresh {
+            currentOffset = 0
+            hasMore = true
+        }
+
         do {
-            let response: APIResponse<ListResponse<Project>> = try await client.get("/projects")
+            let path = "/projects?limit=\(pageSize)&offset=\(currentOffset)" + (refresh ? "&refresh=true" : "")
+            let response: APIResponse<ListResponse<Project>> = try await client.get(path)
             if let data = response.data {
-                projects = data.items
+                if currentOffset == 0 {
+                    projects = data.items
+                } else {
+                    projects.append(contentsOf: data.items)
+                }
+                hasMore = data.items.count == pageSize
             }
         } catch {
             self.error = error
@@ -39,6 +53,12 @@ class ProjectsViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    func loadMore() async {
+        guard hasMore, !isLoading else { return }
+        currentOffset += pageSize
+        await loadProjects()
     }
 
     func retryLoadProjects() async {
@@ -98,19 +118,25 @@ class ProjectsViewModel: ObservableObject {
             print("❌ Failed to delete project: \(error.localizedDescription)")
         }
     }
-}
 
-// MARK: - Request Types
-
-struct CreateProjectRequest: Encodable {
-    let name: String
-    let path: String
-    let defaultModel: String
-    let description: String?
-}
-
-struct UpdateProjectRequest: Encodable {
-    let name: String?
-    let defaultModel: String?
-    let description: String?
+    func duplicateProject(_ project: Project) async -> Project? {
+        guard let client else { return nil }
+        do {
+            let request = CreateProjectRequest(
+                name: "\(project.name) (copy)",
+                path: project.path,
+                defaultModel: project.defaultModel,
+                description: project.description
+            )
+            let response: APIResponse<Project> = try await client.post("/projects", body: request)
+            if let newProject = response.data {
+                projects.insert(newProject, at: 0)
+                return newProject
+            }
+        } catch {
+            self.error = error
+            print("❌ Failed to duplicate project: \(error.localizedDescription)")
+        }
+        return nil
+    }
 }

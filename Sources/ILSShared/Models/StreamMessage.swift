@@ -2,12 +2,17 @@ import Foundation
 
 // MARK: - Main Stream Message Types
 
-/// Top-level streaming message from Claude Code
+/// Top-level streaming message from Claude Code.
 public enum StreamMessage: Codable, Sendable {
+    /// System initialization or control message.
     case system(SystemMessage)
+    /// Assistant response with content blocks.
     case assistant(AssistantMessage)
+    /// Final result message with usage and cost information.
     case result(ResultMessage)
+    /// Permission request for tool execution.
     case permission(PermissionRequest)
+    /// Error message from the stream.
     case error(StreamError)
 
     private enum CodingKeys: String, CodingKey {
@@ -56,9 +61,13 @@ public enum StreamMessage: Codable, Sendable {
 
 // MARK: - System Message
 
+/// System message containing session initialization data.
 public struct SystemMessage: Codable, Sendable {
+    /// Message type (always "system").
     public let type: String
+    /// Message subtype (e.g., "init").
     public let subtype: String
+    /// System data payload.
     public let data: SystemData
 
     public init(type: String = "system", subtype: String = "init", data: SystemData) {
@@ -68,10 +77,15 @@ public struct SystemMessage: Codable, Sendable {
     }
 }
 
+/// System initialization data from Claude Code.
 public struct SystemData: Codable, Sendable {
+    /// Claude session ID.
     public let sessionId: String
+    /// Available plugins.
     public let plugins: [String]?
+    /// Available slash commands.
     public let slashCommands: [String]?
+    /// Available tools.
     public let tools: [String]?
 
     public init(
@@ -89,8 +103,11 @@ public struct SystemData: Codable, Sendable {
 
 // MARK: - Assistant Message
 
+/// Assistant response message containing content blocks.
 public struct AssistantMessage: Codable, Sendable {
+    /// Message type (always "assistant").
     public let type: String
+    /// Array of content blocks in the response.
     public let content: [ContentBlock]
 
     public init(type: String = "assistant", content: [ContentBlock]) {
@@ -101,10 +118,15 @@ public struct AssistantMessage: Codable, Sendable {
 
 // MARK: - Content Blocks
 
+/// Content block within an assistant message.
 public enum ContentBlock: Codable, Sendable {
+    /// Plain text response.
     case text(TextBlock)
+    /// Tool invocation request.
     case toolUse(ToolUseBlock)
+    /// Result from a tool execution.
     case toolResult(ToolResultBlock)
+    /// Extended thinking content.
     case thinking(ThinkingBlock)
 
     private enum CodingKeys: String, CodingKey {
@@ -144,8 +166,11 @@ public enum ContentBlock: Codable, Sendable {
     }
 }
 
+/// Plain text content block.
 public struct TextBlock: Codable, Sendable {
+    /// Block type (always "text").
     public let type: String
+    /// The text content.
     public let text: String
 
     public init(type: String = "text", text: String) {
@@ -154,10 +179,15 @@ public struct TextBlock: Codable, Sendable {
     }
 }
 
+/// Tool invocation block requesting execution.
 public struct ToolUseBlock: Codable, Sendable {
+    /// Block type (always "toolUse").
     public let type: String
+    /// Unique identifier for this tool use.
     public let id: String
+    /// Name of the tool to invoke.
     public let name: String
+    /// Tool input parameters.
     public let input: AnyCodable
 
     public init(type: String = "toolUse", id: String, name: String, input: AnyCodable) {
@@ -168,10 +198,15 @@ public struct ToolUseBlock: Codable, Sendable {
     }
 }
 
+/// Result from a tool execution.
 public struct ToolResultBlock: Codable, Sendable {
+    /// Block type (always "toolResult").
     public let type: String
+    /// ID of the tool use this result corresponds to.
     public let toolUseId: String
+    /// Result content or error message.
     public let content: String
+    /// Whether this result represents an error.
     public let isError: Bool
 
     public init(type: String = "toolResult", toolUseId: String, content: String, isError: Bool = false) {
@@ -182,8 +217,11 @@ public struct ToolResultBlock: Codable, Sendable {
     }
 }
 
+/// Extended thinking content block.
 public struct ThinkingBlock: Codable, Sendable {
+    /// Block type (always "thinking").
     public let type: String
+    /// The thinking content.
     public let thinking: String
 
     public init(type: String = "thinking", thinking: String) {
@@ -194,15 +232,25 @@ public struct ThinkingBlock: Codable, Sendable {
 
 // MARK: - Result Message
 
+/// Final result message with usage and cost information.
 public struct ResultMessage: Codable, Sendable {
+    /// Message type (always "result").
     public let type: String
+    /// Result subtype (e.g., "success", "error").
     public let subtype: String
+    /// Session ID.
     public let sessionId: String
+    /// Total duration in milliseconds.
     public let durationMs: Int?
+    /// API request duration in milliseconds.
     public let durationApiMs: Int?
+    /// Whether the result represents an error.
     public let isError: Bool
+    /// Number of turns in the conversation.
     public let numTurns: Int?
+    /// Total cost in USD.
     public let totalCostUSD: Double?
+    /// Token usage information.
     public let usage: UsageInfo?
 
     public init(
@@ -228,10 +276,15 @@ public struct ResultMessage: Codable, Sendable {
     }
 }
 
+/// Token usage information for a conversation turn.
 public struct UsageInfo: Codable, Sendable {
+    /// Number of input tokens.
     public let inputTokens: Int
+    /// Number of output tokens.
     public let outputTokens: Int
+    /// Cache read input tokens (prompt caching).
     public let cacheReadInputTokens: Int?
+    /// Cache creation input tokens.
     public let cacheCreationInputTokens: Int?
 
     public init(
@@ -249,10 +302,15 @@ public struct UsageInfo: Codable, Sendable {
 
 // MARK: - Permission Request
 
+/// Permission request for tool execution.
 public struct PermissionRequest: Codable, Sendable {
+    /// Message type (always "permission").
     public let type: String
+    /// Unique identifier for this permission request.
     public let requestId: String
+    /// Name of the tool requiring permission.
     public let toolName: String
+    /// Input parameters for the tool.
     public let toolInput: AnyCodable
 
     public init(type: String = "permission", requestId: String, toolName: String, toolInput: AnyCodable) {
@@ -265,9 +323,13 @@ public struct PermissionRequest: Codable, Sendable {
 
 // MARK: - Stream Error
 
+/// Error message from the streaming API.
 public struct StreamError: Codable, Sendable {
+    /// Message type (always "error").
     public let type: String
+    /// Error code.
     public let code: String
+    /// Human-readable error message.
     public let message: String
 
     public init(type: String = "error", code: String, message: String) {

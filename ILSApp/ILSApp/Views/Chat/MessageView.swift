@@ -240,7 +240,7 @@ struct ThinkingView: View {
 
 // MARK: - Data Models
 
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     let isUser: Bool
     var text: String
@@ -272,15 +272,27 @@ struct ChatMessage: Identifiable {
         self.timestamp = timestamp
         self.isFromHistory = isFromHistory
     }
+
+    static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.isUser == rhs.isUser &&
+        lhs.text == rhs.text &&
+        lhs.toolCalls == rhs.toolCalls &&
+        lhs.toolResults == rhs.toolResults &&
+        lhs.thinking == rhs.thinking &&
+        lhs.cost == rhs.cost &&
+        lhs.timestamp == rhs.timestamp &&
+        lhs.isFromHistory == rhs.isFromHistory
+    }
 }
 
-struct ToolCall: Identifiable {
+struct ToolCall: Identifiable, Equatable {
     let id: String
     let name: String
     let inputPreview: String?
 }
 
-struct ToolResult {
+struct ToolResult: Equatable {
     let toolUseId: String
     let content: String
     let isError: Bool

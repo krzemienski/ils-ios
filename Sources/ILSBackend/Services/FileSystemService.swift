@@ -1,10 +1,9 @@
 import Foundation
 import Vapor
 import ILSShared
-import Yams
 
 /// Cache entry with timestamp for TTL-based invalidation
-private struct CacheEntry<T> {
+struct CacheEntry<T> {
     let value: T
     let timestamp: Date
 
@@ -14,7 +13,9 @@ private struct CacheEntry<T> {
 }
 
 /// Actor for thread-safe cache management
-private actor FileSystemCache {
+actor FileSystemCache {
+    static let shared = FileSystemCache()
+
     private var skillsCache: CacheEntry<[Skill]>?
     private var mcpServersCache: CacheEntry<[MCPServer]>?
 
@@ -57,662 +58,194 @@ private actor FileSystemCache {
     }
 }
 
-/// Shared cache instance
-private let sharedCache = FileSystemCache()
-
-/// Service for file system operations related to Claude Code configuration
+/// Facade service that delegates file system operations to specialized domain services.
+///
+/// This service maintains backward compatibility while internally routing operations to focused sub-services:
+/// - `skills`: Skill file scanning and management
+/// - `mcp`: MCP server configuration
+/// - `config`: Claude settings
+/// - `sessions`: External session scanning and transcript reading
 struct FileSystemService {
-    private let fileManager = FileManager.default
+    /// Service for skills directory operations
+    let skills: SkillsFileService
+    /// Service for MCP configuration operations
+    let mcp: MCPFileService
+    /// Service for Claude configuration operations
+    let config: ConfigFileService
+    /// Service for session scanning and transcript reading
+    let sessions: SessionFileService
 
-    /// Cache TTL in seconds (configurable)
-    var cacheTTL: TimeInterval = 30
+    init() {
+        self.skills = SkillsFileService()
+        self.mcp = MCPFileService()
+        self.config = ConfigFileService()
+        self.sessions = SessionFileService()
+    }
 
-    /// Home directory path
+    // MARK: - Type Aliases (exposed for backward compatibility)
+
+    typealias SessionsIndex = SessionFileService.SessionsIndex
+    typealias SessionEntry = SessionFileService.SessionEntry
+
+    // MARK: - Path Properties (exposed for backward compatibility)
+
+    /// User's home directory path (e.g., `/Users/username`)
     var homeDirectory: String {
-        fileManager.homeDirectoryForCurrentUser.path
+        config.homeDirectory
     }
 
-    /// Claude directory path
+    /// Claude configuration directory path (`~/.claude`)
     var claudeDirectory: String {
-        "\(homeDirectory)/.claude"
+        config.claudeDirectory
     }
 
-    /// Skills directory path
+    /// Skills directory path (`~/.claude/skills`)
     var skillsDirectory: String {
-        "\(claudeDirectory)/skills"
+        skills.skillsDirectory
     }
 
-    /// User settings path
+    /// User settings file path (`~/.claude/settings.json`)
     var userSettingsPath: String {
-        "\(claudeDirectory)/settings.json"
+        config.userSettingsPath
     }
 
-    /// User claude.json path (legacy)
+    /// Legacy Claude.json file path (`~/.claude.json`)
     var userClaudeJsonPath: String {
-        "\(homeDirectory)/.claude.json"
+        mcp.userClaudeJsonPath
     }
 
-    /// User MCP config path (~/.mcp.json)
+    /// MCP configuration file path (`~/.mcp.json`)
     var userMCPConfigPath: String {
-        "\(homeDirectory)/.mcp.json"
+        mcp.userMCPConfigPath
     }
 
-    /// Claude projects directory for session scanning
+    /// Claude projects directory path (`~/.claude/projects`)
     var claudeProjectsPath: String {
-        "\(claudeDirectory)/projects"
+        sessions.claudeProjectsPath
     }
 
-    // MARK: - Skills
+    // MARK: - Skills (delegate to SkillsFileService)
 
-    /// List all skills from the skills directory (with caching)
+    /// List all skills from `~/.claude/skills`, with optional caching.
+    /// - Parameter bypassCache: If true, forces a fresh scan from disk
+    /// - Returns: Array of Skill objects
     func listSkills(bypassCache: Bool = false) async throws -> [Skill] {
-        // Check cache first unless bypassed
-        if !bypassCache, let cached = await sharedCache.getCachedSkills(ttl: cacheTTL) {
-            return cached
-        }
-
-        let skills = try scanSkills()
-
-        // Update cache
-        await sharedCache.setCachedSkills(skills)
-
-        return skills
+        try await skills.listSkills(bypassCache: bypassCache)
     }
 
-    /// Scan all skills from the skills directory (no caching)
+    /// Scan all skills from disk without using cache.
+    /// - Returns: Array of Skill objects
     func scanSkills() throws -> [Skill] {
-        var skills: [Skill] = []
-
-        guard fileManager.fileExists(atPath: skillsDirectory) else {
-            return skills
-        }
-
-        // Recursively scan for all .md files in the skills directory
-        skills = try scanSkillsRecursively(at: skillsDirectory, basePath: skillsDirectory)
-
-        return skills
+        try skills.scanSkills()
     }
 
-    /// Recursively scan directory for skill .md files
-    private func scanSkillsRecursively(at path: String, basePath: String) throws -> [Skill] {
-        var skills: [Skill] = []
-
-        let contents = try fileManager.contentsOfDirectory(atPath: path)
-
-        for item in contents {
-            let itemPath = "\(path)/\(item)"
-            var isDirectory: ObjCBool = false
-
-            if fileManager.fileExists(atPath: itemPath, isDirectory: &isDirectory) {
-                if isDirectory.boolValue {
-                    // Check for SKILL.md in this directory (traditional format)
-                    let skillMdPath = "\(itemPath)/SKILL.md"
-                    if fileManager.fileExists(atPath: skillMdPath) {
-                        if let skill = try? parseSkillFile(at: skillMdPath, name: item) {
-                            skills.append(skill)
-                        }
-                    }
-
-                    // Recursively scan subdirectory for more skills
-                    let subSkills = try scanSkillsRecursively(at: itemPath, basePath: basePath)
-                    skills.append(contentsOf: subSkills)
-                } else if item.hasSuffix(".md") && item != "SKILL.md" {
-                    // Parse standalone .md files as skills
-                    let skillName = String(item.dropLast(3)) // Remove .md extension
-                    if let skill = try? parseSkillFile(at: itemPath, name: skillName) {
-                        skills.append(skill)
-                    }
-                }
-            }
-        }
-
-        return skills
-    }
-
-    /// Invalidate skills cache (call after modifications)
+    /// Invalidate the skills cache, forcing next read to scan from disk.
     func invalidateSkillsCache() async {
-        await sharedCache.invalidateSkills()
+        await skills.invalidateSkillsCache()
     }
 
-    /// Parse a SKILL.md file or standalone .md skill file
-    private func parseSkillFile(at path: String, name: String) throws -> Skill {
-        let content = try String(contentsOfFile: path, encoding: .utf8)
-        var description: String?
-        var version: String?
-        var tags: [String] = []
-        var parsedName = name
-
-        // Parse YAML frontmatter if present
-        if content.hasPrefix("---") {
-            let parts = content.split(separator: "---", maxSplits: 2, omittingEmptySubsequences: false)
-            if parts.count >= 2 {
-                let yamlContent = String(parts[1])
-                if let yaml = try? Yams.load(yaml: yamlContent) as? [String: Any] {
-                    description = yaml["description"] as? String
-                    version = yaml["version"] as? String
-
-                    // Parse tags - can be array or comma-separated string
-                    if let tagArray = yaml["tags"] as? [String] {
-                        tags = tagArray
-                    } else if let tagString = yaml["tags"] as? String {
-                        tags = tagString.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-                    }
-
-                    // Use name from frontmatter if available
-                    if let frontmatterName = yaml["name"] as? String {
-                        parsedName = frontmatterName
-                    }
-                }
-            }
-        }
-
-        // Determine the skill path (directory for SKILL.md, file path for standalone)
-        let skillPath: String
-        if path.hasSuffix("/SKILL.md") {
-            skillPath = path.replacingOccurrences(of: "/SKILL.md", with: "")
-        } else {
-            skillPath = path
-        }
-
-        return Skill(
-            name: parsedName,
-            description: description,
-            version: version,
-            tags: tags,
-            isActive: true,
-            path: skillPath,
-            source: .local,
-            content: content
-        )
-    }
-
-    /// Get a specific skill by name
+    /// Get a specific skill by name.
+    /// - Parameter name: The skill name (directory name or file name without .md)
+    /// - Returns: Skill if found, nil otherwise
     func getSkill(name: String) throws -> Skill? {
-        // Try directory-based skill first (name/SKILL.md)
-        let skillPath = "\(skillsDirectory)/\(name)"
-        let skillMdPath = "\(skillPath)/SKILL.md"
-
-        if fileManager.fileExists(atPath: skillMdPath) {
-            return try parseSkillFile(at: skillMdPath, name: name)
-        }
-
-        // Try standalone .md file (name.md)
-        let standalonePath = "\(skillsDirectory)/\(name).md"
-        if fileManager.fileExists(atPath: standalonePath) {
-            return try parseSkillFile(at: standalonePath, name: name)
-        }
-
-        // Search recursively for the skill by name
-        let allSkills = try scanSkills()
-        return allSkills.first { $0.name == name }
+        try skills.getSkill(name: name)
     }
 
-    /// Create a new skill
+    /// Create a new skill with the given name and content.
+    /// - Parameters:
+    ///   - name: Skill name (becomes directory name)
+    ///   - content: Markdown content with optional YAML frontmatter
+    /// - Returns: Created Skill object
     func createSkill(name: String, content: String) throws -> Skill {
-        let skillPath = "\(skillsDirectory)/\(name)"
-        let skillMdPath = "\(skillPath)/SKILL.md"
-
-        // Create directory
-        try fileManager.createDirectory(atPath: skillPath, withIntermediateDirectories: true)
-
-        // Write SKILL.md
-        try content.write(toFile: skillMdPath, atomically: true, encoding: .utf8)
-
-        return try parseSkillFile(at: skillMdPath, name: name)
+        try skills.createSkill(name: name, content: content)
     }
 
-    /// Update a skill's content
+    /// Update an existing skill's content.
+    /// - Parameters:
+    ///   - name: Skill name
+    ///   - content: New markdown content
+    /// - Returns: Updated Skill object
     func updateSkill(name: String, content: String) throws -> Skill {
-        let skillMdPath = "\(skillsDirectory)/\(name)/SKILL.md"
-
-        guard fileManager.fileExists(atPath: skillMdPath) else {
-            throw Abort(.notFound, reason: "Skill not found")
-        }
-
-        try content.write(toFile: skillMdPath, atomically: true, encoding: .utf8)
-
-        return try parseSkillFile(at: skillMdPath, name: name)
+        try skills.updateSkill(name: name, content: content)
     }
 
-    /// Delete a skill
+    /// Delete a skill by name.
+    /// - Parameter name: Skill name to delete
     func deleteSkill(name: String) throws {
-        let skillPath = "\(skillsDirectory)/\(name)"
-
-        guard fileManager.fileExists(atPath: skillPath) else {
-            throw Abort(.notFound, reason: "Skill not found")
-        }
-
-        try fileManager.removeItem(atPath: skillPath)
+        try skills.deleteSkill(name: name)
     }
 
-    // MARK: - MCP Servers
+    // MARK: - MCP Servers (delegate to MCPFileService)
 
-    /// Read MCP servers from configuration (with caching)
-    /// Checks ~/.mcp.json (primary), ~/.claude.json (legacy), and project .mcp.json
+    /// Read MCP servers from configuration files, with optional caching.
+    /// - Parameters:
+    ///   - scope: Optional scope filter (user or project)
+    ///   - bypassCache: If true, forces fresh scan from disk
+    /// - Returns: Array of MCPServer objects
     func readMCPServers(scope: MCPScope? = nil, bypassCache: Bool = false) async throws -> [MCPServer] {
-        // Check cache first unless bypassed
-        if !bypassCache, let cached = await sharedCache.getCachedMCPServers(ttl: cacheTTL) {
-            return cached
-        }
-
-        let servers = try scanMCPServers(scope: scope)
-
-        // Update cache
-        await sharedCache.setCachedMCPServers(servers)
-
-        return servers
+        try await mcp.readMCPServers(scope: scope, bypassCache: bypassCache)
     }
 
-    /// Scan MCP servers from configuration (no caching)
+    /// Scan MCP servers from disk without using cache.
+    /// - Parameter scope: Optional scope filter
+    /// - Returns: Array of MCPServer objects
     func scanMCPServers(scope: MCPScope? = nil) throws -> [MCPServer] {
-        var servers: [MCPServer] = []
-
-        // User scope - check ~/.mcp.json first, then ~/.claude.json as fallback
-        if scope == nil || scope == .user {
-            // Primary: ~/.mcp.json
-            if let userServers = try? readMCPFromFile(userMCPConfigPath, scope: .user) {
-                servers.append(contentsOf: userServers)
-            }
-            // Fallback: ~/.claude.json (legacy location)
-            else if let legacyServers = try? readMCPFromFile(userClaudeJsonPath, scope: .user) {
-                servers.append(contentsOf: legacyServers)
-            }
-        }
-
-        // Get enabled status from settings.local.json
-        var enabledServers: [String]?
-        if fileManager.fileExists(atPath: "\(claudeDirectory)/settings.local.json"),
-           let data = try? Data(contentsOf: URL(fileURLWithPath: "\(claudeDirectory)/settings.local.json")),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            enabledServers = json["enabledMcpjsonServers"] as? [String]
-        }
-
-        // Mark servers as healthy if they're in the enabled list
-        if let enabled = enabledServers {
-            servers = servers.map { server in
-                var updated = server
-                if enabled.contains(server.name) {
-                    updated.status = .healthy
-                }
-                return updated
-            }
-        }
-
-        return servers
+        try mcp.scanMCPServers(scope: scope)
     }
 
-    /// Invalidate MCP servers cache (call after modifications)
+    /// Invalidate the MCP servers cache.
     func invalidateMCPServersCache() async {
-        await sharedCache.invalidateMCPServers()
+        await mcp.invalidateMCPServersCache()
     }
 
-    private func readMCPFromFile(_ path: String, scope: MCPScope) throws -> [MCPServer] {
-        guard fileManager.fileExists(atPath: path) else {
-            return []
-        }
-
-        let data = try Data(contentsOf: URL(fileURLWithPath: path))
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let mcpServers = json["mcpServers"] as? [String: Any] else {
-            return []
-        }
-
-        return mcpServers.compactMap { name, config -> MCPServer? in
-            guard let configDict = config as? [String: Any] else {
-                return nil
-            }
-
-            // Handle both stdio and http types
-            let serverType = configDict["type"] as? String ?? "stdio"
-            var command: String
-            var args: [String] = []
-            var env: [String: String]?
-
-            if serverType == "http" {
-                // HTTP MCP server - use url as command
-                command = configDict["url"] as? String ?? ""
-            } else {
-                // stdio MCP server
-                command = configDict["command"] as? String ?? ""
-                args = configDict["args"] as? [String] ?? []
-            }
-
-            // Filter out sensitive env vars for response
-            if let envDict = configDict["env"] as? [String: String] {
-                env = envDict.mapValues { value in
-                    // Mask sensitive values
-                    if value.count > 10 {
-                        return String(value.prefix(4)) + "..." + String(value.suffix(4))
-                    }
-                    return value
-                }
-            }
-
-            return MCPServer(
-                name: name,
-                command: command,
-                args: args,
-                env: env,
-                scope: scope,
-                status: .unknown,
-                configPath: path
-            )
-        }
-    }
-
-    /// Add an MCP server to configuration (~/.mcp.json)
+    /// Add a new MCP server to `~/.mcp.json`.
+    /// - Parameter server: MCPServer object to add
     func addMCPServer(_ server: MCPServer) throws {
-        let path = userMCPConfigPath
-
-        var json: [String: Any] = [:]
-        if fileManager.fileExists(atPath: path),
-           let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-           let existing = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            json = existing
-        }
-
-        var mcpServers = json["mcpServers"] as? [String: Any] ?? [:]
-
-        var serverConfig: [String: Any] = [
-            "type": "stdio",
-            "command": server.command,
-            "args": server.args
-        ]
-        if let env = server.env {
-            serverConfig["env"] = env
-        }
-
-        mcpServers[server.name] = serverConfig
-        json["mcpServers"] = mcpServers
-
-        let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
-        try data.write(to: URL(fileURLWithPath: path))
+        try mcp.addMCPServer(server)
     }
 
-    /// Remove an MCP server from configuration
+    /// Remove an MCP server from configuration.
+    /// - Parameters:
+    ///   - name: Server name
+    ///   - scope: Configuration scope (user or project)
     func removeMCPServer(name: String, scope: MCPScope) throws {
-        let path = userMCPConfigPath
-
-        guard fileManager.fileExists(atPath: path),
-              let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-              var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw Abort(.notFound, reason: "MCP server not found")
-        }
-
-        var mcpServers = json["mcpServers"] as? [String: Any] ?? [:]
-        mcpServers.removeValue(forKey: name)
-        json["mcpServers"] = mcpServers
-
-        let newData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
-        try newData.write(to: URL(fileURLWithPath: path))
+        try mcp.removeMCPServer(name: name, scope: scope)
     }
 
-    // MARK: - Config
+    // MARK: - Config (delegate to ConfigFileService)
 
-    /// Read Claude settings
+    /// Read Claude configuration for a given scope.
+    /// - Parameter scope: Configuration scope ("user", "project", or "local")
+    /// - Returns: ConfigInfo with content and metadata
     func readConfig(scope: String) throws -> ConfigInfo {
-        let path: String
-        switch scope {
-        case "user":
-            path = userSettingsPath
-        case "project":
-            path = ".claude/settings.json"
-        case "local":
-            path = ".claude/settings.local.json"
-        default:
-            throw Abort(.badRequest, reason: "Invalid scope")
-        }
-
-        var config = ClaudeConfig()
-        let isValid = true
-
-        if fileManager.fileExists(atPath: path) {
-            let data = try Data(contentsOf: URL(fileURLWithPath: path))
-            config = try JSONDecoder().decode(ClaudeConfig.self, from: data)
-        }
-
-        return ConfigInfo(
-            scope: scope,
-            path: path,
-            content: config,
-            isValid: isValid
-        )
+        try config.readConfig(scope: scope)
     }
 
-    /// Write Claude settings
+    /// Write Claude configuration to a given scope.
+    /// - Parameters:
+    ///   - scope: Configuration scope ("user" only currently supported for writes)
+    ///   - content: ClaudeConfig object to write
+    /// - Returns: ConfigInfo with updated content
     func writeConfig(scope: String, content: ClaudeConfig) throws -> ConfigInfo {
-        let path: String
-        switch scope {
-        case "user":
-            path = userSettingsPath
-            // Ensure directory exists
-            try fileManager.createDirectory(atPath: claudeDirectory, withIntermediateDirectories: true)
-        default:
-            throw Abort(.badRequest, reason: "Invalid scope for writing")
-        }
-
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(content)
-        try data.write(to: URL(fileURLWithPath: path))
-
-        return ConfigInfo(
-            scope: scope,
-            path: path,
-            content: content,
-            isValid: true
-        )
+        try config.writeConfig(scope: scope, content: content)
     }
 
-    // MARK: - Session Scanning
+    // MARK: - Sessions (delegate to SessionFileService)
 
-    /// Flexible ISO8601 date formatter that handles fractional seconds
-    private static let flexibleISO8601Formatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    /// Fallback ISO8601 formatter without fractional seconds
-    private static let fallbackISO8601Formatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-
-    /// Parse an ISO8601 date string, handling both with and without fractional seconds
-    private func parseISO8601Date(_ string: String) -> Date? {
-        Self.flexibleISO8601Formatter.date(from: string)
-            ?? Self.fallbackISO8601Formatter.date(from: string)
-    }
-
-    /// Structure matching sessions-index.json from ~/.claude/projects/
-    struct SessionsIndex: Codable {
-        let version: Int
-        let entries: [SessionEntry]
-    }
-
-    struct SessionEntry: Codable {
-        let sessionId: String
-        let projectPath: String
-        let summary: String?
-        let created: String   // ISO8601 string — decoded manually for fractional seconds
-        let modified: String  // ISO8601 string
-        let fullPath: String?
-        let firstPrompt: String?
-        let messageCount: Int?
-        let gitBranch: String?
-        let isSidechain: Bool?
-        let fileMtime: Int64?
-    }
-
-    /// Scan for external Claude Code sessions by reading sessions-index.json files
+    /// Scan for external Claude Code sessions from `~/.claude/projects/`.
+    /// - Returns: Array of ExternalSession objects
     func scanExternalSessions() throws -> [ExternalSession] {
-        var sessions: [ExternalSession] = []
-
-        guard fileManager.fileExists(atPath: claudeProjectsPath) else {
-            return sessions
-        }
-
-        let contents = try fileManager.contentsOfDirectory(atPath: claudeProjectsPath)
-
-        for encodedDir in contents {
-            let projectDirPath = "\(claudeProjectsPath)/\(encodedDir)"
-            var isDirectory: ObjCBool = false
-
-            guard fileManager.fileExists(atPath: projectDirPath, isDirectory: &isDirectory),
-                  isDirectory.boolValue else {
-                continue
-            }
-
-            let indexPath = "\(projectDirPath)/sessions-index.json"
-            guard fileManager.fileExists(atPath: indexPath) else {
-                continue
-            }
-
-            guard let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)),
-                  let index = try? JSONDecoder().decode(SessionsIndex.self, from: data) else {
-                continue
-            }
-
-            let projectName = index.entries.first.map {
-                URL(fileURLWithPath: $0.projectPath).lastPathComponent
-            }
-
-            for entry in index.entries {
-                let createdDate = parseISO8601Date(entry.created)
-                let modifiedDate = parseISO8601Date(entry.modified)
-
-                // Use summary as name, fall back to firstPrompt truncated
-                let displayName: String? = entry.summary
-                    ?? entry.firstPrompt.flatMap { prompt in
-                        let clean = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-                        return clean.isEmpty || clean == "No prompt" ? nil : String(clean.prefix(80))
-                    }
-
-                sessions.append(ExternalSession(
-                    claudeSessionId: entry.sessionId,
-                    name: displayName,
-                    projectPath: entry.projectPath,
-                    encodedProjectPath: encodedDir,
-                    projectName: projectName,
-                    source: .external,
-                    lastActiveAt: modifiedDate,
-                    createdAt: createdDate,
-                    messageCount: entry.messageCount,
-                    firstPrompt: entry.firstPrompt,
-                    summary: entry.summary,
-                    gitBranch: entry.gitBranch
-                ))
-            }
-        }
-
-        // Sort by last active date, most recent first
-        sessions.sort { ($0.lastActiveAt ?? .distantPast) > ($1.lastActiveAt ?? .distantPast) }
-
-        return sessions
+        try sessions.scanExternalSessions()
     }
 
-    // MARK: - Transcript Reading
-
-    /// Read messages from a JSONL transcript file
+    /// Read messages from a session's JSONL transcript file.
+    /// - Parameters:
+    ///   - encodedProjectPath: URL-encoded project directory name
+    ///   - sessionId: Session UUID
+    ///   - limit: Maximum number of messages to return
+    ///   - offset: Number of messages to skip
+    /// - Returns: Array of Message objects
     func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
-        let transcriptPath = "\(claudeProjectsPath)/\(encodedProjectPath)/\(sessionId).jsonl"
-
-        guard fileManager.fileExists(atPath: transcriptPath) else {
-            throw Vapor.Abort(.notFound, reason: "Transcript not found")
-        }
-
-        let content = try String(contentsOfFile: transcriptPath, encoding: .utf8)
-        let lines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
-
-        var messages: [Message] = []
-        // Use a deterministic UUID based on session so IDs are stable
-        let sessionUUID = UUID(uuidString: sessionId) ?? UUID()
-
-        for line in lines {
-            guard let lineData = line.data(using: .utf8),
-                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any] else {
-                continue
-            }
-
-            guard let type = json["type"] as? String,
-                  type == "user" || type == "assistant" else {
-                continue
-            }
-
-            guard let messageObj = json["message"] as? [String: Any],
-                  let roleStr = messageObj["role"] as? String else {
-                continue
-            }
-
-            let role: MessageRole = roleStr == "user" ? .user : .assistant
-            var textContent = ""
-            var toolCallsJSON: String?
-
-            let rawContent = messageObj["content"]
-
-            if let stringContent = rawContent as? String {
-                // User messages can be plain strings
-                textContent = stringContent
-            } else if let blocks = rawContent as? [[String: Any]] {
-                // Array of content blocks (text, tool_use, etc.)
-                var textParts: [String] = []
-                var toolCalls: [[String: Any]] = []
-
-                for block in blocks {
-                    guard let blockType = block["type"] as? String else { continue }
-                    if blockType == "text", let text = block["text"] as? String {
-                        textParts.append(text)
-                    } else if blockType == "tool_use" {
-                        let toolCall: [String: Any] = [
-                            "id": block["id"] as? String ?? "",
-                            "name": block["name"] as? String ?? "",
-                            "type": "tool_use"
-                        ]
-                        toolCalls.append(toolCall)
-                    }
-                }
-
-                textContent = textParts.joined(separator: "\n")
-                if !toolCalls.isEmpty,
-                   let tcData = try? JSONSerialization.data(withJSONObject: toolCalls),
-                   let tcString = String(data: tcData, encoding: .utf8) {
-                    toolCallsJSON = tcString
-                }
-            }
-
-            // Skip empty messages and internal command messages
-            let trimmed = textContent.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmed.isEmpty { continue }
-
-            // Parse timestamp if available
-            let timestamp: Date?
-            if let ts = json["timestamp"] as? String {
-                timestamp = parseISO8601Date(ts)
-            } else {
-                timestamp = nil
-            }
-
-            let messageId = UUID(uuidString: (json["uuid"] as? String) ?? "") ?? UUID()
-
-            let message = Message(
-                id: messageId,
-                sessionId: sessionUUID,
-                role: role,
-                content: textContent,
-                toolCalls: toolCallsJSON,
-                createdAt: timestamp ?? Date(),
-                updatedAt: timestamp ?? Date()
-            )
-
-            messages.append(message)
-        }
-
-        // Apply pagination
-        let total = messages.count
-        let start = min(offset, total)
-        let end = min(start + limit, total)
-        return Array(messages[start..<end])
+        try sessions.readTranscriptMessages(encodedProjectPath: encodedProjectPath, sessionId: sessionId, limit: limit, offset: offset)
     }
 }

@@ -30,10 +30,31 @@ struct SkillsListView: View {
                 Section {
                     ForEach(viewModel.filteredSkills) { skill in
                         NavigationLink(value: skill) {
-                            SkillRowView(skill: skill)
+                            SkillRowView(skill: skill) {
+                                Task { await viewModel.toggleSkillActive(skill) }
+                            }
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                Task { await viewModel.deleteSkill(skill) }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .contextMenu {
+                            Button {
+                                UIPasteboard.general.string = skill.name
+                            } label: {
+                                Label("Copy Name", systemImage: "doc.on.doc")
+                            }
+                            Divider()
+                            Button(role: .destructive) {
+                                Task { await viewModel.deleteSkill(skill) }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
-                    .onDelete(perform: deleteSkill)
                 } header: {
                     Text("Installed (\(viewModel.filteredSkills.count))")
                 }
@@ -117,20 +138,11 @@ struct SkillsListView: View {
             }
         }
     }
-
-    private func deleteSkill(at offsets: IndexSet) {
-        let filtered = viewModel.filteredSkills
-        let skillsToDelete = offsets.map { filtered[$0] }
-        Task {
-            for skill in skillsToDelete {
-                await viewModel.deleteSkill(skill)
-            }
-        }
-    }
 }
 
 struct SkillRowView: View {
     let skill: Skill
+    var onToggle: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
@@ -140,11 +152,10 @@ struct SkillRowView: View {
 
                 Spacer()
 
-                if skill.isActive {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(ILSTheme.success)
-                        .font(.caption)
-                }
+                Image(systemName: skill.isActive ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(skill.isActive ? ILSTheme.success : ILSTheme.tertiaryText)
+                    .font(.caption)
+                    .onTapGesture { onToggle?() }
             }
 
             if let description = skill.description {
@@ -270,19 +281,7 @@ struct SkillDetailView: View {
         } message: {
             Text("This will permanently remove \"/\(skill.name)\" from your skills.")
         }
-        .overlay(alignment: .bottom) {
-            if showCopiedToast {
-                Text("Copied to clipboard")
-                    .font(ILSTheme.captionFont)
-                    .padding(.horizontal, ILSTheme.spacingM)
-                    .padding(.vertical, ILSTheme.spacingS)
-                    .background(ILSTheme.secondaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusSmall)
-                    .shadow(color: ILSTheme.shadowLight, radius: 4)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .padding(.bottom, ILSTheme.spacingL)
-            }
-        }
+        .toast(isPresented: $showCopiedToast, message: "Copied to clipboard")
         .task {
             await loadFullSkill()
         }

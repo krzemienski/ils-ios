@@ -18,6 +18,17 @@ private func debugLog(_ message: String) {
 ///
 /// Instead, this service runs `claude -p --output-format stream-json`
 /// directly and reads stdout on a dedicated DispatchQueue.
+/// Actor managing Claude CLI subprocess execution with streaming JSON output.
+///
+/// This service bypasses ClaudeCodeSDK's Combine-based streaming because the SDK requires
+/// a RunLoop that doesn't exist in Vapor's NIO event loops. Instead, it executes `claude -p`
+/// directly via Process and reads stdout on a dedicated GCD queue.
+///
+/// Features:
+/// - Two-tier timeout (30s initial, 5min total)
+/// - Process cancellation support
+/// - Stream-JSON output parsing
+/// - Session ID tracking for multi-session support
 actor ClaudeExecutorService {
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
@@ -27,7 +38,8 @@ actor ClaudeExecutorService {
 
     // MARK: - Public API
 
-    /// Check if Claude CLI is available in PATH
+    /// Check if Claude CLI is available in PATH.
+    /// - Returns: True if `claude` command is found
     func isAvailable() async -> Bool {
         do {
             let process = Process()
@@ -47,7 +59,8 @@ actor ClaudeExecutorService {
         }
     }
 
-    /// Get Claude CLI version
+    /// Get Claude CLI version string.
+    /// - Returns: Version string (e.g., "claude 1.2.3") or "unknown" on failure
     func getVersion() async throws -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
@@ -64,10 +77,16 @@ actor ClaudeExecutorService {
         return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "unknown"
     }
 
-    /// Execute Claude CLI with streaming output via direct Process.
+    /// Execute Claude CLI with streaming JSON output.
     ///
-    /// Returns an AsyncThrowingStream of StreamMessage that yields messages
-    /// as they arrive from the CLI's stream-json output.
+    /// Spawns `claude -p --output-format stream-json` as a subprocess and streams
+    /// parsed messages as they arrive. Includes timeout protection (30s initial, 5min total).
+    ///
+    /// - Parameters:
+    ///   - prompt: User prompt text (sent via stdin)
+    ///   - workingDirectory: Optional working directory for project context
+    ///   - options: Execution options (model, permissions, session ID, etc.)
+    /// - Returns: AsyncThrowingStream yielding StreamMessage events
     nonisolated func execute(
         prompt: String,
         workingDirectory: String?,
@@ -231,7 +250,8 @@ actor ClaudeExecutorService {
         }
     }
 
-    /// Cancel an active session's process
+    /// Cancel an active session's process.
+    /// - Parameter sessionId: Session ID to cancel
     func cancel(sessionId: String) async {
         if let process = activeProcesses[sessionId], process.isRunning {
             debugLog("Cancelling process for session: \(sessionId)")
@@ -252,12 +272,12 @@ actor ClaudeExecutorService {
 
     // MARK: - Command Building
 
-    /// Build the full claude CLI command string.
+    /// Build the full Claude CLI command string from execution options.
     ///
-    /// Replicates what ClaudeCodeSDK's HeadlessBackend does:
-    /// `claude -p --verbose --output-format stream-json [options]`
+    /// Constructs a command like: `claude -p --verbose --output-format stream-json [options]`
     ///
-    /// Prompt is sent via stdin (not as argument) to avoid shell escaping issues.
+    /// - Parameter options: Execution options to convert to CLI arguments
+    /// - Returns: Shell command string (prompt sent via stdin separately)
     private static func buildCommand(options: ExecutionOptions) -> String {
         var args: [String] = ["claude", "-p", "--verbose"]
 
@@ -406,7 +426,9 @@ actor ClaudeExecutorService {
         return args.joined(separator: " ")
     }
 
-    /// Shell-escape a string by wrapping in single quotes
+    /// Shell-escape a string by wrapping in single quotes and escaping internal quotes.
+    /// - Parameter value: String to escape
+    /// - Returns: Shell-safe quoted string
     private static func shellEscape(_ value: String) -> String {
         let escaped = value.replacingOccurrences(of: "'", with: "'\\''")
         return "'\(escaped)'"
@@ -597,7 +619,10 @@ actor ClaudeExecutorService {
 
 // MARK: - Execution Options
 
-/// Options for Claude CLI execution — mirrors ChatOptions from ILSShared
+/// Options for Claude CLI execution, mirroring ChatOptions from ILSShared.
+///
+/// Supports all Claude CLI flags including session management, model selection,
+/// permissions, tool control, and output formatting.
 struct ExecutionOptions {
     var sessionId: String?
     var model: String?

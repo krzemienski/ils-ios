@@ -232,6 +232,12 @@ class ChatViewModel: ObservableObject {
         isLoadingHistory = false
     }
 
+    /// Reload messages on foreground return, preserving any in-progress stream
+    func refreshMessages() async {
+        guard !isStreaming else { return } // Don't interrupt active streams
+        await loadMessageHistory()
+    }
+
     /// Display a welcome message for new/empty sessions
     private func showWelcomeMessage() {
         let welcomeMessage = ChatMessage(

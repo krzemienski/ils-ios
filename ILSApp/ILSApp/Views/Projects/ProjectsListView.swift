@@ -6,6 +6,7 @@ struct ProjectsListView: View {
     @StateObject private var viewModel = ProjectsViewModel()
     @State private var showingNewProject = false
     @State private var selectedProject: Project?
+    @State private var projectToDelete: Project?
 
     var body: some View {
         List {
@@ -29,8 +30,32 @@ struct ProjectsListView: View {
                         .onTapGesture {
                             selectedProject = project
                         }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                projectToDelete = project
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .contextMenu {
+                            Button {
+                                Task { await viewModel.duplicateProject(project) }
+                            } label: {
+                                Label("Duplicate", systemImage: "doc.on.doc.fill")
+                            }
+                            Button {
+                                UIPasteboard.general.string = project.path
+                            } label: {
+                                Label("Copy Path", systemImage: "doc.on.doc")
+                            }
+                            Divider()
+                            Button(role: .destructive) {
+                                projectToDelete = project
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                 }
-                .onDelete(perform: deleteProject)
             }
         }
         .darkListStyle()
@@ -38,7 +63,7 @@ struct ProjectsListView: View {
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
-            await viewModel.loadProjects()
+            await viewModel.loadProjects(refresh: true)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -57,9 +82,51 @@ struct ProjectsListView: View {
             ProjectDetailView(project: project, viewModel: viewModel)
                 .presentationBackground(Color.black)
         }
+        .alert("Delete Project?", isPresented: Binding(
+            get: { projectToDelete != nil },
+            set: { if !$0 { projectToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let project = projectToDelete {
+                    Task { await viewModel.deleteProject(project) }
+                    projectToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { projectToDelete = nil }
+        } message: {
+            Text("This will permanently delete \"\(projectToDelete?.name ?? "this project")\" and all associated data.")
+        }
         .overlay {
             if viewModel.isLoading && viewModel.projects.isEmpty {
-                ProgressView("Loading projects...")
+                List {
+                    ForEach(0..<6, id: \.self) { _ in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Project Name")
+                                    .font(ILSTheme.headlineFont)
+                                Spacer()
+                                Text("sonnet")
+                                    .font(ILSTheme.captionFont)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(ILSTheme.tertiaryBackground)
+                                    .cornerRadius(ILSTheme.cornerRadiusXS)
+                            }
+                            Text("/path/to/project")
+                                .font(Font.system(.caption, design: .monospaced))
+                            HStack {
+                                Label("5 sessions", systemImage: "bubble.left.and.bubble.right")
+                                    .font(ILSTheme.captionFont)
+                                Spacer()
+                                Text("1 hr ago")
+                                    .font(ILSTheme.captionFont)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .darkListStyle()
+                .redacted(reason: .placeholder)
             }
         }
         .task {
@@ -69,15 +136,6 @@ struct ProjectsListView: View {
         .onChange(of: appState.isConnected) { _, isConnected in
             if isConnected && viewModel.error != nil {
                 Task { await viewModel.retryLoadProjects() }
-            }
-        }
-    }
-
-    private func deleteProject(at offsets: IndexSet) {
-        Task {
-            for index in offsets {
-                let project = viewModel.projects[index]
-                await viewModel.deleteProject(project)
             }
         }
     }
@@ -136,6 +194,8 @@ struct ProjectRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(project.name), \(project.defaultModel)")
     }
 
     private func formattedDate(_ date: Date) -> String {

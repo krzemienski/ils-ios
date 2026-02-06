@@ -2,6 +2,17 @@ import Vapor
 import Fluent
 import ILSShared
 
+/// Controller for session management operations.
+///
+/// Routes:
+/// - `GET /sessions`: List all sessions with optional project filter
+/// - `POST /sessions`: Create a new session
+/// - `GET /sessions/scan`: Scan for external Claude Code sessions
+/// - `GET /sessions/:id`: Get a specific session
+/// - `DELETE /sessions/:id`: Delete a session
+/// - `POST /sessions/:id/fork`: Fork a session
+/// - `GET /sessions/:id/messages`: Get session messages with pagination
+/// - `GET /sessions/transcript/:encodedProjectPath/:sessionId`: Read external session transcript
 struct SessionsController: RouteCollection {
     let fileSystem = FileSystemService()
 
@@ -20,7 +31,9 @@ struct SessionsController: RouteCollection {
         transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
     }
 
-    /// GET /sessions - List all sessions
+    /// List all sessions with optional project filter.
+    /// - Parameter req: Vapor Request with optional projectId query parameter
+    /// - Returns: APIResponse with list of ChatSession objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<ChatSession>> {
         var query = SessionModel.query(on: req.db)
@@ -45,7 +58,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// POST /sessions - Create a new session
+    /// Create a new session.
+    /// - Parameter req: Vapor Request with CreateSessionRequest body
+    /// - Returns: APIResponse with created ChatSession
     @Sendable
     func create(req: Request) async throws -> APIResponse<ChatSession> {
         let input = try req.content.decode(CreateSessionRequest.self)
@@ -72,7 +87,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// GET /sessions/scan - Scan for external Claude Code sessions
+    /// Scan for external Claude Code sessions from `~/.claude/projects/`.
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with SessionScanResponse containing external sessions
     @Sendable
     func scan(req: Request) async throws -> APIResponse<SessionScanResponse> {
         let externalSessions = try fileSystem.scanExternalSessions()
@@ -86,7 +103,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// GET /sessions/:id - Get a single session
+    /// Get a specific session by ID.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with ChatSession
     @Sendable
     func get(req: Request) async throws -> APIResponse<ChatSession> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -106,7 +125,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// DELETE /sessions/:id - Delete a session
+    /// Delete a session and its messages.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with deletion confirmation
     @Sendable
     func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -125,7 +146,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// POST /sessions/:id/fork - Fork a session
+    /// Fork a session, creating a new session with the same settings.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with forked ChatSession
     @Sendable
     func fork(req: Request) async throws -> APIResponse<ChatSession> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -156,7 +179,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// GET /sessions/:id/messages - Get all messages for a session
+    /// Get messages for a session with pagination.
+    /// - Parameter req: Vapor Request with id parameter and optional limit/offset query params
+    /// - Returns: APIResponse with paginated list of Message objects
     @Sendable
     func messages(req: Request) async throws -> APIResponse<ListResponse<Message>> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -195,7 +220,9 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// GET /sessions/transcript/:encodedProjectPath/:sessionId - Read messages from JSONL transcript
+    /// Read messages from an external session's JSONL transcript file.
+    /// - Parameter req: Vapor Request with encodedProjectPath and sessionId parameters, optional limit/offset query params
+    /// - Returns: APIResponse with list of Message objects from transcript
     @Sendable
     func transcript(req: Request) async throws -> APIResponse<ListResponse<Message>> {
         guard let encodedProjectPath = req.parameters.get("encodedProjectPath"),

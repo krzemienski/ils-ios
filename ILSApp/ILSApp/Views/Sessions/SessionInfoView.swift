@@ -9,6 +9,7 @@ struct SessionInfoView: View {
     @State private var loadedSession: ChatSession?
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var showCopiedToast = false
 
     private var displaySession: ChatSession {
         loadedSession ?? session
@@ -78,10 +79,22 @@ struct SessionInfoView: View {
             .navigationTitle("Session Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        UIPasteboard.general.string = session.id.uuidString
+                        showCopiedToast = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showCopiedToast = false
+                        }
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
+            .toast(isPresented: $showCopiedToast, message: "Session ID copied")
             .task {
                 await loadSession()
             }

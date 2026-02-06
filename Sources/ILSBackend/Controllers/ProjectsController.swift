@@ -3,6 +3,15 @@ import Fluent
 import ILSShared
 import Foundation
 
+/// Controller for project management operations.
+///
+/// Routes:
+/// - `GET /projects`: List all projects from `~/.claude/projects/`
+/// - `POST /projects`: Create a new project
+/// - `GET /projects/:id`: Get a specific project
+/// - `PUT /projects/:id`: Update a project
+/// - `DELETE /projects/:id`: Delete a project and its sessions
+/// - `GET /projects/:id/sessions`: Get sessions for a project
 struct ProjectsController: RouteCollection {
     private let fileSystem = FileSystemService()
 
@@ -34,7 +43,9 @@ struct ProjectsController: RouteCollection {
         Self.flexibleISO8601.date(from: s) ?? Self.fallbackISO8601.date(from: s)
     }
 
-    /// GET /projects - List all projects from ~/.claude/projects/
+    /// List all projects discovered from `~/.claude/projects/` sessions-index files.
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of Project objects
     @Sendable
     func index(req: Request) async throws -> APIResponse<ListResponse<Project>> {
         var projects: [Project] = []
@@ -110,7 +121,9 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// POST /projects - Create a new project
+    /// Create a new project (or return existing if path matches).
+    /// - Parameter req: Vapor Request with CreateProjectRequest body
+    /// - Returns: APIResponse with created or existing Project
     @Sendable
     func create(req: Request) async throws -> APIResponse<Project> {
         let input = try req.content.decode(CreateProjectRequest.self)
@@ -141,7 +154,9 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// GET /projects/:id - Get a single project by ID
+    /// Get a specific project by ID.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with Project including session count
     @Sendable
     func show(req: Request) async throws -> APIResponse<Project> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -160,7 +175,9 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// PUT /projects/:id - Update an existing project
+    /// Update a project's metadata (name, model, description).
+    /// - Parameter req: Vapor Request with id parameter and UpdateProjectRequest body
+    /// - Returns: APIResponse with updated Project
     @Sendable
     func update(req: Request) async throws -> APIResponse<Project> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -197,7 +214,9 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// DELETE /projects/:id - Delete a project
+    /// Delete a project and all its associated sessions.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with deletion confirmation
     @Sendable
     func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -220,7 +239,9 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// GET /projects/:id/sessions - Get sessions for a project
+    /// Get all sessions for a specific project.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with list of ChatSession objects
     @Sendable
     func getSessions(req: Request) async throws -> APIResponse<ListResponse<ChatSession>> {
         guard let id = req.parameters.get("id", as: UUID.self) else {

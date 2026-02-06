@@ -1,25 +1,40 @@
 import Foundation
 
-/// Source type for plugins
+/// Source type for plugins.
 public enum PluginSource: String, Codable, Sendable {
+    /// Official Claude Code plugin.
     case official
+    /// Community-contributed plugin.
     case community
 }
 
-/// Represents a Claude Code plugin
+/// Represents a Claude Code plugin.
 public struct Plugin: Codable, Identifiable, Sendable {
+    /// Unique identifier.
     public let id: UUID
+    /// Plugin name.
     public var name: String
+    /// Plugin description.
     public var description: String?
+    /// Marketplace identifier.
     public var marketplace: String?
+    /// Whether the plugin is installed.
     public var isInstalled: Bool
+    /// Whether the plugin is enabled.
     public var isEnabled: Bool
+    /// Plugin version.
     public var version: String?
+    /// Commands provided by the plugin.
     public var commands: [String]?
+    /// Agents provided by the plugin.
     public var agents: [String]?
+    /// Installation path.
     public var path: String?
+    /// GitHub stars.
     public var stars: Int?
+    /// Plugin source.
     public var source: PluginSource?
+    /// Plugin category.
     public var category: String?
 
     public init(
@@ -53,10 +68,13 @@ public struct Plugin: Codable, Identifiable, Sendable {
     }
 }
 
-/// Plugin marketplace information
+/// Plugin marketplace information.
 public struct PluginMarketplace: Codable, Sendable {
+    /// Marketplace name.
     public let name: String
+    /// Marketplace source URL or identifier.
     public let source: String
+    /// Available plugins in this marketplace.
     public var plugins: [PluginInfo]
 
     public init(name: String, source: String, plugins: [PluginInfo] = []) {
@@ -66,9 +84,11 @@ public struct PluginMarketplace: Codable, Sendable {
     }
 }
 
-/// Basic plugin info from marketplace
+/// Basic plugin info from marketplace listing.
 public struct PluginInfo: Codable, Sendable {
+    /// Plugin name.
     public let name: String
+    /// Brief description.
     public let description: String?
 
     public init(name: String, description: String? = nil) {

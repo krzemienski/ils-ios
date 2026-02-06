@@ -191,6 +191,7 @@ struct StatCardView: View {
     let subtitle: String
     let icon: String
     let color: Color
+    @State private var isPressed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
@@ -218,6 +219,15 @@ struct StatCardView: View {
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
         .cornerRadius(ILSTheme.cornerRadiusMedium)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(count), \(subtitle)")
     }
 }
 

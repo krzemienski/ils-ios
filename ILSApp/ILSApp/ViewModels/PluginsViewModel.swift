@@ -6,6 +6,7 @@ class PluginsViewModel: ObservableObject {
     @Published var plugins: [PluginItem] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var searchText = ""
     @Published var marketplaceSearchText = ""
     @Published var selectedCategory: String = "All"
     @Published var isSearchingMarketplace = false
@@ -25,6 +26,17 @@ class PluginsViewModel: ObservableObject {
             return "Loading plugins..."
         }
         return plugins.isEmpty ? "No plugins installed" : ""
+    }
+
+    /// Filtered plugins based on search text
+    var filteredPlugins: [PluginItem] {
+        if searchText.isEmpty {
+            return plugins
+        }
+        return plugins.filter { plugin in
+            plugin.name.localizedCaseInsensitiveContains(searchText) ||
+            (plugin.description?.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
     }
 
     func loadPlugins() async {
@@ -134,15 +146,4 @@ class PluginsViewModel: ObservableObject {
             return false
         }
     }
-}
-
-// MARK: - Request Types
-
-struct InstallPluginRequest: Encodable {
-    let pluginName: String
-    let marketplace: String
-}
-
-struct EnabledResponse: Decodable {
-    let enabled: Bool
 }

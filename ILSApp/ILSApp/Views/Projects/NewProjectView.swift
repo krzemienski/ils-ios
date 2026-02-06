@@ -48,10 +48,15 @@ struct NewProjectView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        createProject()
+                    if isCreating {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Button("Create") {
+                            createProject()
+                        }
+                        .disabled(name.isEmpty || path.isEmpty)
                     }
-                    .disabled(name.isEmpty || path.isEmpty || isCreating)
                 }
             }
         }

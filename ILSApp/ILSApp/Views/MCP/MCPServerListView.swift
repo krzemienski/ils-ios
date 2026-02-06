@@ -48,6 +48,7 @@ struct MCPServerListView: View {
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
+                            HapticManager.notification(.warning)
                             Task { await viewModel.deleteServer(server) }
                         } label: {
                             Label("Delete", systemImage: "trash")
@@ -58,6 +59,24 @@ struct MCPServerListView: View {
                             Label("Edit", systemImage: "pencil")
                         }
                         .tint(ILSTheme.accent)
+                    }
+                    .contextMenu {
+                        Button {
+                            UIPasteboard.general.string = "\(server.command) \(server.args.joined(separator: " "))"
+                        } label: {
+                            Label("Copy Command", systemImage: "doc.on.doc")
+                        }
+                        Button {
+                            editingServer = server
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            Task { await viewModel.deleteServer(server) }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
                 }
             }
@@ -155,20 +174,14 @@ struct MCPServerRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(server.name), \(statusInfo.1), scope \(server.scope)")
     }
 
     @ViewBuilder
     private var statusBadge: some View {
         let (color, text) = statusInfo
-
-        HStack(spacing: 4) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(text)
-                .font(.caption2)
-                .foregroundColor(color)
-        }
+        StatusBadge(text: text, color: color)
     }
 
     private var statusInfo: (Color, String) {
@@ -282,20 +295,7 @@ struct MCPServerDetailView: View {
                 }
             }
         }
-        .overlay(alignment: .bottom) {
-            if showCopiedToast {
-                Text("Copied to clipboard")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusSmall)
-                    .padding(.bottom, 20)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: showCopiedToast)
+        .toast(isPresented: $showCopiedToast, message: "Copied to clipboard")
     }
 
     private var fullCommand: String {
@@ -388,10 +388,15 @@ struct NewMCPServerView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        createServer()
+                    if isCreating {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Button("Add") {
+                            createServer()
+                        }
+                        .disabled(name.isEmpty || command.isEmpty)
                     }
-                    .disabled(name.isEmpty || command.isEmpty || isCreating)
                 }
             }
         }

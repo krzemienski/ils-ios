@@ -138,6 +138,19 @@ class SkillsViewModel: ObservableObject {
         }
     }
 
+    func toggleSkillActive(_ skill: Skill) async {
+        guard let client else { return }
+        do {
+            let endpoint = skill.isActive ? "/skills/\(skill.name)/disable" : "/skills/\(skill.name)/enable"
+            let _: APIResponse<Skill> = try await client.post(endpoint, body: EmptyBody())
+            // Reload to get updated state
+            await loadSkills(refresh: true)
+        } catch {
+            self.error = error
+            print("❌ Failed to toggle skill '\(skill.name)': \(error.localizedDescription)")
+        }
+    }
+
     func searchGitHub(query: String) async {
         guard let client, !query.isEmpty else {
             gitHubResults = []
