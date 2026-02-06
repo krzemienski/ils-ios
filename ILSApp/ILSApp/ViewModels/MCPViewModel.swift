@@ -7,6 +7,7 @@ class MCPViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
+    @Published var selectedScope: String = "user"
 
     private var client: APIClient?
 
@@ -99,5 +100,42 @@ class MCPViewModel: ObservableObject {
             self.error = error
             print("❌ Failed to delete MCP server '\(server.name)': \(error.localizedDescription)")
         }
+    }
+
+    func loadServers(scope: String) async {
+        guard let client else { return }
+        isLoading = true
+        error = nil
+        selectedScope = scope
+
+        do {
+            let response: APIResponse<ListResponse<MCPServerItem>> = try await client.get("/mcp?scope=\(scope)")
+            if let data = response.data {
+                servers = data.items
+            }
+        } catch {
+            self.error = error
+            print("❌ Failed to load MCP servers: \(error.localizedDescription)")
+        }
+
+        isLoading = false
+    }
+
+    func updateServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
+        guard let client else { return nil }
+        do {
+            let request = CreateMCPRequest(name: name, command: command, args: args, scope: scope)
+            let response: APIResponse<MCPServerItem> = try await client.put("/mcp/\(name)", body: request)
+            if let server = response.data {
+                if let index = servers.firstIndex(where: { $0.name == name }) {
+                    servers[index] = server
+                }
+                return server
+            }
+        } catch {
+            self.error = error
+            print("❌ Failed to update MCP server '\(name)': \(error.localizedDescription)")
+        }
+        return nil
     }
 }

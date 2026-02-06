@@ -21,7 +21,6 @@
 		000000000000000000000028 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000038 /* ProjectsListView.swift */; };
 		000000000000000000000029 /* NewProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000039 /* NewProjectView.swift */; };
 		00000000000000000000002A /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003A /* ProjectDetailView.swift */; };
-		0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000E2 /* ProjectSessionsListView.swift */; };
 		00000000000000000000002B /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
 		00000000000000000000002C /* PluginsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003C /* PluginsListView.swift */; };
 		00000000000000000000002D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
@@ -36,7 +35,12 @@
 		000000000000000000000046 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* DashboardView.swift */; };
 		000000000000000000000047 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
+		0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000E2 /* ProjectSessionsListView.swift */; };
+		210FD21F9B885EE639ACB070 /* ServerConnectionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428319AD18184D7B92DE7F61 /* ServerConnectionViewModel.swift */; };
+		55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */; };
+		6AE1D9AD8FF9BA5D49B1F42D /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7707100E4F96375256BF886C /* KeychainService.swift */; };
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
+		9557D153A9312C3A089C5D30 /* ServerConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E47D6F26D29AFF98D336052 /* ServerConnectionView.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
@@ -70,7 +74,6 @@
 		000000000000000000000038 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000039 /* NewProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewProjectView.swift; sourceTree = "<group>"; };
 		00000000000000000000003A /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
-		0000000000000000000000E2 /* ProjectSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionsListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003B /* ProjectsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsViewModel.swift; sourceTree = "<group>"; };
 		00000000000000000000003C /* PluginsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003D /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
@@ -84,6 +87,11 @@
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000056 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		0000000000000000000000E2 /* ProjectSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionsListView.swift; sourceTree = "<group>"; };
+		0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditMCPServerView.swift; sourceTree = "<group>"; };
+		1E47D6F26D29AFF98D336052 /* ServerConnectionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServerConnectionView.swift; sourceTree = "<group>"; };
+		428319AD18184D7B92DE7F61 /* ServerConnectionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ServerConnectionViewModel.swift; sourceTree = "<group>"; };
+		7707100E4F96375256BF886C /* KeychainService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
@@ -157,6 +165,7 @@
 			children = (
 				000000000000000000000031 /* APIClient.swift */,
 				000000000000000000000032 /* SSEClient.swift */,
+				7707100E4F96375256BF886C /* KeychainService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -173,6 +182,7 @@
 				000000000000000000000075 /* Skills */,
 				000000000000000000000076 /* Sessions */,
 				000000000000000000000077 /* Settings */,
+				5E6482F0DAE42DA0FC678C1F /* ServerConnection */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -187,6 +197,7 @@
 				00000000000000000000003F /* MCPViewModel.swift */,
 				000000000000000000000051 /* SkillsViewModel.swift */,
 				000000000000000000000055 /* SessionsViewModel.swift */,
+				428319AD18184D7B92DE7F61 /* ServerConnectionViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -232,6 +243,7 @@
 			isa = PBXGroup;
 			children = (
 				00000000000000000000003E /* MCPServerListView.swift */,
+				0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */,
 			);
 			path = MCP;
 			sourceTree = "<group>";
@@ -268,6 +280,15 @@
 				000000000000000000000056 /* DashboardView.swift */,
 			);
 			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		5E6482F0DAE42DA0FC678C1F /* ServerConnection */ = {
+			isa = PBXGroup;
+			children = (
+				1E47D6F26D29AFF98D336052 /* ServerConnectionView.swift */,
+			);
+			name = ServerConnection;
+			path = ServerConnection;
 			sourceTree = "<group>";
 		};
 		UITEST00000000000000GRP1 /* ILSAppUITests */ = {
@@ -406,6 +427,10 @@
 				000000000000000000000044 /* NewSessionView.swift in Sources */,
 				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
 				76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */,
+				6AE1D9AD8FF9BA5D49B1F42D /* KeychainService.swift in Sources */,
+				55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */,
+				9557D153A9312C3A089C5D30 /* ServerConnectionView.swift in Sources */,
+				210FD21F9B885EE639ACB070 /* ServerConnectionViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

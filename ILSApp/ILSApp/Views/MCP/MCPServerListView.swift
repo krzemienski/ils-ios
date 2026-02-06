@@ -5,9 +5,25 @@ struct MCPServerListView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = MCPViewModel()
     @State private var showingNewServer = false
+    @State private var editingServer: MCPServerItem?
 
     var body: some View {
         List {
+            // Scope picker
+            Section {
+                Picker("Scope", selection: $viewModel.selectedScope) {
+                    Text("User").tag("user")
+                    Text("Project").tag("project")
+                    Text("Local").tag("local")
+                }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .onChange(of: viewModel.selectedScope) { _, newScope in
+                    Task { await viewModel.loadServers(scope: newScope) }
+                }
+            }
+
             if let error = viewModel.error {
                 ErrorStateView(error: error) {
                     await viewModel.loadServers()
@@ -17,7 +33,7 @@ struct MCPServerListView: View {
                     EmptyStateView(
                         title: "No MCP Servers",
                         systemImage: "server.rack",
-                        description: "Add MCP servers to extend Claude's capabilities",
+                        description: "No servers configured for \(viewModel.selectedScope) scope",
                         actionTitle: "Add Server"
                     ) {
                         showingNewServer = true
@@ -30,8 +46,20 @@ struct MCPServerListView: View {
                     NavigationLink(value: server) {
                         MCPServerRowView(server: server)
                     }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            Task { await viewModel.deleteServer(server) }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        Button {
+                            editingServer = server
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        .tint(ILSTheme.accent)
+                    }
                 }
-                .onDelete(perform: deleteServer)
             }
         }
         .darkListStyle()
@@ -58,6 +86,10 @@ struct MCPServerListView: View {
             }
             .presentationBackground(Color.black)
         }
+        .sheet(item: $editingServer) { server in
+            EditMCPServerView(server: server, apiClient: appState.apiClient, viewModel: viewModel)
+                .presentationBackground(Color.black)
+        }
         .overlay {
             if viewModel.isLoading && viewModel.servers.isEmpty {
                 ProgressView("Loading MCP servers...")
@@ -70,16 +102,6 @@ struct MCPServerListView: View {
         .onChange(of: appState.isConnected) { _, isConnected in
             if isConnected && viewModel.error != nil {
                 Task { await viewModel.loadServers() }
-            }
-        }
-    }
-
-    private func deleteServer(at offsets: IndexSet) {
-        Task {
-            let filtered = viewModel.filteredServers
-            let serversToDelete = offsets.map { filtered[$0] }
-            for server in serversToDelete {
-                await viewModel.deleteServer(server)
             }
         }
     }
