@@ -4,6 +4,36 @@ import NIO
 import ILSShared
 import NIOSSH
 
+/// SSH connection errors
+enum SSHError: AbortError {
+    case connectionFailed(String)
+    case authenticationFailed(String)
+    case timeout
+    case notConnected
+
+    var status: HTTPResponseStatus {
+        switch self {
+        case .connectionFailed, .authenticationFailed, .timeout:
+            return .badGateway
+        case .notConnected:
+            return .preconditionFailed
+        }
+    }
+
+    var reason: String {
+        switch self {
+        case .connectionFailed(let message):
+            return "SSH connection failed: \(message)"
+        case .authenticationFailed(let message):
+            return "SSH authentication failed: \(message)"
+        case .timeout:
+            return "SSH connection timeout"
+        case .notConnected:
+            return "Not connected to any server"
+        }
+    }
+}
+
 /// SSH service for remote server operations using Citadel
 actor SSHService {
     private var client: SSHClient?
@@ -80,7 +110,7 @@ actor SSHService {
     /// Execute a remote command and return stdout/stderr
     func executeCommand(_ command: String) async throws -> CommandResult {
         guard let client = client else {
-            throw Abort(.preconditionFailed, reason: "Not connected to any server")
+            throw SSHError.notConnected
         }
 
         var stdout = ""

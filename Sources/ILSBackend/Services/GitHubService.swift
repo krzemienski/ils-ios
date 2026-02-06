@@ -1,8 +1,29 @@
 import Vapor
 import ILSShared
 
+/// Storage key for shared GitHubService instance
+struct GitHubServiceKey: StorageKey {
+    typealias Value = GitHubService
+}
+
+extension Application {
+    var githubService: GitHubService {
+        get {
+            if let existing = self.storage[GitHubServiceKey.self] {
+                return existing
+            }
+            let service = GitHubService(client: self.client)
+            self.storage[GitHubServiceKey.self] = service
+            return service
+        }
+        set {
+            self.storage[GitHubServiceKey.self] = newValue
+        }
+    }
+}
+
 /// Service for searching GitHub for Claude Code skills and fetching content
-struct GitHubService {
+struct GitHubService: Sendable {
     let client: Vapor.Client
     let token: String?
 
@@ -24,6 +45,13 @@ struct GitHubService {
         }
 
         let response = try await client.get(uri, headers: headers)
+
+        // Check rate limit headers
+        if let remaining = response.headers.first(name: "X-RateLimit-Remaining"),
+           let remainingCount = Int(remaining),
+           remainingCount < 10 {
+            print("[WARNING] GitHub API rate limit low: \(remainingCount) requests remaining")
+        }
 
         guard response.status == .ok else {
             if response.status == .forbidden || response.status == .tooManyRequests {
@@ -57,6 +85,13 @@ struct GitHubService {
         }
 
         let response = try await client.get(uri, headers: headers)
+
+        // Check rate limit headers
+        if let remaining = response.headers.first(name: "X-RateLimit-Remaining"),
+           let remainingCount = Int(remaining),
+           remainingCount < 10 {
+            print("[WARNING] GitHub API rate limit low: \(remainingCount) requests remaining")
+        }
 
         guard response.status == .ok else {
             throw Abort(.notFound, reason: "Could not fetch file from GitHub")

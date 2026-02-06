@@ -124,8 +124,7 @@ struct SkillsController: RouteCollection {
         let page = req.query[Int.self, at: "page"] ?? 1
         let perPage = req.query[Int.self, at: "per_page"] ?? 20
 
-        let github = GitHubService(client: req.client)
-        let results = try await github.searchSkills(query: query, page: page, perPage: perPage)
+        let results = try await req.application.githubService.searchSkills(query: query, page: page, perPage: perPage)
 
         return APIResponse(
             success: true,
@@ -150,8 +149,7 @@ struct SkillsController: RouteCollection {
         let skillPath = installRequest.skillPath ?? "SKILL.md"
 
         // Fetch raw content from GitHub
-        let github = GitHubService(client: req.client)
-        let content = try await github.fetchRawContent(owner: owner, repo: repo, path: skillPath)
+        let content = try await req.application.githubService.fetchRawContent(owner: owner, repo: repo, path: skillPath)
 
         // Determine skill name from repo name
         let skillName = repo
