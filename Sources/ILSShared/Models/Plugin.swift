@@ -1,5 +1,11 @@
 import Foundation
 
+/// Source type for plugins
+public enum PluginSource: String, Codable, Sendable {
+    case official
+    case community
+}
+
 /// Represents a Claude Code plugin
 public struct Plugin: Codable, Identifiable, Sendable {
     public let id: UUID
@@ -12,6 +18,9 @@ public struct Plugin: Codable, Identifiable, Sendable {
     public var commands: [String]?
     public var agents: [String]?
     public var path: String?
+    public var stars: Int?
+    public var source: PluginSource?
+    public var category: String?
 
     public init(
         id: UUID = UUID(),
@@ -23,7 +32,10 @@ public struct Plugin: Codable, Identifiable, Sendable {
         version: String? = nil,
         commands: [String]? = nil,
         agents: [String]? = nil,
-        path: String? = nil
+        path: String? = nil,
+        stars: Int? = nil,
+        source: PluginSource? = nil,
+        category: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -35,6 +47,9 @@ public struct Plugin: Codable, Identifiable, Sendable {
         self.commands = commands
         self.agents = agents
         self.path = path
+        self.stars = stars
+        self.source = source
+        self.category = category
     }
 }
 

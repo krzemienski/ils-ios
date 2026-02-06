@@ -366,10 +366,12 @@ public struct CreateMCPRequest: Codable, Sendable {
 public struct InstallPluginRequest: Codable, Sendable {
     public let pluginName: String
     public let marketplace: String
+    public let scope: String?
 
-    public init(pluginName: String, marketplace: String) {
+    public init(pluginName: String, marketplace: String, scope: String? = nil) {
         self.pluginName = pluginName
         self.marketplace = marketplace
+        self.scope = scope
     }
 }
 
