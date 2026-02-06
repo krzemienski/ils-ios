@@ -132,7 +132,10 @@ struct DashboardView: View {
                         } else {
                             VStack(spacing: ILSTheme.spacingXS) {
                                 ForEach(viewModel.recentSessions.prefix(10)) { session in
-                                    RecentActivityRowView(session: session)
+                                    NavigationLink(destination: ChatView(session: session)) {
+                                        RecentActivityRowView(session: session)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                             }
                             .padding(.horizontal)

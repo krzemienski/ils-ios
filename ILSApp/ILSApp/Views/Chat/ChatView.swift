@@ -13,6 +13,7 @@ struct ChatView: View {
     @State private var errorId: UUID?
     @State private var showForkAlert = false
     @State private var forkedSession: ChatSession?
+    @State private var navigateToForked: ChatSession?
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
 
@@ -80,11 +81,17 @@ struct ChatView: View {
             Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
         }
         .alert("Session Forked", isPresented: $showForkAlert) {
-            Button("OK", role: .cancel) {}
+            Button("Open Fork") {
+                navigateToForked = forkedSession
+            }
+            Button("Stay Here", role: .cancel) {}
         } message: {
             if let forked = forkedSession {
                 Text("Created new session: \(forked.name ?? "Unnamed")")
             }
+        }
+        .navigationDestination(item: $navigateToForked) { session in
+            ChatView(session: session)
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {

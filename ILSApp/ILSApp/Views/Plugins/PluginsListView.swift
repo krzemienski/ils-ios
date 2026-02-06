@@ -165,17 +165,25 @@ struct MarketplaceView: View {
     private let categories = ["All", "Productivity", "DevOps", "Testing", "Documentation"]
 
     var filteredPlugins: [(marketplace: MarketplaceInfo, plugins: [MarketplacePlugin])] {
-        if !searchText.isEmpty {
-            return viewModel.searchResults.isEmpty ? [] : [
-                (marketplace: MarketplaceInfo(name: "Search Results", source: "search", plugins: viewModel.searchResults),
-                 plugins: viewModel.searchResults)
-            ]
-        }
-
         return marketplaces.map { marketplace in
-            let filtered = selectedCategory == "All" ? marketplace.plugins : marketplace.plugins.filter { plugin in
-                plugin.description?.lowercased().contains(selectedCategory.lowercased()) ?? false
+            var filtered = marketplace.plugins
+
+            // Apply search filter
+            if !searchText.isEmpty {
+                let query = searchText.lowercased()
+                filtered = filtered.filter { plugin in
+                    plugin.name.lowercased().contains(query) ||
+                    (plugin.description?.lowercased().contains(query) ?? false)
+                }
             }
+
+            // Apply category filter
+            if selectedCategory != "All" {
+                filtered = filtered.filter { plugin in
+                    plugin.description?.lowercased().contains(selectedCategory.lowercased()) ?? false
+                }
+            }
+
             return (marketplace, filtered)
         }.filter { !$0.plugins.isEmpty }
     }
@@ -254,11 +262,6 @@ struct MarketplaceView: View {
                 .background(ILSTheme.background)
             }
             .searchable(text: $searchText, prompt: "Search plugins...")
-            .onChange(of: searchText) { _, newValue in
-                Task {
-                    await viewModel.searchMarketplace(query: newValue)
-                }
-            }
             .navigationTitle("Marketplace")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

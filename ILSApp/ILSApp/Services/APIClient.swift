@@ -20,7 +20,13 @@ actor APIClient {
 
     init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
-        self.session = URLSession.shared
+        
+        // Configure session with reasonable timeouts
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 10 // 10 seconds per request
+        config.timeoutIntervalForResource = 30 // 30 seconds total
+        config.waitsForConnectivity = false
+        self.session = URLSession(configuration: config)
 
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601

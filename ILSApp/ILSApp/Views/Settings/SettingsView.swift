@@ -4,19 +4,7 @@ import ILSShared
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SettingsViewModel()
-    @State private var serverHost: String = "localhost"
-    @State private var serverPort: String = "8080"
-
-    // Editing state
-    @State private var isEditing = false
-    @State private var editedModel: String = ""
-    @State private var editedColorScheme: String = "system"
-
-    // Alert state
-    @State private var showSaveConfirmation = false
-    @State private var showSaveError = false
-    @State private var saveErrorMessage = ""
-    @State private var showSaveSuccess = false
+    @State private var serverURL: String = ""
 
     // Available options
     private let availableModels = [
@@ -31,13 +19,10 @@ struct SettingsView: View {
         Form {
             connectionSection
             generalSettingsSection
-            quickSettingsSection
             apiKeySection
             permissionsSection
-            configManagementSection
             advancedSection
             statisticsSection
-            remoteManagementSection
             diagnosticsSection
             cacheSection
             aboutSection
@@ -54,31 +39,6 @@ struct SettingsView: View {
             viewModel.configure(client: appState.apiClient)
             loadServerSettings()
             await viewModel.loadAll()
-            resetEditedValues()
-        }
-        .confirmationDialog("Save Configuration Changes?", isPresented: $showSaveConfirmation, titleVisibility: .visible) {
-            Button("Save Changes") {
-                saveConfigChanges()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will update your Claude Code configuration. Changes will take effect immediately.")
-        }
-        .alert("Save Failed", isPresented: $showSaveError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(saveErrorMessage)
-        }
-        .alert("Configuration Saved", isPresented: $showSaveSuccess) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Your configuration has been updated successfully.")
-        }
-        .onChange(of: serverHost) { _, newValue in
-            saveServerSettings()
-        }
-        .onChange(of: serverPort) { _, newValue in
-            saveServerSettings()
         }
     }
 
@@ -87,22 +47,19 @@ struct SettingsView: View {
     @ViewBuilder
     private var connectionSection: some View {
         Section {
-                HStack {
-                    Text("Host")
-                        .frame(width: 50, alignment: .leading)
-                    TextField("localhost", text: $serverHost)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Server URL")
+                        .font(.caption)
+                        .foregroundColor(ILSTheme.secondaryText)
+                    TextField("https://example.com or http://localhost:9090", text: $serverURL)
                         .textContentType(.URL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
-                        .accessibilityLabel("Server host")
-                }
-
-                HStack {
-                    Text("Port")
-                        .frame(width: 50, alignment: .leading)
-                    TextField("8080", text: $serverPort)
-                        .keyboardType(.numberPad)
-                        .accessibilityLabel("Server port")
+                        .autocorrectionDisabled()
+                        .accessibilityLabel("Server URL")
+                        .onSubmit {
+                            saveServerSettings()
+                        }
                 }
 
                 HStack {
@@ -131,12 +88,6 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.isTestingConnection)
-
-                NavigationLink {
-                    SSHConnectionsView()
-                } label: {
-                    Label("SSH Server Connection", systemImage: "network")
-                }
             } header: {
                 Text("Backend Connection")
             } footer: {
@@ -156,33 +107,33 @@ struct SettingsView: View {
                             .foregroundColor(ILSTheme.secondaryText)
                     }
                 } else if let config = viewModel.config?.content {
-                    // Default Model - Editable
-                    if isEditing {
-                        Picker("Default Model", selection: $editedModel) {
-                            ForEach(availableModels, id: \.self) { model in
-                                Text(formatModelName(model))
-                                    .tag(model)
+                    // Model Picker (auto-saves on change)
+                    Picker("Default Model", selection: Binding(
+                        get: { config.model ?? "claude-sonnet-4-20250514" },
+                        set: { newModel in
+                            Task {
+                                _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
+                                await viewModel.loadConfig()
                             }
                         }
-                    } else {
-                        LabeledContent("Default Model") {
-                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
-                                .foregroundColor(ILSTheme.secondaryText)
+                    )) {
+                        ForEach(availableModels, id: \.self) { model in
+                            Text(formatModelName(model)).tag(model)
                         }
                     }
 
-                    // Theme Color Scheme - Editable
-                    if isEditing {
-                        Picker("Color Scheme", selection: $editedColorScheme) {
-                            ForEach(availableColorSchemes, id: \.self) { scheme in
-                                Text(scheme.capitalized)
-                                    .tag(scheme)
+                    // Color Scheme Picker (auto-saves on change)
+                    Picker("Color Scheme", selection: Binding(
+                        get: { config.theme?.colorScheme ?? "system" },
+                        set: { newScheme in
+                            Task {
+                                _ = await viewModel.saveConfig(model: config.model ?? "claude-sonnet-4-20250514", colorScheme: newScheme)
+                                await viewModel.loadConfig()
                             }
                         }
-                    } else {
-                        LabeledContent("Color Scheme") {
-                            Text((config.theme?.colorScheme ?? "system").capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
+                    )) {
+                        ForEach(availableColorSchemes, id: \.self) { scheme in
+                            Text(scheme.capitalized).tag(scheme)
                         }
                     }
 
@@ -205,93 +156,16 @@ struct SettingsView: View {
                         Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(config.includeCoAuthoredBy == true ? ILSTheme.success : ILSTheme.secondaryText)
                     }
-
-                    // Save button when editing
-                    if isEditing {
-                        Button {
-                            showSaveConfirmation = true
-                        } label: {
-                            HStack {
-                                Image(systemName: "square.and.arrow.down")
-                                Text("Save Changes")
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(viewModel.isSaving)
-                    }
                 } else {
                     Text("No configuration loaded")
                         .foregroundColor(ILSTheme.secondaryText)
                 }
             } header: {
-                HStack {
-                    Text("General")
-                    Spacer()
-                    if viewModel.config != nil && !viewModel.isLoadingConfig {
-                        Button(isEditing ? "Cancel" : "Edit") {
-                            if isEditing {
-                                // Cancel editing - reset to original values
-                                resetEditedValues()
-                            }
-                            isEditing.toggle()
-                        }
-                        .font(ILSTheme.captionFont)
-                        .textCase(nil)
-                    }
-                }
+                Text("General")
             } footer: {
                 if let config = viewModel.config {
                     Text("Scope: \(config.scope) • \(config.path)")
                 }
-            }
-
-    }
-
-    @ViewBuilder
-    private var quickSettingsSection: some View {
-        Section {
-                if let config = viewModel.config?.content {
-                    // Model Picker
-                    Picker("Model", selection: Binding(
-                        get: { config.model ?? "claude-sonnet-4-20250514" },
-                        set: { newModel in
-                            Task {
-                                _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
-                                await viewModel.loadConfig()
-                            }
-                        }
-                    )) {
-                        ForEach(availableModels, id: \.self) { model in
-                            Text(formatModelName(model)).tag(model)
-                        }
-                    }
-
-                    // Extended Thinking Toggle
-                    Toggle("Extended Thinking", isOn: Binding(
-                        get: { config.alwaysThinkingEnabled ?? false },
-                        set: { _ in
-                            // Read-only for now - toggle display only
-                        }
-                    ))
-                    .disabled(true)
-
-                    // Co-authored-by Toggle
-                    Toggle("Include Co-Author", isOn: Binding(
-                        get: { config.includeCoAuthoredBy ?? false },
-                        set: { _ in
-                            // Read-only for now - toggle display only
-                        }
-                    ))
-                    .disabled(true)
-                } else if !viewModel.isLoadingConfig {
-                    Text("Load settings to see quick actions")
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-            } header: {
-                Text("Quick Settings")
-            } footer: {
-                Text("Change common settings without editing raw JSON")
             }
 
     }
@@ -389,28 +263,6 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private var configManagementSection: some View {
-        Section("CONFIGURATION MANAGEMENT") {
-                NavigationLink(destination: ConfigProfilesView()) {
-                    Label("Configuration Profiles", systemImage: "square.stack.3d.up")
-                }
-                NavigationLink(destination: ConfigOverridesView()) {
-                    Label("Override Visualization", systemImage: "slider.horizontal.below.square.and.square.filled")
-                }
-                NavigationLink(destination: ConfigHistoryView()) {
-                    Label("Configuration History", systemImage: "clock.arrow.circlepath")
-                }
-                NavigationLink(destination: CloudSyncView()) {
-                    Label("Cloud Sync", systemImage: "icloud")
-                }
-                NavigationLink(destination: AutomationScriptsView()) {
-                    Label("Automation Scripts", systemImage: "gearshape.2")
-                }
-            }
-
-    }
-
-    @ViewBuilder
     private var advancedSection: some View {
         Section {
                 if let config = viewModel.config?.content {
@@ -480,16 +332,6 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
-    private var remoteManagementSection: some View {
-        Section("REMOTE MANAGEMENT") {
-                NavigationLink(destination: FleetManagementView()) {
-                    Label("Fleet Management", systemImage: "network")
-                }
-            }
-
-    }
-
-    @ViewBuilder
     private var diagnosticsSection: some View {
         Section("DIAGNOSTICS") {
                 Toggle(isOn: .init(
@@ -545,7 +387,7 @@ struct SettingsView: View {
                     }
                 }
 
-                LabeledContent("Backend Port", value: serverPort)
+                LabeledContent("Backend URL", value: serverURL)
 
                 Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                     HStack {
@@ -561,31 +403,26 @@ struct SettingsView: View {
     // MARK: - Server Settings Persistence
 
     private func loadServerSettings() {
-        // Load from UserDefaults
-        if let savedHost = UserDefaults.standard.string(forKey: "ils_server_host") {
-            serverHost = savedHost
-        }
-        if let savedPort = UserDefaults.standard.string(forKey: "ils_server_port") {
-            serverPort = savedPort
-        }
-        // Also parse from appState if available
+        // Load full URL from appState (which loads from UserDefaults)
         parseServerURL()
     }
 
     private func saveServerSettings() {
-        // Save to UserDefaults
-        UserDefaults.standard.set(serverHost, forKey: "ils_server_host")
-        UserDefaults.standard.set(serverPort, forKey: "ils_server_port")
-
-        // Update appState serverURL
-        let url = "http://\(serverHost):\(serverPort)"
-        appState.serverURL = url
+        // Validate URL format
+        guard !serverURL.isEmpty else { return }
+        
+        // Update appState serverURL (which automatically persists to UserDefaults)
+        appState.serverURL = serverURL
     }
 
     private func testConnection() {
         Task {
-            let url = "http://\(serverHost):\(serverPort)"
-            appState.serverURL = url
+            // Validate URL format
+            guard !serverURL.isEmpty, URL(string: serverURL) != nil else {
+                return
+            }
+            
+            appState.serverURL = serverURL
             await viewModel.testConnection()
 
             // Save settings if connection successful
@@ -595,31 +432,11 @@ struct SettingsView: View {
         }
     }
 
-    private func saveConfigChanges() {
-        Task {
-            let result = await viewModel.saveConfig(model: editedModel, colorScheme: editedColorScheme)
-            if let error = result {
-                saveErrorMessage = error
-                showSaveError = true
-            } else {
-                isEditing = false
-                showSaveSuccess = true
-                await viewModel.loadConfig()
-            }
-        }
-    }
-
     // MARK: - Helper Methods
 
     private func parseServerURL() {
-        // Parse existing server URL into host and port
-        if let url = URL(string: appState.serverURL),
-           let host = url.host {
-            serverHost = host
-            if let port = url.port {
-                serverPort = String(port)
-            }
-        }
+        // Load full URL from appState
+        serverURL = appState.serverURL
     }
 
     private func countHooks(_ hooks: HooksConfig) -> Int {
@@ -644,13 +461,6 @@ struct SettingsView: View {
         return model
     }
 
-    private func resetEditedValues() {
-        // Reset edited values to current config values
-        if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-sonnet-4-20250514"
-            editedColorScheme = config.theme?.colorScheme ?? "system"
-        }
-    }
 }
 
 struct ConfigEditorView: View {

@@ -60,13 +60,21 @@ struct ContentView: View {
                             Text("No connection to backend")
                                 .font(ILSTheme.captionFont)
                             Spacer()
-                            Button("Retry") {
-                                Task {
-                                    try? await appState.apiClient.healthCheck()
+                            if UserDefaults.standard.bool(forKey: "hasConnectedBefore") {
+                                Button("Retry") {
+                                    Task {
+                                        try? await appState.apiClient.healthCheck()
+                                    }
                                 }
+                                .font(ILSTheme.captionFont.weight(.semibold))
+                                .foregroundColor(ILSTheme.accent)
+                            } else {
+                                Button("Configure") {
+                                    appState.showOnboarding = true
+                                }
+                                .font(ILSTheme.captionFont.weight(.semibold))
+                                .foregroundColor(ILSTheme.accent)
                             }
-                            .font(ILSTheme.captionFont.weight(.semibold))
-                            .foregroundColor(ILSTheme.accent)
                         }
                         .foregroundColor(.white)
                         .padding(.horizontal, ILSTheme.spacingM)

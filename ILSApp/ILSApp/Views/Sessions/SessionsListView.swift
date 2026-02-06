@@ -9,6 +9,7 @@ struct SessionsListView: View {
     @State private var searchText = ""
     @State private var showErrorAlert = false
     @State private var errorAlertMessage = ""
+    @State private var navigateToSession: ChatSession?
 
     private var filteredSessions: [ChatSession] {
         guard !searchText.isEmpty else { return viewModel.sessions }
@@ -88,33 +89,15 @@ struct SessionsListView: View {
                 .accessibilityLabel("Add new session")
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            // Floating action button for accessibility testing
-            // This provides a tappable target that idb can hit
-            HStack {
-                Spacer()
-                Button(action: {
-                    HapticManager.impact(.light)
-                    showingNewSession = true
-                }) {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(ILSTheme.accent)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)
-                }
-                .accessibilityIdentifier("fab-add-session")
-                .accessibilityLabel("Add new session")
-                .padding(.trailing, 20)
-                .padding(.bottom, 20)
-            }
+        .navigationDestination(item: $navigateToSession) { session in
+            ChatView(session: session)
         }
         .sheet(isPresented: $showingNewSession) {
             NewSessionView { session in
                 viewModel.sessions.insert(session, at: 0)
+                showingNewSession = false
+                // Auto-navigate to the new session's chat
+                navigateToSession = session
             }
             .presentationBackground(Color.black)
         }

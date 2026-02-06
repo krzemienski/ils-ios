@@ -14,6 +14,11 @@ struct ILSAppApp: App {
                 .onOpenURL { url in
                     appState.handleURL(url)
                 }
+                .sheet(isPresented: $appState.showOnboarding) {
+                    ServerSetupSheet()
+                        .environmentObject(appState)
+                        .presentationBackground(Color.black)
+                }
         }
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
@@ -26,11 +31,16 @@ struct ILSAppApp: App {
 class AppState: ObservableObject {
     @Published var selectedProject: Project?
     @Published var isConnected: Bool = false
-    @Published var serverURL: String = "http://localhost:9090" {
+    @Published var serverURL: String = "" {
         didSet {
+            // Persist full URL to UserDefaults
+            UserDefaults.standard.set(serverURL, forKey: "serverURL")
             apiClient = APIClient(baseURL: serverURL)
             sseClient = SSEClient(baseURL: serverURL)
-            checkConnection()
+            // Only check connection if not initializing
+            if isInitialized {
+                checkConnection()
+            }
         }
     }
     @Published var selectedTab: String = "sessions"
@@ -49,28 +59,48 @@ class AppState: ObservableObject {
     // Spec 058: Offline mode detection
     @Published var isOffline: Bool = false
 
+    // First-run onboarding
+    @Published var showOnboarding: Bool = false
+
     var apiClient: APIClient
     var sseClient: SSEClient
 
     private var retryTask: Task<Void, Never>?
     private var healthPollTask: Task<Void, Never>?
+    private var isInitialized = false
 
     init() {
-        let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
-        let port = UserDefaults.standard.integer(forKey: "serverPort")
-        let actualPort = port > 0 ? port : 9090
-        let url = "http://\(host):\(actualPort)"
-        self.serverURL = url
+        // Try to load full URL first (supports https:// Cloudflare URLs)
+        let url: String
+        if let savedURL = UserDefaults.standard.string(forKey: "serverURL"), !savedURL.isEmpty {
+            url = savedURL
+        } else {
+            // Fallback to legacy host:port format or default
+            let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
+            let port = UserDefaults.standard.integer(forKey: "serverPort")
+            let actualPort = port > 0 ? port : 9090
+            url = "http://\(host):\(actualPort)"
+        }
+        
+        // Initialize clients before setting serverURL to avoid didSet cascade
         self.apiClient = APIClient(baseURL: url)
         self.sseClient = SSEClient(baseURL: url)
+        self.serverURL = url
+        
+        // Mark as initialized so didSet can call checkConnection
+        self.isInitialized = true
+        
+        // Check connection asynchronously (non-blocking)
         checkConnection()
     }
 
     func checkConnection() {
         Task {
             do {
+                print("🔵 Checking connection to: \(serverURL)")
                 let client = APIClient(baseURL: serverURL)
-                _ = try await client.healthCheck()
+                let response = try await client.healthCheck()
+                print("✅ Connection successful! Response: \(response)")
                 let wasDisconnected = !isConnected
                 isConnected = true
                 stopRetryPolling()
@@ -79,10 +109,22 @@ class AppState: ObservableObject {
                     // Notify views to reload after recovery
                     objectWillChange.send()
                 }
-            } catch {
+            } catch let error as URLError {
+                print("❌ Connection failed with URLError: \(error.code.rawValue) - \(error.localizedDescription)")
+                print("   URL: \(serverURL)")
+                print("   Error details: \(error)")
                 isConnected = false
                 stopHealthPolling()
                 startRetryPolling()
+                showOnboardingIfNeeded()
+            } catch {
+                print("❌ Connection failed with error: \(error.localizedDescription)")
+                print("   URL: \(serverURL)")
+                print("   Error type: \(type(of: error))")
+                isConnected = false
+                stopHealthPolling()
+                startRetryPolling()
+                showOnboardingIfNeeded()
             }
         }
     }
@@ -90,20 +132,23 @@ class AppState: ObservableObject {
     /// Start periodic polling to detect backend recovery
     private func startRetryPolling() {
         guard retryTask == nil else { return }
+        print("🔄 Starting retry polling (checking every 5 seconds)")
         retryTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
                 do {
+                    print("🔄 Retry attempt to: \(self.serverURL)")
                     let client = APIClient(baseURL: self.serverURL)
-                    _ = try await client.healthCheck()
+                    let response = try await client.healthCheck()
+                    print("✅ Reconnected! Response: \(response)")
                     self.isConnected = true
                     self.stopRetryPolling()
                     self.startHealthPolling()
                     break
                 } catch {
-                    // Still disconnected, continue polling
+                    print("⏳ Still disconnected, retrying in 5s...")
                 }
             }
         }
@@ -155,6 +200,14 @@ class AppState: ObservableObject {
             break
         @unknown default:
             break
+        }
+    }
+
+    /// Show onboarding sheet if user has never successfully connected
+    private func showOnboardingIfNeeded() {
+        let hasConnectedBefore = UserDefaults.standard.bool(forKey: "hasConnectedBefore")
+        if !hasConnectedBefore && !showOnboarding {
+            showOnboarding = true
         }
     }
 

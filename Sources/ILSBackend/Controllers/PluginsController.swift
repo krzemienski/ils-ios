@@ -212,18 +212,95 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// POST /plugins/install - Install a plugin
+    /// POST /plugins/install - Install a plugin via git clone
     @Sendable
     func install(req: Request) async throws -> APIResponse<Plugin> {
         let input = try req.content.decode(InstallPluginRequest.self)
+        let fm = FileManager.default
 
-        // In a real implementation, this would clone from the marketplace
-        // For now, return a placeholder
+        let pluginsDir = "\(fileSystem.claudeDirectory)/plugins"
+        let targetDir = "\(pluginsDir)/\(input.pluginName)"
+
+        // Ensure plugins directory exists
+        try fm.createDirectory(atPath: pluginsDir, withIntermediateDirectories: true)
+
+        // Remove existing if present (retry/update case)
+        if fm.fileExists(atPath: targetDir) {
+            try fm.removeItem(atPath: targetDir)
+        }
+
+        // Build git clone URL from marketplace source
+        let repoURL = "https://github.com/\(input.marketplace).git"
+
+        // Run git clone on a background queue to avoid blocking NIO event loop
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            DispatchQueue.global().async {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+                process.arguments = ["clone", "--depth", "1", repoURL, targetDir]
+
+                let errorPipe = Pipe()
+                process.standardError = errorPipe
+                process.standardOutput = FileHandle.nullDevice
+
+                do {
+                    try process.run()
+                    process.waitUntilExit()
+
+                    if process.terminationStatus != 0 {
+                        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                        let errorMsg = String(data: errorData, encoding: .utf8) ?? "Unknown git error"
+                        continuation.resume(throwing: Abort(.internalServerError, reason: "git clone failed: \(errorMsg)"))
+                    } else {
+                        continuation.resume()
+                    }
+                } catch {
+                    continuation.resume(throwing: Abort(.internalServerError, reason: "Failed to run git: \(error.localizedDescription)"))
+                }
+            }
+        }
+
+        // Update installed_plugins.json
+        let installedPath = "\(pluginsDir)/installed_plugins.json"
+        var pluginsJson: [String: Any] = [:]
+        if let data = try? Data(contentsOf: URL(fileURLWithPath: installedPath)),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            pluginsJson = json
+        }
+
+        var pluginsDict = pluginsJson["plugins"] as? [String: Any] ?? [:]
+        let pluginKey = "\(input.pluginName)@\(input.marketplace)"
+        let now = ISO8601DateFormatter().string(from: Date())
+        pluginsDict[pluginKey] = [[
+            "installPath": targetDir,
+            "version": "1.0.0",
+            "installedAt": now,
+            "lastUpdated": now
+        ]]
+        pluginsJson["plugins"] = pluginsDict
+
+        let jsonData = try JSONSerialization.data(withJSONObject: pluginsJson, options: [.prettyPrinted, .sortedKeys])
+        try jsonData.write(to: URL(fileURLWithPath: installedPath))
+
+        // Read plugin manifest for description
+        var description: String?
+        for manifestName in [".claude-plugin/plugin.json", "plugin.json", "package.json"] {
+            let path = "\(targetDir)/\(manifestName)"
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+               let manifest = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                description = manifest["description"] as? String
+                break
+            }
+        }
+
         let plugin = Plugin(
             name: input.pluginName,
+            description: description,
             marketplace: input.marketplace,
             isInstalled: true,
-            isEnabled: true
+            isEnabled: true,
+            version: "1.0.0",
+            path: targetDir
         )
 
         return APIResponse(

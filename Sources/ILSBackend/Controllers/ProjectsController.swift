@@ -2,15 +2,13 @@ import Vapor
 import Fluent
 import ILSShared
 import Foundation
+import Crypto
 
 /// Controller for project management operations.
 ///
 /// Routes:
 /// - `GET /projects`: List all projects from `~/.claude/projects/`
-/// - `POST /projects`: Create a new project
-/// - `GET /projects/:id`: Get a specific project
-/// - `PUT /projects/:id`: Update a project
-/// - `DELETE /projects/:id`: Delete a project and its sessions
+/// - `GET /projects/:id`: Get a specific project by deterministic ID
 /// - `GET /projects/:id/sessions`: Get sessions for a project
 struct ProjectsController: RouteCollection {
     private let fileSystem = FileSystemService()
@@ -19,11 +17,25 @@ struct ProjectsController: RouteCollection {
         let projects = routes.grouped("projects")
 
         projects.get(use: index)
-        projects.post(use: create)
         projects.get(":id", use: show)
-        projects.put(":id", use: update)
-        projects.delete(":id", use: delete)
         projects.get(":id", "sessions", use: getSessions)
+    }
+
+    /// Create a deterministic UUID from a string using SHA256.
+    /// Same input always produces the same UUID.
+    private func deterministicID(from path: String) -> UUID {
+        let hash = SHA256.hash(data: Data(path.utf8))
+        var bytes = Array(hash.prefix(16))
+        // Set UUID version 5 bits
+        bytes[6] = (bytes[6] & 0x0F) | 0x50
+        // Set variant bits
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        return UUID(uuid: (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        ))
     }
 
     /// Flexible ISO8601 date parsers for fractional seconds
@@ -95,7 +107,7 @@ struct ProjectsController: RouteCollection {
                 let lastModified = index.entries.compactMap { parseDate($0.modified) }.max() ?? createdDate
 
                 let project = Project(
-                    id: UUID(),
+                    id: deterministicID(from: projectPath),
                     name: projectName,
                     path: projectPath,
                     defaultModel: "sonnet",
@@ -121,125 +133,28 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// Create a new project (or return existing if path matches).
-    /// - Parameter req: Vapor Request with CreateProjectRequest body
-    /// - Returns: APIResponse with created or existing Project
-    @Sendable
-    func create(req: Request) async throws -> APIResponse<Project> {
-        let input = try req.content.decode(CreateProjectRequest.self)
-
-        // Check if project with same path already exists
-        if let existing = try await ProjectModel.query(on: req.db)
-            .filter(\.$path == input.path)
-            .first() {
-            // Return existing project instead of error
-            return APIResponse(
-                success: true,
-                data: existing.toShared(sessionCount: 0)
-            )
-        }
-
-        let project = ProjectModel(
-            name: input.name,
-            path: input.path,
-            defaultModel: input.defaultModel ?? "sonnet",
-            description: input.description
-        )
-
-        try await project.save(on: req.db)
-
-        return APIResponse(
-            success: true,
-            data: project.toShared(sessionCount: 0)
-        )
-    }
-
-    /// Get a specific project by ID.
+    /// Get a specific project by deterministic ID (scans filesystem).
     /// - Parameter req: Vapor Request with id parameter
-    /// - Returns: APIResponse with Project including session count
+    /// - Returns: APIResponse with Project
     @Sendable
     func show(req: Request) async throws -> APIResponse<Project> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid project ID")
         }
 
-        guard let project = try await ProjectModel.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Project not found")
+        // Scan filesystem to find the project matching this deterministic ID
+        let allProjects = try await index(req: req)
+        guard let project = allProjects.data?.items.first(where: { $0.id == id }) else {
+            throw Abort(.notFound, reason: "Project not found. Projects are discovered from ~/.claude/projects/")
         }
-
-        let sessionCount = try await project.$sessions.query(on: req.db).count()
 
         return APIResponse(
             success: true,
-            data: project.toShared(sessionCount: sessionCount)
+            data: project
         )
     }
 
-    /// Update a project's metadata (name, model, description).
-    /// - Parameter req: Vapor Request with id parameter and UpdateProjectRequest body
-    /// - Returns: APIResponse with updated Project
-    @Sendable
-    func update(req: Request) async throws -> APIResponse<Project> {
-        guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Invalid project ID")
-        }
-
-        guard let project = try await ProjectModel.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Project not found")
-        }
-
-        let input = try req.content.decode(UpdateProjectRequest.self)
-
-        // Update only provided fields
-        if let name = input.name {
-            project.name = name
-        }
-        if let defaultModel = input.defaultModel {
-            project.defaultModel = defaultModel
-        }
-        if let description = input.description {
-            project.description = description
-        }
-
-        // Touch lastAccessedAt
-        project.lastAccessedAt = Date()
-
-        try await project.save(on: req.db)
-
-        let sessionCount = try await project.$sessions.query(on: req.db).count()
-
-        return APIResponse(
-            success: true,
-            data: project.toShared(sessionCount: sessionCount)
-        )
-    }
-
-    /// Delete a project and all its associated sessions.
-    /// - Parameter req: Vapor Request with id parameter
-    /// - Returns: APIResponse with deletion confirmation
-    @Sendable
-    func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
-        guard let id = req.parameters.get("id", as: UUID.self) else {
-            throw Abort(.badRequest, reason: "Invalid project ID")
-        }
-
-        guard let project = try await ProjectModel.find(id, on: req.db) else {
-            throw Abort(.notFound, reason: "Project not found")
-        }
-
-        // Delete associated sessions first (cascade)
-        try await project.$sessions.query(on: req.db).delete()
-
-        // Delete the project
-        try await project.delete(on: req.db)
-
-        return APIResponse(
-            success: true,
-            data: DeletedResponse()
-        )
-    }
-
-    /// Get all sessions for a specific project.
+    /// Get all sessions for a specific project (by deterministic ID).
     /// - Parameter req: Vapor Request with id parameter
     /// - Returns: APIResponse with list of ChatSession objects
     @Sendable
@@ -248,11 +163,15 @@ struct ProjectsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid project ID")
         }
 
-        guard let project = try await ProjectModel.find(id, on: req.db) else {
+        // Verify the project exists in filesystem
+        let allProjects = try await index(req: req)
+        guard allProjects.data?.items.contains(where: { $0.id == id }) == true else {
             throw Abort(.notFound, reason: "Project not found")
         }
 
-        let sessionModels = try await project.$sessions.query(on: req.db)
+        // Query sessions that reference this project ID
+        let sessionModels = try await SessionModel.query(on: req.db)
+            .filter(\.$project.$id == id)
             .sort(\.$lastActiveAt, .descending)
             .all()
 
