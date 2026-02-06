@@ -9,9 +9,25 @@ class SkillsViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var gitHubResults: [GitHubSearchResult] = []
     @Published var isSearchingGitHub = false
-    @Published var gitHubSearchText = ""
+    @Published var gitHubSearchText = "" {
+        didSet {
+            // Debounce GitHub search with 300ms delay
+            searchTask?.cancel()
+            guard !gitHubSearchText.isEmpty else {
+                gitHubResults = []
+                return
+            }
+            searchTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                if !Task.isCancelled {
+                    await searchGitHub(query: gitHubSearchText)
+                }
+            }
+        }
+    }
 
     private var client: APIClient?
+    private var searchTask: Task<Void, Never>?
 
     init() {}
 
@@ -128,12 +144,14 @@ class SkillsViewModel: ObservableObject {
             return
         }
         isSearchingGitHub = true
+        error = nil
         do {
             let response: APIResponse<ListResponse<GitHubSearchResult>> = try await client.get("/skills/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)")
             if let data = response.data {
                 gitHubResults = data.items
             }
         } catch {
+            self.error = error
             print("❌ GitHub search failed: \(error.localizedDescription)")
         }
         isSearchingGitHub = false

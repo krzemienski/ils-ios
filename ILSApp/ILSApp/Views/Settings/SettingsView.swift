@@ -546,8 +546,12 @@ struct ConfigEditorView: View {
     let apiClient: APIClient
     @StateObject private var viewModel = ConfigEditorViewModel()
     @State private var configText = ""
+    @State private var originalConfigText = ""
     @State private var isSaving = false
     @State private var validationErrors: [String] = []
+    @State private var hasUnsavedChanges = false
+    @State private var showUnsavedChangesAlert = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack {
@@ -593,17 +597,46 @@ struct ConfigEditorView: View {
         .navigationTitle("\(scope.capitalized) Settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    if hasUnsavedChanges {
+                        showUnsavedChangesAlert = true
+                    } else {
+                        dismiss()
+                    }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Save") {
                     saveConfig()
                 }
-                .disabled(isSaving)
+                .disabled(isSaving || !hasUnsavedChanges)
             }
         }
         .task {
             viewModel.configure(client: apiClient)
             await viewModel.loadConfig(scope: scope)
             configText = viewModel.configJson
+            originalConfigText = viewModel.configJson
+        }
+        .onChange(of: configText) { _, newValue in
+            hasUnsavedChanges = (newValue != originalConfigText)
+        }
+        .alert("Unsaved Changes", isPresented: $showUnsavedChangesAlert) {
+            Button("Discard Changes", role: .destructive) {
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("You have unsaved changes. Are you sure you want to discard them?")
+        }
+        .interactiveDismissDisabled(hasUnsavedChanges)
+        .onDisappear {
+            // User dismissed with unsaved changes (swipe back)
+            if hasUnsavedChanges {
+                // The sheet has already been dismissed at this point
+                // We rely on interactiveDismissDisabled to prevent the swipe
+            }
         }
     }
 
@@ -615,6 +648,13 @@ struct ConfigEditorView: View {
             let errors = await viewModel.saveConfig(scope: scope, json: configText)
             validationErrors = errors
             isSaving = false
+
+            // If save was successful, update original text and clear unsaved flag
+            if errors.isEmpty {
+                originalConfigText = configText
+                hasUnsavedChanges = false
+                dismiss()
+            }
         }
     }
 

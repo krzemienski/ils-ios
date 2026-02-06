@@ -57,36 +57,54 @@ class ServerConnectionViewModel: ObservableObject {
         isConnecting = true
         error = nil
 
-        do {
-            let portNum = Int(port) ?? 22
-            let request = ConnectRequest(
-                host: host,
-                port: portNum,
-                username: username,
-                authMethod: authMethod.rawValue.lowercased(),
-                credential: credential
-            )
-            let response: APIResponse<ConnectionResponse> = try await apiClient.post("/auth/connect", body: request)
-
-            if let data = response.data, data.success {
-                // Save to recent connections
-                saveToRecent()
-                // Save password to keychain
-                if authMethod == .password {
-                    try? KeychainService.shared.savePassword(credential, for: "\(host):\(port)")
+        // Retry with exponential backoff: 3 attempts (0s, 1s, 2s delay)
+        for attempt in 0..<3 {
+            do {
+                // Add delay for retry attempts
+                if attempt > 0 {
+                    let delaySeconds = UInt64(attempt * 1_000_000_000)
+                    try await Task.sleep(nanoseconds: delaySeconds)
                 }
-                isConnecting = false
-                return data
-            } else {
-                error = response.data?.error ?? response.error?.message ?? "Connection failed"
-                isConnecting = false
-                return nil
+
+                let portNum = Int(port) ?? 22
+                let request = ConnectRequest(
+                    host: host,
+                    port: portNum,
+                    username: username,
+                    authMethod: authMethod.rawValue.lowercased(),
+                    credential: credential
+                )
+                let response: APIResponse<ConnectionResponse> = try await apiClient.post("/auth/connect", body: request)
+
+                if let data = response.data, data.success {
+                    // Save to recent connections
+                    saveToRecent()
+                    // Save password to keychain
+                    if authMethod == .password {
+                        try? KeychainService.shared.savePassword(credential, for: "\(host):\(port)")
+                    }
+                    isConnecting = false
+                    return data
+                } else {
+                    // Server returned error - don't retry
+                    error = response.data?.error ?? response.error?.message ?? "Connection failed"
+                    isConnecting = false
+                    return nil
+                }
+            } catch {
+                // Network/connection error - retry if we have attempts left
+                if attempt == 2 {
+                    // Final attempt failed
+                    self.error = error.localizedDescription
+                    isConnecting = false
+                    return nil
+                }
+                // Continue to next retry attempt
             }
-        } catch {
-            self.error = error.localizedDescription
-            isConnecting = false
-            return nil
         }
+
+        isConnecting = false
+        return nil
     }
 
     private func saveToRecent() {
