@@ -106,7 +106,7 @@ struct ProjectRowView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
             }
 
             Text(project.path)

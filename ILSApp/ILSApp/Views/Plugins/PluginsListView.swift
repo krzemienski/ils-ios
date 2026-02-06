@@ -108,7 +108,7 @@ struct PluginRowView: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(ILSTheme.accent.opacity(0.15))
-                            .cornerRadius(ILSTheme.cornerRadiusS)
+                            .cornerRadius(ILSTheme.cornerRadiusXS)
                     }
                     if commands.count > 3 {
                         Text("+\(commands.count - 3)")

@@ -112,7 +112,7 @@ struct MCPServerRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
 
                 // Environment variable count badge
                 if let env = server.env, !env.isEmpty {
@@ -126,7 +126,7 @@ struct MCPServerRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(ILSTheme.accent.opacity(0.1))
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
                 }
 
                 Spacer()
@@ -268,7 +268,7 @@ struct MCPServerDetailView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusM)
+                    .cornerRadius(ILSTheme.cornerRadiusSmall)
                     .padding(.bottom, 20)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }

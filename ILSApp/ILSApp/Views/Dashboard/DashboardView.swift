@@ -179,7 +179,7 @@ struct StatCardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusL)
+        .cornerRadius(ILSTheme.cornerRadiusMedium)
     }
 }
 
@@ -209,7 +209,7 @@ struct RecentActivityRowView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
             }
 
             if let projectName = session.projectName {
@@ -233,7 +233,7 @@ struct RecentActivityRowView: View {
         }
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusM)
+        .cornerRadius(ILSTheme.cornerRadiusSmall)
     }
 
     private func formattedDate(_ date: Date) -> String {
@@ -300,7 +300,7 @@ struct SkeletonStatCardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusL)
+        .cornerRadius(ILSTheme.cornerRadiusMedium)
     }
 }
 
@@ -318,7 +318,7 @@ struct SkeletonActivityRowView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
             }
 
             Text("Project Name")
@@ -337,7 +337,7 @@ struct SkeletonActivityRowView: View {
         }
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusM)
+        .cornerRadius(ILSTheme.cornerRadiusSmall)
     }
 }
 

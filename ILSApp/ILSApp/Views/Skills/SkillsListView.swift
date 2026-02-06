@@ -122,7 +122,7 @@ struct SkillRowView: View {
                                 .padding(.vertical, 2)
                                 .background(ILSTheme.accent.opacity(0.15))
                                 .foregroundColor(ILSTheme.accent)
-                                .cornerRadius(ILSTheme.cornerRadiusS)
+                                .cornerRadius(ILSTheme.cornerRadiusXS)
                         }
                     }
                 }
@@ -215,7 +215,7 @@ struct SkillDetailView: View {
                     .padding(.horizontal, ILSTheme.spacingM)
                     .padding(.vertical, ILSTheme.spacingS)
                     .background(ILSTheme.secondaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusM)
+                    .cornerRadius(ILSTheme.cornerRadiusSmall)
                     .shadow(color: ILSTheme.shadowLight, radius: 4)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, ILSTheme.spacingL)
@@ -249,7 +249,7 @@ struct SkillDetailView: View {
                                 .padding(.vertical, ILSTheme.spacingXS)
                                 .background(ILSTheme.accent.opacity(0.15))
                                 .foregroundColor(ILSTheme.accent)
-                                .cornerRadius(ILSTheme.cornerRadiusS)
+                                .cornerRadius(ILSTheme.cornerRadiusXS)
                         }
                     }
                 }
@@ -288,7 +288,7 @@ struct SkillDetailView: View {
                 .padding(ILSTheme.spacingM)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(ILSTheme.secondaryBackground)
-                .cornerRadius(ILSTheme.cornerRadiusM)
+                .cornerRadius(ILSTheme.cornerRadiusSmall)
                 .textSelection(.enabled)
         }
     }

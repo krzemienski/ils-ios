@@ -150,7 +150,7 @@ struct SessionRowView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
             }
 
             HStack {
@@ -187,7 +187,7 @@ struct SessionRowView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(ILSTheme.accent.opacity(0.15))
-                        .cornerRadius(ILSTheme.cornerRadiusS)
+                        .cornerRadius(ILSTheme.cornerRadiusXS)
                 } else {
                     statusBadge
                 }
@@ -212,7 +212,7 @@ struct SessionRowView: View {
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(color)
-                .cornerRadius(ILSTheme.cornerRadiusS)
+                .cornerRadius(ILSTheme.cornerRadiusXS)
         }
     }
 
@@ -252,7 +252,7 @@ struct PulsingBadgeView: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(color)
-            .cornerRadius(ILSTheme.cornerRadiusS)
+            .cornerRadius(ILSTheme.cornerRadiusXS)
             .opacity(shouldAnimate && isPulsing ? 0.7 : 1.0)
             .animation(shouldAnimate ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil, value: isPulsing)
             .onAppear {

@@ -4,31 +4,39 @@ import SwiftUI
 enum ILSTheme {
     // MARK: - Colors
 
-    /// Primary accent color - Hot Orange (#FF6600)
-    static let accent = Color(red: 1.0, green: 102.0/255.0, blue: 0.0)
+    /// Primary accent color - (#FF6B35)
+    static let accent = Color(red: 1.0, green: 107.0/255.0, blue: 53.0/255.0)
 
     /// Background colors - hardcoded dark theme per DESIGN.md
     static let background = Color(red: 0, green: 0, blue: 0)                                      // #000000 Deep Black
-    static let secondaryBackground = Color(red: 28.0/255.0, green: 28.0/255.0, blue: 30.0/255.0)  // #1C1C1E Charcoal Surface
-    static let tertiaryBackground = Color(red: 44.0/255.0, green: 44.0/255.0, blue: 46.0/255.0)   // #2C2C2E Dark Gray Elevation
+    static let secondaryBackground = Color(red: 13.0/255.0, green: 13.0/255.0, blue: 13.0/255.0)   // #0D0D0D
+    static let tertiaryBackground = Color(red: 26.0/255.0, green: 26.0/255.0, blue: 26.0/255.0)   // #1A1A1A
 
     /// Text colors - hardcoded per DESIGN.md
     static let primaryText = Color.white                                                            // #FFFFFF Pure White
-    static let secondaryText = Color(red: 142.0/255.0, green: 142.0/255.0, blue: 147.0/255.0)     // #8E8E93 Silver Gray
-    static let tertiaryText = Color(red: 72.0/255.0, green: 72.0/255.0, blue: 74.0/255.0)         // #48484A Ash Gray
+    static let secondaryText = Color(red: 160.0/255.0, green: 160.0/255.0, blue: 160.0/255.0)     // #A0A0A0
+    static let tertiaryText = Color(red: 102.0/255.0, green: 102.0/255.0, blue: 102.0/255.0)      // #666666
 
     /// Status colors - exact DESIGN.md values
-    static let success = Color(red: 52.0/255.0, green: 199.0/255.0, blue: 89.0/255.0)             // #34C759 Signal Green
-    static let warning = Color(red: 255.0/255.0, green: 149.0/255.0, blue: 0.0)                   // #FF9500 Caution Orange
-    static let error = Color(red: 255.0/255.0, green: 59.0/255.0, blue: 48.0/255.0)               // #FF3B30 Alert Red
+    static let success = Color(red: 76.0/255.0, green: 175.0/255.0, blue: 80.0/255.0)              // #4CAF50
+    static let warning = Color(red: 1.0, green: 167.0/255.0, blue: 38.0/255.0)                    // #FFA726
+    static let error = Color(red: 239.0/255.0, green: 83.0/255.0, blue: 80.0/255.0)               // #EF5350
     static let info = Color(red: 0.0, green: 122.0/255.0, blue: 255.0/255.0)                      // #007AFF Ocean Blue
 
     /// Message bubble colors
-    static let userBubble = Color(red: 1.0, green: 102.0/255.0, blue: 0.0).opacity(0.15)          // Ember Orange Glow
-    static let assistantBubble = Color(red: 28.0/255.0, green: 28.0/255.0, blue: 30.0/255.0)      // Charcoal Surface
+    static let userBubble = Color(red: 1.0, green: 107.0/255.0, blue: 53.0/255.0).opacity(0.15)
+    static let assistantBubble = Color(red: 13.0/255.0, green: 13.0/255.0, blue: 13.0/255.0)
 
     /// List separator color - very dark gray per DESIGN.md
-    static let separator = Color(red: 38.0/255.0, green: 38.0/255.0, blue: 40.0/255.0)            // #262628
+    static let separator = Color(red: 42.0/255.0, green: 42.0/255.0, blue: 42.0/255.0)            // #2A2A2A
+
+    /// Additional accent variants
+    static let accentSecondary = Color(red: 1.0, green: 140.0/255.0, blue: 90.0/255.0)               // #FF8C5A
+    static let accentTertiary = Color(red: 1.0, green: 69.0/255.0, blue: 0.0)                         // #FF4500
+
+    /// Border colors
+    static let borderDefault = Color(red: 42.0/255.0, green: 42.0/255.0, blue: 42.0/255.0)            // #2A2A2A
+    static let borderActive = Color(red: 1.0, green: 107.0/255.0, blue: 53.0/255.0)                   // #FF6B35
 
     // MARK: - Typography
 
@@ -48,6 +56,12 @@ enum ILSTheme {
 
     // MARK: - Corner Radius
 
+    static let cornerRadiusXS: CGFloat = 4
+    static let cornerRadiusSmall: CGFloat = 8
+    static let cornerRadiusMedium: CGFloat = 12
+    static let cornerRadiusLarge: CGFloat = 16
+
+    // Deprecated aliases - TODO: remove after full migration
     static let cornerRadiusS: CGFloat = 4
     static let cornerRadiusM: CGFloat = 8
     static let cornerRadiusL: CGFloat = 12
@@ -65,7 +79,7 @@ struct CardStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(ILSTheme.secondaryBackground)
-            .cornerRadius(ILSTheme.cornerRadiusL)
+            .cornerRadius(ILSTheme.cornerRadiusMedium)
     }
 }
 
@@ -88,7 +102,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, ILSTheme.spacingS)
             .background(ILSTheme.accent)
             .foregroundColor(.white)
-            .cornerRadius(ILSTheme.cornerRadiusM)
+            .cornerRadius(ILSTheme.cornerRadiusSmall)
             .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
@@ -100,7 +114,7 @@ struct SecondaryButtonStyle: ButtonStyle {
             .padding(.vertical, ILSTheme.spacingS)
             .background(ILSTheme.secondaryBackground)
             .foregroundColor(ILSTheme.accent)
-            .cornerRadius(ILSTheme.cornerRadiusM)
+            .cornerRadius(ILSTheme.cornerRadiusSmall)
             .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
@@ -206,7 +220,7 @@ struct LoadingOverlay: ViewModifier {
                         }
                         .padding(ILSTheme.spacingL)
                         .background(ILSTheme.secondaryBackground)
-                        .cornerRadius(ILSTheme.cornerRadiusL)
+                        .cornerRadius(ILSTheme.cornerRadiusMedium)
                     }
                 }
             }

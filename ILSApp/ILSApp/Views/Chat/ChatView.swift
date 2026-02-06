@@ -386,7 +386,7 @@ struct TypingIndicatorView: View {
             .padding(.horizontal, ILSTheme.spacingM)
             .padding(.vertical, ILSTheme.spacingS)
             .background(ILSTheme.assistantBubble)
-            .cornerRadius(ILSTheme.cornerRadiusL)
+            .cornerRadius(ILSTheme.cornerRadiusMedium)
 
             Spacer()
         }

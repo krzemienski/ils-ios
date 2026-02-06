@@ -76,17 +76,17 @@ struct MessageView: View {
                         .padding(.horizontal, ILSTheme.spacingS)
                         .padding(.vertical, ILSTheme.spacingXS)
                         .background(ILSTheme.success.opacity(0.1))
-                        .cornerRadius(ILSTheme.cornerRadiusS)
+                        .cornerRadius(ILSTheme.cornerRadiusXS)
                         .transition(.scale.combined(with: .opacity))
                     }
                 }
                 .padding()
                 .background(message.isUser ? ILSTheme.userBubble : ILSTheme.assistantBubble)
-                .cornerRadius(ILSTheme.cornerRadiusL)
+                .cornerRadius(ILSTheme.cornerRadiusMedium)
                 .overlay(
                     // Visual indicator for historical messages
                     message.isFromHistory ?
-                        RoundedRectangle(cornerRadius: ILSTheme.cornerRadiusL)
+                        RoundedRectangle(cornerRadius: ILSTheme.cornerRadiusMedium)
                             .strokeBorder(ILSTheme.tertiaryText.opacity(0.3), lineWidth: 1)
                         : nil
                 )
@@ -158,12 +158,12 @@ struct ToolCallView: View {
                     .foregroundColor(ILSTheme.secondaryText)
                     .padding(ILSTheme.spacingS)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
             }
         }
         .padding(ILSTheme.spacingS)
         .background(ILSTheme.tertiaryBackground.opacity(0.5))
-        .cornerRadius(ILSTheme.cornerRadiusM)
+        .cornerRadius(ILSTheme.cornerRadiusSmall)
     }
 }
 
@@ -195,12 +195,12 @@ struct ToolResultView: View {
                 .frame(maxHeight: 200)
                 .padding(ILSTheme.spacingS)
                 .background(ILSTheme.tertiaryBackground)
-                .cornerRadius(ILSTheme.cornerRadiusS)
+                .cornerRadius(ILSTheme.cornerRadiusXS)
             }
         }
         .padding(ILSTheme.spacingS)
         .background(ILSTheme.tertiaryBackground.opacity(0.5))
-        .cornerRadius(ILSTheme.cornerRadiusM)
+        .cornerRadius(ILSTheme.cornerRadiusSmall)
     }
 }
 
@@ -229,12 +229,12 @@ struct ThinkingView: View {
                     .foregroundColor(ILSTheme.secondaryText)
                     .padding(ILSTheme.spacingS)
                     .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusS)
+                    .cornerRadius(ILSTheme.cornerRadiusXS)
             }
         }
         .padding(ILSTheme.spacingS)
         .background(ILSTheme.info.opacity(0.1))
-        .cornerRadius(ILSTheme.cornerRadiusM)
+        .cornerRadius(ILSTheme.cornerRadiusSmall)
     }
 }
 
