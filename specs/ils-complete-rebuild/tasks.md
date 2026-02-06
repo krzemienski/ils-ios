@@ -78,7 +78,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 - **Done when**: Zero compile errors on backend
 - **Commit**: `chore(backend): fix compilation after model updates` (only if fixes needed)
 
-### 1.4 Create backend SSHService
+### 1.4 Create backend SSHService [x]
 
 - **Do**:
   1. Create `Sources/ILSBackend/Services/SSHService.swift` as an actor
