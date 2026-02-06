@@ -73,6 +73,44 @@ struct DashboardView: View {
                     }
                     .padding()
 
+                    // Quick Actions Section
+                    VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
+                        Text("Quick Actions")
+                            .font(ILSTheme.titleFont)
+                            .foregroundColor(ILSTheme.primaryText)
+                            .padding(.horizontal)
+
+                        VStack(spacing: ILSTheme.spacingXS) {
+                            ForEach(viewModel.quickActions) { action in
+                                Button {
+                                    // Navigate to the corresponding tab
+                                    appState.selectedTab = action.tab.rawValue.lowercased()
+                                } label: {
+                                    HStack(spacing: ILSTheme.spacingM) {
+                                        Image(systemName: action.icon)
+                                            .font(.title3)
+                                            .foregroundColor(ILSTheme.accent)
+                                            .frame(width: 32)
+
+                                        Text(action.title)
+                                            .font(ILSTheme.bodyFont)
+                                            .foregroundColor(ILSTheme.primaryText)
+
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption)
+                                            .foregroundColor(ILSTheme.tertiaryText)
+                                    }
+                                    .padding(ILSTheme.spacingM)
+                                    .background(ILSTheme.secondaryBackground)
+                                    .cornerRadius(ILSTheme.cornerRadiusSmall)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+
                     // Recent Activity Section
                     VStack(alignment: .leading, spacing: ILSTheme.spacingM) {
                         Text("Recent Activity")
@@ -166,7 +204,7 @@ struct StatCardView: View {
 
             Text("\(count)")
                 .font(ILSTheme.titleFont)
-                .foregroundColor(ILSTheme.primaryText)
+                .foregroundColor(ILSTheme.accent)
 
             Text(title)
                 .font(ILSTheme.headlineFont)
