@@ -23,7 +23,7 @@ public enum PermissionMode: String, Codable, Sendable {
 }
 
 /// Represents a chat session with Claude Code
-public struct ChatSession: Codable, Identifiable, Sendable {
+public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
     public let id: UUID
     public var claudeSessionId: String?
     public var name: String?
