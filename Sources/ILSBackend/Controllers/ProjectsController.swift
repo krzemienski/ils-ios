@@ -2,7 +2,7 @@ import Vapor
 import Fluent
 import ILSShared
 import Foundation
-import Crypto
+import CryptoKit
 
 /// Controller for project management operations.
 ///
