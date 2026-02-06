@@ -99,7 +99,17 @@ extension CreateSkillRequest: Content {}
 extension UpdateSkillRequest: Content {}
 extension CreateMCPRequest: Content {}
 extension InstallPluginRequest: Content {}
+extension SkillInstallRequest: Content {}
 extension UpdateConfigRequest: Content {}
+
+// MARK: - GitHub Search Types
+extension GitHubSearchResult: Content {}
+extension GitHubCodeSearchResponse: Content {}
+extension GitHubCodeItem: Content {}
+extension GitHubRepository: Content {}
+extension PluginSearchResult: Content {}
+extension AddMarketplaceRequest: Content {}
+extension Marketplace: Content {}
 extension ValidateConfigRequest: Content {}
 
 // MARK: - Response Types

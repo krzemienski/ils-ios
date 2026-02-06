@@ -8,7 +8,9 @@ struct SkillsController: RouteCollection {
         let skills = routes.grouped("skills")
 
         skills.get(use: list)
+        skills.get("search", use: search)
         skills.post(use: create)
+        skills.post("install", use: install)
         skills.get(":name", use: get)
         skills.put(":name", use: update)
         skills.delete(":name", use: delete)
@@ -109,6 +111,79 @@ struct SkillsController: RouteCollection {
         return APIResponse(
             success: true,
             data: DeletedResponse()
+        )
+    }
+
+    /// GET /skills/search?q={query} - Search GitHub for skills
+    @Sendable
+    func search(req: Request) async throws -> APIResponse<ListResponse<GitHubSearchResult>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'q' is required")
+        }
+
+        let page = req.query[Int.self, at: "page"] ?? 1
+        let perPage = req.query[Int.self, at: "per_page"] ?? 20
+
+        let github = GitHubService(client: req.client)
+        let results = try await github.searchSkills(query: query, page: page, perPage: perPage)
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: results)
+        )
+    }
+
+    /// POST /skills/install - Install a skill from GitHub
+    @Sendable
+    func install(req: Request) async throws -> APIResponse<Skill> {
+        let installRequest = try req.content.decode(SkillInstallRequest.self)
+
+        // Parse owner/repo from repository string
+        let parts = installRequest.repository.split(separator: "/")
+        guard parts.count == 2 else {
+            throw Abort(.badRequest, reason: "Repository must be in 'owner/repo' format")
+        }
+        let owner = String(parts[0])
+        let repo = String(parts[1])
+
+        // Determine skill path
+        let skillPath = installRequest.skillPath ?? "SKILL.md"
+
+        // Fetch raw content from GitHub
+        let github = GitHubService(client: req.client)
+        let content = try await github.fetchRawContent(owner: owner, repo: repo, path: skillPath)
+
+        // Determine skill name from repo name
+        let skillName = repo
+
+        // Write to ~/.claude/skills/{name}/SKILL.md
+        let fm = FileManager.default
+        let homeDir = fm.homeDirectoryForCurrentUser
+        let skillDir = homeDir.appendingPathComponent(".claude/skills/\(skillName)")
+
+        try fm.createDirectory(at: skillDir, withIntermediateDirectories: true)
+
+        let skillFilePath = skillDir.appendingPathComponent("SKILL.md")
+        try content.write(to: skillFilePath, atomically: true, encoding: .utf8)
+
+        // Invalidate cache so the new skill shows up
+        await fileSystem.invalidateSkillsCache()
+
+        // Return the installed skill
+        let skill = Skill(
+            name: skillName,
+            description: "Installed from \(installRequest.repository)",
+            path: skillFilePath.path,
+            source: .github,
+            content: content,
+            rawContent: content,
+            stars: nil,
+            author: owner
+        )
+
+        return APIResponse(
+            success: true,
+            data: skill
         )
     }
 }
