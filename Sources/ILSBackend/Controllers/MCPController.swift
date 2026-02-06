@@ -10,6 +10,7 @@ struct MCPController: RouteCollection {
         mcp.get(use: list)
         mcp.get(":name", use: show)
         mcp.post(use: create)
+        mcp.put(":name", use: update)
         mcp.delete(":name", use: delete)
     }
 
@@ -70,6 +71,38 @@ struct MCPController: RouteCollection {
         )
 
         try fileSystem.addMCPServer(server)
+
+        return APIResponse(
+            success: true,
+            data: server
+        )
+    }
+
+    /// PUT /mcp/:name - Update an existing MCP server
+    @Sendable
+    func update(req: Request) async throws -> APIResponse<MCPServer> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid MCP server name")
+        }
+
+        let input = try req.content.decode(CreateMCPRequest.self)
+
+        // Remove old entry then add updated one
+        let scope = input.scope ?? .user
+        try? fileSystem.removeMCPServer(name: name, scope: scope)
+
+        let server = MCPServer(
+            name: input.name,
+            command: input.command,
+            args: input.args ?? [],
+            env: input.env,
+            scope: scope
+        )
+
+        try fileSystem.addMCPServer(server)
+
+        // Invalidate cache
+        await fileSystem.invalidateMCPServersCache()
 
         return APIResponse(
             success: true,

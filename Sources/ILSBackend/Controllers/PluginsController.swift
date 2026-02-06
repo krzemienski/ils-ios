@@ -8,7 +8,9 @@ struct PluginsController: RouteCollection {
         let plugins = routes.grouped("plugins")
 
         plugins.get(use: list)
+        plugins.get("search", use: search)
         plugins.get("marketplace", use: marketplace)
+        plugins.post("marketplaces", use: addMarketplace)
         plugins.post("install", use: install)
         plugins.post(":name", "enable", use: enable)
         plugins.post(":name", "disable", use: disable)
@@ -154,6 +156,59 @@ struct PluginsController: RouteCollection {
         return APIResponse(
             success: true,
             data: marketplaces
+        )
+    }
+
+    /// GET /plugins/search?q={query} - Search installed plugins by name/description
+    @Sendable
+    func search(req: Request) async throws -> APIResponse<ListResponse<Plugin>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'q' is required")
+        }
+
+        let lowercasedQuery = query.lowercased()
+
+        // Get all installed plugins and filter
+        let allPluginsResponse = try await list(req: req)
+        let filtered = (allPluginsResponse.data?.items ?? []).filter { plugin in
+            plugin.name.lowercased().contains(lowercasedQuery) ||
+            (plugin.description?.lowercased().contains(lowercasedQuery) ?? false)
+        }
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: filtered)
+        )
+    }
+
+    /// POST /plugins/marketplaces - Register a new marketplace
+    @Sendable
+    func addMarketplace(req: Request) async throws -> APIResponse<Marketplace> {
+        let input = try req.content.decode(AddMarketplaceRequest.self)
+
+        // Validate repo format (owner/repo)
+        let parts = input.repo.split(separator: "/")
+        guard parts.count == 2 else {
+            throw Abort(.badRequest, reason: "Repository must be in 'owner/repo' format")
+        }
+
+        // Add to config's extraKnownMarketplaces
+        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        var marketplaces = config.extraKnownMarketplaces ?? [:]
+        marketplaces[input.repo] = input.source
+        config.extraKnownMarketplaces = marketplaces
+
+        _ = try fileSystem.writeConfig(scope: "user", content: config)
+
+        let marketplace = Marketplace(
+            name: String(parts[1]),
+            source: input.source,
+            repo: input.repo
+        )
+
+        return APIResponse(
+            success: true,
+            data: marketplace
         )
     }
 
