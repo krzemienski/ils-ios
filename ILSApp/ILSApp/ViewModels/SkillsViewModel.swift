@@ -3,7 +3,7 @@ import ILSShared
 
 @MainActor
 class SkillsViewModel: ObservableObject {
-    @Published var skills: [SkillItem] = []
+    @Published var skills: [Skill] = []
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
@@ -20,7 +20,7 @@ class SkillsViewModel: ObservableObject {
     }
 
     /// Filtered skills based on search text (client-side filtering for responsiveness)
-    var filteredSkills: [SkillItem] {
+    var filteredSkills: [Skill] {
         guard !searchText.isEmpty else { return skills }
         let query = searchText.lowercased()
         return skills.filter { skill in
@@ -52,7 +52,7 @@ class SkillsViewModel: ObservableObject {
 
         do {
             let path = refresh ? "/skills?refresh=true" : "/skills"
-            let response: APIResponse<ListResponse<SkillItem>> = try await client.get(path)
+            let response: APIResponse<ListResponse<Skill>> = try await client.get(path)
             if let data = response.data {
                 skills = data.items
             }
@@ -73,7 +73,7 @@ class SkillsViewModel: ObservableObject {
         await loadSkills()
     }
 
-    func createSkill(name: String, description: String?, content: String) async -> SkillItem? {
+    func createSkill(name: String, description: String?, content: String) async -> Skill? {
         guard let client else { return nil }
         do {
             let request = CreateSkillRequest(
@@ -81,7 +81,7 @@ class SkillsViewModel: ObservableObject {
                 description: description,
                 content: content
             )
-            let response: APIResponse<SkillItem> = try await client.post("/skills", body: request)
+            let response: APIResponse<Skill> = try await client.post("/skills", body: request)
             if let skill = response.data {
                 skills.append(skill)
                 return skill
@@ -93,11 +93,11 @@ class SkillsViewModel: ObservableObject {
         return nil
     }
 
-    func updateSkill(_ skill: SkillItem, content: String) async -> SkillItem? {
+    func updateSkill(_ skill: Skill, content: String) async -> Skill? {
         guard let client else { return nil }
         do {
             let request = UpdateSkillRequest(content: content)
-            let response: APIResponse<SkillItem> = try await client.put("/skills/\(skill.name)", body: request)
+            let response: APIResponse<Skill> = try await client.put("/skills/\(skill.name)", body: request)
             if let updated = response.data {
                 if let index = skills.firstIndex(where: { $0.id == skill.id }) {
                     skills[index] = updated
@@ -111,7 +111,7 @@ class SkillsViewModel: ObservableObject {
         return nil
     }
 
-    func deleteSkill(_ skill: SkillItem) async {
+    func deleteSkill(_ skill: Skill) async {
         guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/skills/\(skill.name)")
@@ -143,7 +143,7 @@ class SkillsViewModel: ObservableObject {
         guard let client else { return false }
         do {
             let request = SkillInstallRequest(repository: result.repository, skillPath: result.skillPath)
-            let _: APIResponse<SkillItem> = try await client.post("/skills/install", body: request)
+            let _: APIResponse<Skill> = try await client.post("/skills/install", body: request)
             // Reload skills to pick up the newly installed one
             await loadSkills(refresh: true)
             return true

@@ -99,7 +99,7 @@ struct SkillsListView: View {
             }
             .presentationBackground(Color.black)
         }
-        .navigationDestination(for: SkillItem.self) { skill in
+        .navigationDestination(for: Skill.self) { skill in
             SkillDetailView(skill: skill, viewModel: viewModel, apiClient: appState.apiClient)
         }
         .overlay {
@@ -130,7 +130,7 @@ struct SkillsListView: View {
 }
 
 struct SkillRowView: View {
-    let skill: SkillItem
+    let skill: Skill
 
     var body: some View {
         VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
@@ -173,11 +173,9 @@ struct SkillRowView: View {
 
             // Source path
             HStack(spacing: ILSTheme.spacingXS) {
-                if let source = skill.source {
-                    Text(source)
-                        .font(.caption2)
-                        .foregroundColor(ILSTheme.tertiaryText)
-                }
+                Text(skill.source.rawValue)
+                    .font(.caption2)
+                    .foregroundColor(ILSTheme.tertiaryText)
                 Text(skill.path)
                     .font(.caption2)
                     .foregroundColor(ILSTheme.tertiaryText)
@@ -191,12 +189,12 @@ struct SkillRowView: View {
 // MARK: - Skill Detail View
 
 struct SkillDetailView: View {
-    let skill: SkillItem
+    let skill: Skill
     @ObservedObject var viewModel: SkillsViewModel
     let apiClient: APIClient
 
     @Environment(\.dismiss) private var dismiss
-    @State private var fullSkill: SkillItem?
+    @State private var fullSkill: Skill?
     @State private var isLoading = true
     @State private var showingEditor = false
     @State private var showCopiedToast = false
@@ -327,11 +325,9 @@ struct SkillDetailView: View {
                         .foregroundColor(ILSTheme.tertiaryText)
                 }
 
-                if let source = fullSkill?.source ?? skill.source {
-                    Label(source, systemImage: "folder")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.tertiaryText)
-                }
+                Label((fullSkill?.source ?? skill.source).rawValue, systemImage: "folder")
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.tertiaryText)
             }
 
             // File path
@@ -362,7 +358,7 @@ struct SkillDetailView: View {
     private func loadFullSkill() async {
         isLoading = true
         do {
-            let response: APIResponse<SkillItem> = try await apiClient.get("/skills/\(skill.name)")
+            let response: APIResponse<Skill> = try await apiClient.get("/skills/\(skill.name)")
             if let loadedSkill = response.data {
                 fullSkill = loadedSkill
             }
@@ -391,13 +387,13 @@ struct SkillDetailView: View {
 struct SkillEditorView: View {
     enum Mode {
         case create
-        case edit(SkillItem)
+        case edit(Skill)
     }
 
     let mode: Mode
     let apiClient: APIClient
     var viewModel: SkillsViewModel?
-    let onSave: (SkillItem) -> Void
+    let onSave: (Skill) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
@@ -405,7 +401,7 @@ struct SkillEditorView: View {
     @State private var content = ""
     @State private var isSaving = false
 
-    init(mode: Mode, apiClient: APIClient, viewModel: SkillsViewModel? = nil, onSave: @escaping (SkillItem) -> Void) {
+    init(mode: Mode, apiClient: APIClient, viewModel: SkillsViewModel? = nil, onSave: @escaping (Skill) -> Void) {
         self.mode = mode
         self.apiClient = apiClient
         self.viewModel = viewModel
@@ -466,7 +462,7 @@ struct SkillEditorView: View {
 
     private func loadSkillContent(_ name: String) async {
         do {
-            let response: APIResponse<SkillItem> = try await apiClient.get("/skills/\(name)")
+            let response: APIResponse<Skill> = try await apiClient.get("/skills/\(name)")
             if let skill = response.data, let skillContent = skill.content {
                 content = skillContent
             }
@@ -486,7 +482,7 @@ struct SkillEditorView: View {
                         description: description.isEmpty ? nil : description,
                         content: content
                     )
-                    let response: APIResponse<SkillItem> = try await apiClient.post("/skills", body: request)
+                    let response: APIResponse<Skill> = try await apiClient.post("/skills", body: request)
                     if let skill = response.data {
                         await MainActor.run {
                             onSave(skill)
@@ -495,7 +491,7 @@ struct SkillEditorView: View {
                     }
                 } else {
                     let request = UpdateSkillRequest(content: content)
-                    let response: APIResponse<SkillItem> = try await apiClient.put("/skills/\(name)", body: request)
+                    let response: APIResponse<Skill> = try await apiClient.put("/skills/\(name)", body: request)
                     if response.data != nil {
                         await viewModel?.loadSkills()
                         await MainActor.run {
