@@ -1,4 +1,5 @@
 import Vapor
+import Fluent
 import ILSShared
 
 /// Storage key for shared GitHubService instance
@@ -12,7 +13,7 @@ extension Application {
             if let existing = self.storage[GitHubServiceKey.self] {
                 return existing
             }
-            let service = GitHubService(client: self.client)
+            let service = GitHubService(client: self.client, database: self.db)
             self.storage[GitHubServiceKey.self] = service
             return service
         }
@@ -26,14 +27,28 @@ extension Application {
 struct GitHubService: Sendable {
     let client: Vapor.Client
     let token: String?
+    let database: Database
 
-    init(client: Vapor.Client) {
+    init(client: Vapor.Client, database: Database) {
         self.client = client
         self.token = Environment.get("GITHUB_TOKEN")
+        self.database = database
     }
 
     /// Search GitHub Code API for SKILL.md files matching query
     func searchSkills(query: String, page: Int = 1, perPage: Int = 20) async throws -> [GitHubSearchResult] {
+        // Check cache first
+        let cacheKey = "skills:\(query):p\(page):pp\(perPage)"
+        let indexingService = IndexingService(database: database)
+
+        if let cachedJSON = try await indexingService.getCachedResults(query: cacheKey) {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            if let cached = try? decoder.decode([GitHubSearchResult].self, from: Data(cachedJSON.utf8)) {
+                return cached
+            }
+        }
+
         let encodedQuery = "\(query)+filename:SKILL.md".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
         let uri = URI(string: "https://api.github.com/search/code?q=\(encodedQuery)&page=\(page)&per_page=\(perPage)")
 
@@ -62,7 +77,7 @@ struct GitHubService: Sendable {
 
         let searchResponse = try response.content.decode(GitHubCodeSearchResponse.self)
 
-        return searchResponse.items.map { item in
+        let results = searchResponse.items.map { item in
             GitHubSearchResult(
                 repository: item.repository.fullName,
                 name: item.name,
@@ -72,6 +87,15 @@ struct GitHubService: Sendable {
                 skillPath: item.path
             )
         }
+
+        // Cache the results
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let jsonData = try? encoder.encode(results), let jsonString = String(data: jsonData, encoding: .utf8) {
+            try? await indexingService.cacheSearchResults(query: cacheKey, results: jsonString)
+        }
+
+        return results
     }
 
     /// Fetch raw file content from GitHub
