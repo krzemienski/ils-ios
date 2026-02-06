@@ -6,6 +6,10 @@ class PluginsViewModel: ObservableObject {
     @Published var plugins: [PluginItem] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var marketplaceSearchText = ""
+    @Published var selectedCategory: String = "All"
+    @Published var isSearchingMarketplace = false
+    @Published var searchResults: [MarketplacePlugin] = []
 
     private var client: APIClient?
 
@@ -97,6 +101,37 @@ class PluginsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)")
+        }
+    }
+
+    func searchMarketplace(query: String) async {
+        guard let client, !query.isEmpty else {
+            searchResults = []
+            return
+        }
+        isSearchingMarketplace = true
+        do {
+            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+            let response: APIResponse<ListResponse<MarketplacePlugin>> = try await client.get("/plugins/search?q=\(encoded)")
+            if let data = response.data {
+                searchResults = data.items
+            }
+        } catch {
+            print("❌ Plugin search failed: \(error.localizedDescription)")
+        }
+        isSearchingMarketplace = false
+    }
+
+    func addMarketplace(repo: String) async -> Bool {
+        guard let client, !repo.isEmpty else { return false }
+        do {
+            let request = AddMarketplaceRequest(source: "github", repo: repo)
+            let _: APIResponse<MarketplaceInfo> = try await client.post("/marketplaces", body: request)
+            return true
+        } catch {
+            self.error = error
+            print("❌ Failed to add marketplace: \(error.localizedDescription)")
+            return false
         }
     }
 }

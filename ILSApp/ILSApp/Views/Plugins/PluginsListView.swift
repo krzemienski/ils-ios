@@ -147,45 +147,109 @@ struct MarketplaceView: View {
     let apiClient: APIClient
     @State private var marketplaces: [MarketplaceInfo] = []
     @State private var isLoading = true
+    @State private var searchText = ""
+    @State private var selectedCategory = "All"
+    @State private var newRepoPath = ""
+    @State private var isAddingRepo = false
+    @State private var installingPlugins: Set<String> = []
+
+    private let categories = ["All", "Productivity", "DevOps", "Testing", "Documentation"]
+
+    var filteredPlugins: [(marketplace: MarketplaceInfo, plugins: [MarketplacePlugin])] {
+        if !searchText.isEmpty {
+            return viewModel.searchResults.isEmpty ? [] : [
+                (marketplace: MarketplaceInfo(name: "Search Results", source: "search", plugins: viewModel.searchResults),
+                 plugins: viewModel.searchResults)
+            ]
+        }
+
+        return marketplaces.map { marketplace in
+            let filtered = selectedCategory == "All" ? marketplace.plugins : marketplace.plugins.filter { plugin in
+                plugin.description?.lowercased().contains(selectedCategory.lowercased()) ?? false
+            }
+            return (marketplace, filtered)
+        }.filter { !$0.plugins.isEmpty }
+    }
 
     var body: some View {
         NavigationStack {
-            List {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    ForEach(marketplaces, id: \.name) { marketplace in
-                        Section(marketplace.name) {
-                            ForEach(marketplace.plugins, id: \.name) { plugin in
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(plugin.name)
-                                            .font(ILSTheme.headlineFont)
-                                        if let desc = plugin.description {
-                                            Text(desc)
-                                                .font(ILSTheme.captionFont)
-                                                .foregroundColor(ILSTheme.secondaryText)
-                                        }
-                                    }
+            VStack(spacing: 0) {
+                // Category chips
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(categories, id: \.self) { category in
+                            Button(action: {
+                                selectedCategory = category
+                            }) {
+                                Text(category)
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(selectedCategory == category ? .white : ILSTheme.secondaryText)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(selectedCategory == category ? ILSTheme.accent : ILSTheme.tertiaryBackground)
+                                    .cornerRadius(ILSTheme.cornerRadiusXS)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                }
+                .background(ILSTheme.background)
 
-                                    Spacer()
-
-                                    Button("Install") {
-                                        Task {
-                                            await viewModel.installPlugin(
-                                                name: plugin.name,
-                                                marketplace: marketplace.name
-                                            )
-                                        }
+                List {
+                    if isLoading {
+                        ProgressView()
+                    } else {
+                        ForEach(filteredPlugins, id: \.marketplace.name) { item in
+                            Section(item.marketplace.name) {
+                                ForEach(item.plugins, id: \.name) { plugin in
+                                    PluginMarketplaceRow(
+                                        plugin: plugin,
+                                        marketplace: item.marketplace.name,
+                                        isInstalling: installingPlugins.contains(plugin.name)
+                                    ) {
+                                        await installPlugin(plugin, marketplace: item.marketplace.name)
                                     }
-                                    .buttonStyle(PrimaryButtonStyle())
+                                }
+                            }
+                        }
+
+                        // Add from GitHub section
+                        Section("Add from GitHub") {
+                            HStack {
+                                TextField("owner/repo", text: $newRepoPath)
+                                    .font(ILSTheme.bodyFont)
+                                    .foregroundColor(ILSTheme.primaryText)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+
+                                if isAddingRepo {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                } else {
+                                    Button(action: {
+                                        Task { await addMarketplace() }
+                                    }) {
+                                        Text("Add")
+                                            .font(ILSTheme.captionFont.weight(.semibold))
+                                            .foregroundColor(newRepoPath.isEmpty ? ILSTheme.tertiaryText : ILSTheme.accent)
+                                    }
+                                    .disabled(newRepoPath.isEmpty)
                                 }
                             }
                         }
                     }
                 }
+                .darkListStyle()
+                .scrollContentBackground(.hidden)
+                .background(ILSTheme.background)
             }
-            .darkListStyle()
+            .searchable(text: $searchText, prompt: "Search plugins...")
+            .onChange(of: searchText) { _, newValue in
+                Task {
+                    await viewModel.searchMarketplace(query: newValue)
+                }
+            }
             .navigationTitle("Marketplace")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -210,6 +274,71 @@ struct MarketplaceView: View {
             print("Failed to load marketplaces: \(error)")
         }
         isLoading = false
+    }
+
+    private func installPlugin(_ plugin: MarketplacePlugin, marketplace: String) async {
+        installingPlugins.insert(plugin.name)
+        await viewModel.installPlugin(name: plugin.name, marketplace: marketplace)
+        installingPlugins.remove(plugin.name)
+    }
+
+    private func addMarketplace() async {
+        guard !newRepoPath.isEmpty else { return }
+        isAddingRepo = true
+        let success = await viewModel.addMarketplace(repo: newRepoPath)
+        if success {
+            newRepoPath = ""
+            await loadMarketplaces()
+        }
+        isAddingRepo = false
+    }
+}
+
+struct PluginMarketplaceRow: View {
+    let plugin: MarketplacePlugin
+    let marketplace: String
+    let isInstalling: Bool
+    let onInstall: () async -> Void
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(plugin.name)
+                    .font(ILSTheme.headlineFont)
+                    .foregroundColor(ILSTheme.primaryText)
+
+                if let desc = plugin.description {
+                    Text(desc)
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.secondaryText)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer()
+
+            if isInstalling {
+                HStack(spacing: 4) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Installing...")
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } else {
+                Button(action: {
+                    Task { await onInstall() }
+                }) {
+                    Text("Install")
+                        .font(ILSTheme.captionFont.weight(.semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(ILSTheme.accent)
+                        .cornerRadius(ILSTheme.cornerRadiusXS)
+                }
+            }
+        }
     }
 }
 
