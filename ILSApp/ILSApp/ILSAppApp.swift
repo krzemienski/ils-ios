@@ -30,6 +30,8 @@ class AppState: ObservableObject {
         }
     }
     @Published var selectedTab: String = "sessions"
+    @Published var isServerConnected: Bool = false
+    @Published var serverConnectionInfo: ConnectionResponse?
 
     var apiClient: APIClient
     var sseClient: SSEClient
