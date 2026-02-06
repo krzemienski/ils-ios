@@ -99,17 +99,10 @@ struct ServerSetupSheet: View {
 
         Task {
             do {
-                let cleanURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
-                let client = APIClient(baseURL: cleanURL)
-                _ = try await client.healthCheck()
+                try await appState.connectToServer(url: serverURL)
 
                 HapticManager.notification(.success)
                 connectionResult = .success
-
-                // Update app state
-                appState.serverURL = cleanURL
-                appState.isConnected = true
-                UserDefaults.standard.set(true, forKey: "hasConnectedBefore")
 
                 // Dismiss after brief success indication
                 try? await Task.sleep(nanoseconds: 800_000_000)

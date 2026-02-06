@@ -203,6 +203,22 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Connect to a server URL — validates, persists, and updates state atomically.
+    /// Used by ServerSetupSheet and Settings "Test Connection".
+    func connectToServer(url: String) async throws {
+        let cleanURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let client = APIClient(baseURL: cleanURL)
+        _ = try await client.healthCheck()
+
+        // Success — update everything atomically
+        serverURL = cleanURL
+        isConnected = true
+        UserDefaults.standard.set(true, forKey: "hasConnectedBefore")
+        showOnboarding = false
+        stopRetryPolling()
+        startHealthPolling()
+    }
+
     /// Show onboarding sheet if user has never successfully connected
     private func showOnboardingIfNeeded() {
         let hasConnectedBefore = UserDefaults.standard.bool(forKey: "hasConnectedBefore")
