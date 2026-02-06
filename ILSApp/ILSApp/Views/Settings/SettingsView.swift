@@ -29,8 +29,64 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            // MARK: - Connection Section
-            Section {
+            connectionSection
+            generalSettingsSection
+            quickSettingsSection
+            apiKeySection
+            permissionsSection
+            configManagementSection
+            advancedSection
+            statisticsSection
+            remoteManagementSection
+            diagnosticsSection
+            cacheSection
+            aboutSection
+        }
+        .scrollContentBackground(.hidden)
+        .background(ILSTheme.background)
+        .navigationTitle("Settings")
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.black, for: .navigationBar)
+        .refreshable {
+            await viewModel.loadAll()
+        }
+        .task {
+            viewModel.configure(client: appState.apiClient)
+            loadServerSettings()
+            await viewModel.loadAll()
+            resetEditedValues()
+        }
+        .confirmationDialog("Save Configuration Changes?", isPresented: $showSaveConfirmation, titleVisibility: .visible) {
+            Button("Save Changes") {
+                saveConfigChanges()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will update your Claude Code configuration. Changes will take effect immediately.")
+        }
+        .alert("Save Failed", isPresented: $showSaveError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
+        .alert("Configuration Saved", isPresented: $showSaveSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your configuration has been updated successfully.")
+        }
+        .onChange(of: serverHost) { _, newValue in
+            saveServerSettings()
+        }
+        .onChange(of: serverPort) { _, newValue in
+            saveServerSettings()
+        }
+    }
+
+    // MARK: - View Sections
+
+    @ViewBuilder
+    private var connectionSection: some View {
+        Section {
                 HStack {
                     Text("Host")
                         .frame(width: 50, alignment: .leading)
@@ -77,8 +133,7 @@ struct SettingsView: View {
                 .disabled(viewModel.isTestingConnection)
 
                 NavigationLink {
-                    ServerConnectionView()
-                        .environmentObject(appState)
+                    SSHConnectionsView()
                 } label: {
                     Label("SSH Server Connection", systemImage: "network")
                 }
@@ -88,8 +143,11 @@ struct SettingsView: View {
                 Text("Configure the ILS backend server address")
             }
 
-            // MARK: - General Settings Section
-            Section {
+    }
+
+    @ViewBuilder
+    private var generalSettingsSection: some View {
+        Section {
                 if viewModel.isLoadingConfig {
                     HStack {
                         ProgressView()
@@ -188,8 +246,11 @@ struct SettingsView: View {
                 }
             }
 
-            // MARK: - Quick Settings Section
-            Section {
+    }
+
+    @ViewBuilder
+    private var quickSettingsSection: some View {
+        Section {
                 if let config = viewModel.config?.content {
                     // Model Picker
                     Picker("Model", selection: Binding(
@@ -233,8 +294,11 @@ struct SettingsView: View {
                 Text("Change common settings without editing raw JSON")
             }
 
-            // MARK: - API Key Section
-            Section {
+    }
+
+    @ViewBuilder
+    private var apiKeySection: some View {
+        Section {
                 if let config = viewModel.config?.content {
                     if let apiKeyStatus = config.apiKeyStatus {
                         HStack {
@@ -273,8 +337,11 @@ struct SettingsView: View {
                 Text("For security, API keys cannot be edited through the iOS app. Use the terminal command: claude config set apiKey <your-key>")
             }
 
-            // MARK: - Permissions Section
-            Section {
+    }
+
+    @ViewBuilder
+    private var permissionsSection: some View {
+        Section {
                 if let config = viewModel.config?.content, let permissions = config.permissions {
                     // Default Permission Mode
                     LabeledContent("Default Mode") {
@@ -319,8 +386,27 @@ struct SettingsView: View {
                 Text("Permissions")
             }
 
-            // MARK: - Advanced Section
-            Section {
+    }
+
+    @ViewBuilder
+    private var configManagementSection: some View {
+        Section("CONFIGURATION MANAGEMENT") {
+                NavigationLink(destination: ConfigProfilesView()) {
+                    Label("Configuration Profiles", systemImage: "square.stack.3d.up")
+                }
+                NavigationLink(destination: ConfigOverridesView()) {
+                    Label("Override Visualization", systemImage: "slider.horizontal.below.square.and.square.filled")
+                }
+                NavigationLink(destination: ConfigHistoryView()) {
+                    Label("Configuration History", systemImage: "clock.arrow.circlepath")
+                }
+            }
+
+    }
+
+    @ViewBuilder
+    private var advancedSection: some View {
+        Section {
                 if let config = viewModel.config?.content {
                     // Hooks Summary
                     if let hooks = config.hooks {
@@ -369,8 +455,11 @@ struct SettingsView: View {
                 Text("Edit raw JSON configuration files")
             }
 
-            // MARK: - Statistics Section
-            Section("Statistics") {
+    }
+
+    @ViewBuilder
+    private var statisticsSection: some View {
+        Section("Statistics") {
                 if viewModel.isLoading {
                     ProgressView()
                 } else if let stats = viewModel.stats {
@@ -382,8 +471,59 @@ struct SettingsView: View {
                 }
             }
 
-            // MARK: - About Section
-            Section("About") {
+    }
+
+    @ViewBuilder
+    private var remoteManagementSection: some View {
+        Section("REMOTE MANAGEMENT") {
+                NavigationLink(destination: FleetManagementView()) {
+                    Label("Fleet Management", systemImage: "network")
+                }
+            }
+
+    }
+
+    @ViewBuilder
+    private var diagnosticsSection: some View {
+        Section("DIAGNOSTICS") {
+                Toggle(isOn: .init(
+                    get: { AppLogger.shared.analyticsOptedIn },
+                    set: { AppLogger.shared.analyticsOptedIn = $0 }
+                )) {
+                    Label("Analytics", systemImage: "chart.bar")
+                }
+                .tint(.orange)
+
+                NavigationLink(destination: LogViewerView()) {
+                    Label("View Logs", systemImage: "doc.text")
+                }
+            }
+
+    }
+
+    @ViewBuilder
+    private var cacheSection: some View {
+        Section("CACHE") {
+                LabeledContent("Cache Size", value: CacheManager.shared.cacheSize)
+                if let lastSync = CacheManager.shared.lastSyncDate {
+                    LabeledContent("Last Sync") {
+                        Text(lastSync, style: .relative)
+                    }
+                } else {
+                    LabeledContent("Last Sync", value: "Never")
+                }
+                Button(role: .destructive) {
+                    CacheManager.shared.clearCache()
+                } label: {
+                    Label("Clear Cache", systemImage: "trash")
+                }
+            }
+
+    }
+
+    @ViewBuilder
+    private var aboutSection: some View {
+        Section("About") {
                 LabeledContent("App Version", value: "1.0.0")
                 LabeledContent("Build", value: "1")
 
@@ -407,45 +547,6 @@ struct SettingsView: View {
                     }
                 }
             }
-        }
-        .scrollContentBackground(.hidden)
-        .background(ILSTheme.background)
-        .navigationTitle("Settings")
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color.black, for: .navigationBar)
-        .refreshable {
-            await viewModel.loadAll()
-        }
-        .task {
-            viewModel.configure(client: appState.apiClient)
-            loadServerSettings()
-            await viewModel.loadAll()
-            resetEditedValues()
-        }
-        .confirmationDialog("Save Configuration Changes?", isPresented: $showSaveConfirmation, titleVisibility: .visible) {
-            Button("Save Changes") {
-                saveConfigChanges()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will update your Claude Code configuration. Changes will take effect immediately.")
-        }
-        .alert("Save Failed", isPresented: $showSaveError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(saveErrorMessage)
-        }
-        .alert("Configuration Saved", isPresented: $showSaveSuccess) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("Your configuration has been updated successfully.")
-        }
-        .onChange(of: serverHost) { _, newValue in
-            saveServerSettings()
-        }
-        .onChange(of: serverPort) { _, newValue in
-            saveServerSettings()
-        }
     }
 
     // MARK: - Server Settings Persistence

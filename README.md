@@ -54,9 +54,9 @@ ils-ios/
 
 ## Prerequisites
 
-- **macOS** 14.0+ (Sonoma or later)
-- **Xcode** 15.0+ with iOS 17 SDK
-- **Swift** 5.9+
+- **macOS** 15.0+ (Sequoia or later)
+- **Xcode** 16.0+ with iOS 18 SDK
+- **Swift** 6.0+
 - **Claude Code CLI** installed and configured (optional, for full functionality)
 
 ## Quick Start
@@ -72,7 +72,7 @@ cd ils-ios
 
 ```bash
 # Build and run the backend server
-swift run ILSBackend
+PORT=9090 swift run ILSBackend
 
 # You should see:
 # [ NOTICE ] Server started on http://0.0.0.0:9090
@@ -263,7 +263,7 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*
 |-----------|------------|
 | Backend Framework | [Vapor 4](https://vapor.codes) |
 | Database | SQLite via [Fluent](https://docs.vapor.codes/fluent/overview/) |
-| iOS UI | SwiftUI (iOS 17+) |
+| iOS UI | SwiftUI (iOS 18+) |
 | Architecture | MVVM |
 | Networking | URLSession + SSE |
 | Streaming | Server-Sent Events |
