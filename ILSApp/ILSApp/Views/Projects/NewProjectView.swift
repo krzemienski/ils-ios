@@ -78,11 +78,13 @@ struct NewProjectView: View {
                 let response: APIResponse<Project> = try await client.post("/projects", body: request)
                 if let project = response.data {
                     await MainActor.run {
+                        HapticManager.notification(.success)
                         onCreated(project)
                         dismiss()
                     }
                 }
             } catch {
+                HapticManager.notification(.error)
                 print("Failed to create project: \(error)")
             }
 

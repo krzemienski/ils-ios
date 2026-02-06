@@ -206,11 +206,13 @@ struct NewSessionView: View {
                 let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
                 if let session = response.data {
                     await MainActor.run {
+                        HapticManager.notification(.success)
                         onCreated(session)
                         dismiss()
                     }
                 }
             } catch {
+                HapticManager.notification(.error)
                 print("Failed to create session: \(error)")
             }
 

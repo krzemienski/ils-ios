@@ -124,7 +124,7 @@ struct FileSystemService {
         sessions.claudeProjectsPath
     }
 
-    // MARK: - Skills (delegate to SkillsFileService)
+    // MARK: - Skills Management
 
     /// List all skills from `~/.claude/skills`, with optional caching.
     /// - Parameter bypassCache: If true, forces a fresh scan from disk
@@ -175,7 +175,7 @@ struct FileSystemService {
         try skills.deleteSkill(name: name)
     }
 
-    // MARK: - MCP Servers (delegate to MCPFileService)
+    // MARK: - MCP Server Configuration
 
     /// Read MCP servers from configuration files, with optional caching.
     /// - Parameters:
@@ -212,7 +212,7 @@ struct FileSystemService {
         try mcp.removeMCPServer(name: name, scope: scope)
     }
 
-    // MARK: - Config (delegate to ConfigFileService)
+    // MARK: - Claude Config Settings
 
     /// Read Claude configuration for a given scope.
     /// - Parameter scope: Configuration scope ("user", "project", or "local")
@@ -230,7 +230,7 @@ struct FileSystemService {
         try config.writeConfig(scope: scope, content: content)
     }
 
-    // MARK: - Sessions (delegate to SessionFileService)
+    // MARK: - Session Scanning
 
     /// Scan for external Claude Code sessions from `~/.claude/projects/`.
     /// - Returns: Array of ExternalSession objects

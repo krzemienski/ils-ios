@@ -6,6 +6,8 @@ struct MCPServerListView: View {
     @StateObject private var viewModel = MCPViewModel()
     @State private var showingNewServer = false
     @State private var editingServer: MCPServerItem?
+    @State private var showingImportExport = false
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         List {
@@ -94,8 +96,46 @@ struct MCPServerListView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { showingNewServer = true }) {
-                    Image(systemName: "plus")
+                HStack(spacing: 12) {
+                    if viewModel.isSelecting {
+                        Button {
+                            if viewModel.selectedCount == viewModel.filteredServers.count {
+                                viewModel.deselectAll()
+                            } else {
+                                viewModel.selectAll()
+                            }
+                        } label: {
+                            Text(viewModel.selectedCount == viewModel.filteredServers.count ? "None" : "All")
+                        }
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .disabled(viewModel.selectedCount == 0)
+                    } else {
+                        Menu {
+                            Button { showingNewServer = true } label: {
+                                Label("Add Server", systemImage: "plus")
+                            }
+                            Button { showingImportExport = true } label: {
+                                Label("Import / Export", systemImage: "arrow.up.arrow.down")
+                            }
+                            Button { viewModel.isSelecting = true } label: {
+                                Label("Select Multiple", systemImage: "checkmark.circle")
+                            }
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                    }
+                }
+            }
+            if viewModel.isSelecting {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        viewModel.isSelecting = false
+                        viewModel.deselectAll()
+                    }
                 }
             }
         }
@@ -109,6 +149,20 @@ struct MCPServerListView: View {
             EditMCPServerView(server: server, apiClient: appState.apiClient, viewModel: viewModel)
                 .presentationBackground(Color.black)
         }
+        .sheet(isPresented: $showingImportExport) {
+            MCPImportExportView(servers: viewModel.servers)
+                .presentationBackground(Color.black)
+        }
+        .confirmationDialog(
+            "Delete \(viewModel.selectedCount) Servers?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete \(viewModel.selectedCount) Servers", role: .destructive) {
+                HapticManager.notification(.warning)
+                Task { await viewModel.deleteSelected() }
+            }
+        }
         .overlay {
             if viewModel.isLoading && viewModel.servers.isEmpty {
                 ProgressView("Loading MCP servers...")
@@ -117,6 +171,10 @@ struct MCPServerListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadServers()
+            viewModel.startHealthPolling()
+        }
+        .onDisappear {
+            viewModel.stopHealthPolling()
         }
         .onChange(of: appState.isConnected) { _, isConnected in
             if isConnected && viewModel.error != nil {
@@ -176,6 +234,7 @@ struct MCPServerRowView: View {
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(server.name), \(statusInfo.1), scope \(server.scope)")
+        .accessibilityHint("Double tap to view server details")
     }
 
     @ViewBuilder
@@ -411,7 +470,7 @@ struct NewMCPServerView: View {
                 name: name,
                 command: command,
                 args: argsArray,
-                scope: scope
+                scope: MCPScope(rawValue: scope)
             )
 
             do {
@@ -451,13 +510,6 @@ struct MCPServerItem: Identifiable, Decodable, Hashable {
     static func == (lhs: MCPServerItem, rhs: MCPServerItem) -> Bool {
         lhs.id == rhs.id
     }
-}
-
-struct CreateMCPRequest: Encodable {
-    let name: String
-    let command: String
-    let args: [String]
-    let scope: String
 }
 
 #Preview {

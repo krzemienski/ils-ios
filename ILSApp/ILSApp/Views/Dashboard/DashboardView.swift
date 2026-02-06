@@ -28,6 +28,7 @@ struct DashboardView: View {
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                HapticManager.impact(.light)
                                 selectedSection = .projects
                             }
 
@@ -40,6 +41,7 @@ struct DashboardView: View {
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                HapticManager.impact(.light)
                                 selectedSection = .sessions
                             }
                         }
@@ -55,6 +57,7 @@ struct DashboardView: View {
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                HapticManager.impact(.light)
                                 selectedSection = .skills
                             }
 
@@ -67,6 +70,7 @@ struct DashboardView: View {
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                HapticManager.impact(.light)
                                 selectedSection = .mcpServers
                             }
                         }
@@ -228,6 +232,7 @@ struct StatCardView: View {
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title), \(count), \(subtitle)")
+        .accessibilityHint("Double tap to view \(title.lowercased())")
     }
 }
 
@@ -282,6 +287,8 @@ struct RecentActivityRowView: View {
         .padding(ILSTheme.spacingM)
         .background(ILSTheme.secondaryBackground)
         .cornerRadius(ILSTheme.cornerRadiusSmall)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(session.name ?? "Unnamed Session"), \(session.model), \(session.messageCount) messages")
     }
 
     private func formattedDate(_ date: Date) -> String {

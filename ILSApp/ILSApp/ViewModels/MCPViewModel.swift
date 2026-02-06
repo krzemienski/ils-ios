@@ -9,6 +9,17 @@ class MCPViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var selectedScope: String = "user"
 
+    // Spec 012: Health monitoring
+    @Published var lastHealthCheck: Date?
+    @Published var isHealthChecking = false
+    private var healthTimer: Task<Void, Never>?
+
+    // Spec 018: Batch operations
+    @Published var isSelecting = false
+    @Published var selectedServerIDs: Set<UUID> = []
+
+    var selectedCount: Int { selectedServerIDs.count }
+
     private var client: APIClient?
 
     init() {}
@@ -77,7 +88,7 @@ class MCPViewModel: ObservableObject {
                 name: name,
                 command: command,
                 args: args,
-                scope: scope
+                scope: MCPScope(rawValue: scope)
             )
             let response: APIResponse<MCPServerItem> = try await client.post("/mcp", body: request)
             if let server = response.data {
@@ -121,10 +132,61 @@ class MCPViewModel: ObservableObject {
         isLoading = false
     }
 
+    // MARK: - Spec 012: Health Monitoring
+
+    func startHealthPolling(interval: TimeInterval = 30) {
+        stopHealthPolling()
+        healthTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                await self?.checkHealth()
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            }
+        }
+    }
+
+    func stopHealthPolling() {
+        healthTimer?.cancel()
+        healthTimer = nil
+    }
+
+    func checkHealth() async {
+        isHealthChecking = true
+        await loadServers()
+        lastHealthCheck = Date()
+        isHealthChecking = false
+    }
+
+    // MARK: - Spec 018: Batch Operations
+
+    func toggleSelection(for server: MCPServerItem) {
+        if selectedServerIDs.contains(server.id) {
+            selectedServerIDs.remove(server.id)
+        } else {
+            selectedServerIDs.insert(server.id)
+        }
+    }
+
+    func selectAll() {
+        selectedServerIDs = Set(filteredServers.map(\.id))
+    }
+
+    func deselectAll() {
+        selectedServerIDs.removeAll()
+    }
+
+    func deleteSelected() async {
+        let toDelete = servers.filter { selectedServerIDs.contains($0.id) }
+        for server in toDelete {
+            await deleteServer(server)
+        }
+        selectedServerIDs.removeAll()
+        isSelecting = false
+    }
+
     func updateServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
         guard let client else { return nil }
         do {
-            let request = CreateMCPRequest(name: name, command: command, args: args, scope: scope)
+            let request = CreateMCPRequest(name: name, command: command, args: args, scope: MCPScope(rawValue: scope))
             let response: APIResponse<MCPServerItem> = try await client.put("/mcp/\(name)", body: request)
             if let server = response.data {
                 if let index = servers.firstIndex(where: { $0.name == name }) {

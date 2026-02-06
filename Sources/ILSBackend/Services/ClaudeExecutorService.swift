@@ -10,25 +10,37 @@ private func debugLog(_ message: String) {
     }
 }
 
-/// Service for executing Claude Code CLI commands directly via Process.
-///
-/// Bypasses ClaudeCodeSDK because the SDK's Combine publisher uses
-/// FileHandle.readabilityHandler which requires a RunLoop. Vapor's NIO
-/// event loops don't pump a RunLoop, so the publisher never emits.
-///
-/// Instead, this service runs `claude -p --output-format stream-json`
-/// directly and reads stdout on a dedicated DispatchQueue.
 /// Actor managing Claude CLI subprocess execution with streaming JSON output.
 ///
-/// This service bypasses ClaudeCodeSDK's Combine-based streaming because the SDK requires
-/// a RunLoop that doesn't exist in Vapor's NIO event loops. Instead, it executes `claude -p`
-/// directly via Process and reads stdout on a dedicated GCD queue.
+/// ## Architecture
 ///
-/// Features:
-/// - Two-tier timeout (30s initial, 5min total)
-/// - Process cancellation support
-/// - Stream-JSON output parsing
-/// - Session ID tracking for multi-session support
+/// This service wraps the Claude CLI (`claude -p --output-format stream-json`) as a subprocess
+/// and converts its JSON output to `ILSShared.StreamMessage` types for the iOS app.
+///
+/// ### Why Not Use ClaudeCodeSDK?
+///
+/// The official SDK uses `FileHandle.readabilityHandler` + Combine's `PassthroughSubject`,
+/// which requires a RunLoop. Vapor's NIO event loops don't pump a RunLoop, so the publisher
+/// never emits data. This service uses direct `Process` execution with `DispatchQueue` for
+/// stdout reads instead.
+///
+/// ### Session Management
+///
+/// Active processes are tracked in `activeProcesses` dictionary keyed by session ID.
+/// This enables cancellation support for multi-session scenarios.
+///
+/// ### Timeout Protection
+///
+/// Two-tier timeout system:
+/// - 30s initial timeout: triggers if no stdout data received (detects stuck CLI)
+/// - 5min total timeout: kills long-running processes (prevents runaway execution)
+///
+/// ### Message Conversion
+///
+/// Converts Claude CLI JSON (snake_case) to ILSShared types (camelCase):
+/// - `session_id` → `sessionId`
+/// - `tool_use` → `toolUse`
+/// - `total_cost_usd` → `totalCostUSD`
 actor ClaudeExecutorService {
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
@@ -510,55 +522,8 @@ actor ClaudeExecutorService {
         var contentBlocks: [ContentBlock] = []
 
         for item in contentArray {
-            guard let itemType = item["type"] as? String else { continue }
-
-            switch itemType {
-            case "text":
-                if let text = item["text"] as? String {
-                    contentBlocks.append(.text(TextBlock(text: text)))
-                    debugLog("Text content: \(text.prefix(100))")
-                }
-
-            case "tool_use":
-                if let id = item["id"] as? String,
-                   let name = item["name"] as? String {
-                    let input = item["input"] ?? [String: Any]()
-                    contentBlocks.append(.toolUse(ToolUseBlock(
-                        id: id,
-                        name: name,
-                        input: AnyCodable(input)
-                    )))
-                    debugLog("Tool use: \(name)")
-                }
-
-            case "tool_result":
-                let toolUseId = item["tool_use_id"] as? String ?? ""
-                let isError = item["is_error"] as? Bool ?? false
-                let content: String
-                if let str = item["content"] as? String {
-                    content = str
-                } else if let items = item["content"] as? [[String: Any]] {
-                    content = items.compactMap { $0["text"] as? String }.joined(separator: "\n")
-                } else {
-                    content = ""
-                }
-                contentBlocks.append(.toolResult(ToolResultBlock(
-                    toolUseId: toolUseId,
-                    content: content,
-                    isError: isError
-                )))
-                debugLog("Tool result: toolUseId=\(toolUseId.prefix(20)), isError=\(isError)")
-
-            case "thinking":
-                if let thinking = item["thinking"] as? String {
-                    contentBlocks.append(.thinking(ThinkingBlock(thinking: thinking)))
-                    debugLog("Thinking: \(thinking.prefix(50))")
-                }
-
-            default:
-                // Gracefully handle unknown content block types (e.g. future CLI additions)
-                debugLog("Unknown content type '\(itemType)' — forwarding as text note")
-                contentBlocks.append(.text(TextBlock(text: "[unsupported block: \(itemType)]")))
+            if let block = convertContentBlock(item) {
+                contentBlocks.append(block)
             }
         }
 
@@ -614,6 +579,81 @@ actor ClaudeExecutorService {
             usage: usageInfo
         )
         continuation.yield(.result(result))
+    }
+
+    // MARK: - Content Block Conversion Helpers
+
+    /// Convert a JSON content item to a ContentBlock.
+    ///
+    /// Reduces nesting depth in processAssistantMessage by extracting switch logic.
+    private static func convertContentBlock(_ item: [String: Any]) -> ContentBlock? {
+        guard let itemType = item["type"] as? String else { return nil }
+
+        switch itemType {
+        case "text":
+            return convertTextBlock(item)
+        case "tool_use":
+            return convertToolUseBlock(item)
+        case "tool_result":
+            return convertToolResultBlock(item)
+        case "thinking":
+            return convertThinkingBlock(item)
+        default:
+            return convertUnknownBlock(itemType)
+        }
+    }
+
+    /// Convert text content block.
+    private static func convertTextBlock(_ item: [String: Any]) -> ContentBlock? {
+        guard let text = item["text"] as? String else { return nil }
+        debugLog("Text content: \(text.prefix(100))")
+        return .text(TextBlock(text: text))
+    }
+
+    /// Convert tool_use content block.
+    private static func convertToolUseBlock(_ item: [String: Any]) -> ContentBlock? {
+        guard let id = item["id"] as? String,
+              let name = item["name"] as? String else { return nil }
+        let input = item["input"] ?? [String: Any]()
+        debugLog("Tool use: \(name)")
+        return .toolUse(ToolUseBlock(
+            id: id,
+            name: name,
+            input: AnyCodable(input)
+        ))
+    }
+
+    /// Convert tool_result content block.
+    private static func convertToolResultBlock(_ item: [String: Any]) -> ContentBlock? {
+        let toolUseId = item["tool_use_id"] as? String ?? ""
+        let isError = item["is_error"] as? Bool ?? false
+        let content: String
+        if let str = item["content"] as? String {
+            content = str
+        } else if let items = item["content"] as? [[String: Any]] {
+            content = items.compactMap { $0["text"] as? String }.joined(separator: "\n")
+        } else {
+            content = ""
+        }
+        debugLog("Tool result: toolUseId=\(toolUseId.prefix(20)), isError=\(isError)")
+        return .toolResult(ToolResultBlock(
+            toolUseId: toolUseId,
+            content: content,
+            isError: isError
+        ))
+    }
+
+    /// Convert thinking content block.
+    private static func convertThinkingBlock(_ item: [String: Any]) -> ContentBlock? {
+        guard let thinking = item["thinking"] as? String else { return nil }
+        debugLog("Thinking: \(thinking.prefix(50))")
+        return .thinking(ThinkingBlock(thinking: thinking))
+    }
+
+    /// Convert unknown content block type (forward compatibility).
+    private static func convertUnknownBlock(_ itemType: String) -> ContentBlock? {
+        debugLog("Unknown content type '\(itemType)' — forwarding as text note")
+        return .text(TextBlock(text: "[unsupported block: \(itemType)]"))
     }
 }
 

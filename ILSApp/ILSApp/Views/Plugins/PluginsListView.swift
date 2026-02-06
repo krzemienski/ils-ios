@@ -125,7 +125,8 @@ struct PluginRowView: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "enabled" : "disabled")")
+        .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "enabled" : "disabled")\(plugin.description.map { ", \($0)" } ?? "")")
+        .accessibilityHint("Double tap to toggle plugin")
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 Task {

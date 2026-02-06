@@ -37,6 +37,18 @@ class AppState: ObservableObject {
     @Published var isServerConnected: Bool = false
     @Published var serverConnectionInfo: ConnectionResponse?
 
+    // Spec 051: Session state persistence
+    @Published var lastSessionId: UUID? {
+        didSet {
+            if let id = lastSessionId {
+                UserDefaults.standard.set(id.uuidString, forKey: "ils_last_session_id")
+            }
+        }
+    }
+
+    // Spec 058: Offline mode detection
+    @Published var isOffline: Bool = false
+
     var apiClient: APIClient
     var sseClient: SSEClient
 

@@ -47,6 +47,9 @@ class ChatViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var connectingTimer: Task<Void, Never>?
 
+    // MARK: - Shared Decoder
+    private let jsonDecoder = JSONDecoder()
+
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
     private var batchTimer: Timer?
@@ -266,8 +269,7 @@ class ChatViewModel: ObservableObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            let blocks = try decoder.decode([ToolUseBlock].self, from: data)
+            let blocks = try jsonDecoder.decode([ToolUseBlock].self, from: data)
             return blocks.map { block in
                 ToolCall(id: block.id, name: block.name, inputPreview: nil)
             }
@@ -285,8 +287,7 @@ class ChatViewModel: ObservableObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            let blocks = try decoder.decode([ToolResultBlock].self, from: data)
+            let blocks = try jsonDecoder.decode([ToolResultBlock].self, from: data)
             return blocks.map { block in
                 ToolResult(toolUseId: block.toolUseId, content: block.content, isError: block.isError)
             }

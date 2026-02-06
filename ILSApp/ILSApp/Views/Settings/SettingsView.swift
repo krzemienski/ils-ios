@@ -400,6 +400,12 @@ struct SettingsView: View {
                 NavigationLink(destination: ConfigHistoryView()) {
                     Label("Configuration History", systemImage: "clock.arrow.circlepath")
                 }
+                NavigationLink(destination: CloudSyncView()) {
+                    Label("Cloud Sync", systemImage: "icloud")
+                }
+                NavigationLink(destination: AutomationScriptsView()) {
+                    Label("Automation Scripts", systemImage: "gearshape.2")
+                }
             }
 
     }
@@ -496,6 +502,9 @@ struct SettingsView: View {
 
                 NavigationLink(destination: LogViewerView()) {
                     Label("View Logs", systemImage: "doc.text")
+                }
+                NavigationLink(destination: NotificationPreferencesView()) {
+                    Label("Notifications", systemImage: "bell.badge")
                 }
             }
 

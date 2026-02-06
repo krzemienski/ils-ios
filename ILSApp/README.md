@@ -1,22 +1,26 @@
-# ILSApp - iOS Client
+# ILS iOS App
 
-The native iOS client for ILS (Intelligent Language System), providing a mobile interface for Claude Code.
+A native iOS client for managing Claude Code configurations, sessions, and workflows.
 
 ## Requirements
 
-- iOS 17.0+
+- iOS 18.0+
 - Xcode 15.0+
 - Swift 5.9+
 
 ## Quick Start
 
 1. Open `ILSApp.xcodeproj` in Xcode
-2. Ensure the backend is running on `localhost:9090`
-3. Press `Cmd+R` to build and run
+2. Start the backend server: `PORT=9090 swift run ILSBackend`
+3. Select the ILSApp scheme
+4. Press `Cmd+R` to build and run
 
 ## Architecture
 
-The app follows **MVVM (Model-View-ViewModel)** architecture with feature-based organization.
+- **Pattern:** MVVM with SwiftUI
+- **Backend:** Vapor server on port 9090
+- **Shared Types:** ILSShared Swift Package (DTOs, models)
+- **Theme:** Dark-first design system (ILSTheme)
 
 ### Directory Structure
 
@@ -170,6 +174,14 @@ struct ILSTheme {
 
 ## Features
 
+- **Sessions**: Create, manage, and chat with Claude Code sessions
+- **Projects**: Browse and manage project directories
+- **Skills**: View, search, and toggle Claude Code skills
+- **MCP Servers**: Monitor health, import/export, batch manage MCP servers
+- **Plugins**: Browse, enable/disable, and install from marketplace
+- **Settings**: Full Claude Code configuration management
+- **Dashboard**: Overview stats and recent activity
+
 ### Chat Interface
 
 The chat system supports:
@@ -195,7 +207,9 @@ Configurable options:
 - Backend host and port
 - Connection testing
 - Default model selection
-- Color scheme preference
+- SSH connections and fleet management
+- Config profiles and overrides
+- Log viewer and analytics
 
 ## Deep Linking
 
@@ -319,6 +333,37 @@ Product > Clean Build Folder (Cmd+Shift+K)
 xcrun simctl shutdown all
 xcrun simctl erase all
 ```
+
+## Bundle ID
+
+`com.ils.app`
+
+## URL Scheme
+
+`ils://` — supports deep linking to tabs:
+- `ils://sessions` - Navigate to Sessions
+- `ils://projects` - Navigate to Projects
+- `ils://skills` - Navigate to Skills
+- `ils://mcp` - Navigate to MCP Servers
+- `ils://plugins` - Navigate to Plugins
+- `ils://settings` - Navigate to Settings
+
+## Key Files
+
+| Area | Path |
+|------|------|
+| App Entry | `ILSApp/ILSAppApp.swift` |
+| Navigation | `ILSApp/ContentView.swift` |
+| Theme | `ILSApp/Theme/ILSTheme.swift` |
+| ViewModels | `ILSApp/ViewModels/` |
+| Views | `ILSApp/Views/` |
+| Services | `ILSApp/Services/` |
+| Shared Models | `../Sources/ILSShared/` |
+| Backend | `../Sources/ILSBackend/` |
+
+## API Reference
+
+See [API-REFERENCE.md](../docs/API-REFERENCE.md) for complete backend API documentation.
 
 ## Dependencies
 

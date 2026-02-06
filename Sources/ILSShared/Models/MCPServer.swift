@@ -22,21 +22,21 @@ public enum MCPStatus: String, Codable, Sendable {
 
 /// Represents an MCP (Model Context Protocol) server configuration.
 public struct MCPServer: Codable, Identifiable, Sendable {
-    /// Unique identifier.
+    /// Unique identifier for this server instance
     public var id: UUID
-    /// Server name.
+    /// Human-readable server name (e.g., "filesystem", "postgres")
     public var name: String
-    /// Command to execute the server.
+    /// Executable command to start the server (e.g., "npx", "python3")
     public var command: String
-    /// Command-line arguments.
+    /// Command-line arguments passed to the server
     public var args: [String]
-    /// Environment variables.
+    /// Environment variables for the server process
     public var env: [String: String]?
-    /// Configuration scope.
+    /// Configuration scope (user, project, or local)
     public var scope: MCPScope
-    /// Current health status.
+    /// Current health check status (healthy, unhealthy, or unknown)
     public var status: MCPStatus
-    /// Path to the configuration file.
+    /// File path where this server was configured
     public var configPath: String?
 
     public init(

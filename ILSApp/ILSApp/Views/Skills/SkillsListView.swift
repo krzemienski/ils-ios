@@ -194,6 +194,9 @@ struct SkillRowView: View {
             }
         }
         .padding(.vertical, ILSTheme.spacingXS)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("/\(skill.name), \(skill.isActive ? "active" : "inactive")\(skill.description.map { ", \($0)" } ?? "")")
+        .accessibilityHint("Double tap to view skill details")
     }
 }
 
@@ -507,17 +510,7 @@ struct SkillEditorView: View {
     }
 }
 
-// MARK: - Request Types
-
-struct CreateSkillRequest: Encodable {
-    let name: String
-    let description: String?
-    let content: String
-}
-
-struct UpdateSkillRequest: Encodable {
-    let content: String
-}
+// MARK: - GitHub UI
 
 struct GitHubSkillRow: View {
     let result: GitHubSearchResult
@@ -581,6 +574,9 @@ struct GitHubSkillRow: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(result.repository), \(result.stars) stars\(result.description.map { ", \($0)" } ?? "")")
+        .accessibilityHint("Double tap to install from GitHub")
     }
 }
 

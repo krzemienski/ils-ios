@@ -6,6 +6,22 @@ struct SessionsListView: View {
     @StateObject private var viewModel = SessionsViewModel()
     @State private var showingNewSession = false
     @State private var sessionToDelete: ChatSession?
+    @State private var searchText = ""
+    @State private var showErrorAlert = false
+    @State private var errorAlertMessage = ""
+
+    private var filteredSessions: [ChatSession] {
+        guard !searchText.isEmpty else { return viewModel.sessions }
+        return viewModel.sessions.filter { session in
+            let name = session.name ?? ""
+            let project = session.projectName ?? ""
+            let prompt = session.firstPrompt ?? ""
+            return name.localizedCaseInsensitiveContains(searchText)
+                || project.localizedCaseInsensitiveContains(searchText)
+                || prompt.localizedCaseInsensitiveContains(searchText)
+                || session.model.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         List {
@@ -23,8 +39,10 @@ struct SessionsListView: View {
                     showingNewSession = true
                 }
                 .accessibilityIdentifier("empty-sessions-state")
+            } else if !searchText.isEmpty && filteredSessions.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             } else {
-                ForEach(viewModel.sessions) { session in
+                ForEach(filteredSessions) { session in
                     NavigationLink(destination: ChatView(session: session)) {
                         SessionRowView(session: session)
                     }
@@ -57,6 +75,7 @@ struct SessionsListView: View {
         .navigationTitle("Sessions")
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(Color.black, for: .navigationBar)
+        .searchable(text: $searchText, prompt: "Search sessions...")
         .refreshable {
             await viewModel.loadSessions(refresh: true)
         }
@@ -105,13 +124,27 @@ struct SessionsListView: View {
         )) {
             Button("Delete", role: .destructive) {
                 if let session = sessionToDelete {
-                    Task { await viewModel.deleteSession(session) }
+                    Task {
+                        await viewModel.deleteSession(session)
+                        if viewModel.error != nil {
+                            errorAlertMessage = viewModel.error?.localizedDescription ?? "Failed to delete session"
+                            showErrorAlert = true
+                            viewModel.error = nil
+                        } else {
+                            HapticManager.notification(.success)
+                        }
+                    }
                     sessionToDelete = nil
                 }
             }
             Button("Cancel", role: .cancel) { sessionToDelete = nil }
         } message: {
             Text("This will permanently delete this session and all its messages.")
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorAlertMessage)
         }
         .overlay {
             if viewModel.isLoading && viewModel.sessions.isEmpty {
@@ -253,6 +286,9 @@ struct SessionRowView: View {
         }
         .padding(.vertical, 4)
         .shadow(color: ILSTheme.shadowLight, radius: 2, x: 0, y: 1)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(displayName), \(session.model), \(session.messageCount) messages, \(session.status.rawValue)")
+        .accessibilityHint("Double tap to open chat session")
     }
 
     @ViewBuilder

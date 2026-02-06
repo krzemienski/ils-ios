@@ -7,6 +7,19 @@ struct ProjectsListView: View {
     @State private var showingNewProject = false
     @State private var selectedProject: Project?
     @State private var projectToDelete: Project?
+    @State private var searchText = ""
+    @State private var showErrorAlert = false
+    @State private var errorAlertMessage = ""
+
+    private var filteredProjects: [Project] {
+        guard !searchText.isEmpty else { return viewModel.projects }
+        return viewModel.projects.filter { project in
+            project.name.localizedCaseInsensitiveContains(searchText)
+                || project.path.localizedCaseInsensitiveContains(searchText)
+                || (project.description?.localizedCaseInsensitiveContains(searchText) ?? false)
+                || project.defaultModel.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         List {
@@ -23,8 +36,10 @@ struct ProjectsListView: View {
                 ) {
                     showingNewProject = true
                 }
+            } else if !searchText.isEmpty && filteredProjects.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             } else {
-                ForEach(viewModel.projects) { project in
+                ForEach(filteredProjects) { project in
                     ProjectRowView(project: project)
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -62,6 +77,7 @@ struct ProjectsListView: View {
         .navigationTitle("Projects")
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(Color.black, for: .navigationBar)
+        .searchable(text: $searchText, prompt: "Search projects...")
         .refreshable {
             await viewModel.loadProjects(refresh: true)
         }
@@ -88,13 +104,27 @@ struct ProjectsListView: View {
         )) {
             Button("Delete", role: .destructive) {
                 if let project = projectToDelete {
-                    Task { await viewModel.deleteProject(project) }
+                    Task {
+                        await viewModel.deleteProject(project)
+                        if viewModel.error != nil {
+                            errorAlertMessage = viewModel.error?.localizedDescription ?? "Failed to delete project"
+                            showErrorAlert = true
+                            viewModel.error = nil
+                        } else {
+                            HapticManager.notification(.success)
+                        }
+                    }
                     projectToDelete = nil
                 }
             }
             Button("Cancel", role: .cancel) { projectToDelete = nil }
         } message: {
             Text("This will permanently delete \"\(projectToDelete?.name ?? "this project")\" and all associated data.")
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorAlertMessage)
         }
         .overlay {
             if viewModel.isLoading && viewModel.projects.isEmpty {
@@ -195,7 +225,8 @@ struct ProjectRowView: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(project.name), \(project.defaultModel)")
+        .accessibilityLabel("\(project.name), \(project.defaultModel), \(project.sessionCount.map { "\($0) sessions" } ?? "no sessions")")
+        .accessibilityHint("Double tap to view project details")
     }
 
     private func formattedDate(_ date: Date) -> String {
