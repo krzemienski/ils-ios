@@ -20,6 +20,20 @@ struct MessageView: View {
         return formatter
     }()
 
+    private var copyButton: some View {
+        Button(action: {
+            UIPasteboard.general.string = message.text
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            showCopyConfirmation = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                showCopyConfirmation = false
+            }
+        }) {
+            Label("Copy Message", systemImage: "doc.on.doc")
+        }
+    }
+
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: ILSTheme.spacingXS) {
             HStack {
@@ -28,25 +42,22 @@ struct MessageView: View {
                 VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
                     // Text content
                     if !message.text.isEmpty {
-                        Text(message.text)
-                            .font(ILSTheme.bodyFont)
-                            .textSelection(.enabled)
-                            .accessibilityIdentifier(message.isUser ? "user-message-text" : "assistant-message-text")
-                            .contextMenu {
-                                Button(action: {
-                                    UIPasteboard.general.string = message.text
-                                    // Haptic feedback on copy
-                                    let generator = UINotificationFeedbackGenerator()
-                                    generator.notificationOccurred(.success)
-                                    showCopyConfirmation = true
-                                    // Hide confirmation after 2 seconds
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                        showCopyConfirmation = false
-                                    }
-                                }) {
-                                    Label("Copy Message", systemImage: "doc.on.doc")
+                        if message.isUser {
+                            Text(message.text)
+                                .font(ILSTheme.bodyFont)
+                                .textSelection(.enabled)
+                                .accessibilityIdentifier("user-message-text")
+                                .contextMenu {
+                                    copyButton
                                 }
-                            }
+                        } else {
+                            MarkdownTextView(text: message.text)
+                                .foregroundColor(ILSTheme.primaryText)
+                                .accessibilityIdentifier("assistant-message-text")
+                                .contextMenu {
+                                    copyButton
+                                }
+                        }
                     }
 
                     // Tool calls
