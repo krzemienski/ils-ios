@@ -26,12 +26,55 @@ struct SkillsListView: View {
                     ContentUnavailableView.search(text: viewModel.searchText)
                 }
             } else {
-                ForEach(viewModel.filteredSkills) { skill in
-                    NavigationLink(value: skill) {
-                        SkillRowView(skill: skill)
+                // Installed skills
+                Section {
+                    ForEach(viewModel.filteredSkills) { skill in
+                        NavigationLink(value: skill) {
+                            SkillRowView(skill: skill)
+                        }
                     }
+                    .onDelete(perform: deleteSkill)
+                } header: {
+                    Text("Installed (\(viewModel.filteredSkills.count))")
                 }
-                .onDelete(perform: deleteSkill)
+
+                // GitHub search section
+                Section {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(ILSTheme.tertiaryText)
+                        TextField("Search GitHub skills...", text: $viewModel.gitHubSearchText)
+                            .textFieldStyle(.plain)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .onSubmit {
+                                Task { await viewModel.searchGitHub(query: viewModel.gitHubSearchText) }
+                            }
+                    }
+                    .padding(10)
+                    .background(ILSTheme.secondaryBackground)
+                    .cornerRadius(ILSTheme.cornerRadiusSmall)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+
+                    if viewModel.isSearchingGitHub {
+                        HStack {
+                            Spacer()
+                            ProgressView("Searching GitHub...")
+                            Spacer()
+                        }
+                    } else {
+                        ForEach(viewModel.gitHubResults) { result in
+                            GitHubSkillRow(result: result) {
+                                Task {
+                                    _ = await viewModel.installFromGitHub(result: result)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Discover from GitHub")
+                }
             }
         }
         .darkListStyle()
@@ -152,10 +195,12 @@ struct SkillDetailView: View {
     @ObservedObject var viewModel: SkillsViewModel
     let apiClient: APIClient
 
+    @Environment(\.dismiss) private var dismiss
     @State private var fullSkill: SkillItem?
     @State private var isLoading = true
     @State private var showingEditor = false
     @State private var showCopiedToast = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -199,6 +244,14 @@ struct SkillDetailView: View {
                     } label: {
                         Label("Edit Skill", systemImage: "pencil")
                     }
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        showingDeleteConfirmation = true
+                    } label: {
+                        Label("Delete Skill", systemImage: "trash")
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -207,6 +260,17 @@ struct SkillDetailView: View {
         .sheet(isPresented: $showingEditor) {
             SkillEditorView(mode: .edit(fullSkill ?? skill), apiClient: apiClient, viewModel: viewModel) { _ in }
                 .presentationBackground(Color.black)
+        }
+        .alert("Delete Skill?", isPresented: $showingDeleteConfirmation) {
+            Button("Delete", role: .destructive) {
+                Task {
+                    await viewModel.deleteSkill(skill)
+                    dismiss()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently remove \"/\(skill.name)\" from your skills.")
         }
         .overlay(alignment: .bottom) {
             if showCopiedToast {
@@ -458,6 +522,71 @@ struct CreateSkillRequest: Encodable {
 
 struct UpdateSkillRequest: Encodable {
     let content: String
+}
+
+struct GitHubSkillRow: View {
+    let result: GitHubSearchResult
+    let onInstall: () -> Void
+    @State private var isInstalling = false
+    @State private var isInstalled = false
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(result.repository)
+                    .font(ILSTheme.headlineFont)
+                    .foregroundColor(ILSTheme.primaryText)
+                if let desc = result.description {
+                    Text(desc)
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.secondaryText)
+                        .lineLimit(2)
+                }
+                HStack(spacing: 8) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                        Text("\(result.stars)")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(ILSTheme.warning)
+                }
+            }
+
+            Spacer()
+
+            if isInstalled {
+                Text("Installed")
+                    .font(.caption)
+                    .foregroundColor(ILSTheme.success)
+            } else {
+                Button(action: {
+                    isInstalling = true
+                    onInstall()
+                    // Optimistically show installed after a delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isInstalling = false
+                        isInstalled = true
+                    }
+                }) {
+                    if isInstalling {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("Install")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(ILSTheme.accent)
+                            .cornerRadius(ILSTheme.cornerRadiusXS)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, 4)
+    }
 }
 
 #Preview {

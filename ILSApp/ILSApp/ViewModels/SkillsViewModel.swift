@@ -7,6 +7,9 @@ class SkillsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
+    @Published var gitHubResults: [GitHubSearchResult] = []
+    @Published var isSearchingGitHub = false
+    @Published var gitHubSearchText = ""
 
     private var client: APIClient?
 
@@ -116,6 +119,38 @@ class SkillsViewModel: ObservableObject {
         } catch {
             self.error = error
             print("❌ Failed to delete skill '\(skill.name)': \(error.localizedDescription)")
+        }
+    }
+
+    func searchGitHub(query: String) async {
+        guard let client, !query.isEmpty else {
+            gitHubResults = []
+            return
+        }
+        isSearchingGitHub = true
+        do {
+            let response: APIResponse<ListResponse<GitHubSearchResult>> = try await client.get("/skills/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)")
+            if let data = response.data {
+                gitHubResults = data.items
+            }
+        } catch {
+            print("❌ GitHub search failed: \(error.localizedDescription)")
+        }
+        isSearchingGitHub = false
+    }
+
+    func installFromGitHub(result: GitHubSearchResult) async -> Bool {
+        guard let client else { return false }
+        do {
+            let request = SkillInstallRequest(repository: result.repository, skillPath: result.skillPath)
+            let _: APIResponse<SkillItem> = try await client.post("/skills/install", body: request)
+            // Reload skills to pick up the newly installed one
+            await loadSkills(refresh: true)
+            return true
+        } catch {
+            self.error = error
+            print("❌ Failed to install skill from GitHub: \(error.localizedDescription)")
+            return false
         }
     }
 }
