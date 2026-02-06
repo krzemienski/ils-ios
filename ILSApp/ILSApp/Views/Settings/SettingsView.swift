@@ -38,6 +38,7 @@ struct SettingsView: View {
                         .textContentType(.URL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
+                        .accessibilityLabel("Server host")
                 }
 
                 HStack {
@@ -45,6 +46,7 @@ struct SettingsView: View {
                         .frame(width: 50, alignment: .leading)
                     TextField("8080", text: $serverPort)
                         .keyboardType(.numberPad)
+                        .accessibilityLabel("Server port")
                 }
 
                 HStack {

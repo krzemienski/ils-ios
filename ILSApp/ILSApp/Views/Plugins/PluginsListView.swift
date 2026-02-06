@@ -337,6 +337,7 @@ struct PluginMarketplaceRow: View {
                         .background(ILSTheme.accent)
                         .cornerRadius(ILSTheme.cornerRadiusXS)
                 }
+                .accessibilityLabel("Install \(plugin.name)")
             }
         }
     }

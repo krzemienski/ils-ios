@@ -357,8 +357,11 @@ struct NewMCPServerView: View {
             Form {
                 Section("Server Details") {
                     TextField("Name", text: $name)
+                        .accessibilityLabel("Server name")
                     TextField("Command (e.g., npx)", text: $command)
+                        .accessibilityLabel("Server command")
                     TextField("Arguments (space-separated)", text: $args)
+                        .accessibilityLabel("Command arguments")
                 }
 
                 Section("Scope") {
