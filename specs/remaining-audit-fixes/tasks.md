@@ -47,7 +47,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-2, FR-3, FR-4, FR-8, FR-19 | AC-1.2, AC-1.3, AC-1.4, AC-3.1_
   - _Design: ILSAppApp.swift section_
 
-- [ ] 1.4 [VERIFY] Quality checkpoint: build succeeds after core service fixes
+- [x] 1.4 [VERIFY] Quality checkpoint: build succeeds after core service fixes
   - **Do**: Build the project to catch any compilation errors from tasks 1.1-1.3
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E '(BUILD SUCCEEDED|BUILD FAILED|error:)'`
   - **Done when**: BUILD SUCCEEDED with zero errors
@@ -67,7 +67,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-3, FR-4, FR-5, FR-7 | AC-1.3, AC-1.4, AC-2.1, AC-2.3_
   - _Design: ChatViewModel.swift section_
 
-- [ ] 1.6 Fix SystemMetricsViewModel: dedicated URLSession, nonisolated decoder
+- [x] 1.6 Fix SystemMetricsViewModel: dedicated URLSession, nonisolated decoder
   - **Do**:
     1. Open `SystemMetricsViewModel.swift`
     2. **M-CONC-1**: Replace `private let session = URLSession.shared` (line 22) with dedicated instance: `private let session: URLSession` initialized in `init` with `URLSessionConfiguration.default` + 10s timeout

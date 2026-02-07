@@ -19,8 +19,8 @@ final class SystemMetricsViewModel: ObservableObject {
     @Published var isLoadingProcesses: Bool = false
 
     private let baseURL: String
-    private let session = URLSession.shared
-    private let decoder: JSONDecoder
+    private let session: URLSession
+    nonisolated private let decoder: JSONDecoder
 
     enum ProcessSortOption: String, CaseIterable {
         case cpu = "CPU"
@@ -30,6 +30,9 @@ final class SystemMetricsViewModel: ObservableObject {
     init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
         self.metricsClient = MetricsWebSocketClient(baseURL: baseURL)
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 10
+        self.session = URLSession(configuration: configuration)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
     }
