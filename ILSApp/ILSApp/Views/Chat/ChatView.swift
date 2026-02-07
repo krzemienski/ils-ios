@@ -381,7 +381,6 @@ struct StreamingStatusView: View {
 
 struct TypingIndicatorView: View {
     @State private var animationPhase = 0
-    @State private var timer: Timer?
 
     private var shouldAnimate: Bool {
         !UIAccessibility.isReduceMotionEnabled
@@ -406,26 +405,16 @@ struct TypingIndicatorView: View {
             Spacer()
         }
         .accessibilityIdentifier("typing-indicator")
-        .onAppear {
-            startAnimation()
-        }
-        .onDisappear {
-            stopAnimation()
-        }
-    }
-
-    private func startAnimation() {
-        guard shouldAnimate else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
-            withAnimation(.easeInOut(duration: 0.3)) {
-                animationPhase = (animationPhase + 1) % 3
+        .task {
+            guard shouldAnimate else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard !Task.isCancelled else { break }
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    animationPhase = (animationPhase + 1) % 3
+                }
             }
         }
-    }
-
-    private func stopAnimation() {
-        timer?.invalidate()
-        timer = nil
     }
 }
 

@@ -7,6 +7,7 @@ final class AppLogger {
     private let logger: Logger
     private let logFileURL: URL
     private let maxLogSize: Int = 5_000_000 // 5MB
+    private static let iso8601Formatter = ISO8601DateFormatter()
 
     private init() {
         logger = Logger(subsystem: "com.ils.app", category: "general")
@@ -36,7 +37,7 @@ final class AppLogger {
     }
 
     private func writeToFile(_ level: String, category: String, message: String) {
-        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let timestamp = Self.iso8601Formatter.string(from: Date())
         let entry = "[\(timestamp)] [\(level)] [\(category)] \(message)\n"
 
         guard let data = entry.data(using: .utf8) else { return }
@@ -61,10 +62,13 @@ final class AppLogger {
         try? FileManager.default.moveItem(at: logFileURL, to: backup)
     }
 
-    func recentLogs(lines: Int = 100) -> [String] {
-        guard let content = try? String(contentsOf: logFileURL, encoding: .utf8) else { return [] }
-        let allLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
-        return Array(allLines.suffix(lines))
+    func recentLogs(lines: Int = 100) async -> [String] {
+        let url = logFileURL
+        return await Task.detached(priority: .userInitiated) {
+            guard let content = try? String(contentsOf: url, encoding: .utf8) else { return [String]() }
+            let allLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
+            return Array(allLines.suffix(lines))
+        }.value
     }
 
     var analyticsOptedIn: Bool {

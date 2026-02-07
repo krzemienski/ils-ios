@@ -73,7 +73,6 @@ class ChatViewModel: ObservableObject {
         guard let sseClient else { return }
 
         sseClient.$isStreaming
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] streaming in
                 guard let self = self else { return }
                 self.isStreaming = streaming
@@ -90,11 +89,9 @@ class ChatViewModel: ObservableObject {
             .store(in: &cancellables)
 
         sseClient.$error
-            .receive(on: DispatchQueue.main)
             .assign(to: &$error)
 
         sseClient.$connectionState
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 guard let self = self else { return }
                 self.connectionState = state
@@ -109,7 +106,6 @@ class ChatViewModel: ObservableObject {
             .store(in: &cancellables)
 
         sseClient.$messages
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] streamMessages in
                 guard let self = self else { return }
 
@@ -135,7 +131,9 @@ class ChatViewModel: ObservableObject {
             withTimeInterval: batchInterval,
             repeats: true
         ) { [weak self] _ in
-            self?.flushPendingMessages()
+            Task { @MainActor [weak self] in
+                self?.flushPendingMessages()
+            }
         }
     }
 
@@ -148,10 +146,10 @@ class ChatViewModel: ObservableObject {
     private func startConnectingTimer() {
         connectingTimer?.cancel()
         connectingTooLong = false
-        connectingTimer = Task { @MainActor in
+        connectingTimer = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 5_000_000_000)
             guard !Task.isCancelled else { return }
-            self.connectingTooLong = true
+            self?.connectingTooLong = true
         }
     }
 

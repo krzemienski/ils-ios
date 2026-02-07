@@ -13,6 +13,7 @@ struct TunnelSettingsView: View {
     @State private var notInstalled = false
     @State private var installURL: String?
     @State private var showCopiedToast = false
+    @State private var qrImage: UIImage?
 
     // Custom domain fields
     @State private var cfToken = ""
@@ -40,6 +41,13 @@ struct TunnelSettingsView: View {
         .toast(isPresented: $showCopiedToast, message: "URL copied to clipboard")
         .task {
             await fetchStatus()
+        }
+        .onChange(of: tunnelURL) { _, newURL in
+            if let url = newURL {
+                qrImage = Self.generateQRCode(from: url)
+            } else {
+                qrImage = nil
+            }
         }
     }
 
@@ -141,8 +149,8 @@ struct TunnelSettingsView: View {
             }
             .buttonStyle(.bordered)
 
-            // QR Code
-            if let qrImage = generateQRCode(from: url) {
+            // QR Code (pre-generated, not computed in view body)
+            if let qrImage = qrImage {
                 HStack {
                     Spacer()
                     Image(uiImage: qrImage)
@@ -299,6 +307,9 @@ struct TunnelSettingsView: View {
             uptime = status.uptime
             notInstalled = false
             errorMessage = nil
+            if let url = status.url {
+                qrImage = Self.generateQRCode(from: url)
+            }
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
                 notInstalled = true
@@ -320,6 +331,7 @@ struct TunnelSettingsView: View {
             tunnelURL = response.url
             isRunning = true
             notInstalled = false
+            qrImage = Self.generateQRCode(from: response.url)
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
                 notInstalled = true
@@ -350,8 +362,9 @@ struct TunnelSettingsView: View {
 
     // MARK: - QR Code Generation
 
-    private func generateQRCode(from string: String) -> UIImage? {
-        let context = CIContext()
+    private static let ciContext = CIContext()
+
+    private static func generateQRCode(from string: String) -> UIImage? {
         let filter = CIFilter.qrCodeGenerator()
 
         guard let data = string.data(using: .ascii) else { return nil }
@@ -360,11 +373,10 @@ struct TunnelSettingsView: View {
 
         guard let outputImage = filter.outputImage else { return nil }
 
-        // Scale up the QR code
         let scale = CGAffineTransform(scaleX: 10, y: 10)
         let scaledImage = outputImage.transformed(by: scale)
 
-        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
+        guard let cgImage = ciContext.createCGImage(scaledImage, from: scaledImage.extent) else {
             return nil
         }
 

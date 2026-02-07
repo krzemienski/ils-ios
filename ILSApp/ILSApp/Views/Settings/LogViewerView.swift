@@ -23,14 +23,16 @@ struct LogViewerView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    logs = AppLogger.shared.recentLogs()
+                    Task {
+                        logs = await AppLogger.shared.recentLogs()
+                    }
                 } label: {
                     Image(systemName: "arrow.clockwise").foregroundColor(.orange)
                 }
             }
         }
-        .onAppear {
-            logs = AppLogger.shared.recentLogs()
+        .task {
+            logs = await AppLogger.shared.recentLogs()
         }
     }
 
