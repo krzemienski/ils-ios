@@ -10,6 +10,9 @@ class ChatViewModel: ObservableObject {
     @Published var error: Error?
     @Published var connectionState: SSEClient.ConnectionState = .disconnected
     @Published var connectingTooLong = false
+    @Published var streamTokenCount: Int = 0
+    @Published var streamElapsedSeconds: Double = 0
+    private var streamStartTime: Date?
 
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
@@ -78,13 +81,17 @@ class ChatViewModel: ObservableObject {
                 guard let self = self else { return }
                 self.isStreaming = streaming
 
-                // Manage timer lifecycle based on streaming state
-                if !streaming {
+                if streaming {
+                    // Reset streaming stats
+                    self.streamTokenCount = 0
+                    self.streamElapsedSeconds = 0
+                    self.streamStartTime = Date()
+                } else {
                     // Streaming ended - flush remaining messages and stop timer
                     self.flushPendingMessages()
                     self.stopBatchTimer()
-                    // Reset index tracker for next stream
                     self.lastProcessedMessageIndex = 0
+                    self.streamStartTime = nil
                 }
             }
             .store(in: &cancellables)
@@ -221,7 +228,7 @@ class ChatViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to load message history: \(error)")
+            AppLogger.shared.error("Failed to load message history: \(error)", category: "chat")
             if messages.isEmpty {
                 if encodedProjectPath != nil {
                     showEmptyTranscriptMessage()
@@ -273,7 +280,7 @@ class ChatViewModel: ObservableObject {
                 ToolCallDisplay(id: block.id, name: block.name, inputPreview: nil)
             }
         } catch {
-            AppLogger.shared.error("Failed to parse tool calls: \(error)")
+            AppLogger.shared.error("Failed to parse tool calls: \(error)", category: "chat")
             return []
         }
     }
@@ -291,7 +298,7 @@ class ChatViewModel: ObservableObject {
                 ToolResultDisplay(toolUseId: block.toolUseId, content: block.content, isError: block.isError)
             }
         } catch {
-            AppLogger.shared.error("Failed to parse tool results: \(error)")
+            AppLogger.shared.error("Failed to parse tool results: \(error)", category: "chat")
             return []
         }
     }
@@ -340,7 +347,7 @@ class ChatViewModel: ObservableObject {
                     let _: APIResponse<DeletedResponse> = try await apiClient.post("/chat/cancel/\(sessionId.uuidString)", body: EmptyBody())
                 } catch {
                     // Cancel is best-effort — don't surface errors to user
-                    AppLogger.shared.warning("Backend cancel failed (non-fatal): \(error)")
+                    AppLogger.shared.warning("Backend cancel failed (non-fatal): \(error)", category: "chat")
                 }
             }
         }
@@ -356,7 +363,7 @@ class ChatViewModel: ObservableObject {
             return response.data
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to fork session: \(error)")
+            AppLogger.shared.error("Failed to fork session: \(error)", category: "chat")
             return nil
         }
     }
@@ -406,13 +413,19 @@ class ChatViewModel: ObservableObject {
                 currentMessage.cost = resultMsg.totalCostUSD
 
             case .permission:
-                // Handle permission requests
                 break
 
             case .error(let errorMsg):
                 currentMessage.text += "\n\nError: \(errorMsg.message)"
             }
         }
+
+        // Update streaming stats
+        if let startTime = streamStartTime {
+            streamElapsedSeconds = Date().timeIntervalSince(startTime)
+        }
+        // Approximate token count from text length (rough: ~4 chars per token)
+        streamTokenCount = max(streamTokenCount, currentMessage.text.count / 4)
 
         messages.append(currentMessage)
     }
