@@ -1,4 +1,5 @@
 import SwiftUI
+import MarkdownUI
 
 /// Collapsible section for displaying AI thinking/reasoning in chat messages.
 /// Shows pulsing brain icon when active, static when complete.
@@ -32,7 +33,7 @@ struct ThinkingSection: View {
                         .scaleEffect(pulseScale)
                         .frame(width: 20)
 
-                    Text(isActive ? "Thinking..." : "Thinking")
+                    Text(isActive ? "Thinking..." : "Thinking (\(thinking.count.formatted()) chars)")
                         .font(.system(.subheadline, weight: .medium))
                         .foregroundColor(ILSTheme.textPrimary)
 
@@ -56,13 +57,15 @@ struct ThinkingSection: View {
 
             // Expanded thinking text
             if isExpanded {
-                Text(thinking)
-                    .font(.system(.caption, design: .default))
-                    .foregroundColor(ILSTheme.textSecondary)
-                    .textSelection(.enabled)
-                    .padding(.horizontal, ILSTheme.spacingS)
-                    .padding(.bottom, ILSTheme.spacingS)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                ScrollView {
+                    Markdown(thinking)
+                        .markdownTheme(.ilsChat)
+                        .textSelection(.enabled)
+                }
+                .frame(maxHeight: 400)
+                .padding(.horizontal, ILSTheme.spacingS)
+                .padding(.bottom, ILSTheme.spacingS)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(sectionBg)
@@ -103,7 +106,7 @@ struct ThinkingSection: View {
         )
 
         ThinkingSection(
-            thinking: "The function needs to handle three cases: successful response, timeout, and network error. I'll implement each with proper error propagation.",
+            thinking: "Let me analyze the code structure and identify the **best approach** for implementing this feature.\n\n- Consider existing patterns\n- Ensure backward compatibility\n- Check for `edge cases`",
             isActive: false
         )
     }
