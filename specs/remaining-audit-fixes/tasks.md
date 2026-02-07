@@ -97,7 +97,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - **Done when**: BUILD SUCCEEDED with zero errors
   - **Commit**: `chore(audit): pass quality checkpoint after ViewModel fixes` (only if fixes needed)
 
-- [ ] 1.9 Fix SessionsListView: static formatters namespace, computed to method, font theme, color indicators
+- [x] 1.9 Fix SessionsListView: static formatters namespace, computed to method, font theme, color indicators
   - **Do**:
     1. Open `SessionsListView.swift`
     2. **M-ARCH-2**: Extract `relativeDateFormatter` (line 197) to a top-level `enum SessionFormatters` with `nonisolated(unsafe) static let relative = RelativeDateTimeFormatter()`. Also add `nonisolated(unsafe) static let date: DateFormatter` if one exists. Update all references from `Self.relativeDateFormatter` to `SessionFormatters.relative`
@@ -111,7 +111,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-9, FR-10, FR-11, FR-18 | AC-3.2, AC-3.3, AC-4.1, AC-6.3_
   - _Design: SessionsListView.swift section_
 
-- [ ] 1.10 Fix SkillsViewModel: didSet to method
+- [x] 1.10 Fix SkillsViewModel: didSet to method
   - **Do**:
     1. Open `SkillsViewModel.swift`
     2. **M-ARCH-1**: Remove `didSet` from `gitHubSearchText` (line 13). Create `func updateGitHubSearchText(_ text: String)` that sets the property and calls `searchGitHubSkills()`. Find all callers that assign `gitHubSearchText` directly and update them to call the new method instead

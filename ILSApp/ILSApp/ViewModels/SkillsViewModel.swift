@@ -9,19 +9,27 @@ class SkillsViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var gitHubResults: [GitHubSearchResult] = []
     @Published var isSearchingGitHub = false
-    @Published var gitHubSearchText = "" {
-        didSet {
-            // Debounce GitHub search with 300ms delay
-            searchTask?.cancel()
-            guard !gitHubSearchText.isEmpty else {
-                gitHubResults = []
-                return
-            }
-            searchTask = Task {
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                if !Task.isCancelled {
-                    await searchGitHub(query: gitHubSearchText)
-                }
+    @Published var gitHubSearchText = ""
+
+    /// Update GitHub search text and trigger debounced search.
+    /// Call this instead of assigning `gitHubSearchText` directly.
+    /// For SwiftUI TextField bindings, call from `.onChange(of:)`.
+    func updateGitHubSearchText(_ text: String) {
+        gitHubSearchText = text
+        debouncedGitHubSearch()
+    }
+
+    /// Trigger a debounced GitHub search based on current `gitHubSearchText`.
+    private func debouncedGitHubSearch() {
+        searchTask?.cancel()
+        guard !gitHubSearchText.isEmpty else {
+            gitHubResults = []
+            return
+        }
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            if !Task.isCancelled {
+                await searchGitHub(query: gitHubSearchText)
             }
         }
     }

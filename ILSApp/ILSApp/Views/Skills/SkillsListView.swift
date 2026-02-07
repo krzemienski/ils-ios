@@ -68,6 +68,9 @@ struct SkillsListView: View {
                             .textFieldStyle(.plain)
                             .autocorrectionDisabled()
                             .textInputAutocapitalization(.never)
+                            .onChange(of: viewModel.gitHubSearchText) { _, newValue in
+                                viewModel.updateGitHubSearchText(newValue)
+                            }
                             .onSubmit {
                                 Task { await viewModel.searchGitHub(query: viewModel.gitHubSearchText) }
                             }
