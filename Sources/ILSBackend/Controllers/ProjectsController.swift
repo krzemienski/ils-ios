@@ -137,7 +137,7 @@ struct ProjectsController: RouteCollection {
         )
     }
 
-    /// Get a specific project by deterministic ID (scans filesystem).
+    /// Get a specific project by deterministic ID (scans filesystem with early exit).
     /// - Parameter req: Vapor Request with id parameter
     /// - Returns: APIResponse with Project
     @Sendable
@@ -146,16 +146,56 @@ struct ProjectsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid project ID")
         }
 
-        // Scan filesystem to find the project matching this deterministic ID
-        let allProjects = try await index(req: req)
-        guard let project = allProjects.data?.items.first(where: { $0.id == id }) else {
-            throw Abort(.notFound, reason: "Project not found. Projects are discovered from ~/.claude/projects/")
+        let claudeProjectsDir = fileSystem.claudeProjectsPath
+
+        guard FileManager.default.fileExists(atPath: claudeProjectsDir) else {
+            throw Abort(.notFound, reason: "Project not found")
         }
 
-        return APIResponse(
-            success: true,
-            data: project
-        )
+        let contents = try FileManager.default.contentsOfDirectory(atPath: claudeProjectsDir)
+
+        for encodedDir in contents {
+            let projectDirPath = "\(claudeProjectsDir)/\(encodedDir)"
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: projectDirPath, isDirectory: &isDirectory),
+                  isDirectory.boolValue else {
+                continue
+            }
+
+            let indexPath = "\(projectDirPath)/sessions-index.json"
+            guard FileManager.default.fileExists(atPath: indexPath),
+                  let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)),
+                  let index = try? JSONDecoder().decode(FileSystemService.SessionsIndex.self, from: data),
+                  let firstEntry = index.entries.first else {
+                continue
+            }
+
+            let projectPath = firstEntry.projectPath
+            let candidateId = deterministicID(from: projectPath)
+
+            // Early exit on match
+            if candidateId == id {
+                let projectName = URL(fileURLWithPath: projectPath).lastPathComponent
+                let createdDate = parseDate(firstEntry.created) ?? Date()
+                let lastModified = index.entries.compactMap { self.parseDate($0.modified) }.max() ?? createdDate
+
+                let project = Project(
+                    id: id,
+                    name: projectName,
+                    path: projectPath,
+                    defaultModel: "sonnet",
+                    description: "Claude Code project",
+                    createdAt: createdDate,
+                    lastAccessedAt: lastModified,
+                    sessionCount: index.entries.count,
+                    encodedPath: encodedDir
+                )
+
+                return APIResponse(success: true, data: project)
+            }
+        }
+
+        throw Abort(.notFound, reason: "Project not found. Projects are discovered from ~/.claude/projects/")
     }
 
     /// Get all sessions for a specific project (by deterministic ID).
