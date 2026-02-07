@@ -24,6 +24,7 @@ class SSEClient: ObservableObject {
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
+    private var lastEventId: String?
     nonisolated private let jsonEncoder = JSONEncoder()
     nonisolated private let jsonDecoder = JSONDecoder()
 
@@ -59,11 +60,14 @@ class SSEClient: ObservableObject {
 
     private func performStream(request: ChatStreamRequest) async {
         let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
-        AppLogger.shared.info("Request URL: \(url)", category: "sse")
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.addValue("text/event-stream", forHTTPHeaderField: "Accept")
+
+        if let lastEventId {
+            urlRequest.addValue(lastEventId, forHTTPHeaderField: "Last-Event-ID")
+        }
 
         do {
             urlRequest.httpBody = try jsonEncoder.encode(request)
@@ -95,7 +99,6 @@ class SSEClient: ObservableObject {
             }
 
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-            AppLogger.shared.info("Response status: \(statusCode)", category: "sse")
 
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
@@ -109,9 +112,10 @@ class SSEClient: ObservableObject {
             var currentData = ""
 
             for try await line in asyncBytes.lines {
-                AppLogger.shared.info("Line: \(line.prefix(120))", category: "sse")
                 if line.hasPrefix("event:") {
                     currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+                } else if line.hasPrefix("id:") {
+                    lastEventId = String(line.dropFirst(3)).trimmingCharacters(in: .whitespaces)
                 } else if line.hasPrefix("data:") {
                     currentData = String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces)
 
@@ -158,8 +162,8 @@ class SSEClient: ObservableObject {
 
         AppLogger.shared.warning("Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)", category: "sse")
 
-        // Exponential backoff
-        let delay = reconnectDelay * UInt64(1 << (reconnectAttempts - 1))
+        // Exponential backoff capped at 30 seconds
+        let delay = min(reconnectDelay * UInt64(1 << (reconnectAttempts - 1)), 30_000_000_000)
         try? await Task.sleep(nanoseconds: delay)
 
         // Check if cancelled during sleep
@@ -194,8 +198,6 @@ class SSEClient: ObservableObject {
     @Published var assistantMessageId: String?
 
     private func parseAndAddMessage(event: String, data: String) async {
-        AppLogger.shared.info("Parsing event=\(event) data=\(data.prefix(120))", category: "sse")
-
         // Handle special event types
         switch event {
         case "done":
@@ -216,7 +218,6 @@ class SSEClient: ObservableObject {
         do {
             let message = try jsonDecoder.decode(StreamMessage.self, from: jsonData)
             messages.append(message)
-            AppLogger.shared.info("Parsed message successfully, total messages: \(messages.count)", category: "sse")
         } catch {
             AppLogger.shared.error("Decode error: \(error)", category: "sse")
             AppLogger.shared.error("Raw data: \(data)", category: "sse")
@@ -230,7 +231,6 @@ class SSEClient: ObservableObject {
         }
         userMessageId = json["userMessageId"]
         assistantMessageId = json["assistantMessageId"]
-        AppLogger.shared.info("Message IDs: user=\(userMessageId ?? "nil"), assistant=\(assistantMessageId ?? "nil")", category: "sse")
     }
 
     /// Cancel the current stream
@@ -241,6 +241,7 @@ class SSEClient: ObservableObject {
         connectionState = .disconnected
         currentRequest = nil
         reconnectAttempts = 0
+        lastEventId = nil
         userMessageId = nil
         assistantMessageId = nil
     }

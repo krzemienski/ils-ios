@@ -175,7 +175,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - **Done when**: Zero build errors
   - **Commit**: `chore(ios): pass chat rendering quality checkpoint` (only if fixes needed)
 
-- [ ] 2.4 Enhance ToolCallAccordion with structured inputs and output truncation
+- [x] 2.4 Enhance ToolCallAccordion with structured inputs and output truncation
   - **Do**:
     1. Update `ToolCallAccordion.swift` to accept new parameters:
        - `inputPairs: [(key: String, value: String)]` for structured key-value display (FR-5)
@@ -192,7 +192,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-5, FR-6, FR-7_
   - _Design: Phase 2 — 2.4 Enhanced ToolCallAccordion_
 
-- [ ] 2.5 Enhance ThinkingSection with markdown rendering and character count
+- [x] 2.5 Enhance ThinkingSection with markdown rendering and character count
   - **Do**:
     1. In `ThinkingSection.swift`, import MarkdownUI
     2. Replace plain `Text(thinking)` (line 59) with `Markdown(thinking).markdownTheme(.ilsChat)` for markdown rendering (FR-8)
@@ -206,7 +206,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-8, FR-9_
   - _Design: Phase 2 — 2.5 Enhanced ThinkingSection_
 
-- [ ] 2.6 Add message context menu and Expand All button to MessageView
+- [x] 2.6 Add message context menu and Expand All button to MessageView
   - **Do**:
     1. In `MessageView.swift`, replace simple `.contextMenu { copyButton }` with full context menu (FR-10):
        ```
@@ -232,7 +232,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-10, FR-11, FR-7_
   - _Design: Phase 2 — 2.6 Message Actions, 2.7 Expand All_
 
-- [ ] 2.7 Wire message actions in ChatView and ChatViewModel
+- [x] 2.7 Wire message actions in ChatView and ChatViewModel
   - **Do**:
     1. Add `func retryMessage(_ message: ChatMessage)` to ChatViewModel — finds preceding user message, removes assistant response, resends
     2. Add `func deleteMessage(_ message: ChatMessage)` to ChatViewModel — removes message from `messages` array
@@ -245,7 +245,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-10_
   - _Design: Phase 2 — 2.6 Message Actions (callbacks)_
 
-- [ ] V3 [VERIFY] Phase 2 checkpoint: build + install + screenshot evidence
+- [x] V3 [VERIFY] Phase 2 checkpoint: build + install + screenshot evidence
   - **Do**:
     1. Build and install on simulator (UDID: 50523130-57AA-48B0-ABD0-4D59CE455F14)
     2. Start backend: `PORT=9090 swift run ILSBackend &`

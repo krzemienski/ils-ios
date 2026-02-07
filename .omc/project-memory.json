@@ -115,8 +115,8 @@
   "hotPaths": [
     {
       "path": "ILSApp/ILSApp",
-      "accessCount": 228,
-      "lastAccessed": 1770456873627,
+      "accessCount": 232,
+      "lastAccessed": 1770457354737,
       "type": "directory"
     },
     {
@@ -132,15 +132,15 @@
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
-      "accessCount": 51,
-      "lastAccessed": 1770456245298,
+      "path": "ILSApp/ILSApp/Services/SSEClient.swift",
+      "accessCount": 52,
+      "lastAccessed": 1770457359272,
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Services/SSEClient.swift",
-      "accessCount": 38,
-      "lastAccessed": 1770456048721,
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
+      "accessCount": 51,
+      "lastAccessed": 1770456245298,
       "type": "file"
     },
     {
@@ -228,6 +228,12 @@
       "type": "file"
     },
     {
+      "path": "ILSApp/ILSApp/Views/Chat/CommandPaletteView.swift",
+      "accessCount": 9,
+      "lastAccessed": 1770457190351,
+      "type": "file"
+    },
+    {
       "path": "specs/agent-teams/requirements.md",
       "accessCount": 7,
       "lastAccessed": 1770401738364,
@@ -255,12 +261,6 @@
       "path": "ILSApp/ILSApp/Views/Settings/LogViewerView.swift",
       "accessCount": 6,
       "lastAccessed": 1770446447993,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Chat/CommandPaletteView.swift",
-      "accessCount": 6,
-      "lastAccessed": 1770451390842,
       "type": "file"
     },
     {
