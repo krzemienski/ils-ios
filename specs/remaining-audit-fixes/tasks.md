@@ -145,7 +145,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-15 | AC-5.4_
   - _Design: MetricsWebSocketClient.swift section_
 
-- [ ] 1.13 [VERIFY] Quality checkpoint: build succeeds after all View/ViewModel fixes
+- [x] 1.13 [VERIFY] Quality checkpoint: build succeeds after all View/ViewModel fixes
   - **Do**: Build the project to catch any compilation errors from tasks 1.9-1.12
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E '(BUILD SUCCEEDED|BUILD FAILED|error:)'`
   - **Done when**: BUILD SUCCEEDED with zero errors
@@ -182,7 +182,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-18 | AC-6.3_
   - _Design: Accessibility Color Indicators section_
 
-- [ ] 1.16 Fix remaining print() in CommandPaletteView
+- [x] 1.16 Fix remaining print() in CommandPaletteView
   - **Do**:
     1. Open `CommandPaletteView.swift`
     2. Replace the 1 `print()` call with `AppLogger.shared.info()` category `"ui"`

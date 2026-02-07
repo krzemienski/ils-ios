@@ -166,6 +166,6 @@ struct SkillRow: View {
 
 #Preview {
     CommandPaletteView { command in
-        print("Selected: \(command)")
+        AppLogger.shared.info("Selected: \(command)", category: "ui")
     }
 }
