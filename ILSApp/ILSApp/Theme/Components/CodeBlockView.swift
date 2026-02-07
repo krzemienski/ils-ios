@@ -2,33 +2,26 @@ import SwiftUI
 import HighlightSwift
 
 /// Renders a fenced code block with language header, grammar-aware syntax highlighting,
-/// optional line numbers, and copy button.
+/// optional line numbers, and copy button. All colors from theme tokens.
 struct CodeBlockView: View {
     let language: String?
     let code: String
     @State private var showCopied = false
     @State private var highlightedCode: AttributedString?
     @State private var detectedLanguage: String?
-    @State private var showLineNumbers = true
+    @State private var isExpanded = false
 
-    /// Header background color (#1E293B)
-    private let headerBg = Color(red: 30.0/255.0, green: 41.0/255.0, blue: 59.0/255.0)
-    /// Code background color (#0F172A)
-    private let codeBg = Color(red: 15.0/255.0, green: 23.0/255.0, blue: 42.0/255.0)
-    /// Border color: white at 8% opacity
-    private let borderColor = Color.white.opacity(0.08)
-    /// Line number color
-    private let lineNumberColor = Color(red: 100.0/255.0, green: 116.0/255.0, blue: 139.0/255.0)
+    @Environment(\.theme) private var theme: any AppTheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerBar
             codeContent
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(borderColor, lineWidth: 1)
+            RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
+                .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Code block, \(detectedLanguage ?? language ?? "code")")
@@ -42,85 +35,81 @@ struct CodeBlockView: View {
     private var headerBar: some View {
         HStack {
             Text(detectedLanguage ?? language ?? "code")
-                .font(.system(.caption, design: .monospaced, weight: .medium))
-                .foregroundColor(ILSTheme.textSecondary)
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundStyle(theme.textTertiary)
 
             Spacer()
 
             Button(action: copyCode) {
                 HStack(spacing: 4) {
                     Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
-                        .font(.caption2)
+                        .font(.system(size: 10))
                     Text(showCopied ? "Copied" : "Copy")
-                        .font(.system(.caption2, design: .default, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundColor(showCopied ? ILSTheme.success : ILSTheme.textSecondary)
+                .foregroundStyle(showCopied ? theme.success : theme.textSecondary)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(showCopied ? "Code copied to clipboard" : "Copy code to clipboard")
         }
-        .padding(.horizontal, ILSTheme.spacingS)
+        .padding(.horizontal, theme.spacingSM)
         .padding(.vertical, 6)
-        .background(headerBg)
+        .background(theme.bgTertiary)
     }
 
     // MARK: - Code Content
 
     private var codeContent: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(alignment: .top, spacing: 0) {
-                if showLineNumbers {
-                    lineNumbersGutter
+            codeText
+        }
+        .frame(maxHeight: isExpanded ? .infinity : 300)
+        .background(theme.bgSecondary)
+        .overlay(alignment: .bottom) {
+            if !isExpanded && lineCount > 15 {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isExpanded = true
+                    }
+                } label: {
+                    Text("Show more (\(lineCount) lines)")
+                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .foregroundStyle(theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingXS)
+                        .background(
+                            LinearGradient(
+                                colors: [theme.bgSecondary.opacity(0), theme.bgSecondary],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                 }
-                codeText
             }
         }
-        .background(codeBg)
     }
 
     private var codeText: some View {
         Group {
             if let highlighted = highlightedCode {
                 Text(highlighted)
-                    .font(.system(.callout, design: .monospaced))
+                    .font(.system(size: 13, design: .monospaced))
                     .textSelection(.enabled)
             } else {
                 Text(code)
-                    .font(.system(.callout, design: .monospaced))
-                    .foregroundColor(Color(red: 226.0/255.0, green: 232.0/255.0, blue: 240.0/255.0))
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
                     .textSelection(.enabled)
             }
         }
-        .padding(ILSTheme.spacingS)
+        .padding(theme.spacingSM)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Line Numbers
+    // MARK: - Helpers
 
-    private var lineNumbersGutter: some View {
-        let lineCount = max(code.components(separatedBy: "\n").count, 1)
-        return VStack(alignment: .trailing, spacing: 0) {
-            ForEach(1...lineCount, id: \.self) { lineNum in
-                Text("\(lineNum)")
-                    .font(.system(.callout, design: .monospaced))
-                    .foregroundColor(lineNumberColor)
-                    .frame(minWidth: 30, alignment: .trailing)
-            }
-        }
-        .padding(.vertical, ILSTheme.spacingS)
-        .padding(.leading, ILSTheme.spacingS)
-        .padding(.trailing, 4)
-        .background(codeBg.opacity(0.5))
-        .overlay(alignment: .trailing) {
-            Rectangle()
-                .fill(borderColor)
-                .frame(width: 1)
-        }
-        .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showLineNumbers.toggle()
-            }
-        }
+    private var lineCount: Int {
+        max(code.components(separatedBy: "\n").count, 1)
     }
 
     // MARK: - Highlighting
@@ -155,30 +144,4 @@ struct CodeBlockView: View {
             showCopied = false
         }
     }
-}
-
-#Preview {
-    ScrollView {
-        VStack(spacing: 16) {
-            CodeBlockView(language: "swift", code: """
-            func greet(_ name: String) -> String {
-                let message = "Hello, \\(name)!"
-                // Return greeting
-                return message
-            }
-            """)
-
-            CodeBlockView(language: "python", code: """
-            def fibonacci(n):
-                # Calculate fibonacci
-                if n <= 1:
-                    return n
-                return fibonacci(n - 1) + fibonacci(n - 2)
-            """)
-
-            CodeBlockView(language: nil, code: "npm install express")
-        }
-        .padding()
-    }
-    .background(Color.black)
 }

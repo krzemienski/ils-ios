@@ -3,6 +3,7 @@ import MarkdownUI
 
 /// Collapsible section for displaying AI thinking/reasoning in chat messages.
 /// Shows pulsing brain icon when active, static when complete.
+/// Collapsed by default — expanded shows italic content.
 struct ThinkingSection: View {
     let thinking: String
     let isActive: Bool
@@ -10,12 +11,8 @@ struct ThinkingSection: View {
     @State private var isExpanded = false
     @State private var pulseScale: CGFloat = 1.0
 
-    /// Dark background
-    private let sectionBg = Color(red: 17.0/255.0, green: 24.0/255.0, blue: 39.0/255.0)
-    /// Border color
-    private let borderColor = Color.white.opacity(0.06)
-    /// Brain icon color
-    private let brainColor = Color(red: 168.0/255.0, green: 85.0/255.0, blue: 247.0/255.0)
+    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(thinking: String, isActive: Bool = false) {
         self.thinking = thinking
@@ -24,66 +21,28 @@ struct ThinkingSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header
-            Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }) {
-                HStack(spacing: ILSTheme.spacingS) {
-                    Image(systemName: "brain")
-                        .font(.system(.caption, weight: .medium))
-                        .foregroundColor(brainColor)
-                        .scaleEffect(pulseScale)
-                        .frame(width: 20)
+            headerButton
 
-                    Text(isActive ? "Thinking..." : "Thinking (\(thinking.count.formatted()) chars)")
-                        .font(.system(.subheadline, weight: .medium))
-                        .foregroundColor(ILSTheme.textPrimary)
-
-                    if isActive {
-                        ProgressView()
-                            .scaleEffect(0.6)
-                            .tint(brainColor)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundColor(ILSTheme.textTertiary)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                }
-                .padding(.horizontal, ILSTheme.spacingS)
-                .padding(.vertical, 8)
-            }
-            .buttonStyle(.plain)
-
-            // Expanded thinking text
             if isExpanded {
-                ScrollView {
-                    Markdown(thinking)
-                        .markdownTheme(.ilsChat)
-                        .textSelection(.enabled)
-                }
-                .frame(maxHeight: 400)
-                .padding(.horizontal, ILSTheme.spacingS)
-                .padding(.bottom, ILSTheme.spacingS)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                expandedContent
             }
         }
-        .background(sectionBg)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(borderColor, lineWidth: 1)
+            RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
+                .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(isActive ? "AI thinking process, in progress" : "AI thinking process")
         .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
         .onAppear {
-            if isActive && !UIAccessibility.isReduceMotionEnabled {
+            if isActive && !reduceMotion {
                 startPulsing()
             }
         }
         .onChange(of: isActive) { _, active in
-            if active && !UIAccessibility.isReduceMotionEnabled {
+            if active && !reduceMotion {
                 startPulsing()
             } else {
                 pulseScale = 1.0
@@ -91,25 +50,81 @@ struct ThinkingSection: View {
         }
     }
 
+    // MARK: - Header
+
+    private var headerButton: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isExpanded.toggle()
+            }
+        } label: {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "brain")
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.entityPlugin)
+                    .scaleEffect(pulseScale)
+                    .frame(width: 20)
+
+                if isActive {
+                    Text("Thinking...")
+                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .foregroundStyle(theme.textPrimary)
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .tint(theme.entityPlugin)
+                } else {
+                    Text("Thinking")
+                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .foregroundStyle(theme.textPrimary)
+                    Text("·")
+                        .foregroundStyle(theme.textTertiary)
+                    Text(durationText)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(theme.textTertiary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10))
+                    .foregroundStyle(theme.textTertiary)
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+            }
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.vertical, theme.spacingSM)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Expanded Content
+
+    private var expandedContent: some View {
+        ScrollView {
+            Text(thinking)
+                .font(.system(size: theme.fontCaption).italic())
+                .foregroundStyle(theme.textSecondary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: 400)
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.bottom, theme.spacingSM)
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+
+    // MARK: - Helpers
+
+    private var durationText: String {
+        let charCount = thinking.count
+        if charCount > 1000 {
+            return "\(charCount / 1000)k chars"
+        }
+        return "\(charCount) chars"
+    }
+
     private func startPulsing() {
         withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
             pulseScale = 1.15
         }
     }
-}
-
-#Preview {
-    VStack(spacing: 12) {
-        ThinkingSection(
-            thinking: "Let me analyze the code structure and identify the best approach for implementing this feature. I need to consider the existing patterns and ensure backward compatibility...",
-            isActive: true
-        )
-
-        ThinkingSection(
-            thinking: "Let me analyze the code structure and identify the **best approach** for implementing this feature.\n\n- Consider existing patterns\n- Ensure backward compatibility\n- Check for `edge cases`",
-            isActive: false
-        )
-    }
-    .padding()
-    .background(Color.black)
 }
