@@ -61,7 +61,7 @@ created: 2026-02-06T18:40:00-05:00
   - **Commit**: `fix(ios): wire MCP CRUD UI to backend` (only if changes needed)
   - _Requirements: FR-9, AC-7.2 through AC-7.6_
 
-- [ ] 1.3 Verify Skills detail + search + install is wired
+- [x] 1.3 Verify Skills detail + search + install is wired
   - **Do**:
     1. Read `ILSApp/ILSApp/Views/Skills/SkillsListView.swift` — confirm detail navigation, search UI, install button
     2. Read `ILSApp/ILSApp/ViewModels/SkillsViewModel.swift` — confirm `searchGitHub()`, `installFromGitHub()`, `deleteSkill()`
