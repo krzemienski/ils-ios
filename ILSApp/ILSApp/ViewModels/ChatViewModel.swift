@@ -48,11 +48,11 @@ class ChatViewModel: ObservableObject {
     private var connectingTimer: Task<Void, Never>?
 
     // MARK: - Shared Decoder
-    private let jsonDecoder = JSONDecoder()
+    nonisolated private let jsonDecoder = JSONDecoder()
 
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
-    private var batchTimer: Timer?
+    private var batchTask: Task<Void, Never>?
     private let batchInterval: TimeInterval = 0.075
     private var lastProcessedMessageIndex = 0
 
@@ -65,8 +65,9 @@ class ChatViewModel: ObservableObject {
     }
 
     deinit {
-        batchTimer?.invalidate()
+        batchTask?.cancel()
         connectingTimer?.cancel()
+        cancellables.removeAll()
     }
 
     private func setupBindings() {
@@ -125,13 +126,13 @@ class ChatViewModel: ObservableObject {
 
     /// Start the batch timer to flush pending messages at regular intervals
     private func startBatchTimer() {
-        guard batchTimer == nil else { return }
+        guard batchTask == nil else { return }
 
-        batchTimer = Timer.scheduledTimer(
-            withTimeInterval: batchInterval,
-            repeats: true
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        batchTask = Task { [weak self] in
+            let intervalNanos = UInt64((self?.batchInterval ?? 0.075) * 1_000_000_000)
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: intervalNanos)
+                guard !Task.isCancelled else { break }
                 self?.flushPendingMessages()
             }
         }
@@ -139,8 +140,8 @@ class ChatViewModel: ObservableObject {
 
     /// Stop the batch timer
     private func stopBatchTimer() {
-        batchTimer?.invalidate()
-        batchTimer = nil
+        batchTask?.cancel()
+        batchTask = nil
     }
 
     private func startConnectingTimer() {
@@ -354,7 +355,7 @@ class ChatViewModel: ObservableObject {
             switch streamMessage {
             case .system(let sysMsg):
                 // Could update session ID from init
-                print("Session initialized: \(sysMsg.data.sessionId)")
+                AppLogger.shared.info("Session initialized: \(sysMsg.data.sessionId)", category: "chat")
 
             case .assistant(let assistantMsg):
                 for block in assistantMsg.content {
