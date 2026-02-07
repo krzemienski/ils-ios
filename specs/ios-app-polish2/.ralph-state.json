@@ -1,0 +1,13 @@
+{
+  "source": "spec",
+  "name": "ios-app-polish2",
+  "basePath": "specs/ios-app-polish2",
+  "phase": "complete",
+  "taskIndex": 63,
+  "totalTasks": 63,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 2,
+  "maxGlobalIterations": 100,
+  "awaitingApproval": false
+}
