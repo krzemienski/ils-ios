@@ -161,7 +161,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s06-*.png | wc -l` shows 2
   - _Requirements: US-6, AC-6.1 through AC-6.5_
 
-- [ ] 2.7 S-07: MCP Server Management
+- [x] 2.7 S-07: MCP Server Management
   - **Do**:
     1. Modify selectedTab to "mcp", build, launch
     2. Capture `s07-mcp-list.png` — list of configured MCP servers
@@ -174,7 +174,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s07-*.png | wc -l` shows 3+
   - _Requirements: US-7, AC-7.1 through AC-7.6_
 
-- [ ] 2.8 S-08: Settings Configuration
+- [x] 2.8 S-08: Settings Configuration
   - **Do**:
     1. Modify selectedTab to "settings", build, launch
     2. Capture `s08-settings.png` — clean layout, no SSH/Fleet/Config Management
@@ -186,7 +186,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s08-*.png | wc -l` shows 2
   - _Requirements: US-12, AC-12.1 through AC-12.5_
 
-- [ ] 2.9 S-09: Plugin Management
+- [x] 2.9 S-09: Plugin Management
   - **Do**:
     1. Modify selectedTab to "plugins", build, launch
     2. Capture `s09-plugins-list.png` — installed plugins
