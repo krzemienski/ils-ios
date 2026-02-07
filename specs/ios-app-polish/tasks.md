@@ -198,7 +198,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s09-*.png | wc -l` shows 2+
   - _Requirements: US-8, AC-8.1 through AC-8.7_
 
-- [ ] 2.10 S-10: Skill Discovery & Install
+- [x] 2.10 S-10: Skill Discovery & Install
   - **Do**:
     1. Modify selectedTab to "skills", build, launch
     2. Capture `s10-skills-list.png` — installed skills
@@ -210,7 +210,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s10-*.png | wc -l` shows 2+
   - _Requirements: US-9, AC-9.1 through AC-9.5_
 
-- [ ] 2.11 S-11: Projects & Project Sessions
+- [x] 2.11 S-11: Projects & Project Sessions
   - **Do**:
     1. Modify selectedTab to "projects", build, launch
     2. Capture `s11-projects-list.png` — filesystem projects, no "+" button, no delete
@@ -222,7 +222,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s11-*.png | wc -l` shows 2
   - _Requirements: US-10, AC-10.1 through AC-10.6_
 
-- [ ] 2.12 S-12: Config Management
+- [x] 2.12 S-12: Config Management
   - **Do**:
     1. Modify selectedTab to "settings", build, launch
     2. Navigate to config editor section (if present in settings)
@@ -234,7 +234,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s12-*.png | wc -l` shows 1+
   - _Requirements: US-12 (config subset)_
 
-- [ ] 2.13 S-13: Cancel Active Stream
+- [x] 2.13 S-13: Cancel Active Stream
   - **Do**:
     1. Open active session, send a message that triggers streaming
     2. Capture `s13-streaming.png` — typing indicator + stop button visible
