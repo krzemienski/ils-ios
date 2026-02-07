@@ -278,7 +278,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-9.1, AC-9.2, AC-9.3, AC-9.4, AC-9.5, AC-9.6, AC-9.7, AC-9.8, FR-12_
   - _Design: Section 4.2 — Home Dashboard_
 
-- [ ] V5 [VERIFY] Phase 4 checkpoint: dashboard with backend data
+- [x] V5 [VERIFY] Phase 4 checkpoint: dashboard with backend data
   - **Do**:
     1. Build, install, launch with backend running
     2. Verify home screen shows with welcome message, recent sessions, health stats
@@ -292,7 +292,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 5: New Session Creation (US-10)
 
-- [ ] 5.1 Build NewSessionSheet
+- [x] 5.1 Build NewSessionSheet
   - **Do**:
     1. Rewrite `ILSApp/ILSApp/Views/Sessions/NewSessionView.swift` — modal sheet with `.presentationDetents([.medium])`
     2. Project directory picker: dropdown populated from `ProjectsViewModel` (GET /projects)
@@ -309,7 +309,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-10.1, AC-10.2, AC-10.3, AC-10.4, AC-10.5, AC-10.6, AC-10.7, FR-13_
   - _Design: Section 4.4 — New Session Sheet_
 
-- [ ] V6 [VERIFY] Quality checkpoint: build + new session flow
+- [x] V6 [VERIFY] Quality checkpoint: build + new session flow
   - **Do**: Build app, verify new session creation compiles and all views integrate
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
   - **Done when**: Build succeeds

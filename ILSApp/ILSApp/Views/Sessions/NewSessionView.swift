@@ -4,21 +4,18 @@ import ILSShared
 struct NewSessionView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme: any AppTheme
+
     @StateObject private var projectsViewModel = ProjectsViewModel()
     @State private var sessionName = ""
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"
     @State private var permissionMode = "default"
     @State private var isCreating = false
-
-    // New config fields for CLI parity
     @State private var systemPrompt = ""
     @State private var maxBudget = ""
     @State private var maxTurns = ""
     @State private var showAdvanced = false
-    @State private var fallbackModel = ""
-    @State private var includePartialMessages = false
-    @State private var continueConversation = false
     @State private var showTemplates = false
 
     let onCreated: (ChatSession) -> Void
@@ -30,131 +27,27 @@ struct NewSessionView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Button {
-                        showTemplates = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "doc.on.doc")
-                                .foregroundColor(EntityType.sessions.color)
-                            Text("Start from Template")
-                                .foregroundColor(ILSTheme.primaryText)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(ILSTheme.tertiaryText)
-                        }
-                    }
+            ScrollView {
+                VStack(spacing: theme.spacingMD) {
+                    templateButton
+                    sessionDetailsSection
+                    modelSection
+                    permissionsSection
+                    systemPromptSection
+                    limitsSection
+                    advancedSection
+                    createButton
                 }
-
-                Section("Session Details") {
-                    TextField("Session Name (optional)", text: $sessionName)
-                        .accessibilityIdentifier("session-name-field")
-                        .accessibilityLabel("Session name")
-
-                    Picker("Project", selection: $selectedProject) {
-                        Text("No Project").tag(nil as Project?)
-                        ForEach(projectsViewModel.projects) { project in
-                            Text(project.name).tag(project as Project?)
-                        }
-                    }
-                    .accessibilityIdentifier("project-picker")
-                    .accessibilityLabel("Project selection")
-                }
-
-                Section("Model") {
-                    Picker("Model", selection: $selectedModel) {
-                        ForEach(models, id: \.self) { model in
-                            Text(model.capitalized).tag(model)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .accessibilityLabel("Claude model selection")
-                }
-
-                Section("Permissions") {
-                    Picker("Permission Mode", selection: $permissionMode) {
-                        ForEach(permissionModes, id: \.self) { mode in
-                            Text(formattedMode(mode)).tag(mode)
-                        }
-                    }
-                    .accessibilityLabel("Permission mode selection")
-
-                    Text(permissionDescription)
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-
-                Section("System Prompt") {
-                    TextEditor(text: $systemPrompt)
-                        .font(ILSTheme.codeFont)
-                        .frame(minHeight: 80)
-                        .overlay(alignment: .topLeading) {
-                            if systemPrompt.isEmpty {
-                                Text("Custom instructions for Claude (optional)")
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
-                                    .padding(.top, 8)
-                                    .padding(.leading, 4)
-                                    .allowsHitTesting(false)
-                            }
-                        }
-                }
-
-                Section("Limits") {
-                    HStack {
-                        Text("Max Budget (USD)")
-                        Spacer()
-                        TextField("No limit", text: $maxBudget)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 100)
-                            .accessibilityLabel("Maximum budget in US dollars")
-                    }
-
-                    HStack {
-                        Text("Max Turns")
-                        Spacer()
-                        TextField("1", text: $maxTurns)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 100)
-                            .accessibilityLabel("Maximum conversation turns")
-                    }
-                }
-
-                Section {
-                    DisclosureGroup("Advanced Options", isExpanded: $showAdvanced) {
-                        TextField("Fallback Model", text: $fallbackModel)
-                            .accessibilityLabel("Fallback model name")
-
-                        Toggle("Include Partial Messages", isOn: $includePartialMessages)
-                            .accessibilityLabel("Include partial messages in conversation")
-
-                        Toggle("Continue Previous Session", isOn: $continueConversation)
-                            .accessibilityLabel("Continue from previous session")
-                    }
-                }
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM)
             }
-            .scrollContentBackground(.hidden)
-            .background(ILSTheme.background)
+            .background(theme.bgPrimary)
             .navigationTitle("New Session")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .accessibilityIdentifier("cancel-new-session-button")
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if isCreating {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Button("Create") {
-                            createSession()
-                        }
-                        .accessibilityIdentifier("create-session-button")
-                    }
+                        .foregroundStyle(theme.textSecondary)
                 }
             }
             .task {
@@ -165,9 +58,233 @@ struct NewSessionView: View {
                 SessionTemplatesView { template in
                     applyTemplate(template)
                 }
-                .presentationBackground(Color.black)
+                .presentationBackground(theme.bgPrimary)
             }
         }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+
+    // MARK: - Template Button
+
+    @ViewBuilder
+    private var templateButton: some View {
+        Button {
+            showTemplates = true
+        } label: {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "doc.on.doc")
+                    .foregroundStyle(theme.entitySession)
+                Text("Start from Template")
+                    .font(.system(size: theme.fontBody, weight: .medium))
+                    .foregroundStyle(theme.textPrimary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Session Details
+
+    @ViewBuilder
+    private var sessionDetailsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Session Details")
+
+            TextField("Session Name (optional)", text: $sessionName)
+                .font(.system(size: theme.fontBody))
+                .padding(theme.spacingSM)
+                .background(theme.bgSecondary)
+                .foregroundStyle(theme.textPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .accessibilityIdentifier("session-name-field")
+
+            Picker("Project", selection: $selectedProject) {
+                Text("No Project").tag(nil as Project?)
+                ForEach(projectsViewModel.projects) { project in
+                    Text(project.name).tag(project as Project?)
+                }
+            }
+            .tint(theme.accent)
+            .padding(theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .accessibilityIdentifier("project-picker")
+        }
+    }
+
+    // MARK: - Model Selection
+
+    @ViewBuilder
+    private var modelSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Model")
+
+            Picker("Model", selection: $selectedModel) {
+                ForEach(models, id: \.self) { model in
+                    Text(model.capitalized).tag(model)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Claude model selection")
+        }
+    }
+
+    // MARK: - Permissions
+
+    @ViewBuilder
+    private var permissionsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Permissions")
+
+            Picker("Permission Mode", selection: $permissionMode) {
+                ForEach(permissionModes, id: \.self) { mode in
+                    Text(formattedMode(mode)).tag(mode)
+                }
+            }
+            .tint(theme.accent)
+            .padding(theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            Text(permissionDescription)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+        }
+    }
+
+    // MARK: - System Prompt
+
+    @ViewBuilder
+    private var systemPromptSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("System Prompt")
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $systemPrompt)
+                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 80)
+
+                if systemPrompt.isEmpty {
+                    Text("Custom instructions for Claude (optional)")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
+                        .padding(.top, 8)
+                        .padding(.leading, 4)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+    }
+
+    // MARK: - Limits
+
+    @ViewBuilder
+    private var limitsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Limits")
+
+            HStack {
+                Text("Max Budget (USD)")
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(theme.textPrimary)
+                Spacer()
+                TextField("No limit", text: $maxBudget)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.system(size: theme.fontBody, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
+                    .frame(width: 100)
+            }
+            .padding(theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            HStack {
+                Text("Max Turns")
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(theme.textPrimary)
+                Spacer()
+                TextField("1", text: $maxTurns)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.system(size: theme.fontBody, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
+                    .frame(width: 100)
+            }
+            .padding(theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+    }
+
+    // MARK: - Advanced
+
+    @ViewBuilder
+    private var advancedSection: some View {
+        DisclosureGroup("Advanced Options", isExpanded: $showAdvanced) {
+            VStack(spacing: theme.spacingSM) {
+                Text("Advanced options available when connected")
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textTertiary)
+            }
+        }
+        .font(.system(size: theme.fontBody))
+        .foregroundStyle(theme.textSecondary)
+        .tint(theme.textTertiary)
+        .padding(theme.spacingSM)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+    }
+
+    // MARK: - Create Button
+
+    @ViewBuilder
+    private var createButton: some View {
+        Button {
+            createSession()
+        } label: {
+            HStack(spacing: theme.spacingSM) {
+                if isCreating {
+                    ProgressView()
+                        .tint(theme.textOnAccent)
+                        .controlSize(.small)
+                } else {
+                    Image(systemName: "plus.circle.fill")
+                }
+                Text(isCreating ? "Creating..." : "Create Session")
+                    .font(.system(size: theme.fontBody, weight: .semibold))
+            }
+            .foregroundStyle(theme.textOnAccent)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.accent)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        }
+        .disabled(isCreating)
+        .opacity(isCreating ? 0.7 : 1.0)
+        .padding(.top, theme.spacingSM)
+        .accessibilityIdentifier("create-session-button")
+    }
+
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .foregroundStyle(theme.textTertiary)
+            .textCase(.uppercase)
     }
 
     private func formattedMode(_ mode: String) -> String {
@@ -233,17 +350,13 @@ struct NewSessionView: View {
         }
     }
 
-    /// Build ChatOptions from the form state for use when sending the first message
     func buildChatOptions() -> ChatOptions {
         ChatOptions(
             model: selectedModel,
             permissionMode: PermissionMode(rawValue: permissionMode),
             maxTurns: Int(maxTurns),
             maxBudgetUSD: Double(maxBudget),
-            systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
-            continueConversation: continueConversation ? true : nil,
-            includePartialMessages: includePartialMessages ? true : nil,
-            fallbackModel: fallbackModel.isEmpty ? nil : fallbackModel
+            systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt
         )
     }
 
@@ -259,4 +372,5 @@ struct NewSessionView: View {
 
 #Preview {
     NewSessionView { _ in }
+        .environment(\.theme, ObsidianTheme())
 }
