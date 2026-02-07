@@ -13,6 +13,7 @@ struct TunnelSettingsView: View {
     @State private var notInstalled = false
     @State private var installURL: String?
     @State private var showCopiedToast = false
+    @State private var toastTask: Task<Void, Never>?
     @State private var qrImage: UIImage?
 
     // Custom domain fields
@@ -48,6 +49,9 @@ struct TunnelSettingsView: View {
             } else {
                 qrImage = nil
             }
+        }
+        .onDisappear {
+            toastTask?.cancel()
         }
     }
 
@@ -85,6 +89,7 @@ struct TunnelSettingsView: View {
                     ))
                     .labelsHidden()
                     .tint(ILSTheme.success)
+                    .accessibilityLabel("Enable quick tunnel")
                 }
             }
 
@@ -140,7 +145,10 @@ struct TunnelSettingsView: View {
             Button {
                 UIPasteboard.general.string = url
                 showCopiedToast = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                toastTask?.cancel()
+                toastTask = Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    guard !Task.isCancelled else { return }
                     showCopiedToast = false
                 }
             } label: {
@@ -148,6 +156,7 @@ struct TunnelSettingsView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            .accessibilityLabel("Copy tunnel URL to clipboard")
 
             // QR Code (pre-generated, not computed in view body)
             if let qrImage = qrImage {
@@ -230,6 +239,7 @@ struct TunnelSettingsView: View {
                             .foregroundColor(ILSTheme.secondaryText)
                         SecureField("Cloudflare API token", text: $cfToken)
                             .textContentType(.password)
+                            .accessibilityLabel("Cloudflare API token")
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -239,6 +249,7 @@ struct TunnelSettingsView: View {
                         TextField("my-ils-tunnel", text: $cfTunnelName)
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
+                            .accessibilityLabel("Tunnel name")
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -249,6 +260,7 @@ struct TunnelSettingsView: View {
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
                             .keyboardType(.URL)
+                            .accessibilityLabel("Custom domain")
                     }
                 }
                 .padding(.vertical, 4)

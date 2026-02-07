@@ -53,7 +53,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - **Done when**: BUILD SUCCEEDED with zero errors
   - **Commit**: `chore(audit): pass quality checkpoint after core service fixes` (only if fixes needed)
 
-- [ ] 1.5 Fix ChatViewModel: Timer to Task, cancellables cleanup, nonisolated decoder, print to AppLogger
+- [x] 1.5 Fix ChatViewModel: Timer to Task, cancellables cleanup, nonisolated decoder, print to AppLogger
   - **Do**:
     1. Open `ChatViewModel.swift`
     2. **M-MEM-1**: Replace `Timer.scheduledTimer` (line 130) with Task-based timer. Change `private var batchTimer: Timer?` to `private var batchTask: Task<Void, Never>?`. In `startBatchTimer()`: create Task with `[weak self]` that loops with `Task.sleep`. In `stopBatchTimer()`: cancel task and nil it
@@ -79,7 +79,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-1, FR-3 | AC-1.1, AC-1.3_
   - _Design: SystemMetricsViewModel.swift section_
 
-- [ ] 1.7 Fix TunnelSettingsView: DispatchQueue to Task, accessibility labels
+- [x] 1.7 Fix TunnelSettingsView: DispatchQueue to Task, accessibility labels
   - **Do**:
     1. Open `TunnelSettingsView.swift`
     2. **M-MEM-2**: Replace `DispatchQueue.main.asyncAfter` (line 143) with `@State private var toastTask: Task<Void, Never>?` pattern. Cancel previous, create new Task with `Task.sleep(for: .seconds(2))`, guard `!Task.isCancelled`. Add `.onDisappear { toastTask?.cancel() }`
