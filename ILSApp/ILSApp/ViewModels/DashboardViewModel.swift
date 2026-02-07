@@ -59,7 +59,7 @@ class DashboardViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to load stats: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load stats: \(error.localizedDescription)", category: "dashboard")
         }
     }
 
@@ -73,7 +73,7 @@ class DashboardViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to load recent activity: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load recent activity: \(error.localizedDescription)", category: "dashboard")
         }
     }
 

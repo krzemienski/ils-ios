@@ -211,7 +211,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
 
 After POC validated, clean up any rough edges.
 
-- [ ] 2.1 Review and normalize AppLogger categories across all modified files
+- [x] 2.1 Review and normalize AppLogger categories across all modified files
   - **Do**:
     1. Grep all `AppLogger.shared` calls across the codebase
     2. Ensure consistent category naming: `"api"` for APIClient, `"sse"` for SSEClient, `"app"` for ILSAppApp, `"chat"` for ChatViewModel, `"ui"` for Views
@@ -235,7 +235,7 @@ After POC validated, clean up any rough edges.
   - **Commit**: `refactor(memory): verify Task cancellation paths`
   - _Requirements: FR-5, FR-6 | AC-2.1, AC-2.2_
 
-- [ ] 2.3 [VERIFY] Quality checkpoint: clean build after refactoring
+- [x] 2.3 [VERIFY] Quality checkpoint: clean build after refactoring
   - **Do**: Full clean build to verify refactoring introduced no issues
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E '(BUILD SUCCEEDED|BUILD FAILED|error:)'`
   - **Done when**: BUILD SUCCEEDED with zero errors

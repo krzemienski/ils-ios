@@ -72,7 +72,7 @@ class SessionsViewModel: ObservableObject {
                 }
             } catch {
                 // External session scan is best-effort — don't fail the whole load
-                AppLogger.shared.warning("External session scan failed: \(error.localizedDescription)")
+                AppLogger.shared.warning("External session scan failed: \(error.localizedDescription)", category: "sessions")
             }
 
             // Sort by last active date, most recent first
@@ -85,7 +85,7 @@ class SessionsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to load sessions: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load sessions: \(error.localizedDescription)", category: "sessions")
         }
 
         isLoading = false
@@ -120,7 +120,7 @@ class SessionsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to create session: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to create session: \(error.localizedDescription)", category: "sessions")
         }
         return nil
     }
@@ -139,7 +139,7 @@ class SessionsViewModel: ObservableObject {
             sessions.removeAll { $0.id == session.id }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to delete session: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to delete session: \(error.localizedDescription)", category: "sessions")
         }
     }
 
@@ -153,7 +153,7 @@ class SessionsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to fork session: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to fork session: \(error.localizedDescription)", category: "sessions")
         }
         return nil
     }

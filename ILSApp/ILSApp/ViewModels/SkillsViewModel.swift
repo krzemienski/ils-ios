@@ -93,7 +93,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to load skills: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load skills: \(error.localizedDescription)", category: "skills")
         }
 
         isLoading = false
@@ -124,7 +124,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to create skill '\(name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to create skill '\(name)': \(error.localizedDescription)", category: "skills")
         }
         return nil
     }
@@ -143,7 +143,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to update skill '\(skill.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to update skill '\(skill.name)': \(error.localizedDescription)", category: "skills")
         }
         return nil
     }
@@ -156,7 +156,7 @@ class SkillsViewModel: ObservableObject {
             rebuildSearchCache()
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to delete skill '\(skill.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to delete skill '\(skill.name)': \(error.localizedDescription)", category: "skills")
         }
     }
 
@@ -169,7 +169,7 @@ class SkillsViewModel: ObservableObject {
             await loadSkills(refresh: true)
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to toggle skill '\(skill.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to toggle skill '\(skill.name)': \(error.localizedDescription)", category: "skills")
         }
     }
 
@@ -187,7 +187,7 @@ class SkillsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("GitHub search failed: \(error.localizedDescription)")
+            AppLogger.shared.error("GitHub search failed: \(error.localizedDescription)", category: "skills")
         }
         isSearchingGitHub = false
     }
@@ -202,7 +202,7 @@ class SkillsViewModel: ObservableObject {
             return true
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to install skill from GitHub: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to install skill from GitHub: \(error.localizedDescription)", category: "skills")
             return false
         }
     }

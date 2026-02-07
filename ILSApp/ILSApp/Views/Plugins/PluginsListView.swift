@@ -313,7 +313,7 @@ struct MarketplaceView: View {
                 rebuildCategories()
             }
         } catch {
-            AppLogger.shared.error("Failed to load marketplaces: \(error)")
+            AppLogger.shared.error("Failed to load marketplaces: \(error)", category: "ui")
         }
         isLoading = false
     }

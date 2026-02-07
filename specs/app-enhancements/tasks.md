@@ -262,7 +262,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
 
 Focus: Add SSE event IDs (server + client), implement exponential backoff, replace Timer with Task batching, improve auto-scroll, add streaming stats.
 
-- [ ] 3.1 Add SSE event IDs and ring buffer to StreamingService (backend)
+- [x] 3.1 Add SSE event IDs and ring buffer to StreamingService (backend)
   - **Do**:
     1. In `StreamingService.swift`, add `EventCounter` actor with `func next() -> Int`
     2. Add `EventBuffer` actor with `store(id:data:)` and `eventsSince(_ lastId:)` — ring buffer capacity 1000
@@ -281,7 +281,7 @@ Focus: Add SSE event IDs (server + client), implement exponential backoff, repla
   - _Requirements: FR-14, FR-16, FR-25_
   - _Design: Phase 3 — 3.1 SSE Event IDs, Phase 4 — 4.4 StreamingService Refactor_
 
-- [ ] 3.2 Add event ID tracking and exponential backoff to SSEClient (iOS)
+- [x] 3.2 Add event ID tracking and exponential backoff to SSEClient (iOS)
   - **Do**:
     1. In `SSEClient.swift`, add `private var lastEventId: String?`
     2. In `performStream`, add `Last-Event-ID` header when `lastEventId` is set (FR-15)
@@ -296,7 +296,7 @@ Focus: Add SSE event IDs (server + client), implement exponential backoff, repla
   - _Requirements: FR-15, FR-17, FR-45, FR-34 (SSEClient)_
   - _Design: Phase 3 — 3.2 SSEClient Event ID + Exponential Backoff_
 
-- [ ] 3.3 Replace Timer.scheduledTimer with Task-based batching in ChatViewModel
+- [x] 3.3 Replace Timer.scheduledTimer with Task-based batching in ChatViewModel
   - **Do**:
     1. In `ChatViewModel.swift`, replace `batchTimer: Timer?` with `batchTask: Task<Void, Never>?`
     2. Replace `startBatchTimer()` (lines 127-138):
@@ -326,7 +326,7 @@ Focus: Add SSE event IDs (server + client), implement exponential backoff, repla
   - _Requirements: FR-21, FR-35, FR-37, FR-18 (prep)_
   - _Design: Phase 3 — 3.3 Task-Based Batching, 3.5 Streaming Stats_
 
-- [ ] V4 [VERIFY] Quality checkpoint: both builds pass after streaming changes
+- [x] V4 [VERIFY] Quality checkpoint: both builds pass after streaming changes
   - **Do**: Run both backend and iOS builds
   - **Verify**: `swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both builds succeed with zero errors

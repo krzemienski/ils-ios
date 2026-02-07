@@ -498,7 +498,7 @@ struct NewMCPServerView: View {
                     }
                 }
             } catch {
-                AppLogger.shared.error("Failed to create MCP server: \(error)")
+                AppLogger.shared.error("Failed to create MCP server: \(error)", category: "ui")
             }
 
             isCreating = false

@@ -36,21 +36,36 @@ struct SessionsController: RouteCollection {
         transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
     }
 
-    /// List all sessions with optional project filter.
-    /// - Parameter req: Vapor Request with optional projectId query parameter
-    /// - Returns: APIResponse with list of ChatSession objects
+    /// List all sessions with optional project filter and pagination.
+    /// - Parameter req: Vapor Request with optional projectId, page, and limit query parameters
+    /// - Returns: APIResponse with paginated ChatSession objects
     @Sendable
-    func list(req: Request) async throws -> APIResponse<ListResponse<ChatSession>> {
-        var query = SessionModel.query(on: req.db)
-
+    func list(req: Request) async throws -> APIResponse<PaginatedResponse<ChatSession>> {
         // Optional project filter
-        if let projectId = req.query[UUID.self, at: "projectId"] {
-            query = query.filter(\.$project.$id == projectId)
-        }
+        let projectId = req.query[UUID.self, at: "projectId"]
 
-        let sessions = try await query
+        // Pagination parameters
+        let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
+        let offset = (page - 1) * limit
+
+        // Build count query
+        var countQuery = SessionModel.query(on: req.db)
+        if let projectId = projectId {
+            countQuery = countQuery.filter(\.$project.$id == projectId)
+        }
+        let total = try await countQuery.count()
+
+        // Build paginated query
+        var listQuery = SessionModel.query(on: req.db)
+        if let projectId = projectId {
+            listQuery = listQuery.filter(\.$project.$id == projectId)
+        }
+        let sessions = try await listQuery
             .with(\.$project)
             .sort(\.$lastActiveAt, .descending)
+            .offset(offset)
+            .limit(limit)
             .all()
 
         let items = sessions.map { session in
@@ -59,7 +74,7 @@ struct SessionsController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: ListResponse(items: items)
+            data: PaginatedResponse(items: items, total: total, hasMore: offset + items.count < total)
         )
     }
 

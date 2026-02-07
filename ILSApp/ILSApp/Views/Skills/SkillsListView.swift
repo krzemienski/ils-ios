@@ -375,7 +375,7 @@ struct SkillDetailView: View {
                 fullSkill = loadedSkill
             }
         } catch {
-            AppLogger.shared.error("Failed to load full skill: \(error)")
+            AppLogger.shared.error("Failed to load full skill: \(error)", category: "ui")
         }
         isLoading = false
     }
@@ -479,7 +479,7 @@ struct SkillEditorView: View {
                 content = skillContent
             }
         } catch {
-            AppLogger.shared.error("Failed to load skill content: \(error)")
+            AppLogger.shared.error("Failed to load skill content: \(error)", category: "ui")
         }
     }
 
@@ -512,7 +512,7 @@ struct SkillEditorView: View {
                     }
                 }
             } catch {
-                AppLogger.shared.error("Failed to save skill: \(error)")
+                AppLogger.shared.error("Failed to save skill: \(error)", category: "ui")
             }
 
             isSaving = false

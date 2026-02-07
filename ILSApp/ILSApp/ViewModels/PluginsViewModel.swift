@@ -51,7 +51,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to load plugins: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load plugins: \(error.localizedDescription)", category: "plugins")
         }
 
         isLoading = false
@@ -71,7 +71,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to install plugin '\(name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to install plugin '\(name)': \(error.localizedDescription)", category: "plugins")
         }
     }
 
@@ -82,7 +82,7 @@ class PluginsViewModel: ObservableObject {
             plugins.removeAll { $0.id == plugin.id }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)", category: "plugins")
         }
     }
 
@@ -97,7 +97,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to enable plugin '\(plugin.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to enable plugin '\(plugin.name)': \(error.localizedDescription)", category: "plugins")
         }
     }
 
@@ -112,7 +112,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)", category: "plugins")
         }
     }
 
@@ -129,7 +129,7 @@ class PluginsViewModel: ObservableObject {
                 searchResults = data.items
             }
         } catch {
-            AppLogger.shared.error("Plugin search failed: \(error.localizedDescription)")
+            AppLogger.shared.error("Plugin search failed: \(error.localizedDescription)", category: "plugins")
         }
         isSearchingMarketplace = false
     }
@@ -142,7 +142,7 @@ class PluginsViewModel: ObservableObject {
             return true
         } catch {
             self.error = error
-            AppLogger.shared.error("Failed to add marketplace: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to add marketplace: \(error.localizedDescription)", category: "plugins")
             return false
         }
     }

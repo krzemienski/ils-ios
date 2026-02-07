@@ -16,6 +16,8 @@ struct ChatView: View {
     @State private var navigateToForked: ChatSession?
     @State private var showDeleteConfirmation = false
     @State private var messageToDelete: ChatMessage?
+    @State private var isUserScrolledUp = false
+    @State private var showJumpToBottom = false
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
 
@@ -128,8 +130,13 @@ struct ChatView: View {
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
-            StreamingStatusView(statusText: statusText, connectionState: viewModel.connectionState)
-                .transition(.move(edge: .top).combined(with: .opacity))
+            StreamingStatusView(
+                statusText: statusText,
+                connectionState: viewModel.connectionState,
+                tokenCount: viewModel.streamTokenCount,
+                elapsedSeconds: viewModel.streamElapsedSeconds
+            )
+            .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 
@@ -142,13 +149,17 @@ struct ChatView: View {
                 // Only auto-scroll for new messages, not when loading history
                 // History loading replaces messages (goes from 0 to N), new messages append (increment by 1)
                 let isNewMessage = oldCount > 0 && newCount == oldCount + 1
-                if isNewMessage {
+                if isNewMessage && !isUserScrolledUp {
                     scrollToBottom(proxy: proxy)
                 }
             }
             .onChange(of: viewModel.isStreaming) { _, isStreaming in
-                if isStreaming {
+                if isStreaming && !isUserScrolledUp {
                     scrollToBottom(proxy: proxy)
+                }
+                // Hide FAB when streaming stops
+                if !isStreaming {
+                    withAnimation { showJumpToBottom = false }
                 }
             }
             .onChange(of: viewModel.isLoadingHistory) { wasLoading, isLoading in
@@ -158,11 +169,41 @@ struct ChatView: View {
                 }
             }
             .simultaneousGesture(
-                // Dismiss keyboard on scroll
-                DragGesture().onChanged { _ in
+                // Dismiss keyboard on scroll and detect user scroll
+                DragGesture().onChanged { gesture in
                     isInputFocused = false
+                    // Detect upward scroll (user scrolling to see older messages)
+                    if gesture.translation.height > 10 {
+                        isUserScrolledUp = true
+                        // Show FAB if streaming
+                        if viewModel.isStreaming {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showJumpToBottom = true
+                            }
+                        }
+                    }
                 }
             )
+            .overlay(alignment: .bottomTrailing) {
+                if showJumpToBottom {
+                    Button(action: {
+                        isUserScrolledUp = false
+                        withAnimation { showJumpToBottom = false }
+                        scrollToBottom(proxy: proxy)
+                    }) {
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(ILSTheme.accent)
+                            .background(Circle().fill(ILSTheme.secondaryBackground))
+                            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                    }
+                    .padding(.trailing, ILSTheme.spacingM)
+                    .padding(.bottom, ILSTheme.spacingM)
+                    .transition(.scale.combined(with: .opacity))
+                    .accessibilityLabel("Jump to bottom")
+                    .accessibilityIdentifier("jump-to-bottom-button")
+                }
+            }
         }
     }
 
@@ -379,6 +420,8 @@ struct ChatInputView: View {
 struct StreamingStatusView: View {
     let statusText: String
     let connectionState: SSEClient.ConnectionState
+    var tokenCount: Int = 0
+    var elapsedSeconds: Double = 0
 
     var body: some View {
         HStack(spacing: ILSTheme.spacingS) {
@@ -404,6 +447,13 @@ struct StreamingStatusView: View {
                 .accessibilityIdentifier("streaming-status-text")
 
             Spacer()
+
+            if tokenCount > 0 {
+                Text("\(tokenCount) tokens • \(String(format: "%.1f", elapsedSeconds))s")
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(ILSTheme.tertiaryText)
+                    .accessibilityIdentifier("streaming-stats-text")
+            }
         }
         .padding(.horizontal)
         .padding(.vertical, ILSTheme.spacingXS)
