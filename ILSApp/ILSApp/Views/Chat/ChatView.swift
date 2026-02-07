@@ -20,6 +20,7 @@ struct ChatView: View {
     @State private var showJumpToBottom = false
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.theme) private var theme: any AppTheme
 
     /// Whether this is an external (read-only) session
     private var isExternalSession: Bool {
@@ -30,18 +31,18 @@ struct ChatView: View {
         VStack(spacing: 0) {
             statusBanner
             messagesScrollView
-            Divider()
+            Divider().overlay(theme.divider)
             if isExternalSession {
                 externalSessionBanner
             } else {
                 inputBar
             }
         }
-        .background(ILSTheme.background)
+        .background(theme.bgPrimary)
         .navigationTitle(session.name ?? "Chat")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color.black, for: .navigationBar)
+        .toolbarBackground(theme.bgPrimary, for: .navigationBar)
         .toolbar { toolbarContent }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteView { command in
@@ -49,12 +50,12 @@ struct ChatView: View {
                 showCommandPalette = false
                 isInputFocused = true
             }
-            .presentationBackground(Color.black)
+            .presentationBackground(theme.bgPrimary)
         }
         .sheet(isPresented: $showSessionInfo) {
             SessionInfoView(session: session)
                 .environmentObject(appState)
-                .presentationBackground(Color.black)
+                .presentationBackground(theme.bgPrimary)
         }
         .task {
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
@@ -130,7 +131,7 @@ struct ChatView: View {
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
-            StreamingStatusView(
+            StreamingStatusBanner(
                 statusText: statusText,
                 connectionState: viewModel.connectionState,
                 tokenCount: viewModel.streamTokenCount,
@@ -146,8 +147,6 @@ struct ChatView: View {
                 messagesContent
             }
             .onChange(of: viewModel.messages.count) { oldCount, newCount in
-                // Only auto-scroll for new messages, not when loading history
-                // History loading replaces messages (goes from 0 to N), new messages append (increment by 1)
                 let isNewMessage = oldCount > 0 && newCount == oldCount + 1
                 if isNewMessage && !isUserScrolledUp {
                     scrollToBottom(proxy: proxy)
@@ -157,25 +156,20 @@ struct ChatView: View {
                 if isStreaming && !isUserScrolledUp {
                     scrollToBottom(proxy: proxy)
                 }
-                // Hide FAB when streaming stops
                 if !isStreaming {
                     withAnimation { showJumpToBottom = false }
                 }
             }
             .onChange(of: viewModel.isLoadingHistory) { wasLoading, isLoading in
-                // Scroll to bottom after history finishes loading
                 if wasLoading && !isLoading && !viewModel.messages.isEmpty {
                     scrollToBottom(proxy: proxy)
                 }
             }
             .simultaneousGesture(
-                // Dismiss keyboard on scroll and detect user scroll
                 DragGesture().onChanged { gesture in
                     isInputFocused = false
-                    // Detect upward scroll (user scrolling to see older messages)
                     if gesture.translation.height > 10 {
                         isUserScrolledUp = true
-                        // Show FAB if streaming
                         if viewModel.isStreaming {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 showJumpToBottom = true
@@ -186,46 +180,56 @@ struct ChatView: View {
             )
             .overlay(alignment: .bottomTrailing) {
                 if showJumpToBottom {
-                    Button(action: {
+                    Button {
                         isUserScrolledUp = false
                         withAnimation { showJumpToBottom = false }
                         scrollToBottom(proxy: proxy)
-                    }) {
+                    } label: {
                         Image(systemName: "chevron.down.circle.fill")
-                            .font(ILSTheme.fabIconFont)
-                            .foregroundColor(ILSTheme.accent)
-                            .background(Circle().fill(ILSTheme.secondaryBackground))
+                            .font(.system(size: 28))
+                            .foregroundStyle(theme.accent)
+                            .background(Circle().fill(theme.bgSecondary))
                             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
                     }
-                    .padding(.trailing, ILSTheme.spacingM)
-                    .padding(.bottom, ILSTheme.spacingM)
+                    .padding(.trailing, theme.spacingMD)
+                    .padding(.bottom, theme.spacingMD)
                     .transition(.scale.combined(with: .opacity))
                     .accessibilityLabel("Jump to bottom")
-                    .accessibilityIdentifier("jump-to-bottom-button")
                 }
             }
         }
     }
 
     private var messagesContent: some View {
-        LazyVStack(alignment: .leading, spacing: ILSTheme.spacingM) {
+        LazyVStack(alignment: .leading, spacing: theme.spacingMD) {
             ForEach(viewModel.messages) { message in
-                MessageView(
-                    message: message,
-                    onRetry: { msg in
-                        viewModel.retryMessage(msg, projectId: session.projectId)
-                    },
-                    onDelete: { msg in
-                        messageToDelete = msg
-                        showDeleteConfirmation = true
-                    }
-                )
-                .id(message.id)
+                if message.isUser {
+                    UserMessageCard(
+                        message: message,
+                        onDelete: { msg in
+                            messageToDelete = msg
+                            showDeleteConfirmation = true
+                        }
+                    )
+                } else {
+                    AssistantCard(
+                        message: message,
+                        onRetry: { msg in
+                            viewModel.retryMessage(msg, projectId: session.projectId)
+                        },
+                        onDelete: { msg in
+                            messageToDelete = msg
+                            showDeleteConfirmation = true
+                        }
+                    )
+                }
             }
 
             if shouldShowTypingIndicator() {
-                TypingIndicatorView()
-                    .id("typing-indicator")
+                StreamingIndicatorView(
+                    statusText: viewModel.statusText
+                )
+                .id("typing-indicator")
             }
 
             Color.clear
@@ -240,7 +244,7 @@ struct ChatView: View {
     }
 
     private var inputBar: some View {
-        ChatInputView(
+        ChatInputBar(
             text: $inputText,
             isStreaming: viewModel.isStreaming,
             isDisabled: viewModel.isLoadingHistory,
@@ -253,21 +257,21 @@ struct ChatView: View {
 
     /// Banner shown for external (read-only) sessions
     private var externalSessionBanner: some View {
-        HStack(spacing: ILSTheme.spacingS) {
+        HStack(spacing: theme.spacingSM) {
             Image(systemName: "terminal")
-                .foregroundColor(ILSTheme.accent)
+                .foregroundStyle(theme.accent)
             Text("Read-only Claude Code session")
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textSecondary)
             Spacer()
             if let count = session.messageCount as Int?, count > 0 {
                 Text("\(count) messages")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textTertiary)
             }
         }
         .padding()
-        .background(ILSTheme.secondaryBackground)
+        .background(theme.bgSecondary)
     }
 
     @ToolbarContentBuilder
@@ -275,14 +279,14 @@ struct ChatView: View {
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 if !isExternalSession {
-                    Button(action: {
+                    Button {
                         Task {
                             if let forked = await viewModel.forkSession() {
                                 forkedSession = forked
                                 showForkAlert = true
                             }
                         }
-                    }) {
+                    } label: {
                         Label("Fork Session", systemImage: "arrow.branch")
                     }
                     .accessibilityIdentifier("fork-session-button")
@@ -334,15 +338,14 @@ struct ChatView: View {
         let prompt = inputText
         inputText = ""
 
-        // Add user message locally
         viewModel.addUserMessage(prompt)
-
-        // Send to backend
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId)
     }
 }
 
-struct ChatInputView: View {
+// MARK: - Chat Input Bar
+
+struct ChatInputBar: View {
     @Binding var text: String
     let isStreaming: Bool
     var isDisabled: Bool = false
@@ -352,11 +355,14 @@ struct ChatInputView: View {
     @State private var sendButtonPressed = false
     @State private var resetTask: Task<Void, Never>?
 
+    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
-        HStack(spacing: ILSTheme.spacingS) {
+        HStack(spacing: theme.spacingSM) {
             Button(action: onCommandPalette) {
                 Image(systemName: "command")
-                    .foregroundColor(isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
+                    .foregroundStyle(isDisabled ? theme.textTertiary : theme.accent)
             }
             .disabled(isDisabled)
 
@@ -374,23 +380,19 @@ struct ChatInputView: View {
             if isStreaming {
                 Button(action: onCancel) {
                     Image(systemName: "stop.circle.fill")
-                        .foregroundColor(ILSTheme.error)
+                        .foregroundStyle(theme.error)
                 }
                 .accessibilityIdentifier("cancel-button")
             } else {
-                Button(action: {
-                    // Haptic feedback on send
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
+                Button {
+                    HapticManager.notification(.success)
 
-                    // Spring animation (respects reduce motion)
-                    if !UIAccessibility.isReduceMotionEnabled {
+                    if !reduceMotion {
                         sendButtonPressed = true
                     }
                     onSend()
 
-                    // Reset after animation
-                    if !UIAccessibility.isReduceMotionEnabled {
+                    if !reduceMotion {
                         resetTask?.cancel()
                         resetTask = Task {
                             try? await Task.sleep(for: .milliseconds(300))
@@ -398,108 +400,70 @@ struct ChatInputView: View {
                             sendButtonPressed = false
                         }
                     }
-                }) {
+                } label: {
                     Image(systemName: "arrow.up.circle.fill")
-                        .foregroundColor(text.isEmpty || isDisabled ? ILSTheme.tertiaryText : Color(red: 0, green: 122.0/255.0, blue: 255.0/255.0))
+                        .foregroundStyle(text.isEmpty || isDisabled ? theme.textTertiary : theme.accent)
                         .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
-                        .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
+                        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
                 }
                 .disabled(text.isEmpty || isDisabled)
                 .accessibilityIdentifier("send-button")
             }
         }
         .padding()
-        .background(ILSTheme.secondaryBackground)
+        .background(theme.bgSecondary)
         .accessibilityIdentifier("chat-input-bar")
         .onDisappear { resetTask?.cancel() }
     }
 }
 
-// MARK: - Streaming Status View
+// MARK: - Streaming Status Banner
 
-struct StreamingStatusView: View {
+struct StreamingStatusBanner: View {
     let statusText: String
     let connectionState: SSEClient.ConnectionState
     var tokenCount: Int = 0
     var elapsedSeconds: Double = 0
 
+    @Environment(\.theme) private var theme: any AppTheme
+
     var body: some View {
-        HStack(spacing: ILSTheme.spacingS) {
+        HStack(spacing: theme.spacingSM) {
             Group {
                 switch connectionState {
                 case .connecting, .connected:
                     ProgressView()
                         .scaleEffect(0.7)
+                        .tint(theme.accent)
                         .accessibilityIdentifier("streaming-indicator")
                 case .reconnecting:
                     Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundColor(ILSTheme.warning)
+                        .foregroundStyle(theme.warning)
                 case .disconnected:
                     Image(systemName: "wifi.slash")
-                        .foregroundColor(ILSTheme.error)
+                        .foregroundStyle(theme.error)
                 }
             }
             .frame(width: 16, height: 16)
 
             Text(statusText)
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textSecondary)
                 .accessibilityIdentifier("streaming-status-text")
 
             Spacer()
 
             if tokenCount > 0 {
-                Text("\(tokenCount) tokens • \(String(format: "%.1f", elapsedSeconds))s")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
+                Text("\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(theme.textTertiary)
                     .accessibilityIdentifier("streaming-stats-text")
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, ILSTheme.spacingXS)
-        .background(ILSTheme.secondaryBackground)
+        .padding(.vertical, theme.spacingXS)
+        .background(theme.bgSecondary)
         .accessibilityIdentifier("streaming-status-banner")
-    }
-}
-
-// MARK: - Typing Indicator View
-
-struct TypingIndicatorView: View {
-    @State private var animationPhase = 0
-
-    private var shouldAnimate: Bool {
-        !UIAccessibility.isReduceMotionEnabled
-    }
-
-    var body: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: 4) {
-                ForEach(0..<3, id: \.self) { index in
-                    Circle()
-                        .fill(ILSTheme.tertiaryText)
-                        .frame(width: 8, height: 8)
-                        .scaleEffect(shouldAnimate ? (animationPhase == index ? 1.2 : 0.8) : 1.0)
-                        .opacity(shouldAnimate ? (animationPhase == index ? 1.0 : 0.5) : 0.7)
-                }
-            }
-            .padding(.horizontal, ILSTheme.spacingM)
-            .padding(.vertical, ILSTheme.spacingS)
-            .background(ILSTheme.assistantBubble)
-            .cornerRadius(ILSTheme.cornerRadiusMedium)
-
-            Spacer()
-        }
-        .accessibilityIdentifier("typing-indicator")
-        .task {
-            guard shouldAnimate else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 400_000_000)
-                guard !Task.isCancelled else { break }
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    animationPhase = (animationPhase + 1) % 3
-                }
-            }
-        }
     }
 }
 
