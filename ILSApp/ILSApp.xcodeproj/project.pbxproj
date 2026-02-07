@@ -16,6 +16,9 @@
 		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
 		USMC00000000000000001 /* UserMessageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = USMC00000000000000002 /* UserMessageCard.swift */; };
 		ASTC00000000000000001 /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ASTC00000000000000002 /* AssistantCard.swift */; };
+		STIV00000000000000001 /* StreamingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = STIV00000000000000002 /* StreamingIndicatorView.swift */; };
+		ERMV00000000000000001 /* ErrorMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ERMV00000000000000002 /* ErrorMessageView.swift */; };
+		SYMV00000000000000001 /* SystemMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYMV00000000000000002 /* SystemMessageView.swift */; };
 		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
 		000000000000000000000026 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
 		000000000000000000000027 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
@@ -122,6 +125,9 @@
 		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		USMC00000000000000002 /* UserMessageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserMessageCard.swift; sourceTree = "<group>"; };
 		ASTC00000000000000002 /* AssistantCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantCard.swift; sourceTree = "<group>"; };
+		STIV00000000000000002 /* StreamingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingIndicatorView.swift; sourceTree = "<group>"; };
+		ERMV00000000000000002 /* ErrorMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMessageView.swift; sourceTree = "<group>"; };
+		SYMV00000000000000002 /* SystemMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMessageView.swift; sourceTree = "<group>"; };
 		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		000000000000000000000036 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		000000000000000000000037 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
@@ -344,6 +350,9 @@
 				000000000000000000000034 /* MessageView.swift */,
 				USMC00000000000000002 /* UserMessageCard.swift */,
 				ASTC00000000000000002 /* AssistantCard.swift */,
+				STIV00000000000000002 /* StreamingIndicatorView.swift */,
+				ERMV00000000000000002 /* ErrorMessageView.swift */,
+				SYMV00000000000000002 /* SystemMessageView.swift */,
 				MARKDOWN0000000000000002 /* MarkdownTextView.swift */,
 				000000000000000000000035 /* CommandPaletteView.swift */,
 				000000000000000000000036 /* ChatView.swift */,
@@ -672,6 +681,9 @@
 				000000000000000000000024 /* MessageView.swift in Sources */,
 				USMC00000000000000001 /* UserMessageCard.swift in Sources */,
 				ASTC00000000000000001 /* AssistantCard.swift in Sources */,
+				STIV00000000000000001 /* StreamingIndicatorView.swift in Sources */,
+				ERMV00000000000000001 /* ErrorMessageView.swift in Sources */,
+				SYMV00000000000000001 /* SystemMessageView.swift in Sources */,
 				MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */,
 				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
 				000000000000000000000026 /* ChatView.swift in Sources */,
