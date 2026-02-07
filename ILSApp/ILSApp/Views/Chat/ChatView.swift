@@ -152,7 +152,7 @@ struct ChatView: View {
                     .id(message.id)
             }
 
-            if shouldShowTypingIndicator {
+            if shouldShowTypingIndicator() {
                 TypingIndicatorView()
                     .id("typing-indicator")
             }
@@ -164,7 +164,7 @@ struct ChatView: View {
         .padding()
     }
 
-    private var shouldShowTypingIndicator: Bool {
+    private func shouldShowTypingIndicator() -> Bool {
         viewModel.isStreaming && (viewModel.currentStreamingMessage?.text.isEmpty ?? true)
     }
 
@@ -279,6 +279,7 @@ struct ChatInputView: View {
     let onCancel: () -> Void
     let onCommandPalette: () -> Void
     @State private var sendButtonPressed = false
+    @State private var resetTask: Task<Void, Never>?
 
     var body: some View {
         HStack(spacing: ILSTheme.spacingS) {
@@ -319,7 +320,10 @@ struct ChatInputView: View {
 
                     // Reset after animation
                     if !UIAccessibility.isReduceMotionEnabled {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        resetTask?.cancel()
+                        resetTask = Task {
+                            try? await Task.sleep(for: .milliseconds(300))
+                            guard !Task.isCancelled else { return }
                             sendButtonPressed = false
                         }
                     }
@@ -336,6 +340,7 @@ struct ChatInputView: View {
         .padding()
         .background(ILSTheme.secondaryBackground)
         .accessibilityIdentifier("chat-input-bar")
+        .onDisappear { resetTask?.cancel() }
     }
 }
 

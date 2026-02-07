@@ -1,6 +1,18 @@
 import SwiftUI
 import ILSShared
 
+// MARK: - Static Formatters
+
+enum SessionFormatters {
+    nonisolated(unsafe) static let relative: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
+    }()
+}
+
+// MARK: - Sessions List
+
 struct SessionsListView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SessionsViewModel()
@@ -13,7 +25,7 @@ struct SessionsListView: View {
     @State private var sessionToRename: ChatSession?
     @State private var renameText = ""
 
-    private var filteredSessions: [ChatSession] {
+    private func filteredSessions() -> [ChatSession] {
         guard !searchText.isEmpty else { return viewModel.sessions }
         return viewModel.sessions.filter { session in
             let name = session.name ?? ""
@@ -42,10 +54,10 @@ struct SessionsListView: View {
                     showingNewSession = true
                 }
                 .accessibilityIdentifier("empty-sessions-state")
-            } else if !searchText.isEmpty && filteredSessions.isEmpty {
+            } else if !searchText.isEmpty && filteredSessions().isEmpty {
                 ContentUnavailableView.search(text: searchText)
             } else {
-                ForEach(filteredSessions) { session in
+                ForEach(filteredSessions()) { session in
                     NavigationLink(destination: ChatView(session: session)) {
                         SessionRowView(session: session)
                     }
@@ -194,12 +206,6 @@ struct SessionsListView: View {
 struct SessionRowView: View {
     let session: ChatSession
 
-    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter
-    }()
-
     /// Whether this is an external Claude Code session
     private var isExternal: Bool {
         session.source == .external
@@ -218,12 +224,22 @@ struct SessionRowView: View {
 
     var body: some View {
         HStack(spacing: ILSTheme.spaceM) {
-            // Blue status dot - filled=active, hollow=inactive
-            Circle()
-                .fill(session.status == .active
-                      ? EntityType.sessions.color
-                      : EntityType.sessions.color.opacity(0.3))
-                .frame(width: 10, height: 10)
+            // Status indicator with icon for accessibility
+            HStack(spacing: 3) {
+                Image(systemName: session.status == .active ? "circle.fill" : "circle")
+                    .font(.caption2)
+                    .imageScale(.small)
+                    .foregroundColor(session.status == .active
+                        ? EntityType.sessions.color
+                        : EntityType.sessions.color.opacity(0.3))
+                Text(session.status == .active ? "Active" : "Idle")
+                    .font(ILSTheme.captionFont)
+                    .foregroundColor(session.status == .active
+                        ? EntityType.sessions.color
+                        : ILSTheme.textTertiary)
+            }
+            .accessibilityElement(children: .combine)
+            .frame(width: 50, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -329,7 +345,7 @@ struct SessionRowView: View {
     }
 
     private func formattedDate(_ date: Date) -> String {
-        Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
+        SessionFormatters.relative.localizedString(for: date, relativeTo: Date())
     }
 }
 
