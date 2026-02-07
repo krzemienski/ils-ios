@@ -395,7 +395,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 8: MCP/Skills/Plugins Browser (US-15)
 
-- [ ] 8.1 Build BrowserView with segmented control
+- [x] 8.1 Build BrowserView with segmented control
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Browser/BrowserView.swift` — segmented control (MCP | Skills | Plugins) at top
     2. Each segment: scrollable list with search/filter bar, items showing name, description, status, entity-colored indicator (entityMCP, entitySkill, entityPlugin)
@@ -416,7 +416,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-15.1, AC-15.2, AC-15.3, AC-15.4, AC-15.5, AC-15.6, FR-17_
   - _Design: Section 4.7 — MCP/Skills/Plugins Browser_
 
-- [ ] V9 [VERIFY] Phase 8 checkpoint: browser with backend data
+- [x] V9 [VERIFY] Phase 8 checkpoint: browser with backend data
   - **Do**: Build, navigate to Browser from home quick actions, verify all 3 segments load data
   - **Verify**: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot specs/rebuild-ground-up/evidence/phase8-browser.png && echo "PASS"`
   - **Done when**: MCP (20), Skills (1527), Plugins (78) load and display

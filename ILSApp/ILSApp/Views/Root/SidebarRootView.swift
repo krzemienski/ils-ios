@@ -74,7 +74,7 @@ struct SidebarRootView: View {
                 case .settings:
                     settingsScreen
                 case .browser:
-                    browserPlaceholder
+                    browserScreen
                 }
             }
             .toolbar {
@@ -163,22 +163,8 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var browserPlaceholder: some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "square.grid.2x2.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(theme.entitySkill)
-            Text("MCP / Skills / Plugins")
-                .font(.system(size: theme.fontTitle2, weight: .bold))
-                .foregroundStyle(theme.textPrimary)
-            Text("Built in Phase 8")
-                .font(.system(size: theme.fontBody))
-                .foregroundStyle(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.bgPrimary)
-        .navigationTitle("Browse")
-        .navigationBarTitleDisplayMode(.inline)
+    private var browserScreen: some View {
+        BrowserView()
     }
 
     // MARK: - Sidebar Logic

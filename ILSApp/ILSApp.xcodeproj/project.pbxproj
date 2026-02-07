@@ -104,6 +104,7 @@
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
+		0310AFDDB11F9369D57CC482 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDFF49EABB28E45F8F82637 /* BrowserView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -212,6 +213,7 @@
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
+		8BDFF49EABB28E45F8F82637 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -316,6 +318,7 @@
 		000000000000000000000062 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				BD439714253C97CFE18DD885 /* Browser */,
 				HOMV00000000000000003 /* Home */,
 				000000000000000000000070 /* Sidebar */,
 				000000000000000000000071 /* Chat */,
@@ -585,6 +588,14 @@
 			path = ILSAppUITests;
 			sourceTree = "<group>";
 		};
+		BD439714253C97CFE18DD885 /* Browser */ = {
+			isa = PBXGroup;
+			children = (
+				8BDFF49EABB28E45F8F82637 /* BrowserView.swift */,
+			);
+			path = Browser;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -686,6 +697,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0310AFDDB11F9369D57CC482 /* BrowserView.swift in Sources */,
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
 				000000000000000000000002 /* ContentView.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
