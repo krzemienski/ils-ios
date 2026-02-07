@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SettingsViewModel()
     @State private var serverURL: String = ""
+    @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
     // Available options
     private let availableModels = [
@@ -18,6 +19,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             connectionSection
+            manageSection
             generalSettingsSection
             apiKeySection
             permissionsSection
@@ -97,6 +99,73 @@ struct SettingsView: View {
     }
 
     @ViewBuilder
+    private var manageSection: some View {
+        Section {
+            NavigationLink {
+                SkillsListView()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "sparkles")
+                        .font(.body)
+                        .foregroundColor(EntityType.skills.color)
+                        .frame(width: 28, height: 28)
+                        .background(EntityType.skills.color.opacity(0.15))
+                        .cornerRadius(6)
+                    Text("Skills")
+                    Spacer()
+                    if let stats = viewModel.stats {
+                        Text("\(stats.skills.total)")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            }
+
+            NavigationLink {
+                MCPServerListView()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "server.rack")
+                        .font(.body)
+                        .foregroundColor(EntityType.mcp.color)
+                        .frame(width: 28, height: 28)
+                        .background(EntityType.mcp.color.opacity(0.15))
+                        .cornerRadius(6)
+                    Text("MCP Servers")
+                    Spacer()
+                    if let stats = viewModel.stats {
+                        Text("\(stats.mcpServers.total)")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            }
+
+            NavigationLink {
+                PluginsListView()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "puzzlepiece.extension")
+                        .font(.body)
+                        .foregroundColor(EntityType.plugins.color)
+                        .frame(width: 28, height: 28)
+                        .background(EntityType.plugins.color.opacity(0.15))
+                        .cornerRadius(6)
+                    Text("Plugins")
+                    Spacer()
+                    if let stats = viewModel.stats {
+                        Text("\(stats.plugins.total)")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            }
+        } header: {
+            Text("Manage")
+        }
+    }
+
+    @ViewBuilder
     private var generalSettingsSection: some View {
         Section {
                 if viewModel.isLoadingConfig {
@@ -122,16 +191,8 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Color Scheme Picker (auto-saves on change)
-                    Picker("Color Scheme", selection: Binding(
-                        get: { config.theme?.colorScheme ?? "system" },
-                        set: { newScheme in
-                            Task {
-                                _ = await viewModel.saveConfig(model: config.model ?? "claude-sonnet-4-20250514", colorScheme: newScheme)
-                                await viewModel.loadConfig()
-                            }
-                        }
-                    )) {
+                    // Color Scheme Picker (writes to UserDefaults)
+                    Picker("Color Scheme", selection: $colorSchemePreference) {
                         ForEach(availableColorSchemes, id: \.self) { scheme in
                             Text(scheme.capitalized).tag(scheme)
                         }
@@ -617,7 +678,7 @@ class SettingsViewModel: ObservableObject {
     func loadHealth() async {
         guard let client else { return }
         do {
-            let response: HealthResponse = try await client.get("/health")
+            let response = try await client.getHealth()
             claudeVersion = response.claudeVersion
         } catch {
             // Health endpoint might return plain string — try alternate

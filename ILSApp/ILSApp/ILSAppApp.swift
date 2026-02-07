@@ -5,12 +5,21 @@ import ILSShared
 struct ILSAppApp: App {
     @StateObject private var appState = AppState()
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
+
+    private var computedColorScheme: ColorScheme? {
+        switch colorSchemePreference {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil  // "system" follows device setting
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(computedColorScheme)
                 .onOpenURL { url in
                     appState.handleURL(url)
                 }
@@ -43,7 +52,7 @@ class AppState: ObservableObject {
             }
         }
     }
-    @Published var selectedTab: String = "sessions"
+    @Published var selectedTab: String = "dashboard"
     @Published var isServerConnected: Bool = false
     @Published var serverConnectionInfo: ConnectionResponse?
 
@@ -233,16 +242,15 @@ class AppState: ObservableObject {
         switch url.host {
         case "projects":
             selectedTab = "projects"
-        case "plugins":
-            selectedTab = "plugins"
-        case "mcp":
-            selectedTab = "mcp"
+        case "plugins", "mcp", "skills":
+            // Skills, MCP, and Plugins are now nested under Settings
+            selectedTab = "settings"
         case "sessions":
             selectedTab = "sessions"
         case "settings":
             selectedTab = "settings"
-        case "skills":
-            selectedTab = "skills"
+        case "system":
+            selectedTab = "system"
         default:
             break
         }

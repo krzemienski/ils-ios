@@ -51,6 +51,7 @@
 		4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */; };
 		55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */; };
 		5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */; };
+		5FAB32D6951B376A319E321F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D1A53A5156A8D8D724FDCB /* EntityType.swift */; };
 		6AE1D9AD8FF9BA5D49B1F42D /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7707100E4F96375256BF886C /* KeychainService.swift */; };
 		71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5959087095F5F603D0B826 /* AppLogger.swift */; };
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
@@ -62,11 +63,13 @@
 		FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */; };
 		FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8864999F593F3FBA35FE5962 /* SessionTemplate.swift */; };
 		MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MARKDOWN0000000000000002 /* MarkdownTextView.swift */; };
+		ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBOARD0000000000000002 /* ServerSetupSheet.swift */; };
+		SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSMON0000000000000002 /* SystemMonitorView.swift */; };
+		CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONNBN0000000000000002 /* ConnectionBanner.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
-		ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBOARD0000000000000002 /* ServerSetupSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -131,17 +134,20 @@
 		7707100E4F96375256BF886C /* KeychainService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		A81D47EAE6EBAE3D55FC6D68 /* ConfigurationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
+		B1D1A53A5156A8D8D724FDCB /* EntityType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
 		CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LogViewerView.swift; path = Views/Settings/LogViewerView.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
 		FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
 		FDCBD8D3710FA0856AC734C2 /* CacheManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CacheManager.swift; path = Services/CacheManager.swift; sourceTree = "<group>"; };
 		MARKDOWN0000000000000002 /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
+		ONBOARD0000000000000002 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
+		SYSMON0000000000000002 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
+		CONNBN0000000000000002 /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
-		ONBOARD0000000000000002 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,8 +208,18 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000030 /* ILSTheme.swift */,
+				B1D1A53A5156A8D8D724FDCB /* EntityType.swift */,
+				CONNBN0000000000000003 /* Components */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		CONNBN0000000000000003 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				CONNBN0000000000000002 /* ConnectionBanner.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		000000000000000000000061 /* Services */ = {
@@ -229,6 +245,7 @@
 				000000000000000000000075 /* Skills */,
 				000000000000000000000076 /* Sessions */,
 				000000000000000000000077 /* Settings */,
+				SYSMON0000000000000003 /* System */,
 				5E6482F0DAE42DA0FC678C1F /* ServerConnection */,
 				ONBOARD0000000000000003 /* Onboarding */,
 			);
@@ -376,14 +393,6 @@
 			path = ServerConnection;
 			sourceTree = "<group>";
 		};
-		ONBOARD0000000000000003 /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				ONBOARD0000000000000002 /* ServerSetupSheet.swift */,
-			);
-			path = Onboarding;
-			sourceTree = "<group>";
-		};
 		627DA2386F49F2D249D329AC /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -424,6 +433,22 @@
 			children = (
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		ONBOARD0000000000000003 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				ONBOARD0000000000000002 /* ServerSetupSheet.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		SYSMON0000000000000003 /* System */ = {
+			isa = PBXGroup;
+			children = (
+				SYSMON0000000000000002 /* SystemMonitorView.swift */,
+			);
+			path = System;
 			sourceTree = "<group>";
 		};
 		UITEST00000000000000GRP1 /* ILSAppUITests */ = {
@@ -578,6 +603,9 @@
 				4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */,
 				9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */,
 				ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */,
+				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
+				SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */,
+				CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
