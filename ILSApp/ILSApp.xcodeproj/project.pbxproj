@@ -66,6 +66,8 @@
 		SDBV00000000000000001 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDBV00000000000000002 /* SidebarView.swift */; };
 		SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDSR00000000000000002 /* SidebarSessionRow.swift */; };
 		5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */; };
+		2F023018A4AB7240B1861F58 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
+		E2C1C5D774B7BE4FAE456771 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F023018A4AB7240B1861F58 /* ThemePickerView.swift */; };
 		5FAB32D6951B376A319E321F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D1A53A5156A8D8D724FDCB /* EntityType.swift */; };
 		7103F0FECA16410192750881 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */; };
 		71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5959087095F5F603D0B826 /* AppLogger.swift */; };
@@ -423,6 +425,7 @@
 			children = (
 				000000000000000000000052 /* SettingsView.swift */,
 				FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */,
+				2F023018A4AB7240B1861F58 /* ThemePickerView.swift */,
 				TUNSET0000000000000002 /* TunnelSettingsView.swift */,
 			);
 			path = Settings;
@@ -722,6 +725,7 @@
 				71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */,
 				C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */,
 				5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */,
+				E2C1C5D774B7BE4FAE456771 /* ThemePickerView.swift in Sources */,
 				4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */,
 				9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */,
 				ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */,

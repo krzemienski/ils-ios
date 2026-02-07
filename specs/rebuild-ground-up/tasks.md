@@ -319,7 +319,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 6: System Monitor (US-11)
 
-- [ ] 6.1 Rebuild SystemMonitorView with theme
+- [x] 6.1 Rebuild SystemMonitorView with theme
   - **Do**:
     1. Rewrite `ILSApp/ILSApp/Views/System/SystemMonitorView.swift` — CPU sparkline, memory sparkline, disk progress bar, network up/down rates, all styled with theme tokens and GlassCard
     2. Rewrite `ILSApp/ILSApp/Theme/Components/MetricChart.swift` with theme colors
@@ -338,7 +338,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-11.1, AC-11.2, AC-11.3, AC-11.4, AC-11.5, AC-11.6, AC-11.7, AC-11.8, FR-14_
   - _Design: Section 4.5 — System Monitor_
 
-- [ ] V7 [VERIFY] Phase 6 checkpoint: system monitor with real data
+- [x] V7 [VERIFY] Phase 6 checkpoint: system monitor with real data
   - **Do**: Build, launch with backend, navigate to System Monitor from sidebar, capture screenshot
   - **Verify**: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot specs/rebuild-ground-up/evidence/phase6-system.png && echo "PASS"`
   - **Done when**: System monitor renders real metrics from backend
@@ -348,7 +348,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 7: Settings + Theme Picker (US-12, US-13)
 
-- [ ] 7.1 Rebuild SettingsView with theme
+- [x] 7.1 Rebuild SettingsView with theme
   - **Do**:
     1. Rewrite `ILSApp/ILSApp/Views/Settings/SettingsView.swift` — List with sections:
        - Server Connection: URL, port, health check status dot, edit capability
@@ -370,7 +370,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-12.1, AC-12.2, AC-12.3, AC-12.4, AC-12.5, AC-12.6, FR-15_
   - _Design: Section 4.6 — Settings_
 
-- [ ] 7.2 Build ThemePickerView with live preview
+- [x] 7.2 Build ThemePickerView with live preview
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Settings/ThemePickerView.swift` — 2-column LazyVGrid of theme preview cards
     2. Each card: theme name, 4 color swatches (bgPrimary, accent, textPrimary, bgSecondary), checkmark on active theme
@@ -385,7 +385,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-13.1, AC-13.2, AC-13.3, AC-13.4, AC-13.5, FR-16_
   - _Design: Section 4.8 — Theme Picker_
 
-- [ ] V8 [VERIFY] Phase 7 checkpoint: settings + theme picker
+- [x] V8 [VERIFY] Phase 7 checkpoint: settings + theme picker
   - **Do**: Build, navigate to Settings, then Theme Picker. Capture screenshots
   - **Verify**: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot specs/rebuild-ground-up/evidence/phase7-settings.png && echo "PASS"`
   - **Done when**: Settings and theme picker render correctly

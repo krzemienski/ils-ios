@@ -3,6 +3,7 @@ import ILSShared
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.theme) private var theme: any AppTheme
     @StateObject private var viewModel = SettingsViewModel()
     @State private var serverURL: String = ""
@@ -21,6 +22,7 @@ struct SettingsView: View {
             VStack(spacing: theme.spacingMD) {
                 connectionSection
                 remoteAccessSection
+                appearanceSection
                 manageSection
                 generalSettingsSection
                 apiKeySection
@@ -139,6 +141,43 @@ struct SettingsView: View {
                             .font(.system(size: theme.fontBody))
                             .foregroundStyle(theme.textPrimary)
                         Text("Cloudflare Tunnel")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Appearance
+
+    @ViewBuilder
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Appearance")
+
+            NavigationLink {
+                ThemePickerView()
+            } label: {
+                HStack(spacing: theme.spacingMD) {
+                    Image(systemName: "paintpalette.fill")
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.accent)
+                        .frame(width: 28, height: 28)
+                        .background(theme.accent.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Theme")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Text(themeManager.currentTheme.name)
                             .font(.system(size: theme.fontCaption))
                             .foregroundStyle(theme.textSecondary)
                     }
@@ -939,6 +978,7 @@ class ConfigEditorViewModel: ObservableObject {
     NavigationStack {
         SettingsView()
             .environmentObject(AppState())
+            .environmentObject(ThemeManager())
             .environment(\.theme, ObsidianTheme())
     }
 }
