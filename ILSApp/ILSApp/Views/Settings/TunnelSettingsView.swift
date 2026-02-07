@@ -4,6 +4,7 @@ import CoreImage.CIFilterBuiltins
 /// Settings screen for managing Cloudflare tunnel remote access.
 struct TunnelSettingsView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.theme) private var theme: any AppTheme
     @State private var isRunning = false
     @State private var tunnelURL: String?
     @State private var uptime: Int?
@@ -22,23 +23,24 @@ struct TunnelSettingsView: View {
     @State private var cfDomain = ""
 
     var body: some View {
-        Form {
-            quickTunnelSection
-            if isRunning, let url = tunnelURL {
-                tunnelInfoSection(url: url)
+        ScrollView {
+            VStack(spacing: theme.spacingMD) {
+                quickTunnelSection
+                if isRunning, let url = tunnelURL {
+                    tunnelInfoSection(url: url)
+                }
+                if notInstalled {
+                    installSection
+                }
+                customDomainSection
+                howItWorksSection
             }
-            if notInstalled {
-                installSection
-            }
-            customDomainSection
-            howItWorksSection
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
         }
-        .scrollContentBackground(.hidden)
-        .background(ILSTheme.background)
+        .background(theme.bgPrimary)
         .navigationTitle("Remote Access")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color.black, for: .navigationBar)
         .toast(isPresented: $showCopiedToast, message: "URL copied to clipboard")
         .task {
             await fetchStatus()
@@ -59,53 +61,61 @@ struct TunnelSettingsView: View {
 
     @ViewBuilder
     private var quickTunnelSection: some View {
-        Section {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Quick Tunnel")
-                        .font(ILSTheme.bodyFont)
-                    Text("Create a temporary public URL")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Tunnel")
 
-                Spacer()
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Quick Tunnel")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("Create a temporary public URL")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
 
-                if isToggling {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                } else {
-                    Toggle("", isOn: Binding(
-                        get: { isRunning },
-                        set: { newValue in
-                            Task {
-                                if newValue {
-                                    await startTunnel()
-                                } else {
-                                    await stopTunnel()
+                    Spacer()
+
+                    if isToggling {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(theme.accent)
+                    } else {
+                        Toggle("", isOn: Binding(
+                            get: { isRunning },
+                            set: { newValue in
+                                Task {
+                                    if newValue {
+                                        await startTunnel()
+                                    } else {
+                                        await stopTunnel()
+                                    }
                                 }
                             }
-                        }
-                    ))
-                    .labelsHidden()
-                    .tint(ILSTheme.success)
-                    .accessibilityLabel("Enable quick tunnel")
+                        ))
+                        .labelsHidden()
+                        .tint(theme.success)
+                        .accessibilityLabel("Enable quick tunnel")
+                    }
                 }
-            }
 
-            if let error = errorMessage {
-                HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(ILSTheme.warning)
-                    Text(error)
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.error)
+                if let error = errorMessage {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(theme.warning)
+                        Text(error)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.error)
+                    }
                 }
             }
-        } header: {
-            Text("Tunnel")
-        } footer: {
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
             Text("Exposes your local backend through a Cloudflare tunnel so you can access it from anywhere.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
         }
     }
 
@@ -113,67 +123,75 @@ struct TunnelSettingsView: View {
 
     @ViewBuilder
     private func tunnelInfoSection(url: String) -> some View {
-        Section {
-            // Status
-            HStack {
-                Circle()
-                    .fill(ILSTheme.success)
-                    .frame(width: 10, height: 10)
-                Text("Running")
-                    .font(ILSTheme.bodyFont)
-                    .foregroundColor(ILSTheme.success)
-                Spacer()
-                if let uptime = uptime {
-                    Text(formatUptime(uptime))
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-            }
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Connection Info")
 
-            // URL
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Public URL")
-                    .font(.caption)
-                    .foregroundColor(ILSTheme.secondaryText)
-                Text(url)
-                    .font(ILSTheme.codeFont)
-                    .foregroundColor(ILSTheme.accent)
-                    .textSelection(.enabled)
-            }
-
-            // Copy button
-            Button {
-                UIPasteboard.general.string = url
-                showCopiedToast = true
-                toastTask?.cancel()
-                toastTask = Task {
-                    try? await Task.sleep(for: .seconds(2))
-                    guard !Task.isCancelled else { return }
-                    showCopiedToast = false
-                }
-            } label: {
-                Label("Copy URL", systemImage: "doc.on.doc")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .accessibilityLabel("Copy tunnel URL to clipboard")
-
-            // QR Code (pre-generated, not computed in view body)
-            if let qrImage = qrImage {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                // Status
                 HStack {
+                    Circle()
+                        .fill(theme.success)
+                        .frame(width: 10, height: 10)
+                    Text("Running")
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.success)
                     Spacer()
-                    Image(uiImage: qrImage)
-                        .interpolation(.none)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 200, height: 200)
-                        .cornerRadius(ILSTheme.cornerRadiusSmall)
-                    Spacer()
+                    if let uptime = uptime {
+                        Text(formatUptime(uptime))
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
                 }
-                .padding(.vertical, 8)
+
+                // URL
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Public URL")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
+                    Text(url)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.accent)
+                        .textSelection(.enabled)
+                }
+
+                // Copy button
+                Button {
+                    UIPasteboard.general.string = url
+                    showCopiedToast = true
+                    toastTask?.cancel()
+                    toastTask = Task {
+                        try? await Task.sleep(for: .seconds(2))
+                        guard !Task.isCancelled else { return }
+                        showCopiedToast = false
+                    }
+                } label: {
+                    Label("Copy URL", systemImage: "doc.on.doc")
+                        .font(.system(size: theme.fontBody, weight: .medium))
+                        .foregroundStyle(theme.textOnAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                        .background(theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                }
+                .accessibilityLabel("Copy tunnel URL to clipboard")
+
+                // QR Code
+                if let qrImage = qrImage {
+                    HStack {
+                        Spacer()
+                        Image(uiImage: qrImage)
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 200, height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        Spacer()
+                    }
+                    .padding(.vertical, theme.spacingSM)
+                }
             }
-        } header: {
-            Text("Connection Info")
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
         }
     }
 
@@ -181,44 +199,50 @@ struct TunnelSettingsView: View {
 
     @ViewBuilder
     private var installSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Installation Required")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(ILSTheme.warning)
+                        .foregroundStyle(theme.warning)
                     Text("cloudflared not installed")
-                        .font(ILSTheme.bodyFont)
-                        .foregroundColor(ILSTheme.warning)
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.warning)
                 }
 
                 Text("The cloudflared CLI tool is required to create tunnels. Install it via Homebrew or download from Cloudflare.")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.secondaryText)
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textSecondary)
 
                 if let installURL = installURL, let url = URL(string: installURL) {
                     Link(destination: url) {
                         HStack {
                             Text("Install cloudflared")
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textPrimary)
                             Spacer()
                             Image(systemName: "arrow.up.right.square")
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Quick install with Homebrew:")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
                     Text("brew install cloudflared")
-                        .font(ILSTheme.codeFont)
-                        .padding(8)
-                        .background(ILSTheme.tertiaryBackground)
-                        .cornerRadius(6)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.textPrimary)
+                        .padding(theme.spacingSM)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(theme.bgTertiary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
                 }
             }
-        } header: {
-            Text("Installation Required")
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
         }
     }
 
@@ -226,56 +250,70 @@ struct TunnelSettingsView: View {
 
     @ViewBuilder
     private var customDomainSection: some View {
-        Section {
-            DisclosureGroup {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Use a Cloudflare account and API token for a stable custom domain instead of a random trycloudflare.com URL.")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Advanced")
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("API Token")
-                            .font(.caption)
-                            .foregroundColor(ILSTheme.secondaryText)
-                        SecureField("Cloudflare API token", text: $cfToken)
-                            .textContentType(.password)
-                            .accessibilityLabel("Cloudflare API token")
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                DisclosureGroup {
+                    VStack(alignment: .leading, spacing: theme.spacingSM) {
+                        Text("Use a Cloudflare account and API token for a stable custom domain instead of a random trycloudflare.com URL.")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+
+                        fieldGroup(label: "API Token") {
+                            SecureField("Cloudflare API token", text: $cfToken)
+                                .textContentType(.password)
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textPrimary)
+                                .padding(theme.spacingSM)
+                                .background(theme.bgSecondary)
+                                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                                .accessibilityLabel("Cloudflare API token")
+                        }
+
+                        fieldGroup(label: "Tunnel Name") {
+                            TextField("my-ils-tunnel", text: $cfTunnelName)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textPrimary)
+                                .padding(theme.spacingSM)
+                                .background(theme.bgSecondary)
+                                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                                .accessibilityLabel("Tunnel name")
+                        }
+
+                        fieldGroup(label: "Custom Domain") {
+                            TextField("ils.example.com", text: $cfDomain)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                                .keyboardType(.URL)
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textPrimary)
+                                .padding(theme.spacingSM)
+                                .background(theme.bgSecondary)
+                                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                                .accessibilityLabel("Custom domain")
+                        }
                     }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Tunnel Name")
-                            .font(.caption)
-                            .foregroundColor(ILSTheme.secondaryText)
-                        TextField("my-ils-tunnel", text: $cfTunnelName)
-                            .autocapitalization(.none)
-                            .autocorrectionDisabled()
-                            .accessibilityLabel("Tunnel name")
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
+                    .padding(.top, theme.spacingSM)
+                } label: {
+                    HStack(spacing: theme.spacingSM) {
+                        Image(systemName: "globe")
+                            .foregroundStyle(theme.accent)
                         Text("Custom Domain")
-                            .font(.caption)
-                            .foregroundColor(ILSTheme.secondaryText)
-                        TextField("ils.example.com", text: $cfDomain)
-                            .autocapitalization(.none)
-                            .autocorrectionDisabled()
-                            .keyboardType(.URL)
-                            .accessibilityLabel("Custom domain")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
                     }
                 }
-                .padding(.vertical, 4)
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "globe")
-                        .foregroundColor(ILSTheme.accent)
-                    Text("Custom Domain")
-                        .font(ILSTheme.bodyFont)
-                }
+                .tint(theme.textTertiary)
             }
-        } header: {
-            Text("Advanced")
-        } footer: {
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
             Text("Requires a Cloudflare account with a registered domain.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
         }
     }
 
@@ -283,29 +321,53 @@ struct TunnelSettingsView: View {
 
     @ViewBuilder
     private var howItWorksSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("How It Works")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
                 infoRow(icon: "1.circle.fill", text: "Starts a cloudflared tunnel on your Mac")
                 infoRow(icon: "2.circle.fill", text: "Cloudflare assigns a temporary public URL")
                 infoRow(icon: "3.circle.fill", text: "Access your ILS backend from any device using the URL or QR code")
                 infoRow(icon: "4.circle.fill", text: "Traffic is encrypted end-to-end via Cloudflare's network")
             }
-        } header: {
-            Text("How It Works")
-        } footer: {
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
             Text("Quick tunnels use randomly generated URLs that change each time. Use a custom domain for a stable URL.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+        }
+    }
+
+    // MARK: - Reusable Components
+
+    @ViewBuilder
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .foregroundStyle(theme.textTertiary)
+            .textCase(.uppercase)
+    }
+
+    @ViewBuilder
+    private func fieldGroup<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textSecondary)
+            content()
         }
     }
 
     private func infoRow(icon: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
-                .font(.caption)
-                .foregroundColor(ILSTheme.accent)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.accent)
                 .frame(width: 20)
             Text(text)
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textSecondary)
         }
     }
 
@@ -437,5 +499,6 @@ struct EmptyTunnelRequest: Encodable {}
     NavigationStack {
         TunnelSettingsView()
             .environmentObject(AppState())
+            .environment(\.theme, ObsidianTheme())
     }
 }

@@ -72,7 +72,7 @@ struct SidebarRootView: View {
                 case .system:
                     systemScreen
                 case .settings:
-                    settingsPlaceholder
+                    settingsScreen
                 case .browser:
                     browserPlaceholder
                 }
@@ -158,22 +158,8 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var settingsPlaceholder: some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(theme.textSecondary)
-            Text("Settings")
-                .font(.system(size: theme.fontTitle2, weight: .bold))
-                .foregroundStyle(theme.textPrimary)
-            Text("Built in Phase 7")
-                .font(.system(size: theme.fontBody))
-                .foregroundStyle(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.bgPrimary)
-        .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
+    private var settingsScreen: some View {
+        SettingsView()
     }
 
     @ViewBuilder

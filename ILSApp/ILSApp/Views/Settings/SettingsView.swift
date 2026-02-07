@@ -3,11 +3,11 @@ import ILSShared
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.theme) private var theme: any AppTheme
     @StateObject private var viewModel = SettingsViewModel()
     @State private var serverURL: String = ""
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
-    // Available options
     private let availableModels = [
         "claude-sonnet-4-20250514",
         "claude-opus-4-20250514",
@@ -17,23 +17,24 @@ struct SettingsView: View {
     private let availableColorSchemes = ["system", "light", "dark"]
 
     var body: some View {
-        Form {
-            connectionSection
-            remoteAccessSection
-            manageSection
-            generalSettingsSection
-            apiKeySection
-            permissionsSection
-            advancedSection
-            statisticsSection
-            diagnosticsSection
-            aboutSection
+        ScrollView {
+            VStack(spacing: theme.spacingMD) {
+                connectionSection
+                remoteAccessSection
+                manageSection
+                generalSettingsSection
+                apiKeySection
+                permissionsSection
+                advancedSection
+                statisticsSection
+                diagnosticsSection
+                aboutSection
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
         }
-        .scrollContentBackground(.hidden)
-        .background(ILSTheme.background)
+        .background(theme.bgPrimary)
         .navigationTitle("Settings")
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadAll()
         }
@@ -44,166 +45,197 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - View Sections
+    // MARK: - Connection Section
 
     @ViewBuilder
     private var connectionSection: some View {
-        Section {
-                VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Backend Connection")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("Server URL")
-                        .font(.caption)
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
                     TextField("https://example.com or http://localhost:9090", text: $serverURL)
+                        .font(.system(size: theme.fontBody))
                         .textContentType(.URL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
                         .autocorrectionDisabled()
+                        .foregroundStyle(theme.textPrimary)
+                        .padding(theme.spacingSM)
+                        .background(theme.bgSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
                         .accessibilityLabel("Server URL")
-                        .onSubmit {
-                            saveServerSettings()
-                        }
+                        .onSubmit { saveServerSettings() }
                 }
 
                 HStack {
                     Text("Status")
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textPrimary)
                     Spacer()
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(appState.isConnected ? ILSTheme.success : ILSTheme.error)
+                            .fill(appState.isConnected ? theme.success : theme.error)
                             .frame(width: 8, height: 8)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
 
                 Button {
                     testConnection()
                 } label: {
-                    HStack {
+                    HStack(spacing: theme.spacingSM) {
                         if viewModel.isTestingConnection {
                             ProgressView()
-                                .scaleEffect(0.8)
+                                .tint(theme.textOnAccent)
+                                .controlSize(.small)
                         }
                         Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
+                            .font(.system(size: theme.fontBody, weight: .medium))
                     }
+                    .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingSM)
+                    .background(theme.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                 }
-                .buttonStyle(.bordered)
                 .disabled(viewModel.isTestingConnection)
+                .opacity(viewModel.isTestingConnection ? 0.7 : 1.0)
                 .accessibilityLabel("Test connection to backend server")
-            } header: {
-                Text("Backend Connection")
-            } footer: {
-                Text("Configure the ILS backend server address")
             }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
 
+            Text("Configure the ILS backend server address")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+        }
     }
+
+    // MARK: - Remote Access
 
     @ViewBuilder
     private var remoteAccessSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Remote Access")
+
             NavigationLink {
                 TunnelSettingsView()
             } label: {
-                HStack(spacing: 12) {
+                HStack(spacing: theme.spacingMD) {
                     Image(systemName: "network")
-                        .font(.body)
-                        .foregroundColor(ILSTheme.info)
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.info)
                         .frame(width: 28, height: 28)
-                        .background(ILSTheme.info.opacity(0.15))
-                        .cornerRadius(6)
+                        .background(theme.info.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Remote Access")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
                         Text("Cloudflare Tunnel")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
                     }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
                 }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
             }
-        } header: {
-            Text("Remote Access")
+            .buttonStyle(.plain)
         }
     }
+
+    // MARK: - Manage
 
     @ViewBuilder
     private var manageSection: some View {
-        Section {
-            NavigationLink {
-                SkillsListView()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "sparkles")
-                        .font(.body)
-                        .foregroundColor(EntityType.skills.color)
-                        .frame(width: 28, height: 28)
-                        .background(EntityType.skills.color.opacity(0.15))
-                        .cornerRadius(6)
-                    Text("Skills")
-                    Spacer()
-                    if let stats = viewModel.stats {
-                        Text("\(stats.skills.total)")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                }
-            }
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Manage")
 
-            NavigationLink {
-                MCPServerListView()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "server.rack")
-                        .font(.body)
-                        .foregroundColor(EntityType.mcp.color)
-                        .frame(width: 28, height: 28)
-                        .background(EntityType.mcp.color.opacity(0.15))
-                        .cornerRadius(6)
-                    Text("MCP Servers")
-                    Spacer()
-                    if let stats = viewModel.stats {
-                        Text("\(stats.mcpServers.total)")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                }
+            VStack(spacing: 0) {
+                settingsNavRow(
+                    icon: "sparkles",
+                    color: EntityType.skills.themeColor(from: theme),
+                    title: "Skills",
+                    count: viewModel.stats?.skills.total,
+                    destination: SkillsListView()
+                )
+                Divider().background(theme.bgTertiary)
+                settingsNavRow(
+                    icon: "server.rack",
+                    color: EntityType.mcp.themeColor(from: theme),
+                    title: "MCP Servers",
+                    count: viewModel.stats?.mcpServers.total,
+                    destination: MCPServerListView()
+                )
+                Divider().background(theme.bgTertiary)
+                settingsNavRow(
+                    icon: "puzzlepiece.extension",
+                    color: EntityType.plugins.themeColor(from: theme),
+                    title: "Plugins",
+                    count: viewModel.stats?.plugins.total,
+                    destination: PluginsListView()
+                )
             }
-
-            NavigationLink {
-                PluginsListView()
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "puzzlepiece.extension")
-                        .font(.body)
-                        .foregroundColor(EntityType.plugins.color)
-                        .frame(width: 28, height: 28)
-                        .background(EntityType.plugins.color.opacity(0.15))
-                        .cornerRadius(6)
-                    Text("Plugins")
-                    Spacer()
-                    if let stats = viewModel.stats {
-                        Text("\(stats.plugins.total)")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                }
-            }
-        } header: {
-            Text("Manage")
+            .modifier(GlassCard())
         }
     }
 
     @ViewBuilder
+    private func settingsNavRow<Dest: View>(icon: String, color: Color, title: String, count: Int?, destination: Dest) -> some View {
+        NavigationLink {
+            destination
+        } label: {
+            HStack(spacing: theme.spacingMD) {
+                Image(systemName: icon)
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(color)
+                    .frame(width: 28, height: 28)
+                    .background(color.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                Text(title)
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(theme.textPrimary)
+                Spacer()
+                if let count {
+                    Text("\(count)")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingMD)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - General Settings
+
+    @ViewBuilder
     private var generalSettingsSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("General")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
                 if viewModel.isLoadingConfig {
                     HStack {
-                        ProgressView()
-                            .padding(.trailing, 8)
+                        ProgressView().tint(theme.accent)
                         Text("Loading configuration...")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textSecondary)
                     }
                 } else if let config = viewModel.config?.content {
-                    // Model Picker (auto-saves on change)
                     Picker("Default Model", selection: Binding(
                         get: { config.model ?? "claude-sonnet-4-20250514" },
                         set: { newModel in
@@ -217,298 +249,400 @@ struct SettingsView: View {
                             Text(formatModelName(model)).tag(model)
                         }
                     }
+                    .tint(theme.accent)
                     .accessibilityLabel("Default Claude model")
 
-                    // Color Scheme Picker (writes to UserDefaults)
                     Picker("Color Scheme", selection: $colorSchemePreference) {
                         ForEach(availableColorSchemes, id: \.self) { scheme in
                             Text(scheme.capitalized).tag(scheme)
                         }
                     }
+                    .tint(theme.accent)
                     .accessibilityLabel("Color scheme preference")
 
-                    // Auto Updates Channel (read-only)
                     if let channel = config.autoUpdatesChannel {
-                        LabeledContent("Updates Channel") {
-                            Text(channel.capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
+                        settingsRow("Updates Channel", value: channel.capitalized)
                     }
 
-                    // Always Thinking (read-only)
-                    LabeledContent("Extended Thinking") {
-                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? ILSTheme.success : ILSTheme.secondaryText)
-                    }
+                    settingsRow("Extended Thinking", icon: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle", iconColor: config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
 
-                    // Co-authored by (read-only)
-                    LabeledContent("Include Co-Author") {
-                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? ILSTheme.success : ILSTheme.secondaryText)
-                    }
+                    settingsRow("Include Co-Author", icon: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle", iconColor: config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
                 } else {
                     Text("No configuration loaded")
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-            } header: {
-                Text("General")
-            } footer: {
-                if let config = viewModel.config {
-                    Text("Scope: \(config.scope) • \(config.path)")
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textSecondary)
                 }
             }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
 
+            if let config = viewModel.config {
+                Text("Scope: \(config.scope) \u{2022} \(config.path)")
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textTertiary)
+            }
+        }
     }
+
+    // MARK: - API Key
 
     @ViewBuilder
     private var apiKeySection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("API Key")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
                 if let config = viewModel.config?.content {
                     if let apiKeyStatus = config.apiKeyStatus {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
-                                .foregroundColor(apiKeyStatus.isConfigured ? ILSTheme.success : ILSTheme.warning)
+                                .foregroundStyle(apiKeyStatus.isConfigured ? theme.success : theme.warning)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
-                                    .font(ILSTheme.bodyFont)
+                                    .font(.system(size: theme.fontBody))
+                                    .foregroundStyle(theme.textPrimary)
                                 if let maskedKey = apiKeyStatus.maskedKey {
                                     Text("Key: \(maskedKey)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
+                                        .font(.system(size: theme.fontCaption))
+                                        .foregroundStyle(theme.textSecondary)
                                 }
                                 if let source = apiKeyStatus.source {
                                     Text("Source: \(source)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
+                                        .font(.system(size: theme.fontCaption))
+                                        .foregroundStyle(theme.textSecondary)
                                 }
                             }
                         }
                     } else {
                         HStack {
                             Image(systemName: "key.fill")
-                                .foregroundColor(ILSTheme.warning)
+                                .foregroundStyle(theme.warning)
                             Text("API Key status unknown")
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textSecondary)
                 }
-            } header: {
-                Text("API Key")
-            } footer: {
-                Text("For security, API keys cannot be edited through the iOS app. Use the terminal command: claude config set apiKey <your-key>")
             }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
 
+            Text("API keys cannot be edited through the iOS app. Use: claude config set apiKey <your-key>")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+        }
     }
+
+    // MARK: - Permissions
 
     @ViewBuilder
     private var permissionsSection: some View {
-        Section {
-                if let config = viewModel.config?.content, let permissions = config.permissions {
-                    // Default Permission Mode
-                    LabeledContent("Default Mode") {
-                        Text(permissions.defaultMode?.capitalized ?? "Prompt")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Permissions")
 
-                    // Allowed Commands
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                if let config = viewModel.config?.content, let permissions = config.permissions {
+                    settingsRow("Default Mode", value: permissions.defaultMode?.capitalized ?? "Prompt")
+
                     if let allowed = permissions.allow, !allowed.isEmpty {
                         DisclosureGroup {
                             ForEach(allowed, id: \.self) { item in
                                 Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .font(.system(size: theme.fontCaption))
+                                    .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
-                            LabeledContent("Allowed", value: "\(allowed.count) rules")
+                            settingsRow("Allowed", value: "\(allowed.count) rules")
                         }
+                        .tint(theme.textTertiary)
                     } else {
-                        LabeledContent("Allowed", value: "None")
+                        settingsRow("Allowed", value: "None")
                     }
 
-                    // Denied Commands
                     if let denied = permissions.deny, !denied.isEmpty {
                         DisclosureGroup {
                             ForEach(denied, id: \.self) { item in
                                 Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .font(.system(size: theme.fontCaption))
+                                    .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
-                            LabeledContent("Denied", value: "\(denied.count) rules")
+                            settingsRow("Denied", value: "\(denied.count) rules")
                         }
+                        .tint(theme.textTertiary)
                     } else {
-                        LabeledContent("Denied", value: "None")
+                        settingsRow("Denied", value: "None")
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textSecondary)
                 }
-            } header: {
-                Text("Permissions")
             }
-
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
     }
+
+    // MARK: - Advanced
 
     @ViewBuilder
     private var advancedSection: some View {
-        Section {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Advanced")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
                 if let config = viewModel.config?.content {
-                    // Hooks Summary
                     if let hooks = config.hooks {
                         let hookCount = countHooks(hooks)
-                        LabeledContent("Hooks Configured", value: "\(hookCount)")
+                        settingsRow("Hooks Configured", value: "\(hookCount)")
                     } else {
-                        LabeledContent("Hooks Configured", value: "0")
+                        settingsRow("Hooks Configured", value: "0")
                     }
 
-                    // Enabled Plugins Count
                     if let plugins = config.enabledPlugins {
                         let enabledCount = plugins.filter { $0.value }.count
-                        LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                        settingsRow("Enabled Plugins", value: "\(enabledCount)")
                     } else {
-                        LabeledContent("Enabled Plugins", value: "0")
+                        settingsRow("Enabled Plugins", value: "0")
                     }
 
-                    // Status Line
                     if let statusLine = config.statusLine {
-                        LabeledContent("Status Line") {
-                            Text(statusLine.type ?? "disabled")
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
+                        settingsRow("Status Line", value: statusLine.type ?? "disabled")
                     }
 
-                    // Environment Variables
                     if let env = config.env, !env.isEmpty {
-                        LabeledContent("Environment Vars", value: "\(env.count)")
+                        settingsRow("Environment Vars", value: "\(env.count)")
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textSecondary)
                 }
 
-                // Raw Config Editor Links
-                NavigationLink("Edit User Settings") {
+                Divider().background(theme.bgTertiary)
+
+                NavigationLink {
                     ConfigEditorView(scope: "user", apiClient: appState.apiClient)
-                }
-
-                NavigationLink("Edit Project Settings") {
-                    ConfigEditorView(scope: "project", apiClient: appState.apiClient)
-                }
-            } header: {
-                Text("Advanced")
-            } footer: {
-                Text("Edit raw JSON configuration files")
-            }
-
-    }
-
-    @ViewBuilder
-    private var statisticsSection: some View {
-        Section("Statistics") {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if let stats = viewModel.stats {
-                    LabeledContent("Projects", value: "\(stats.projects.total)")
-                    LabeledContent("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
-                    LabeledContent("Skills", value: "\(stats.skills.total)")
-                    LabeledContent("MCP Servers", value: "\(stats.mcpServers.total) (\(stats.mcpServers.healthy) healthy)")
-                    LabeledContent("Plugins", value: "\(stats.plugins.total) (\(stats.plugins.enabled) enabled)")
-                }
-            }
-
-    }
-
-    @ViewBuilder
-    private var diagnosticsSection: some View {
-        Section("DIAGNOSTICS") {
-                Toggle(isOn: .init(
-                    get: { AppLogger.shared.analyticsOptedIn },
-                    set: { AppLogger.shared.analyticsOptedIn = $0 }
-                )) {
-                    Label("Analytics", systemImage: "chart.bar")
-                }
-                .tint(.orange)
-                .accessibilityLabel("Enable analytics")
-
-                NavigationLink(destination: LogViewerView()) {
-                    Label("View Logs", systemImage: "doc.text")
-                }
-                NavigationLink(destination: NotificationPreferencesView()) {
-                    Label("Notifications", systemImage: "bell.badge")
-                }
-            }
-
-    }
-
-    @ViewBuilder
-    private var aboutSection: some View {
-        Section("About") {
-                LabeledContent("App Version", value: "1.0.0")
-                LabeledContent("Build", value: "1")
-
-                if let claudeVersion = viewModel.claudeVersion {
-                    LabeledContent("Claude CLI", value: claudeVersion)
-                } else {
-                    LabeledContent("Claude CLI") {
-                        Text("Checking...")
-                            .foregroundColor(ILSTheme.secondaryText)
+                } label: {
+                    HStack {
+                        Text("Edit User Settings")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
                     }
                 }
 
-                LabeledContent("Backend URL", value: serverURL)
+                NavigationLink {
+                    ConfigEditorView(scope: "project", apiClient: appState.apiClient)
+                } label: {
+                    HStack {
+                        Text("Edit Project Settings")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Edit raw JSON configuration files")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+        }
+    }
+
+    // MARK: - Statistics
+
+    @ViewBuilder
+    private var statisticsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Statistics")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                if viewModel.isLoading {
+                    HStack { Spacer(); ProgressView().tint(theme.accent); Spacer() }
+                } else if let stats = viewModel.stats {
+                    settingsRow("Projects", value: "\(stats.projects.total)")
+                    settingsRow("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
+                    settingsRow("Skills", value: "\(stats.skills.total)")
+                    settingsRow("MCP Servers", value: "\(stats.mcpServers.total) (\(stats.mcpServers.healthy) healthy)")
+                    settingsRow("Plugins", value: "\(stats.plugins.total) (\(stats.plugins.enabled) enabled)")
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
+    }
+
+    // MARK: - Diagnostics
+
+    @ViewBuilder
+    private var diagnosticsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Diagnostics")
+
+            VStack(spacing: 0) {
+                HStack {
+                    Label("Analytics", systemImage: "chart.bar")
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: .init(
+                        get: { AppLogger.shared.analyticsOptedIn },
+                        set: { AppLogger.shared.analyticsOptedIn = $0 }
+                    ))
+                    .labelsHidden()
+                    .tint(theme.accent)
+                    .accessibilityLabel("Enable analytics")
+                }
+                .padding(theme.spacingMD)
+
+                Divider().background(theme.bgTertiary)
+
+                NavigationLink(destination: LogViewerView()) {
+                    HStack {
+                        Label("View Logs", systemImage: "doc.text")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                }
+
+                Divider().background(theme.bgTertiary)
+
+                NavigationLink(destination: NotificationPreferencesView()) {
+                    HStack {
+                        Label("Notifications", systemImage: "bell.badge")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                }
+            }
+            .modifier(GlassCard())
+        }
+    }
+
+    // MARK: - About
+
+    @ViewBuilder
+    private var aboutSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("About")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                settingsRow("App Version", value: "1.0.0")
+                settingsRow("Build", value: "1")
+
+                if let claudeVersion = viewModel.claudeVersion {
+                    settingsRow("Claude CLI", value: claudeVersion)
+                } else {
+                    HStack {
+                        Text("Claude CLI")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Text("Checking...")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+
+                settingsRow("Backend URL", value: serverURL)
 
                 Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                     HStack {
                         Text("Claude Code Documentation")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
             }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
     }
 
-    // MARK: - Server Settings Persistence
+    // MARK: - Reusable Components
+
+    @ViewBuilder
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .foregroundStyle(theme.textTertiary)
+            .textCase(.uppercase)
+    }
+
+    @ViewBuilder
+    private func settingsRow(_ label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: theme.fontBody))
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Text(value)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textSecondary)
+        }
+    }
+
+    @ViewBuilder
+    private func settingsRow(_ label: String, icon: String, iconColor: Color) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: theme.fontBody))
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Image(systemName: icon)
+                .foregroundStyle(iconColor)
+        }
+    }
+
+    // MARK: - Server Settings
 
     private func loadServerSettings() {
-        // Load full URL from appState (which loads from UserDefaults)
-        parseServerURL()
+        serverURL = appState.serverURL
     }
 
     private func saveServerSettings() {
-        // Validate URL format
         guard !serverURL.isEmpty else { return }
-        
-        // Update appState serverURL (persists to UserDefaults and recreates clients)
         appState.updateServerURL(serverURL)
     }
 
     private func testConnection() {
         Task {
-            // Validate URL format
-            guard !serverURL.isEmpty, URL(string: serverURL) != nil else {
-                return
-            }
-            
+            guard !serverURL.isEmpty, URL(string: serverURL) != nil else { return }
             appState.updateServerURL(serverURL)
             await viewModel.testConnection()
-
-            // Save settings if connection successful
-            if appState.isConnected {
-                saveServerSettings()
-            }
+            if appState.isConnected { saveServerSettings() }
         }
     }
 
-    // MARK: - Helper Methods
-
-    private func parseServerURL() {
-        // Load full URL from appState
-        serverURL = appState.serverURL
-    }
+    // MARK: - Helpers
 
     private func countHooks(_ hooks: HooksConfig) -> Int {
         var count = 0
@@ -521,20 +655,17 @@ struct SettingsView: View {
     }
 
     private func formatModelName(_ model: String) -> String {
-        // Convert model ID to human-readable name
-        if model.contains("sonnet") {
-            return "Claude Sonnet"
-        } else if model.contains("opus") {
-            return "Claude Opus"
-        } else if model.contains("haiku") {
-            return "Claude Haiku"
-        }
+        if model.contains("sonnet") { return "Claude Sonnet" }
+        if model.contains("opus") { return "Claude Opus" }
+        if model.contains("haiku") { return "Claude Haiku" }
         return model
     }
-
 }
 
+// MARK: - Config Editor View
+
 struct ConfigEditorView: View {
+    @Environment(\.theme) private var theme: any AppTheme
     let scope: String
     let apiClient: APIClient
     @StateObject private var viewModel = ConfigEditorViewModel()
@@ -549,26 +680,27 @@ struct ConfigEditorView: View {
     var body: some View {
         VStack {
             if viewModel.isLoading {
-                ProgressView()
+                ProgressView().tint(theme.accent)
             } else {
                 TextEditor(text: $configText)
-                    .font(ILSTheme.codeFont)
+                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
+                    .scrollContentBackground(.hidden)
                     .padding()
 
-                // JSON validation indicator
                 HStack {
                     if isValidJSON(configText) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(ILSTheme.success)
+                            .foregroundStyle(theme.success)
                         Text("Valid JSON")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.success)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.success)
                     } else {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(ILSTheme.error)
+                            .foregroundStyle(theme.error)
                         Text("Invalid JSON")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.error)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.error)
                     }
                     Spacer()
                 }
@@ -578,15 +710,16 @@ struct ConfigEditorView: View {
                     VStack(alignment: .leading) {
                         ForEach(validationErrors, id: \.self) { error in
                             Label(error, systemImage: "exclamationmark.triangle")
-                                .font(ILSTheme.captionFont)
-                                .foregroundColor(ILSTheme.error)
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.error)
                         }
                     }
                     .padding()
-                    .background(ILSTheme.error.opacity(0.1))
+                    .background(theme.error.opacity(0.1))
                 }
             }
         }
+        .background(theme.bgPrimary)
         .navigationTitle("\(scope.capitalized) Settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -598,12 +731,12 @@ struct ConfigEditorView: View {
                         dismiss()
                     }
                 }
+                .foregroundStyle(theme.textSecondary)
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Save") {
-                    saveConfig()
-                }
-                .disabled(isSaving || !hasUnsavedChanges)
+                Button("Save") { saveConfig() }
+                    .foregroundStyle(theme.accent)
+                    .disabled(isSaving || !hasUnsavedChanges)
             }
         }
         .task {
@@ -616,33 +749,21 @@ struct ConfigEditorView: View {
             hasUnsavedChanges = (newValue != originalConfigText)
         }
         .alert("Unsaved Changes", isPresented: $showUnsavedChangesAlert) {
-            Button("Discard Changes", role: .destructive) {
-                dismiss()
-            }
+            Button("Discard Changes", role: .destructive) { dismiss() }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("You have unsaved changes. Are you sure you want to discard them?")
         }
         .interactiveDismissDisabled(hasUnsavedChanges)
-        .onDisappear {
-            // User dismissed with unsaved changes (swipe back)
-            if hasUnsavedChanges {
-                // The sheet has already been dismissed at this point
-                // We rely on interactiveDismissDisabled to prevent the swipe
-            }
-        }
     }
 
     private func saveConfig() {
         isSaving = true
         validationErrors = []
-
         Task {
             let errors = await viewModel.saveConfig(scope: scope, json: configText)
             validationErrors = errors
             isSaving = false
-
-            // If save was successful, update original text and clear unsaved flag
             if errors.isEmpty {
                 originalConfigText = configText
                 hasUnsavedChanges = false
@@ -691,7 +812,6 @@ class SettingsViewModel: ObservableObject {
             let response = try await client.getHealth()
             claudeVersion = response.claudeVersion
         } catch {
-            // Health endpoint might return plain string — try alternate
             claudeVersion = nil
         }
     }
@@ -699,28 +819,24 @@ class SettingsViewModel: ObservableObject {
     func loadStats() async {
         guard let client else { return }
         isLoading = true
-
         do {
             let response: APIResponse<StatsResponse> = try await client.get("/stats")
             stats = response.data
         } catch {
             self.error = error
         }
-
         isLoading = false
     }
 
     func loadConfig(scope: String = "user") async {
         guard let client else { return }
         isLoadingConfig = true
-
         do {
             let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
             config = response.data
         } catch {
             self.error = error
         }
-
         isLoadingConfig = false
     }
 
@@ -728,7 +844,6 @@ class SettingsViewModel: ObservableObject {
         guard let client else { return }
         isTestingConnection = true
         defer { isTestingConnection = false }
-
         do {
             _ = try await client.healthCheck()
         } catch {
@@ -741,15 +856,11 @@ class SettingsViewModel: ObservableObject {
         isSaving = true
         defer { isSaving = false }
 
-        // Build updated config from current config
         guard var currentConfig = config?.content else {
             return "No configuration loaded"
         }
 
-        // Update model
         currentConfig.model = model
-
-        // Update theme (create if doesn't exist)
         if currentConfig.theme == nil {
             currentConfig.theme = ThemeConfig(colorScheme: colorScheme, accentColor: nil)
         } else {
@@ -759,18 +870,13 @@ class SettingsViewModel: ObservableObject {
         do {
             let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
             let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
-
-            // Update local config with response
             if let updatedConfig = response.data {
                 config = updatedConfig
-
-                // Check for validation errors
                 if !updatedConfig.isValid {
                     return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
                 }
             }
-
-            return nil // Success
+            return nil
         } catch {
             return "Failed to save: \(error.localizedDescription)"
         }
@@ -794,7 +900,6 @@ class ConfigEditorViewModel: ObservableObject {
     func loadConfig(scope: String) async {
         guard let client else { return }
         isLoading = true
-
         do {
             let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
             if let config = response.data {
@@ -808,7 +913,6 @@ class ConfigEditorViewModel: ObservableObject {
         } catch {
             self.error = error
         }
-
         isLoading = false
     }
 
@@ -818,29 +922,23 @@ class ConfigEditorViewModel: ObservableObject {
               let content = try? JSONDecoder().decode(ClaudeConfig.self, from: data) else {
             return ["Invalid JSON format"]
         }
-
         do {
             let request = UpdateConfigRequest(scope: scope, content: content)
             let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
-
             if let config = response.data, !config.isValid {
                 return config.errors ?? []
             }
         } catch {
             return ["Failed to save: \(error.localizedDescription)"]
         }
-
         return []
     }
 }
-
-// MARK: - Models
-// Using models from ILSShared: StatsResponse, CountStat, SessionStat, MCPStat, PluginStat,
-// ConfigInfo, ClaudeConfig, PermissionsConfig, UpdateConfigRequest
 
 #Preview {
     NavigationStack {
         SettingsView()
             .environmentObject(AppState())
+            .environment(\.theme, ObsidianTheme())
     }
 }

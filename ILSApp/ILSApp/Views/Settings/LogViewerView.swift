@@ -1,24 +1,28 @@
 import SwiftUI
 
 struct LogViewerView: View {
+    @Environment(\.theme) private var theme: any AppTheme
     @State private var logs: [String] = []
 
     var body: some View {
-        List {
+        ScrollView {
             if logs.isEmpty {
                 ContentUnavailableView("No Logs", systemImage: "doc.text", description: Text("App logs will appear here"))
+                    .foregroundStyle(theme.textSecondary)
             } else {
-                ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
-                    Text(line)
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundColor(logColor(for: line))
-                        .listRowBackground(Color.black)
+                LazyVStack(alignment: .leading, spacing: 2) {
+                    ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                            .font(.system(size: theme.fontCaption, design: .monospaced))
+                            .foregroundStyle(logColor(for: line))
+                            .padding(.horizontal, theme.spacingSM)
+                            .padding(.vertical, 2)
+                    }
                 }
+                .padding(.vertical, theme.spacingSM)
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Color.black)
+        .background(theme.bgPrimary)
         .navigationTitle("Logs")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -27,8 +31,10 @@ struct LogViewerView: View {
                         logs = await AppLogger.shared.recentLogs()
                     }
                 } label: {
-                    Image(systemName: "arrow.clockwise").foregroundColor(.orange)
+                    Image(systemName: "arrow.clockwise")
+                        .foregroundStyle(theme.accent)
                 }
+                .accessibilityLabel("Refresh logs")
             }
         }
         .task {
@@ -37,8 +43,15 @@ struct LogViewerView: View {
     }
 
     private func logColor(for line: String) -> Color {
-        if line.contains("[ERROR]") { return .red }
-        if line.contains("[WARN]") { return .orange }
-        return .gray
+        if line.contains("[ERROR]") { return theme.error }
+        if line.contains("[WARN]") { return theme.warning }
+        return theme.textSecondary
+    }
+}
+
+#Preview {
+    NavigationStack {
+        LogViewerView()
+            .environment(\.theme, ObsidianTheme())
     }
 }
