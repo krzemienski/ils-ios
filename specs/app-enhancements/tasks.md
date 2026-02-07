@@ -26,7 +26,7 @@ Focus: Add MarkdownUI + HighlightSwift deps, extract ChatMessage model, wire DI 
   - _Requirements: FR-1, FR-2 (dep only)_
   - _Design: Phase 1 — 1.1 Package Dependencies_
 
-- [ ] 1.2 Extract ChatMessage model from MessageView to dedicated Models file
+- [x] 1.2 Extract ChatMessage model from MessageView to dedicated Models file
   - **Do**:
     1. Create `ILSApp/ILSApp/Models/ChatMessage.swift`
     2. Move `ChatMessage`, `ToolCall`, `ToolResult` structs from `MessageView.swift` lines 210-266

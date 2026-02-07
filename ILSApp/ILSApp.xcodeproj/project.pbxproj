@@ -48,6 +48,7 @@
 		01D90FE62F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE52F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift */; };
 		01D90FE82F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE72F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift */; };
 		01D90FEA2F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE92F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift */; };
+		7103F0FECA16410192750881 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */; };
 		4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */; };
 		55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */; };
 		5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */; };
@@ -141,6 +142,7 @@
 		68E0683F219C707581CC1582 /* BaseListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BaseListViewModel.swift; sourceTree = "<group>"; };
 		6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MCPImportExportView.swift; sourceTree = "<group>"; };
 		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		B1D1A53A5156A8D8D724FDCB /* EntityType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
 		CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LogViewerView.swift; path = Views/Settings/LogViewerView.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
@@ -414,6 +416,7 @@
 			isa = PBXGroup;
 			children = (
 				8864999F593F3FBA35FE5962 /* SessionTemplate.swift */,
+				2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -594,6 +597,7 @@
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
 				000000000000000000000002 /* ContentView.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
+				7103F0FECA16410192750881 /* ChatMessage.swift in Sources */,
 				000000000000000000000021 /* APIClient.swift in Sources */,
 				000000000000000000000022 /* SSEClient.swift in Sources */,
 				000000000000000000000024 /* MessageView.swift in Sources */,

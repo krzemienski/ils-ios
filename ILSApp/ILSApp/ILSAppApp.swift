@@ -40,30 +40,13 @@ struct ILSAppApp: App {
 class AppState: ObservableObject {
     @Published var selectedProject: Project?
     @Published var isConnected: Bool = false
-    @Published var serverURL: String = "" {
-        didSet {
-            // Persist full URL to UserDefaults
-            UserDefaults.standard.set(serverURL, forKey: "serverURL")
-            apiClient = APIClient(baseURL: serverURL)
-            sseClient = SSEClient(baseURL: serverURL)
-            // Only check connection if not initializing
-            if isInitialized {
-                checkConnection()
-            }
-        }
-    }
+    @Published var serverURL: String = ""
     @Published var selectedTab: String = "dashboard"
     @Published var isServerConnected: Bool = false
     @Published var serverConnectionInfo: ConnectionResponse?
 
     // Spec 051: Session state persistence
-    @Published var lastSessionId: UUID? {
-        didSet {
-            if let id = lastSessionId {
-                UserDefaults.standard.set(id.uuidString, forKey: "ils_last_session_id")
-            }
-        }
-    }
+    @Published var lastSessionId: UUID?
 
     // Spec 058: Offline mode detection
     @Published var isOffline: Bool = false
@@ -90,46 +73,59 @@ class AppState: ObservableObject {
             let actualPort = port > 0 ? port : 9090
             url = "http://\(host):\(actualPort)"
         }
-        
-        // Initialize clients before setting serverURL to avoid didSet cascade
+
+        // Initialize clients and set URL directly (no didSet needed)
         self.apiClient = APIClient(baseURL: url)
         self.sseClient = SSEClient(baseURL: url)
         self.serverURL = url
-        
-        // Mark as initialized so didSet can call checkConnection
+
+        // Mark as initialized so updateServerURL can call checkConnection
         self.isInitialized = true
-        
+
         // Check connection asynchronously (non-blocking)
         checkConnection()
+    }
+
+    /// Update the server URL, persist to UserDefaults, recreate clients, and check connection.
+    /// Use this instead of assigning serverURL directly.
+    func updateServerURL(_ url: String) {
+        serverURL = url
+        UserDefaults.standard.set(url, forKey: "serverURL")
+        apiClient = APIClient(baseURL: url)
+        sseClient = SSEClient(baseURL: url)
+        if isInitialized {
+            checkConnection()
+        }
+    }
+
+    /// Update the last session ID and persist to UserDefaults.
+    func updateLastSessionId(_ id: UUID?) {
+        lastSessionId = id
+        if let id {
+            UserDefaults.standard.set(id.uuidString, forKey: "ils_last_session_id")
+        }
     }
 
     func checkConnection() {
         Task {
             do {
-                print("🔵 Checking connection to: \(serverURL)")
+                AppLogger.shared.info("Checking connection to: \(serverURL)", category: "app")
                 let client = APIClient(baseURL: serverURL)
                 let response = try await client.healthCheck()
-                print("✅ Connection successful! Response: \(response)")
-                let wasDisconnected = !isConnected
+                AppLogger.shared.info("Connection successful! Response: \(response)", category: "app")
                 isConnected = true
                 stopRetryPolling()
                 startHealthPolling()
-                if wasDisconnected {
-                    // Notify views to reload after recovery
-                    objectWillChange.send()
-                }
             } catch let error as URLError {
-                print("❌ Connection failed with URLError: \(error.code.rawValue) - \(error.localizedDescription)")
-                print("   URL: \(serverURL)")
-                print("   Error details: \(error)")
+                AppLogger.shared.error("Connection failed with URLError: \(error.code.rawValue) - \(error.localizedDescription)", category: "app")
+                AppLogger.shared.error("URL: \(serverURL), details: \(error)", category: "app")
                 isConnected = false
                 stopHealthPolling()
                 startRetryPolling()
                 showOnboardingIfNeeded()
             } catch {
-                print("❌ Connection failed with error: \(error.localizedDescription)")
-                print("   URL: \(serverURL)")
-                print("   Error type: \(type(of: error))")
+                AppLogger.shared.error("Connection failed: \(error.localizedDescription)", category: "app")
+                AppLogger.shared.error("URL: \(serverURL), type: \(type(of: error))", category: "app")
                 isConnected = false
                 stopHealthPolling()
                 startRetryPolling()
@@ -141,23 +137,24 @@ class AppState: ObservableObject {
     /// Start periodic polling to detect backend recovery
     private func startRetryPolling() {
         guard retryTask == nil else { return }
-        print("🔄 Starting retry polling (checking every 5 seconds)")
+        AppLogger.shared.info("Starting retry polling (every 5 seconds)", category: "app")
         retryTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
+                let currentURL = self.serverURL
                 do {
-                    print("🔄 Retry attempt to: \(self.serverURL)")
-                    let client = APIClient(baseURL: self.serverURL)
+                    AppLogger.shared.info("Retry attempt to: \(currentURL)", category: "app")
+                    let client = APIClient(baseURL: currentURL)
                     let response = try await client.healthCheck()
-                    print("✅ Reconnected! Response: \(response)")
+                    AppLogger.shared.info("Reconnected! Response: \(response)", category: "app")
                     self.isConnected = true
                     self.stopRetryPolling()
                     self.startHealthPolling()
                     break
                 } catch {
-                    print("⏳ Still disconnected, retrying in 5s...")
+                    AppLogger.shared.warning("Still disconnected, retrying in 5s...", category: "app")
                 }
             }
         }
@@ -177,8 +174,9 @@ class AppState: ObservableObject {
                 try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
+                let currentURL = self.serverURL
                 do {
-                    let client = APIClient(baseURL: self.serverURL)
+                    let client = APIClient(baseURL: currentURL)
                     _ = try await client.healthCheck()
                     // Still connected
                 } catch {
@@ -220,7 +218,7 @@ class AppState: ObservableObject {
         _ = try await client.healthCheck()
 
         // Success — update everything atomically
-        serverURL = cleanURL
+        updateServerURL(cleanURL)
         isConnected = true
         UserDefaults.standard.set(true, forKey: "hasConnectedBefore")
         showOnboarding = false

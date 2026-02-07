@@ -61,6 +61,14 @@ struct ToolCallDisplay: Identifiable, Equatable {
     let name: String
     let inputPreview: String?
     var inputPairs: [(key: String, value: String)] = []
+
+    static func == (lhs: ToolCallDisplay, rhs: ToolCallDisplay) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.name == rhs.name &&
+        lhs.inputPreview == rhs.inputPreview &&
+        lhs.inputPairs.count == rhs.inputPairs.count &&
+        zip(lhs.inputPairs, rhs.inputPairs).allSatisfy { $0.key == $1.key && $0.value == $1.value }
+    }
 }
 
 struct ToolResultDisplay: Equatable {

@@ -478,8 +478,8 @@ struct SettingsView: View {
         // Validate URL format
         guard !serverURL.isEmpty else { return }
         
-        // Update appState serverURL (which automatically persists to UserDefaults)
-        appState.serverURL = serverURL
+        // Update appState serverURL (persists to UserDefaults and recreates clients)
+        appState.updateServerURL(serverURL)
     }
 
     private func testConnection() {
@@ -489,7 +489,7 @@ struct SettingsView: View {
                 return
             }
             
-            appState.serverURL = serverURL
+            appState.updateServerURL(serverURL)
             await viewModel.testConnection()
 
             // Save settings if connection successful

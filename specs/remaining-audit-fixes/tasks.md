@@ -32,7 +32,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-3, FR-4, FR-14 | AC-1.3, AC-1.4, AC-5.3_
   - _Design: SSEClient.swift section_
 
-- [ ] 1.3 Fix ILSAppApp: weak capture, didSet to method, remove objectWillChange, nonisolated coders
+- [x] 1.3 Fix ILSAppApp: weak capture, didSet to method, remove objectWillChange, nonisolated coders
   - **Do**:
     1. Open `ILSAppApp.swift`
     2. **M-ARCH-1**: Remove `didSet` from `serverURL` (line 44) and `selectedTab` (line 61 if applicable). Create explicit `updateServerURL(_ url: String)` method containing the didSet logic. Update all callers to use the method

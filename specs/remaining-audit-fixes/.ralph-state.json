@@ -3,7 +3,7 @@
   "name": "remaining-audit-fixes",
   "basePath": "specs/remaining-audit-fixes",
   "phase": "execution",
-  "taskIndex": 1,
+  "taskIndex": 2,
   "totalTasks": 23,
   "taskIteration": 1,
   "maxTaskIterations": 5,
