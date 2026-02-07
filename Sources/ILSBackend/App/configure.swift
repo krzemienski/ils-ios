@@ -17,7 +17,7 @@ func configure(_ app: Application) async throws {
     app.middleware.use(cors, at: .beginning)
 
     // Error middleware
-    app.middleware.use(ErrorMiddleware.default(environment: app.environment))
+    app.middleware.use(ILSErrorMiddleware())
 
     // Database configuration
     let dbPath = app.directory.workingDirectory + "ils.sqlite"
