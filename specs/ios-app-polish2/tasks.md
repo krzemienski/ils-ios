@@ -587,7 +587,7 @@ Focus: Markdown, code blocks, tool call accordions, thinking sections, styled bu
 
 Focus: Multi-mode ServerSetupSheet with connection history and progress indicator.
 
-- [ ] 7.1 Add Local/Remote/Tunnel tab modes to ServerSetupSheet
+- [x] 7.1 Add Local/Remote/Tunnel tab modes to ServerSetupSheet
   - **Do**:
     1. In `ServerSetupSheet.swift`, add segmented picker at top: "Local" | "Remote" | "Tunnel"
     2. Local tab: prefilled `http://localhost:9090`, single Connect button
@@ -602,7 +602,7 @@ Focus: Multi-mode ServerSetupSheet with connection history and progress indicato
   - _Requirements: AC-3.1, FR-2.1_
   - _Design: Enhanced Onboarding screen_
 
-- [ ] 7.2 Add multi-step connection progress indicator
+- [x] 7.2 Add multi-step connection progress indicator
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/ConnectionSteps.swift`
     2. Shows 3 steps: "DNS Resolve", "TCP Connect", "Health Check" — each with checkmark/spinner/x
@@ -618,7 +618,7 @@ Focus: Multi-mode ServerSetupSheet with connection history and progress indicato
   - **Commit**: `feat(onboarding): add multi-step connection progress indicator`
   - _Requirements: AC-3.2, FR-2.2_
 
-- [ ] 7.3 Add connection history and backend info display
+- [x] 7.3 Add connection history and backend info display
   - **Do**:
     1. Store last 5 successful URLs in `UserDefaults` array key `"connectionHistory"`
     2. In ServerSetupSheet, below input: show "Recent" section with tappable history URLs
