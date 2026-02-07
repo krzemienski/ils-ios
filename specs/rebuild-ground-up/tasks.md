@@ -493,7 +493,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-3.1, AC-3.2, AC-3.3, AC-3.4, AC-3.5, AC-3.6, FR-18_
   - _Design: Section 6 — iPad Layout Strategy_
 
-- [ ] V11 [VERIFY] Phase 9 checkpoint: iPad layout (build only)
+- [x] V11 [VERIFY] Phase 9 checkpoint: iPad layout (build only)
   - **Do**: Build for iPad simulator target to verify compilation. iPad screenshot is nice-to-have if iPad simulator available
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
   - **Done when**: Builds successfully with iPad size class logic
