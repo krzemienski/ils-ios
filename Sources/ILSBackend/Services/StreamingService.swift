@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 import ILSShared
+import NIOCore
 
 /// Thread-safe monotonically increasing event counter
 actor EventCounter {
@@ -61,9 +62,9 @@ struct StreamingService {
     ///   - writer: Response body writer
     ///   - request: Vapor Request for logging and Last-Event-ID header
     ///   - onMessage: Optional closure called for each message (for persistence)
-    private static func writeSSEStream(
+    private static func writeSSEStream<Writer: AsyncBodyStreamWriter>(
         from stream: AsyncThrowingStream<StreamMessage, Error>,
-        writer: Response.Body.AsyncWriter,
+        writer: Writer,
         request: Request,
         onMessage: ((StreamMessage) -> Void)? = nil
     ) async throws {
