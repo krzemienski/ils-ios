@@ -404,7 +404,8 @@ extension View {
     /// Show toast then auto-dismiss after duration
     func showToast(_ binding: Binding<Bool>, duration: TimeInterval = 2) {
         binding.wrappedValue = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(duration))
             binding.wrappedValue = false
         }
     }
