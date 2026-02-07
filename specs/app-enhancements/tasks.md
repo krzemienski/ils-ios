@@ -61,7 +61,7 @@ Focus: Add MarkdownUI + HighlightSwift deps, extract ChatMessage model, wire DI 
   - _Requirements: FR-26_
   - _Design: Phase 1 — 1.3 FileSystemService DI_
 
-- [ ] 1.4 Replace UnsafeMutablePointer with actor in SystemController
+- [x] 1.4 Replace UnsafeMutablePointer with actor in SystemController
   - **Do**:
     1. In `SystemController.swift`, add `WebSocketCancellation` actor:
        ```
