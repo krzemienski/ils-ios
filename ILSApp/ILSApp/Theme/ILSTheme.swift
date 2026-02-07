@@ -305,16 +305,26 @@ struct EmptyStateView: View {
 struct StatusBadge: View {
     let text: String
     let color: Color
+    let icon: String
+
+    init(text: String, color: Color, icon: String = "circle.fill") {
+        self.text = text
+        self.color = color
+        self.icon = icon
+    }
 
     var body: some View {
         HStack(spacing: 4) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
+            Image(systemName: icon)
+                .font(.caption2)
+                .imageScale(.small)
+                .foregroundColor(color)
             Text(text)
                 .font(.caption2)
                 .foregroundColor(color)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(text) status")
     }
 }
 
