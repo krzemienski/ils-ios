@@ -442,7 +442,9 @@
       "agent_type": "oh-my-claudecode:executor",
       "started_at": "2026-02-07T09:58:39.280Z",
       "parent_mode": "ultrawork",
-      "status": "running"
+      "status": "completed",
+      "completed_at": "2026-02-07T10:00:20.473Z",
+      "duration_ms": 101193
     },
     {
       "agent_id": "a3a0158",
@@ -453,7 +455,7 @@
     }
   ],
   "total_spawned": 51,
-  "total_completed": 47,
+  "total_completed": 48,
   "total_failed": 0,
-  "last_updated": "2026-02-07T09:59:54.767Z"
+  "last_updated": "2026-02-07T10:00:23.809Z"
 }

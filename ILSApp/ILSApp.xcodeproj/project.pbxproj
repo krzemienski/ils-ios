@@ -54,6 +54,7 @@
 		7103F0FECA16410192750881 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */; };
 		71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5959087095F5F603D0B826 /* AppLogger.swift */; };
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
+		7EC8ADE88CF9F68FAB2868BD /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */; };
 		9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E0683F219C707581CC1582 /* BaseListViewModel.swift */; };
 		C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */; };
 		CNSTP00000000000000001 /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CNSTP00000000000000002 /* ConnectionSteps.swift */; };
@@ -146,6 +147,7 @@
 		6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MCPImportExportView.swift; sourceTree = "<group>"; };
 		6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
 		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
 		B1D1A53A5156A8D8D724FDCB /* EntityType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
 		CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LogViewerView.swift; path = Views/Settings/LogViewerView.swift; sourceTree = "<group>"; };
 		CNSTP00000000000000002 /* ConnectionSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSteps.swift; sourceTree = "<group>"; };
@@ -452,6 +454,7 @@
 			isa = PBXGroup;
 			children = (
 				6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */,
+				AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -666,6 +669,7 @@
 				SKLROW0000000000000001 /* SkeletonRow.swift in Sources */,
 				ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */,
 				0A8D2F5C6ED7B3BB633DCEA3 /* DateFormatters.swift in Sources */,
+				7EC8ADE88CF9F68FAB2868BD /* DateFormatters.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
