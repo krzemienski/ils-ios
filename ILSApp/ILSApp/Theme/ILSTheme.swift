@@ -38,6 +38,35 @@ enum ILSTheme {
     static let borderDefault = Color(red: 42.0/255.0, green: 42.0/255.0, blue: 42.0/255.0)            // #2A2A2A
     static let borderActive = Color(red: 1.0, green: 107.0/255.0, blue: 53.0/255.0)                   // #FF6B35
 
+    // MARK: - V2 Background Scale (from design.md)
+    static let bg0 = Color(red: 0, green: 0, blue: 0)                                          // #000000
+    static let bg1 = Color(red: 10.0/255.0, green: 14.0/255.0, blue: 26.0/255.0)               // #0A0E1A
+    static let bg2 = Color(red: 17.0/255.0, green: 24.0/255.0, blue: 39.0/255.0)               // #111827
+    static let bg3 = Color(red: 30.0/255.0, green: 41.0/255.0, blue: 59.0/255.0)               // #1E293B
+    static let bg4 = Color(red: 51.0/255.0, green: 65.0/255.0, blue: 85.0/255.0)               // #334155
+
+    // MARK: - V2 Text Scale
+    static let textPrimary = Color(red: 241.0/255.0, green: 245.0/255.0, blue: 249.0/255.0)    // #F1F5F9
+    static let textSecondary = Color(red: 148.0/255.0, green: 163.0/255.0, blue: 184.0/255.0)  // #94A3B8
+    static let textTertiary = Color(red: 100.0/255.0, green: 116.0/255.0, blue: 139.0/255.0)   // #64748B
+
+    // MARK: - V2 Spacing
+    static let space2XS: CGFloat = 2
+    static let spaceXS: CGFloat = 4
+    static let spaceS: CGFloat = 8
+    static let spaceM: CGFloat = 12
+    static let spaceL: CGFloat = 16
+    static let spaceXL: CGFloat = 20
+    static let space2XL: CGFloat = 24
+    static let space3XL: CGFloat = 32
+
+    // MARK: - V2 Corner Radius
+    static let radiusXS: CGFloat = 6
+    static let radiusS: CGFloat = 10
+    static let radiusM: CGFloat = 14
+    static let radiusL: CGFloat = 20
+    static let radiusXL: CGFloat = 28
+
     // MARK: - Typography
 
     static let titleFont = Font.system(.title, design: .default, weight: .bold)
@@ -76,10 +105,17 @@ enum ILSTheme {
 // MARK: - View Modifiers
 
 struct CardStyle: ViewModifier {
+    var entityColor: Color?
+
     func body(content: Content) -> some View {
         content
-            .background(ILSTheme.secondaryBackground)
-            .cornerRadius(ILSTheme.cornerRadiusMedium)
+            .background(ILSTheme.bg2)
+            .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+            .overlay(
+                RoundedRectangle(cornerRadius: ILSTheme.radiusS)
+                    .stroke((entityColor ?? ILSTheme.bg4).opacity(0.15), lineWidth: 1)
+            )
+            .shadow(color: (entityColor ?? Color.clear).opacity(0.10), radius: 8, x: 0, y: 4)
     }
 }
 
@@ -120,8 +156,8 @@ struct SecondaryButtonStyle: ButtonStyle {
 }
 
 extension View {
-    func cardStyle() -> some View {
-        modifier(CardStyle())
+    func cardStyle(entityColor: Color? = nil) -> some View {
+        modifier(CardStyle(entityColor: entityColor))
     }
 
     func darkListStyle() -> some View {
@@ -302,24 +338,54 @@ enum HapticManager {
 
 // MARK: - Toast Component
 
+enum ToastVariant {
+    case info
+    case success
+    case warning
+    case error
+
+    var backgroundColor: Color {
+        switch self {
+        case .info: return ILSTheme.bg3
+        case .success: return ILSTheme.success.opacity(0.9)
+        case .warning: return ILSTheme.warning.opacity(0.9)
+        case .error: return ILSTheme.error.opacity(0.9)
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .info: return "info.circle.fill"
+        case .success: return "checkmark.circle.fill"
+        case .warning: return "exclamationmark.triangle.fill"
+        case .error: return "xmark.circle.fill"
+        }
+    }
+}
+
 struct ToastModifier: ViewModifier {
     @Binding var isPresented: Bool
     let message: String
+    let variant: ToastVariant
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottom) {
                 if isPresented {
-                    Text(message)
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, ILSTheme.spacingM)
-                        .padding(.vertical, ILSTheme.spacingS)
-                        .background(ILSTheme.tertiaryBackground)
-                        .cornerRadius(ILSTheme.cornerRadiusSmall)
-                        .shadow(color: .black.opacity(0.3), radius: 4)
-                        .padding(.bottom, 20)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    HStack(spacing: 8) {
+                        Image(systemName: variant.icon)
+                            .font(.caption)
+                        Text(message)
+                            .font(ILSTheme.captionFont)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, ILSTheme.spacingM)
+                    .padding(.vertical, ILSTheme.spacingS)
+                    .background(variant.backgroundColor)
+                    .cornerRadius(ILSTheme.cornerRadiusSmall)
+                    .shadow(color: .black.opacity(0.3), radius: 4)
+                    .padding(.bottom, 20)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: isPresented)
@@ -327,8 +393,8 @@ struct ToastModifier: ViewModifier {
 }
 
 extension View {
-    func toast(isPresented: Binding<Bool>, message: String) -> some View {
-        modifier(ToastModifier(isPresented: isPresented, message: message))
+    func toast(isPresented: Binding<Bool>, message: String, variant: ToastVariant = .info) -> some View {
+        modifier(ToastModifier(isPresented: isPresented, message: message, variant: variant))
     }
 
     /// Show toast then auto-dismiss after duration

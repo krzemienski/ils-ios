@@ -67,7 +67,7 @@ actor APIClient {
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
         // Cache the raw data
@@ -84,7 +84,7 @@ actor APIClient {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = try encoder.encode(body)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
         // Invalidate GET cache for the base path
@@ -102,7 +102,7 @@ actor APIClient {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = try encoder.encode(body)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
         // Invalidate GET cache for the base path
@@ -118,7 +118,7 @@ actor APIClient {
         request.httpMethod = "DELETE"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
         // Invalidate GET cache for the base path
@@ -147,14 +147,41 @@ actor APIClient {
         }
     }
 
+    // MARK: - Retry Logic
+
+    private func performWithRetry(request: URLRequest, maxAttempts: Int = 3) async throws -> (Data, URLResponse) {
+        var lastError: Error?
+        for attempt in 1...maxAttempts {
+            do {
+                let (data, response) = try await session.data(for: request)
+                return (data, response)
+            } catch {
+                lastError = error
+                let nsError = error as NSError
+                let isTransient = nsError.domain == NSURLErrorDomain && [
+                    NSURLErrorTimedOut,
+                    NSURLErrorNetworkConnectionLost,
+                    NSURLErrorNotConnectedToInternet,
+                    NSURLErrorCannotConnectToHost
+                ].contains(nsError.code)
+
+                if !isTransient || attempt == maxAttempts {
+                    throw APIError.networkError(error)
+                }
+                // Exponential backoff: 0.5s, 1s, 2s
+                let delay = 0.5 * pow(2.0, Double(attempt - 1))
+                try await Task.sleep(for: .seconds(delay))
+            }
+        }
+        throw APIError.networkError(lastError ?? URLError(.unknown))
+    }
+
     private func validateResponse(_ response: URLResponse) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("❌ API Error: Invalid response from server")
             throw APIError.invalidResponse
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            print("❌ API Error: HTTP \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
     }

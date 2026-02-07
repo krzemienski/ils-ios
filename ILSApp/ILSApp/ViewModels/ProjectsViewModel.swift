@@ -49,7 +49,7 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to load projects: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load projects: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -81,7 +81,7 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to create project: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to create project: \(error.localizedDescription)")
         }
         return nil
     }
@@ -103,7 +103,7 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to update project: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to update project: \(error.localizedDescription)")
         }
         return nil
     }
@@ -115,7 +115,7 @@ class ProjectsViewModel: ObservableObject {
             projects.removeAll { $0.id == project.id }
         } catch {
             self.error = error
-            print("❌ Failed to delete project: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to delete project: \(error.localizedDescription)")
         }
     }
 
@@ -135,7 +135,7 @@ class ProjectsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to duplicate project: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to duplicate project: \(error.localizedDescription)")
         }
         return nil
     }

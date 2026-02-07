@@ -14,8 +14,20 @@ class DashboardViewModel: ObservableObject {
     @Published var recentSessions: [ChatSession] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var totalCost: Double = 0.0
 
     private var client: APIClient?
+
+    // Sparkline data (synthetic from recent sessions for visual interest)
+    var sessionSparkline: [Double] { generateSparkline(count: 8, seed: stats?.sessions.total ?? 0) }
+    var projectSparkline: [Double] { generateSparkline(count: 8, seed: stats?.projects.total ?? 0) }
+    var skillSparkline: [Double] { generateSparkline(count: 8, seed: stats?.skills.total ?? 0) }
+    var mcpSparkline: [Double] { generateSparkline(count: 8, seed: stats?.mcpServers.total ?? 0) }
+
+    /// Formatted total cost as "$X.XX"
+    var formattedTotalCost: String {
+        String(format: "$%.2f", totalCost)
+    }
 
     init() {}
 
@@ -48,6 +60,7 @@ class DashboardViewModel: ObservableObject {
 
         await loadStats()
         await loadRecentActivity()
+        computeTotalCost()
 
         isLoading = false
     }
@@ -62,7 +75,7 @@ class DashboardViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to load stats: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load stats: \(error.localizedDescription)")
         }
     }
 
@@ -76,12 +89,29 @@ class DashboardViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to load recent activity: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load recent activity: \(error.localizedDescription)")
+        }
+    }
+
+    /// Compute total cost from all recent sessions
+    private func computeTotalCost() {
+        totalCost = recentSessions.reduce(0.0) { sum, session in
+            sum + (session.totalCostUSD ?? 0.0)
         }
     }
 
     /// Retry loading dashboard data
     func retryLoad() async {
         await loadAll()
+    }
+
+    /// Generate synthetic sparkline data from a seed value for visual variety
+    private func generateSparkline(count: Int, seed: Int) -> [Double] {
+        guard seed > 0 else { return [] }
+        let base = Double(seed)
+        return (0..<count).map { i in
+            let variance = sin(Double(i) * 0.8 + Double(seed % 7)) * base * 0.3
+            return max(0, base + variance)
+        }
     }
 }

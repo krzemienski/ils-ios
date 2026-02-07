@@ -51,7 +51,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to load plugins: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load plugins: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -71,7 +71,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to install plugin '\(name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to install plugin '\(name)': \(error.localizedDescription)")
         }
     }
 
@@ -82,7 +82,7 @@ class PluginsViewModel: ObservableObject {
             plugins.removeAll { $0.id == plugin.id }
         } catch {
             self.error = error
-            print("❌ Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
 
@@ -97,7 +97,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to enable plugin '\(plugin.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to enable plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
 
@@ -112,7 +112,7 @@ class PluginsViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to disable plugin '\(plugin.name)': \(error.localizedDescription)")
         }
     }
 
@@ -129,7 +129,7 @@ class PluginsViewModel: ObservableObject {
                 searchResults = data.items
             }
         } catch {
-            print("❌ Plugin search failed: \(error.localizedDescription)")
+            AppLogger.shared.error("Plugin search failed: \(error.localizedDescription)")
         }
         isSearchingMarketplace = false
     }
@@ -142,7 +142,7 @@ class PluginsViewModel: ObservableObject {
             return true
         } catch {
             self.error = error
-            print("❌ Failed to add marketplace: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to add marketplace: \(error.localizedDescription)")
             return false
         }
     }

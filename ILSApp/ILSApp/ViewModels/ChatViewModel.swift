@@ -222,7 +222,7 @@ class ChatViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("Failed to load message history: \(error)")
+            AppLogger.shared.error("Failed to load message history: \(error)")
             if messages.isEmpty {
                 if encodedProjectPath != nil {
                     showEmptyTranscriptMessage()
@@ -274,7 +274,7 @@ class ChatViewModel: ObservableObject {
                 ToolCall(id: block.id, name: block.name, inputPreview: nil)
             }
         } catch {
-            print("Failed to parse tool calls: \(error)")
+            AppLogger.shared.error("Failed to parse tool calls: \(error)")
             return []
         }
     }
@@ -292,7 +292,7 @@ class ChatViewModel: ObservableObject {
                 ToolResult(toolUseId: block.toolUseId, content: block.content, isError: block.isError)
             }
         } catch {
-            print("Failed to parse tool results: \(error)")
+            AppLogger.shared.error("Failed to parse tool results: \(error)")
             return []
         }
     }
@@ -321,7 +321,7 @@ class ChatViewModel: ObservableObject {
                     let _: APIResponse<DeletedResponse> = try await apiClient.post("/chat/cancel/\(sessionId.uuidString)", body: EmptyBody())
                 } catch {
                     // Cancel is best-effort — don't surface errors to user
-                    print("Backend cancel failed (non-fatal): \(error)")
+                    AppLogger.shared.warning("Backend cancel failed (non-fatal): \(error)")
                 }
             }
         }
@@ -337,7 +337,7 @@ class ChatViewModel: ObservableObject {
             return response.data
         } catch {
             self.error = error
-            print("Failed to fork session: \(error)")
+            AppLogger.shared.error("Failed to fork session: \(error)")
             return nil
         }
     }

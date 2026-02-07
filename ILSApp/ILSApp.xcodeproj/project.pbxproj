@@ -77,6 +77,11 @@
 		TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = TOOLAC0000000000000002 /* ToolCallAccordion.swift */; };
 		THNKSC0000000000000001 /* ThinkingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = THNKSC0000000000000002 /* ThinkingSection.swift */; };
 		CNSTP00000000000000001 /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CNSTP00000000000000002 /* ConnectionSteps.swift */; };
+		STCARD0000000000000001 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = STCARD0000000000000002 /* StatCard.swift */; };
+		SPRKCR0000000000000001 /* SparklineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = SPRKCR0000000000000002 /* SparklineChart.swift */; };
+		EMTYST0000000000000001 /* EmptyEntityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EMTYST0000000000000002 /* EmptyEntityState.swift */; };
+		SHIMMR0000000000000001 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHIMMR0000000000000002 /* ShimmerModifier.swift */; };
+		SKLROW0000000000000001 /* SkeletonRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SKLROW0000000000000002 /* SkeletonRow.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
@@ -165,6 +170,11 @@
 		TOOLAC0000000000000002 /* ToolCallAccordion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallAccordion.swift; sourceTree = "<group>"; };
 		THNKSC0000000000000002 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		CNSTP00000000000000002 /* ConnectionSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSteps.swift; sourceTree = "<group>"; };
+		STCARD0000000000000002 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
+		SPRKCR0000000000000002 /* SparklineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparklineChart.swift; sourceTree = "<group>"; };
+		EMTYST0000000000000002 /* EmptyEntityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyEntityState.swift; sourceTree = "<group>"; };
+		SHIMMR0000000000000002 /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
+		SKLROW0000000000000002 /* SkeletonRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonRow.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -246,6 +256,11 @@
 				TOOLAC0000000000000002 /* ToolCallAccordion.swift */,
 				THNKSC0000000000000002 /* ThinkingSection.swift */,
 				CNSTP00000000000000002 /* ConnectionSteps.swift */,
+				STCARD0000000000000002 /* StatCard.swift */,
+				SPRKCR0000000000000002 /* SparklineChart.swift */,
+				EMTYST0000000000000002 /* EmptyEntityState.swift */,
+				SHIMMR0000000000000002 /* ShimmerModifier.swift */,
+				SKLROW0000000000000002 /* SkeletonRow.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -650,6 +665,11 @@
 				TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */,
 				THNKSC0000000000000001 /* ThinkingSection.swift in Sources */,
 				CNSTP00000000000000001 /* ConnectionSteps.swift in Sources */,
+				STCARD0000000000000001 /* StatCard.swift in Sources */,
+				SPRKCR0000000000000001 /* SparklineChart.swift in Sources */,
+				EMTYST0000000000000001 /* EmptyEntityState.swift in Sources */,
+				SHIMMR0000000000000001 /* ShimmerModifier.swift in Sources */,
+				SKLROW0000000000000001 /* SkeletonRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

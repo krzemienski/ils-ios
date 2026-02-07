@@ -23,10 +23,10 @@ struct ProjectsListView: View {
                     await viewModel.retryLoadProjects()
                 }
             } else if viewModel.projects.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    title: "No Projects Found",
-                    systemImage: "folder",
-                    description: "Projects are created via the Claude CLI."
+                EmptyEntityState(
+                    entityType: .projects,
+                    title: "No Projects",
+                    description: "Connect to a backend with projects"
                 )
             } else if !searchText.isEmpty && filteredProjects.isEmpty {
                 ContentUnavailableView.search(text: searchText)
@@ -56,34 +56,9 @@ struct ProjectsListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.projects.isEmpty {
                 List {
-                    ForEach(0..<6, id: \.self) { _ in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Project Name")
-                                    .font(ILSTheme.headlineFont)
-                                Spacer()
-                                Text("sonnet")
-                                    .font(ILSTheme.captionFont)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 2)
-                                    .background(ILSTheme.tertiaryBackground)
-                                    .cornerRadius(ILSTheme.cornerRadiusXS)
-                            }
-                            Text("/path/to/project")
-                                .font(Font.system(.caption, design: .monospaced))
-                            HStack {
-                                Label("5 sessions", systemImage: "bubble.left.and.bubble.right")
-                                    .font(ILSTheme.captionFont)
-                                Spacer()
-                                Text("1 hr ago")
-                                    .font(ILSTheme.captionFont)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
+                    SkeletonListView()
                 }
                 .darkListStyle()
-                .redacted(reason: .placeholder)
             }
         }
         .task {
@@ -108,46 +83,55 @@ struct ProjectRowView: View {
     }()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(project.name)
-                    .font(ILSTheme.headlineFont)
+        HStack(spacing: ILSTheme.spaceM) {
+            // Green folder icon accent
+            Image(systemName: EntityType.projects.icon)
+                .font(.title3)
+                .foregroundColor(EntityType.projects.color)
+                .frame(width: 28)
 
-                Spacer()
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(project.name)
+                        .font(ILSTheme.headlineFont)
+                        .foregroundColor(ILSTheme.textPrimary)
 
-                Text(project.defaultModel)
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.secondaryText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusXS)
-            }
+                    Spacer()
 
-            Text(project.path)
-                .font(Font.system(.caption, design: .monospaced))
-                .foregroundColor(ILSTheme.secondaryText)
-                .lineLimit(1)
-
-            if let description = project.description {
-                Text(description)
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
-                    .lineLimit(2)
-            }
-
-            HStack {
-                if let count = project.sessionCount {
-                    Label("\(count) sessions", systemImage: "bubble.left.and.bubble.right")
+                    Text(project.defaultModel)
                         .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.tertiaryText)
+                        .foregroundColor(ILSTheme.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(ILSTheme.bg3)
+                        .cornerRadius(ILSTheme.cornerRadiusXS)
                 }
 
-                Spacer()
+                Text(project.path)
+                    .font(Font.system(.caption, design: .monospaced))
+                    .foregroundColor(ILSTheme.textSecondary)
+                    .lineLimit(1)
 
-                Text(formattedDate(project.lastAccessedAt))
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
+                if let description = project.description {
+                    Text(description)
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.textTertiary)
+                        .lineLimit(2)
+                }
+
+                HStack {
+                    if let count = project.sessionCount {
+                        Label("\(count) sessions", systemImage: "bubble.left.and.bubble.right")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.textTertiary)
+                    }
+
+                    Spacer()
+
+                    Text(formattedDate(project.lastAccessedAt))
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.textTertiary)
+                }
             }
         }
         .padding(.vertical, 4)

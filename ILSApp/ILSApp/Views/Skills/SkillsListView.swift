@@ -14,9 +14,9 @@ struct SkillsListView: View {
                 }
             } else if viewModel.filteredSkills.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty {
-                    EmptyStateView(
+                    EmptyEntityState(
+                        entityType: .skills,
                         title: "No Skills",
-                        systemImage: "star",
                         description: "Skills from ~/.claude/skills/ will appear here",
                         actionTitle: "Create Skill"
                     ) {
@@ -121,7 +121,10 @@ struct SkillsListView: View {
         }
         .overlay {
             if viewModel.isLoading && viewModel.skills.isEmpty {
-                ProgressView("Loading skills...")
+                List {
+                    SkeletonListView()
+                }
+                .darkListStyle()
             }
         }
         .task {
@@ -141,10 +144,17 @@ struct SkillRowView: View {
     var onToggle: (() -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
+        HStack(spacing: ILSTheme.spaceM) {
+            Image(systemName: EntityType.skills.icon)
+                .font(.title3)
+                .foregroundColor(EntityType.skills.color)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: ILSTheme.spacingXS) {
             HStack {
                 Text("/\(skill.name)")
                     .font(ILSTheme.headlineFont)
+                    .foregroundColor(ILSTheme.textPrimary)
 
                 Spacer()
 
@@ -188,7 +198,8 @@ struct SkillRowView: View {
                     .foregroundColor(ILSTheme.tertiaryText)
                     .lineLimit(1)
             }
-        }
+        } // end inner VStack
+        } // end outer HStack
         .padding(.vertical, ILSTheme.spacingXS)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("/\(skill.name), \(skill.isActive ? "active" : "inactive")\(skill.description.map { ", \($0)" } ?? "")")
@@ -361,7 +372,7 @@ struct SkillDetailView: View {
                 fullSkill = loadedSkill
             }
         } catch {
-            print("Failed to load full skill: \(error)")
+            AppLogger.shared.error("Failed to load full skill: \(error)")
         }
         isLoading = false
     }
@@ -465,7 +476,7 @@ struct SkillEditorView: View {
                 content = skillContent
             }
         } catch {
-            print("Failed to load skill content: \(error)")
+            AppLogger.shared.error("Failed to load skill content: \(error)")
         }
     }
 
@@ -498,7 +509,7 @@ struct SkillEditorView: View {
                     }
                 }
             } catch {
-                print("Failed to save skill: \(error)")
+                AppLogger.shared.error("Failed to save skill: \(error)")
             }
 
             isSaving = false

@@ -14,9 +14,9 @@ struct PluginsListView: View {
                 }
             } else if viewModel.filteredPlugins.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty {
-                    EmptyStateView(
+                    EmptyEntityState(
+                        entityType: .plugins,
                         title: "No Plugins",
-                        systemImage: "puzzlepiece.extension",
                         description: "Install plugins from the marketplace",
                         actionTitle: "Browse Marketplace"
                     ) {
@@ -64,7 +64,10 @@ struct PluginsListView: View {
         }
         .overlay {
             if viewModel.isLoading && viewModel.plugins.isEmpty {
-                ProgressView("Loading plugins...")
+                List {
+                    SkeletonListView()
+                }
+                .darkListStyle()
             }
         }
         .task {
@@ -84,10 +87,17 @@ struct PluginRowView: View {
     @ObservedObject var viewModel: PluginsViewModel
 
     var body: some View {
+        HStack(spacing: ILSTheme.spaceM) {
+            Image(systemName: EntityType.plugins.icon)
+                .font(.title3)
+                .foregroundColor(EntityType.plugins.color)
+                .frame(width: 28)
+
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(plugin.name)
                     .font(ILSTheme.headlineFont)
+                    .foregroundColor(ILSTheme.textPrimary)
 
                 Spacer()
 
@@ -122,7 +132,8 @@ struct PluginRowView: View {
                     }
                 }
             }
-        }
+        } // end VStack
+        } // end HStack
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "enabled" : "disabled")\(plugin.description.map { ", \($0)" } ?? "")")
@@ -302,7 +313,7 @@ struct MarketplaceView: View {
                 marketplaces = data
             }
         } catch {
-            print("Failed to load marketplaces: \(error)")
+            AppLogger.shared.error("Failed to load marketplaces: \(error)")
         }
         isLoading = false
     }

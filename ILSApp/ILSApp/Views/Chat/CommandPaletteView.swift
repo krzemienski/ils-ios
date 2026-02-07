@@ -102,7 +102,7 @@ struct CommandPaletteView: View {
                 skills = data.items
             }
         } catch {
-            print("Failed to load skills: \(error)")
+            AppLogger.shared.error("Failed to load skills: \(error)")
         }
         isLoading = false
     }

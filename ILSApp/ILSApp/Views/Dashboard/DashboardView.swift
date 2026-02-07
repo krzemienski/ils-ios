@@ -5,175 +5,84 @@ struct DashboardView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = DashboardViewModel()
     @State private var selectedSection: DashboardSection?
+    @State private var lastRefreshed: Date?
+
+    private var greetingText: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return "Good morning"
+        case 12..<17: return "Good afternoon"
+        case 17..<22: return "Good evening"
+        default: return "Good night"
+        }
+    }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: ILSTheme.spacingL) {
+            VStack(spacing: ILSTheme.spaceL) {
+                // Greeting Header
+                greetingHeader
+
                 if let error = viewModel.error {
                     ErrorStateView(error: error) {
                         await viewModel.retryLoad()
                     }
                     .padding()
+                } else if viewModel.isLoading && viewModel.stats == nil {
+                    skeletonContent
                 } else if let stats = viewModel.stats {
-                    // Stats Grid
-                    VStack(spacing: ILSTheme.spacingM) {
-                        // Row 1: Projects & Sessions
-                        HStack(spacing: ILSTheme.spacingM) {
-                            StatCardView(
-                                title: "Projects",
-                                count: stats.projects.total,
-                                subtitle: activeText(stats.projects.active),
-                                icon: "folder.fill",
-                                color: ILSTheme.info
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                HapticManager.impact(.light)
-                                selectedSection = .projects
-                            }
-
-                            StatCardView(
-                                title: "Sessions",
-                                count: stats.sessions.total,
-                                subtitle: "\(stats.sessions.active) active",
-                                icon: "bubble.left.and.bubble.right.fill",
-                                color: ILSTheme.success
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                HapticManager.impact(.light)
-                                selectedSection = .sessions
-                            }
-                        }
-
-                        // Row 2: Skills & MCP
-                        HStack(spacing: ILSTheme.spacingM) {
-                            StatCardView(
-                                title: "Skills",
-                                count: stats.skills.total,
-                                subtitle: activeText(stats.skills.active),
-                                icon: "wand.and.stars.fill",
-                                color: Color(red: 175.0/255.0, green: 82.0/255.0, blue: 222.0/255.0)
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                HapticManager.impact(.light)
-                                selectedSection = .skills
-                            }
-
-                            StatCardView(
-                                title: "MCP Servers",
-                                count: stats.mcpServers.total,
-                                subtitle: "\(stats.mcpServers.healthy) healthy",
-                                icon: "server.rack",
-                                color: ILSTheme.accent
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                HapticManager.impact(.light)
-                                selectedSection = .mcpServers
-                            }
-                        }
-                    }
-                    .padding()
+                    // 2x2 Stat Cards Grid
+                    statCardsGrid(stats)
 
                     // Quick Actions Section
-                    VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
-                        Text("Quick Actions")
-                            .font(ILSTheme.titleFont)
-                            .foregroundColor(ILSTheme.primaryText)
-                            .padding(.horizontal)
+                    quickActionsSection
 
-                        VStack(spacing: ILSTheme.spacingXS) {
-                            ForEach(viewModel.quickActions) { action in
-                                Button {
-                                    // Navigate to the corresponding tab
-                                    appState.selectedTab = action.tab.rawValue.lowercased()
-                                } label: {
-                                    HStack(spacing: ILSTheme.spacingM) {
-                                        Image(systemName: action.icon)
-                                            .font(.title3)
-                                            .foregroundColor(ILSTheme.accent)
-                                            .frame(width: 32)
+                    // Recent Sessions Section
+                    recentSessionsSection
 
-                                        Text(action.title)
-                                            .font(ILSTheme.bodyFont)
-                                            .foregroundColor(ILSTheme.primaryText)
+                    // System Health Strip
+                    systemHealthStrip(stats)
 
-                                        Spacer()
-
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption)
-                                            .foregroundColor(ILSTheme.tertiaryText)
-                                    }
-                                    .padding(ILSTheme.spacingM)
-                                    .background(ILSTheme.secondaryBackground)
-                                    .cornerRadius(ILSTheme.cornerRadiusSmall)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
+                    // Last Updated
+                    if let lastRefreshed = lastRefreshed {
+                        Text("Updated \(lastRefreshed, style: .relative) ago")
+                            .font(.caption2)
+                            .foregroundColor(ILSTheme.textTertiary)
+                            .padding(.bottom, ILSTheme.spaceS)
                     }
-
-                    // Recent Activity Section
-                    VStack(alignment: .leading, spacing: ILSTheme.spacingM) {
-                        Text("Recent Activity")
-                            .font(ILSTheme.titleFont)
-                            .foregroundColor(ILSTheme.primaryText)
-                            .padding(.horizontal)
-
-                        if viewModel.recentSessions.isEmpty {
-                            EmptyStateView(
-                                title: "No Recent Activity",
-                                systemImage: "clock",
-                                description: "Your recent sessions will appear here"
-                            )
-                            .padding()
-                        } else {
-                            VStack(spacing: ILSTheme.spacingXS) {
-                                ForEach(viewModel.recentSessions.prefix(10)) { session in
-                                    NavigationLink(destination: ChatView(session: session)) {
-                                        RecentActivityRowView(session: session)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
-                } else if viewModel.isLoading {
-                    SkeletonDashboardView()
-                        .padding()
                 } else {
-                    EmptyStateView(
+                    EmptyEntityState(
+                        entityType: .sessions,
                         title: "No Data",
-                        systemImage: "chart.bar",
-                        description: "Dashboard data is not available"
+                        description: "Dashboard data is not available",
+                        actionTitle: "Retry"
                     ) {
-                        Task {
-                            await viewModel.loadAll()
-                        }
+                        Task { await viewModel.loadAll() }
                     }
                     .padding()
                 }
             }
+            .padding(.horizontal, ILSTheme.spaceL)
         }
-        .background(ILSTheme.background.ignoresSafeArea())
+        .background(ILSTheme.bg0.ignoresSafeArea())
         .navigationTitle("Dashboard")
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarBackground(Color.black, for: .navigationBar)
         .refreshable {
             await viewModel.loadAll()
+            lastRefreshed = Date()
+            HapticManager.notification(.success)
         }
         .sheet(item: $selectedSection) { section in
             NavigationStack {
                 section.destinationView
             }
-            .presentationBackground(Color.black)
+            .presentationBackground(.ultraThinMaterial)
         }
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadAll()
+            lastRefreshed = Date()
         }
         .onChange(of: appState.isConnected) { _, isConnected in
             if isConnected && viewModel.error != nil {
@@ -182,220 +91,314 @@ struct DashboardView: View {
         }
     }
 
-    private func activeText(_ active: Int?) -> String {
-        if let active = active {
-            return "\(active) active"
+    // MARK: - Greeting Header
+
+    private var greetingHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(greetingText)
+                    .font(.title2.weight(.bold))
+                    .foregroundColor(ILSTheme.textPrimary)
+
+                Text("ILS Dashboard")
+                    .font(.subheadline)
+                    .foregroundColor(ILSTheme.textSecondary)
+            }
+
+            Spacer()
+
+            // Connection dot
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(appState.isConnected ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                Text(appState.isConnected ? "Online" : "Offline")
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(appState.isConnected ? .green : .red)
+            }
+            .padding(.horizontal, ILSTheme.spaceM)
+            .padding(.vertical, ILSTheme.spaceXS)
+            .background(ILSTheme.bg2)
+            .clipShape(Capsule())
         }
-        return "No activity"
-    }
-}
-
-// MARK: - Stat Card Component
-
-struct StatCardView: View {
-    let title: String
-    let count: Int
-    let subtitle: String
-    let icon: String
-    let color: Color
-    @State private var isPressed = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                    .font(.title2)
-
-                Spacer()
-            }
-
-            Text("\(count)")
-                .font(ILSTheme.titleFont)
-                .foregroundColor(ILSTheme.accent)
-
-            Text(title)
-                .font(ILSTheme.headlineFont)
-                .foregroundColor(ILSTheme.secondaryText)
-
-            Text(subtitle)
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.tertiaryText)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(ILSTheme.spacingM)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusMedium)
-        .scaleEffect(isPressed ? 0.96 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(count), \(subtitle)")
-        .accessibilityHint("Double tap to view \(title.lowercased())")
-    }
-}
-
-// MARK: - Recent Activity Row Component
-
-struct RecentActivityRowView: View {
-    let session: ChatSession
-
-    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter
-    }()
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(session.name ?? "Unnamed Session")
-                    .font(ILSTheme.headlineFont)
-                    .foregroundColor(ILSTheme.primaryText)
-
-                Spacer()
-
-                Text(session.model)
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.secondaryText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusXS)
-            }
-
-            if let projectName = session.projectName {
-                Text(projectName)
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.secondaryText)
-                    .lineLimit(1)
-            }
-
-            HStack {
-                Label("\(session.messageCount) messages", systemImage: "bubble.left.and.bubble.right")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
-
-                Spacer()
-
-                Text(formattedDate(session.lastActiveAt))
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
-            }
-        }
-        .padding(ILSTheme.spacingM)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusSmall)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(session.name ?? "Unnamed Session"), \(session.model), \(session.messageCount) messages")
+        .padding(.top, ILSTheme.spaceS)
     }
 
-    private func formattedDate(_ date: Date) -> String {
-        Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
-    }
-}
+    // MARK: - 2x2 Stat Cards Grid
 
-// MARK: - Skeleton Loading Views
-
-struct SkeletonDashboardView: View {
-    var body: some View {
-        VStack(spacing: ILSTheme.spacingL) {
-            // Stats Grid Skeleton
-            VStack(spacing: ILSTheme.spacingM) {
-                // Row 1
-                HStack(spacing: ILSTheme.spacingM) {
-                    SkeletonStatCardView()
-                    SkeletonStatCardView()
+    private func statCardsGrid(_ stats: StatsResponse) -> some View {
+        VStack(spacing: ILSTheme.spaceM) {
+            HStack(spacing: ILSTheme.spaceM) {
+                StatCard(
+                    title: "Sessions",
+                    count: stats.sessions.total,
+                    entityType: .sessions,
+                    sparklineData: viewModel.sessionSparkline
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    HapticManager.impact(.light)
+                    selectedSection = .sessions
                 }
 
-                // Row 2
-                HStack(spacing: ILSTheme.spacingM) {
-                    SkeletonStatCardView()
-                    SkeletonStatCardView()
+                StatCard(
+                    title: "Projects",
+                    count: stats.projects.total,
+                    entityType: .projects,
+                    sparklineData: viewModel.projectSparkline
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    HapticManager.impact(.light)
+                    selectedSection = .projects
                 }
             }
 
-            // Recent Activity Section Skeleton
-            VStack(alignment: .leading, spacing: ILSTheme.spacingM) {
-                Text("Recent Activity")
-                    .font(ILSTheme.titleFont)
-                    .foregroundColor(ILSTheme.primaryText)
+            HStack(spacing: ILSTheme.spaceM) {
+                StatCard(
+                    title: "Skills",
+                    count: stats.skills.total,
+                    entityType: .skills,
+                    sparklineData: viewModel.skillSparkline
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    HapticManager.impact(.light)
+                    selectedSection = .skills
+                }
 
-                VStack(spacing: ILSTheme.spacingXS) {
-                    ForEach(0..<5, id: \.self) { _ in
-                        SkeletonActivityRowView()
+                StatCard(
+                    title: "MCP Servers",
+                    count: stats.mcpServers.total,
+                    entityType: .mcp,
+                    sparklineData: viewModel.mcpSparkline
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    HapticManager.impact(.light)
+                    selectedSection = .mcpServers
+                }
+            }
+        }
+    }
+
+    // MARK: - Quick Actions
+
+    private var quickActionsSection: some View {
+        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+            Text("Quick Actions")
+                .font(.headline.weight(.semibold))
+                .foregroundColor(ILSTheme.textPrimary)
+
+            HStack(spacing: ILSTheme.spaceM) {
+                // New Session button
+                Button {
+                    appState.selectedTab = "sessions"
+                } label: {
+                    HStack(spacing: ILSTheme.spaceS) {
+                        Image(systemName: "plus.bubble.fill")
+                            .foregroundColor(EntityType.sessions.color)
+                        Text("New Session")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(ILSTheme.textPrimary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(ILSTheme.spaceM)
+                    .background(ILSTheme.bg2)
+                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ILSTheme.radiusS)
+                            .stroke(EntityType.sessions.color.opacity(0.15), lineWidth: 1)
+                    )
+                }
+
+                // Total Cost card
+                VStack(spacing: 4) {
+                    Text("Total Cost")
+                        .font(.caption)
+                        .foregroundColor(ILSTheme.textTertiary)
+                    Text(viewModel.formattedTotalCost)
+                        .font(.title3.monospacedDigit().bold())
+                        .foregroundColor(ILSTheme.textPrimary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(ILSTheme.spaceM)
+                .background(ILSTheme.bg2)
+                .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+            }
+        }
+    }
+
+    // MARK: - Recent Sessions
+
+    private var recentSessionsSection: some View {
+        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+            Text("Recent Sessions")
+                .font(.headline.weight(.semibold))
+                .foregroundColor(ILSTheme.textPrimary)
+
+            if viewModel.recentSessions.isEmpty {
+                EmptyEntityState(
+                    entityType: .sessions,
+                    title: "No Recent Activity",
+                    description: "Your recent sessions will appear here"
+                )
+            } else {
+                VStack(spacing: ILSTheme.spaceXS) {
+                    ForEach(viewModel.recentSessions.prefix(5)) { session in
+                        NavigationLink(destination: ChatView(session: session)) {
+                            HStack(spacing: ILSTheme.spaceM) {
+                                // Blue entity dot
+                                Circle()
+                                    .fill(session.status == .active
+                                          ? EntityType.sessions.color
+                                          : EntityType.sessions.color.opacity(0.3))
+                                    .frame(width: 8, height: 8)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(session.name ?? "Unnamed Session")
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundColor(ILSTheme.textPrimary)
+                                        .lineLimit(1)
+
+                                    HStack(spacing: ILSTheme.spaceS) {
+                                        Text(session.model)
+                                            .font(.caption2)
+                                            .foregroundColor(ILSTheme.textTertiary)
+                                        Text("\(session.messageCount) msgs")
+                                            .font(.caption2)
+                                            .foregroundColor(ILSTheme.textTertiary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                Text(session.lastActiveAt, style: .relative)
+                                    .font(.caption2)
+                                    .foregroundColor(ILSTheme.textTertiary)
+                            }
+                            .padding(ILSTheme.spaceM)
+                            .background(ILSTheme.bg2)
+                            .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
         }
-        .redacted(reason: .placeholder)
     }
-}
 
-struct SkeletonStatCardView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
-            HStack {
-                Image(systemName: "square.fill")
-                    .font(.title2)
+    // MARK: - System Health Strip
 
-                Spacer()
+    private func systemHealthStrip(_ stats: StatsResponse) -> some View {
+        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+            Text("System Health")
+                .font(.headline.weight(.semibold))
+                .foregroundColor(ILSTheme.textPrimary)
+
+            HStack(spacing: ILSTheme.spaceM) {
+                // Active sessions bar
+                compactBar(
+                    label: "Active",
+                    value: Double(stats.sessions.active),
+                    total: Double(max(stats.sessions.total, 1)),
+                    color: EntityType.sessions.color
+                )
+
+                // Healthy MCP bar
+                compactBar(
+                    label: "MCP Health",
+                    value: Double(stats.mcpServers.healthy),
+                    total: Double(max(stats.mcpServers.total, 1)),
+                    color: EntityType.mcp.color
+                )
+
+                // Enabled plugins bar
+                compactBar(
+                    label: "Plugins",
+                    value: Double(stats.plugins.enabled),
+                    total: Double(max(stats.plugins.total, 1)),
+                    color: EntityType.plugins.color
+                )
             }
-
-            Text("000")
-                .font(ILSTheme.titleFont)
-
-            Text("Loading")
-                .font(ILSTheme.headlineFont)
-
-            Text("Please wait")
-                .font(ILSTheme.captionFont)
+            .padding(ILSTheme.spaceM)
+            .background(ILSTheme.bg2)
+            .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(ILSTheme.spacingM)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusMedium)
     }
-}
 
-struct SkeletonActivityRowView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("Loading Session Name")
-                    .font(ILSTheme.headlineFont)
+    private func compactBar(label: String, value: Double, total: Double, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Text("\(Int(value))/\(Int(total))")
+                .font(.caption.monospacedDigit().bold())
+                .foregroundColor(color)
 
-                Spacer()
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(ILSTheme.bg3)
+                        .frame(height: 4)
 
-                Text("model")
-                    .font(ILSTheme.captionFont)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusXS)
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(color)
+                        .frame(width: geo.size.width * min(value / total, 1.0), height: 4)
+                }
+            }
+            .frame(height: 4)
+
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(ILSTheme.textTertiary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Skeleton Content
+
+    private var skeletonContent: some View {
+        VStack(spacing: ILSTheme.spaceL) {
+            VStack(spacing: ILSTheme.spaceM) {
+                HStack(spacing: ILSTheme.spaceM) {
+                    skeletonCard
+                    skeletonCard
+                }
+                HStack(spacing: ILSTheme.spaceM) {
+                    skeletonCard
+                    skeletonCard
+                }
             }
 
-            Text("Project Name")
-                .font(ILSTheme.captionFont)
-                .lineLimit(1)
-
-            HStack {
-                Label("0 messages", systemImage: "bubble.left.and.bubble.right")
-                    .font(ILSTheme.captionFont)
-
-                Spacer()
-
-                Text("Just now")
-                    .font(ILSTheme.captionFont)
+            VStack(spacing: ILSTheme.spaceXS) {
+                ForEach(0..<5, id: \.self) { _ in
+                    SkeletonRow()
+                }
             }
         }
-        .padding(ILSTheme.spacingM)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusSmall)
+        .padding(.top)
+    }
+
+    private var skeletonCard: some View {
+        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(ILSTheme.bg3)
+                    .frame(width: 24, height: 24)
+                Spacer()
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(ILSTheme.bg3)
+                    .frame(width: 40, height: 20)
+            }
+            RoundedRectangle(cornerRadius: 4)
+                .fill(ILSTheme.bg3)
+                .frame(width: 80, height: 14)
+            RoundedRectangle(cornerRadius: 4)
+                .fill(ILSTheme.bg3)
+                .frame(height: 24)
+        }
+        .padding(ILSTheme.spaceM)
+        .background(ILSTheme.bg2)
+        .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+        .shimmer()
     }
 }
 

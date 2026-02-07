@@ -643,7 +643,7 @@ Focus: Multi-mode ServerSetupSheet with connection history and progress indicato
 
 Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, glass effects. This touches many views.
 
-- [ ] 8.1 Create StatCard and SparklineChart components
+- [x] 8.1 Create StatCard and SparklineChart components
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/StatCard.swift` per design.md: title, count, entity type, sparkline data
     2. Card has ProgressRing with entity gradient, count in entity color, title, SparklineChart below
@@ -656,7 +656,7 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - _Requirements: AC-19.2, FR-8.2_
   - _Design: StatCard Component_
 
-- [ ] 8.2 Redesign DashboardView with stat cards, quick actions, system health
+- [x] 8.2 Redesign DashboardView with stat cards, quick actions, system health
   - **Do**:
     1. Replace current DashboardView stat section with 2x2 grid of StatCards (Sessions, Projects, Skills, MCP) using entity colors
     2. Add "Quick Actions" section: "New Session" button, cost total card
@@ -671,7 +671,7 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - _Requirements: AC-19.2, AC-14.1, FR-8.2_
   - _Design: Dashboard screen_
 
-- [ ] 8.3 Redesign list rows with entity colors
+- [x] 8.3 Redesign list rows with entity colors
   - **Do**:
     1. SessionsListView rows: blue status dot (filled=active, hollow=inactive), blue accent, swipe rename
     2. ProjectsListView rows: green folder icon accent
@@ -685,13 +685,13 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - **Commit**: `feat(ui): apply entity colors to all list rows`
   - _Requirements: AC-19.1, FR-8.1_
 
-- [ ] 8.4 [VERIFY] Quality checkpoint after redesign batch 1
+- [x] 8.4 [VERIFY] Quality checkpoint after redesign batch 1
   - **Do**: Build iOS app after stat cards + dashboard + list rows changes
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
   - **Done when**: Build succeeds
   - **Commit**: `chore(ui): pass redesign batch 1 checkpoint` (only if fixes needed)
 
-- [ ] 8.5 Create custom empty states for each entity type
+- [x] 8.5 Create custom empty states for each entity type
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/EmptyEntityState.swift`
     2. Takes `EntityType`, title, description, optional action button
@@ -705,7 +705,7 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - _Requirements: AC-19.4, FR-8.3_
   - _Design: Empty States_
 
-- [ ] 8.6 Add skeleton loading with shimmer across all list views
+- [x] 8.6 Add skeleton loading with shimmer across all list views
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/SkeletonRow.swift` — placeholder row with rounded rectangles
     2. Create `ILSApp/ILSApp/Theme/Components/ShimmerModifier.swift` — left-to-right gradient sweep at 1.5s, repeating
@@ -719,7 +719,7 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - _Requirements: AC-18.1, AC-18.2, AC-18.3, FR-6.4_
   - _Design: Skeleton Loading_
 
-- [ ] 8.7 Add aggregate cost tracking to Dashboard
+- [x] 8.7 Add aggregate cost tracking to Dashboard
   - **Do**:
     1. In `DashboardViewModel.swift`, add method to compute total cost across all sessions (sum of `session.cost`)
     2. Display as a card in Quick Actions section: "Total Cost: $X.XX"
@@ -731,7 +731,7 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - **Commit**: `feat(dashboard): add aggregate cost tracking card`
   - _Requirements: AC-14.1, AC-14.4, FR-5.9_
 
-- [ ] 8.8 Apply frosted glass and pull-to-refresh feedback
+- [x] 8.8 Apply frosted glass and pull-to-refresh feedback
   - **Do**:
     1. Apply `.ultraThinMaterial` to all sheets (ServerSetupSheet, CommandPaletteView, SessionInfoView) presentationBackground
     2. Apply to overlays and tab bar (already done in Phase 1)
@@ -744,7 +744,7 @@ Focus: Apply entity colors, redesign cards, add empty states, skeleton loading, 
   - **Commit**: `feat(ui): apply frosted glass materials and pull-to-refresh haptic feedback`
   - _Requirements: AC-19.5, AC-19.6, AC-19.8, FR-6.3, FR-8.4_
 
-- [ ] 8.9 Standardize error handling — toast on all failures
+- [x] 8.9 Standardize error handling — toast on all failures
   - **Do**:
     1. Audit all `catch` blocks in ViewModels that use `print()` — replace with toast or `ErrorStateView`
     2. Ensure all user-initiated actions (create, delete, install, toggle, rename, export) show toast on failure

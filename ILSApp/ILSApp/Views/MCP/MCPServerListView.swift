@@ -32,9 +32,9 @@ struct MCPServerListView: View {
                 }
             } else if viewModel.filteredServers.isEmpty && !viewModel.isLoading {
                 if viewModel.servers.isEmpty {
-                    EmptyStateView(
+                    EmptyEntityState(
+                        entityType: .mcp,
                         title: "No MCP Servers",
-                        systemImage: "server.rack",
                         description: "No servers configured for \(viewModel.selectedScope) scope",
                         actionTitle: "Add Server"
                     ) {
@@ -165,7 +165,10 @@ struct MCPServerListView: View {
         }
         .overlay {
             if viewModel.isLoading && viewModel.servers.isEmpty {
-                ProgressView("Loading MCP servers...")
+                List {
+                    SkeletonListView()
+                }
+                .darkListStyle()
             }
         }
         .task {
@@ -188,10 +191,17 @@ struct MCPServerRowView: View {
     let server: MCPServerItem
 
     var body: some View {
+        HStack(spacing: ILSTheme.spaceM) {
+            Image(systemName: EntityType.mcp.icon)
+                .font(.title3)
+                .foregroundColor(EntityType.mcp.color)
+                .frame(width: 28)
+
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(server.name)
                     .font(ILSTheme.headlineFont)
+                    .foregroundColor(ILSTheme.textPrimary)
 
                 Spacer()
 
@@ -230,7 +240,8 @@ struct MCPServerRowView: View {
 
                 Spacer()
             }
-        }
+        } // end VStack
+        } // end HStack
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(server.name), \(statusInfo.1), scope \(server.scope)")
@@ -482,7 +493,7 @@ struct NewMCPServerView: View {
                     }
                 }
             } catch {
-                print("Failed to create MCP server: \(error)")
+                AppLogger.shared.error("Failed to create MCP server: \(error)")
             }
 
             isCreating = false

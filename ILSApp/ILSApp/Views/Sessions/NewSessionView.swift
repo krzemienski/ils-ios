@@ -217,7 +217,7 @@ struct NewSessionView: View {
                 }
             } catch {
                 HapticManager.notification(.error)
-                print("Failed to create session: \(error)")
+                AppLogger.shared.error("Failed to create session: \(error)")
             }
 
             isCreating = false

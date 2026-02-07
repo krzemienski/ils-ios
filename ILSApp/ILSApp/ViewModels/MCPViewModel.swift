@@ -66,7 +66,7 @@ class MCPViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to load MCP servers: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load MCP servers: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -97,7 +97,7 @@ class MCPViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to add MCP server '\(name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to add MCP server '\(name)': \(error.localizedDescription)")
         }
         return nil
     }
@@ -109,7 +109,7 @@ class MCPViewModel: ObservableObject {
             servers.removeAll { $0.id == server.id }
         } catch {
             self.error = error
-            print("❌ Failed to delete MCP server '\(server.name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to delete MCP server '\(server.name)': \(error.localizedDescription)")
         }
     }
 
@@ -126,7 +126,7 @@ class MCPViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to load MCP servers: \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to load MCP servers: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -196,7 +196,7 @@ class MCPViewModel: ObservableObject {
             }
         } catch {
             self.error = error
-            print("❌ Failed to update MCP server '\(name)': \(error.localizedDescription)")
+            AppLogger.shared.error("Failed to update MCP server '\(name)': \(error.localizedDescription)")
         }
         return nil
     }

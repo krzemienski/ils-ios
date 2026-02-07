@@ -33,10 +33,10 @@ struct SessionsListView: View {
                     await viewModel.retryLoadSessions()
                 }
             } else if viewModel.sessions.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    title: "No Sessions",
-                    systemImage: "bubble.left.and.bubble.right",
-                    description: "Start a new chat session to begin",
+                EmptyEntityState(
+                    entityType: .sessions,
+                    title: "No Sessions Yet",
+                    description: "Start a conversation with Claude",
                     actionTitle: "New Chat"
                 ) {
                     showingNewSession = true
@@ -173,37 +173,9 @@ struct SessionsListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.sessions.isEmpty {
                 List {
-                    ForEach(0..<6, id: \.self) { _ in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text("Session Name Here")
-                                    .font(ILSTheme.headlineFont)
-                                Spacer()
-                                Text("sonnet")
-                                    .font(ILSTheme.captionFont)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 2)
-                                    .background(ILSTheme.tertiaryBackground)
-                                    .cornerRadius(ILSTheme.cornerRadiusXS)
-                            }
-                            HStack {
-                                Label("project/name", systemImage: "folder")
-                                    .font(ILSTheme.captionFont)
-                                Spacer()
-                                Text("2 min ago")
-                                    .font(ILSTheme.captionFont)
-                            }
-                            HStack {
-                                Label("12 messages", systemImage: "bubble.left")
-                                    .font(ILSTheme.captionFont)
-                                Spacer()
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
+                    SkeletonListView()
                 }
                 .darkListStyle()
-                .redacted(reason: .placeholder)
             }
         }
         .task {
@@ -245,71 +217,80 @@ struct SessionRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                if isExternal {
-                    Image(systemName: "terminal")
-                        .font(.caption)
-                        .foregroundColor(ILSTheme.accent)
-                }
+        HStack(spacing: ILSTheme.spaceM) {
+            // Blue status dot - filled=active, hollow=inactive
+            Circle()
+                .fill(session.status == .active
+                      ? EntityType.sessions.color
+                      : EntityType.sessions.color.opacity(0.3))
+                .frame(width: 10, height: 10)
 
-                Text(displayName)
-                    .font(ILSTheme.headlineFont)
-                    .lineLimit(1)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    if isExternal {
+                        Image(systemName: "terminal")
+                            .font(.caption)
+                            .foregroundColor(EntityType.sessions.color)
+                    }
 
-                Spacer()
+                    Text(displayName)
+                        .font(ILSTheme.headlineFont)
+                        .foregroundColor(ILSTheme.textPrimary)
+                        .lineLimit(1)
 
-                Text(session.model)
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.secondaryText)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(ILSTheme.tertiaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusXS)
-            }
+                    Spacer()
 
-            HStack {
-                if let projectName = session.projectName {
-                    Label(projectName, systemImage: "folder")
+                    Text(session.model)
                         .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-
-                Spacer()
-
-                Text(formattedDate(session.lastActiveAt))
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
-            }
-
-            HStack {
-                Label("\(session.messageCount) messages", systemImage: "bubble.left")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
-
-                if let cost = session.totalCostUSD {
-                    Text("$\(cost, specifier: "%.4f")")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.tertiaryText)
-                }
-
-                Spacer()
-
-                if isExternal {
-                    Text("Claude Code")
-                        .font(.caption2)
-                        .foregroundColor(ILSTheme.accent)
-                        .padding(.horizontal, 6)
+                        .foregroundColor(ILSTheme.textSecondary)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(ILSTheme.accent.opacity(0.15))
+                        .background(ILSTheme.bg3)
                         .cornerRadius(ILSTheme.cornerRadiusXS)
-                } else {
-                    statusBadge
+                }
+
+                HStack {
+                    if let projectName = session.projectName {
+                        Label(projectName, systemImage: "folder")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.textSecondary)
+                    }
+
+                    Spacer()
+
+                    Text(formattedDate(session.lastActiveAt))
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.textTertiary)
+                }
+
+                HStack {
+                    Label("\(session.messageCount) messages", systemImage: "bubble.left")
+                        .font(ILSTheme.captionFont)
+                        .foregroundColor(ILSTheme.textTertiary)
+
+                    if let cost = session.totalCostUSD {
+                        Text("$\(cost, specifier: "%.4f")")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.textTertiary)
+                    }
+
+                    Spacer()
+
+                    if isExternal {
+                        Text("Claude Code")
+                            .font(.caption2)
+                            .foregroundColor(EntityType.sessions.color)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(EntityType.sessions.color.opacity(0.15))
+                            .cornerRadius(ILSTheme.cornerRadiusXS)
+                    } else {
+                        statusBadge
+                    }
                 }
             }
         }
         .padding(.vertical, 4)
-        .shadow(color: ILSTheme.shadowLight, radius: 2, x: 0, y: 1)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(displayName), \(session.model), \(session.messageCount) messages, \(session.status.rawValue)")
         .accessibilityHint("Double tap to open chat session")
