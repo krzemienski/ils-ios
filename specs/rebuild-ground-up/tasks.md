@@ -51,7 +51,7 @@ Focus: Prove the AppTheme protocol + ThemeManager + EnvironmentKey approach work
   - _Requirements: AC-1.6_
   - _Design: Section 3_
 
-- [ ] V1 [VERIFY] Phase 1 checkpoint: build + simulator screenshot
+- [x] V1 [VERIFY] Phase 1 checkpoint: build + simulator screenshot
   - **Do**:
     1. Build iOS app
     2. Boot simulator if needed: `xcrun simctl boot 50523130-57AA-48B0-ABD0-4D59CE455F14`
@@ -68,7 +68,7 @@ Focus: Prove the AppTheme protocol + ThemeManager + EnvironmentKey approach work
 
 Focus: Replace ContentView's TabView with SidebarRootView. Custom offset-based drawer on iPhone. Sessions grouped by project. Deep linking updated.
 
-- [ ] 2.1 Create SidebarRootView as new app root
+- [x] 2.1 Create SidebarRootView as new app root
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — ZStack with main content area + sidebar overlay
     2. State: `@State var isSidebarOpen: Bool = false`, `@State var selectedSession: ChatSession?`, `@State var activeScreen: ActiveScreen` enum (home, chat, system, settings, browser)
@@ -87,7 +87,7 @@ Focus: Replace ContentView's TabView with SidebarRootView. Custom offset-based d
   - _Requirements: AC-2.1, AC-2.2, AC-2.13, FR-4, FR-5_
   - _Design: Section 2 — Information Architecture, Section 4.1 — Sidebar_
 
-- [ ] 2.2 Build SidebarView with session list grouped by project
+- [x] 2.2 Build SidebarView with session list grouped by project
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Root/SidebarView.swift` — full sidebar content
     2. Top: connection status (green/red dot + server name from AppState)
@@ -107,7 +107,7 @@ Focus: Replace ContentView's TabView with SidebarRootView. Custom offset-based d
   - _Requirements: AC-2.3, AC-2.4, AC-2.5, AC-2.6, AC-2.7, AC-2.8, AC-2.9, AC-2.10, AC-2.11, AC-2.12, FR-6_
   - _Design: Section 4.1 — Sidebar_
 
-- [ ] 2.3 Update deep linking for sidebar navigation
+- [x] 2.3 Update deep linking for sidebar navigation
   - **Do**:
     1. Update `AppState.handleURL` to set `activeScreen` enum values instead of `selectedTab` strings
     2. Add `@Published var activeScreen: ActiveScreen = .home` to AppState (or keep navigation in SidebarRootView and have AppState publish navigation intents)
@@ -122,7 +122,7 @@ Focus: Replace ContentView's TabView with SidebarRootView. Custom offset-based d
   - _Requirements: AC-19.1, AC-19.2, AC-19.3, FR-23, FR-24_
   - _Design: Section 2 — Navigation Flows_
 
-- [ ] V2 [VERIFY] Phase 2 checkpoint: sidebar + navigation validation
+- [x] V2 [VERIFY] Phase 2 checkpoint: sidebar + navigation validation
   - **Do**:
     1. Build and install app on simulator
     2. Start backend: `PORT=9090 swift run ILSBackend` (if not running)
