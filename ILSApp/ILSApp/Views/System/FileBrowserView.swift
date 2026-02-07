@@ -4,6 +4,8 @@ import ILSShared
 /// File browser with breadcrumb navigation.
 /// Starts at ~/ and allows navigating into directories.
 struct FileBrowserView: View {
+    @Environment(\.theme) private var theme: any AppTheme
+
     let baseURL: String
 
     @State private var currentPath: String = "~"
@@ -31,36 +33,37 @@ struct FileBrowserView: View {
             breadcrumbBar
 
             Divider()
-                .background(ILSTheme.bg3)
+                .background(theme.bgTertiary)
 
             // File list
             if isLoading {
                 Spacer()
                 ProgressView()
-                    .tint(EntityType.system.color)
+                    .tint(theme.entitySystem)
                 Spacer()
             } else if let error = errorMessage {
                 Spacer()
-                VStack(spacing: ILSTheme.spaceS) {
+                VStack(spacing: theme.spacingSM) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.title2)
-                        .foregroundColor(ILSTheme.error)
+                        .font(.system(size: theme.fontTitle2))
+                        .foregroundStyle(theme.error)
                     Text(error)
-                        .font(.caption)
-                        .foregroundColor(ILSTheme.textSecondary)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
                         .multilineTextAlignment(.center)
                     Button("Retry") {
                         Task { await loadDirectory() }
                     }
-                    .buttonStyle(SecondaryButtonStyle())
+                    .font(.system(size: theme.fontBody, weight: .medium))
+                    .foregroundStyle(theme.accent)
                 }
                 .padding()
                 Spacer()
             } else if entries.isEmpty {
                 Spacer()
                 Text("Empty directory")
-                    .font(.subheadline)
-                    .foregroundColor(ILSTheme.textTertiary)
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(theme.textTertiary)
                 Spacer()
             } else {
                 ScrollView {
@@ -68,13 +71,13 @@ struct FileBrowserView: View {
                         ForEach(sortedEntries, id: \.name) { entry in
                             fileRow(entry)
                             Divider()
-                                .background(ILSTheme.bg3)
+                                .background(theme.bgTertiary)
                         }
                     }
                 }
             }
         }
-        .background(ILSTheme.bg0)
+        .background(theme.bgPrimary)
         .navigationTitle("Files")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -82,7 +85,7 @@ struct FileBrowserView: View {
         }
         .sheet(item: $previewFile) { file in
             filePreviewSheet(file)
-                .presentationBackground(Color.black)
+                .presentationBackground(theme.bgPrimary)
         }
     }
 
@@ -116,12 +119,12 @@ struct FileBrowserView: View {
 
     private var breadcrumbBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: ILSTheme.spaceXS) {
+            HStack(spacing: theme.spacingXS) {
                 ForEach(Array(pathComponents.enumerated()), id: \.offset) { index, component in
                     if index > 0 {
                         Image(systemName: "chevron.right")
                             .font(.caption2)
-                            .foregroundColor(ILSTheme.textTertiary)
+                            .foregroundStyle(theme.textTertiary)
                     }
 
                     Button {
@@ -129,19 +132,19 @@ struct FileBrowserView: View {
                         Task { await loadDirectory() }
                     } label: {
                         Text(component.label)
-                            .font(.caption.weight(index == pathComponents.count - 1 ? .semibold : .regular))
-                            .foregroundColor(
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(
                                 index == pathComponents.count - 1
-                                    ? EntityType.system.color
-                                    : ILSTheme.textSecondary
+                                    ? theme.entitySystem
+                                    : theme.textSecondary
                             )
                     }
                 }
             }
-            .padding(.horizontal, ILSTheme.spaceL)
-            .padding(.vertical, ILSTheme.spaceS)
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
         }
-        .background(ILSTheme.bg1)
+        .background(theme.bgSecondary)
     }
 
     // MARK: - File Row
@@ -162,21 +165,21 @@ struct FileBrowserView: View {
                 Task { await previewFileContent(entry.name) }
             }
         } label: {
-            HStack(spacing: ILSTheme.spaceM) {
+            HStack(spacing: theme.spacingMD) {
                 Image(systemName: entry.isDirectory ? "folder.fill" : "doc.text")
-                    .foregroundColor(entry.isDirectory ? EntityType.system.color : ILSTheme.textTertiary)
+                    .foregroundStyle(entry.isDirectory ? theme.entitySystem : theme.textTertiary)
                     .frame(width: 24)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.name)
-                        .font(.subheadline)
-                        .foregroundColor(ILSTheme.textPrimary)
+                        .font(.system(size: theme.fontBody))
+                        .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
 
                     if !entry.isDirectory {
                         Text(formatFileSize(entry.size))
-                            .font(.caption2)
-                            .foregroundColor(ILSTheme.textTertiary)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
                     }
                 }
 
@@ -184,12 +187,12 @@ struct FileBrowserView: View {
 
                 if entry.isDirectory {
                     Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(ILSTheme.textTertiary)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
                 }
             }
-            .padding(.horizontal, ILSTheme.spaceL)
-            .padding(.vertical, ILSTheme.spaceS)
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -201,12 +204,12 @@ struct FileBrowserView: View {
         NavigationStack {
             ScrollView {
                 Text(file.content)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundColor(ILSTheme.textPrimary)
+                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(ILSTheme.spaceM)
+                    .padding(theme.spacingMD)
             }
-            .background(ILSTheme.bg0)
+            .background(theme.bgPrimary)
             .navigationTitle(file.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -214,7 +217,7 @@ struct FileBrowserView: View {
                     Button("Done") {
                         previewFile = nil
                     }
-                    .foregroundColor(EntityType.system.color)
+                    .foregroundStyle(theme.entitySystem)
                 }
             }
         }
@@ -266,7 +269,6 @@ struct FileBrowserView: View {
             let (data, response) = try await session.data(from: url)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
             let content = String(data: data, encoding: .utf8) ?? "Unable to read file"
-            // Limit to first 500 lines
             let lines = content.components(separatedBy: "\n")
             let truncated = lines.prefix(500).joined(separator: "\n")
             previewFile = PreviewFile(name: name, content: truncated)

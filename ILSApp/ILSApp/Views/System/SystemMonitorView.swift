@@ -4,51 +4,55 @@ import ILSShared
 
 struct SystemMonitorView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.theme) private var theme: any AppTheme
     @StateObject private var viewModel: SystemMetricsViewModel
 
     init() {
-        // Will be re-initialized with correct URL in .onAppear
         _viewModel = StateObject(wrappedValue: SystemMetricsViewModel())
     }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: ILSTheme.spaceL) {
+            VStack(spacing: theme.spacingMD) {
                 // CPU Chart - full width
                 MetricChart(
                     title: "CPU Usage",
                     data: viewModel.metricsClient.cpuHistory,
-                    color: EntityType.system.color,
+                    color: theme.entitySystem,
                     unit: "%",
                     currentValue: String(format: "%.1f%%", viewModel.cpuPercentage)
                 )
 
                 // Load Average
                 if !viewModel.loadAverage.isEmpty {
-                    HStack(spacing: ILSTheme.spaceM) {
+                    HStack(spacing: theme.spacingMD) {
                         ForEach(Array(zip(["1m", "5m", "15m"], viewModel.loadAverage)), id: \.0) { label, value in
                             VStack(spacing: 4) {
                                 Text(String(format: "%.2f", value))
-                                    .font(.subheadline.monospacedDigit().bold())
-                                    .foregroundColor(ILSTheme.textPrimary)
+                                    .font(.system(size: theme.fontBody, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(theme.textPrimary)
                                 Text(label)
-                                    .font(.caption2)
-                                    .foregroundColor(ILSTheme.textTertiary)
+                                    .font(.system(size: theme.fontCaption))
+                                    .foregroundStyle(theme.textTertiary)
                             }
                             .frame(maxWidth: .infinity)
                         }
                     }
-                    .padding(ILSTheme.spaceM)
-                    .background(ILSTheme.bg2)
-                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
                 }
 
                 // Memory & Disk - 2-column grid
-                HStack(spacing: ILSTheme.spaceM) {
+                HStack(spacing: theme.spacingMD) {
                     // Memory
-                    VStack(spacing: ILSTheme.spaceS) {
+                    VStack(spacing: theme.spacingSM) {
                         ProgressRing(
                             progress: viewModel.memoryPercentage / 100,
+                            gradient: LinearGradient(
+                                colors: [theme.entitySystem, theme.entitySystem.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
                             title: "Memory",
                             subtitle: String(
                                 format: "%.1f / %.1f GB",
@@ -58,16 +62,15 @@ struct SystemMonitorView: View {
                         )
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(ILSTheme.spaceM)
-                    .background(ILSTheme.bg2)
-                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
 
                     // Disk
-                    VStack(spacing: ILSTheme.spaceS) {
+                    VStack(spacing: theme.spacingSM) {
                         ProgressRing(
                             progress: viewModel.diskPercentage / 100,
                             gradient: LinearGradient(
-                                colors: [Color.orange, Color.orange.opacity(0.6)],
+                                colors: [theme.accent, theme.accent.opacity(0.6)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -80,9 +83,8 @@ struct SystemMonitorView: View {
                         )
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(ILSTheme.spaceM)
-                    .background(ILSTheme.bg2)
-                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
                 }
 
                 // Network Chart - dual line
@@ -97,23 +99,22 @@ struct SystemMonitorView: View {
                 } label: {
                     HStack {
                         Image(systemName: "folder")
-                            .foregroundColor(EntityType.system.color)
+                            .foregroundStyle(theme.entitySystem)
                         Text("File Browser")
-                            .foregroundColor(ILSTheme.textPrimary)
+                            .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(ILSTheme.textTertiary)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
                     }
-                    .padding(ILSTheme.spaceM)
-                    .background(ILSTheme.bg2)
-                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
                 }
             }
-            .padding(.horizontal, ILSTheme.spaceL)
-            .padding(.bottom, ILSTheme.space2XL)
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.bottom, theme.spacingLG)
         }
-        .background(ILSTheme.bg0)
+        .background(theme.bgPrimary)
         .navigationTitle("System")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -135,22 +136,22 @@ struct SystemMonitorView: View {
     // MARK: - Network Chart
 
     private var networkChart: some View {
-        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Text("Network")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(ILSTheme.textPrimary)
+                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
-                HStack(spacing: ILSTheme.spaceM) {
+                HStack(spacing: theme.spacingMD) {
                     Label(formatBytes(viewModel.networkBytesIn) + "/s", systemImage: "arrow.down")
-                        .font(.caption.monospacedDigit())
-                        .foregroundColor(EntityType.system.color)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.entitySystem)
 
                     Label(formatBytes(viewModel.networkBytesOut) + "/s", systemImage: "arrow.up")
-                        .font(.caption.monospacedDigit())
-                        .foregroundColor(.blue)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.accent)
                 }
             }
 
@@ -159,14 +160,14 @@ struct SystemMonitorView: View {
 
             if inData.isEmpty && outData.isEmpty {
                 Rectangle()
-                    .fill(ILSTheme.bg3)
+                    .fill(theme.bgTertiary)
                     .frame(height: 100)
                     .overlay {
                         Text("Waiting for data...")
-                            .font(.caption)
-                            .foregroundColor(ILSTheme.textTertiary)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusXS))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             } else {
                 Chart {
                     ForEach(inData) { point in
@@ -175,7 +176,7 @@ struct SystemMonitorView: View {
                             y: .value("In", point.value),
                             series: .value("Direction", "In")
                         )
-                        .foregroundStyle(EntityType.system.color)
+                        .foregroundStyle(theme.entitySystem)
                         .lineStyle(StrokeStyle(lineWidth: 2))
                     }
 
@@ -185,7 +186,7 @@ struct SystemMonitorView: View {
                             y: .value("Out", point.value),
                             series: .value("Direction", "Out")
                         )
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(theme.accent)
                         .lineStyle(StrokeStyle(lineWidth: 2))
                     }
                 }
@@ -194,15 +195,14 @@ struct SystemMonitorView: View {
                     AxisMarks(position: .leading) { _ in
                         AxisValueLabel()
                             .font(.caption2)
-                            .foregroundStyle(ILSTheme.textTertiary)
+                            .foregroundStyle(theme.textTertiary)
                     }
                 }
                 .frame(height: 100)
             }
         }
-        .padding(ILSTheme.spaceM)
-        .background(ILSTheme.bg2)
-        .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
     }
 
     // MARK: - Live Indicator
@@ -212,7 +212,7 @@ struct SystemMonitorView: View {
     private var liveIndicator: some View {
         HStack(spacing: 6) {
             Circle()
-                .fill(viewModel.isConnected ? Color.green : Color.red)
+                .fill(viewModel.isConnected ? theme.success : theme.error)
                 .frame(width: 8, height: 8)
                 .scaleEffect(livePulse && viewModel.isConnected ? 1.3 : 1.0)
                 .animation(
@@ -224,8 +224,8 @@ struct SystemMonitorView: View {
                 .onAppear { livePulse = true }
 
             Text(viewModel.isConnected ? "Live" : "Offline")
-                .font(.caption.weight(.medium))
-                .foregroundColor(viewModel.isConnected ? .green : .red)
+                .font(.system(size: theme.fontCaption, weight: .medium))
+                .foregroundStyle(viewModel.isConnected ? theme.success : theme.error)
         }
     }
 
@@ -247,5 +247,6 @@ struct SystemMonitorView: View {
     NavigationStack {
         SystemMonitorView()
             .environmentObject(AppState())
+            .environment(\.theme, ObsidianTheme())
     }
 }

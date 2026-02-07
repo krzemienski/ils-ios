@@ -70,7 +70,7 @@ struct SidebarRootView: View {
                 case .chat(let session):
                     chatPlaceholder(session: session)
                 case .system:
-                    systemPlaceholder
+                    systemScreen
                 case .settings:
                     settingsPlaceholder
                 case .browser:
@@ -153,22 +153,8 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var systemPlaceholder: some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "gauge.with.dots.needle.33percent")
-                .font(.system(size: 48))
-                .foregroundStyle(theme.entitySystem)
-            Text("System Monitor")
-                .font(.system(size: theme.fontTitle2, weight: .bold))
-                .foregroundStyle(theme.textPrimary)
-            Text("Built in Phase 6")
-                .font(.system(size: theme.fontBody))
-                .foregroundStyle(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.bgPrimary)
-        .navigationTitle("System")
-        .navigationBarTitleDisplayMode(.inline)
+    private var systemScreen: some View {
+        SystemMonitorView()
     }
 
     @ViewBuilder

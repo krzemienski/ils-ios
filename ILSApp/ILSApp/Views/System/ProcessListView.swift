@@ -4,15 +4,16 @@ import ILSShared
 /// Process list with search and sort controls.
 /// Embedded in SystemMonitorView below the charts.
 struct ProcessListView: View {
+    @Environment(\.theme) private var theme: any AppTheme
     @ObservedObject var viewModel: SystemMetricsViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             // Header
             HStack {
                 Text("Processes")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(ILSTheme.textPrimary)
+                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
@@ -32,44 +33,45 @@ struct ProcessListView: View {
             }
 
             // Search bar
-            HStack(spacing: ILSTheme.spaceS) {
+            HStack(spacing: theme.spacingSM) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(ILSTheme.textTertiary)
+                    .foregroundStyle(theme.textTertiary)
                 TextField("Search processes", text: $viewModel.processSearchText)
                     .textFieldStyle(.plain)
-                    .foregroundColor(ILSTheme.textPrimary)
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(theme.textPrimary)
 
                 if !viewModel.processSearchText.isEmpty {
                     Button {
                         viewModel.processSearchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(ILSTheme.textTertiary)
+                            .foregroundStyle(theme.textTertiary)
                     }
                 }
             }
-            .padding(ILSTheme.spaceS)
-            .background(ILSTheme.bg3)
-            .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusXS))
+            .padding(theme.spacingSM)
+            .background(theme.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
             // Process list
             if viewModel.isLoadingProcesses && viewModel.processes.isEmpty {
                 HStack {
                     Spacer()
                     ProgressView()
-                        .tint(EntityType.system.color)
+                        .tint(theme.entitySystem)
                     Spacer()
                 }
-                .padding(.vertical, ILSTheme.spaceL)
+                .padding(.vertical, theme.spacingMD)
             } else if viewModel.filteredProcesses.isEmpty {
                 HStack {
                     Spacer()
                     Text("No processes found")
-                        .font(.caption)
-                        .foregroundColor(ILSTheme.textTertiary)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
                     Spacer()
                 }
-                .padding(.vertical, ILSTheme.spaceL)
+                .padding(.vertical, theme.spacingMD)
             } else {
                 // Column headers
                 HStack {
@@ -82,9 +84,9 @@ struct ProcessListView: View {
                     Text("MEM")
                         .frame(width: 55, alignment: .trailing)
                 }
-                .font(.caption2.weight(.medium))
-                .foregroundColor(ILSTheme.textTertiary)
-                .padding(.horizontal, ILSTheme.spaceXS)
+                .font(.system(size: theme.fontCaption, weight: .medium))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
 
                 LazyVStack(spacing: 0) {
                     ForEach(viewModel.filteredProcesses.prefix(50), id: \.pid) { process in
@@ -93,35 +95,34 @@ struct ProcessListView: View {
                 }
             }
         }
-        .padding(ILSTheme.spaceM)
-        .background(ILSTheme.bg2)
-        .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
     }
 
     private func processRow(_ process: ProcessInfoResponse) -> some View {
         HStack {
             Text(process.name)
-                .font(.caption.monospacedDigit())
-                .foregroundColor(ILSTheme.textPrimary)
+                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .foregroundStyle(theme.textPrimary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("\(process.pid)")
-                .font(.caption2.monospacedDigit())
-                .foregroundColor(ILSTheme.textSecondary)
+                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .foregroundStyle(theme.textSecondary)
                 .frame(width: 50, alignment: .trailing)
 
             Text(String(format: "%.1f%%", process.cpuPercent))
-                .font(.caption.monospacedDigit())
-                .foregroundColor(process.cpuPercent > 50 ? .orange : ILSTheme.textSecondary)
+                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .foregroundStyle(process.cpuPercent > 50 ? theme.warning : theme.textSecondary)
                 .frame(width: 50, alignment: .trailing)
 
             Text(String(format: "%.0fM", process.memoryMB))
-                .font(.caption.monospacedDigit())
-                .foregroundColor(process.memoryMB > 500 ? .orange : ILSTheme.textSecondary)
+                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .foregroundStyle(process.memoryMB > 500 ? theme.warning : theme.textSecondary)
                 .frame(width: 55, alignment: .trailing)
         }
-        .padding(.horizontal, ILSTheme.spaceXS)
-        .padding(.vertical, ILSTheme.spaceXS)
+        .padding(.horizontal, theme.spacingXS)
+        .padding(.vertical, theme.spacingXS)
     }
 }

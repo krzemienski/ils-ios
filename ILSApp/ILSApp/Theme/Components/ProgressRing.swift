@@ -3,6 +3,8 @@ import SwiftUI
 /// A circular progress ring with gradient stroke.
 /// Used for memory and disk usage visualization.
 struct ProgressRing: View {
+    @Environment(\.theme) private var theme: any AppTheme
+
     let progress: Double // 0.0 - 1.0
     let gradient: LinearGradient
     let lineWidth: CGFloat
@@ -12,7 +14,7 @@ struct ProgressRing: View {
     init(
         progress: Double,
         gradient: LinearGradient = LinearGradient(
-            colors: [EntityType.system.color, EntityType.system.color.opacity(0.6)],
+            colors: [.cyan, .cyan.opacity(0.6)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         ),
@@ -28,11 +30,11 @@ struct ProgressRing: View {
     }
 
     var body: some View {
-        VStack(spacing: ILSTheme.spaceS) {
+        VStack(spacing: theme.spacingSM) {
             ZStack {
                 // Background track
                 Circle()
-                    .stroke(ILSTheme.bg3, lineWidth: lineWidth)
+                    .stroke(theme.bgTertiary, lineWidth: lineWidth)
 
                 // Progress arc
                 Circle()
@@ -44,22 +46,22 @@ struct ProgressRing: View {
                 // Center label
                 VStack(spacing: 2) {
                     Text("\(Int(progress * 100))%")
-                        .font(.title3.monospacedDigit().bold())
-                        .foregroundColor(ILSTheme.textPrimary)
+                        .font(.system(size: theme.fontTitle3, weight: .bold, design: .monospaced))
+                        .foregroundStyle(theme.textPrimary)
                 }
             }
             .frame(width: 80, height: 80)
 
             if !title.isEmpty {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(ILSTheme.textPrimary)
+                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .foregroundStyle(theme.textPrimary)
             }
 
             if !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(ILSTheme.textSecondary)
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textSecondary)
             }
         }
         .accessibilityElement(children: .ignore)

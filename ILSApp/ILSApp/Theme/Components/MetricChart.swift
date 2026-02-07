@@ -4,6 +4,8 @@ import Charts
 /// A reusable area + line chart for system metrics.
 /// Renders an AreaMark with gradient fill and a LineMark overlay.
 struct MetricChart: View {
+    @Environment(\.theme) private var theme: any AppTheme
+
     let title: String
     let data: [MetricDataPoint]
     let color: Color
@@ -13,7 +15,7 @@ struct MetricChart: View {
     init(
         title: String,
         data: [MetricDataPoint],
-        color: Color = EntityType.system.color,
+        color: Color = .cyan,
         unit: String = "%",
         currentValue: String = ""
     ) {
@@ -25,31 +27,31 @@ struct MetricChart: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ILSTheme.spaceS) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(ILSTheme.textPrimary)
+                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
                 if !currentValue.isEmpty {
                     Text(currentValue)
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundColor(color)
+                        .font(.system(size: theme.fontBody, design: .monospaced))
+                        .foregroundStyle(color)
                 }
             }
 
             if data.isEmpty {
                 Rectangle()
-                    .fill(ILSTheme.bg2)
+                    .fill(theme.bgSecondary)
                     .frame(height: 120)
                     .overlay {
                         Text("Waiting for data...")
-                            .font(.caption)
-                            .foregroundColor(ILSTheme.textTertiary)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusXS))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             } else {
                 Chart(data) { point in
                     AreaMark(
@@ -78,7 +80,7 @@ struct MetricChart: View {
                             if let v = value.as(Double.self) {
                                 Text("\(Int(v))\(unit)")
                                     .font(.caption2)
-                                    .foregroundColor(ILSTheme.textTertiary)
+                                    .foregroundStyle(theme.textTertiary)
                             }
                         }
                     }
@@ -86,9 +88,8 @@ struct MetricChart: View {
                 .frame(height: 120)
             }
         }
-        .padding(ILSTheme.spaceM)
-        .background(ILSTheme.bg2)
-        .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(metricAccessibilityLabel)
     }
