@@ -74,7 +74,7 @@ created: 2026-02-06T18:40:00-05:00
   - **Commit**: `fix(ios): wire skills search and install to backend` (only if changes needed)
   - _Requirements: FR-10, FR-11, AC-9.1 through AC-9.7_
 
-- [ ] 1.4 [VERIFY] Build checkpoint after gap analysis
+- [x] 1.4 [VERIFY] Build checkpoint after gap analysis
   - **Do**: Build backend + iOS, verify zero errors
   - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E "(error:|BUILD)" | tail -5`
   - **Done when**: Both builds pass
@@ -89,7 +89,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
 
 ---
 
-- [ ] 2.1 S-01: First Launch & Server Setup
+- [x] 2.1 S-01: First Launch & Server Setup
   - **Do**:
     1. Ensure backend running on port 9090
     2. Build and install app on simulator
