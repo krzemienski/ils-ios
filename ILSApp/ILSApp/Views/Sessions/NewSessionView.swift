@@ -37,7 +37,7 @@ struct NewSessionView: View {
                     } label: {
                         HStack {
                             Image(systemName: "doc.on.doc")
-                                .foregroundColor(ILSTheme.accent)
+                                .foregroundColor(EntityType.sessions.color)
                             Text("Start from Template")
                                 .foregroundColor(ILSTheme.primaryText)
                             Spacer()

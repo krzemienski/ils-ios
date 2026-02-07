@@ -180,8 +180,8 @@ struct SkillRowView: View {
                                 .font(.caption2)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(ILSTheme.accent.opacity(0.15))
-                                .foregroundColor(ILSTheme.accent)
+                                .background(EntityType.skills.color.opacity(0.15))
+                                .foregroundColor(EntityType.skills.color)
                                 .cornerRadius(ILSTheme.cornerRadiusXS)
                         }
                     }
@@ -318,8 +318,8 @@ struct SkillDetailView: View {
                                 .font(ILSTheme.captionFont)
                                 .padding(.horizontal, ILSTheme.spacingS)
                                 .padding(.vertical, ILSTheme.spacingXS)
-                                .background(ILSTheme.accent.opacity(0.15))
-                                .foregroundColor(ILSTheme.accent)
+                                .background(EntityType.skills.color.opacity(0.15))
+                                .foregroundColor(EntityType.skills.color)
                                 .cornerRadius(ILSTheme.cornerRadiusXS)
                         }
                     }
@@ -587,7 +587,7 @@ struct GitHubSkillRow: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(ILSTheme.accent)
+                            .background(EntityType.skills.color)
                             .cornerRadius(ILSTheme.cornerRadiusXS)
                     }
                 }

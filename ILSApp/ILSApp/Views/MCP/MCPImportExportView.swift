@@ -27,7 +27,7 @@ struct MCPImportExportView: View {
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.up")
-                                .foregroundColor(ILSTheme.accent)
+                                .foregroundColor(EntityType.mcp.color)
                             Text("Export All Servers (\(servers.count))")
                             Spacer()
                             if isExporting {
@@ -86,7 +86,7 @@ struct MCPImportExportView: View {
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.down")
-                                .foregroundColor(ILSTheme.accent)
+                                .foregroundColor(EntityType.mcp.color)
                             Text("Preview Import")
                             Spacer()
                             if isImporting {
@@ -124,7 +124,7 @@ struct MCPImportExportView: View {
                                 Spacer()
                             }
                         }
-                        .foregroundColor(ILSTheme.accent)
+                        .foregroundColor(EntityType.mcp.color)
                     }
                 }
 

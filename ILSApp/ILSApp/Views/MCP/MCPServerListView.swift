@@ -60,7 +60,7 @@ struct MCPServerListView: View {
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
-                        .tint(ILSTheme.accent)
+                        .tint(EntityType.mcp.color)
                     }
                     .contextMenu {
                         Button {
@@ -231,10 +231,10 @@ struct MCPServerRowView: View {
                         Text("\(env.count) env")
                     }
                     .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.accent)
+                    .foregroundColor(EntityType.mcp.color)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(ILSTheme.accent.opacity(0.1))
+                    .background(EntityType.mcp.color.opacity(0.1))
                     .cornerRadius(ILSTheme.cornerRadiusXS)
                 }
 

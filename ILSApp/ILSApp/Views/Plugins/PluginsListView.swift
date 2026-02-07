@@ -119,10 +119,10 @@ struct PluginRowView: View {
                     ForEach(commands.prefix(3), id: \.self) { command in
                         Text(command)
                             .font(.caption2)
-                            .foregroundColor(ILSTheme.accent)
+                            .foregroundColor(EntityType.plugins.color)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(ILSTheme.accent.opacity(0.15))
+                            .background(EntityType.plugins.color.opacity(0.15))
                             .cornerRadius(ILSTheme.cornerRadiusXS)
                     }
                     if commands.count > 3 {
@@ -233,7 +233,7 @@ struct MarketplaceView: View {
                                     .foregroundColor(selectedCategory == category ? .white : ILSTheme.secondaryText)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(selectedCategory == category ? ILSTheme.accent : ILSTheme.tertiaryBackground)
+                                    .background(selectedCategory == category ? EntityType.plugins.color : ILSTheme.tertiaryBackground)
                                     .cornerRadius(ILSTheme.cornerRadiusXS)
                             }
                         }
@@ -279,7 +279,7 @@ struct MarketplaceView: View {
                                     }) {
                                         Text("Add")
                                             .font(ILSTheme.captionFont.weight(.semibold))
-                                            .foregroundColor(newRepoPath.isEmpty ? ILSTheme.tertiaryText : ILSTheme.accent)
+                                            .foregroundColor(newRepoPath.isEmpty ? ILSTheme.tertiaryText : EntityType.plugins.color)
                                     }
                                     .disabled(newRepoPath.isEmpty)
                                 }
@@ -376,7 +376,7 @@ struct PluginMarketplaceRow: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(ILSTheme.accent)
+                        .background(EntityType.plugins.color)
                         .cornerRadius(ILSTheme.cornerRadiusXS)
                 }
                 .accessibilityLabel("Install \(plugin.name)")

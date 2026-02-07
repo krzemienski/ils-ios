@@ -58,7 +58,7 @@ struct SessionsListView: View {
                         } label: {
                             Label("Rename", systemImage: "pencil")
                         }
-                        .tint(ILSTheme.accent)
+                        .tint(EntityType.sessions.color)
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {

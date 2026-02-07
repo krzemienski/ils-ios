@@ -50,8 +50,8 @@ struct SessionTemplatesView: View {
                                 .font(ILSTheme.captionFont)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 2)
-                                .background(ILSTheme.accent.opacity(0.2))
-                                .foregroundColor(ILSTheme.accent)
+                                .background(EntityType.sessions.color.opacity(0.2))
+                                .foregroundColor(EntityType.sessions.color)
                                 .cornerRadius(4)
                         }
                     }
