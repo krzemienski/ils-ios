@@ -28,6 +28,8 @@ class SkillsViewModel: ObservableObject {
 
     private var client: APIClient?
     private var searchTask: Task<Void, Never>?
+    /// Precomputed lowercase search strings keyed by skill index, rebuilt when skills change
+    private var searchCache: [(skill: Skill, searchText: String)] = []
 
     init() {}
 
@@ -35,16 +37,24 @@ class SkillsViewModel: ObservableObject {
         self.client = client
     }
 
-    /// Filtered skills based on search text (client-side filtering for responsiveness)
+    /// Filtered skills based on search text using precomputed lowercase cache
     var filteredSkills: [Skill] {
         guard !searchText.isEmpty else { return skills }
         let query = searchText.lowercased()
-        return skills.filter { skill in
-            let nameLower = skill.name.lowercased()
-            let descLower = skill.description?.lowercased()
-            return nameLower.contains(query) ||
-                (descLower?.contains(query) ?? false) ||
-                skill.tags.contains { $0.lowercased().contains(query) }
+        return searchCache
+            .filter { $0.searchText.contains(query) }
+            .map(\.skill)
+    }
+
+    /// Rebuild the lowercase search cache when skills array changes
+    private func rebuildSearchCache() {
+        searchCache = skills.map { skill in
+            let text = [
+                skill.name.lowercased(),
+                skill.description?.lowercased() ?? "",
+                skill.tags.map { $0.lowercased() }.joined(separator: " ")
+            ].joined(separator: " ")
+            return (skill, text)
         }
     }
 
@@ -71,6 +81,7 @@ class SkillsViewModel: ObservableObject {
             let response: APIResponse<ListResponse<Skill>> = try await client.get(path)
             if let data = response.data {
                 skills = data.items
+                rebuildSearchCache()
             }
         } catch {
             self.error = error
@@ -100,6 +111,7 @@ class SkillsViewModel: ObservableObject {
             let response: APIResponse<Skill> = try await client.post("/skills", body: request)
             if let skill = response.data {
                 skills.append(skill)
+                rebuildSearchCache()
                 return skill
             }
         } catch {
@@ -117,6 +129,7 @@ class SkillsViewModel: ObservableObject {
             if let updated = response.data {
                 if let index = skills.firstIndex(where: { $0.id == skill.id }) {
                     skills[index] = updated
+                    rebuildSearchCache()
                 }
                 return updated
             }
@@ -132,6 +145,7 @@ class SkillsViewModel: ObservableObject {
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/skills/\(skill.name)")
             skills.removeAll { $0.id == skill.id }
+            rebuildSearchCache()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to delete skill '\(skill.name)': \(error.localizedDescription)")

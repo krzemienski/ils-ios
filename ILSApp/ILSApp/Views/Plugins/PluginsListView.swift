@@ -84,7 +84,7 @@ struct PluginsListView: View {
 
 struct PluginRowView: View {
     let plugin: PluginItem
-    @ObservedObject var viewModel: PluginsViewModel
+    let viewModel: PluginsViewModel
 
     var body: some View {
         HStack(spacing: ILSTheme.spaceM) {
@@ -163,27 +163,26 @@ struct PluginRowView: View {
 
 struct MarketplaceView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var viewModel: PluginsViewModel
+    let viewModel: PluginsViewModel
     let apiClient: APIClient
     @State private var marketplaces: [MarketplaceInfo] = []
     @State private var isLoading = true
     @State private var searchText = ""
     @State private var selectedCategory = "All"
+    @State private var cachedCategories: [String] = ["All"]
     @State private var newRepoPath = ""
     @State private var isAddingRepo = false
     @State private var installingPlugins: Set<String> = []
 
-    /// Dynamic categories extracted from marketplace data, with "All" prepended
-    private var categories: [String] {
+    /// Rebuild cached categories from marketplace data
+    private func rebuildCategories() {
         var cats = Set<String>()
+        let keywords = ["productivity", "devops", "testing", "documentation", "security", "monitoring", "integration", "ai", "database", "networking", "utilities"]
         for marketplace in marketplaces {
             for plugin in marketplace.plugins {
                 if let desc = plugin.description?.lowercased() {
-                    // Extract category keywords from description
-                    for keyword in ["productivity", "devops", "testing", "documentation", "security", "monitoring", "integration", "ai", "database", "networking", "utilities"] {
-                        if desc.contains(keyword) {
-                            cats.insert(keyword.capitalized)
-                        }
+                    for keyword in keywords where desc.contains(keyword) {
+                        cats.insert(keyword.capitalized)
                     }
                 }
                 if let category = plugin.category, !category.isEmpty {
@@ -191,7 +190,7 @@ struct MarketplaceView: View {
                 }
             }
         }
-        return ["All"] + cats.sorted()
+        cachedCategories = ["All"] + cats.sorted()
     }
 
     var filteredPlugins: [(marketplace: MarketplaceInfo, plugins: [MarketplacePlugin])] {
@@ -224,7 +223,7 @@ struct MarketplaceView: View {
                 // Category chips
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(categories, id: \.self) { category in
+                        ForEach(cachedCategories, id: \.self) { category in
                             Button(action: {
                                 selectedCategory = category
                             }) {
@@ -311,6 +310,7 @@ struct MarketplaceView: View {
             let response: APIResponse<[MarketplaceInfo]> = try await apiClient.get("/plugins/marketplace")
             if let data = response.data {
                 marketplaces = data
+                rebuildCategories()
             }
         } catch {
             AppLogger.shared.error("Failed to load marketplaces: \(error)")

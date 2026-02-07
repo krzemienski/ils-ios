@@ -3,7 +3,7 @@ import ILSShared
 
 struct ProjectDetailView: View {
     let project: Project
-    @ObservedObject var viewModel: ProjectsViewModel
+    let viewModel: ProjectsViewModel
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String

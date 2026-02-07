@@ -211,7 +211,7 @@ struct SkillRowView: View {
 
 struct SkillDetailView: View {
     let skill: Skill
-    @ObservedObject var viewModel: SkillsViewModel
+    let viewModel: SkillsViewModel
     let apiClient: APIClient
 
     @Environment(\.dismiss) private var dismiss
