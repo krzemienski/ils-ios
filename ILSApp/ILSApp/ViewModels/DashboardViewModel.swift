@@ -1,13 +1,6 @@
 import Foundation
 import ILSShared
 
-struct QuickAction: Identifiable {
-    let id = UUID()
-    let title: String
-    let icon: String
-    let tab: SidebarItem
-}
-
 @MainActor
 class DashboardViewModel: ObservableObject {
     @Published var stats: StatsResponse?
@@ -33,15 +26,6 @@ class DashboardViewModel: ObservableObject {
 
     func configure(client: APIClient) {
         self.client = client
-    }
-
-    var quickActions: [QuickAction] {
-        [
-            QuickAction(title: "Discover Skills", icon: "wand.and.stars", tab: .skills),
-            QuickAction(title: "Browse Plugins", icon: "puzzlepiece.extension", tab: .plugins),
-            QuickAction(title: "Configure MCP", icon: "server.rack", tab: .mcp),
-            QuickAction(title: "Edit Settings", icon: "gear", tab: .settings),
-        ]
     }
 
     /// Empty state text for UI display

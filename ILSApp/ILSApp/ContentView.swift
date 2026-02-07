@@ -53,31 +53,6 @@ struct ContentView: View {
     }
 }
 
-// Keep SidebarItem for backward compatibility (used by SidebarView)
-enum SidebarItem: String, CaseIterable, Identifiable {
-    case dashboard = "Dashboard"
-    case sessions = "Sessions"
-    case projects = "Projects"
-    case plugins = "Plugins"
-    case mcp = "MCP Servers"
-    case skills = "Skills"
-    case settings = "Settings"
-
-    var id: String { rawValue }
-
-    var icon: String {
-        switch self {
-        case .dashboard: return "square.grid.2x2"
-        case .sessions: return "bubble.left.and.bubble.right"
-        case .projects: return "folder"
-        case .plugins: return "puzzlepiece.extension"
-        case .mcp: return "server.rack"
-        case .skills: return "star"
-        case .settings: return "gear"
-        }
-    }
-}
-
 #Preview {
     ContentView()
         .environmentObject(AppState())

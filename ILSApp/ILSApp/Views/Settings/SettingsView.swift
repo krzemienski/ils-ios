@@ -27,7 +27,6 @@ struct SettingsView: View {
             advancedSection
             statisticsSection
             diagnosticsSection
-            cacheSection
             aboutSection
         }
         .scrollContentBackground(.hidden)
@@ -435,26 +434,6 @@ struct SettingsView: View {
                 }
                 NavigationLink(destination: NotificationPreferencesView()) {
                     Label("Notifications", systemImage: "bell.badge")
-                }
-            }
-
-    }
-
-    @ViewBuilder
-    private var cacheSection: some View {
-        Section("CACHE") {
-                LabeledContent("Cache Size", value: CacheManager.shared.cacheSize)
-                if let lastSync = CacheManager.shared.lastSyncDate {
-                    LabeledContent("Last Sync") {
-                        Text(lastSync, style: .relative)
-                    }
-                } else {
-                    LabeledContent("Last Sync", value: "Never")
-                }
-                Button(role: .destructive) {
-                    CacheManager.shared.clearCache()
-                } label: {
-                    Label("Clear Cache", systemImage: "trash")
                 }
             }
 
