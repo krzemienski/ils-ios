@@ -14,7 +14,11 @@ import ILSShared
 /// - `GET /sessions/:id/messages`: Get session messages with pagination
 /// - `GET /sessions/transcript/:encodedProjectPath/:sessionId`: Read external session transcript
 struct SessionsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let fileSystem: FileSystemService
+
+    init(fileSystem: FileSystemService) {
+        self.fileSystem = fileSystem
+    }
 
     func boot(routes: RoutesBuilder) throws {
         let sessions = routes.grouped("sessions")
@@ -23,7 +27,7 @@ struct SessionsController: RouteCollection {
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get(":id", use: get)
-        sessions.put(":id", use: rename)
+        sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "messages", use: messages)

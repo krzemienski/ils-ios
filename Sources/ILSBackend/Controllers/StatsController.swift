@@ -3,7 +3,11 @@ import Fluent
 import ILSShared
 
 struct StatsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let fileSystem: FileSystemService
+
+    init(fileSystem: FileSystemService) {
+        self.fileSystem = fileSystem
+    }
 
     func boot(routes: RoutesBuilder) throws {
         let stats = routes.grouped("stats")

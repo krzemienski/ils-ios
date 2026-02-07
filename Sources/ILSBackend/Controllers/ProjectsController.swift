@@ -11,7 +11,11 @@ import CryptoKit
 /// - `GET /projects/:id`: Get a specific project by deterministic ID
 /// - `GET /projects/:id/sessions`: Get sessions for a project
 struct ProjectsController: RouteCollection {
-    private let fileSystem = FileSystemService()
+    private let fileSystem: FileSystemService
+
+    init(fileSystem: FileSystemService) {
+        self.fileSystem = fileSystem
+    }
 
     func boot(routes: RoutesBuilder) throws {
         let projects = routes.grouped("projects")

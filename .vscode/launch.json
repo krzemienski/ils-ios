@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ils-ios}",
+            "name": "Debug ILSBackend",
+            "target": "ILSBackend",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug ILSBackend"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:ils-ios}",
+            "name": "Release ILSBackend",
+            "target": "ILSBackend",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release ILSBackend"
+        }
+    ]
+}

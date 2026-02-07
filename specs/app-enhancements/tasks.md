@@ -42,7 +42,7 @@ Focus: Add MarkdownUI + HighlightSwift deps, extract ChatMessage model, wire DI 
   - _Requirements: FR-29, FR-5 (prep), FR-18 (prep)_
   - _Design: Phase 1 — 1.2 ChatMessage Model Extraction_
 
-- [ ] 1.3 Add FileSystemService DI to all backend controllers
+- [x] 1.3 Add FileSystemService DI to all backend controllers
   - **Do**:
     1. In each controller that has `let fileSystem = FileSystemService()`, change to `let fileSystem: FileSystemService` with `init(fileSystem: FileSystemService)`:
        - `SessionsController.swift` (line 17)

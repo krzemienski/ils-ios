@@ -205,66 +205,6 @@ struct MessageView: View {
     }
 }
 
-// MARK: - Data Models
-
-struct ChatMessage: Identifiable, Equatable {
-    let id: UUID
-    let isUser: Bool
-    var text: String
-    var toolCalls: [ToolCall] = []
-    var toolResults: [ToolResult] = []
-    var thinking: String?
-    var cost: Double?
-    var timestamp: Date?
-    var isFromHistory: Bool = false
-
-    init(
-        id: UUID = UUID(),
-        isUser: Bool,
-        text: String,
-        toolCalls: [ToolCall] = [],
-        toolResults: [ToolResult] = [],
-        thinking: String? = nil,
-        cost: Double? = nil,
-        timestamp: Date? = nil,
-        isFromHistory: Bool = false
-    ) {
-        self.id = id
-        self.isUser = isUser
-        self.text = text
-        self.toolCalls = toolCalls
-        self.toolResults = toolResults
-        self.thinking = thinking
-        self.cost = cost
-        self.timestamp = timestamp
-        self.isFromHistory = isFromHistory
-    }
-
-    static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.isUser == rhs.isUser &&
-        lhs.text == rhs.text &&
-        lhs.toolCalls == rhs.toolCalls &&
-        lhs.toolResults == rhs.toolResults &&
-        lhs.thinking == rhs.thinking &&
-        lhs.cost == rhs.cost &&
-        lhs.timestamp == rhs.timestamp &&
-        lhs.isFromHistory == rhs.isFromHistory
-    }
-}
-
-struct ToolCall: Identifiable, Equatable {
-    let id: String
-    let name: String
-    let inputPreview: String?
-}
-
-struct ToolResult: Equatable {
-    let toolUseId: String
-    let content: String
-    let isError: Bool
-}
-
 #Preview {
     ScrollView {
         VStack(spacing: 16) {
@@ -277,7 +217,7 @@ struct ToolResult: Equatable {
                 isUser: false,
                 text: "Of course! Here's an example:\n\n```swift\nfunc greet() -> String {\n    return \"Hello!\"\n}\n```\n\nThis function returns a **greeting** string.",
                 toolCalls: [
-                    ToolCall(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
+                    ToolCallDisplay(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
                 ],
                 thinking: "Let me analyze the code structure..."
             ))

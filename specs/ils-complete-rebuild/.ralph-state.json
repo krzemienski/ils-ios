@@ -1,0 +1,23 @@
+{
+  "source": "spec",
+  "name": "ils-complete-rebuild",
+  "basePath": "specs/ils-complete-rebuild",
+  "phase": "execution",
+  "taskIndex": 40,
+  "totalTasks": 40,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 1,
+  "maxGlobalIterations": 100,
+  "recoveryMode": false,
+  "maxFixTasksPerOriginal": 3,
+  "fixTaskMap": {},
+  "completedAt": "2026-02-06T06:20:00.000Z",
+  "skippedTasks": {
+    "4.5": "No git remote configured - local-only repo, PR creation not possible",
+    "5.1": "No git remote - CI monitoring not applicable",
+    "5.2": "No git remote - code review feedback not applicable",
+    "5.3": "No git remote - PR E2E validation done locally instead",
+    "5.4": "No git remote - final acceptance done locally"
+  }
+}

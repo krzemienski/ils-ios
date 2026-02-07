@@ -2,7 +2,11 @@ import Vapor
 import ILSShared
 
 struct ConfigController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let fileSystem: FileSystemService
+
+    init(fileSystem: FileSystemService) {
+        self.fileSystem = fileSystem
+    }
 
     func boot(routes: RoutesBuilder) throws {
         let config = routes.grouped("config")

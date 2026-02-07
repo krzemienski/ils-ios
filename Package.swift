@@ -26,8 +26,6 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.6.0"),
         // YAML parsing for skill files
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
-        // Claude Code SDK for CLI integration (forked for customization)
-        .package(url: "https://github.com/krzemienski/ClaudeCodeSDK.git", branch: "main"),
         // SSH client for remote server connections
         .package(url: "https://github.com/orlandos-nl/Citadel.git", from: "0.7.0"),
     ],
@@ -50,7 +48,6 @@ let package = Package(
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Yams", package: "Yams"),
-                .product(name: "ClaudeCodeSDK", package: "ClaudeCodeSDK"),
                 .product(name: "Citadel", package: "Citadel"),
             ],
             path: "Sources/ILSBackend",

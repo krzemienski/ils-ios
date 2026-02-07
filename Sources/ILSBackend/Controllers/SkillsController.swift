@@ -2,7 +2,11 @@ import Vapor
 import ILSShared
 
 struct SkillsController: RouteCollection {
-    let fileSystem = FileSystemService()
+    let fileSystem: FileSystemService
+
+    init(fileSystem: FileSystemService) {
+        self.fileSystem = fileSystem
+    }
 
     func boot(routes: RoutesBuilder) throws {
         let skills = routes.grouped("skills")

@@ -4,8 +4,8 @@ import Foundation
 actor APIClient {
     let baseURL: String
     private let session: URLSession
-    private let decoder: JSONDecoder
-    private let encoder: JSONEncoder
+    nonisolated private let decoder: JSONDecoder
+    nonisolated private let encoder: JSONEncoder
     private var cache: [String: CacheEntry] = [:]
     private let defaultCacheTTL: TimeInterval = 30 // 30 seconds
 
@@ -87,9 +87,8 @@ actor APIClient {
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
-        // Invalidate GET cache for the base path
-        let basePath = path.split(separator: "/").prefix(2).joined(separator: "/")
-        cache.removeValue(forKey: "/\(basePath)")
+        // Invalidate cache for exact resource + list endpoint
+        invalidateCacheForMutation(path: path)
 
         return try decoder.decode(T.self, from: data)
     }
@@ -105,9 +104,8 @@ actor APIClient {
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
-        // Invalidate GET cache for the base path
-        let basePath = path.split(separator: "/").prefix(2).joined(separator: "/")
-        cache.removeValue(forKey: "/\(basePath)")
+        // Invalidate cache for exact resource + list endpoint
+        invalidateCacheForMutation(path: path)
 
         return try decoder.decode(T.self, from: data)
     }
@@ -121,9 +119,8 @@ actor APIClient {
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response)
 
-        // Invalidate GET cache for the base path
-        let basePath = path.split(separator: "/").prefix(2).joined(separator: "/")
-        cache.removeValue(forKey: "/\(basePath)")
+        // Invalidate cache for exact resource + list endpoint
+        invalidateCacheForMutation(path: path)
 
         return try decoder.decode(T.self, from: data)
     }
@@ -137,6 +134,19 @@ actor APIClient {
     func renameSession<T: Decodable>(id: UUID, name: String) async throws -> T {
         let body = RenameBody(name: name)
         return try await put("/sessions/\(id.uuidString)", body: body)
+    }
+
+    /// Invalidate cache entries affected by a mutation (POST/PUT/DELETE).
+    /// Removes the exact resource path and its parent list endpoint.
+    private func invalidateCacheForMutation(path: String) {
+        // Remove exact path (e.g. /sessions/abc-123)
+        cache.removeValue(forKey: path)
+        // Remove list endpoint (e.g. /sessions)
+        let components = path.split(separator: "/")
+        if components.count >= 1 {
+            let listPath = "/\(components[0])"
+            cache.removeValue(forKey: listPath)
+        }
     }
 
     func invalidateCache(for path: String? = nil) {

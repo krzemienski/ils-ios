@@ -26,15 +26,18 @@ func routes(_ app: Application) throws {
     // API v1 routes
     let api = app.grouped("api", "v1")
 
+    // Create shared FileSystemService for DI
+    let fileSystem = FileSystemService()
+
     // Register controllers
-    try api.register(collection: ProjectsController())
-    try api.register(collection: SessionsController())
+    try api.register(collection: ProjectsController(fileSystem: fileSystem))
+    try api.register(collection: SessionsController(fileSystem: fileSystem))
     try api.register(collection: ChatController())
-    try api.register(collection: SkillsController())
-    try api.register(collection: MCPController())
-    try api.register(collection: PluginsController())
-    try api.register(collection: ConfigController())
-    try api.register(collection: StatsController())
+    try api.register(collection: SkillsController(fileSystem: fileSystem))
+    try api.register(collection: MCPController(fileSystem: fileSystem))
+    try api.register(collection: PluginsController(fileSystem: fileSystem))
+    try api.register(collection: ConfigController(fileSystem: fileSystem))
+    try api.register(collection: StatsController(fileSystem: fileSystem))
     try api.register(collection: AuthController())
     try api.register(collection: SystemController())
     try api.register(collection: TunnelController())

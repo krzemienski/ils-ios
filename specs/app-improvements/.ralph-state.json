@@ -1,0 +1,12 @@
+{
+  "source": "spec",
+  "name": "app-improvements",
+  "basePath": "specs/app-improvements",
+  "phase": "research",
+  "taskIndex": 0,
+  "totalTasks": 0,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 1,
+  "maxGlobalIterations": 100
+}

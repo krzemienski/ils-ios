@@ -259,8 +259,8 @@ class ChatViewModel: ObservableObject {
         messages = [emptyMessage]
     }
 
-    /// Parse tool calls JSON string into ToolCall array
-    private func parseToolCalls(from jsonString: String?) -> [ToolCall] {
+    /// Parse tool calls JSON string into ToolCallDisplay array
+    private func parseToolCalls(from jsonString: String?) -> [ToolCallDisplay] {
         guard let jsonString = jsonString,
               let data = jsonString.data(using: .utf8) else {
             return []
@@ -269,7 +269,7 @@ class ChatViewModel: ObservableObject {
         do {
             let blocks = try jsonDecoder.decode([ToolUseBlock].self, from: data)
             return blocks.map { block in
-                ToolCall(id: block.id, name: block.name, inputPreview: nil)
+                ToolCallDisplay(id: block.id, name: block.name, inputPreview: nil)
             }
         } catch {
             AppLogger.shared.error("Failed to parse tool calls: \(error)")
@@ -277,8 +277,8 @@ class ChatViewModel: ObservableObject {
         }
     }
 
-    /// Parse tool results JSON string into ToolResult array
-    private func parseToolResults(from jsonString: String?) -> [ToolResult] {
+    /// Parse tool results JSON string into ToolResultDisplay array
+    private func parseToolResults(from jsonString: String?) -> [ToolResultDisplay] {
         guard let jsonString = jsonString,
               let data = jsonString.data(using: .utf8) else {
             return []
@@ -287,7 +287,7 @@ class ChatViewModel: ObservableObject {
         do {
             let blocks = try jsonDecoder.decode([ToolResultBlock].self, from: data)
             return blocks.map { block in
-                ToolResult(toolUseId: block.toolUseId, content: block.content, isError: block.isError)
+                ToolResultDisplay(toolUseId: block.toolUseId, content: block.content, isError: block.isError)
             }
         } catch {
             AppLogger.shared.error("Failed to parse tool results: \(error)")
@@ -363,14 +363,14 @@ class ChatViewModel: ObservableObject {
                         currentMessage.text += textBlock.text
 
                     case .toolUse(let toolUseBlock):
-                        currentMessage.toolCalls.append(ToolCall(
+                        currentMessage.toolCalls.append(ToolCallDisplay(
                             id: toolUseBlock.id,
                             name: toolUseBlock.name,
                             inputPreview: nil
                         ))
 
                     case .toolResult(let resultBlock):
-                        currentMessage.toolResults.append(ToolResult(
+                        currentMessage.toolResults.append(ToolResultDisplay(
                             toolUseId: resultBlock.toolUseId,
                             content: resultBlock.content,
                             isError: resultBlock.isError

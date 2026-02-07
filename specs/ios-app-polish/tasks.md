@@ -247,17 +247,17 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
 
 ## Phase 3: Quality Gates & Final Verification
 
-- [ ] 3.1 [VERIFY] Full build: backend + iOS
+- [x] 3.1 [VERIFY] Full build: backend + iOS
   - **Do**: Build both targets, verify zero errors
   - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E "(error:|BUILD)" | tail -5`
   - **Done when**: Both builds succeed
 
-- [ ] 3.2 [VERIFY] Evidence completeness check
+- [x] 3.2 [VERIFY] Evidence completeness check
   - **Do**: Count all evidence screenshots across all scenarios
   - **Verify**: `ls -la .omc/evidence/ios-app-polish/s*.png 2>/dev/null | wc -l` shows 28+ files (avg 2+ per scenario × 13 scenarios)
   - **Done when**: All 13 scenarios have at least 1 screenshot each
 
-- [ ] 3.3 [VERIFY] Final acceptance criteria checklist
+- [x] 3.3 [VERIFY] Final acceptance criteria checklist
   - **Do**: Programmatically verify each key AC:
     1. AC-1.1: `ls ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift` — exists
     2. AC-3.3: `grep -c navigateToSession ILSApp/ILSApp/Views/Sessions/SessionsListView.swift` — > 0

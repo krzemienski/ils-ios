@@ -24,8 +24,8 @@ class SSEClient: ObservableObject {
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
-    private let jsonEncoder = JSONEncoder()
-    private let jsonDecoder = JSONDecoder()
+    nonisolated private let jsonEncoder = JSONEncoder()
+    nonisolated private let jsonDecoder = JSONDecoder()
 
     init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
@@ -41,7 +41,7 @@ class SSEClient: ObservableObject {
     func startStream(request: ChatStreamRequest) {
         // Cancel any existing stream before starting a new one
         if isStreaming {
-            print("[SSEClient] Cancelling previous stream before starting new one")
+            AppLogger.shared.info("Cancelling previous stream before starting new one", category: "sse")
             cancel()
         }
 
@@ -59,7 +59,7 @@ class SSEClient: ObservableObject {
 
     private func performStream(request: ChatStreamRequest) async {
         let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
-        print("[SSEClient] Request URL: \(url)")
+        AppLogger.shared.info("Request URL: \(url)", category: "sse")
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -68,7 +68,7 @@ class SSEClient: ObservableObject {
         do {
             urlRequest.httpBody = try jsonEncoder.encode(request)
         } catch {
-            print("[SSEClient] Encode error: \(error)")
+            AppLogger.shared.error("Encode error: \(error)", category: "sse")
             self.error = error
             self.isStreaming = false
             return
@@ -95,7 +95,7 @@ class SSEClient: ObservableObject {
             }
 
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-            print("[SSEClient] Response status: \(statusCode)")
+            AppLogger.shared.info("Response status: \(statusCode)", category: "sse")
 
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
@@ -109,7 +109,7 @@ class SSEClient: ObservableObject {
             var currentData = ""
 
             for try await line in asyncBytes.lines {
-                print("[SSEClient] Line: \(line.prefix(120))")
+                AppLogger.shared.info("Line: \(line.prefix(120))", category: "sse")
                 if line.hasPrefix("event:") {
                     currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
                 } else if line.hasPrefix("data:") {
@@ -128,13 +128,13 @@ class SSEClient: ObservableObject {
             }
 
             // Stream completed normally
-            print("[SSEClient] Stream completed normally")
+            AppLogger.shared.info("Stream completed normally", category: "sse")
             connectionState = .disconnected
         } catch is CancellationError {
-            print("[SSEClient] Stream cancelled")
+            AppLogger.shared.info("Stream cancelled", category: "sse")
             connectionState = .disconnected
         } catch {
-            print("[SSEClient] Stream error: \(error)")
+            AppLogger.shared.error("Stream error: \(error)", category: "sse")
             if await shouldReconnect(error: error) {
                 return
             }
@@ -156,10 +156,10 @@ class SSEClient: ObservableObject {
         reconnectAttempts += 1
         connectionState = .reconnecting(attempt: reconnectAttempts)
 
-        print("SSEClient: Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)")
+        AppLogger.shared.warning("Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)", category: "sse")
 
         // Exponential backoff
-        let delay = reconnectDelay * UInt64(reconnectAttempts)
+        let delay = reconnectDelay * UInt64(1 << (reconnectAttempts - 1))
         try? await Task.sleep(nanoseconds: delay)
 
         // Check if cancelled during sleep
@@ -194,12 +194,12 @@ class SSEClient: ObservableObject {
     @Published var assistantMessageId: String?
 
     private func parseAndAddMessage(event: String, data: String) async {
-        print("[SSEClient] Parsing event=\(event) data=\(data.prefix(120))")
+        AppLogger.shared.info("Parsing event=\(event) data=\(data.prefix(120))", category: "sse")
 
         // Handle special event types
         switch event {
         case "done":
-            print("[SSEClient] Received done event — stream complete")
+            AppLogger.shared.info("Received done event — stream complete", category: "sse")
             return
         case "messageId":
             parseMessageIdEvent(data: data)
@@ -209,17 +209,17 @@ class SSEClient: ObservableObject {
         }
 
         guard let jsonData = data.data(using: .utf8) else {
-            print("[SSEClient] Failed to convert data to UTF8")
+            AppLogger.shared.error("Failed to convert data to UTF8", category: "sse")
             return
         }
 
         do {
             let message = try jsonDecoder.decode(StreamMessage.self, from: jsonData)
             messages.append(message)
-            print("[SSEClient] Parsed message successfully, total messages: \(messages.count)")
+            AppLogger.shared.info("Parsed message successfully, total messages: \(messages.count)", category: "sse")
         } catch {
-            print("[SSEClient] DECODE ERROR: \(error)")
-            print("[SSEClient] Raw data: \(data)")
+            AppLogger.shared.error("Decode error: \(error)", category: "sse")
+            AppLogger.shared.error("Raw data: \(data)", category: "sse")
         }
     }
 
@@ -230,7 +230,7 @@ class SSEClient: ObservableObject {
         }
         userMessageId = json["userMessageId"]
         assistantMessageId = json["assistantMessageId"]
-        print("[SSEClient] Message IDs: user=\(userMessageId ?? "nil"), assistant=\(assistantMessageId ?? "nil")")
+        AppLogger.shared.info("Message IDs: user=\(userMessageId ?? "nil"), assistant=\(assistantMessageId ?? "nil")", category: "sse")
     }
 
     /// Cancel the current stream

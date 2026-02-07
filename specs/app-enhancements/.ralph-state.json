@@ -1,0 +1,15 @@
+{
+  "source": "spec",
+  "name": "app-enhancements",
+  "basePath": "specs/app-enhancements",
+  "phase": "execution",
+  "taskIndex": 1,
+  "totalTasks": 42,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 1,
+  "maxGlobalIterations": 100,
+  "recoveryMode": false,
+  "maxFixTasksPerOriginal": 3,
+  "fixTaskMap": {}
+}
