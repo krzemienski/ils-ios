@@ -18,9 +18,16 @@ struct ChatView: View {
     @State private var messageToDelete: ChatMessage?
     @State private var isUserScrolledUp = false
     @State private var showJumpToBottom = false
+    @State private var isRenaming = false
+    @State private var renameText = ""
+    @State private var showExportSheet = false
+    @State private var exportMarkdown = ""
+    @State private var isExporting = false
+    @State private var showDeleteSessionConfirmation = false
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.dismiss) private var dismiss
 
     /// Whether this is an external (read-only) session
     private var isExternalSession: Bool {
@@ -113,6 +120,31 @@ struct ChatView: View {
             }
         } message: {
             Text("Are you sure you want to delete this message?")
+        }
+        .alert("Rename Session", isPresented: $isRenaming) {
+            TextField("Session name", text: $renameText)
+            Button("Rename") {
+                Task {
+                    let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Enter a new name for this session")
+        }
+        .alert("Delete Session", isPresented: $showDeleteSessionConfirmation) {
+            Button("Delete", role: .destructive) {
+                Task {
+                    let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
+                    dismiss()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete this session and all its messages.")
+        }
+        .sheet(isPresented: $showExportSheet) {
+            ShareSheet(text: exportMarkdown, fileName: "\(session.name ?? "session").md")
         }
         .navigationDestination(item: $navigateToForked) { session in
             ChatView(session: session)
@@ -280,6 +312,13 @@ struct ChatView: View {
             Menu {
                 if !isExternalSession {
                     Button {
+                        renameText = session.name ?? ""
+                        isRenaming = true
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+
+                    Button {
                         Task {
                             if let forked = await viewModel.forkSession() {
                                 forkedSession = forked
@@ -290,6 +329,12 @@ struct ChatView: View {
                         Label("Fork Session", systemImage: "arrow.branch")
                     }
                     .accessibilityIdentifier("fork-session-button")
+                }
+
+                Button {
+                    Task { await exportSession() }
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
                 }
 
                 Button(action: { showSessionInfo = true }) {
@@ -309,6 +354,15 @@ struct ChatView: View {
                         Text("Project: \(projectName)")
                     }
                     Text("Source: Claude Code")
+                }
+
+                if !isExternalSession {
+                    Divider()
+                    Button(role: .destructive) {
+                        showDeleteSessionConfirmation = true
+                    } label: {
+                        Label("Delete Session", systemImage: "trash")
+                    }
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -340,6 +394,28 @@ struct ChatView: View {
 
         viewModel.addUserMessage(prompt)
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId)
+    }
+
+    private func exportSession() async {
+        isExporting = true
+        var md = "# Session: \(session.name ?? "Unnamed")\n\n"
+        md += "Model: \(session.model.capitalized)\n"
+        md += "Status: \(session.status.rawValue.capitalized)\n"
+        md += "Created: \(session.createdAt.formatted())\n"
+        md += "Last Active: \(session.lastActiveAt.formatted())\n"
+        if let cost = session.totalCostUSD {
+            md += "Cost: $\(String(format: "%.4f", cost))\n"
+        }
+        md += "\n---\n\n"
+
+        for message in viewModel.messages {
+            let role = message.isUser ? "User" : "Assistant"
+            md += "## \(role)\n\n\(message.text)\n\n"
+        }
+
+        exportMarkdown = md
+        isExporting = false
+        showExportSheet = true
     }
 }
 
