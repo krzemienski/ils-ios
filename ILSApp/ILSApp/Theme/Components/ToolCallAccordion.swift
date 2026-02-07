@@ -97,6 +97,9 @@ struct ToolCallAccordion: View {
             RoundedRectangle(cornerRadius: 8)
                 .strokeBorder(borderColor, lineWidth: 1)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Tool call: \(toolName)\(isError ? ", error" : "")")
+        .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
     }
 
     private var toolIcon: String {

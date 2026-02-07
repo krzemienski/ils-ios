@@ -44,6 +44,8 @@ struct ConnectionStepsView: View {
 
                     Spacer()
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(stepAccessibilityLabel(for: step))
             }
         }
     }
@@ -67,6 +69,21 @@ struct ConnectionStepsView: View {
                 .foregroundColor(ILSTheme.error)
                 .font(.system(size: 20))
         }
+    }
+
+    private func stepAccessibilityLabel(for step: ConnectionStep) -> String {
+        let statusText: String
+        switch step.status {
+        case .pending:
+            statusText = "pending"
+        case .inProgress:
+            statusText = "in progress"
+        case .success:
+            statusText = "completed"
+        case .failure(let msg):
+            statusText = "failed, \(msg)"
+        }
+        return "Step \(step.id): \(step.name), \(statusText)"
     }
 
     private func textColor(for status: StepStatus) -> Color {

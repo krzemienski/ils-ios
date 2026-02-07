@@ -33,6 +33,7 @@ struct CodeBlockView: View {
                     .foregroundColor(showCopied ? ILSTheme.success : ILSTheme.textSecondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(showCopied ? "Code copied to clipboard" : "Copy code to clipboard")
             }
             .padding(.horizontal, ILSTheme.spacingS)
             .padding(.vertical, 6)
@@ -53,6 +54,8 @@ struct CodeBlockView: View {
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(borderColor, lineWidth: 1)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Code block, \(language ?? "code")")
     }
 
     private func copyCode() {

@@ -71,6 +71,9 @@ struct ThinkingSection: View {
             RoundedRectangle(cornerRadius: 8)
                 .strokeBorder(borderColor, lineWidth: 1)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(isActive ? "AI thinking process, in progress" : "AI thinking process")
+        .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
         .onAppear {
             if isActive && !UIAccessibility.isReduceMotionEnabled {
                 startPulsing()

@@ -89,5 +89,17 @@ struct MetricChart: View {
         .padding(ILSTheme.spaceM)
         .background(ILSTheme.bg2)
         .clipShape(RoundedRectangle(cornerRadius: ILSTheme.radiusS))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(metricAccessibilityLabel)
+    }
+
+    private var metricAccessibilityLabel: String {
+        if data.isEmpty {
+            return "\(title) chart, waiting for data"
+        }
+        if !currentValue.isEmpty {
+            return "\(title) chart, current value \(currentValue)"
+        }
+        return "\(title) chart"
     }
 }

@@ -35,10 +35,13 @@ struct SparklineChart: View {
             .chartYAxis(.hidden)
             .chartLegend(.hidden)
             .frame(height: 24)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Sparkline chart, \(data.count) data points, latest value \(Int(data.last ?? 0))")
         } else {
             Rectangle()
                 .fill(Color.clear)
                 .frame(height: 24)
+                .accessibilityHidden(true)
         }
     }
 }

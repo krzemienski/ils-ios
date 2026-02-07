@@ -45,6 +45,9 @@ struct ConnectionBanner: View {
                 .background(.ultraThinMaterial)
             )
             .transition(.move(edge: .top).combined(with: .opacity))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(isConnected ? "Connected to server" : "Disconnected from server")
+            .accessibilityAddTraits(.updatesFrequently)
         }
     }
 
@@ -98,6 +101,9 @@ struct ConnectionBannerModifier: ViewModifier {
                         .background(.ultraThinMaterial)
                     )
                     .transition(.move(edge: .top).combined(with: .opacity))
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(isConnected ? "Connected to server" : "Disconnected from server, reconnecting")
+                    .accessibilityAddTraits(.updatesFrequently)
                 }
             }
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: shouldShowBanner)

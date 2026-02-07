@@ -62,5 +62,15 @@ struct ProgressRing: View {
                     .foregroundColor(ILSTheme.textSecondary)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(ringAccessibilityLabel)
+        .accessibilityValue("\(Int(progress * 100)) percent")
+    }
+
+    private var ringAccessibilityLabel: String {
+        if !title.isEmpty {
+            return "\(title), \(Int(progress * 100)) percent"
+        }
+        return "\(Int(progress * 100)) percent"
     }
 }

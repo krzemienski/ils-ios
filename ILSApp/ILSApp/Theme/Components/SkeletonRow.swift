@@ -35,6 +35,8 @@ struct SkeletonRow: View {
         }
         .padding(.vertical, 8)
         .shimmer()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading content")
     }
 }
 
@@ -44,5 +46,7 @@ struct SkeletonListView: View {
         ForEach(0..<5, id: \.self) { _ in
             SkeletonRow()
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading content, please wait")
     }
 }
