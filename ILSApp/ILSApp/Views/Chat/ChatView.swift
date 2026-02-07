@@ -60,17 +60,23 @@ struct ChatView: View {
             viewModel.encodedProjectPath = session.encodedProjectPath
             viewModel.claudeSessionId = session.claudeSessionId
 
-            // Monitor error changes
-            Task { @MainActor in
-                for await _ in viewModel.$error.values {
-                    if viewModel.error != nil {
-                        errorId = UUID()
-                        showErrorAlert = true
+            // Run error monitor and history loading as child tasks
+            // so both are cancelled when the view disappears
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { @MainActor in
+                    for await _ in viewModel.$error.values {
+                        guard !Task.isCancelled else { return }
+                        if viewModel.error != nil {
+                            errorId = UUID()
+                            showErrorAlert = true
+                        }
                     }
                 }
-            }
 
-            await viewModel.loadMessageHistory()
+                group.addTask { @MainActor in
+                    await viewModel.loadMessageHistory()
+                }
+            }
         }
         .alert("Connection Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}

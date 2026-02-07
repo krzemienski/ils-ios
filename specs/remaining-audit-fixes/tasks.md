@@ -193,7 +193,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-4 | AC-1.4_
   - _Design: L-CONC-2 print cleanup_
 
-- [ ] 1.17 POC Checkpoint: full build + app launch verification
+- [x] 1.17 POC Checkpoint: full build + app launch verification
   - **Do**:
     1. Clean derived data: `rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*`
     2. Build with strict warnings: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,id=50523130-57AA-48B0-ABD0-4D59CE455F14' clean build`
@@ -222,7 +222,7 @@ After POC validated, clean up any rough edges.
   - **Commit**: `refactor(logging): normalize AppLogger categories`
   - _Design: Technical Decisions table_
 
-- [ ] 2.2 Verify all Task cancellation paths are complete
+- [x] 2.2 Verify all Task cancellation paths are complete
   - **Do**:
     1. Check every `Task<Void, Never>?` property has matching cancel in deinit/onDisappear
     2. Verify ChatViewModel.deinit cancels `batchTask` + clears `cancellables`
