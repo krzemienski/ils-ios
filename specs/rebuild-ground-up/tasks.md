@@ -155,7 +155,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-4.1, AC-4.2, AC-4.8, FR-8_
   - _Design: Section 8 — Chat Content Rendering Spec, Message Layout_
 
-- [ ] 3.2 Rebuild CodeBlockView and MarkdownTextView with theme
+- [x] 3.2 Rebuild CodeBlockView and MarkdownTextView with theme
   - **Do**:
     1. Rewrite `ILSApp/ILSApp/Theme/Components/CodeBlockView.swift` — bgTertiary background, borderSubtle 0.5px border, cornerRadiusSmall (8pt), SF Mono 13pt, language label top-left (SF Mono 11pt, textTertiary), copy button top-right with clipboard + visual feedback, max height 300pt with ScrollView, tap to expand
     2. Update `ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift` — use theme tokens for colors (textPrimary, accent for links), detect and render code blocks via CodeBlockView, handle bold, italic, lists, links, headings with SF Pro
@@ -169,7 +169,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-6.1, AC-6.2, AC-6.3, AC-6.4, AC-6.5, AC-6.6, FR-9_
   - _Design: Section 8 — Code Block Spec_
 
-- [ ] 3.3 Rebuild ToolCallAccordion with all 10 tool types
+- [x] 3.3 Rebuild ToolCallAccordion with all 10 tool types
   - **Do**:
     1. Rewrite `ILSApp/ILSApp/Theme/Components/ToolCallAccordion.swift` — collapsible accordion with SF Symbol icon per tool type, tool name, status indicator (spinner running, checkmark success, X error)
     2. Map all 10 tool types to correct icons: Read→doc.text, Write→doc.badge.plus, Edit→pencil.line, Bash→terminal, Grep→magnifyingglass, Glob→folder.badge.questionmark, WebSearch→globe, WebFetch→arrow.down.doc, Task→person.2, Skill→sparkles
@@ -184,13 +184,13 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-7.1, AC-7.2, AC-7.3, AC-7.4, AC-7.5, AC-7.6, FR-10_
   - _Design: Section 8 — Tool Call Accordion Spec, Tool Call Types table_
 
-- [ ] V3 [VERIFY] Quality checkpoint: build compiles with chat components
+- [x] V3 [VERIFY] Quality checkpoint: build compiles with chat components
   - **Do**: Build iOS target to verify all new/rewritten chat components compile together
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
   - **Done when**: Build succeeds with zero errors
   - **Commit**: `chore(rebuild): pass quality checkpoint` (only if fixes needed)
 
-- [ ] 3.4 Rebuild StreamingIndicator, ThinkingSection, and error/system views
+- [x] 3.4 Rebuild StreamingIndicator, ThinkingSection, and error/system views
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Chat/StreamingIndicatorView.swift` — animated 3-dot typing indicator (1.2s easeInOut loop), status text below, reduce-motion: static "Responding..." text. Use theme colors
     2. Rewrite `ILSApp/ILSApp/Theme/Components/ThinkingSection.swift` — collapsible "Thinking..." label with duration, collapsed by default, italic textSecondary content when expanded
@@ -207,7 +207,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-5.1, AC-5.2, AC-5.6, AC-8.1, AC-8.2, AC-8.3, AC-8.4, AC-8.5, FR-11_
   - _Design: Section 8 — Message Content Types table_
 
-- [ ] 3.5 Rebuild ChatView with new components and ChatViewModel integration
+- [x] 3.5 Rebuild ChatView with new components and ChatViewModel integration
   - **Do**:
     1. Rewrite `ILSApp/ILSApp/Views/Chat/ChatView.swift` — use new card components instead of MessageView/bubbles
     2. Navigation bar: hamburger icon (opens sidebar via callback/binding), session name (tappable to rename inline), info button, overflow menu (Export, Fork, Delete)
@@ -226,7 +226,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-4.3, AC-4.4, AC-4.5, AC-4.6, AC-4.7, AC-5.3, AC-5.4, AC-5.5, FR-7_
   - _Design: Section 4.3 — Chat View_
 
-- [ ] 3.6 Session management: rename, export, fork, delete
+- [x] 3.6 Session management: rename, export, fork, delete
   - **Do**:
     1. Implement inline rename: tapping session name in nav bar shows TextField overlay for editing, calls PATCH /sessions/:id
     2. Overflow menu items: Export (generate transcript text, share sheet), Fork (existing viewModel.forkSession), Delete (confirmation alert, DELETE /sessions/:id)
@@ -239,7 +239,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - _Requirements: AC-18.1, AC-18.2, AC-18.3, AC-18.4, AC-18.5_
   - _Design: Section 4.3 — Navigation Bar_
 
-- [ ] V4 [VERIFY] Phase 3 critical: SSE streaming end-to-end in simulator
+- [x] V4 [VERIFY] Phase 3 critical: SSE streaming end-to-end in simulator
   - **Do**:
     1. Ensure backend running: `PORT=9090 swift run ILSBackend`
     2. Build, install, launch app
