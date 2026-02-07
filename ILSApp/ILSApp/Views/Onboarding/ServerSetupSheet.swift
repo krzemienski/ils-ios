@@ -24,6 +24,7 @@ enum ConnectionMode: String, CaseIterable, Identifiable {
 struct ServerSetupSheet: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme: any AppTheme
 
     @State private var selectedMode: ConnectionMode = .local
     @State private var localURL = "http://localhost:9090"
@@ -38,7 +39,6 @@ struct ServerSetupSheet: View {
     @State private var backendInfo: BackendInfo?
     @State private var showConnectedState = false
 
-    // Connection history
     @State private var connectionHistory: [String] = []
 
     enum ConnectionResult {
@@ -83,10 +83,10 @@ struct ServerSetupSheet: View {
 
                     Spacer(minLength: 40)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
+                .padding(.horizontal, theme.spacingXL)
+                .padding(.top, theme.spacingSM)
             }
-            .background(ILSTheme.background)
+            .background(theme.bgPrimary)
             .navigationTitle("Welcome")
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -104,25 +104,25 @@ struct ServerSetupSheet: View {
     private var brandingHeader: some View {
         VStack(spacing: 12) {
             Image(systemName: "server.rack")
-                .font(ILSTheme.largeTitleFont) // Decorative icon, Dynamic Type compatible
+                .font(.largeTitle)
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [ILSTheme.accent, ILSTheme.accentSecondary],
+                        colors: [theme.accent, theme.accentSecondary],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
 
             Text("Welcome to ILS")
-                .font(ILSTheme.title2Font)
-                .foregroundColor(ILSTheme.primaryText)
+                .font(.system(size: theme.fontTitle2, weight: .bold))
+                .foregroundColor(theme.textPrimary)
 
             Text("Connect to your backend server to get started.")
-                .font(ILSTheme.bodyFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontBody))
+                .foregroundColor(theme.textSecondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(.top, 16)
+        .padding(.top, theme.spacingMD)
     }
 
     // MARK: - Mode Picker
@@ -153,14 +153,14 @@ struct ServerSetupSheet: View {
     }
 
     private var localModeView: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Local Server")
-                .font(ILSTheme.headlineFont)
-                .foregroundColor(ILSTheme.primaryText)
+                .font(.system(size: theme.fontBody, weight: .semibold))
+                .foregroundColor(theme.textPrimary)
 
             Text("Connect to a backend running on this device or your local network.")
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontCaption))
+                .foregroundColor(theme.textSecondary)
 
             TextField("Server URL", text: $localURL)
                 .textFieldStyle(.roundedBorder)
@@ -169,20 +169,20 @@ struct ServerSetupSheet: View {
                 .textInputAutocapitalization(.never)
                 .accessibilityIdentifier("server-url-field")
         }
-        .padding(16)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusMedium)
+        .padding(theme.spacingMD)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
     }
 
     private var remoteModeView: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Remote Server")
-                .font(ILSTheme.headlineFont)
-                .foregroundColor(ILSTheme.primaryText)
+                .font(.system(size: theme.fontBody, weight: .semibold))
+                .foregroundColor(theme.textPrimary)
 
             Text("Enter the hostname or IP address of your remote server.")
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontCaption))
+                .foregroundColor(theme.textSecondary)
 
             HStack(spacing: 12) {
                 TextField("Hostname / IP", text: $remoteHost)
@@ -199,20 +199,20 @@ struct ServerSetupSheet: View {
                     .accessibilityIdentifier("remote-port-field")
             }
         }
-        .padding(16)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusMedium)
+        .padding(theme.spacingMD)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
     }
 
     private var tunnelModeView: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Cloudflare Tunnel")
-                .font(ILSTheme.headlineFont)
-                .foregroundColor(ILSTheme.primaryText)
+                .font(.system(size: theme.fontBody, weight: .semibold))
+                .foregroundColor(theme.textPrimary)
 
             Text("Paste your Cloudflare tunnel URL (trycloudflare.com or custom domain).")
-                .font(ILSTheme.captionFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontCaption))
+                .foregroundColor(theme.textSecondary)
 
             TextField("https://your-tunnel.trycloudflare.com", text: $tunnelURL)
                 .textFieldStyle(.roundedBorder)
@@ -223,22 +223,22 @@ struct ServerSetupSheet: View {
 
             if !tunnelURL.isEmpty && !isValidTunnelURL(tunnelURL) {
                 Label("Enter a valid URL (trycloudflare.com or https://)", systemImage: "exclamationmark.triangle.fill")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.warning)
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundColor(theme.warning)
             }
         }
-        .padding(16)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusMedium)
+        .padding(theme.spacingMD)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
     }
 
     // MARK: - Connection Steps View
 
     private var connectionStepsView: some View {
         ConnectionStepsView(steps: connectionSteps)
-            .padding(16)
-            .background(ILSTheme.secondaryBackground)
-            .cornerRadius(ILSTheme.cornerRadiusMedium)
+            .padding(theme.spacingMD)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
     }
 
     // MARK: - Result Banner
@@ -248,12 +248,12 @@ struct ServerSetupSheet: View {
             switch result {
             case .success:
                 Label("Connected", systemImage: "checkmark.circle.fill")
-                    .foregroundColor(ILSTheme.success)
-                    .font(ILSTheme.bodyFont)
+                    .foregroundColor(theme.success)
+                    .font(.system(size: theme.fontBody))
             case .failure(let message):
                 Label(message, systemImage: "xmark.circle.fill")
-                    .foregroundColor(ILSTheme.error)
-                    .font(ILSTheme.captionFont)
+                    .foregroundColor(theme.error)
+                    .font(.system(size: theme.fontCaption))
                     .multilineTextAlignment(.center)
             }
         }
@@ -264,41 +264,41 @@ struct ServerSetupSheet: View {
     private func backendInfoCard(_ info: BackendInfo) -> some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(ILSTheme.largeTitleFont) // Decorative icon, Dynamic Type compatible
-                .foregroundColor(ILSTheme.success)
+                .font(.largeTitle)
+                .foregroundColor(theme.success)
 
             Text("Connected")
-                .font(ILSTheme.title3Font)
-                .foregroundColor(ILSTheme.primaryText)
+                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .foregroundColor(theme.textPrimary)
 
             VStack(spacing: 6) {
                 if !info.claudeVersion.isEmpty {
                     HStack {
                         Text("Claude CLI")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundColor(theme.textSecondary)
                         Spacer()
                         Text(info.claudeVersion)
-                            .foregroundColor(ILSTheme.primaryText)
+                            .foregroundColor(theme.textPrimary)
                     }
-                    .font(ILSTheme.captionFont)
+                    .font(.system(size: theme.fontCaption))
                 }
 
                 HStack {
                     Text("Status")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundColor(theme.textSecondary)
                     Spacer()
                     Text(info.status)
-                        .foregroundColor(ILSTheme.success)
+                        .foregroundColor(theme.success)
                 }
-                .font(ILSTheme.captionFont)
+                .font(.system(size: theme.fontCaption))
             }
             .padding(12)
-            .background(ILSTheme.tertiaryBackground)
-            .cornerRadius(ILSTheme.cornerRadiusSmall)
+            .background(theme.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
-        .padding(16)
-        .background(ILSTheme.secondaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusMedium)
+        .padding(theme.spacingMD)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
     }
 
     // MARK: - Connect Button
@@ -314,13 +314,13 @@ struct ServerSetupSheet: View {
                     .frame(height: 44)
             } else {
                 Text("Connect")
-                    .font(ILSTheme.headlineFont)
+                    .font(.system(size: theme.fontBody, weight: .semibold))
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
             }
         }
         .buttonStyle(.borderedProminent)
-        .tint(ILSTheme.accent)
+        .tint(theme.accent)
         .disabled(!isConnectEnabled || isConnecting)
         .accessibilityIdentifier("connect-button")
     }
@@ -328,10 +328,10 @@ struct ServerSetupSheet: View {
     // MARK: - Recent Section
 
     private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Recent")
-                .font(ILSTheme.headlineFont)
-                .foregroundColor(ILSTheme.secondaryText)
+                .font(.system(size: theme.fontBody, weight: .semibold))
+                .foregroundColor(theme.textSecondary)
 
             ForEach(connectionHistory, id: \.self) { url in
                 Button {
@@ -339,21 +339,21 @@ struct ServerSetupSheet: View {
                 } label: {
                     HStack {
                         Image(systemName: "clock.arrow.circlepath")
-                            .foregroundColor(ILSTheme.tertiaryText)
+                            .foregroundColor(theme.textTertiary)
                             .font(.caption)
                         Text(url)
-                            .font(ILSTheme.bodyFont)
-                            .foregroundColor(ILSTheme.primaryText)
+                            .font(.system(size: theme.fontBody))
+                            .foregroundColor(theme.textPrimary)
                             .lineLimit(1)
                         Spacer()
                         Image(systemName: "arrow.up.left")
-                            .foregroundColor(ILSTheme.tertiaryText)
+                            .foregroundColor(theme.textTertiary)
                             .font(.caption)
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(ILSTheme.secondaryBackground)
-                    .cornerRadius(ILSTheme.cornerRadiusSmall)
+                    .padding(.vertical, theme.spacingSM)
+                    .padding(.horizontal, theme.spacingSM)
+                    .background(theme.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
                 }
             }
         }
@@ -385,7 +385,6 @@ struct ServerSetupSheet: View {
             if !url.hasPrefix("http://") && !url.hasPrefix("https://") {
                 url = "https://\(url)"
             }
-            // Remove trailing slash
             if url.hasSuffix("/") {
                 url = String(url.dropLast())
             }
@@ -397,20 +396,14 @@ struct ServerSetupSheet: View {
         let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
 
-        // Accept trycloudflare.com URLs
         if trimmed.contains("trycloudflare.com") { return true }
-
-        // Accept any https:// URL as a custom domain
         if trimmed.hasPrefix("https://") { return true }
-
-        // Accept bare domains (will prepend https://)
         if trimmed.contains(".") && !trimmed.contains(" ") { return true }
 
         return false
     }
 
     private func fillFromHistory(_ url: String) {
-        // Detect the mode from the URL and fill appropriately
         if url.contains("trycloudflare.com") {
             selectedMode = .tunnel
             tunnelURL = url
@@ -418,7 +411,6 @@ struct ServerSetupSheet: View {
             selectedMode = .local
             localURL = url
         } else {
-            // Try to parse as remote host:port
             if let urlObj = URL(string: url), let host = urlObj.host {
                 selectedMode = .remote
                 remoteHost = host
@@ -450,7 +442,6 @@ struct ServerSetupSheet: View {
         Task {
             let url = resolvedURL
 
-            // Step 1: DNS Resolve (validate URL host)
             connectionSteps[0].status = .inProgress
             try? await Task.sleep(nanoseconds: 300_000_000)
 
@@ -461,7 +452,6 @@ struct ServerSetupSheet: View {
             }
             connectionSteps[0].status = .success
 
-            // Step 2: TCP Connect (attempt connection)
             connectionSteps[1].status = .inProgress
             try? await Task.sleep(nanoseconds: 200_000_000)
 
@@ -476,7 +466,6 @@ struct ServerSetupSheet: View {
                 return
             }
 
-            // Step 3: Health Check (verify backend responds correctly)
             connectionSteps[2].status = .inProgress
             try? await Task.sleep(nanoseconds: 200_000_000)
 
@@ -484,10 +473,8 @@ struct ServerSetupSheet: View {
                 let health = try await client.getHealth()
                 connectionSteps[2].status = .success
 
-                // Save to history
                 saveToHistory(url)
 
-                // Connect via AppState
                 try await appState.connectToServer(url: url)
 
                 HapticManager.notification(.success)
@@ -501,7 +488,6 @@ struct ServerSetupSheet: View {
                 showSteps = false
                 showConnectedState = true
 
-                // Auto-dismiss after 1.5s
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
                 dismiss()
 
@@ -521,11 +507,8 @@ struct ServerSetupSheet: View {
 
     private func saveToHistory(_ url: String) {
         var history = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
-        // Remove if already exists (move to top)
         history.removeAll { $0 == url }
-        // Insert at front
         history.insert(url, at: 0)
-        // Keep only last 5
         if history.count > 5 {
             history = Array(history.prefix(5))
         }
@@ -533,4 +516,3 @@ struct ServerSetupSheet: View {
         connectionHistory = history
     }
 }
-

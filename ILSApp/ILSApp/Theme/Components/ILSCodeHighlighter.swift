@@ -3,16 +3,13 @@ import MarkdownUI
 
 /// Bridges MarkdownUI's code syntax highlighting protocol to ILS theme colors.
 ///
-/// The `CodeSyntaxHighlighter` protocol is synchronous (`-> Text`), so full
-/// grammar-aware highlighting via HighlightSwift isn't possible here. Instead,
-/// this provides styled monospaced text for inline code spans. Fenced code blocks
-/// are rendered by `CodeBlockView` via the `.codeBlock` theme configuration,
-/// which uses HighlightSwift's async API with `.task`.
+/// The `CodeSyntaxHighlighter` protocol is synchronous (`-> Text`), so it cannot
+/// use `@Environment(\.theme)`. Uses system monospaced font with primary text color.
+/// Fenced code blocks are rendered by `CodeBlockView` which does use theme tokens.
 struct ILSCodeHighlighter: CodeSyntaxHighlighter {
     func highlightCode(_ code: String, language: String?) -> Text {
         Text(code)
-            .font(ILSTheme.codeFont)
-            .foregroundColor(ILSTheme.textPrimary)
+            .font(.system(.body, design: .monospaced))
     }
 }
 

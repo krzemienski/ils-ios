@@ -140,7 +140,7 @@ Focus: Replace ContentView's TabView with SidebarRootView. Custom offset-based d
 
 Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout, themed components. Must preserve ChatViewModel/SSEClient integration exactly. Split into 5 sub-tasks.
 
-- [ ] 3.1 Create UserMessageCard and AssistantCard components
+- [x] 3.1 Create UserMessageCard and AssistantCard components
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Chat/UserMessageCard.swift` — full-width card with bgSecondary background, textPrimary text, left-aligned, themed cornerRadius. Show timestamp. Context menu: Copy, Delete
     2. Create `ILSApp/ILSApp/Views/Chat/AssistantCard.swift` — AI Assistant Card (NOT bubble): full-width themed card with glassCard modifier, renders child content slots for markdown text, code blocks, tool calls, thinking. Show timestamp + cost if available
@@ -445,7 +445,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
   - **Commit**: `refactor(rebuild): remove dead files and migrate to theme environment`
   - _Design: Section 9 — Files to Create/Modify, PRESERVE list_
 
-- [ ] 2R.2 Rebuild remaining shared components with theme
+- [x] 2R.2 Rebuild remaining shared components with theme
   - **Do**:
     1. Rewrite `ConnectionBanner.swift` — use theme tokens, show "Configure" for first-run, "Retry" for returning
     2. Rewrite `ConnectionSteps.swift` — themed connection step indicators

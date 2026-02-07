@@ -3,33 +3,35 @@ import SwiftUI
 /// Placeholder skeleton row with rounded rectangles for loading states.
 /// Shows shimmering animation while data loads.
 struct SkeletonRow: View {
+    @Environment(\.theme) private var theme: any AppTheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(ILSTheme.bg3)
+                    .fill(theme.bgTertiary)
                     .frame(width: 160, height: 16)
 
                 Spacer()
 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(ILSTheme.bg3)
+                    .fill(theme.bgTertiary)
                     .frame(width: 60, height: 14)
             }
 
             RoundedRectangle(cornerRadius: 4)
-                .fill(ILSTheme.bg3)
+                .fill(theme.bgTertiary)
                 .frame(width: 220, height: 12)
 
             HStack {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(ILSTheme.bg3)
+                    .fill(theme.bgTertiary)
                     .frame(width: 100, height: 12)
 
                 Spacer()
 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(ILSTheme.bg3)
+                    .fill(theme.bgTertiary)
                     .frame(width: 50, height: 12)
             }
         }

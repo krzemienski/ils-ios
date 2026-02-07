@@ -22,6 +22,7 @@ struct ConnectionStep: Identifiable {
 /// Each step shows a checkmark (success), spinner (in-progress), X (failure), or circle (pending).
 struct ConnectionStepsView: View {
     let steps: [ConnectionStep]
+    @Environment(\.theme) private var theme: any AppTheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -32,13 +33,13 @@ struct ConnectionStepsView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(step.name)
-                            .font(ILSTheme.bodyFont)
+                            .font(.system(size: theme.fontBody))
                             .foregroundColor(textColor(for: step.status))
 
                         if case .failure(let msg) = step.status {
                             Text(msg)
-                                .font(ILSTheme.captionFont)
-                                .foregroundColor(ILSTheme.error)
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundColor(theme.error)
                         }
                     }
 
@@ -55,19 +56,19 @@ struct ConnectionStepsView: View {
         switch status {
         case .pending:
             Circle()
-                .stroke(ILSTheme.tertiaryText, lineWidth: 2)
+                .stroke(theme.textTertiary, lineWidth: 2)
                 .frame(width: 20, height: 20)
         case .inProgress:
             ProgressView()
                 .controlSize(.small)
         case .success:
             Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(ILSTheme.success)
-                .font(.title3) // Status icon, Dynamic Type compatible
+                .foregroundColor(theme.success)
+                .font(.title3)
         case .failure:
             Image(systemName: "xmark.circle.fill")
-                .foregroundColor(ILSTheme.error)
-                .font(.title3) // Status icon, Dynamic Type compatible
+                .foregroundColor(theme.error)
+                .font(.title3)
         }
     }
 
@@ -88,10 +89,10 @@ struct ConnectionStepsView: View {
 
     private func textColor(for status: StepStatus) -> Color {
         switch status {
-        case .pending: return ILSTheme.tertiaryText
-        case .inProgress: return ILSTheme.primaryText
-        case .success: return ILSTheme.success
-        case .failure: return ILSTheme.error
+        case .pending: return theme.textTertiary
+        case .inProgress: return theme.textPrimary
+        case .success: return theme.success
+        case .failure: return theme.error
         }
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 /// Shows "Reconnecting..." when disconnected, "Connected" when reconnected (auto-dismisses after 2s).
 struct ConnectionBanner: View {
     let isConnected: Bool
+    @Environment(\.theme) private var theme: any AppTheme
 
     @State private var showConnectedBanner = false
     @State private var wasDisconnected = false
@@ -18,28 +19,28 @@ struct ConnectionBanner: View {
                 if isConnected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(theme.success)
                     Text("Connected")
-                        .font(ILSTheme.captionFont.weight(.medium))
-                        .foregroundColor(.green)
+                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .foregroundColor(theme.success)
                 } else {
                     ProgressView()
                         .scaleEffect(0.7)
                         .tint(.white)
                     Text("Reconnecting...")
-                        .font(ILSTheme.captionFont.weight(.medium))
+                        .font(.system(size: theme.fontCaption, weight: .medium))
                         .foregroundColor(.white)
                 }
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, theme.spacingMD)
             .frame(height: 36)
             .background(
                 Group {
                     if isConnected {
-                        Color.green.opacity(0.15)
+                        theme.success.opacity(0.15)
                     } else {
-                        Color.red.opacity(0.2)
+                        theme.error.opacity(0.2)
                     }
                 }
                 .background(.ultraThinMaterial)
@@ -50,13 +51,12 @@ struct ConnectionBanner: View {
             .accessibilityAddTraits(.updatesFrequently)
         }
     }
-
-    // State tracking handled via ConnectionBannerModifier onChange in parent
 }
 
 /// View modifier that manages ConnectionBanner state and auto-dismiss logic.
 struct ConnectionBannerModifier: ViewModifier {
     let isConnected: Bool
+    @Environment(\.theme) private var theme: any AppTheme
 
     @State private var showConnectedBanner = false
     @State private var wasDisconnected = false
@@ -74,28 +74,28 @@ struct ConnectionBannerModifier: ViewModifier {
                         if isConnected {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(.green)
+                                .foregroundColor(theme.success)
                             Text("Connected")
-                                .font(ILSTheme.captionFont.weight(.medium))
-                                .foregroundColor(.green)
+                                .font(.system(size: theme.fontCaption, weight: .medium))
+                                .foregroundColor(theme.success)
                         } else {
                             ProgressView()
                                 .scaleEffect(0.7)
                                 .tint(.white)
                             Text("Reconnecting...")
-                                .font(ILSTheme.captionFont.weight(.medium))
+                                .font(.system(size: theme.fontCaption, weight: .medium))
                                 .foregroundColor(.white)
                         }
                         Spacer()
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, theme.spacingMD)
                     .frame(height: 36)
                     .background(
                         Group {
                             if isConnected {
-                                Color.green.opacity(0.15)
+                                theme.success.opacity(0.15)
                             } else {
-                                Color.red.opacity(0.2)
+                                theme.error.opacity(0.2)
                             }
                         }
                         .background(.ultraThinMaterial)
@@ -109,7 +109,6 @@ struct ConnectionBannerModifier: ViewModifier {
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: shouldShowBanner)
             .onChange(of: isConnected) { oldValue, newValue in
                 if !oldValue && newValue {
-                    // Reconnected — show green banner briefly
                     showConnectedBanner = true
                     wasDisconnected = false
                     dismissTask?.cancel()
@@ -121,7 +120,6 @@ struct ConnectionBannerModifier: ViewModifier {
                         }
                     }
                 } else if oldValue && !newValue {
-                    // Disconnected
                     wasDisconnected = true
                     showConnectedBanner = false
                     dismissTask?.cancel()
