@@ -102,7 +102,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s01-*.png | wc -l` shows 3
   - _Requirements: US-1, AC-1.1 through AC-1.4_
 
-- [ ] 2.2 S-02: Browse External Claude Code Sessions
+- [x] 2.2 S-02: Browse External Claude Code Sessions
   - **Do**:
     1. Ensure selectedTab is "sessions", build and launch
     2. Capture `s02-sessions-list.png` — verify merged list with external sessions
@@ -114,7 +114,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s02-*.png | wc -l` shows 2+
   - _Requirements: US-2, AC-2.1 through AC-2.5_
 
-- [ ] 2.3 S-03: Create New Session & Chat
+- [x] 2.3 S-03: Create New Session & Chat
   - **Do**:
     1. On sessions tab, use idb_describe to find "+" button, tap it
     2. Capture `s03-new-session.png` — NewSessionView with project picker
@@ -128,7 +128,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s03-*.png | wc -l` shows 4
   - _Requirements: US-3, AC-3.1 through AC-3.7_
 
-- [ ] 2.4 S-04: Chat in Multiple Projects
+- [x] 2.4 S-04: Chat in Multiple Projects
   - **Do**:
     1. Create session in one project, send message, capture `s04-project-a.png`
     2. Go back, create session in different project, send message, capture `s04-project-b.png`
@@ -138,7 +138,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s04-*.png | wc -l` shows 2
   - _Requirements: US-4 (implied by S-03 working with projects)_
 
-- [ ] 2.5 S-05: Resume Existing Session
+- [x] 2.5 S-05: Resume Existing Session
   - **Do**:
     1. On sessions tab, tap an existing session with message history
     2. Capture `s05-history.png` — previous messages loaded
@@ -149,7 +149,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
   - **Verify**: `ls .omc/evidence/ios-app-polish/s05-*.png | wc -l` shows 2
   - _Requirements: US-4, AC-4.1 through AC-4.4_
 
-- [ ] 2.6 S-06: Fork & Experiment
+- [x] 2.6 S-06: Fork & Experiment
   - **Do**:
     1. In active session, tap menu button (use idb_describe for coordinates)
     2. Tap "Fork Session" in menu
