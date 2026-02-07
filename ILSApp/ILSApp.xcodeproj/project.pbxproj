@@ -49,6 +49,14 @@
 		0A8D2F5C6ED7B3BB633DCEA3 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */; };
 		4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */; };
 		55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */; };
+		5910023177AFED4B86044C84 /* ObsidianTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F7C11B6F8F2CBD21AE63D6 /* ObsidianTheme.swift */; };
+		APPTHEM000000000000001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919526D04FDC331F2C26E684 /* AppTheme.swift */; };
+		THMMGR0000000000000001 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = THMMGR0000000000000002 /* ThemeManager.swift */; };
+		GLSCRD0000000000000001 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = GLSCRD0000000000000002 /* GlassCard.swift */; };
+		ACNTBT0000000000000001 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACNTBT0000000000000002 /* AccentButton.swift */; };
+		ENTBDG0000000000000001 /* EntityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENTBDG0000000000000002 /* EntityBadge.swift */; };
+
+		SBRV00000000000000001 /* SidebarRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBRV00000000000000002 /* SidebarRootView.swift */; };
 		5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */; };
 		5FAB32D6951B376A319E321F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D1A53A5156A8D8D724FDCB /* EntityType.swift */; };
 		7103F0FECA16410192750881 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */; };
@@ -147,6 +155,7 @@
 		6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MCPImportExportView.swift; sourceTree = "<group>"; };
 		6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
 		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		919526D04FDC331F2C26E684 /* AppTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
 		B1D1A53A5156A8D8D724FDCB /* EntityType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
 		CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LogViewerView.swift; path = Views/Settings/LogViewerView.swift; sourceTree = "<group>"; };
@@ -154,6 +163,13 @@
 		CODEBL0000000000000002 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
 		CONNBN0000000000000002 /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
+		E8F7C11B6F8F2CBD21AE63D6 /* ObsidianTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ObsidianTheme.swift; path = Themes/ObsidianTheme.swift; sourceTree = "<group>"; };
+		THMMGR0000000000000002 /* ThemeManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		GLSCRD0000000000000002 /* GlassCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		ACNTBT0000000000000002 /* AccentButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccentButton.swift; sourceTree = "<group>"; };
+		ENTBDG0000000000000002 /* EntityBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityBadge.swift; sourceTree = "<group>"; };
+
+		SBRV00000000000000002 /* SidebarRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
 		EMTYST0000000000000002 /* EmptyEntityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyEntityState.swift; sourceTree = "<group>"; };
 		FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
 		FILBRW0000000000000002 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
@@ -243,6 +259,10 @@
 				000000000000000000000030 /* ILSTheme.swift */,
 				B1D1A53A5156A8D8D724FDCB /* EntityType.swift */,
 				CONNBN0000000000000003 /* Components */,
+				919526D04FDC331F2C26E684 /* AppTheme.swift */,
+				THMMGR0000000000000002 /* ThemeManager.swift */,
+				GLSCRD0000000000000002 /* GlassCard.swift */,
+				99FA89C5B8C4BF43C64716A2 /* Themes */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -255,6 +275,14 @@
 				METRWS0000000000000002 /* MetricsWebSocketClient.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		SBRV00000000000000003 /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				SBRV00000000000000002 /* SidebarRootView.swift */,
+			);
+			path = Root;
 			sourceTree = "<group>";
 		};
 		000000000000000000000062 /* Views */ = {
@@ -271,6 +299,8 @@
 				000000000000000000000077 /* Settings */,
 				SYSMON0000000000000003 /* System */,
 				ONBOARD0000000000000003 /* Onboarding */,
+				SBRV00000000000000003 /* Root */,
+
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -425,6 +455,14 @@
 			name = Settings;
 			sourceTree = "<group>";
 		};
+		99FA89C5B8C4BF43C64716A2 /* Themes */ = {
+			isa = PBXGroup;
+			children = (
+				E8F7C11B6F8F2CBD21AE63D6 /* ObsidianTheme.swift */,
+			);
+			name = Themes;
+			sourceTree = "<group>";
+		};
 		9A167A2D45391F003B1893E5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -475,6 +513,8 @@
 				SHIMMR0000000000000002 /* ShimmerModifier.swift */,
 				SKLROW0000000000000002 /* SkeletonRow.swift */,
 				ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */,
+				ACNTBT0000000000000002 /* AccentButton.swift */,
+				ENTBDG0000000000000002 /* EntityBadge.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -670,6 +710,14 @@
 				ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */,
 				0A8D2F5C6ED7B3BB633DCEA3 /* DateFormatters.swift in Sources */,
 				7EC8ADE88CF9F68FAB2868BD /* DateFormatters.swift in Sources */,
+				5910023177AFED4B86044C84 /* ObsidianTheme.swift in Sources */,
+				APPTHEM000000000000001 /* AppTheme.swift in Sources */,
+				THMMGR0000000000000001 /* ThemeManager.swift in Sources */,
+				GLSCRD0000000000000001 /* GlassCard.swift in Sources */,
+				ACNTBT0000000000000001 /* AccentButton.swift in Sources */,
+				ENTBDG0000000000000001 /* EntityBadge.swift in Sources */,
+
+				SBRV00000000000000001 /* SidebarRootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

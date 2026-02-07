@@ -18,21 +18,13 @@ struct ILSAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // TEMPORARY: ThemeTestView as root for Phase 1 validation — revert in Phase 2
-            ThemeTestView()
+            SidebarRootView()
                 .environmentObject(appState)
                 .environmentObject(themeManager)
                 .environment(\.theme, themeManager.currentTheme)
                 .preferredColorScheme(computedColorScheme)
                 .onOpenURL { url in
                     appState.handleURL(url)
-                }
-                .sheet(isPresented: $appState.showOnboarding) {
-                    ServerSetupSheet()
-                        .environmentObject(appState)
-                        .environmentObject(themeManager)
-                        .environment(\.theme, themeManager.currentTheme)
-                        .presentationBackground(Color.black)
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
