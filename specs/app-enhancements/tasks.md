@@ -127,7 +127,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-1_
   - _Design: Phase 2 — 2.1 MarkdownUI Integration_
 
-- [ ] 2.2 Replace CodeBlockView with HighlightSwift and add line numbers
+- [x] 2.2 Replace CodeBlockView with HighlightSwift and add line numbers
   - **Do**:
     1. Rewrite `CodeBlockView.swift` — replace keyword-based highlighter (lines 71-258) with HighlightSwift:
        - Import HighlightSwift
