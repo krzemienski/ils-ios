@@ -4,6 +4,7 @@ import ILSShared
 @main
 struct ILSAppApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var themeManager = ThemeManager()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
@@ -19,6 +20,8 @@ struct ILSAppApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
+                .environmentObject(themeManager)
+                .environment(\.theme, themeManager.currentTheme)
                 .preferredColorScheme(computedColorScheme)
                 .onOpenURL { url in
                     appState.handleURL(url)
@@ -26,6 +29,8 @@ struct ILSAppApp: App {
                 .sheet(isPresented: $appState.showOnboarding) {
                     ServerSetupSheet()
                         .environmentObject(appState)
+                        .environmentObject(themeManager)
+                        .environment(\.theme, themeManager.currentTheme)
                         .presentationBackground(Color.black)
                 }
         }
