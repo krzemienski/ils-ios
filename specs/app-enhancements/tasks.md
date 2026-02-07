@@ -148,7 +148,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-2, FR-3, FR-4, FR-12, FR-13_
   - _Design: Phase 2 — 2.2 CodeBlockView with HighlightSwift_
 
-- [ ] 2.3 Create ILSCodeHighlighter bridge for MarkdownUI
+- [x] 2.3 Create ILSCodeHighlighter bridge for MarkdownUI
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/ILSCodeHighlighter.swift`
     2. Implement `CodeSyntaxHighlighter` protocol from MarkdownUI:
@@ -169,7 +169,7 @@ Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword high
   - _Requirements: FR-1, FR-2_
   - _Design: Phase 2 — 2.3 ILSCodeHighlighter_
 
-- [ ] V2 [VERIFY] Quality checkpoint: iOS build after rendering overhaul
+- [x] V2 [VERIFY] Quality checkpoint: iOS build after rendering overhaul
   - **Do**: Verify iOS build succeeds after major MarkdownUI + HighlightSwift integration
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Zero build errors

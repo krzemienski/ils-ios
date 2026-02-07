@@ -107,16 +107,6 @@ extension Theme {
         }
 }
 
-// MARK: - ILSCodeHighlighter Stub (temporary - will be replaced in task 2.3)
-
-/// Temporary stub for ILSCodeHighlighter
-/// This will be replaced with a full implementation using HighlightSwift in task 2.3
-struct ILSCodeHighlighter: CodeSyntaxHighlighter {
-    func highlightCode(_ code: String, language: String?) -> Text {
-        Text(code).font(.system(.body, design: .monospaced))
-    }
-}
-
 #Preview {
     ScrollView {
         MarkdownTextView(text: """

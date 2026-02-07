@@ -71,6 +71,7 @@
 		FILBRW0000000000000001 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILBRW0000000000000002 /* FileBrowserView.swift */; };
 		TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TUNSET0000000000000002 /* TunnelSettingsView.swift */; };
 		CODEBL0000000000000001 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CODEBL0000000000000002 /* CodeBlockView.swift */; };
+		ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */; };
 		TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = TOOLAC0000000000000002 /* ToolCallAccordion.swift */; };
 		THNKSC0000000000000001 /* ThinkingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = THNKSC0000000000000002 /* ThinkingSection.swift */; };
 		CNSTP00000000000000001 /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CNSTP00000000000000002 /* ConnectionSteps.swift */; };
@@ -159,6 +160,7 @@
 		FILBRW0000000000000002 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
 		TUNSET0000000000000002 /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
 		CODEBL0000000000000002 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
+		ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSCodeHighlighter.swift; sourceTree = "<group>"; };
 		TOOLAC0000000000000002 /* ToolCallAccordion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallAccordion.swift; sourceTree = "<group>"; };
 		THNKSC0000000000000002 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		CNSTP00000000000000002 /* ConnectionSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSteps.swift; sourceTree = "<group>"; };
@@ -255,6 +257,7 @@
 				EMTYST0000000000000002 /* EmptyEntityState.swift */,
 				SHIMMR0000000000000002 /* ShimmerModifier.swift */,
 				SKLROW0000000000000002 /* SkeletonRow.swift */,
+				ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -650,6 +653,7 @@
 				EMTYST0000000000000001 /* EmptyEntityState.swift in Sources */,
 				SHIMMR0000000000000001 /* ShimmerModifier.swift in Sources */,
 				SKLROW0000000000000001 /* SkeletonRow.swift in Sources */,
+				ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
