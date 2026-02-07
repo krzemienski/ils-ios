@@ -45,6 +45,17 @@ struct SidebarRootView: View {
             sidebarPanel
         }
         .gesture(edgeSwipeGesture)
+        .onChange(of: appState.navigationIntent) { _, intent in
+            guard let screen = intent else { return }
+            activeScreen = screen
+            appState.navigationIntent = nil
+            closeSidebar()
+        }
+        .sheet(isPresented: $appState.showOnboarding) {
+            ServerSetupSheet()
+                .environmentObject(appState)
+                .environment(\.theme, theme)
+        }
     }
 
     // MARK: - Main Content

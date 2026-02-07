@@ -40,6 +40,9 @@ class AppState: ObservableObject {
     @Published var isConnected: Bool = false
     @Published var serverURL: String = ""
     @Published var selectedTab: String = "dashboard"
+
+    /// Navigation intent for deep linking — consumed by SidebarRootView
+    @Published var navigationIntent: ActiveScreen?
     @Published var isServerConnected: Bool = false
     @Published var serverConnectionInfo: ConnectionResponse?
 
@@ -236,17 +239,16 @@ class AppState: ObservableObject {
         guard url.scheme == "ils" else { return }
 
         switch url.host {
-        case "projects":
-            selectedTab = "projects"
-        case "plugins", "mcp", "skills":
-            // Skills, MCP, and Plugins are now nested under Settings
-            selectedTab = "settings"
+        case "home":
+            navigationIntent = .home
         case "sessions":
-            selectedTab = "sessions"
+            navigationIntent = .home  // Sessions are in sidebar, go home to access
+        case "projects", "plugins", "mcp", "skills":
+            navigationIntent = .browser
         case "settings":
-            selectedTab = "settings"
+            navigationIntent = .settings
         case "system":
-            selectedTab = "system"
+            navigationIntent = .system
         default:
             break
         }
