@@ -1,5 +1,5 @@
 {
-  "originHash" : "d5e99703aef5272170356170cf071eadd286417e20a48a58816fbe9687f4fc4c",
+  "originHash" : "1296ff74ddd61738df76f347d393ac54a551322b50b2e5c2fda99ba0c57f4ec7",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -20,12 +20,21 @@
       }
     },
     {
-      "identity" : "claudecodesdk",
+      "identity" : "bigint",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/krzemienski/ClaudeCodeSDK.git",
+      "location" : "https://github.com/attaswift/BigInt.git",
       "state" : {
-        "branch" : "main",
-        "revision" : "f626d1d1eab3bf43a1eef2f70b2a493903f7e5e8"
+        "revision" : "e07e00fa1fd435143a2dcf8b7eec9a7710b2fdfe",
+        "version" : "5.7.0"
+      }
+    },
+    {
+      "identity" : "citadel",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/orlandos-nl/Citadel.git",
+      "state" : {
+        "revision" : "a054a77eff9f2ef03051022a096377794dc16140",
+        "version" : "0.12.0"
       }
     },
     {
@@ -65,12 +74,30 @@
       }
     },
     {
+      "identity" : "highlightswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/appstefan/HighlightSwift",
+      "state" : {
+        "revision" : "784ca3ccfc8a2cf724fbb2f06cb6ec3329424da3",
+        "version" : "1.1.0"
+      }
+    },
+    {
       "identity" : "multipart-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/multipart-kit.git",
       "state" : {
         "revision" : "3498e60218e6003894ff95192d756e238c01f44e",
         "version" : "4.7.1"
+      }
+    },
+    {
+      "identity" : "networkimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/NetworkImage",
+      "state" : {
+        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
+        "version" : "6.0.1"
       }
     },
     {
@@ -155,6 +182,15 @@
       }
     },
     {
+      "identity" : "swift-cmark",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-cmark",
+      "state" : {
+        "revision" : "5d9bdaa4228b381639fff09403e39a04926e2dbe",
+        "version" : "0.7.1"
+      }
+    },
+    {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections.git",
@@ -168,8 +204,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "6f70fa9eab24c1fd982af18c281c4525d05e3095",
-        "version" : "4.2.0"
+        "revision" : "95ba0316a9b733e92bb6b071255ff46263bbe7dc",
+        "version" : "3.15.1"
       }
     },
     {
@@ -209,6 +245,15 @@
       }
     },
     {
+      "identity" : "swift-markdown-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gonzalezreal/swift-markdown-ui",
+      "state" : {
+        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
+        "version" : "2.4.1"
+      }
+    },
+    {
       "identity" : "swift-metrics",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-metrics.git",
@@ -242,6 +287,15 @@
       "state" : {
         "revision" : "c2ba4cfbb83f307c66f5a6df6bb43e3c88dfbf80",
         "version" : "1.39.0"
+      }
+    },
+    {
+      "identity" : "swift-nio-ssh",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Joannis/swift-nio-ssh.git",
+      "state" : {
+        "revision" : "791437a67f5394b13060314c778c0f63124803b1",
+        "version" : "0.3.5"
       }
     },
     {
@@ -296,15 +350,6 @@
       "state" : {
         "revision" : "7c6ad0fc39d0763e0b699210e4124afd5041c5df",
         "version" : "1.6.4"
-      }
-    },
-    {
-      "identity" : "swiftanthropic",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jamesrochabrun/SwiftAnthropic",
-      "state" : {
-        "revision" : "4f9e21b94e491138003903ff6c14ab4f04b6ba6c",
-        "version" : "2.2.0"
       }
     },
     {
