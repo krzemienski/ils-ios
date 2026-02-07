@@ -3,7 +3,10 @@ import ILSShared
 
 struct MessageView: View {
     let message: ChatMessage
+    var onRetry: ((ChatMessage) -> Void)?
+    var onDelete: ((ChatMessage) -> Void)?
     @State private var showCopyConfirmation = false
+    @State private var expandAllToolCalls: Bool? = nil
 
     /// Formatter for displaying message timestamps
     private static let timeFormatter: DateFormatter = {
@@ -31,18 +34,6 @@ struct MessageView: View {
     /// Assistant bubble border: white at 6% opacity
     private let assistantBorder = Color.white.opacity(0.06)
 
-    private var copyButton: some View {
-        Button(action: {
-            UIPasteboard.general.string = message.text
-            HapticManager.notification(.success)
-            showCopyConfirmation = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                showCopyConfirmation = false
-            }
-        }) {
-            Label("Copy Message", systemImage: "doc.on.doc")
-        }
-    }
 
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: ILSTheme.spacingXS) {
@@ -59,23 +50,75 @@ struct MessageView: View {
                                 .textSelection(.enabled)
                                 .accessibilityIdentifier("user-message-text")
                                 .contextMenu {
-                                    copyButton
+                                    Button(action: {
+                                        UIPasteboard.general.string = message.text
+                                        HapticManager.notification(.success)
+                                        showCopyConfirmation = true
+                                        Task {
+                                            try? await Task.sleep(for: .seconds(2))
+                                            showCopyConfirmation = false
+                                        }
+                                    }) {
+                                        Label("Copy Markdown", systemImage: "doc.on.doc")
+                                    }
+
+                                    Button(role: .destructive, action: { onDelete?(message) }) {
+                                        Label("Delete", systemImage: "trash")
+                                    }
                                 }
                         } else {
                             MarkdownTextView(text: message.text)
                                 .foregroundColor(ILSTheme.textPrimary)
                                 .accessibilityIdentifier("assistant-message-text")
                                 .contextMenu {
-                                    copyButton
+                                    Button(action: {
+                                        UIPasteboard.general.string = message.text
+                                        HapticManager.notification(.success)
+                                        showCopyConfirmation = true
+                                        Task {
+                                            try? await Task.sleep(for: .seconds(2))
+                                            showCopyConfirmation = false
+                                        }
+                                    }) {
+                                        Label("Copy Markdown", systemImage: "doc.on.doc")
+                                    }
+
+                                    Button(action: { onRetry?(message) }) {
+                                        Label("Retry", systemImage: "arrow.counterclockwise")
+                                    }
+
+                                    Button(role: .destructive, action: { onDelete?(message) }) {
+                                        Label("Delete", systemImage: "trash")
+                                    }
                                 }
                         }
                     }
 
                     // Tool calls
+                    if message.toolCalls.count >= 2 {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                expandAllToolCalls = (expandAllToolCalls == true) ? false : true
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: expandAllToolCalls == true ? "rectangle.compress.vertical" : "rectangle.expand.vertical")
+                                    .font(.caption2)
+                                Text(expandAllToolCalls == true ? "Collapse All" : "Expand All")
+                                    .font(.system(.caption2, weight: .medium))
+                            }
+                            .foregroundColor(ILSTheme.accent)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     ForEach(message.toolCalls, id: \.id) { toolCall in
                         ToolCallAccordion(
                             toolName: toolCall.name,
-                            input: toolCall.inputPreview
+                            input: toolCall.inputPreview,
+                            inputPairs: toolCall.inputPairs,
+                            output: nil,
+                            expandAll: $expandAllToolCalls
                         )
                     }
 
@@ -127,6 +170,7 @@ struct MessageView: View {
                         : nil
                 )
                 .accessibilityIdentifier(message.isUser ? "user-message-bubble" : "assistant-message-bubble")
+                .accessibilityCustomContent("Actions", "Copy, Retry, Delete")
 
                 if !message.isUser { Spacer() }
             }
@@ -215,12 +259,13 @@ struct MessageView: View {
 
             MessageView(message: ChatMessage(
                 isUser: false,
-                text: "Of course! Here's an example:\n\n```swift\nfunc greet() -> String {\n    return \"Hello!\"\n}\n```\n\nThis function returns a **greeting** string.",
+                text: "Here's the analysis:\n\n```swift\nfunc greet() -> String {\n    return \"Hello!\"\n}\n```",
                 toolCalls: [
-                    ToolCallDisplay(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
+                    ToolCallDisplay(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift"),
+                    ToolCallDisplay(id: "2", name: "Grep", inputPreview: "pattern: greet")
                 ],
                 thinking: "Let me analyze the code structure..."
-            ))
+            ), onRetry: { _ in }, onDelete: { _ in })
         }
         .padding()
     }
