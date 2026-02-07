@@ -478,7 +478,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 9: iPad Layout (US-3)
 
-- [ ] 9.1 Add iPad persistent sidebar via size class detection
+- [x] 9.1 Add iPad persistent sidebar via size class detection
   - **Do**:
     1. In `SidebarRootView.swift`: detect `@Environment(\.horizontalSizeClass)` — if `.regular`, show sidebar persistently (320pt wide) alongside content; if `.compact`, keep overlay behavior
     2. iPad portrait: 280pt sidebar. iPad landscape: 320pt sidebar

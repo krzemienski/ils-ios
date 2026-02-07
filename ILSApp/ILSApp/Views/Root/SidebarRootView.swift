@@ -17,20 +17,72 @@ struct SidebarRootView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.theme) private var theme: any AppTheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
     @State private var sidebarDragOffset: CGFloat = 0
 
-    private let sidebarWidth: CGFloat = 280
+    private var isRegularWidth: Bool {
+        horizontalSizeClass == .regular
+    }
+
+    private var sidebarWidth: CGFloat {
+        isRegularWidth ? 320 : 280
+    }
 
     var body: some View {
+        Group {
+            if isRegularWidth {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+        }
+        .onChange(of: appState.navigationIntent) { _, intent in
+            guard let screen = intent else { return }
+            activeScreen = screen
+            appState.navigationIntent = nil
+            if !isRegularWidth {
+                closeSidebar()
+            }
+        }
+        .sheet(isPresented: $appState.showOnboarding) {
+            ServerSetupSheet()
+                .environmentObject(appState)
+                .environment(\.theme, theme)
+        }
+    }
+
+    // MARK: - iPad Layout (Persistent Sidebar)
+
+    private var iPadLayout: some View {
+        HStack(spacing: 0) {
+            SidebarView(
+                activeScreen: $activeScreen,
+                isSidebarOpen: .constant(true),
+                onSessionSelected: { session in
+                    activeScreen = .chat(session)
+                }
+            )
+            .frame(width: sidebarWidth)
+            .background(theme.bgSidebar)
+
+            Divider()
+                .background(theme.divider)
+
+            mainContent(showHamburger: false)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - iPhone Layout (Overlay Sidebar)
+
+    private var iPhoneLayout: some View {
         ZStack(alignment: .leading) {
-            // Main content area
-            mainContent
+            mainContent(showHamburger: true)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Dimmed overlay (tap to dismiss)
             if isSidebarOpen {
                 theme.bgPrimary
                     .opacity(0.5)
@@ -41,27 +93,15 @@ struct SidebarRootView: View {
                     .transition(.opacity)
             }
 
-            // Sidebar panel
             sidebarPanel
         }
         .gesture(edgeSwipeGesture)
-        .onChange(of: appState.navigationIntent) { _, intent in
-            guard let screen = intent else { return }
-            activeScreen = screen
-            appState.navigationIntent = nil
-            closeSidebar()
-        }
-        .sheet(isPresented: $appState.showOnboarding) {
-            ServerSetupSheet()
-                .environmentObject(appState)
-                .environment(\.theme, theme)
-        }
     }
 
     // MARK: - Main Content
 
     @ViewBuilder
-    private var mainContent: some View {
+    private func mainContent(showHamburger: Bool) -> some View {
         NavigationStack {
             Group {
                 switch activeScreen {
@@ -78,22 +118,24 @@ struct SidebarRootView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        openSidebar()
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: theme.fontTitle3, weight: .medium))
-                            .foregroundStyle(theme.textPrimary)
+                if showHamburger {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            openSidebar()
+                        } label: {
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: theme.fontTitle3, weight: .medium))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+                        .accessibilityLabel("Open sidebar")
                     }
-                    .accessibilityLabel("Open sidebar")
                 }
             }
         }
         .tint(theme.accent)
     }
 
-    // MARK: - Sidebar Panel
+    // MARK: - Sidebar Panel (iPhone overlay)
 
     private var sidebarPanel: some View {
         HStack(spacing: 0) {
@@ -119,7 +161,7 @@ struct SidebarRootView: View {
         )
     }
 
-    // MARK: - Placeholder Views
+    // MARK: - Screen Views
 
     @ViewBuilder
     private var homeScreen: some View {
@@ -167,7 +209,7 @@ struct SidebarRootView: View {
         BrowserView()
     }
 
-    // MARK: - Sidebar Logic
+    // MARK: - Sidebar Logic (iPhone)
 
     private var sidebarXOffset: CGFloat {
         if isSidebarOpen {
@@ -187,7 +229,7 @@ struct SidebarRootView: View {
         sidebarDragOffset = 0
     }
 
-    // MARK: - Edge Swipe Gesture
+    // MARK: - Edge Swipe Gesture (iPhone)
 
     private var edgeSwipeGesture: some Gesture {
         DragGesture(minimumDistance: 20)
@@ -195,12 +237,10 @@ struct SidebarRootView: View {
                 let startX = value.startLocation.x
 
                 if isSidebarOpen {
-                    // Swipe left to close
                     if value.translation.width < 0 {
                         sidebarDragOffset = value.translation.width
                     }
                 } else {
-                    // Swipe from left edge to open (within 30pt of left edge)
                     if startX < 30 && value.translation.width > 0 {
                         sidebarDragOffset = min(value.translation.width, sidebarWidth)
                     }
@@ -210,14 +250,12 @@ struct SidebarRootView: View {
                 let threshold: CGFloat = sidebarWidth * 0.3
 
                 if isSidebarOpen {
-                    // Close if dragged far enough left
                     if value.translation.width < -threshold {
                         closeSidebar()
                     } else {
                         sidebarDragOffset = 0
                     }
                 } else {
-                    // Open if dragged far enough right from left edge
                     if value.startLocation.x < 30 && value.translation.width > threshold {
                         openSidebar()
                     } else {
