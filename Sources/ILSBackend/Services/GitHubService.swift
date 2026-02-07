@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 import ILSShared
+import Logging
 
 /// Storage key for shared GitHubService instance
 struct GitHubServiceKey: StorageKey {
@@ -25,6 +26,9 @@ extension Application {
 
 /// Service for searching GitHub for Claude Code skills and fetching content
 struct GitHubService: Sendable {
+    /// Structured logger for GitHub operations
+    private static let logger = Logger(label: "ils.github")
+
     let client: Vapor.Client
     let token: String?
     let database: Database
@@ -65,7 +69,7 @@ struct GitHubService: Sendable {
         if let remaining = response.headers.first(name: "X-RateLimit-Remaining"),
            let remainingCount = Int(remaining),
            remainingCount < 10 {
-            print("[WARNING] GitHub API rate limit low: \(remainingCount) requests remaining")
+            Self.logger.warning("GitHub API rate limit low: \(remainingCount) requests remaining")
         }
 
         guard response.status == .ok else {
@@ -114,7 +118,7 @@ struct GitHubService: Sendable {
         if let remaining = response.headers.first(name: "X-RateLimit-Remaining"),
            let remainingCount = Int(remaining),
            remainingCount < 10 {
-            print("[WARNING] GitHub API rate limit low: \(remainingCount) requests remaining")
+            Self.logger.warning("GitHub API rate limit low: \(remainingCount) requests remaining")
         }
 
         guard response.status == .ok else {

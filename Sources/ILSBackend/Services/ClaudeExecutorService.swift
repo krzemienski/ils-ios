@@ -546,7 +546,7 @@ actor ClaudeExecutorService {
         let numTurns = json["num_turns"] as? Int
         let totalCostUSD = json["total_cost_usd"] as? Double
 
-        debugLog("Result: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), cost=\(totalCostUSD ?? 0), turns=\(numTurns ?? 0)")
+        Self.logger.debug("Result: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), cost=\(totalCostUSD ?? 0), turns=\(numTurns ?? 0)")
 
         // Parse usage stats if present
         var usageInfo: UsageInfo?
@@ -561,7 +561,7 @@ actor ClaudeExecutorService {
                 cacheReadInputTokens: cacheRead,
                 cacheCreationInputTokens: cacheCreation
             )
-            debugLog("Usage: input=\(inputTokens), output=\(outputTokens)")
+            Self.logger.debug("Usage: input=\(inputTokens), output=\(outputTokens)")
         }
 
         let result = ResultMessage(
@@ -602,7 +602,7 @@ actor ClaudeExecutorService {
     /// Convert text content block.
     private static func convertTextBlock(_ item: [String: Any]) -> ContentBlock? {
         guard let text = item["text"] as? String else { return nil }
-        debugLog("Text content: \(text.prefix(100))")
+        Self.logger.debug("Text content: \(text.prefix(100))")
         return .text(TextBlock(text: text))
     }
 
@@ -611,7 +611,7 @@ actor ClaudeExecutorService {
         guard let id = item["id"] as? String,
               let name = item["name"] as? String else { return nil }
         let input = item["input"] ?? [String: Any]()
-        debugLog("Tool use: \(name)")
+        Self.logger.debug("Tool use: \(name)")
         return .toolUse(ToolUseBlock(
             id: id,
             name: name,
@@ -631,7 +631,7 @@ actor ClaudeExecutorService {
         } else {
             content = ""
         }
-        debugLog("Tool result: toolUseId=\(toolUseId.prefix(20)), isError=\(isError)")
+        Self.logger.debug("Tool result: toolUseId=\(toolUseId.prefix(20)), isError=\(isError)")
         return .toolResult(ToolResultBlock(
             toolUseId: toolUseId,
             content: content,
@@ -642,13 +642,13 @@ actor ClaudeExecutorService {
     /// Convert thinking content block.
     private static func convertThinkingBlock(_ item: [String: Any]) -> ContentBlock? {
         guard let thinking = item["thinking"] as? String else { return nil }
-        debugLog("Thinking: \(thinking.prefix(50))")
+        Self.logger.debug("Thinking: \(thinking.prefix(50))")
         return .thinking(ThinkingBlock(thinking: thinking))
     }
 
     /// Convert unknown content block type (forward compatibility).
     private static func convertUnknownBlock(_ itemType: String) -> ContentBlock? {
-        debugLog("Unknown content type '\(itemType)' — forwarding as text note")
+        Self.logger.debug("Unknown content type '\(itemType)' — forwarding as text note")
         return .text(TextBlock(text: "[unsupported block: \(itemType)]"))
     }
 }

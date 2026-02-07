@@ -1,8 +1,12 @@
 import Vapor
 import ILSShared
+import Logging
 
 /// Service for handling WebSocket connections
 actor WebSocketService {
+    /// Structured logger for WebSocket operations
+    private static let logger = Logger(label: "ils.websocket")
+
     private var connections: [String: WebSocket] = [:]
     private let executor: ClaudeExecutorService
     private let jsonEncoder = JSONEncoder()
@@ -103,7 +107,7 @@ actor WebSocketService {
     ) async {
         // In a real implementation, this would send the decision to Claude CLI
         // For now, we just acknowledge it
-        print("Permission decision for \(requestId): \(decision)")
+        Self.logger.info("Permission decision for \(requestId): \(decision)")
     }
 
     private func sendMessage(_ message: WSServerMessage, to ws: WebSocket) async throws {
