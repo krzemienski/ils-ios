@@ -257,7 +257,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 4: Home Dashboard (US-9)
 
-- [ ] 4.1 Build HomeView dashboard
+- [x] 4.1 Build HomeView dashboard
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Home/HomeView.swift` — default content when no session selected
     2. Welcome message with server name (from AppState)

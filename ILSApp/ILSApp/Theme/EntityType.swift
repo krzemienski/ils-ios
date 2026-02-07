@@ -64,4 +64,16 @@ extension EntityType {
         case .system:   return "System"
         }
     }
+
+    /// Theme-aware entity color from AppTheme tokens
+    func themeColor(from theme: any AppTheme) -> Color {
+        switch self {
+        case .sessions: return theme.entitySession
+        case .projects: return theme.entityProject
+        case .skills:   return theme.entitySkill
+        case .mcp:      return theme.entityMCP
+        case .plugins:  return theme.entityPlugin
+        case .system:   return theme.entitySystem
+        }
+    }
 }

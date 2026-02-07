@@ -61,6 +61,7 @@
 		ACNTBT0000000000000001 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACNTBT0000000000000002 /* AccentButton.swift */; };
 		ENTBDG0000000000000001 /* EntityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENTBDG0000000000000002 /* EntityBadge.swift */; };
 
+		HOMV00000000000000001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = HOMV00000000000000002 /* HomeView.swift */; };
 		SBRV00000000000000001 /* SidebarRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBRV00000000000000002 /* SidebarRootView.swift */; };
 		SDBV00000000000000001 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDBV00000000000000002 /* SidebarView.swift */; };
 		SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDSR00000000000000002 /* SidebarSessionRow.swift */; };
@@ -181,6 +182,7 @@
 		ACNTBT0000000000000002 /* AccentButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccentButton.swift; sourceTree = "<group>"; };
 		ENTBDG0000000000000002 /* EntityBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityBadge.swift; sourceTree = "<group>"; };
 
+		HOMV00000000000000002 /* HomeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		SBRV00000000000000002 /* SidebarRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
 		SDBV00000000000000002 /* SidebarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		SDSR00000000000000002 /* SidebarSessionRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarSessionRow.swift; sourceTree = "<group>"; };
@@ -301,9 +303,18 @@
 			path = Root;
 			sourceTree = "<group>";
 		};
+		HOMV00000000000000003 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				HOMV00000000000000002 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
 		000000000000000000000062 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				HOMV00000000000000003 /* Home */,
 				000000000000000000000070 /* Sidebar */,
 				000000000000000000000071 /* Chat */,
 				000000000000000000000078 /* Dashboard */,
@@ -743,6 +754,7 @@
 				ACNTBT0000000000000001 /* AccentButton.swift in Sources */,
 				ENTBDG0000000000000001 /* EntityBadge.swift in Sources */,
 
+				HOMV00000000000000001 /* HomeView.swift in Sources */,
 				SBRV00000000000000001 /* SidebarRootView.swift in Sources */,
 				SDBV00000000000000001 /* SidebarView.swift in Sources */,
 				SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */,

@@ -66,7 +66,7 @@ struct SidebarRootView: View {
             Group {
                 switch activeScreen {
                 case .home:
-                    homePlaceholder
+                    homeScreen
                 case .chat(let session):
                     chatPlaceholder(session: session)
                 case .system:
@@ -122,22 +122,15 @@ struct SidebarRootView: View {
     // MARK: - Placeholder Views
 
     @ViewBuilder
-    private var homePlaceholder: some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "house.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(theme.accent)
-            Text("Home Dashboard")
-                .font(.system(size: theme.fontTitle2, weight: .bold))
-                .foregroundStyle(theme.textPrimary)
-            Text("Built in Phase 4")
-                .font(.system(size: theme.fontBody))
-                .foregroundStyle(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.bgPrimary)
-        .navigationTitle("Home")
-        .navigationBarTitleDisplayMode(.inline)
+    private var homeScreen: some View {
+        HomeView(
+            onSessionSelected: { session in
+                activeScreen = .chat(session)
+            },
+            onNavigate: { screen in
+                activeScreen = screen
+            }
+        )
     }
 
     @ViewBuilder
