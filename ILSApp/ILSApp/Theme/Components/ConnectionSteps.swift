@@ -63,11 +63,11 @@ struct ConnectionStepsView: View {
         case .success:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(ILSTheme.success)
-                .font(.system(size: 20))
+                .font(.title3) // Status icon, Dynamic Type compatible
         case .failure:
             Image(systemName: "xmark.circle.fill")
                 .foregroundColor(ILSTheme.error)
-                .font(.system(size: 20))
+                .font(.title3) // Status icon, Dynamic Type compatible
         }
     }
 

@@ -26,7 +26,7 @@ struct EmptyEntityState: View {
     var body: some View {
         VStack(spacing: ILSTheme.spaceL) {
             Image(systemName: entityType.icon)
-                .font(.system(size: 48))
+                .font(.system(.largeTitle)) // Decorative icon, Dynamic Type compatible
                 .foregroundStyle(entityType.gradient)
                 .padding(.bottom, ILSTheme.spaceS)
 

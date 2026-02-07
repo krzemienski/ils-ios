@@ -151,7 +151,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - **Done when**: BUILD SUCCEEDED with zero errors
   - **Commit**: `chore(audit): pass quality checkpoint after View fixes` (only if fixes needed)
 
-- [ ] 1.14 Fix remaining hardcoded fonts across 6 files
+- [x] 1.14 Fix remaining hardcoded fonts across 6 files
   - **Do**:
     1. Replace all `.font(.system(size:))` with ILSTheme references in these files:
        - `ServerSetupSheet.swift:107` — `.font(.system(size: 44))` to `.font(.system(.largeTitle, weight: .bold))` or `ILSTheme.titleFont` (large icon, may need custom)
@@ -168,7 +168,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-11, FR-17 | AC-4.1, AC-6.2_
   - _Design: Low-Impact Files font fixes section_
 
-- [ ] 1.15 Fix StatusBadge: augment color-only indicators with icon
+- [x] 1.15 Fix StatusBadge: augment color-only indicators with icon
   - **Do**:
     1. Open `ILSTheme.swift`, find `StatusBadge` (line 305)
     2. Modify StatusBadge to include an SF Symbol icon alongside the colored circle. Add `let icon: String` parameter with a default. Change body to `HStack(spacing: 4) { Image(systemName: icon).font(.caption2).foregroundColor(color); Text(text).font(.caption2).foregroundColor(color) }`. Add `.accessibilityElement(children: .combine)` and `.accessibilityLabel("\(text) status")`

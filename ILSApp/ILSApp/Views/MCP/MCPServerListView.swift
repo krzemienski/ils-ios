@@ -227,7 +227,7 @@ struct MCPServerRowView: View {
                 if let env = server.env, !env.isEmpty {
                     HStack(spacing: 2) {
                         Image(systemName: "key.fill")
-                            .font(.system(size: 9))
+                            .font(.caption2) // Small badge icon, Dynamic Type compatible
                         Text("\(env.count) env")
                     }
                     .font(ILSTheme.captionFont)
@@ -250,18 +250,18 @@ struct MCPServerRowView: View {
 
     @ViewBuilder
     private var statusBadge: some View {
-        let (color, text) = statusInfo
-        StatusBadge(text: text, color: color)
+        let (color, text, icon) = statusInfo
+        StatusBadge(text: text, color: color, icon: icon)
     }
 
-    private var statusInfo: (Color, String) {
+    private var statusInfo: (Color, String, String) {
         switch server.status {
         case "healthy":
-            return (ILSTheme.success, "Healthy")
+            return (ILSTheme.success, "Healthy", "checkmark.circle.fill")
         case "unhealthy":
-            return (ILSTheme.error, "Unhealthy")
+            return (ILSTheme.error, "Unhealthy", "exclamationmark.triangle.fill")
         default:
-            return (ILSTheme.warning, "Unknown")
+            return (ILSTheme.warning, "Unknown", "circle")
         }
     }
 }
@@ -322,13 +322,7 @@ struct MCPServerDetailView: View {
                 }
 
                 LabeledContent("Status") {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(statusColor)
-                            .frame(width: 8, height: 8)
-                        Text(statusText)
-                            .foregroundColor(statusColor)
-                    }
+                    StatusBadge(text: statusText, color: statusColor, icon: statusIcon)
                 }
 
                 if let configPath = server.configPath {
@@ -394,6 +388,17 @@ struct MCPServerDetailView: View {
             return "Unhealthy"
         default:
             return "Unknown"
+        }
+    }
+
+    private var statusIcon: String {
+        switch server.status {
+        case "healthy":
+            return "checkmark.circle.fill"
+        case "unhealthy":
+            return "exclamationmark.triangle.fill"
+        default:
+            return "circle"
         }
     }
 
