@@ -18,7 +18,8 @@ struct ILSAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // TEMPORARY: ThemeTestView as root for Phase 1 validation — revert in Phase 2
+            ThemeTestView()
                 .environmentObject(appState)
                 .environmentObject(themeManager)
                 .environment(\.theme, themeManager.currentTheme)

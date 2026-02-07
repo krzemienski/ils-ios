@@ -35,7 +35,7 @@ Focus: Prove the AppTheme protocol + ThemeManager + EnvironmentKey approach work
   - _Requirements: AC-1.5_
   - _Design: Section 5 — Component Library, Glass Card Spec_
 
-- [ ] 1.3 Wire ThemeManager into app root and validate in simulator
+- [x] 1.3 Wire ThemeManager into app root and validate in simulator
   - **Do**:
     1. Modify `ILSAppApp.swift`: add `@StateObject private var themeManager = ThemeManager()`, inject as `.environmentObject(themeManager)` and `.environment(\.theme, themeManager.currentTheme)` on root view
     2. Create a temporary `ThemeTestView.swift` that displays: bgPrimary background, a GlassCard with accent-colored text, an AccentButton, and EntityBadge for each entity type — proving all tokens work
