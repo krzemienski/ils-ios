@@ -343,8 +343,7 @@ class ChatViewModel: ObservableObject {
     func cancel() {
         // Notify backend to kill Claude CLI process (best-effort, fire-and-forget)
         if let sessionId = sessionId, let apiClient = apiClient {
-            Task { [weak self] in
-                guard let self else { return }
+            Task {
                 do {
                     let _: APIResponse<DeletedResponse> = try await apiClient.post("/chat/cancel/\(sessionId.uuidString)", body: EmptyBody())
                 } catch {

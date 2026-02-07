@@ -38,7 +38,7 @@ class DashboardViewModel: ObservableObject {
 
     /// Load all dashboard data (stats + recent activity)
     func loadAll() async {
-        guard let client else { return }
+        guard client != nil else { return }
         isLoading = true
         error = nil
 

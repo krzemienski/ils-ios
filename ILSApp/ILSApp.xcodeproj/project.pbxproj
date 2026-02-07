@@ -51,7 +51,7 @@
 		740920FC81B448D14BCBD53C /* CrimsonTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD65CE4559E67BE7E9BB3310 /* CrimsonTheme.swift */; };
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
 		79749939869277B83FB3F09B /* PaperTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9321E429688A848C0DFF63B3 /* PaperTheme.swift */; };
-		7EC8ADE88CF9F68FAB2868BD /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */; };
+
 		91F19D5F77DA1286391D0468 /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CE45720072EBA7B75C042F /* MidnightTheme.swift */; };
 		9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E0683F219C707581CC1582 /* BaseListViewModel.swift */; };
 		978A8A075CC3D2CA5471BEC2 /* GhostProtocolTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7ED6A074C75424C5ABAF25 /* GhostProtocolTheme.swift */; };
@@ -164,7 +164,7 @@
 		ACNTBT0000000000000002 /* AccentButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccentButton.swift; sourceTree = "<group>"; };
 		AD994FACAC5FE5E165A8EA10 /* NeonNoirTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Themes/NeonNoirTheme.swift; sourceTree = "<group>"; };
 		ADE314BB38E3F55D9BA99144 /* EmberTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Themes/EmberTheme.swift; sourceTree = "<group>"; };
-		AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
+
 		ASTC00000000000000002 /* AssistantCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantCard.swift; sourceTree = "<group>"; };
 		B1D1A53A5156A8D8D724FDCB /* EntityType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
 		B8C3FB4E38B7BB1D4FB30FC5 /* CarbonTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Themes/CarbonTheme.swift; sourceTree = "<group>"; };
@@ -505,7 +505,6 @@
 			isa = PBXGroup;
 			children = (
 				6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */,
-				AF89819CE93B70D0ACAEA000 /* DateFormatters.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -741,7 +740,6 @@
 				SKLROW0000000000000001 /* SkeletonRow.swift in Sources */,
 				ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */,
 				0A8D2F5C6ED7B3BB633DCEA3 /* DateFormatters.swift in Sources */,
-				7EC8ADE88CF9F68FAB2868BD /* DateFormatters.swift in Sources */,
 				5910023177AFED4B86044C84 /* ObsidianTheme.swift in Sources */,
 				APPTHEM000000000000001 /* AppTheme.swift in Sources */,
 				THMMGR0000000000000001 /* ThemeManager.swift in Sources */,
