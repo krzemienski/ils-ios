@@ -108,7 +108,7 @@ struct SidebarRootView: View {
                 case .home:
                     homeScreen
                 case .chat(let session):
-                    chatPlaceholder(session: session)
+                    ChatView(session: session)
                 case .system:
                     systemScreen
                 case .settings:
@@ -173,25 +173,6 @@ struct SidebarRootView: View {
                 activeScreen = screen
             }
         )
-    }
-
-    @ViewBuilder
-    private func chatPlaceholder(session: ChatSession) -> some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "bubble.left.and.bubble.right.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(theme.entitySession)
-            Text(session.name ?? "Chat")
-                .font(.system(size: theme.fontTitle2, weight: .bold))
-                .foregroundStyle(theme.textPrimary)
-            Text("Chat rebuilt in Phase 3")
-                .font(.system(size: theme.fontBody))
-                .foregroundStyle(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(theme.bgPrimary)
-        .navigationTitle(session.name ?? "Chat")
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     @ViewBuilder
