@@ -47,7 +47,7 @@ created: 2026-02-06T18:40:00-05:00
   - **Commit**: `feat(ios): verify external session merge in sessions list` (only if code changes needed)
   - _Requirements: FR-2, AC-2.1, AC-2.2, AC-2.3_
 
-- [ ] 1.2 Verify MCP CRUD UI is fully wired
+- [x] 1.2 Verify MCP CRUD UI is fully wired
   - **Do**:
     1. Read `ILSApp/ILSApp/Views/MCP/MCPServerListView.swift` — confirm add/edit/delete actions exist
     2. Read `ILSApp/ILSApp/Views/MCP/NewMCPServerView.swift` — confirm form sends `POST /mcp`
