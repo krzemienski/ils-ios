@@ -57,6 +57,8 @@
 		ENTBDG0000000000000001 /* EntityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENTBDG0000000000000002 /* EntityBadge.swift */; };
 
 		SBRV00000000000000001 /* SidebarRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBRV00000000000000002 /* SidebarRootView.swift */; };
+		SDBV00000000000000001 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDBV00000000000000002 /* SidebarView.swift */; };
+		SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDSR00000000000000002 /* SidebarSessionRow.swift */; };
 		5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */; };
 		5FAB32D6951B376A319E321F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D1A53A5156A8D8D724FDCB /* EntityType.swift */; };
 		7103F0FECA16410192750881 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */; };
@@ -170,6 +172,8 @@
 		ENTBDG0000000000000002 /* EntityBadge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityBadge.swift; sourceTree = "<group>"; };
 
 		SBRV00000000000000002 /* SidebarRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
+		SDBV00000000000000002 /* SidebarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		SDSR00000000000000002 /* SidebarSessionRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarSessionRow.swift; sourceTree = "<group>"; };
 		EMTYST0000000000000002 /* EmptyEntityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyEntityState.swift; sourceTree = "<group>"; };
 		FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
 		FILBRW0000000000000002 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
@@ -281,6 +285,8 @@
 			isa = PBXGroup;
 			children = (
 				SBRV00000000000000002 /* SidebarRootView.swift */,
+				SDBV00000000000000002 /* SidebarView.swift */,
+				SDSR00000000000000002 /* SidebarSessionRow.swift */,
 			);
 			path = Root;
 			sourceTree = "<group>";
@@ -718,6 +724,8 @@
 				ENTBDG0000000000000001 /* EntityBadge.swift in Sources */,
 
 				SBRV00000000000000001 /* SidebarRootView.swift in Sources */,
+				SDBV00000000000000001 /* SidebarView.swift in Sources */,
+				SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

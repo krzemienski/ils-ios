@@ -86,105 +86,14 @@ struct SidebarRootView: View {
 
     private var sidebarPanel: some View {
         HStack(spacing: 0) {
-            // Sidebar content
-            VStack(alignment: .leading, spacing: 0) {
-                // Header
-                VStack(alignment: .leading, spacing: theme.spacingSM) {
-                    Text("ILS")
-                        .font(.system(size: theme.fontTitle1, weight: .bold, design: .monospaced))
-                        .foregroundStyle(theme.accent)
-
-                    HStack(spacing: theme.spacingXS) {
-                        Circle()
-                            .fill(appState.isConnected ? theme.success : theme.error)
-                            .frame(width: 8, height: 8)
-                        Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .font(.system(size: theme.fontCaption))
-                            .foregroundStyle(theme.textSecondary)
-                    }
+            SidebarView(
+                activeScreen: $activeScreen,
+                isSidebarOpen: $isSidebarOpen,
+                onSessionSelected: { session in
+                    activeScreen = .chat(session)
                 }
-                .padding(.horizontal, theme.spacingMD)
-                .padding(.top, theme.spacingLG)
-                .padding(.bottom, theme.spacingMD)
-
-                Divider()
-                    .overlay(theme.divider)
-
-                // Navigation items
-                ScrollView {
-                    VStack(spacing: theme.spacingXS) {
-                        sidebarNavItem(
-                            icon: "house.fill",
-                            label: "Home",
-                            screen: .home
-                        )
-                        sidebarNavItem(
-                            icon: "gauge.with.dots.needle.33percent",
-                            label: "System Monitor",
-                            screen: .system
-                        )
-                        sidebarNavItem(
-                            icon: "square.grid.2x2.fill",
-                            label: "Browse",
-                            screen: .browser
-                        )
-                        sidebarNavItem(
-                            icon: "gearshape.fill",
-                            label: "Settings",
-                            screen: .settings
-                        )
-                    }
-                    .padding(.horizontal, theme.spacingSM)
-                    .padding(.top, theme.spacingMD)
-
-                    // Sessions section header
-                    HStack {
-                        Text("SESSIONS")
-                            .font(.system(size: theme.fontCaption, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(theme.textTertiary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, theme.spacingMD)
-                    .padding(.top, theme.spacingLG)
-                    .padding(.bottom, theme.spacingXS)
-
-                    // Placeholder for session list (built in task 2.2)
-                    VStack(spacing: theme.spacingXS) {
-                        Text("Sessions will appear here")
-                            .font(.system(size: theme.fontCaption))
-                            .foregroundStyle(theme.textTertiary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, theme.spacingLG)
-                    }
-                    .padding(.horizontal, theme.spacingSM)
-                }
-
-                Spacer()
-
-                Divider()
-                    .overlay(theme.divider)
-
-                // Bottom: New Session button
-                Button {
-                    // New session action — wired in task 5.1
-                    closeSidebar()
-                } label: {
-                    HStack(spacing: theme.spacingSM) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("New Session")
-                            .font(.system(size: theme.fontBody, weight: .semibold))
-                    }
-                    .foregroundStyle(theme.textOnAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingSM + 2)
-                    .background(theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-                }
-                .padding(.horizontal, theme.spacingMD)
-                .padding(.vertical, theme.spacingMD)
-            }
+            )
             .frame(width: sidebarWidth)
-            .background(theme.bgSidebar)
 
             Spacer(minLength: 0)
         }
@@ -197,36 +106,6 @@ struct SidebarRootView: View {
             reduceMotion ? .none : .spring(response: 0.3, dampingFraction: 0.85),
             value: sidebarDragOffset
         )
-    }
-
-    // MARK: - Sidebar Navigation Item
-
-    private func sidebarNavItem(icon: String, label: String, screen: ActiveScreen) -> some View {
-        let isActive = isScreenActive(screen)
-
-        return Button {
-            activeScreen = screen
-            closeSidebar()
-        } label: {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: icon)
-                    .font(.system(size: theme.fontBody))
-                    .frame(width: 24)
-                Text(label)
-                    .font(.system(size: theme.fontBody))
-                Spacer()
-            }
-            .foregroundStyle(isActive ? theme.accent : theme.textSecondary)
-            .padding(.horizontal, theme.spacingSM + 4)
-            .padding(.vertical, theme.spacingSM + 2)
-            .background(
-                isActive
-                    ? theme.accent.opacity(0.1)
-                    : Color.clear
-            )
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        }
-        .accessibilityLabel(label)
     }
 
     // MARK: - Placeholder Views
@@ -344,17 +223,6 @@ struct SidebarRootView: View {
     private func closeSidebar() {
         isSidebarOpen = false
         sidebarDragOffset = 0
-    }
-
-    private func isScreenActive(_ screen: ActiveScreen) -> Bool {
-        switch (activeScreen, screen) {
-        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser):
-            return true
-        case (.chat, .chat):
-            return true
-        default:
-            return false
-        }
     }
 
     // MARK: - Edge Swipe Gesture
