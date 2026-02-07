@@ -66,6 +66,12 @@
 		ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBOARD0000000000000002 /* ServerSetupSheet.swift */; };
 		SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSMON0000000000000002 /* SystemMonitorView.swift */; };
 		CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONNBN0000000000000002 /* ConnectionBanner.swift */; };
+		METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = METRWS0000000000000002 /* MetricsWebSocketClient.swift */; };
+		SYSVM00000000000000001 /* SystemMetricsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSVM00000000000000002 /* SystemMetricsViewModel.swift */; };
+		MTCHRT0000000000000001 /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = MTCHRT0000000000000002 /* MetricChart.swift */; };
+		PRGRING000000000000001 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRGRING000000000000002 /* ProgressRing.swift */; };
+		PRCLST0000000000000001 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRCLST0000000000000002 /* ProcessListView.swift */; };
+		FILBRW0000000000000001 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILBRW0000000000000002 /* FileBrowserView.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
@@ -143,6 +149,12 @@
 		ONBOARD0000000000000002 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
 		SYSMON0000000000000002 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
 		CONNBN0000000000000002 /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
+		METRWS0000000000000002 /* MetricsWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsWebSocketClient.swift; sourceTree = "<group>"; };
+		SYSVM00000000000000002 /* SystemMetricsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsViewModel.swift; sourceTree = "<group>"; };
+		MTCHRT0000000000000002 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
+		PRGRING000000000000002 /* ProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
+		PRCLST0000000000000002 /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
+		FILBRW0000000000000002 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -218,6 +230,8 @@
 			isa = PBXGroup;
 			children = (
 				CONNBN0000000000000002 /* ConnectionBanner.swift */,
+				MTCHRT0000000000000002 /* MetricChart.swift */,
+				PRGRING000000000000002 /* ProgressRing.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -229,6 +243,7 @@
 				000000000000000000000032 /* SSEClient.swift */,
 				7707100E4F96375256BF886C /* KeychainService.swift */,
 				A81D47EAE6EBAE3D55FC6D68 /* ConfigurationManager.swift */,
+				METRWS0000000000000002 /* MetricsWebSocketClient.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -264,6 +279,7 @@
 				000000000000000000000055 /* SessionsViewModel.swift */,
 				428319AD18184D7B92DE7F61 /* ServerConnectionViewModel.swift */,
 				68E0683F219C707581CC1582 /* BaseListViewModel.swift */,
+				SYSVM00000000000000002 /* SystemMetricsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -447,6 +463,8 @@
 			isa = PBXGroup;
 			children = (
 				SYSMON0000000000000002 /* SystemMonitorView.swift */,
+				PRCLST0000000000000002 /* ProcessListView.swift */,
+				FILBRW0000000000000002 /* FileBrowserView.swift */,
 			);
 			path = System;
 			sourceTree = "<group>";
@@ -606,6 +624,12 @@
 				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
 				SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */,
 				CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */,
+				METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */,
+				SYSVM00000000000000001 /* SystemMetricsViewModel.swift in Sources */,
+				MTCHRT0000000000000001 /* MetricChart.swift in Sources */,
+				PRGRING000000000000001 /* ProgressRing.swift in Sources */,
+				PRCLST0000000000000001 /* ProcessListView.swift in Sources */,
+				FILBRW0000000000000001 /* FileBrowserView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

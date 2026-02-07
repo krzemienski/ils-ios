@@ -340,7 +340,7 @@ Focus: Create 3 new API endpoints + 1 WebSocket for system metrics. macOS-first,
 
 Focus: Build System tab UI with live charts, process list, file browser. Depends on Phase 3 backend.
 
-- [ ] 4.1 Create MetricsWebSocketClient.swift for live data
+- [x] 4.1 Create MetricsWebSocketClient.swift for live data
   - **Do**:
     1. Create `ILSApp/ILSApp/Services/MetricsWebSocketClient.swift`
     2. Uses `URLSessionWebSocketTask` to connect to `WS /api/v1/system/metrics/live`
@@ -355,7 +355,7 @@ Focus: Build System tab UI with live charts, process list, file browser. Depends
   - **Commit**: `feat(ios): add MetricsWebSocketClient with reconnection and fallback`
   - _Requirements: AC-5.3, AC-5.4, FR-4.4_
 
-- [ ] 4.2 Create SystemMetricsViewModel and MetricChart components
+- [x] 4.2 Create SystemMetricsViewModel and MetricChart components
   - **Do**:
     1. Create `ILSApp/ILSApp/ViewModels/SystemMetricsViewModel.swift` — owns MetricsWebSocketClient, exposes chart data arrays, process list
     2. Create `ILSApp/ILSApp/Theme/Components/MetricChart.swift` — Swift Charts AreaMark + LineMark with teal gradient per design.md
@@ -370,7 +370,7 @@ Focus: Build System tab UI with live charts, process list, file browser. Depends
   - _Requirements: AC-5.1, AC-5.2, AC-5.6, FR-4.1_
   - _Design: MetricChart, ProgressRing components_
 
-- [ ] 4.3 Build SystemMonitorView with metric cards and charts
+- [x] 4.3 Build SystemMonitorView with metric cards and charts
   - **Do**:
     1. Replace placeholder in `SystemMonitorView.swift` with full implementation
     2. Top section: CPU chart (full-width AreaMark, teal), current % label
@@ -386,7 +386,7 @@ Focus: Build System tab UI with live charts, process list, file browser. Depends
   - _Requirements: AC-5.1, AC-5.2, AC-5.5, AC-5.6, FR-4.1_
   - _Design: System Monitoring screen_
 
-- [ ] 4.4 Create ProcessListView with search and sort
+- [x] 4.4 Create ProcessListView with search and sort
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/System/ProcessListView.swift`
     2. List of processes from `GET /system/processes` showing name, PID, CPU %, memory MB
@@ -400,7 +400,7 @@ Focus: Build System tab UI with live charts, process list, file browser. Depends
   - **Commit**: `feat(ios): add process list with search and sort to System tab`
   - _Requirements: AC-6.1, AC-6.2, AC-6.3, AC-6.4, AC-6.5, FR-4.2_
 
-- [ ] 4.5 Create FileBrowserView with breadcrumb navigation
+- [x] 4.5 Create FileBrowserView with breadcrumb navigation
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/System/FileBrowserView.swift`
     2. Starts at `~/` with breadcrumb showing current path components as tappable links
