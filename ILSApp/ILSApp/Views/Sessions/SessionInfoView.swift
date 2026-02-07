@@ -4,6 +4,7 @@ import ILSShared
 struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme: any AppTheme
     @EnvironmentObject var appState: AppState
 
     @State private var loadedSession: ChatSession?
@@ -27,12 +28,12 @@ struct SessionInfoView: View {
                     VStack(spacing: 16) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.largeTitle)
-                            .foregroundColor(ILSTheme.warning)
+                            .foregroundColor(theme.warning)
                         Text("Failed to load session details")
                             .font(.headline)
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundColor(theme.textSecondary)
                         Button("Retry") {
                             Task { await loadSession() }
                         }
@@ -75,10 +76,10 @@ struct SessionInfoView: View {
                             }
                         }
                     }
-                    .darkListStyle()
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .background(ILSTheme.background)
+            .background(theme.bgPrimary)
             .navigationTitle("Session Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

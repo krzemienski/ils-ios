@@ -426,7 +426,7 @@ Focus: Highest-risk phase. Rebuild entire ChatView with AI Assistant Card layout
 
 ## Phase 2 (Refactoring): Clean Up and Modularize
 
-- [ ] 2R.1 Clean up dead files and old references
+- [x] 2R.1 Clean up dead files and old references
   - **Do**:
     1. Delete `ContentView.swift` (replaced by SidebarRootView)
     2. Delete `DashboardView.swift` (replaced by HomeView)

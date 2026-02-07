@@ -3,6 +3,7 @@ import ILSShared
 
 struct CommandPaletteView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme: any AppTheme
     @EnvironmentObject var appState: AppState
     @State private var searchText = ""
     @State private var skills: [Skill] = []
@@ -46,7 +47,8 @@ struct CommandPaletteView: View {
                     }
                 }
             }
-            .darkListStyle()
+            .scrollContentBackground(.hidden)
+            .background(theme.bgPrimary)
             .searchable(text: $searchText, prompt: "Search commands...")
             .navigationTitle("Commands")
             .navigationBarTitleDisplayMode(.inline)
@@ -118,6 +120,7 @@ struct CommandItem: Identifiable {
 struct CommandRow: View {
     let command: CommandItem
     let onSelect: (String) -> Void
+    @Environment(\.theme) private var theme: any AppTheme
 
     var body: some View {
         Button {
@@ -126,14 +129,14 @@ struct CommandRow: View {
             Label {
                 VStack(alignment: .leading) {
                     Text(command.name)
-                        .font(ILSTheme.bodyFont)
+                        .font(.system(size: theme.fontBody))
                     Text(command.description)
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
                 }
             } icon: {
                 Image(systemName: command.icon)
-                    .foregroundColor(ILSTheme.accent)
+                    .foregroundStyle(theme.accent)
             }
         }
     }
@@ -142,23 +145,24 @@ struct CommandRow: View {
 struct SkillRow: View {
     let skill: Skill
     let onSelect: () -> Void
+    @Environment(\.theme) private var theme: any AppTheme
 
     var body: some View {
         Button(action: onSelect) {
             Label {
                 VStack(alignment: .leading) {
                     Text("/\(skill.name)")
-                        .font(ILSTheme.bodyFont)
+                        .font(.system(size: theme.fontBody))
                     if let desc = skill.description {
                         Text(desc)
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
                     }
                 }
             } icon: {
                 Image(systemName: "star")
-                    .foregroundColor(ILSTheme.accent)
+                    .foregroundStyle(theme.accent)
             }
         }
     }

@@ -104,7 +104,7 @@ struct ServerSetupSheet: View {
     private var brandingHeader: some View {
         VStack(spacing: 12) {
             Image(systemName: "server.rack")
-                .font(.system(.largeTitle)) // Decorative icon, Dynamic Type compatible
+                .font(ILSTheme.largeTitleFont) // Decorative icon, Dynamic Type compatible
                 .foregroundStyle(
                     LinearGradient(
                         colors: [ILSTheme.accent, ILSTheme.accentSecondary],
@@ -114,7 +114,7 @@ struct ServerSetupSheet: View {
                 )
 
             Text("Welcome to ILS")
-                .font(.system(.title2, design: .default, weight: .bold))
+                .font(ILSTheme.title2Font)
                 .foregroundColor(ILSTheme.primaryText)
 
             Text("Connect to your backend server to get started.")
@@ -264,11 +264,11 @@ struct ServerSetupSheet: View {
     private func backendInfoCard(_ info: BackendInfo) -> some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.largeTitle) // Decorative icon, Dynamic Type compatible
+                .font(ILSTheme.largeTitleFont) // Decorative icon, Dynamic Type compatible
                 .foregroundColor(ILSTheme.success)
 
             Text("Connected")
-                .font(.system(.title3, design: .default, weight: .semibold))
+                .font(ILSTheme.title3Font)
                 .foregroundColor(ILSTheme.primaryText)
 
             VStack(spacing: 6) {

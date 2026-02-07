@@ -16,7 +16,6 @@ struct NewSessionView: View {
     @State private var maxBudget = ""
     @State private var maxTurns = ""
     @State private var showAdvanced = false
-    @State private var showTemplates = false
 
     let onCreated: (ChatSession) -> Void
 
@@ -29,7 +28,6 @@ struct NewSessionView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: theme.spacingMD) {
-                    templateButton
                     sessionDetailsSection
                     modelSection
                     permissionsSection
@@ -54,39 +52,9 @@ struct NewSessionView: View {
                 projectsViewModel.configure(client: appState.apiClient)
                 await projectsViewModel.loadProjects()
             }
-            .sheet(isPresented: $showTemplates) {
-                SessionTemplatesView { template in
-                    applyTemplate(template)
-                }
-                .presentationBackground(theme.bgPrimary)
-            }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-    }
-
-    // MARK: - Template Button
-
-    @ViewBuilder
-    private var templateButton: some View {
-        Button {
-            showTemplates = true
-        } label: {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "doc.on.doc")
-                    .foregroundStyle(theme.entitySession)
-                Text("Start from Template")
-                    .font(.system(size: theme.fontBody, weight: .medium))
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: theme.fontCaption))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(theme.spacingMD)
-            .modifier(GlassCard())
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Session Details
@@ -360,14 +328,6 @@ struct NewSessionView: View {
         )
     }
 
-    private func applyTemplate(_ template: SessionTemplate) {
-        sessionName = ""
-        selectedModel = template.model
-        permissionMode = template.permissionMode
-        systemPrompt = template.systemPrompt
-        maxBudget = template.maxBudget
-        maxTurns = template.maxTurns
-    }
 }
 
 #Preview {

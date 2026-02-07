@@ -23,7 +23,6 @@ struct SettingsView: View {
                 connectionSection
                 remoteAccessSection
                 appearanceSection
-                manageSection
                 generalSettingsSection
                 apiKeySection
                 permissionsSection
@@ -191,72 +190,6 @@ struct SettingsView: View {
             }
             .buttonStyle(.plain)
         }
-    }
-
-    // MARK: - Manage
-
-    @ViewBuilder
-    private var manageSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionLabel("Manage")
-
-            VStack(spacing: 0) {
-                settingsNavRow(
-                    icon: "sparkles",
-                    color: EntityType.skills.themeColor(from: theme),
-                    title: "Skills",
-                    count: viewModel.stats?.skills.total,
-                    destination: SkillsListView()
-                )
-                Divider().background(theme.bgTertiary)
-                settingsNavRow(
-                    icon: "server.rack",
-                    color: EntityType.mcp.themeColor(from: theme),
-                    title: "MCP Servers",
-                    count: viewModel.stats?.mcpServers.total,
-                    destination: MCPServerListView()
-                )
-                Divider().background(theme.bgTertiary)
-                settingsNavRow(
-                    icon: "puzzlepiece.extension",
-                    color: EntityType.plugins.themeColor(from: theme),
-                    title: "Plugins",
-                    count: viewModel.stats?.plugins.total,
-                    destination: PluginsListView()
-                )
-            }
-            .modifier(GlassCard())
-        }
-    }
-
-    @ViewBuilder
-    private func settingsNavRow<Dest: View>(icon: String, color: Color, title: String, count: Int?, destination: Dest) -> some View {
-        NavigationLink {
-            destination
-        } label: {
-            HStack(spacing: theme.spacingMD) {
-                Image(systemName: icon)
-                    .font(.system(size: theme.fontBody))
-                    .foregroundStyle(color)
-                    .frame(width: 28, height: 28)
-                    .background(color.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                Text(title)
-                    .font(.system(size: theme.fontBody))
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                if let count {
-                    Text("\(count)")
-                        .font(.system(size: theme.fontCaption))
-                        .foregroundStyle(theme.textSecondary)
-                }
-                Image(systemName: "chevron.right")
-                    .font(.system(size: theme.fontCaption))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(theme.spacingMD)
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - General Settings

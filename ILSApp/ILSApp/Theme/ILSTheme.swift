@@ -69,11 +69,33 @@ enum ILSTheme {
 
     // MARK: - Typography
 
+    // Title Scale
+    static let largeTitleFont = Font.system(.largeTitle, design: .default)
     static let titleFont = Font.system(.title, design: .default, weight: .bold)
+    static let title2Font = Font.system(.title2, design: .default, weight: .bold)
+    static let title3Font = Font.system(.title3, design: .default, weight: .semibold)
+
+    // Body Scale
     static let headlineFont = Font.system(.headline, design: .default, weight: .semibold)
+    static let subheadlineFont = Font.system(.subheadline, design: .default)
+    static let subheadlineSemiboldFont = Font.system(.subheadline, design: .default, weight: .semibold)
     static let bodyFont = Font.system(.body, design: .default)
+    static let calloutFont = Font.system(.callout, design: .default)
+
+    // Caption Scale
     static let captionFont = Font.system(.caption, design: .default)
+    static let caption2Font = Font.system(.caption2, design: .default)
+    static let caption2MediumFont = Font.system(.caption2, design: .default, weight: .medium)
+    static let caption2SemiboldFont = Font.system(.caption2, design: .default, weight: .semibold)
+
+    // Monospaced Variants
     static let codeFont = Font.system(.body, design: .monospaced)
+    static let codeCalloutFont = Font.system(.callout, design: .monospaced)
+    static let codeCaptionFont = Font.system(.caption, design: .monospaced)
+    static let codeCaption2Font = Font.system(.caption2, design: .monospaced)
+    static let subheadlineMonoFont = Font.system(.subheadline, design: .monospaced, weight: .medium)
+    static let captionMonoFont = Font.system(.caption, design: .monospaced)
+    static let captionMonoSemiboldFont = Font.system(.caption, design: .monospaced, weight: .semibold)
 
     /// Jump-to-bottom FAB icon font (36pt)
     static let fabIconFont = Font.system(size: 36)

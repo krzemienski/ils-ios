@@ -8,37 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		000000000000000000000001 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
-		000000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000012 /* ContentView.swift */; };
 		000000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000013 /* Assets.xcassets */; };
 		000000000000000000000020 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
 		000000000000000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
 		000000000000000000000022 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
-		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
 		USMC00000000000000001 /* UserMessageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = USMC00000000000000002 /* UserMessageCard.swift */; };
 		ASTC00000000000000001 /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ASTC00000000000000002 /* AssistantCard.swift */; };
 		STIV00000000000000001 /* StreamingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = STIV00000000000000002 /* StreamingIndicatorView.swift */; };
-		ERMV00000000000000001 /* ErrorMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ERMV00000000000000002 /* ErrorMessageView.swift */; };
-		SYMV00000000000000001 /* SystemMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYMV00000000000000002 /* SystemMessageView.swift */; };
 		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
 		000000000000000000000026 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
 		000000000000000000000027 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
-		000000000000000000000028 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000038 /* ProjectsListView.swift */; };
-		00000000000000000000002A /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003A /* ProjectDetailView.swift */; };
 		00000000000000000000002B /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
-		00000000000000000000002C /* PluginsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003C /* PluginsListView.swift */; };
 		00000000000000000000002D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
-		00000000000000000000002E /* MCPServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003E /* MCPServerListView.swift */; };
 		00000000000000000000002F /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
-		000000000000000000000040 /* SkillsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000050 /* SkillsListView.swift */; };
 		000000000000000000000041 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
 		000000000000000000000042 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* SettingsView.swift */; };
-		000000000000000000000043 /* SessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000053 /* SessionsListView.swift */; };
 		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
 		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
-		000000000000000000000046 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* DashboardView.swift */; };
 		000000000000000000000047 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
-		0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000E2 /* ProjectSessionsListView.swift */; };
 		01D90FD32F366E1D0072CFC0 /* XCUITestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD22F366E1D0072CFC0 /* XCUITestBase.swift */; };
 		01D90FD62F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD52F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift */; };
 		01D90FD82F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD72F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift */; };
@@ -52,8 +40,6 @@
 		01D90FE82F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE72F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift */; };
 		01D90FEA2F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE92F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift */; };
 		0A8D2F5C6ED7B3BB633DCEA3 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */; };
-		4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */; };
-		55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */; };
 		5910023177AFED4B86044C84 /* ObsidianTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F7C11B6F8F2CBD21AE63D6 /* ObsidianTheme.swift */; };
 		APPTHEM000000000000001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919526D04FDC331F2C26E684 /* AppTheme.swift */; };
 		THMMGR0000000000000001 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = THMMGR0000000000000002 /* ThemeManager.swift */; };
@@ -79,7 +65,6 @@
 		CODEBL0000000000000001 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CODEBL0000000000000002 /* CodeBlockView.swift */; };
 		CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONNBN0000000000000002 /* ConnectionBanner.swift */; };
 		EMTYST0000000000000001 /* EmptyEntityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EMTYST0000000000000002 /* EmptyEntityState.swift */; };
-		FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */; };
 		FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8864999F593F3FBA35FE5962 /* SessionTemplate.swift */; };
 		FILBRW0000000000000001 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILBRW0000000000000002 /* FileBrowserView.swift */; };
 		HIGHLIGHT000000000000081 /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = HIGHLIGHT000000000000091 /* HighlightSwift */; };
@@ -105,6 +90,9 @@
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
 		0310AFDDB11F9369D57CC482 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDFF49EABB28E45F8F82637 /* BrowserView.swift */; };
+		D7BA05A1B0B5380CADE68B8E /* PluginModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79946942CF0E1CA622F3F08E /* PluginModels.swift */; };
+		4A4F0079485E39F4257E6521 /* MCPServerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5ED4396C17770B53BBDCBD6 /* MCPServerItem.swift */; };
+		F7997090BDD38B6FB3984C09 /* MCPServerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE24B4A8201ACA8EE6C5F2F /* MCPServerDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,37 +108,25 @@
 /* Begin PBXFileReference section */
 		000000000000000000000010 /* ILSApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000011 /* ILSAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSAppApp.swift; sourceTree = "<group>"; };
-		000000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		000000000000000000000014 /* ILSApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSApp.entitlements; sourceTree = "<group>"; };
 		000000000000000000000030 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
 		000000000000000000000031 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		000000000000000000000032 /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
-		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		USMC00000000000000002 /* UserMessageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserMessageCard.swift; sourceTree = "<group>"; };
 		ASTC00000000000000002 /* AssistantCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantCard.swift; sourceTree = "<group>"; };
 		STIV00000000000000002 /* StreamingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingIndicatorView.swift; sourceTree = "<group>"; };
-		ERMV00000000000000002 /* ErrorMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMessageView.swift; sourceTree = "<group>"; };
-		SYMV00000000000000002 /* SystemMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMessageView.swift; sourceTree = "<group>"; };
 		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		000000000000000000000036 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		000000000000000000000037 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000000038 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
-		00000000000000000000003A /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
 		00000000000000000000003B /* ProjectsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsViewModel.swift; sourceTree = "<group>"; };
-		00000000000000000000003C /* PluginsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003D /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
-		00000000000000000000003E /* MCPServerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003F /* MCPViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000000050 /* SkillsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000051 /* SkillsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		000000000000000000000053 /* SessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000000056 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
-		0000000000000000000000E2 /* ProjectSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionsListView.swift; sourceTree = "<group>"; };
 		01D90FD22F366E1D0072CFC0 /* XCUITestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCUITestBase.swift; sourceTree = "<group>"; };
 		01D90FD52F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario01_CompleteSessionLifecycle.swift; sourceTree = "<group>"; };
 		01D90FD72F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario02_MultiSectionNavigation.swift; sourceTree = "<group>"; };
@@ -163,12 +139,9 @@
 		01D90FE52F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario09_SkillsManagement.swift; sourceTree = "<group>"; };
 		01D90FE72F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario10_DashboardAndAnalytics.swift; sourceTree = "<group>"; };
 		01D90FE92F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario11_ExtendedChatConversation.swift; sourceTree = "<group>"; };
-		0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditMCPServerView.swift; sourceTree = "<group>"; };
-		16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplatesView.swift; sourceTree = "<group>"; };
 		2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		4F5959087095F5F603D0B826 /* AppLogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppLogger.swift; path = Services/AppLogger.swift; sourceTree = "<group>"; };
 		68E0683F219C707581CC1582 /* BaseListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BaseListViewModel.swift; sourceTree = "<group>"; };
-		6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MCPImportExportView.swift; sourceTree = "<group>"; };
 		6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
 		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		919526D04FDC331F2C26E684 /* AppTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
@@ -214,6 +187,9 @@
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
 		8BDFF49EABB28E45F8F82637 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
+		79946942CF0E1CA622F3F08E /* PluginModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginModels.swift; sourceTree = "<group>"; };
+		A5ED4396C17770B53BBDCBD6 /* MCPServerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerItem.swift; sourceTree = "<group>"; };
+		ABE24B4A8201ACA8EE6C5F2F /* MCPServerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -259,7 +235,6 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000011 /* ILSAppApp.swift */,
-				000000000000000000000012 /* ContentView.swift */,
 				000000000000000000000060 /* Theme */,
 				000000000000000000000061 /* Services */,
 				000000000000000000000062 /* Views */,
@@ -363,12 +338,9 @@
 		000000000000000000000071 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000034 /* MessageView.swift */,
 				USMC00000000000000002 /* UserMessageCard.swift */,
 				ASTC00000000000000002 /* AssistantCard.swift */,
 				STIV00000000000000002 /* StreamingIndicatorView.swift */,
-				ERMV00000000000000002 /* ErrorMessageView.swift */,
-				SYMV00000000000000002 /* SystemMessageView.swift */,
 				MARKDOWN0000000000000002 /* MarkdownTextView.swift */,
 				000000000000000000000035 /* CommandPaletteView.swift */,
 				000000000000000000000036 /* ChatView.swift */,
@@ -379,9 +351,6 @@
 		000000000000000000000072 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000038 /* ProjectsListView.swift */,
-				00000000000000000000003A /* ProjectDetailView.swift */,
-				0000000000000000000000E2 /* ProjectSessionsListView.swift */,
 			);
 			path = Projects;
 			sourceTree = "<group>";
@@ -389,7 +358,6 @@
 		000000000000000000000073 /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000003C /* PluginsListView.swift */,
 			);
 			path = Plugins;
 			sourceTree = "<group>";
@@ -397,9 +365,6 @@
 		000000000000000000000074 /* MCP */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000003E /* MCPServerListView.swift */,
-				0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */,
-				6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */,
 			);
 			path = MCP;
 			sourceTree = "<group>";
@@ -407,7 +372,6 @@
 		000000000000000000000075 /* Skills */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000050 /* SkillsListView.swift */,
 			);
 			path = Skills;
 			sourceTree = "<group>";
@@ -415,10 +379,8 @@
 		000000000000000000000076 /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000053 /* SessionsListView.swift */,
 				000000000000000000000054 /* NewSessionView.swift */,
 				D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */,
-				16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -437,7 +399,6 @@
 		000000000000000000000078 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000056 /* DashboardView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -471,6 +432,8 @@
 		2F5AAE5FE7854694374E1A23 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				79946942CF0E1CA622F3F08E /* PluginModels.swift */,
+				A5ED4396C17770B53BBDCBD6 /* MCPServerItem.swift */,
 				8864999F593F3FBA35FE5962 /* SessionTemplate.swift */,
 				2511DAD2E05644EA9E65F4F0 /* ChatMessage.swift */,
 			);
@@ -592,6 +555,7 @@
 			isa = PBXGroup;
 			children = (
 				8BDFF49EABB28E45F8F82637 /* BrowserView.swift */,
+				ABE24B4A8201ACA8EE6C5F2F /* MCPServerDetailView.swift */,
 			);
 			path = Browser;
 			sourceTree = "<group>";
@@ -699,46 +663,31 @@
 			files = (
 				0310AFDDB11F9369D57CC482 /* BrowserView.swift in Sources */,
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
-				000000000000000000000002 /* ContentView.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
 				7103F0FECA16410192750881 /* ChatMessage.swift in Sources */,
 				000000000000000000000021 /* APIClient.swift in Sources */,
 				000000000000000000000022 /* SSEClient.swift in Sources */,
-				000000000000000000000024 /* MessageView.swift in Sources */,
 				USMC00000000000000001 /* UserMessageCard.swift in Sources */,
 				ASTC00000000000000001 /* AssistantCard.swift in Sources */,
 				STIV00000000000000001 /* StreamingIndicatorView.swift in Sources */,
-				ERMV00000000000000001 /* ErrorMessageView.swift in Sources */,
-				SYMV00000000000000001 /* SystemMessageView.swift in Sources */,
 				MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */,
 				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
 				000000000000000000000026 /* ChatView.swift in Sources */,
 				000000000000000000000027 /* ChatViewModel.swift in Sources */,
-				000000000000000000000046 /* DashboardView.swift in Sources */,
 				000000000000000000000047 /* DashboardViewModel.swift in Sources */,
-				000000000000000000000028 /* ProjectsListView.swift in Sources */,
-				00000000000000000000002A /* ProjectDetailView.swift in Sources */,
-				0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */,
 				00000000000000000000002B /* ProjectsViewModel.swift in Sources */,
-				00000000000000000000002C /* PluginsListView.swift in Sources */,
 				00000000000000000000002D /* PluginsViewModel.swift in Sources */,
-				00000000000000000000002E /* MCPServerListView.swift in Sources */,
 				00000000000000000000002F /* MCPViewModel.swift in Sources */,
-				000000000000000000000040 /* SkillsListView.swift in Sources */,
 				000000000000000000000041 /* SkillsViewModel.swift in Sources */,
 				000000000000000000000042 /* SettingsView.swift in Sources */,
-				000000000000000000000043 /* SessionsListView.swift in Sources */,
 				000000000000000000000044 /* NewSessionView.swift in Sources */,
 				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
 				76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */,
-				55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */,
 				FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */,
-				FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */,
 				71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */,
 				C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */,
 				5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */,
 				E2C1C5D774B7BE4FAE456771 /* ThemePickerView.swift in Sources */,
-				4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */,
 				9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */,
 				ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */,
 				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
@@ -774,7 +723,10 @@
 				SBRV00000000000000001 /* SidebarRootView.swift in Sources */,
 				SDBV00000000000000001 /* SidebarView.swift in Sources */,
 				SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */,
-			);
+			
+				D7BA05A1B0B5380CADE68B8E /* PluginModels.swift in Sources */,
+				4A4F0079485E39F4257E6521 /* MCPServerItem.swift in Sources */,
+				F7997090BDD38B6FB3984C09 /* MCPServerDetailView.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		UITEST00000000000000000B /* Sources */ = {

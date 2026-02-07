@@ -11,7 +11,7 @@ import MarkdownUI
 struct ILSCodeHighlighter: CodeSyntaxHighlighter {
     func highlightCode(_ code: String, language: String?) -> Text {
         Text(code)
-            .font(.system(.body, design: .monospaced))
+            .font(ILSTheme.codeFont)
             .foregroundColor(ILSTheme.textPrimary)
     }
 }

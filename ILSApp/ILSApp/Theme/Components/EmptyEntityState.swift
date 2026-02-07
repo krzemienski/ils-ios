@@ -26,17 +26,17 @@ struct EmptyEntityState: View {
     var body: some View {
         VStack(spacing: ILSTheme.spaceL) {
             Image(systemName: entityType.icon)
-                .font(.system(.largeTitle)) // Decorative icon, Dynamic Type compatible
+                .font(ILSTheme.largeTitleFont) // Decorative icon, Dynamic Type compatible
                 .foregroundStyle(entityType.gradient)
                 .padding(.bottom, ILSTheme.spaceS)
 
             Text(title)
-                .font(.title3.weight(.semibold))
+                .font(ILSTheme.title3Font)
                 .foregroundColor(ILSTheme.textPrimary)
                 .multilineTextAlignment(.center)
 
             Text(description)
-                .font(.subheadline)
+                .font(ILSTheme.subheadlineFont)
                 .foregroundColor(ILSTheme.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
@@ -44,7 +44,7 @@ struct EmptyEntityState: View {
             if let actionTitle = actionTitle, let action = action {
                 Button(action: action) {
                     Text(actionTitle)
-                        .font(.subheadline.weight(.semibold))
+                        .font(ILSTheme.subheadlineSemiboldFont)
                         .foregroundColor(.white)
                         .padding(.horizontal, ILSTheme.spaceXL)
                         .padding(.vertical, ILSTheme.spaceS)
