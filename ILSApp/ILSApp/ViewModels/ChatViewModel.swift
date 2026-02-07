@@ -312,6 +312,26 @@ class ChatViewModel: ObservableObject {
         sseClient.startStream(request: request)
     }
 
+    /// Retry by removing the assistant response and resending the preceding user message
+    func retryMessage(_ message: ChatMessage, projectId: UUID?) {
+        guard !message.isUser else { return }
+        // Find the index of this assistant message
+        guard let assistantIndex = messages.firstIndex(where: { $0.id == message.id }) else { return }
+        // Find the preceding user message
+        let precedingUserMessage = messages[..<assistantIndex].last(where: { $0.isUser })
+        // Remove the assistant message
+        messages = messages.filter { $0.id != message.id }
+        // Resend if we found a user message
+        if let userMessage = precedingUserMessage {
+            sendMessage(prompt: userMessage.text, projectId: projectId)
+        }
+    }
+
+    /// Delete a message from the local messages array
+    func deleteMessage(_ message: ChatMessage) {
+        messages = messages.filter { $0.id != message.id }
+    }
+
     func cancel() {
         // Notify backend to kill Claude CLI process (best-effort, fire-and-forget)
         if let sessionId = sessionId, let apiClient = apiClient {

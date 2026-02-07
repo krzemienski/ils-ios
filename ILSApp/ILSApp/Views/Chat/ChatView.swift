@@ -14,6 +14,8 @@ struct ChatView: View {
     @State private var showForkAlert = false
     @State private var forkedSession: ChatSession?
     @State private var navigateToForked: ChatSession?
+    @State private var showDeleteConfirmation = false
+    @State private var messageToDelete: ChatMessage?
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
 
@@ -90,6 +92,19 @@ struct ChatView: View {
                 Text("Created new session: \(forked.name ?? "Unnamed")")
             }
         }
+        .alert("Delete Message", isPresented: $showDeleteConfirmation) {
+            Button("Delete", role: .destructive) {
+                if let msg = messageToDelete {
+                    viewModel.deleteMessage(msg)
+                    messageToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                messageToDelete = nil
+            }
+        } message: {
+            Text("Are you sure you want to delete this message?")
+        }
         .navigationDestination(item: $navigateToForked) { session in
             ChatView(session: session)
         }
@@ -148,8 +163,17 @@ struct ChatView: View {
     private var messagesContent: some View {
         LazyVStack(alignment: .leading, spacing: ILSTheme.spacingM) {
             ForEach(viewModel.messages) { message in
-                MessageView(message: message)
-                    .id(message.id)
+                MessageView(
+                    message: message,
+                    onRetry: { msg in
+                        viewModel.retryMessage(msg, projectId: session.projectId)
+                    },
+                    onDelete: { msg in
+                        messageToDelete = msg
+                        showDeleteConfirmation = true
+                    }
+                )
+                .id(message.id)
             }
 
             if shouldShowTypingIndicator() {
