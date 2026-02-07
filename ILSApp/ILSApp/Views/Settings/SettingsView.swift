@@ -19,6 +19,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             connectionSection
+            remoteAccessSection
             manageSection
             generalSettingsSection
             apiKeySection
@@ -96,6 +97,32 @@ struct SettingsView: View {
                 Text("Configure the ILS backend server address")
             }
 
+    }
+
+    @ViewBuilder
+    private var remoteAccessSection: some View {
+        Section {
+            NavigationLink {
+                TunnelSettingsView()
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "network")
+                        .font(.body)
+                        .foregroundColor(ILSTheme.info)
+                        .frame(width: 28, height: 28)
+                        .background(ILSTheme.info.opacity(0.15))
+                        .cornerRadius(6)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Remote Access")
+                        Text("Cloudflare Tunnel")
+                            .font(ILSTheme.captionFont)
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            }
+        } header: {
+            Text("Remote Access")
+        }
     }
 
     @ViewBuilder

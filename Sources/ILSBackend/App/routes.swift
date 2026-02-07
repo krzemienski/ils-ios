@@ -36,6 +36,8 @@ func routes(_ app: Application) throws {
     try api.register(collection: ConfigController())
     try api.register(collection: StatsController())
     try api.register(collection: AuthController())
+    try api.register(collection: SystemController())
+    try api.register(collection: TunnelController())
 }
 
 /// Detect Claude CLI version by running `claude --version`
