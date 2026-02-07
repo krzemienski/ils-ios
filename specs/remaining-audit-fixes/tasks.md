@@ -245,7 +245,7 @@ After POC validated, clean up any rough edges.
 
 Per FUNCTIONAL VALIDATION MANDATE: no mocks, no test files — real app, real simulator, real evidence.
 
-- [ ] 3.1 Build and install on simulator
+- [x] 3.1 Build and install on simulator
   - **Do**:
     1. Boot simulator: `xcrun simctl boot 50523130-57AA-48B0-ABD0-4D59CE455F14` (if not booted)
     2. Clean build and install: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -configuration Debug -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build`

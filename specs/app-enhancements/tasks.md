@@ -332,7 +332,7 @@ Focus: Add SSE event IDs (server + client), implement exponential backoff, repla
   - **Done when**: Both builds succeed with zero errors
   - **Commit**: `chore(app): pass streaming quality checkpoint` (only if fixes needed)
 
-- [ ] 3.4 Add auto-scroll tracking, jump-to-bottom FAB, and streaming stats display
+- [x] 3.4 Add auto-scroll tracking, jump-to-bottom FAB, and streaming stats display
   - **Do**:
     1. In `ChatView.swift`, add state: `@State private var isUserScrolledUp = false`, `@State private var showJumpToBottom = false`
     2. Add `.onScrollGeometryChange` (iOS 17+) to detect when user scrolls up from bottom
@@ -364,7 +364,7 @@ Focus: Add SSE event IDs (server + client), implement exponential backoff, repla
 
 Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsController optimization, print()->logger.
 
-- [ ] 4.1 Create global ErrorMiddleware for structured JSON errors
+- [x] 4.1 Create global ErrorMiddleware for structured JSON errors
   - **Do**:
     1. Create `Sources/ILSBackend/Middleware/ILSErrorMiddleware.swift`
     2. Implement `AsyncMiddleware` per design.md section 4.1:
@@ -380,7 +380,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
   - _Requirements: FR-22_
   - _Design: Phase 4 — 4.1 Global ErrorMiddleware_
 
-- [ ] 4.2 Add request validation to ChatController
+- [x] 4.2 Add request validation to ChatController
   - **Do**:
     1. In `ChatController.stream()`, add validation before Claude CLI call:
        ```
@@ -403,7 +403,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
   - _Requirements: FR-23_
   - _Design: Phase 4 — 4.2 Request Validation_
 
-- [ ] 4.3 Add pagination to SessionsController.list
+- [x] 4.3 Add pagination to SessionsController.list
   - **Do**:
     1. Add `PaginatedResponse<T>` to `Sources/ILSShared/DTOs/PaginatedResponse.swift`:
        ```
@@ -427,7 +427,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
   - _Requirements: FR-24_
   - _Design: Phase 4 — 4.3 Sessions Pagination_
 
-- [ ] V5 [VERIFY] Quality checkpoint: backend builds + curl validation
+- [x] V5 [VERIFY] Quality checkpoint: backend builds + curl validation
   - **Do**:
     1. Build backend
     2. Start backend: `PORT=9090 swift run ILSBackend &`

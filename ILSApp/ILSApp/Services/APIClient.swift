@@ -47,7 +47,7 @@ actor APIClient {
     func getHealth() async throws -> HealthResponse {
         let url = URL(string: "\(baseURL)/health")!
         let (data, response) = try await session.data(from: url)
-        try validateResponse(response)
+        try validateResponse(response, data: data)
         return try decoder.decode(HealthResponse.self, from: data)
     }
 
@@ -68,7 +68,7 @@ actor APIClient {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await performWithRetry(request: request)
-        try validateResponse(response)
+        try validateResponse(response, data: data)
 
         // Cache the raw data
         cache[cacheKey] = CacheEntry(data: data, timestamp: Date())
@@ -85,7 +85,7 @@ actor APIClient {
         request.httpBody = try encoder.encode(body)
 
         let (data, response) = try await performWithRetry(request: request)
-        try validateResponse(response)
+        try validateResponse(response, data: data)
 
         // Invalidate cache for exact resource + list endpoint
         invalidateCacheForMutation(path: path)
@@ -102,7 +102,7 @@ actor APIClient {
         request.httpBody = try encoder.encode(body)
 
         let (data, response) = try await performWithRetry(request: request)
-        try validateResponse(response)
+        try validateResponse(response, data: data)
 
         // Invalidate cache for exact resource + list endpoint
         invalidateCacheForMutation(path: path)
@@ -117,7 +117,7 @@ actor APIClient {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await performWithRetry(request: request)
-        try validateResponse(response)
+        try validateResponse(response, data: data)
 
         // Invalidate cache for exact resource + list endpoint
         invalidateCacheForMutation(path: path)
@@ -186,12 +186,18 @@ actor APIClient {
         throw APIError.networkError(lastError ?? URLError(.unknown))
     }
 
-    private func validateResponse(_ response: URLResponse) throws {
+    private func validateResponse(_ response: URLResponse, data: Data? = nil) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
+            // Try to decode structured error from backend
+            if let data = data,
+               let errorBody = try? decoder.decode(ServerErrorBody.self, from: data),
+               errorBody.error {
+                throw APIError.serverError(code: errorBody.code, reason: errorBody.reason)
+            }
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
     }
@@ -225,6 +231,13 @@ struct HealthResponse: Decodable {
     let port: Int?
 }
 
+/// Decoded structured error from backend
+private struct ServerErrorBody: Decodable {
+    let error: Bool
+    let code: String
+    let reason: String
+}
+
 // MARK: - Error Types
 
 enum APIError: Error, LocalizedError {
@@ -232,6 +245,7 @@ enum APIError: Error, LocalizedError {
     case httpError(statusCode: Int)
     case decodingError(Error)
     case networkError(Error)
+    case serverError(code: String, reason: String)
 
     var errorDescription: String? {
         switch self {
@@ -257,6 +271,19 @@ enum APIError: Error, LocalizedError {
             return "Failed to decode response: \(error.localizedDescription)"
         case .networkError(let error):
             return "Network error: \(error.localizedDescription)"
+        case .serverError(let code, let reason):
+            switch code {
+            case "VALIDATION_ERROR":
+                return "Please check your input: \(reason)"
+            case "NOT_FOUND":
+                return "Resource not found"
+            case "SERVICE_UNAVAILABLE":
+                return "Service temporarily unavailable. Please try again."
+            case "INTERNAL_ERROR":
+                return "Something went wrong. Please try again."
+            default:
+                return reason
+            }
         }
     }
 
@@ -271,6 +298,8 @@ enum APIError: Error, LocalizedError {
         case .invalidResponse, .decodingError:
             // These indicate a fundamental problem, not retriable
             return false
+        case .serverError(let code, _):
+            return code == "INTERNAL_ERROR" || code == "SERVICE_UNAVAILABLE"
         }
     }
 }

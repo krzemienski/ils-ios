@@ -1,14 +1,7 @@
 import Foundation
 import Vapor
 import ILSShared
-
-/// Unbuffered stderr logging for debugging
-private func debugLog(_ message: String) {
-    let msg = "[EXECUTOR] " + message + "\n"
-    if let data = msg.data(using: .utf8) {
-        FileHandle.standardError.write(data)
-    }
-}
+import Logging
 
 /// Actor managing Claude CLI subprocess execution with streaming JSON output.
 ///
@@ -42,6 +35,9 @@ private func debugLog(_ message: String) {
 /// - `tool_use` → `toolUse`
 /// - `total_cost_usd` → `totalCostUSD`
 actor ClaudeExecutorService {
+    /// Structured logger for ClaudeExecutor operations
+    private static let logger = Logger(label: "ils.claude-executor")
+
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
 
@@ -107,9 +103,9 @@ actor ClaudeExecutorService {
         AsyncThrowingStream { continuation in
             // Build the full shell command
             let command = Self.buildCommand(options: options)
-            debugLog("Command: \(command)")
-            debugLog("Prompt: \(prompt.prefix(100))")
-            debugLog("Working dir: \(workingDirectory ?? "nil")")
+            Self.logger.debug("Command: \(command)")
+            Self.logger.debug("Prompt: \(prompt.prefix(100))")
+            Self.logger.debug("Working dir: \(workingDirectory ?? "nil")")
 
             // Configure process
             let process = Process()
@@ -145,9 +141,9 @@ actor ClaudeExecutorService {
             // Start process
             do {
                 try process.run()
-                debugLog("Process started (PID: \(process.processIdentifier))")
+                Self.logger.debug("Process started (PID: \(process.processIdentifier))")
             } catch {
-                debugLog("Failed to start process: \(error)")
+                Self.logger.debug("Failed to start process: \(error)")
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch claude: \(error.localizedDescription)"
@@ -162,7 +158,7 @@ actor ClaudeExecutorService {
 
             let timeoutWork = DispatchWorkItem {
                 didTimeout = true
-                debugLog("TIMEOUT: No stdout data received within 30 seconds, terminating process")
+                Self.logger.debug("TIMEOUT: No stdout data received within 30 seconds, terminating process")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
             }
@@ -171,7 +167,7 @@ actor ClaudeExecutorService {
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
                     didTimeout = true
-                    debugLog("TOTAL TIMEOUT: Process running for >5 minutes, terminating")
+                    Self.logger.debug("TOTAL TIMEOUT: Process running for >5 minutes, terminating")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
                 }
@@ -231,7 +227,7 @@ actor ClaudeExecutorService {
                 let exitCode = process.terminationStatus
                 if exitCode != 0 {
                     if didTimeout {
-                        debugLog("Process killed by timeout (exit code \(exitCode))")
+                        Self.logger.debug("Process killed by timeout (exit code \(exitCode))")
                         continuation.yield(.error(StreamError(
                             code: "TIMEOUT",
                             message: "Claude CLI timed out — the AI service may be busy. Please try again."
@@ -240,7 +236,7 @@ actor ClaudeExecutorService {
                         let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
                         let errText = String(data: errData, encoding: .utf8)?
                             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                        debugLog("Process exited with code \(exitCode): \(errText.prefix(500))")
+                        Self.logger.debug("Process exited with code \(exitCode): \(errText.prefix(500))")
                         if !errText.isEmpty {
                             continuation.yield(.error(StreamError(
                                 code: "PROCESS_ERROR",
@@ -249,7 +245,7 @@ actor ClaudeExecutorService {
                         }
                     }
                 } else {
-                    debugLog("Process exited successfully")
+                    Self.logger.debug("Process exited successfully")
                 }
 
                 continuation.finish()
@@ -266,7 +262,7 @@ actor ClaudeExecutorService {
     /// - Parameter sessionId: Session ID to cancel
     func cancel(sessionId: String) async {
         if let process = activeProcesses[sessionId], process.isRunning {
-            debugLog("Cancelling process for session: \(sessionId)")
+            Self.logger.debug("Cancelling process for session: \(sessionId)")
             process.terminate()
         }
         activeProcesses.removeValue(forKey: sessionId)
@@ -463,7 +459,7 @@ actor ClaudeExecutorService {
         guard let data = line.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let type = json["type"] as? String else {
-            debugLog("Failed to parse JSON line: \(line.prefix(200))")
+            Self.logger.debug("Failed to parse JSON line: \(line.prefix(200))")
             return
         }
 
@@ -478,7 +474,7 @@ actor ClaudeExecutorService {
             processResultMessage(json, continuation: continuation)
 
         default:
-            debugLog("Unknown message type: \(type)")
+            Self.logger.debug("Unknown message type: \(type)")
         }
     }
 
@@ -493,7 +489,7 @@ actor ClaudeExecutorService {
         let sessionId = json["session_id"] as? String ?? ""
         let tools = json["tools"] as? [String]
 
-        debugLog("System message: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), tools=\(tools?.count ?? 0)")
+        Self.logger.debug("System message: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), tools=\(tools?.count ?? 0)")
 
         // Handle all known subtypes — init, completion, etc.
         let systemData = SystemData(
@@ -515,7 +511,7 @@ actor ClaudeExecutorService {
         // Extract content from nested message object
         guard let messageObj = json["message"] as? [String: Any],
               let contentArray = messageObj["content"] as? [[String: Any]] else {
-            debugLog("Assistant message missing message.content")
+            Self.logger.debug("Assistant message missing message.content")
             return
         }
 
@@ -530,7 +526,7 @@ actor ClaudeExecutorService {
         if !contentBlocks.isEmpty {
             let assistantMsg = AssistantMessage(content: contentBlocks)
             continuation.yield(.assistant(assistantMsg))
-            debugLog("Yielded assistant message with \(contentBlocks.count) content blocks")
+            Self.logger.debug("Yielded assistant message with \(contentBlocks.count) content blocks")
         }
     }
 

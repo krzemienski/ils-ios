@@ -127,8 +127,8 @@
     },
     {
       "path": "ILSApp/ILSApp/Services/APIClient.swift",
-      "accessCount": 55,
-      "lastAccessed": 1770455716287,
+      "accessCount": 67,
+      "lastAccessed": 1770458101339,
       "type": "file"
     },
     {
@@ -151,8 +151,14 @@
     },
     {
       "path": "Sources/ILSBackend/Controllers/ProjectsController.swift",
-      "accessCount": 21,
-      "lastAccessed": 1770456013823,
+      "accessCount": 24,
+      "lastAccessed": 1770458031464,
+      "type": "file"
+    },
+    {
+      "path": "Sources/ILSBackend/Services/ClaudeExecutorService.swift",
+      "accessCount": 23,
+      "lastAccessed": 1770458109922,
       "type": "file"
     },
     {
@@ -163,8 +169,8 @@
     },
     {
       "path": "Sources/ILSBackend/Controllers/ChatController.swift",
-      "accessCount": 18,
-      "lastAccessed": 1770457874178,
+      "accessCount": 20,
+      "lastAccessed": 1770457959929,
       "type": "file"
     },
     {
@@ -225,12 +231,6 @@
       "path": "Package.swift",
       "accessCount": 10,
       "lastAccessed": 1770452842008,
-      "type": "file"
-    },
-    {
-      "path": "Sources/ILSBackend/Services/ClaudeExecutorService.swift",
-      "accessCount": 10,
-      "lastAccessed": 1770452842794,
       "type": "file"
     },
     {
@@ -390,16 +390,16 @@
       "type": "file"
     },
     {
+      "path": "Sources/ILSBackend/Services",
+      "accessCount": 2,
+      "lastAccessed": 1770457998614,
+      "type": "directory"
+    },
+    {
       "path": "ILSApp/ILSApp/Models/SSHConnection.swift",
       "accessCount": 1,
       "lastAccessed": 1770392785261,
       "type": "file"
-    },
-    {
-      "path": "Sources/ILSBackend/Services",
-      "accessCount": 1,
-      "lastAccessed": 1770392905711,
-      "type": "directory"
     },
     {
       "path": "ILSApp/ILSApp/Views/Settings/SSHConnectionFormView.swift",
