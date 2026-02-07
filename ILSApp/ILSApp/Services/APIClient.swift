@@ -128,6 +128,17 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
+    // MARK: - Session Helpers
+
+    private struct RenameBody: Encodable {
+        let name: String
+    }
+
+    func renameSession<T: Decodable>(id: UUID, name: String) async throws -> T {
+        let body = RenameBody(name: name)
+        return try await put("/sessions/\(id.uuidString)", body: body)
+    }
+
     func invalidateCache(for path: String? = nil) {
         if let path = path {
             cache.removeValue(forKey: path)

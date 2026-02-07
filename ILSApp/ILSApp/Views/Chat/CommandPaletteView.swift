@@ -61,13 +61,27 @@ struct CommandPaletteView: View {
         }
     }
 
+    private static let allBuiltInCommands: [CommandItem] = [
+        CommandItem(name: "/compact", description: "Compact conversation history to reduce context usage", icon: "arrow.down.right.and.arrow.up.left"),
+        CommandItem(name: "/clear", description: "Clear conversation history and start fresh", icon: "trash"),
+        CommandItem(name: "/config", description: "View or modify Claude Code configuration", icon: "gear"),
+        CommandItem(name: "/cost", description: "Show token usage and cost for this session", icon: "dollarsign.circle"),
+        CommandItem(name: "/doctor", description: "Run diagnostics to check for common issues", icon: "stethoscope"),
+        CommandItem(name: "/help", description: "Show available commands and usage information", icon: "questionmark.circle"),
+        CommandItem(name: "/init", description: "Initialize a new CLAUDE.md project memory file", icon: "doc.badge.plus"),
+        CommandItem(name: "/login", description: "Log in to your Anthropic account", icon: "person.crop.circle.badge.checkmark"),
+        CommandItem(name: "/logout", description: "Log out of your Anthropic account", icon: "person.crop.circle.badge.xmark"),
+        CommandItem(name: "/mcp", description: "View and manage MCP server connections", icon: "server.rack"),
+        CommandItem(name: "/memory", description: "Edit CLAUDE.md project memory file", icon: "brain"),
+        CommandItem(name: "/model", description: "Switch the active Claude model", icon: "cpu"),
+        CommandItem(name: "/permissions", description: "View and manage tool permissions", icon: "lock.shield"),
+        CommandItem(name: "/review", description: "Request a code review of recent changes", icon: "eye"),
+        CommandItem(name: "/status", description: "Show current session status and connection info", icon: "info.circle"),
+        CommandItem(name: "/terminal-setup", description: "Install shell integration for enhanced terminal support", icon: "terminal"),
+    ]
+
     private var builtInCommands: [CommandItem] {
-        [
-            CommandItem(name: "/help", description: "Show help", icon: "questionmark.circle"),
-            CommandItem(name: "/compact", description: "Compact conversation", icon: "arrow.down.right.and.arrow.up.left"),
-            CommandItem(name: "/clear", description: "Clear conversation", icon: "trash"),
-            CommandItem(name: "/config", description: "Show configuration", icon: "gear"),
-        ].filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
+        Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
     }
 
     private var filteredSkills: [Skill] {

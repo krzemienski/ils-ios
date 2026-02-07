@@ -199,7 +199,11 @@ struct NewSessionView: View {
             let request = CreateSessionRequest(
                 projectId: selectedProject?.id,
                 name: sessionName.isEmpty ? nil : sessionName,
-                model: selectedModel
+                model: selectedModel,
+                permissionMode: PermissionMode(rawValue: permissionMode),
+                systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
+                maxBudgetUSD: Double(maxBudget),
+                maxTurns: Int(maxTurns)
             )
 
             do {

@@ -10,6 +10,8 @@ struct SessionsListView: View {
     @State private var showErrorAlert = false
     @State private var errorAlertMessage = ""
     @State private var navigateToSession: ChatSession?
+    @State private var sessionToRename: ChatSession?
+    @State private var renameText = ""
 
     private var filteredSessions: [ChatSession] {
         guard !searchText.isEmpty else { return viewModel.sessions }
@@ -49,6 +51,15 @@ struct SessionsListView: View {
                     }
                     .contentShape(Rectangle())
                     .accessibilityIdentifier("session-\(session.id)")
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            renameText = session.name ?? ""
+                            sessionToRename = session
+                        } label: {
+                            Label("Rename", systemImage: "pencil")
+                        }
+                        .tint(ILSTheme.accent)
+                    }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
                             sessionToDelete = session
@@ -57,6 +68,12 @@ struct SessionsListView: View {
                         }
                     }
                     .contextMenu {
+                        Button {
+                            renameText = session.name ?? ""
+                            sessionToRename = session
+                        } label: {
+                            Label("Rename", systemImage: "pencil")
+                        }
                         Button {
                             UIPasteboard.general.string = session.id.uuidString
                         } label: {
@@ -123,6 +140,30 @@ struct SessionsListView: View {
             Button("Cancel", role: .cancel) { sessionToDelete = nil }
         } message: {
             Text("This will permanently delete this session and all its messages.")
+        }
+        .alert("Rename Session", isPresented: Binding(
+            get: { sessionToRename != nil },
+            set: { if !$0 { sessionToRename = nil } }
+        )) {
+            TextField("Session Name", text: $renameText)
+            Button("Rename") {
+                if let session = sessionToRename {
+                    Task {
+                        do {
+                            let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                            await viewModel.loadSessions(refresh: true)
+                            HapticManager.notification(.success)
+                        } catch {
+                            errorAlertMessage = error.localizedDescription
+                            showErrorAlert = true
+                        }
+                    }
+                    sessionToRename = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { sessionToRename = nil }
+        } message: {
+            Text("Enter a new name for this session.")
         }
         .alert("Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}

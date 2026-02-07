@@ -86,11 +86,7 @@ struct SkillsListView: View {
                         }
                     } else {
                         ForEach(viewModel.gitHubResults) { result in
-                            GitHubSkillRow(result: result) {
-                                Task {
-                                    _ = await viewModel.installFromGitHub(result: result)
-                                }
-                            }
+                            GitHubSkillRow(result: result, viewModel: viewModel)
                         }
                     }
                 } header: {
@@ -514,9 +510,10 @@ struct SkillEditorView: View {
 
 struct GitHubSkillRow: View {
     let result: GitHubSearchResult
-    let onInstall: () -> Void
+    let viewModel: SkillsViewModel
     @State private var isInstalling = false
     @State private var isInstalled = false
+    @State private var installError: String?
 
     var body: some View {
         HStack {
@@ -538,23 +535,36 @@ struct GitHubSkillRow: View {
                             .font(.caption2)
                     }
                     .foregroundColor(ILSTheme.warning)
+
+                    if let error = installError {
+                        Text(error)
+                            .font(.caption2)
+                            .foregroundColor(ILSTheme.error)
+                            .lineLimit(1)
+                    }
                 }
             }
 
             Spacer()
 
             if isInstalled {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(ILSTheme.success)
                 Text("Installed")
                     .font(.caption)
                     .foregroundColor(ILSTheme.success)
             } else {
                 Button(action: {
-                    isInstalling = true
-                    onInstall()
-                    // Optimistically show installed after a delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    Task {
+                        isInstalling = true
+                        installError = nil
+                        let success = await viewModel.installFromGitHub(result: result)
                         isInstalling = false
-                        isInstalled = true
+                        if success {
+                            isInstalled = true
+                        } else {
+                            installError = "Install failed"
+                        }
                     }
                 }) {
                     if isInstalling {
@@ -571,6 +581,7 @@ struct GitHubSkillRow: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .disabled(isInstalling)
             }
         }
         .padding(.vertical, 4)

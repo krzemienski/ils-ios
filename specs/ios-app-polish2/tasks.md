@@ -166,7 +166,7 @@ Focus: Replace sidebar-as-sheet with TabView. This is the single highest-impact 
 
 Focus: Fix 8 broken features identified in audit. No new features, just making existing ones work correctly.
 
-- [ ] 2.1 Fix CreateSessionRequest to send advanced options
+- [x] 2.1 Fix CreateSessionRequest to send advanced options
   - **Do**:
     1. In `NewSessionView.swift`, find `createSession()` method (~line 199)
     2. The `CreateSessionRequest` init already accepts systemPrompt, maxBudget, etc. in `Sources/ILSShared/DTOs/Requests.swift`
@@ -178,7 +178,7 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
   - **Commit**: `fix(ios): send advanced options in CreateSessionRequest`
   - _Requirements: AC-8.1, AC-8.2, FR-5.1_
 
-- [ ] 2.2 Fix skill install optimistic state
+- [x] 2.2 Fix skill install optimistic state
   - **Do**:
     1. In `SkillsListView.swift` or `SkillsViewModel.swift`, find the install handler for GitHub skills
     2. Remove the hardcoded 2-second `Task.sleep` / `DispatchQueue.asyncAfter` delay
@@ -190,13 +190,13 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
   - **Commit**: `fix(ios): show real skill install status instead of optimistic delay`
   - _Requirements: AC-15.1, AC-15.2, AC-15.3, AC-15.4, FR-5.4_
 
-- [ ] 2.3 [VERIFY] Quality checkpoint after parity fixes batch 1
+- [x] 2.3 [VERIFY] Quality checkpoint after parity fixes batch 1
   - **Do**: Run iOS build to verify no compile errors from 2.1-2.2
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
   - **Done when**: Build succeeds
   - **Commit**: `chore(ios): pass quality checkpoint` (only if fixes needed)
 
-- [ ] 2.4 Add session rename (swipe action + backend PUT endpoint)
+- [x] 2.4 Add session rename (swipe action + backend PUT endpoint)
   - **Do**:
     1. In `Sources/ILSBackend/Controllers/SessionsController.swift`, add `PUT /sessions/:id` route that updates session name in the session JSON file
     2. In `SessionsController.boot(routes:)`, register: `sessions.put(":id", use: rename)`
@@ -211,7 +211,7 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
   - **Commit**: `feat(sessions): add rename via swipe action and PUT endpoint`
   - _Requirements: AC-11.1, AC-11.2, FR-5.6_
 
-- [ ] 2.5 Add session export as markdown via share sheet
+- [x] 2.5 Add session export as markdown via share sheet
   - **Do**:
     1. In `SessionInfoView.swift`, add "Export" button that generates markdown from session messages
     2. Markdown format: `# Session: {name}\n\nModel: {model}\nCreated: {date}\n\n---\n\n` + each message as `## User\n{text}\n\n## Assistant\n{text}\n\n`
@@ -223,7 +223,7 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
   - **Commit**: `feat(sessions): add markdown export via share sheet`
   - _Requirements: AC-11.3, AC-11.4, AC-11.5, FR-5.7_
 
-- [ ] 2.6 Dynamic marketplace categories from API data
+- [x] 2.6 Dynamic marketplace categories from API data
   - **Do**:
     1. In `PluginsViewModel.swift` or `MarketplaceView` (inside PluginsListView), find the hardcoded categories array `["All", "Productivity", "DevOps", "Testing", "Documentation"]`
     2. Replace with dynamic extraction: after fetching marketplace data from `GET /plugins/marketplace`, extract unique `category` values from response
@@ -235,7 +235,7 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
   - **Commit**: `fix(plugins): derive marketplace categories from API data`
   - _Requirements: AC-16.1, AC-16.2, AC-16.3, FR-5.8_
 
-- [ ] 2.7 Dynamic command palette with real Claude CLI commands
+- [x] 2.7 Dynamic command palette with real Claude CLI commands
   - **Do**:
     1. In `CommandPaletteView.swift`, replace hardcoded command array with real Claude CLI slash commands
     2. Define command list: `/compact`, `/clear`, `/config`, `/cost`, `/doctor`, `/help`, `/init`, `/login`, `/logout`, `/mcp`, `/memory`, `/model`, `/permissions`, `/review`, `/status`, `/terminal-setup`

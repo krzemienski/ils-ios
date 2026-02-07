@@ -93,17 +93,39 @@ public struct CreateSessionRequest: Codable, Sendable {
     public let model: String?
     /// Permission mode for the session.
     public let permissionMode: PermissionMode?
+    /// Custom system prompt.
+    public let systemPrompt: String?
+    /// Maximum budget in USD.
+    public let maxBudgetUSD: Double?
+    /// Maximum conversation turns.
+    public let maxTurns: Int?
 
     public init(
         projectId: UUID? = nil,
         name: String? = nil,
         model: String? = nil,
-        permissionMode: PermissionMode? = nil
+        permissionMode: PermissionMode? = nil,
+        systemPrompt: String? = nil,
+        maxBudgetUSD: Double? = nil,
+        maxTurns: Int? = nil
     ) {
         self.projectId = projectId
         self.name = name
         self.model = model
         self.permissionMode = permissionMode
+        self.systemPrompt = systemPrompt
+        self.maxBudgetUSD = maxBudgetUSD
+        self.maxTurns = maxTurns
+    }
+}
+
+/// Request to rename a session.
+public struct RenameSessionRequest: Codable, Sendable {
+    /// New session name.
+    public let name: String
+
+    public init(name: String) {
+        self.name = name
     }
 }
 

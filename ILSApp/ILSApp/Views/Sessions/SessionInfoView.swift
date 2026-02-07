@@ -10,6 +10,9 @@ struct SessionInfoView: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showCopiedToast = false
+    @State private var showExportSheet = false
+    @State private var exportMarkdown = ""
+    @State private var isExporting = false
 
     private var displaySession: ChatSession {
         loadedSession ?? session
@@ -80,19 +83,36 @@ struct SessionInfoView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        UIPasteboard.general.string = session.id.uuidString
-                        showCopiedToast = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            showCopiedToast = false
+                    HStack(spacing: 12) {
+                        Button {
+                            Task { await exportSession() }
+                        } label: {
+                            if isExporting {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "square.and.arrow.up")
+                            }
                         }
-                    } label: {
-                        Image(systemName: "doc.on.doc")
+                        .disabled(isExporting)
+
+                        Button {
+                            UIPasteboard.general.string = session.id.uuidString
+                            showCopiedToast = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                showCopiedToast = false
+                            }
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                        }
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showExportSheet) {
+                ShareSheet(text: exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
             }
             .toast(isPresented: $showCopiedToast, message: "Session ID copied")
             .task {
@@ -118,4 +138,55 @@ struct SessionInfoView: View {
 
         isLoading = false
     }
+
+    private func exportSession() async {
+        isExporting = true
+        let s = displaySession
+        var md = "# Session: \(s.name ?? "Unnamed")\n\n"
+        md += "Model: \(s.model.capitalized)\n"
+        md += "Status: \(s.status.rawValue.capitalized)\n"
+        md += "Created: \(s.createdAt.formatted())\n"
+        md += "Last Active: \(s.lastActiveAt.formatted())\n"
+        if let cost = s.totalCostUSD {
+            md += "Cost: $\(String(format: "%.4f", cost))\n"
+        }
+        md += "\n---\n\n"
+
+        // Fetch messages
+        do {
+            let response: APIResponse<ListResponse<Message>> = try await appState.apiClient.get("/sessions/\(session.id.uuidString)/messages?limit=500")
+            if let messages = response.data?.items {
+                for message in messages {
+                    let role = message.role.rawValue.capitalized
+                    md += "## \(role)\n\n\(message.content)\n\n"
+                }
+            }
+        } catch {
+            md += "_Failed to load messages: \(error.localizedDescription)_\n"
+        }
+
+        exportMarkdown = md
+        isExporting = false
+        showExportSheet = true
+    }
+}
+
+// MARK: - Share Sheet
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let text: String
+    let fileName: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let data = Data(text.utf8)
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        try? data.write(to: tempURL)
+        let controller = UIActivityViewController(
+            activityItems: [tempURL],
+            applicationActivities: nil
+        )
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

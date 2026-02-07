@@ -23,6 +23,7 @@ struct SessionsController: RouteCollection {
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get(":id", use: get)
+        sessions.put(":id", use: rename)
         sessions.delete(":id", use: delete)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "messages", use: messages)
@@ -84,6 +85,33 @@ struct SessionsController: RouteCollection {
         return APIResponse(
             success: true,
             data: session.toShared(projectName: projectName)
+        )
+    }
+
+    /// Rename a session.
+    /// - Parameter req: Vapor Request with id parameter and RenameSessionRequest body
+    /// - Returns: APIResponse with updated ChatSession
+    @Sendable
+    func rename(req: Request) async throws -> APIResponse<ChatSession> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        let input = try req.content.decode(RenameSessionRequest.self)
+
+        guard let session = try await SessionModel.query(on: req.db)
+            .filter(\.$id == id)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        session.name = input.name
+        try await session.save(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: session.toShared(projectName: session.project?.name)
         )
     }
 

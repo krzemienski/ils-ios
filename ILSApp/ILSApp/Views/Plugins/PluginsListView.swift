@@ -162,7 +162,26 @@ struct MarketplaceView: View {
     @State private var isAddingRepo = false
     @State private var installingPlugins: Set<String> = []
 
-    private let categories = ["All", "Productivity", "DevOps", "Testing", "Documentation"]
+    /// Dynamic categories extracted from marketplace data, with "All" prepended
+    private var categories: [String] {
+        var cats = Set<String>()
+        for marketplace in marketplaces {
+            for plugin in marketplace.plugins {
+                if let desc = plugin.description?.lowercased() {
+                    // Extract category keywords from description
+                    for keyword in ["productivity", "devops", "testing", "documentation", "security", "monitoring", "integration", "ai", "database", "networking", "utilities"] {
+                        if desc.contains(keyword) {
+                            cats.insert(keyword.capitalized)
+                        }
+                    }
+                }
+                if let category = plugin.category, !category.isEmpty {
+                    cats.insert(category)
+                }
+            }
+        }
+        return ["All"] + cats.sorted()
+    }
 
     var filteredPlugins: [(marketplace: MarketplaceInfo, plugins: [MarketplacePlugin])] {
         return marketplaces.map { marketplace in
@@ -378,6 +397,7 @@ struct MarketplaceInfo: Decodable {
 struct MarketplacePlugin: Decodable {
     let name: String
     let description: String?
+    let category: String?
 }
 
 #Preview {

@@ -101,13 +101,17 @@ class SessionsViewModel: ObservableObject {
         await loadSessions()
     }
 
-    func createSession(projectId: UUID?, name: String?, model: String) async -> ChatSession? {
+    func createSession(projectId: UUID?, name: String?, model: String, permissionMode: PermissionMode? = nil, systemPrompt: String? = nil, maxBudgetUSD: Double? = nil, maxTurns: Int? = nil) async -> ChatSession? {
         guard let client else { return nil }
         do {
             let request = CreateSessionRequest(
                 projectId: projectId,
                 name: name,
-                model: model
+                model: model,
+                permissionMode: permissionMode,
+                systemPrompt: systemPrompt,
+                maxBudgetUSD: maxBudgetUSD,
+                maxTurns: maxTurns
             )
             let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
             if let session = response.data {
