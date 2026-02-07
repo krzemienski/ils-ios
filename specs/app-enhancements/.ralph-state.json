@@ -3,7 +3,7 @@
   "name": "app-enhancements",
   "basePath": "specs/app-enhancements",
   "phase": "execution",
-  "taskIndex": 5,
+  "taskIndex": 9,
   "totalTasks": 42,
   "taskIteration": 1,
   "maxTaskIterations": 5,

@@ -5,27 +5,39 @@ import SwiftUI
 struct ToolCallAccordion: View {
     let toolName: String
     let input: String?
+    let inputPairs: [(key: String, value: String)]
     let output: String?
     let isError: Bool
+    var expandAll: Binding<Bool?>?
 
     @State private var isExpanded = false
+    @State private var showFullOutput = false
 
     /// Dark background for the accordion
     private let accordionBg = Color(red: 17.0/255.0, green: 24.0/255.0, blue: 39.0/255.0)
     /// Border color
     private let borderColor = Color.white.opacity(0.06)
 
-    init(toolName: String, input: String? = nil, output: String? = nil, isError: Bool = false) {
+    init(toolName: String, input: String? = nil, inputPairs: [(key: String, value: String)] = [], output: String? = nil, isError: Bool = false, expandAll: Binding<Bool?>? = nil) {
         self.toolName = toolName
         self.input = input
+        self.inputPairs = inputPairs
         self.output = output
         self.isError = isError
+        self.expandAll = expandAll
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
-            Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }) {
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                    if let expandAll = expandAll {
+                        expandAll.wrappedValue = isExpanded
+                    }
+                }
+            }) {
                 HStack(spacing: ILSTheme.spacingS) {
                     Image(systemName: toolIcon)
                         .font(.system(.caption, weight: .medium))
@@ -52,20 +64,37 @@ struct ToolCallAccordion: View {
             // Expanded content
             if isExpanded {
                 VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
-                    if let input, !input.isEmpty {
+                    if !inputPairs.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Input")
                                 .font(.system(.caption2, weight: .semibold))
                                 .foregroundColor(ILSTheme.textTertiary)
                                 .textCase(.uppercase)
 
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                Text(input)
-                                    .font(.system(.caption, design: .monospaced))
-                                    .foregroundColor(ILSTheme.textSecondary)
-                                    .textSelection(.enabled)
+                            ForEach(Array(inputPairs.enumerated()), id: \.offset) { _, pair in
+                                HStack(alignment: .top, spacing: 4) {
+                                    Text(pair.key + ":")
+                                        .font(.system(.caption, design: .monospaced, weight: .semibold))
+                                        .foregroundColor(ILSTheme.accent)
+                                    Text(pair.value)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundColor(ILSTheme.textSecondary)
+                                        .textSelection(.enabled)
+                                        .lineLimit(3)
+                                }
                             }
-                            .frame(maxHeight: 120)
+                        }
+                    } else if let input, !input.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Input")
+                                .font(.system(.caption2, weight: .semibold))
+                                .foregroundColor(ILSTheme.textTertiary)
+                                .textCase(.uppercase)
+
+                            Text(input)
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundColor(ILSTheme.textSecondary)
+                                .textSelection(.enabled)
                         }
                     }
 
@@ -76,13 +105,20 @@ struct ToolCallAccordion: View {
                                 .foregroundColor(ILSTheme.textTertiary)
                                 .textCase(.uppercase)
 
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                Text(output)
-                                    .font(.system(.caption, design: .monospaced))
-                                    .foregroundColor(isError ? ILSTheme.error : ILSTheme.textSecondary)
-                                    .textSelection(.enabled)
+                            Text(output)
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundColor(isError ? ILSTheme.error : ILSTheme.textSecondary)
+                                .textSelection(.enabled)
+                                .lineLimit(showFullOutput ? nil : 5)
+
+                            if output.components(separatedBy: "\n").count > 5 {
+                                Button(action: { showFullOutput.toggle() }) {
+                                    Text(showFullOutput ? "Show less" : "Show more")
+                                        .font(.system(.caption2, weight: .medium))
+                                        .foregroundColor(ILSTheme.accent)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .frame(maxHeight: 200)
                         }
                     }
                 }
@@ -95,8 +131,15 @@ struct ToolCallAccordion: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(borderColor, lineWidth: 1)
+                .strokeBorder(isError ? ILSTheme.error.opacity(0.5) : borderColor, lineWidth: isError ? 2 : 1)
         )
+        .onChange(of: expandAll?.wrappedValue) { _, newValue in
+            if let newValue {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded = newValue
+                }
+            }
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Tool call: \(toolName)\(isError ? ", error" : "")")
         .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
@@ -115,26 +158,35 @@ struct ToolCallAccordion: View {
 }
 
 #Preview {
+    @Previewable @State var expandAllState: Bool? = nil
+
     VStack(spacing: 12) {
         ToolCallAccordion(
             toolName: "Read",
-            input: "file_path: /src/main.swift",
-            output: "import SwiftUI\n\nstruct ContentView: View {\n    var body: some View {\n        Text(\"Hello\")\n    }\n}"
+            inputPairs: [("file_path", "/src/main.swift"), ("offset", "0"), ("limit", "100")],
+            output: "import SwiftUI\n\nstruct ContentView: View {\n    var body: some View {\n        Text(\"Hello\")\n    }\n}",
+            expandAll: $expandAllState
         )
 
         ToolCallAccordion(
             toolName: "Bash",
             input: "command: swift build",
-            output: "Build complete! (0.45s)",
-            isError: false
+            output: "Build complete! (0.45s)\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10",
+            isError: false,
+            expandAll: $expandAllState
         )
 
         ToolCallAccordion(
             toolName: "Write",
-            input: "file_path: /src/error.swift",
-            output: "Error: file not found",
-            isError: true
+            inputPairs: [("file_path", "/src/error.swift"), ("content", "Invalid syntax")],
+            output: "Error: file not found\nStack trace...\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7",
+            isError: true,
+            expandAll: $expandAllState
         )
+
+        Button("Toggle Expand All") {
+            expandAllState = !(expandAllState ?? false)
+        }
     }
     .padding()
     .background(Color.black)
