@@ -107,7 +107,20 @@ class ThemeManager: ObservableObject {
 
     init() {
         let savedID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "obsidian"
-        let themes: [any AppTheme] = [ObsidianTheme()]
+        let themes: [any AppTheme] = [
+            ObsidianTheme(),
+            SlateTheme(),
+            MidnightTheme(),
+            GhostProtocolTheme(),
+            NeonNoirTheme(),
+            ElectricGridTheme(),
+            EmberTheme(),
+            CrimsonTheme(),
+            CarbonTheme(),
+            GraphiteTheme(),
+            PaperTheme(),
+            SnowTheme(),
+        ]
         self.availableThemes = themes
         self.currentTheme = themes.first(where: { $0.id == savedID }) ?? ObsidianTheme()
     }
