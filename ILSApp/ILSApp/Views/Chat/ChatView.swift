@@ -325,7 +325,7 @@ struct ChatInputView: View {
                     }
                 }) {
                     Image(systemName: "arrow.up.circle.fill")
-                        .foregroundColor(text.isEmpty || isDisabled ? ILSTheme.tertiaryText : ILSTheme.accent)
+                        .foregroundColor(text.isEmpty || isDisabled ? ILSTheme.tertiaryText : Color(red: 0, green: 122.0/255.0, blue: 255.0/255.0))
                         .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
                         .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
                 }

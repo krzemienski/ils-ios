@@ -429,7 +429,7 @@ Focus: Build System tab UI with live charts, process list, file browser. Depends
 
 Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunnel as optional.
 
-- [ ] 5.1 Create TunnelService.swift — spawn cloudflared, parse URL
+- [x] 5.1 Create TunnelService.swift — spawn cloudflared, parse URL
   - **Do**:
     1. Create `Sources/ILSBackend/Services/TunnelService.swift`
     2. Actor that manages a `Process` running `cloudflared tunnel --url http://localhost:{port}`
@@ -447,7 +447,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
   - **Commit**: `feat(backend): add TunnelService for Cloudflare quick tunnel management`
   - _Requirements: FR-1.1, FR-1.2, FR-1.3, FR-1.4, AC-1.2, AC-1.3_
 
-- [ ] 5.2 Create TunnelController.swift with REST endpoints
+- [x] 5.2 Create TunnelController.swift with REST endpoints
   - **Do**:
     1. Create `Sources/ILSBackend/Controllers/TunnelController.swift`
     2. `POST /tunnel/start` — calls TunnelService.start(), returns `{url: "https://..."}`
@@ -461,7 +461,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
   - **Commit**: `feat(backend): add tunnel start/stop/status REST endpoints`
   - _Requirements: FR-1.1, FR-1.2, FR-1.3_
 
-- [ ] 5.3 Add shared DTOs for tunnel
+- [x] 5.3 Add shared DTOs for tunnel
   - **Do**:
     1. In `Sources/ILSShared/DTOs/`, create `TunnelDTOs.swift`
     2. `TunnelStartResponse`: url String
@@ -473,7 +473,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
   - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Commit**: `feat(shared): add tunnel DTOs`
 
-- [ ] 5.4 Create TunnelSettingsView.swift in iOS
+- [x] 5.4 Create TunnelSettingsView.swift in iOS
   - **Do**:
     1. Create `ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift`
     2. "Quick Tunnel" section: toggle switch calls POST /tunnel/start or /tunnel/stop
@@ -504,7 +504,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
 
 Focus: Markdown, code blocks, tool call accordions, thinking sections, styled bubbles.
 
-- [ ] 6.1 Add swift-markdown-ui dependency to iOS project
+- [x] 6.1 Add swift-markdown-ui dependency to iOS project
   - **Do**:
     1. In `ILSApp/ILSApp.xcodeproj`, add Swift Package dependency: `https://github.com/gonzalezreal/swift-markdown-ui` (version 2.0+)
     2. Or if using Package.swift for iOS: add package there
@@ -517,7 +517,7 @@ Focus: Markdown, code blocks, tool call accordions, thinking sections, styled bu
   - **Commit**: `feat(ios): add markdown rendering capability for chat messages`
   - _Requirements: AC-12.1, FR-7.1_
 
-- [ ] 6.2 Create CodeBlockView.swift with syntax highlighting
+- [x] 6.2 Create CodeBlockView.swift with syntax highlighting
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/CodeBlockView.swift`
     2. Language header bar (dark bg, language label left, "Copy" button right)
@@ -533,7 +533,7 @@ Focus: Markdown, code blocks, tool call accordions, thinking sections, styled bu
   - _Requirements: AC-12.2, FR-7.2_
   - _Design: Code Block Rendering_
 
-- [ ] 6.3 Create ToolCallAccordion.swift and ThinkingSection.swift
+- [x] 6.3 Create ToolCallAccordion.swift and ThinkingSection.swift
   - **Do**:
     1. Create `ILSApp/ILSApp/Theme/Components/ToolCallAccordion.swift` — expandable disclosure with tool name + icon; expanded shows input JSON preview + output text
     2. Create `ILSApp/ILSApp/Theme/Components/ThinkingSection.swift` — collapsible "Thinking..." section with brain icon; expanded shows thinking text
@@ -546,7 +546,7 @@ Focus: Markdown, code blocks, tool call accordions, thinking sections, styled bu
   - **Commit**: `feat(chat): add tool call accordion and thinking section components`
   - _Requirements: AC-12.3, AC-12.4, AC-12.5, FR-7.3, FR-7.4_
 
-- [ ] 6.4 Integrate markdown + code blocks + accordions into MessageView
+- [x] 6.4 Integrate markdown + code blocks + accordions into MessageView
   - **Do**:
     1. In `MessageView.swift`, replace plain Text rendering with markdown-aware rendering
     2. Parse message content: split into blocks (text, code fence, tool call, thinking)
@@ -561,7 +561,7 @@ Focus: Markdown, code blocks, tool call accordions, thinking sections, styled bu
   - **Commit**: `feat(chat): integrate markdown, code blocks, and accordions into MessageView`
   - _Requirements: AC-12.1, AC-12.2, AC-12.3, AC-12.4, AC-12.5_
 
-- [ ] 6.5 Restyle chat bubbles — user gradient, assistant glass
+- [x] 6.5 Restyle chat bubbles — user gradient, assistant glass
   - **Do**:
     1. In `ChatView.swift` or `MessageView.swift`, update bubble backgrounds:
     2. User messages: right-aligned, blue gradient (`#007AFF` to `#0056B3`), 16pt corner radius with 4pt on bottom-right

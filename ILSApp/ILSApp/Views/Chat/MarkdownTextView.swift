@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Renders markdown text with proper formatting for chat messages.
-/// Handles headers, code blocks, inline code, bold, italic, and lists.
+/// Handles headers, code blocks, inline code, bold, italic, links, and lists.
 struct MarkdownTextView: View {
     let text: String
 
@@ -19,7 +19,7 @@ struct MarkdownTextView: View {
         case .heading(let level, let content):
             headingView(level: level, content: content)
         case .codeBlock(let language, let code):
-            codeBlockView(language: language, code: code)
+            CodeBlockView(language: language, code: code)
         case .paragraph(let content):
             inlineMarkdownText(content)
                 .font(ILSTheme.bodyFont)
@@ -56,39 +56,37 @@ struct MarkdownTextView: View {
             .padding(.top, level <= 2 ? ILSTheme.spacingXS : 0)
     }
 
-    private func codeBlockView(language: String?, code: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let language, !language.isEmpty {
-                Text(language)
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundColor(ILSTheme.tertiaryText)
-                    .padding(.horizontal, ILSTheme.spacingS)
-                    .padding(.top, ILSTheme.spacingXS)
-                    .padding(.bottom, 2)
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                Text(code)
-                    .font(ILSTheme.codeFont)
-                    .foregroundColor(ILSTheme.primaryText)
-                    .textSelection(.enabled)
-                    .padding(ILSTheme.spacingS)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ILSTheme.tertiaryBackground)
-        .cornerRadius(ILSTheme.cornerRadiusSmall)
-        .overlay(
-            RoundedRectangle(cornerRadius: ILSTheme.cornerRadiusSmall)
-                .strokeBorder(ILSTheme.separator, lineWidth: 0.5)
-        )
-    }
-
-    /// Renders inline markdown (bold, italic, inline code) as styled Text
+    /// Renders inline markdown (bold, italic, inline code, links) as styled Text
     private func inlineMarkdownText(_ content: String) -> Text {
         var result = Text("")
         var remaining = content[content.startIndex...]
 
         while !remaining.isEmpty {
+            // Link: [text](url)
+            if remaining.hasPrefix("[") {
+                let afterBracket = remaining.index(after: remaining.startIndex)
+                if let closeBracket = remaining[afterBracket...].firstIndex(of: "]") {
+                    let linkText = String(remaining[afterBracket..<closeBracket])
+                    let afterClose = remaining.index(after: closeBracket)
+                    if afterClose < remaining.endIndex && remaining[afterClose] == "(" {
+                        let afterParen = remaining.index(after: afterClose)
+                        if let closeParen = remaining[afterParen...].firstIndex(of: ")") {
+                            let urlString = String(remaining[afterParen..<closeParen])
+                            if let url = URL(string: urlString) {
+                                result = result + Text(.init("[\(linkText)](\(url.absoluteString))"))
+                                    .foregroundColor(ILSTheme.info)
+                                    .underline()
+                            } else {
+                                result = result + Text(linkText)
+                                    .foregroundColor(ILSTheme.info)
+                            }
+                            remaining = remaining[remaining.index(after: closeParen)...]
+                            continue
+                        }
+                    }
+                }
+            }
+
             // Inline code: `code`
             if remaining.hasPrefix("`") {
                 let afterTick = remaining.index(after: remaining.startIndex)
@@ -128,7 +126,7 @@ struct MarkdownTextView: View {
             var endIndex = remaining.index(after: remaining.startIndex)
             while endIndex < remaining.endIndex {
                 let ch = remaining[endIndex]
-                if ch == "`" || ch == "*" {
+                if ch == "`" || ch == "*" || ch == "[" {
                     break
                 }
                 endIndex = remaining.index(after: endIndex)
@@ -270,6 +268,8 @@ private enum MarkdownBlock {
         ## Getting Started
 
         Here's a **bold** statement and some *italic* text.
+
+        Check out [SwiftUI docs](https://developer.apple.com/swiftui/) for more.
 
         ### Code Example
 

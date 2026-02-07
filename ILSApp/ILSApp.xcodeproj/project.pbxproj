@@ -72,6 +72,10 @@
 		PRGRING000000000000001 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRGRING000000000000002 /* ProgressRing.swift */; };
 		PRCLST0000000000000001 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRCLST0000000000000002 /* ProcessListView.swift */; };
 		FILBRW0000000000000001 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILBRW0000000000000002 /* FileBrowserView.swift */; };
+		TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TUNSET0000000000000002 /* TunnelSettingsView.swift */; };
+		CODEBL0000000000000001 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CODEBL0000000000000002 /* CodeBlockView.swift */; };
+		TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = TOOLAC0000000000000002 /* ToolCallAccordion.swift */; };
+		THNKSC0000000000000001 /* ThinkingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = THNKSC0000000000000002 /* ThinkingSection.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
@@ -155,6 +159,10 @@
 		PRGRING000000000000002 /* ProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
 		PRCLST0000000000000002 /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
 		FILBRW0000000000000002 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
+		TUNSET0000000000000002 /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
+		CODEBL0000000000000002 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
+		TOOLAC0000000000000002 /* ToolCallAccordion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallAccordion.swift; sourceTree = "<group>"; };
+		THNKSC0000000000000002 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -232,6 +240,9 @@
 				CONNBN0000000000000002 /* ConnectionBanner.swift */,
 				MTCHRT0000000000000002 /* MetricChart.swift */,
 				PRGRING000000000000002 /* ProgressRing.swift */,
+				CODEBL0000000000000002 /* CodeBlockView.swift */,
+				TOOLAC0000000000000002 /* ToolCallAccordion.swift */,
+				THNKSC0000000000000002 /* ThinkingSection.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -355,6 +366,7 @@
 			children = (
 				000000000000000000000052 /* SettingsView.swift */,
 				FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */,
+				TUNSET0000000000000002 /* TunnelSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -630,6 +642,10 @@
 				PRGRING000000000000001 /* ProgressRing.swift in Sources */,
 				PRCLST0000000000000001 /* ProcessListView.swift in Sources */,
 				FILBRW0000000000000001 /* FileBrowserView.swift in Sources */,
+				TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */,
+				CODEBL0000000000000001 /* CodeBlockView.swift in Sources */,
+				TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */,
+				THNKSC0000000000000001 /* ThinkingSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
