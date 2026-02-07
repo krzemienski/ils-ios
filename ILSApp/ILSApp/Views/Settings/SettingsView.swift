@@ -90,6 +90,7 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.isTestingConnection)
+                .accessibilityLabel("Test connection to backend server")
             } header: {
                 Text("Backend Connection")
             } footer: {
@@ -216,6 +217,7 @@ struct SettingsView: View {
                             Text(formatModelName(model)).tag(model)
                         }
                     }
+                    .accessibilityLabel("Default Claude model")
 
                     // Color Scheme Picker (writes to UserDefaults)
                     Picker("Color Scheme", selection: $colorSchemePreference) {
@@ -223,6 +225,7 @@ struct SettingsView: View {
                             Text(scheme.capitalized).tag(scheme)
                         }
                     }
+                    .accessibilityLabel("Color scheme preference")
 
                     // Auto Updates Channel (read-only)
                     if let channel = config.autoUpdatesChannel {
@@ -428,6 +431,7 @@ struct SettingsView: View {
                     Label("Analytics", systemImage: "chart.bar")
                 }
                 .tint(.orange)
+                .accessibilityLabel("Enable analytics")
 
                 NavigationLink(destination: LogViewerView()) {
                     Label("View Logs", systemImage: "doc.text")

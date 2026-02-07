@@ -50,6 +50,7 @@ struct NewSessionView: View {
                 Section("Session Details") {
                     TextField("Session Name (optional)", text: $sessionName)
                         .accessibilityIdentifier("session-name-field")
+                        .accessibilityLabel("Session name")
 
                     Picker("Project", selection: $selectedProject) {
                         Text("No Project").tag(nil as Project?)
@@ -58,6 +59,7 @@ struct NewSessionView: View {
                         }
                     }
                     .accessibilityIdentifier("project-picker")
+                    .accessibilityLabel("Project selection")
                 }
 
                 Section("Model") {
@@ -67,6 +69,7 @@ struct NewSessionView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    .accessibilityLabel("Claude model selection")
                 }
 
                 Section("Permissions") {
@@ -75,6 +78,7 @@ struct NewSessionView: View {
                             Text(formattedMode(mode)).tag(mode)
                         }
                     }
+                    .accessibilityLabel("Permission mode selection")
 
                     Text(permissionDescription)
                         .font(ILSTheme.captionFont)
@@ -105,6 +109,7 @@ struct NewSessionView: View {
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 100)
+                            .accessibilityLabel("Maximum budget in US dollars")
                     }
 
                     HStack {
@@ -114,16 +119,20 @@ struct NewSessionView: View {
                             .keyboardType(.numberPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 100)
+                            .accessibilityLabel("Maximum conversation turns")
                     }
                 }
 
                 Section {
                     DisclosureGroup("Advanced Options", isExpanded: $showAdvanced) {
                         TextField("Fallback Model", text: $fallbackModel)
+                            .accessibilityLabel("Fallback model name")
 
                         Toggle("Include Partial Messages", isOn: $includePartialMessages)
+                            .accessibilityLabel("Include partial messages in conversation")
 
                         Toggle("Continue Previous Session", isOn: $continueConversation)
+                            .accessibilityLabel("Continue from previous session")
                     }
                 }
             }

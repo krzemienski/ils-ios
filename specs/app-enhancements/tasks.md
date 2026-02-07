@@ -438,7 +438,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
   - **Done when**: Backend builds; error responses are structured JSON; pagination works
   - **Commit**: `chore(backend): pass backend robustness quality checkpoint` (only if fixes needed)
 
-- [ ] 4.4 Optimize ProjectsController.show() with direct lookup
+- [x] 4.4 Optimize ProjectsController.show() with direct lookup
   - **Do**:
     1. In `ProjectsController.show()` (line 140-155), replace `index(req:)` call + filter approach
     2. Instead, scan filesystem directly for matching project ID:
@@ -453,7 +453,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
   - _Requirements: FR-28_
   - _Design: Phase 4 — 4.5 ProjectsController Direct Lookup_
 
-- [ ] 4.5 Replace print()/debugLog() with structured logging across backend
+- [x] 4.5 Replace print()/debugLog() with structured logging across backend
   - **Do**:
     1. `ClaudeExecutorService.swift`: Replace 24 `debugLog()` calls with `Logger` from `Logging` framework (not `req.logger` since executor isn't in request context — create static logger)
     2. `StreamingService.swift`: Already done in 3.1 (verify zero debugLog remaining)
@@ -466,7 +466,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
   - _Requirements: FR-30_
   - _Design: Phase 4 — 4.6 print() to Logger Migration_
 
-- [ ] 4.6 Add error code mapping to iOS APIClient
+- [x] 4.6 Add error code mapping to iOS APIClient
   - **Do**:
     1. In `APIClient.swift`, update `validateResponse` to decode `ErrorBody` from response body when status is 4xx/5xx
     2. Add new `APIError` case: `.serverError(code: String, reason: String)` for structured backend errors
@@ -488,7 +488,7 @@ Focus: Global ErrorMiddleware, request validation, session pagination, ProjectsC
 
 Focus: Absorb all remaining audit fixes — concurrency safety, memory management, architecture patterns, theming, networking, accessibility.
 
-- [ ] 5.1 Replace print() with AppLogger across iOS app
+- [x] 5.1 Replace print() with AppLogger across iOS app
   - **Do**:
     1. `ILSAppApp.swift`: Replace 12 `print(` with `AppLogger.shared.info/debug/error()`
     2. `CommandPaletteView.swift`: Replace 1 `print(` with `AppLogger.shared.debug()`
@@ -501,7 +501,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - _Requirements: FR-34, FR-42_
   - _Design: Phase 5 — 5.1 Concurrency Safety, 5.4 Theming Consistency_
 
-- [ ] 5.2 Replace DispatchQueue.asyncAfter with Task.sleep across iOS app
+- [x] 5.2 Replace DispatchQueue.asyncAfter with Task.sleep across iOS app
   - **Do**:
     1. Replace `DispatchQueue.main.asyncAfter(deadline: .now() + N) { ... }` with `Task { try? await Task.sleep(for: .seconds(N)); ... }` in:
        - `SkillsListView.swift` — search/copy confirmation delay
@@ -519,7 +519,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - _Requirements: FR-36_
   - _Design: Phase 5 — 5.2 Memory Management_
 
-- [ ] V6 [VERIFY] Quality checkpoint: iOS build after audit fixes batch 1
+- [x] V6 [VERIFY] Quality checkpoint: iOS build after audit fixes batch 1
   - **Do**: Build iOS after print removal and DispatchQueue replacement
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Zero build errors

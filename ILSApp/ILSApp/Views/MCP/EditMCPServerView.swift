@@ -29,7 +29,9 @@ struct EditMCPServerView: View {
                 Section("Server Details") {
                     LabeledContent("Name", value: name)
                     TextField("Command", text: $command)
+                        .accessibilityLabel("Server command")
                     TextField("Arguments (space-separated)", text: $args)
+                        .accessibilityLabel("Command arguments")
                 }
 
                 Section("Scope") {

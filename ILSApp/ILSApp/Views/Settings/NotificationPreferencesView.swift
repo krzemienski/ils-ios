@@ -14,19 +14,25 @@ struct NotificationPreferencesView: View {
         List {
             Section("MCP Server Alerts") {
                 Toggle("Server Goes Offline", isOn: $mcpOfflineAlerts)
+                    .accessibilityLabel("Alert when MCP server goes offline")
                 Toggle("Server Comes Online", isOn: $mcpOnlineAlerts)
+                    .accessibilityLabel("Alert when MCP server comes online")
             }
 
             Section("Session Alerts") {
                 Toggle("Session Complete", isOn: $sessionCompleteAlerts)
+                    .accessibilityLabel("Alert when session completes")
             }
 
             Section("Quiet Hours") {
                 Toggle("Enable Quiet Hours", isOn: $quietHoursEnabled)
+                    .accessibilityLabel("Enable quiet hours for notifications")
 
                 if quietHoursEnabled {
                     DatePicker("Start", selection: $quietStart, displayedComponents: .hourAndMinute)
+                        .accessibilityLabel("Quiet hours start time")
                     DatePicker("End", selection: $quietEnd, displayedComponents: .hourAndMinute)
+                        .accessibilityLabel("Quiet hours end time")
                 }
             }
 

@@ -8,20 +8,6 @@ struct MessageView: View {
     @State private var showCopyConfirmation = false
     @State private var expandAllToolCalls: Bool? = nil
 
-    /// Formatter for displaying message timestamps
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter
-    }()
-
-    /// Formatter for displaying dates (for messages from previous days)
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }()
 
     // MARK: - Bubble Colors
 
@@ -242,9 +228,9 @@ struct MessageView: View {
     /// Format timestamp based on whether it's from today or an earlier date
     private func formattedTimestamp(_ date: Date) -> String {
         if Calendar.current.isDateInToday(date) {
-            return Self.timeFormatter.string(from: date)
+            return DateFormatters.time.string(from: date)
         } else {
-            return Self.dateFormatter.string(from: date)
+            return DateFormatters.dateTime.string(from: date)
         }
     }
 }

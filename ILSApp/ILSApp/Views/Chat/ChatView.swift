@@ -192,7 +192,7 @@ struct ChatView: View {
                         scrollToBottom(proxy: proxy)
                     }) {
                         Image(systemName: "chevron.down.circle.fill")
-                            .font(.system(size: 36))
+                            .font(ILSTheme.fabIconFont)
                             .foregroundColor(ILSTheme.accent)
                             .background(Circle().fill(ILSTheme.secondaryBackground))
                             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)

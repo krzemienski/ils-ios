@@ -115,8 +115,8 @@
   "hotPaths": [
     {
       "path": "ILSApp/ILSApp",
-      "accessCount": 240,
-      "lastAccessed": 1770457645404,
+      "accessCount": 248,
+      "lastAccessed": 1770458347145,
       "type": "directory"
     },
     {
@@ -127,20 +127,20 @@
     },
     {
       "path": "ILSApp/ILSApp/Services/APIClient.swift",
-      "accessCount": 67,
-      "lastAccessed": 1770458101339,
+      "accessCount": 69,
+      "lastAccessed": 1770458343537,
       "type": "file"
     },
     {
       "path": "ILSApp/ILSApp/Services/SSEClient.swift",
-      "accessCount": 52,
-      "lastAccessed": 1770457359272,
+      "accessCount": 56,
+      "lastAccessed": 1770458316681,
       "type": "file"
     },
     {
       "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
-      "accessCount": 51,
-      "lastAccessed": 1770456245298,
+      "accessCount": 56,
+      "lastAccessed": 1770458367450,
       "type": "file"
     },
     {
@@ -150,15 +150,21 @@
       "type": "file"
     },
     {
+      "path": "Sources/ILSBackend/Services/ClaudeExecutorService.swift",
+      "accessCount": 25,
+      "lastAccessed": 1770458136622,
+      "type": "file"
+    },
+    {
       "path": "Sources/ILSBackend/Controllers/ProjectsController.swift",
       "accessCount": 24,
       "lastAccessed": 1770458031464,
       "type": "file"
     },
     {
-      "path": "Sources/ILSBackend/Services/ClaudeExecutorService.swift",
+      "path": "ILSApp/ILSApp/Views/Sessions/NewSessionView.swift",
       "accessCount": 23,
-      "lastAccessed": 1770458109922,
+      "lastAccessed": 1770458407911,
       "type": "file"
     },
     {
@@ -177,12 +183,6 @@
       "path": "Sources/ILSBackend/App/routes.swift",
       "accessCount": 17,
       "lastAccessed": 1770456025144,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Sessions/NewSessionView.swift",
-      "accessCount": 17,
-      "lastAccessed": 1770457579628,
       "type": "file"
     },
     {
@@ -210,16 +210,16 @@
       "type": "file"
     },
     {
+      "path": "ILSApp/ILSApp/Views",
+      "accessCount": 11,
+      "lastAccessed": 1770458343343,
+      "type": "directory"
+    },
+    {
       "path": "specs/agent-teams/research.md",
       "accessCount": 10,
       "lastAccessed": 1770401738916,
       "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views",
-      "accessCount": 10,
-      "lastAccessed": 1770443794772,
-      "type": "directory"
     },
     {
       "path": "specs/.current-spec",
@@ -273,6 +273,12 @@
       "path": "Sources/ILSBackend/Controllers/SkillsController.swift",
       "accessCount": 6,
       "lastAccessed": 1770456018858,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift",
+      "accessCount": 6,
+      "lastAccessed": 1770458380227,
       "type": "file"
     },
     {
@@ -381,12 +387,6 @@
       "path": "Sources/ILSBackend/Controllers/AuthController.swift",
       "accessCount": 2,
       "lastAccessed": 1770414464503,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift",
-      "accessCount": 2,
-      "lastAccessed": 1770443743546,
       "type": "file"
     },
     {

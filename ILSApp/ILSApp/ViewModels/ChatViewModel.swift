@@ -51,6 +51,7 @@ class ChatViewModel: ObservableObject {
     private var connectingTimer: Task<Void, Never>?
 
     // MARK: - Shared Decoder
+    // nonisolated: JSONDecoder is thread-safe for decoding. Isolated to instance lifetime.
     nonisolated private let jsonDecoder = JSONDecoder()
 
     // MARK: - Batching Properties
@@ -342,7 +343,8 @@ class ChatViewModel: ObservableObject {
     func cancel() {
         // Notify backend to kill Claude CLI process (best-effort, fire-and-forget)
         if let sessionId = sessionId, let apiClient = apiClient {
-            Task {
+            Task { [weak self] in
+                guard let self else { return }
                 do {
                     let _: APIResponse<DeletedResponse> = try await apiClient.post("/chat/cancel/\(sessionId.uuidString)", body: EmptyBody())
                 } catch {

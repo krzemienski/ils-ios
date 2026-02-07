@@ -75,6 +75,9 @@ enum ILSTheme {
     static let captionFont = Font.system(.caption, design: .default)
     static let codeFont = Font.system(.body, design: .monospaced)
 
+    /// Jump-to-bottom FAB icon font (36pt)
+    static let fabIconFont = Font.system(size: 36)
+
     // MARK: - Spacing
 
     static let spacingXS: CGFloat = 4

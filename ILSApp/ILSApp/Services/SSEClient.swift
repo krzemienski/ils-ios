@@ -25,6 +25,7 @@ class SSEClient: ObservableObject {
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
     private var lastEventId: String?
+    // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
     nonisolated private let jsonDecoder = JSONDecoder()
 
@@ -53,8 +54,8 @@ class SSEClient: ObservableObject {
         reconnectAttempts = 0
         connectionState = .connecting
 
-        streamTask = Task {
-            await performStream(request: request)
+        streamTask = Task { [weak self] in
+            await self?.performStream(request: request)
         }
     }
 

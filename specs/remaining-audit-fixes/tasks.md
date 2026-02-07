@@ -255,7 +255,7 @@ Per FUNCTIONAL VALIDATION MANDATE: no mocks, no test files — real app, real si
   - **Verify**: `xcrun simctl launch 50523130-57AA-48B0-ABD0-4D59CE455F14 com.ils.app` exits 0
   - **Commit**: None (validation only)
 
-- [ ] 3.2 Capture evidence screenshots (6 key screens)
+- [x] 3.2 Capture evidence screenshots (6 key screens)
   - **Do**:
     1. Start backend: `cd /Users/nick/Desktop/ils-ios && PORT=9090 swift run ILSBackend &`
     2. Wait for backend health: `curl -s http://localhost:9090/api/v1/health | head -1`
@@ -273,7 +273,7 @@ Per FUNCTIONAL VALIDATION MANDATE: no mocks, no test files — real app, real si
   - **Commit**: `chore(audit): capture validation evidence screenshots`
   - _Requirements: NFR-4 | Success Criteria: visual evidence_
 
-- [ ] 3.3 [VERIFY] Functional spot-checks via automated verification
+- [x] 3.3 [VERIFY] Functional spot-checks via automated verification
   - **Do**:
     1. Verify no `print()` output in Console: `grep -rn 'print(' ILSApp/ILSApp/ --include='*.swift' | grep -v AppLogger | grep -v '//' | grep -v 'debugPrint'`
     2. Verify all `nonisolated` markers: `grep -rn 'nonisolated' ILSApp/ILSApp/ --include='*.swift' | wc -l` (expect 5+)
