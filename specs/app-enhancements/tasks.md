@@ -83,7 +83,7 @@ Focus: Add MarkdownUI + HighlightSwift deps, extract ChatMessage model, wire DI 
   - _Requirements: FR-27_
   - _Design: Phase 1 — 1.4 SystemController Actor-Safe Cancellation_
 
-- [ ] V1 [VERIFY] Foundation checkpoint: backend + iOS builds pass
+- [x] V1 [VERIFY] Foundation checkpoint: backend + iOS builds pass
   - **Do**: Run both build commands to confirm Phase 1 foundation is solid
   - **Verify**: `swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both builds succeed with zero errors
@@ -95,7 +95,7 @@ Focus: Add MarkdownUI + HighlightSwift deps, extract ChatMessage model, wire DI 
 
 Focus: Replace hand-rolled markdown parser with MarkdownUI, replace keyword highlighter with HighlightSwift, enhance tool calls + thinking sections, add message actions.
 
-- [ ] 2.1 Replace MarkdownTextView with MarkdownUI wrapper
+- [x] 2.1 Replace MarkdownTextView with MarkdownUI wrapper
   - **Do**:
     1. Rewrite `MarkdownTextView.swift` — replace all 299 lines of custom parser with MarkdownUI:
        ```
