@@ -29,6 +29,8 @@ final class MetricsWebSocketClient: ObservableObject {
     private var pollingTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
     private var useFallbackPolling: Bool = false
+    private var lastWSResetTime: Date?
+    private let wsResetInterval: TimeInterval = 600
 
     init(baseURL: String = "http://localhost:9090") {
         self.baseURL = baseURL
@@ -41,6 +43,14 @@ final class MetricsWebSocketClient: ObservableObject {
 
     func connect() {
         guard webSocketTask == nil, pollingTask == nil else { return }
+
+        // Reset fallback after recovery window (10 minutes) to retry WebSocket
+        if useFallbackPolling,
+           let resetTime = lastWSResetTime,
+           Date().timeIntervalSince(resetTime) > wsResetInterval {
+            useFallbackPolling = false
+            wsFailureCount = 0
+        }
 
         if useFallbackPolling {
             startPolling()
@@ -136,6 +146,7 @@ final class MetricsWebSocketClient: ObservableObject {
 
         if wsFailureCount >= maxWSFailures {
             useFallbackPolling = true
+            lastWSResetTime = Date()
             startPolling()
             return
         }

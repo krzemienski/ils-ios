@@ -91,7 +91,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-6, FR-16 | AC-2.2, AC-6.1_
   - _Design: TunnelSettingsView.swift section_
 
-- [ ] 1.8 [VERIFY] Quality checkpoint: build succeeds after ViewModel fixes
+- [x] 1.8 [VERIFY] Quality checkpoint: build succeeds after ViewModel fixes
   - **Do**: Build the project to catch any compilation errors from tasks 1.5-1.7
   - **Verify**: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E '(BUILD SUCCEEDED|BUILD FAILED|error:)'`
   - **Done when**: BUILD SUCCEEDED with zero errors
@@ -122,7 +122,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-8 | AC-3.1_
   - _Design: SkillsViewModel.swift section_
 
-- [ ] 1.11 Fix ChatView: DispatchQueue to Task, computed to method
+- [x] 1.11 Fix ChatView: DispatchQueue to Task, computed to method
   - **Do**:
     1. Open `ChatView.swift`
     2. **M-MEM-2**: Replace `DispatchQueue.main.asyncAfter` (line 322) with `@State private var scrollTask: Task<Void, Never>?` pattern. Cancel previous, create Task with `Task.sleep(for: .milliseconds(300))`, guard `!Task.isCancelled`, then perform scroll. Add `.onDisappear { scrollTask?.cancel() }`
@@ -134,7 +134,7 @@ Focus: Fix all 21 audit issues grouped by file. Core services first, then ViewMo
   - _Requirements: FR-6, FR-10 | AC-2.2, AC-3.3_
   - _Design: ChatView.swift section_
 
-- [ ] 1.12 Fix MetricsWebSocketClient: WebSocket fallback reset timer
+- [x] 1.12 Fix MetricsWebSocketClient: WebSocket fallback reset timer
   - **Do**:
     1. Open `MetricsWebSocketClient.swift`
     2. **L-NET-2**: Add `private var lastWSResetTime: Date?` and `private let wsResetInterval: TimeInterval = 600` properties. In `connect()`, before checking `useFallbackPolling`, add reset logic: if `useFallbackPolling == true` AND `Date().timeIntervalSince(lastWSResetTime) > wsResetInterval`, reset `useFallbackPolling = false` and `wsFailureCount = 0`. When setting `useFallbackPolling = true` (line 138), also set `lastWSResetTime = Date()`
