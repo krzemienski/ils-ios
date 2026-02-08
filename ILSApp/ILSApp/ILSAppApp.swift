@@ -66,16 +66,15 @@ class AppState: ObservableObject {
             self?.objectWillChange.send()
         }.store(in: &cancellables)
 
-        // Sync showOnboarding bidirectionally: ConnectionManager -> AppState
-        cm.$showOnboarding.sink { [weak self] (value: Bool) in
-            guard let self, self.showOnboarding != value else { return }
-            self.showOnboarding = value
+        // Sync showOnboarding bidirectionally with removeDuplicates to prevent
+        // infinite recursion (@Published emits on willSet before storage updates,
+        // so property-read guards are unreliable — use stream dedup instead)
+        cm.$showOnboarding.removeDuplicates().sink { [weak self] (value: Bool) in
+            self?.showOnboarding = value
         }.store(in: &cancellables)
 
-        // Sync showOnboarding bidirectionally: AppState -> ConnectionManager
-        $showOnboarding.dropFirst().sink { [weak cm] (value: Bool) in
-            guard let cm, cm.showOnboarding != value else { return }
-            cm.showOnboarding = value
+        $showOnboarding.dropFirst().removeDuplicates().sink { [weak cm] (value: Bool) in
+            cm?.showOnboarding = value
         }.store(in: &cancellables)
 
         pollingManager.checkConnection()
