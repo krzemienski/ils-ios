@@ -166,12 +166,12 @@ struct SidebarView: View {
                 }
                 .contextMenu {
                     Button {
-                        // Rename — wired in Phase 3
+                        // TODO: Implement rename via sessionsViewModel
                     } label: {
                         Label("Rename", systemImage: "pencil")
                     }
                     Button {
-                        // Export — wired in Phase 3
+                        // TODO: Implement export via share sheet
                     } label: {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
@@ -234,7 +234,6 @@ struct SidebarView: View {
 
     private var bottomActions: some View {
         Button {
-            // New session — wired in Phase 5
             isSidebarOpen = false
         } label: {
             HStack(spacing: theme.spacingSM) {

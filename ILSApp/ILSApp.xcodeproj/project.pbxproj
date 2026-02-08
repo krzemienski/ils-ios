@@ -57,7 +57,6 @@
 		79749939869277B83FB3F09B /* PaperTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9321E429688A848C0DFF63B3 /* PaperTheme.swift */; };
 
 		91F19D5F77DA1286391D0468 /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CE45720072EBA7B75C042F /* MidnightTheme.swift */; };
-		9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E0683F219C707581CC1582 /* BaseListViewModel.swift */; };
 		978A8A075CC3D2CA5471BEC2 /* GhostProtocolTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7ED6A074C75424C5ABAF25 /* GhostProtocolTheme.swift */; };
 		ACNTBT0000000000000001 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACNTBT0000000000000002 /* AccentButton.swift */; };
 		APPTHEM000000000000001 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919526D04FDC331F2C26E684 /* AppTheme.swift */; };
@@ -92,6 +91,7 @@
 		SBRV00000000000000001 /* SidebarRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SBRV00000000000000002 /* SidebarRootView.swift */; };
 		SDBV00000000000000001 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDBV00000000000000002 /* SidebarView.swift */; };
 		SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SDSR00000000000000002 /* SidebarSessionRow.swift */; };
+		SHRSHT0000000000000001 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHRSHT0000000000000002 /* ShareSheet.swift */; };
 		SHIMMR0000000000000001 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHIMMR0000000000000002 /* ShimmerModifier.swift */; };
 		SKLROW0000000000000001 /* SkeletonRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SKLROW0000000000000002 /* SkeletonRow.swift */; };
 		SPRKCR0000000000000001 /* SparklineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = SPRKCR0000000000000002 /* SparklineChart.swift */; };
@@ -99,7 +99,6 @@
 		STIV00000000000000001 /* StreamingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = STIV00000000000000002 /* StreamingIndicatorView.swift */; };
 		SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSMON0000000000000002 /* SystemMonitorView.swift */; };
 		SYSVM00000000000000001 /* SystemMetricsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSVM00000000000000002 /* SystemMetricsViewModel.swift */; };
-		THMMGR0000000000000001 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = THMMGR0000000000000002 /* ThemeManager.swift */; };
 		THNKSC0000000000000001 /* ThinkingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = THNKSC0000000000000002 /* ThinkingSection.swift */; };
 		TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = TOOLAC0000000000000002 /* ToolCallAccordion.swift */; };
 		TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TUNSET0000000000000002 /* TunnelSettingsView.swift */; };
@@ -160,7 +159,6 @@
 		2F023018A4AB7240B1861F58 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
 		3148929677345A42F1893F38 /* SlateTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Themes/SlateTheme.swift; sourceTree = "<group>"; };
 		4F5959087095F5F603D0B826 /* AppLogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppLogger.swift; path = Services/AppLogger.swift; sourceTree = "<group>"; };
-		68E0683F219C707581CC1582 /* BaseListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BaseListViewModel.swift; sourceTree = "<group>"; };
 		6B3087D09349EA69F8D3EF62 /* DateFormatters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DateFormatters.swift; path = Utils/DateFormatters.swift; sourceTree = "<group>"; };
 		79946942CF0E1CA622F3F08E /* PluginModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginModels.swift; sourceTree = "<group>"; };
 		7CAF769D0615A31709BF46E9 /* ElectricGridTheme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Themes/ElectricGridTheme.swift; sourceTree = "<group>"; };
@@ -205,6 +203,7 @@
 		SBRV00000000000000002 /* SidebarRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
 		SDBV00000000000000002 /* SidebarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		SDSR00000000000000002 /* SidebarSessionRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarSessionRow.swift; sourceTree = "<group>"; };
+		SHRSHT0000000000000002 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		SHIMMR0000000000000002 /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
 		SKLROW0000000000000002 /* SkeletonRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonRow.swift; sourceTree = "<group>"; };
 		SPRKCR0000000000000002 /* SparklineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparklineChart.swift; sourceTree = "<group>"; };
@@ -212,7 +211,6 @@
 		STIV00000000000000002 /* StreamingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingIndicatorView.swift; sourceTree = "<group>"; };
 		SYSMON0000000000000002 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
 		SYSVM00000000000000002 /* SystemMetricsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsViewModel.swift; sourceTree = "<group>"; };
-		THMMGR0000000000000002 /* ThemeManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		THNKSC0000000000000002 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		TOOLAC0000000000000002 /* ToolCallAccordion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallAccordion.swift; sourceTree = "<group>"; };
 		TUNSET0000000000000002 /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
@@ -287,7 +285,6 @@
 				B1D1A53A5156A8D8D724FDCB /* EntityType.swift */,
 				CONNBN0000000000000003 /* Components */,
 				919526D04FDC331F2C26E684 /* AppTheme.swift */,
-				THMMGR0000000000000002 /* ThemeManager.swift */,
 				GLSCRD0000000000000002 /* GlassCard.swift */,
 				99FA89C5B8C4BF43C64716A2 /* Themes */,
 			);
@@ -320,6 +317,7 @@
 				000000000000000000000075 /* Skills */,
 				000000000000000000000076 /* Sessions */,
 				000000000000000000000077 /* Settings */,
+				SHRSHT0000000000000003 /* Shared */,
 				SYSMON0000000000000003 /* System */,
 				ONBOARD0000000000000003 /* Onboarding */,
 				SBRV00000000000000003 /* Root */,
@@ -337,7 +335,6 @@
 				00000000000000000000003F /* MCPViewModel.swift */,
 				000000000000000000000051 /* SkillsViewModel.swift */,
 				000000000000000000000055 /* SessionsViewModel.swift */,
-				68E0683F219C707581CC1582 /* BaseListViewModel.swift */,
 				SYSVM00000000000000002 /* SystemMetricsViewModel.swift */,
 				CFGVM0000000000000002 /* ConfigEditorViewModel.swift */,
 				SETVM0000000000000002 /* SettingsViewModel.swift */,
@@ -584,6 +581,14 @@
 			path = Root;
 			sourceTree = "<group>";
 		};
+		SHRSHT0000000000000003 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				SHRSHT0000000000000002 /* ShareSheet.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		SYSMON0000000000000003 /* System */ = {
 			isa = PBXGroup;
 			children = (
@@ -735,7 +740,6 @@
 				C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */,
 				5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */,
 				E2C1C5D774B7BE4FAE456771 /* ThemePickerView.swift in Sources */,
-				9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */,
 				ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */,
 				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
 				SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */,
@@ -766,7 +770,6 @@
 				0A8D2F5C6ED7B3BB633DCEA3 /* DateFormatters.swift in Sources */,
 				5910023177AFED4B86044C84 /* ObsidianTheme.swift in Sources */,
 				APPTHEM000000000000001 /* AppTheme.swift in Sources */,
-				THMMGR0000000000000001 /* ThemeManager.swift in Sources */,
 				GLSCRD0000000000000001 /* GlassCard.swift in Sources */,
 				ACNTBT0000000000000001 /* AccentButton.swift in Sources */,
 				ENTBDG0000000000000001 /* EntityBadge.swift in Sources */,
@@ -774,6 +777,7 @@
 				SBRV00000000000000001 /* SidebarRootView.swift in Sources */,
 				SDBV00000000000000001 /* SidebarView.swift in Sources */,
 				SDSR00000000000000001 /* SidebarSessionRow.swift in Sources */,
+				SHRSHT0000000000000001 /* ShareSheet.swift in Sources */,
 				D7BA05A1B0B5380CADE68B8E /* PluginModels.swift in Sources */,
 				4A4F0079485E39F4257E6521 /* MCPServerItem.swift in Sources */,
 				F7997090BDD38B6FB3984C09 /* MCPServerDetailView.swift in Sources */,
