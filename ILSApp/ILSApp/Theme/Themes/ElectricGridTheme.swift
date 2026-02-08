@@ -21,7 +21,7 @@ struct ElectricGridTheme: AppTheme {
     let textPrimary = Color(hex: "D8E8E0")
     let textSecondary = Color(hex: "7898A0")
     let textTertiary = Color(hex: "405860")
-    let textOnAccent = Color.white
+    let textOnAccent = Color(hex: "050510")
 
     // Semantic
     let success = Color(hex: "22C55E")

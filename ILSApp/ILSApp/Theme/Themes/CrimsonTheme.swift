@@ -11,7 +11,7 @@ struct CrimsonTheme: AppTheme {
     let bgSidebar = Color(hex: "0C0808")
 
     // Accent
-    let accent = Color(hex: "EF4444")
+    let accent = Color(hex: "DC2626")
     let accentSecondary = Color(hex: "F87171")
     var accentGradient: LinearGradient {
         LinearGradient(colors: [Color(hex: "EF4444"), Color(hex: "F87171")], startPoint: .topLeading, endPoint: .bottomTrailing)

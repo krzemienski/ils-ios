@@ -1,11 +1,14 @@
 import SwiftUI
 import MarkdownUI
 
-/// Bridges MarkdownUI's code syntax highlighting protocol to ILS theme colors.
+/// Intentional passthrough highlighter for inline code spans in MarkdownUI.
 ///
-/// The `CodeSyntaxHighlighter` protocol is synchronous (`-> Text`), so it cannot
-/// use `@Environment(\.theme)`. Uses system monospaced font with primary text color.
-/// Fenced code blocks are rendered by `CodeBlockView` which does use theme tokens.
+/// Inline code uses system monospaced font without syntax coloring. This is intentional:
+/// the `CodeSyntaxHighlighter` protocol is synchronous (`-> Text`), so it cannot
+/// use `@Environment(\.theme)` or perform async work.
+///
+/// Fenced code blocks are handled by `CodeBlockView` which provides full async syntax
+/// highlighting via the Highlight framework with proper theme integration.
 struct ILSCodeHighlighter: CodeSyntaxHighlighter {
     func highlightCode(_ code: String, language: String?) -> Text {
         Text(code)

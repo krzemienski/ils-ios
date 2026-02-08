@@ -89,7 +89,8 @@ class DashboardViewModel: ObservableObject {
         await loadAll()
     }
 
-    /// Generate synthetic sparkline data from a seed value for visual variety
+    /// Synthetic sample data for dashboard sparkline visualization.
+    /// Generates deterministic pseudo-random values from a seed for visual variety.
     private func generateSparkline(count: Int, seed: Int) -> [Double] {
         guard seed > 0 else { return [] }
         let base = Double(seed)

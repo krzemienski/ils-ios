@@ -21,7 +21,7 @@ struct GhostProtocolTheme: AppTheme {
     let textPrimary = Color(hex: "E0E4F0")
     let textSecondary = Color(hex: "808CA0")
     let textTertiary = Color(hex: "485068")
-    let textOnAccent = Color.white
+    let textOnAccent = Color(hex: "08080C")
 
     // Semantic
     let success = Color(hex: "22C55E")

@@ -447,11 +447,6 @@ struct ChatInputBar: View {
                 .lineLimit(1...5)
                 .disabled(isDisabled)
                 .accessibilityIdentifier("chat-input-field")
-                .onSubmit {
-                    if !text.isEmpty && !isDisabled {
-                        onSend()
-                    }
-                }
 
             if isStreaming {
                 Button(action: onCancel) {
@@ -530,7 +525,7 @@ struct StreamingStatusBanner: View {
             Spacer()
 
             if tokenCount > 0 {
-                Text("\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
+                Text("~\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(theme.textTertiary)
                     .accessibilityIdentifier("streaming-stats-text")

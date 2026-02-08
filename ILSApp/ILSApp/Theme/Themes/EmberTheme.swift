@@ -25,7 +25,7 @@ struct EmberTheme: AppTheme {
 
     // Semantic
     let success = Color(hex: "22C55E")
-    let warning = Color(hex: "EAB308")
+    let warning = Color(hex: "FBBF24")
     let error = Color(hex: "EF4444")
     let info = Color(hex: "3B82F6")
 
