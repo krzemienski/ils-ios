@@ -43,8 +43,6 @@ class AppState: ObservableObject {
 
     /// Navigation intent for deep linking — consumed by SidebarRootView
     @Published var navigationIntent: ActiveScreen?
-    @Published var isServerConnected: Bool = false
-    @Published var serverConnectionInfo: ConnectionResponse?
 
     // Spec 051: Session state persistence
     @Published var lastSessionId: UUID?

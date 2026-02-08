@@ -106,7 +106,13 @@ class ThemeManager: ObservableObject {
     private(set) var availableThemes: [any AppTheme] = []
 
     init() {
-        let savedID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "obsidian"
+        // Migrate legacy theme IDs from before the rename
+        var savedID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "obsidian"
+        let legacyMigrations = ["ghost": "ghost-protocol", "electric": "electric-grid"]
+        if let migrated = legacyMigrations[savedID] {
+            savedID = migrated
+            UserDefaults.standard.set(migrated, forKey: Self.themeIDKey)
+        }
         let themes: [any AppTheme] = [
             ObsidianTheme(),
             SlateTheme(),
