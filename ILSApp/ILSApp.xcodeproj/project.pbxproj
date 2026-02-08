@@ -20,6 +20,10 @@
 		00000000000000000000002F /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
 		000000000000000000000041 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
 		000000000000000000000042 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* SettingsView.swift */; };
+		CFGED0000000000000001 /* ConfigEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFGED0000000000000002 /* ConfigEditorView.swift */; };
+		SETSEC0000000000000001 /* SettingsViewSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = SETSEC0000000000000002 /* SettingsViewSections.swift */; };
+		CFGVM0000000000000001 /* ConfigEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFGVM0000000000000002 /* ConfigEditorViewModel.swift */; };
+		SETVM0000000000000001 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SETVM0000000000000002 /* SettingsViewModel.swift */; };
 		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
 		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
 		000000000000000000000047 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
@@ -132,6 +136,10 @@
 		00000000000000000000003F /* MCPViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000051 /* SkillsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CFGED0000000000000002 /* ConfigEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditorView.swift; sourceTree = "<group>"; };
+		SETSEC0000000000000002 /* SettingsViewSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewSections.swift; sourceTree = "<group>"; };
+		CFGVM0000000000000002 /* ConfigEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditorViewModel.swift; sourceTree = "<group>"; };
+		SETVM0000000000000002 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
@@ -331,6 +339,8 @@
 				000000000000000000000055 /* SessionsViewModel.swift */,
 				68E0683F219C707581CC1582 /* BaseListViewModel.swift */,
 				SYSVM00000000000000002 /* SystemMetricsViewModel.swift */,
+				CFGVM0000000000000002 /* ConfigEditorViewModel.swift */,
+				SETVM0000000000000002 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -399,6 +409,8 @@
 				FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */,
 				2F023018A4AB7240B1861F58 /* ThemePickerView.swift */,
 				TUNSET0000000000000002 /* TunnelSettingsView.swift */,
+				CFGED0000000000000002 /* ConfigEditorView.swift */,
+				SETSEC0000000000000002 /* SettingsViewSections.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -737,6 +749,10 @@
 				PRCLST0000000000000001 /* ProcessListView.swift in Sources */,
 				FILBRW0000000000000001 /* FileBrowserView.swift in Sources */,
 				TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */,
+				CFGED0000000000000001 /* ConfigEditorView.swift in Sources */,
+				SETSEC0000000000000001 /* SettingsViewSections.swift in Sources */,
+				CFGVM0000000000000001 /* ConfigEditorViewModel.swift in Sources */,
+				SETVM0000000000000001 /* SettingsViewModel.swift in Sources */,
 				CODEBL0000000000000001 /* CodeBlockView.swift in Sources */,
 				TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */,
 				THNKSC0000000000000001 /* ThinkingSection.swift in Sources */,
