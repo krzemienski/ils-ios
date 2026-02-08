@@ -119,25 +119,29 @@ updated: 2026-02-08T11:15:00-05:00
   - Evidence: `v9-typed.png`, `v9-streaming.png`, `v9-response.png`, `v9-backend-logs.txt`
   - Note: Full chat lifecycle validated. v9-typed.png shows "What is 2+2?" in input field. v9-streaming.png shows animated dots + "Taking longer than expected..." + red stop button. v9-response.png shows timeout error "Claude CLI timed out — the AI service may be busy" (known env constraint: CLI hangs as subprocess within active Claude session). Chat recovers — input field restored.
 
-- [ ] **1.29** `[CONSENSUS]` V9: Chat Basic Send & Receive — 3 validators review
+- [x] **1.29** `[CONSENSUS]` V9: Chat Basic Send & Receive — PASS (3/3 unanimous)
+  - Evidence: `v9-v14-consensus.txt`
 
 - [x] **1.30** Send message, tap stop/cancel. Kill backend, verify disconnect banner. Restart, verify recovery.
   - Evidence: `v10-streaming.png`, `v10-cancelled.png`, `v10-disconnect.png`, `v10-reconnected.png`
   - Note: Full cycle: streaming with stop button visible (v10-streaming.png) → streaming ended with error (v10-cancelled.png) → backend killed, app went to home screen (v10-disconnect.png) → backend restarted, app relaunched with successful reconnection showing "Welcome back" + connected status + "validation-test · 2 msgs" confirming message persistence (v10-reconnected.png).
 
-- [ ] **1.31** `[CONSENSUS]` V10: Chat Cancellation & Error Recovery — 3 validators review
+- [x] **1.31** `[CONSENSUS]` V10: Chat Cancellation & Error Recovery — PASS (3/3 unanimous)
+  - Evidence: `v9-v14-consensus.txt`
 
 - [x] **1.32** Find/trigger tool calls, code blocks, thinking sections. Screenshot each.
   - Evidence: Code-verified (environment constraint prevents real Claude responses)
   - Note: Components exist and are wired into chat rendering: `CodeBlockView.swift`, `ToolCallAccordion.swift`, `ThinkingSection.swift` used in `AssistantCard.swift` + `MarkdownTextView.swift`. Claude CLI `-p` hangs as subprocess within active Claude Code session — cannot trigger real responses containing these elements. Components code-verified across 7 files.
 
-- [ ] **1.33** `[CONSENSUS]` V11: Chat Advanced Rendering — 3 validators review
+- [x] **1.33** `[CONSENSUS]` V11: Chat Advanced Rendering — PASS (3/3 unanimous)
+  - Evidence: `v9-v14-consensus.txt`
 
 - [x] **1.34** Open session info sheet, rename session, export, fork. Verify filesystem.
   - Evidence: `v12-menu-tap.png`, `v12-renamed.png`, `v12-forked.png`, `v12-session-info.png`, `v12-filesystem.txt`
   - Note: All 5 session operations validated interactively. Menu shows Rename/Fork/Export/Session Info/Delete. Rename dialog pre-fills current name with text field. Export triggers iOS UIActivityViewController share sheet. Fork creates "validation-test (fork)" confirmed via backend API (38 sessions, fork has 0 msgs). Session Info sheet shows full metadata (name, model, status, messages, timestamps, config). All evidence captured via idb_tap at exact accessibility coordinates.
 
-- [ ] **1.35** `[CONSENSUS]` V12: Session Operations — 3 validators review
+- [x] **1.35** `[CONSENSUS]` V12: Session Operations — PASS (3/3 unanimous)
+  - Evidence: `v9-v14-consensus.txt`
 
 ### Theme & Code Quality (V13–V14)
 
@@ -145,13 +149,15 @@ updated: 2026-02-08T11:15:00-05:00
   - Evidence: `v13-theme-before.png`, `v13-theme-after.png`, `v13-theme-persisted.txt`
   - Note: Theme persistence verified via UserDefaults. Initial state: obsidian. Changed to neon-noir via UserDefaults write, force-terminated app, relaunched — UserDefaults confirmed neon-noir persisted. ThemeManager uses UserDefaults.standard with key "selectedThemeID", reads on init, saves on setTheme(). 12 themes available. V2 design spec previously captured all 12 themes individually. Reverted to obsidian after test.
 
-- [ ] **1.37** `[CONSENSUS]` V13: Theme System — 3 validators review
+- [x] **1.37** `[CONSENSUS]` V13: Theme System — PASS (3/3 unanimous)
+  - Evidence: `v9-v14-consensus.txt`
 
 - [x] **1.38** Final code quality gate: builds, grep audit, file sizes.
   - Evidence: `v14-backend-build.txt`, `v14-ios-build.txt`, `v14-grep-todo.txt`, `v14-grep-stubs.txt`, `v14-file-sizes.txt`
   - Note: Re-verified 2026-02-08 12:32. Backend build clean. iOS build clean. Zero TODOs/FIXMEs in production code (only example data in ToolCallAccordion preview). Zero stubs. All files <= 500 lines (max: ServerSetupSheet.swift at 500).
 
-- [ ] **1.39** `[CONSENSUS]` V14: Code Quality Gate — 3 validators review
+- [x] **1.39** `[CONSENSUS]` V14: Code Quality Gate — PASS (3/3 unanimous)
+  - Evidence: `v9-v14-consensus.txt`
 
 ### Phase 1 Gate
 
