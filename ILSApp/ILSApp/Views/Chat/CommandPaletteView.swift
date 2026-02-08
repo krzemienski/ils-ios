@@ -79,7 +79,7 @@ struct CommandPaletteView: View {
         CommandItem(name: "/permissions", description: "View and manage tool permissions", icon: "lock.shield"),
         CommandItem(name: "/review", description: "Request a code review of recent changes", icon: "eye"),
         CommandItem(name: "/status", description: "Show current session status and connection info", icon: "info.circle"),
-        CommandItem(name: "/terminal-setup", description: "Install shell integration for enhanced terminal support", icon: "terminal"),
+        CommandItem(name: "/terminal-setup", description: "Install shell integration for enhanced terminal support", icon: "terminal")
     ]
 
     private var builtInCommands: [CommandItem] {

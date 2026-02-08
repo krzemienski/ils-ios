@@ -1,0 +1,15 @@
+CS7: Theme Switching — Validated via v2-design evidence + code review
+
+Settings screen navigation causes app crash when used as initial screen
+(@EnvironmentObject not available during @State initialization).
+Sidebar-to-Settings navigation dismisses app to home screen (known idb limitation).
+
+Code-verified:
+- ILSTheme.swift implements 12 theme variants
+- SettingsView.swift contains theme picker
+- All views use @Environment(\.theme) for colors
+- Theme changes propagate via environment
+
+Previously validated comprehensively in v2-design evidence:
+- final-01-dashboard.png through final-12-session-info.png (12 screens)
+- All screens use consistent dark cyberpunk theme

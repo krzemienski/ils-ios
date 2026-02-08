@@ -436,7 +436,7 @@ struct ServerSetupSheet: View {
         connectionSteps = [
             ConnectionStep(id: 0, name: "DNS Resolve", icon: "network", status: .pending),
             ConnectionStep(id: 1, name: "TCP Connect", icon: "cable.connector", status: .pending),
-            ConnectionStep(id: 2, name: "Health Check", icon: "heart.fill", status: .pending),
+            ConnectionStep(id: 2, name: "Health Check", icon: "heart.fill", status: .pending)
         ]
 
         Task {

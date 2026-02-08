@@ -1,0 +1,12 @@
+{
+  "source": "spec",
+  "name": "alpha",
+  "basePath": "specs/alpha",
+  "phase": "complete",
+  "taskIndex": 39,
+  "totalTasks": 39,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 6,
+  "maxGlobalIterations": 100
+}

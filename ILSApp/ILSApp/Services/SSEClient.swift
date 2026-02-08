@@ -99,8 +99,6 @@ class SSEClient: ObservableObject {
                 return result
             }
 
-            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
                 throw APIError.invalidResponse
@@ -109,10 +107,29 @@ class SSEClient: ObservableObject {
             connectionState = .connected
             reconnectAttempts = 0
 
+            // Track last received data or heartbeat for stale connection detection
+            let lastActivity = LastActivityTracker()
+
+            // Watchdog: detect stale connections (no data/heartbeat in 45s)
+            let heartbeatWatchdog = Task.detached { [weak self] in
+                while !Task.isCancelled {
+                    try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
+                    if await lastActivity.secondsSinceLastActivity() > 45 {
+                        AppLogger.shared.warning("SSE heartbeat timeout — no activity in 45s", category: "sse")
+                        throw URLError(.timedOut)
+                    }
+                    // Verify self still exists
+                    guard self != nil else { return }
+                }
+            }
+            defer { heartbeatWatchdog.cancel() }
+
             var currentEvent = ""
             var currentData = ""
 
             for try await line in asyncBytes.lines {
+                await lastActivity.touch() // Reset on ANY received line
+
                 if line.hasPrefix("event:") {
                     currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
                 } else if line.hasPrefix("id:") {
@@ -127,7 +144,7 @@ class SSEClient: ObservableObject {
                     currentEvent = ""
                     currentData = ""
                 } else if line.hasPrefix(":") {
-                    // Heartbeat/ping comment - ignore
+                    // Heartbeat/ping comment — activity already tracked above
                     continue
                 }
             }
@@ -245,5 +262,18 @@ class SSEClient: ObservableObject {
         lastEventId = nil
         userMessageId = nil
         assistantMessageId = nil
+    }
+}
+
+/// Thread-safe tracker for last SSE activity timestamp
+private actor LastActivityTracker {
+    private var lastActivity = Date()
+
+    func touch() {
+        lastActivity = Date()
+    }
+
+    func secondsSinceLastActivity() -> TimeInterval {
+        Date().timeIntervalSince(lastActivity)
     }
 }

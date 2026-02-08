@@ -1,0 +1,11 @@
+: ping
+
+: ping
+
+id: 3
+event: error
+data: {"type":"error","code":"TIMEOUT","message":"Claude CLI timed out — the AI service may be busy. Please try again."}
+
+event: done
+data: {}
+

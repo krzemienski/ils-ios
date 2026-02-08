@@ -9,7 +9,7 @@ struct AssistantCard: View {
 
     @Environment(\.theme) private var theme: any AppTheme
     @State private var showCopyConfirmation = false
-    @State private var expandAllToolCalls: Bool? = nil
+    @State private var expandAllToolCalls: Bool?
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {

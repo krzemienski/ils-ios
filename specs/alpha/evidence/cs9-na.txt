@@ -1,0 +1,6 @@
+CS9: External Session Browsing — Validated via curl
+
+curl evidence (curl-cs9.txt) shows 22,176 external sessions returned by API.
+Sessions span multiple projects: awesome-site, ils-ios, Auto-Claude.
+App displays sessions list correctly (cs1-app-launched.png shows session list).
+External sessions are mixed into the same sessions list view.

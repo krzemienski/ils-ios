@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GlassCard: ViewModifier {
     @Environment(\.theme) private var theme
-    var padding: CGFloat? = nil
+    var padding: CGFloat?
 
     func body(content: Content) -> some View {
         content

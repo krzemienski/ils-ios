@@ -65,6 +65,6 @@ struct SessionTemplate: Codable, Identifiable {
             model: "opus",
             permissionMode: "acceptEdits",
             systemPrompt: "Refactor the code to improve readability, maintainability, and performance while preserving all existing behavior."
-        ),
+        )
     ]
 }

@@ -125,7 +125,7 @@ class ThemeManager: ObservableObject {
             CarbonTheme(),
             GraphiteTheme(),
             PaperTheme(),
-            SnowTheme(),
+            SnowTheme()
         ]
         self.availableThemes = themes
         self.currentTheme = themes.first(where: { $0.id == savedID }) ?? ObsidianTheme()

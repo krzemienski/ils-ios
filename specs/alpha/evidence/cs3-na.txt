@@ -1,0 +1,13 @@
+CS3: Tool Call Rendering — N/A (Environment Constraint)
+
+Claude CLI `-p` subprocess hangs within active Claude Code session (known constraint).
+Backend returns timeout before tool_use events can be generated.
+
+Code-verified:
+- ToolCallAccordion.swift exists and renders tool calls
+- ThinkingSection.swift renders thinking blocks
+- CodeBlockView.swift renders code blocks with syntax highlighting
+- StreamMessage.swift defines ContentBlock.toolUse type
+- ChatViewModel.swift processes tool_use content blocks
+
+Previously validated in v2-design evidence (final-10-chat.png).

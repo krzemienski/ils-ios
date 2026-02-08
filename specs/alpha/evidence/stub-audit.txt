@@ -1,0 +1,109 @@
+================================================================================
+STUB AUDIT RESULTS - ILS iOS App
+Generated: 2026-02-07
+================================================================================
+
+COMMAND 1: grep -n "alwaysThinkingEnabled\|includeCoAuthoredBy" ILSApp/ILSApp/Views/Settings/SettingsViewSections.swift
+Status: FOUND (2 matches)
+Output:
+  198:                    settingsRow("Extended Thinking", icon: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle", iconColor: config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+  200:                    settingsRow("Include Co-Author", icon: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle", iconColor: config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+
+Audit Result: ❌ FAIL - Stub settings displayed in UI but likely not wired to backend
+Concern: Lines 198 & 200 show read-only display of config values without apparent toggle functionality
+
+================================================================================
+
+COMMAND 2: grep -A5 "func testConnection" ILSApp/ILSApp/ViewModels/SettingsViewModel.swift
+Status: FOUND (1 match with 5 lines context)
+Output:
+  func testConnection() async {
+      guard let client else { return }
+      isTestingConnection = true
+      defer { isTestingConnection = false }
+      do {
+          _ = try await client.healthCheck()
+
+Audit Result: ✅ PASS - testConnection properly implemented
+Concern: None - function calls actual healthCheck() via APIClient
+
+================================================================================
+
+COMMAND 3: grep -n "AppLogger" ILSApp/ILSApp/Views/Settings/LogViewerView.swift
+Status: FOUND (2 matches)
+Output:
+  31:                        logs = await AppLogger.shared.recentLogs()
+  41:            logs = await AppLogger.shared.recentLogs()
+
+Audit Result: ✅ PASS - AppLogger integrated and used
+Concern: None - actual logging service being called
+
+================================================================================
+
+COMMAND 4: grep -n "AppStorage" ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift
+Status: FOUND (6 matches)
+Output:
+  7:    @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
+  8:    @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
+  9:    @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
+  10:    @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
+  11:    @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
+  12:    @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
+
+Audit Result: ✅ PASS - Notification preferences properly persisted
+Concern: None - using SwiftUI @AppStorage for user defaults
+
+================================================================================
+
+COMMAND 5: grep -rn 'set: { _ in }' ILSApp/ILSApp/ --include="*.swift"
+Status: 0 matches
+Output: (no results)
+
+Audit Result: ✅ PASS - No stub setters found
+Concern: None - no placeholder set blocks
+
+================================================================================
+
+COMMAND 6: grep -rn '\.disabled(true)' ILSApp/ILSApp/ --include="*.swift"
+Status: 0 matches
+Output: (no results)
+
+Audit Result: ✅ PASS - No permanently disabled UI elements
+Concern: None - no stub buttons/fields left disabled
+
+================================================================================
+
+COMMAND 7: grep -rn 'sampleFleet\|sampleData\|sampleHistory' ILSApp/ILSApp/ --include="*.swift"
+Status: 0 matches
+Output: (no results)
+
+Audit Result: ✅ PASS - No sample data stubs detected
+Concern: None - no placeholder data generators
+
+================================================================================
+
+SUMMARY
+================================================================================
+
+Total Commands: 7
+Pass: 6
+Fail: 1
+Pass Rate: 85.7%
+
+❌ ISSUES IDENTIFIED:
+
+1. STUB SETTINGS (SettingsViewSections.swift, lines 198-200)
+   - alwaysThinkingEnabled and includeCoAuthoredBy displayed as read-only toggles
+   - Unclear if these sync with backend or are just UI stubs
+   - Recommendation: Verify if these should be functional toggles wired to API
+
+✅ AREAS CLEAN:
+
+1. Connection testing properly implemented (healthCheck)
+2. Logging system fully integrated (AppLogger)
+3. Notification preferences persisted (AppStorage)
+4. No stub setters (set: { _ in })
+5. No disabled UI elements
+6. No sample data stubs
+
+================================================================================

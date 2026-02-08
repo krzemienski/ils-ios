@@ -25,7 +25,7 @@ private struct ThemePreview: Identifiable {
         ThemePreview(id: "carbon", name: "Carbon", accent: Color(hex: "8B5CF6"), bgPrimary: Color(hex: "0D0A12"), textPrimary: Color(hex: "E0DCE8"), bgSecondary: Color(hex: "16131E"), isLight: false),
         ThemePreview(id: "graphite", name: "Graphite", accent: Color(hex: "14B8A6"), bgPrimary: Color(hex: "0A0F0F"), textPrimary: Color(hex: "D8E4E4"), bgSecondary: Color(hex: "131A1A"), isLight: false),
         ThemePreview(id: "paper", name: "Paper", accent: Color(hex: "EA580C"), bgPrimary: Color(hex: "FAFAF9"), textPrimary: Color(hex: "1C1917"), bgSecondary: Color(hex: "F0EFEE"), isLight: true),
-        ThemePreview(id: "snow", name: "Snow", accent: Color(hex: "2563EB"), bgPrimary: Color(hex: "FAFBFF"), textPrimary: Color(hex: "111827"), bgSecondary: Color(hex: "EFF1F5"), isLight: true),
+        ThemePreview(id: "snow", name: "Snow", accent: Color(hex: "2563EB"), bgPrimary: Color(hex: "FAFBFF"), textPrimary: Color(hex: "111827"), bgSecondary: Color(hex: "EFF1F5"), isLight: true)
     ]
 }
 

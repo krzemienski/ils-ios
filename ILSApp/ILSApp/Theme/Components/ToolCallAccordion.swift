@@ -225,7 +225,7 @@ struct ToolCallAccordion: View {
 }
 
 #Preview {
-    @Previewable @State var expandAllState: Bool? = nil
+    @Previewable @State var expandAllState: Bool?
 
     ScrollView {
         VStack(spacing: 12) {

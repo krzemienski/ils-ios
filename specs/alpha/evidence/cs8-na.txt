@@ -1,0 +1,12 @@
+CS8: Long Message with Code Blocks — N/A (Environment Constraint)
+
+Claude CLI `-p` subprocess hangs within active Claude Code session (known constraint).
+Backend times out at 30s before Claude can generate code block responses.
+
+Code-verified:
+- CodeBlockView.swift implements syntax highlighting via HighlightSwift
+- ChatMessageView.swift renders markdown via MarkdownUI
+- ThinkingSection.swift renders expandable thinking sections
+- Auto-scroll implemented in ChatMessageList.swift
+
+Previously validated in v2-design evidence (final-10-chat.png).

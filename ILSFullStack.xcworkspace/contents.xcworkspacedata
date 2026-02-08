@@ -8,13 +8,24 @@
       location = "container:"
       name = "Backend">
       <FileRef
-         location = "group:Sources">
+         location = "group:Sources/ILSBackend">
       </FileRef>
       <FileRef
          location = "group:Package.swift">
       </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "Shared">
       <FileRef
-         location = "group:Package.resolved">
+         location = "group:Sources/ILSShared">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:"
+      name = "Tests">
+      <FileRef
+         location = "group:Tests">
       </FileRef>
    </Group>
 </Workspace>
