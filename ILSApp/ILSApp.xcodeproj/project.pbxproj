@@ -78,7 +78,9 @@
 		ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */; };
 		MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MARKDOWN0000000000000002 /* MarkdownTextView.swift */; };
 		MARKDOWN0000000000000081 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = MARKDOWN0000000000000091 /* MarkdownUI */; };
+		CONNMGR000000000000001 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONNMGR000000000000002 /* ConnectionManager.swift */; };
 		METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = METRWS0000000000000002 /* MetricsWebSocketClient.swift */; };
+		POLLMGR000000000000001 /* PollingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = POLLMGR000000000000002 /* PollingManager.swift */; };
 		MTCHRT0000000000000001 /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = MTCHRT0000000000000002 /* MetricChart.swift */; };
 		ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBOARD0000000000000002 /* ServerSetupSheet.swift */; };
 		PRCLST0000000000000001 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRCLST0000000000000002 /* ProcessListView.swift */; };
@@ -185,7 +187,9 @@
 		HOMV00000000000000002 /* HomeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSCodeHighlighter.swift; sourceTree = "<group>"; };
 		MARKDOWN0000000000000002 /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
+		CONNMGR000000000000002 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
 		METRWS0000000000000002 /* MetricsWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsWebSocketClient.swift; sourceTree = "<group>"; };
+		POLLMGR000000000000002 /* PollingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingManager.swift; sourceTree = "<group>"; };
 		MTCHRT0000000000000002 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
 		ONBOARD0000000000000002 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
 		PRCLST0000000000000002 /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
@@ -286,8 +290,10 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000031 /* APIClient.swift */,
-				000000000000000000000032 /* SSEClient.swift */,
+				CONNMGR000000000000002 /* ConnectionManager.swift */,
 				METRWS0000000000000002 /* MetricsWebSocketClient.swift */,
+				POLLMGR000000000000002 /* PollingManager.swift */,
+				000000000000000000000032 /* SSEClient.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -722,7 +728,9 @@
 				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
 				SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */,
 				CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */,
+				CONNMGR000000000000001 /* ConnectionManager.swift in Sources */,
 				METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */,
+				POLLMGR000000000000001 /* PollingManager.swift in Sources */,
 				SYSVM00000000000000001 /* SystemMetricsViewModel.swift in Sources */,
 				MTCHRT0000000000000001 /* MetricChart.swift in Sources */,
 				PRGRING000000000000001 /* ProgressRing.swift in Sources */,
