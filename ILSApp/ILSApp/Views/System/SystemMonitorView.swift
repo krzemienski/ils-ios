@@ -95,7 +95,7 @@ struct SystemMonitorView: View {
 
                 // File Browser link
                 NavigationLink {
-                    FileBrowserView(baseURL: appState.serverURL)
+                    FileBrowserView()
                 } label: {
                     HStack {
                         Image(systemName: "folder")

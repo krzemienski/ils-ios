@@ -4,12 +4,26 @@ import SwiftUI
 
 struct NotificationPreferencesView: View {
     @Environment(\.theme) private var theme: any AppTheme
-    @State private var mcpOfflineAlerts = true
-    @State private var mcpOnlineAlerts = false
-    @State private var sessionCompleteAlerts = true
-    @State private var quietHoursEnabled = false
-    @State private var quietStart = Calendar.current.date(from: DateComponents(hour: 22)) ?? Date()
-    @State private var quietEnd = Calendar.current.date(from: DateComponents(hour: 7)) ?? Date()
+    @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
+    @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
+    @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
+    @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
+    @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
+    @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
+
+    private var quietStart: Binding<Date> {
+        Binding(
+            get: { Calendar.current.date(from: DateComponents(hour: quietStartHour)) ?? Date() },
+            set: { quietStartHour = Calendar.current.component(.hour, from: $0) }
+        )
+    }
+
+    private var quietEnd: Binding<Date> {
+        Binding(
+            get: { Calendar.current.date(from: DateComponents(hour: quietEndHour)) ?? Date() },
+            set: { quietEndHour = Calendar.current.component(.hour, from: $0) }
+        )
+    }
 
     var body: some View {
         ScrollView {
@@ -52,7 +66,7 @@ struct NotificationPreferencesView: View {
                                     .font(.system(size: theme.fontBody))
                                     .foregroundStyle(theme.textPrimary)
                                 Spacer()
-                                DatePicker("", selection: $quietStart, displayedComponents: .hourAndMinute)
+                                DatePicker("", selection: quietStart, displayedComponents: .hourAndMinute)
                                     .labelsHidden()
                                     .tint(theme.accent)
                                     .accessibilityLabel("Quiet hours start time")
@@ -62,7 +76,7 @@ struct NotificationPreferencesView: View {
                                     .font(.system(size: theme.fontBody))
                                     .foregroundStyle(theme.textPrimary)
                                 Spacer()
-                                DatePicker("", selection: $quietEnd, displayedComponents: .hourAndMinute)
+                                DatePicker("", selection: quietEnd, displayedComponents: .hourAndMinute)
                                     .labelsHidden()
                                     .tint(theme.accent)
                                     .accessibilityLabel("Quiet hours end time")

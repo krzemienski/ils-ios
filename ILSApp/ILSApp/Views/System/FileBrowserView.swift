@@ -5,21 +5,13 @@ import ILSShared
 /// Starts at ~/ and allows navigating into directories.
 struct FileBrowserView: View {
     @Environment(\.theme) private var theme: any AppTheme
-
-    let baseURL: String
+    @EnvironmentObject var appState: AppState
 
     @State private var currentPath: String = "~"
     @State private var entries: [FileEntryResponse] = []
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var previewFile: PreviewFile?
-
-    private let session = URLSession.shared
-    private let decoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.dateDecodingStrategy = .iso8601
-        return d
-    }()
 
     struct PreviewFile: Identifiable {
         let id = UUID()
@@ -239,20 +231,10 @@ struct FileBrowserView: View {
         errorMessage = nil
 
         let encodedPath = currentPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? currentPath
-        guard let url = URL(string: "\(baseURL)/api/v1/system/files?path=\(encodedPath)") else {
-            errorMessage = "Invalid path"
-            isLoading = false
-            return
-        }
 
         do {
-            let (data, response) = try await session.data(from: url)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                errorMessage = "Server returned an error"
-                isLoading = false
-                return
-            }
-            entries = try decoder.decode([FileEntryResponse].self, from: data)
+            let result: [FileEntryResponse] = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
+            entries = result
         } catch {
             errorMessage = "Failed to load directory: \(error.localizedDescription)"
         }
@@ -263,17 +245,17 @@ struct FileBrowserView: View {
     private func previewFileContent(_ name: String) async {
         let filePath = currentPath == "/" ? "/\(name)" : "\(currentPath)/\(name)"
         let encodedPath = filePath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? filePath
-        guard let url = URL(string: "\(baseURL)/api/v1/system/files?path=\(encodedPath)&preview=true") else { return }
+        guard let url = URL(string: "\(appState.serverURL)/api/v1/system/files?path=\(encodedPath)&preview=true") else { return }
 
         do {
-            let (data, response) = try await session.data(from: url)
+            let (data, response) = try await URLSession.shared.data(from: url)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
             let content = String(data: data, encoding: .utf8) ?? "Unable to read file"
             let lines = content.components(separatedBy: "\n")
             let truncated = lines.prefix(500).joined(separator: "\n")
             previewFile = PreviewFile(name: name, content: truncated)
         } catch {
-            // Silently fail
+            // Silently fail for preview
         }
     }
 
