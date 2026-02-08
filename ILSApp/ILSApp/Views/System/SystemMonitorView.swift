@@ -122,7 +122,10 @@ struct SystemMonitorView: View {
             }
         }
         .onAppear {
-            viewModel.metricsClient = MetricsWebSocketClient(baseURL: appState.serverURL)
+            if viewModel.metricsClient.baseURL != appState.serverURL {
+                viewModel.disconnect()
+                viewModel.metricsClient = MetricsWebSocketClient(baseURL: appState.serverURL)
+            }
             viewModel.connect()
             Task {
                 await viewModel.loadProcesses()

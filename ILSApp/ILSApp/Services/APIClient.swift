@@ -208,10 +208,12 @@ actor APIClient {
 struct APIResponse<T: Decodable>: Decodable {
     let success: Bool
     let data: T?
-    let error: APIErrorResponse?
+    let error: APIErrorDetail?
 }
 
-struct APIErrorResponse: Decodable {
+/// App-side error detail from backend responses (Decodable only).
+/// Separate from ILSShared's APIError which requires Codable & Sendable.
+struct APIErrorDetail: Decodable {
     let code: String
     let message: String
 }

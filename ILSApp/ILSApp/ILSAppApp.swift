@@ -109,8 +109,7 @@ class AppState: ObservableObject {
         Task {
             do {
                 AppLogger.shared.info("Checking connection to: \(serverURL)", category: "app")
-                let client = APIClient(baseURL: serverURL)
-                let response = try await client.healthCheck()
+                let response = try await apiClient.healthCheck()
                 AppLogger.shared.info("Connection successful! Response: \(response)", category: "app")
                 isConnected = true
                 stopRetryPolling()
@@ -142,11 +141,9 @@ class AppState: ObservableObject {
                 try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
-                let currentURL = self.serverURL
                 do {
-                    AppLogger.shared.info("Retry attempt to: \(currentURL)", category: "app")
-                    let client = APIClient(baseURL: currentURL)
-                    let response = try await client.healthCheck()
+                    AppLogger.shared.info("Retry attempt to: \(self.serverURL)", category: "app")
+                    let response = try await self.apiClient.healthCheck()
                     AppLogger.shared.info("Reconnected! Response: \(response)", category: "app")
                     self.isConnected = true
                     self.stopRetryPolling()
@@ -173,10 +170,8 @@ class AppState: ObservableObject {
                 try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
-                let currentURL = self.serverURL
                 do {
-                    let client = APIClient(baseURL: currentURL)
-                    _ = try await client.healthCheck()
+                    _ = try await self.apiClient.healthCheck()
                     // Still connected
                 } catch {
                     self.isConnected = false
@@ -213,10 +208,11 @@ class AppState: ObservableObject {
     /// Used by ServerSetupSheet and Settings "Test Connection".
     func connectToServer(url: String) async throws {
         let cleanURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
-        let client = APIClient(baseURL: cleanURL)
-        _ = try await client.healthCheck()
+        // Validate with a temporary client before committing the URL change
+        let tempClient = APIClient(baseURL: cleanURL)
+        _ = try await tempClient.healthCheck()
 
-        // Success — update everything atomically
+        // Success — update everything atomically (recreates self.apiClient with cleanURL)
         updateServerURL(cleanURL)
         isConnected = true
         UserDefaults.standard.set(true, forKey: "hasConnectedBefore")

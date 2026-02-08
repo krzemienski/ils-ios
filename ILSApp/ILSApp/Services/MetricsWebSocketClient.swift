@@ -15,7 +15,7 @@ final class MetricsWebSocketClient: ObservableObject {
     @Published var networkInHistory: [MetricDataPoint] = []
     @Published var networkOutHistory: [MetricDataPoint] = []
 
-    private let baseURL: String
+    let baseURL: String
     private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private let decoder: JSONDecoder

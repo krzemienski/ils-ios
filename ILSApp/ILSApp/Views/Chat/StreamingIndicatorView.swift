@@ -7,6 +7,7 @@ struct StreamingIndicatorView: View {
     var statusText: String?
 
     @State private var animatingDot = 0
+    @State private var animationTask: Task<Void, Never>?
     @Environment(\.theme) private var theme: any AppTheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -44,6 +45,10 @@ struct StreamingIndicatorView: View {
         .onAppear {
             startAnimation()
         }
+        .onDisappear {
+            animationTask?.cancel()
+            animationTask = nil
+        }
     }
 
     // MARK: - Static Indicator (Reduce Motion)
@@ -62,13 +67,14 @@ struct StreamingIndicatorView: View {
     // MARK: - Animation
 
     private func startAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { timer in
-            if reduceMotion {
-                timer.invalidate()
-                return
-            }
-            withAnimation(.easeInOut(duration: 0.4)) {
-                animatingDot = (animatingDot + 1) % 3
+        animationTask?.cancel()
+        animationTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(400))
+                guard !Task.isCancelled, !reduceMotion else { break }
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    animatingDot = (animatingDot + 1) % 3
+                }
             }
         }
     }

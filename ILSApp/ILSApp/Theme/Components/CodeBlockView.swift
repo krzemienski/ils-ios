@@ -25,8 +25,8 @@ struct CodeBlockView: View {
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Code block, \(detectedLanguage ?? language ?? "code")")
-        .task {
-            await performHighlight()
+        .task(id: theme.isLight) {
+            await performHighlight(isLight: theme.isLight)
         }
     }
 
@@ -114,7 +114,7 @@ struct CodeBlockView: View {
 
     // MARK: - Highlighting
 
-    private func performHighlight() async {
+    private func performHighlight(isLight: Bool = false) async {
         let highlight = Highlight()
         do {
             let mode: HighlightMode
@@ -123,7 +123,8 @@ struct CodeBlockView: View {
             } else {
                 mode = .automatic
             }
-            let result = try await highlight.request(code, mode: mode, colors: .dark(.xcode))
+            let colors: HighlightColors = isLight ? .light(.xcode) : .dark(.xcode)
+            let result = try await highlight.request(code, mode: mode, colors: colors)
             self.highlightedCode = result.attributedText
             if language == nil || language?.isEmpty == true {
                 self.detectedLanguage = result.languageName
