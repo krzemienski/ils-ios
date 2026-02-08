@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05 - DATA STORM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system-mono, 'SF Mono', 'Menlo', 'Courier New', monospace;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .phone-bezel {
+      width: 390px;
+      height: 844px;
+      background: #000;
+      border-radius: 50px;
+      padding: 12px;
+      box-shadow: 0 0 0 12px #1c1c1e, 0 0 60px rgba(0,255,255,0.3);
+      position: relative;
+    }
+
+    .notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 30px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      border-radius: 38px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .matrix-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .scanlines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,255,0,0.03) 0px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .screen-content {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .screen-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .screen-content::-webkit-scrollbar-track {
+      background: rgba(0,255,255,0.1);
+    }
+
+    .screen-content::-webkit-scrollbar-thumb {
+      background: rgba(0,255,255,0.4);
+      border-radius: 2px;
+    }
+
+    .title-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 11px;
+      color: #00FFFF;
+      letter-spacing: 2px;
+      z-index: 200;
+      border-bottom: 1px solid rgba(0,255,255,0.2);
+    }
+
+    .screen-number {
+      position: absolute;
+      right: 16px;
+      color: rgba(0,255,255,0.5);
+    }
+
+    .terminal-text {
+      color: rgba(0,255,0,0.8);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .terminal-header {
+      color: #00FFFF;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: #00FF00;
+      animation: blink 1s infinite;
+      vertical-align: text-bottom;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    .glitch {
+      animation: glitch 0.3s;
+    }
+
+    @keyframes glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-2px, 1px); text-shadow: 2px 0 #FF0066, -2px 0 #00FFFF; }
+      40% { transform: translate(2px, -1px); text-shadow: -2px 0 #FF0066, 2px 0 #00FFFF; }
+      60% { transform: translate(-1px, 2px); text-shadow: 1px 0 #FF0066, -1px 0 #00FFFF; }
+      80% { transform: translate(1px, -2px); text-shadow: -1px 0 #FF0066, 1px 0 #00FFFF; }
+      100% { transform: translate(0); text-shadow: none; }
+    }
+
+    .nav-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(20px);
+      z-index: 150;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .nav-overlay.active {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .ascii-art {
+      color: #00FFFF;
+      font-size: 9px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      white-space: pre;
+      margin-bottom: 24px;
+    }
+
+    .menu-item {
+      padding: 12px 24px;
+      color: rgba(0,255,0,0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .menu-item:hover {
+      background: rgba(0,255,255,0.1);
+      color: #00FF00;
+    }
+
+    .menu-item.active {
+      color: #00FFFF;
+      background: rgba(0,255,255,0.15);
+    }
+
+    .menu-item.active .cursor {
+      background: #00FFFF;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      background: transparent;
+      border: 1px solid #00FFFF;
+      color: #00FFFF;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    .btn:hover {
+      background: rgba(0,255,255,0.2);
+      box-shadow: 0 0 20px rgba(0,255,255,0.4);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .terminal-block {
+      background: rgba(0,20,0,0.6);
+      border-left: 2px solid rgba(0,255,0,0.4);
+      padding: 12px;
+      margin: 8px 0;
+    }
+
+    .code-block {
+      background: rgba(0,0,0,0.8);
+      border: 1px solid rgba(0,255,0,0.3);
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 4px;
+    }
+
+    .tool-call {
+      background: rgba(255,238,0,0.1);
+      border-left: 2px solid #FFEE00;
+      padding: 8px 12px;
+      margin: 4px 0;
+      color: #FFEE00;
+      font-size: 12px;
+    }
+
+    .thinking {
+      background: rgba(0,255,0,0.05);
+      border-left: 2px solid rgba(0,255,0,0.3);
+      padding: 8px 12px;
+      margin: 4px 0;
+      color: rgba(0,255,0,0.5);
+      font-size: 12px;
+    }
+
+    .progress-bar {
+      display: inline-block;
+      font-size: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,255,255,0.1);
+    }
+
+    .stat-label {
+      color: rgba(0,255,0,0.6);
+    }
+
+    .stat-value {
+      color: #00FFFF;
+    }
+
+    .file-entry {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(0,255,255,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .file-entry:hover {
+      background: rgba(0,255,255,0.05);
+    }
+
+    .gauge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .gauge-label {
+      width: 40px;
+      color: rgba(0,255,0,0.6);
+      font-size: 12px;
+    }
+
+    .gauge-bar {
+      flex: 1;
+      height: 16px;
+      background: rgba(0,255,0,0.1);
+      border: 1px solid rgba(0,255,0,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00FF00, #00FFFF);
+      transition: width 0.5s;
+    }
+
+    .gauge-value {
+      color: #00FFFF;
+      font-size: 12px;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    .process-table {
+      margin-top: 16px;
+    }
+
+    .process-header {
+      display: grid;
+      grid-template-columns: 60px 1fr 60px 60px;
+      padding: 8px 16px;
+      background: rgba(0,255,255,0.1);
+      color: #00FFFF;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(0,255,255,0.3);
+    }
+
+    .process-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 60px 60px;
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(0,255,255,0.05);
+      color: rgba(0,255,0,0.7);
+      font-size: 12px;
+    }
+
+    .config-row {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .config-key {
+      color: rgba(0,255,0,0.6);
+      min-width: 140px;
+    }
+
+    .config-value {
+      color: #00FFFF;
+      flex: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(0,255,255,0.3);
+      color: #00FF00;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #00FFFF;
+      box-shadow: 0 0 10px rgba(0,255,255,0.3);
+    }
+
+    .search-input::placeholder {
+      color: rgba(0,255,0,0.3);
+    }
+
+    .message-user {
+      color: #00FFFF;
+      margin: 12px 16px;
+      padding: 10px 14px;
+      background: rgba(0,255,255,0.05);
+      border-left: 3px solid #00FFFF;
+    }
+
+    .message-ai {
+      color: #E0E0E0;
+      margin: 12px 16px;
+      padding: 10px 14px;
+      background: rgba(0,255,0,0.03);
+      border-left: 3px solid rgba(0,255,0,0.4);
+    }
+
+    .ai-header {
+      color: #00FF00;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .chat-input-container {
+      position: sticky;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      border-top: 1px solid rgba(0,255,255,0.2);
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(0,255,255,0.3);
+      color: #00FFFF;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .chat-input:focus {
+      border-color: #00FFFF;
+      box-shadow: 0 0 10px rgba(0,255,255,0.3);
+    }
+
+    .send-btn {
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px solid #00FFFF;
+      color: #00FFFF;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .send-btn:hover {
+      background: rgba(0,255,255,0.2);
+      box-shadow: 0 0 15px rgba(0,255,255,0.4);
+    }
+
+    .header-bar {
+      background: rgba(0,0,0,0.9);
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0,255,255,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .menu-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
+      border: 1px solid rgba(0,255,255,0.3);
+      color: #00FFFF;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+
+    .menu-btn:hover {
+      background: rgba(0,255,255,0.1);
+      border-color: #00FFFF;
+    }
+
+    .back-btn {
+      color: #00FFFF;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 8px 12px;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: rgba(0,255,255,0.1);
+    }
+
+    .divider {
+      color: rgba(0,255,0,0.4);
+      margin: 16px 0;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 2px;
+    }
+
+    .recent-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0,255,255,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      gap: 12px;
+    }
+
+    .recent-item:hover {
+      background: rgba(0,255,255,0.05);
+    }
+
+    .recent-time {
+      color: rgba(0,255,0,0.5);
+      min-width: 40px;
+    }
+
+    .recent-title {
+      color: #00FFFF;
+      flex: 1;
+    }
+
+    .recent-project {
+      color: rgba(0,255,0,0.6);
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-bezel">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="title-bar">
+        DATA STORM
+        <span class="screen-number">05</span>
+      </div>
+
+      <canvas class="matrix-canvas" id="matrixCanvas"></canvas>
+      <div class="scanlines"></div>
+
+      <!-- Navigation Overlay -->
+      <div class="nav-overlay" id="navOverlay">
+        <div style="padding: 60px 24px;">
+          <div class="ascii-art">██╗██╗     ███████╗
+██║██║     ██╔════╝
+██║██║     ███████╗
+██║██║     ╚════██║
+██║███████╗███████║
+╚═╝╚══════╝╚══════╝</div>
+
+          <div class="terminal-text" style="margin-bottom: 24px;">
+            <div>$ whoami</div>
+            <div style="color: #00FFFF; margin-left: 16px;">nick</div>
+            <div style="margin-top: 12px;">$ status</div>
+            <div style="color: #00FF00; margin-left: 16px;">CONNECTED [localhost:9090]</div>
+          </div>
+
+          <div style="margin-top: 32px;">
+            <div class="menu-item active" onclick="showScreen('dashboard')">
+              $ dashboard<span class="cursor"></span>
+            </div>
+            <div class="menu-item" onclick="showScreen('sessions')">
+              $ sessions
+            </div>
+            <div class="menu-item" onclick="showScreen('projects')">
+              $ projects
+            </div>
+            <div class="menu-item" onclick="showScreen('system')">
+              $ system
+            </div>
+            <div class="menu-item" onclick="showScreen('config')">
+              $ config
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Screen -->
+      <div class="screen-content" id="dashboard">
+        <div class="header-bar">
+          <button class="menu-btn" onclick="toggleNav()">[≡]</button>
+          <div class="terminal-header">$ cat /dashboard</div>
+          <div style="width: 44px;"></div>
+        </div>
+
+        <div style="padding: 24px 16px;">
+          <div class="terminal-text" style="margin-bottom: 24px;">
+            <div class="stat-row">
+              <span class="stat-label">SESSIONS ....</span>
+              <span class="stat-value">3</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">PROJECTS ....</span>
+              <span class="stat-value">371</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">SKILLS ......</span>
+              <span class="stat-value">1,527</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">MCP .........</span>
+              <span class="stat-value">20</span>
+            </div>
+          </div>
+
+          <div class="divider">--- RECENT ---</div>
+
+          <div class="recent-item" onclick="showScreen('chat')">
+            <span class="recent-time">[2h]</span>
+            <div style="flex: 1;">
+              <div class="recent-title">Architecture Review</div>
+              <div class="recent-project">ils-ios</div>
+            </div>
+          </div>
+
+          <div class="recent-item" onclick="showScreen('chat')">
+            <span class="recent-time">[5h]</span>
+            <div style="flex: 1;">
+              <div class="recent-title">Bug Fix Sprint</div>
+              <div class="recent-project">backend</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sessions Screen -->
+      <div class="screen-content" id="sessions" style="display: none;">
+        <div class="header-bar">
+          <button class="menu-btn" onclick="toggleNav()">[≡]</button>
+          <div class="terminal-header">$ ls sessions/</div>
+          <div style="width: 44px;"></div>
+        </div>
+
+        <div style="padding: 16px;">
+          <input type="text" class="search-input" placeholder="$ grep &quot;_&quot; sessions/" />
+        </div>
+
+        <div>
+          <div class="file-entry" onclick="showScreen('chat')">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="color: rgba(0,255,0,0.5);">drwx</span>
+              <span style="color: #00FFFF; flex: 1;">Architecture Review</span>
+              <span style="color: rgba(0,255,0,0.5); font-size: 11px;">2h</span>
+              <span style="color: rgba(0,255,0,0.6); font-size: 11px;">ils-ios</span>
+            </div>
+          </div>
+
+          <div class="file-entry" onclick="showScreen('chat')">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="color: rgba(0,255,0,0.5);">drwx</span>
+              <span style="color: #00FFFF; flex: 1;">Bug Fix Sprint</span>
+              <span style="color: rgba(0,255,0,0.5); font-size: 11px;">5h</span>
+              <span style="color: rgba(0,255,0,0.6); font-size: 11px;">backend</span>
+            </div>
+          </div>
+
+          <div class="file-entry" onclick="showScreen('chat')">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="color: rgba(0,255,0,0.5);">drwx</span>
+              <span style="color: #00FFFF; flex: 1;">API Design</span>
+              <span style="color: rgba(0,255,0,0.5); font-size: 11px;">1d</span>
+              <span style="color: rgba(0,255,0,0.6); font-size: 11px;">shared</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="position: fixed; bottom: 20px; left: 16px; right: 16px;">
+          <button class="btn" style="width: 100%;">$ touch new_session</button>
+        </div>
+      </div>
+
+      <!-- Chat Screen -->
+      <div class="screen-content" id="chat" style="display: none;">
+        <div class="header-bar">
+          <div class="back-btn" onclick="showScreen('sessions')">[&lt;]</div>
+          <div class="terminal-header">$ cat sessions/architecture-review</div>
+          <div style="width: 44px;"></div>
+        </div>
+
+        <div style="padding-bottom: 80px;">
+          <div class="message-user">
+            nick@ils:~$ What is the best API pattern?
+          </div>
+
+          <div class="message-ai">
+            <div class="ai-header">claude@ils:~$</div>
+            <div style="color: #E0E0E0; margin-bottom: 8px;">
+              For your iOS app communicating with a Swift Vapor backend, I recommend the Repository pattern with async/await. This provides clean separation and excellent error handling.
+            </div>
+
+            <div class="code-block">
+              <div style="color: rgba(0,255,0,0.5); font-size: 11px; margin-bottom: 6px;">// src/api/client.ts</div>
+              <pre style="color: #00FF00; font-size: 12px; white-space: pre-wrap;">protocol APIClient {
+  func fetch&lt;T&gt;(_ endpoint: String) async throws -&gt; T
+  func post&lt;T&gt;(_ endpoint: String, body: Data) async throws -&gt; T
+}</pre>
+            </div>
+
+            <div class="tool-call">
+              [EXEC] read src/api/client.ts ... 306 lines
+            </div>
+
+            <div class="thinking">
+              [PROC] analyzing 12 files <span class="progress-bar">████████░░</span> 80%
+            </div>
+          </div>
+
+          <div class="message-user">
+            nick@ils:~$ Show me error handling
+          </div>
+
+          <div class="message-ai">
+            <div class="ai-header">claude@ils:~$</div>
+            <div style="color: #E0E0E0; margin-bottom: 8px;">
+              Here's a robust error handling approach using Swift's Result type:
+            </div>
+
+            <div class="code-block">
+              <div style="color: rgba(0,255,0,0.5); font-size: 11px; margin-bottom: 6px;">// error-handling.swift</div>
+              <pre style="color: #00FF00; font-size: 12px; white-space: pre-wrap;">enum APIError: Error {
+  case network(Error)
+  case decode(Error)
+  case server(Int)
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-container">
+          <input type="text" class="chat-input" placeholder="nick@ils:~$ " />
+          <button class="send-btn">[ENTER]</button>
+        </div>
+      </div>
+
+      <!-- Projects Screen -->
+      <div class="screen-content" id="projects" style="display: none;">
+        <div class="header-bar">
+          <button class="menu-btn" onclick="toggleNav()">[≡]</button>
+          <div class="terminal-header">$ ls projects/</div>
+          <div style="width: 44px;"></div>
+        </div>
+
+        <div>
+          <div class="file-entry">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="color: rgba(0,255,0,0.5);">drwxr-xr-x</span>
+              <span style="color: #00FFFF; flex: 1;">ils-ios/</span>
+              <span style="color: rgba(0,255,0,0.5); font-size: 11px;">371 files</span>
+              <span style="color: rgba(0,255,0,0.6); font-size: 11px;">2h ago</span>
+            </div>
+          </div>
+
+          <div class="file-entry">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="color: rgba(0,255,0,0.5);">drwxr-xr-x</span>
+              <span style="color: #00FFFF; flex: 1;">backend-api/</span>
+              <span style="color: rgba(0,255,0,0.5); font-size: 11px;">45 files</span>
+              <span style="color: rgba(0,255,0,0.6); font-size: 11px;">3h ago</span>
+            </div>
+          </div>
+
+          <div class="file-entry">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="color: rgba(0,255,0,0.5);">drwxr-xr-x</span>
+              <span style="color: #00FFFF; flex: 1;">shared-models/</span>
+              <span style="color: rgba(0,255,0,0.5); font-size: 11px;">15 files</span>
+              <span style="color: rgba(0,255,0,0.6); font-size: 11px;">1d ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Screen -->
+      <div class="screen-content" id="system" style="display: none;">
+        <div class="header-bar">
+          <button class="menu-btn" onclick="toggleNav()">[≡]</button>
+          <div class="terminal-header">$ top</div>
+          <div style="width: 44px;"></div>
+        </div>
+
+        <div style="padding: 24px 16px;">
+          <div class="gauge">
+            <div class="gauge-label">CPU</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" style="width: 34.2%;"></div>
+            </div>
+            <div class="gauge-value">34.2%</div>
+          </div>
+
+          <div class="gauge">
+            <div class="gauge-label">MEM</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" style="width: 51.25%;"></div>
+            </div>
+            <div class="gauge-value">8.2/16.0 GB</div>
+          </div>
+
+          <div class="gauge">
+            <div class="gauge-label">DISK</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" style="width: 46.8%;"></div>
+            </div>
+            <div class="gauge-value">234/500 GB</div>
+          </div>
+
+          <div class="gauge">
+            <div class="gauge-label">NET</div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" style="width: 65%;"></div>
+            </div>
+            <div class="gauge-value">↑ 1.2 ↓ 3.4 MB/s</div>
+          </div>
+
+          <div class="process-table">
+            <div class="process-header">
+              <div>PID</div>
+              <div>COMMAND</div>
+              <div>%CPU</div>
+              <div>%MEM</div>
+            </div>
+            <div class="process-row">
+              <div>1234</div>
+              <div>Xcode</div>
+              <div>23.4</div>
+              <div>8.1</div>
+            </div>
+            <div class="process-row">
+              <div>5678</div>
+              <div>swift-build</div>
+              <div>12.1</div>
+              <div>4.2</div>
+            </div>
+            <div class="process-row">
+              <div>9012</div>
+              <div>Simulator</div>
+              <div>8.7</div>
+              <div>6.3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Config Screen -->
+      <div class="screen-content" id="config" style="display: none;">
+        <div class="header-bar">
+          <button class="menu-btn" onclick="toggleNav()">[≡]</button>
+          <div class="terminal-header">$ cat /etc/ils.conf</div>
+          <div style="width: 44px;"></div>
+        </div>
+
+        <div>
+          <div class="config-row">
+            <div class="config-key">SERVER_URL</div>
+            <div class="config-value">=http://localhost:9090</div>
+          </div>
+          <div class="config-row">
+            <div class="config-key">CONNECTION</div>
+            <div class="config-value">=ACTIVE</div>
+          </div>
+          <div class="config-row">
+            <div class="config-key">THEME</div>
+            <div class="config-value">=DATA_STORM</div>
+          </div>
+          <div class="config-row">
+            <div class="config-key">VERSION</div>
+            <div class="config-value">=1.0.0</div>
+          </div>
+          <div class="config-row">
+            <div class="config-key">UPTIME</div>
+            <div class="config-value">=4h23m</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Matrix Rain Animation
+    const canvas = document.getElementById('matrixCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = 390;
+    canvas.height = 844;
+
+    const katakana = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const nums = '0123456789';
+    const alphabet = katakana + latin + nums;
+
+    const fontSize = 12;
+    const columns = canvas.width / fontSize;
+
+    const rainDrops = [];
+
+    for (let x = 0; x < columns; x++) {
+      rainDrops[x] = Math.random() * canvas.height / fontSize;
+    }
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#0F0';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < rainDrops.length; i++) {
+        const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+        if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          rainDrops[i] = 0;
+        }
+        rainDrops[i]++;
+      }
+    };
+
+    setInterval(draw, 50);
+
+    // Navigation
+    function toggleNav() {
+      const nav = document.getElementById('navOverlay');
+      nav.classList.toggle('active');
+    }
+
+    function showScreen(screenId) {
+      // Hide all screens
+      const screens = document.querySelectorAll('.screen-content');
+      screens.forEach(screen => screen.style.display = 'none');
+
+      // Show selected screen
+      const selectedScreen = document.getElementById(screenId);
+      selectedScreen.style.display = 'block';
+
+      // Add glitch effect
+      selectedScreen.classList.add('glitch');
+      setTimeout(() => {
+        selectedScreen.classList.remove('glitch');
+      }, 300);
+
+      // Close nav
+      const nav = document.getElementById('navOverlay');
+      nav.classList.remove('active');
+
+      // Update active menu item
+      const menuItems = document.querySelectorAll('.menu-item');
+      menuItems.forEach(item => {
+        item.classList.remove('active');
+        const cursor = item.querySelector('.cursor');
+        if (cursor) cursor.remove();
+      });
+
+      const activeMenuItem = Array.from(menuItems).find(item =>
+        item.textContent.includes(screenId)
+      );
+      if (activeMenuItem) {
+        activeMenuItem.classList.add('active');
+        const cursor = document.createElement('span');
+        cursor.className = 'cursor';
+        activeMenuItem.appendChild(cursor);
+      }
+    }
+
+    // Add typing animation on chat input
+    const chatInputs = document.querySelectorAll('.chat-input');
+    chatInputs.forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          // Simulate message send with glitch
+          const screen = document.getElementById('chat');
+          screen.classList.add('glitch');
+          setTimeout(() => {
+            screen.classList.remove('glitch');
+          }, 300);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

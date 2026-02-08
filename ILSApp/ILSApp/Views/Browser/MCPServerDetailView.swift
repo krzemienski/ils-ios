@@ -1,9 +1,10 @@
 import SwiftUI
+import ILSShared
 
 // MARK: - MCP Server Detail View (extracted from MCPServerListView.swift, migrated to theme)
 
 struct MCPServerDetailView: View {
-    let server: MCPServerItem
+    let server: MCPServer
     @Environment(\.theme) private var theme: any AppTheme
     @State private var showCopiedToast = false
 
@@ -60,7 +61,7 @@ struct MCPServerDetailView: View {
                                 .font(.system(size: theme.fontBody))
                                 .foregroundStyle(theme.textSecondary)
                             Spacer()
-                            Text(server.scope.capitalized)
+                            Text(server.scope.rawValue.capitalized)
                                 .font(.system(size: theme.fontBody, weight: .medium))
                                 .foregroundStyle(theme.textPrimary)
                         }
@@ -165,17 +166,17 @@ struct MCPServerDetailView: View {
 
     private var statusColor: Color {
         switch server.status {
-        case "healthy": return theme.success
-        case "unhealthy": return theme.error
-        default: return theme.warning
+        case .healthy: return theme.success
+        case .unhealthy: return theme.error
+        case .unknown: return theme.warning
         }
     }
 
     private var statusText: String {
         switch server.status {
-        case "healthy": return "Healthy"
-        case "unhealthy": return "Unhealthy"
-        default: return "Unknown"
+        case .healthy: return "Healthy"
+        case .unhealthy: return "Unhealthy"
+        case .unknown: return "Unknown"
         }
     }
 

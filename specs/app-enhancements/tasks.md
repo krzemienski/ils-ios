@@ -525,7 +525,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - **Done when**: Zero build errors
   - **Commit**: `chore(ios): pass audit fixes batch 1 quality checkpoint` (only if fixes needed)
 
-- [ ] 5.3 Concurrency safety: [weak self] audit and Decoder isolation
+- [x] 5.3 Concurrency safety: [weak self] audit and Decoder isolation
   - **Do**:
     1. Audit all `Task { }` blocks in ChatViewModel, SSEClient for strong self captures (FR-32):
        - Ensure `[weak self]` where the task outlives the view model
@@ -541,7 +541,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - _Requirements: FR-31, FR-32, FR-33_
   - _Design: Phase 5 — 5.1 Concurrency Safety_
 
-- [ ] 5.4 Extract DateFormatters namespace and complex computed properties
+- [x] 5.4 Extract DateFormatters namespace and complex computed properties
   - **Do**:
     1. Create `ILSApp/ILSApp/Utils/DateFormatters.swift` with static formatters (FR-39):
        ```
@@ -560,7 +560,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - _Requirements: FR-39, FR-40_
   - _Design: Phase 5 — 5.3 Architecture Cleanup_
 
-- [ ] 5.5 Replace hardcoded fonts with ILSTheme and scope cache invalidation
+- [x] 5.5 Replace hardcoded fonts with ILSTheme and scope cache invalidation
   - **Do**:
     1. Replace 6 `.font(.system(size:))` occurrences with ILSTheme equivalents (FR-41, FR-48):
        - `ServerSetupSheet.swift:107` — `.font(.system(size: 44))` -> `.font(ILSTheme.displayFont)` (add if needed)
@@ -580,7 +580,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - _Requirements: FR-41, FR-43, FR-44, FR-48_
   - _Design: Phase 5 — 5.4 Theming, 5.5 Network Reliability_
 
-- [ ] 5.6 Add missing accessibility labels and color-only indicator fixes
+- [x] 5.6 Add missing accessibility labels and color-only indicator fixes
   - **Do**:
     1. Audit all Toggle, TextField, Button elements across views for missing `.accessibilityLabel()` (FR-47):
        - `SettingsView.swift` — toggles need labels
@@ -604,7 +604,7 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
   - _Requirements: FR-47, FR-49_
   - _Design: Phase 5 — 5.6 Accessibility_
 
-- [ ] V7 [VERIFY] Quality checkpoint: full iOS + backend build
+- [x] V7 [VERIFY] Quality checkpoint: full iOS + backend build
   - **Do**: Run complete build for both targets after all audit fixes
   - **Verify**: `swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both builds succeed with zero errors
@@ -614,13 +614,13 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
 
 ## Phase 4.5: Quality Gates
 
-- [ ] 4G.1 [VERIFY] Full local CI: build both targets
+- [x] 4G.1 [VERIFY] Full local CI: build both targets
   - **Do**: Run complete local CI suite
   - **Verify**: `swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both build succeed, zero errors
   - **Commit**: `chore(app): pass local CI` (if fixes needed)
 
-- [ ] 4G.2 Create PR and verify CI
+- [x] 4G.2 Create PR and verify CI (SKIPPED: no git remote configured)
   - **Do**:
     1. Verify current branch is `design/v2-redesign`: `git branch --show-current`
     2. Stage and commit any remaining changes
@@ -635,13 +635,13 @@ Focus: Absorb all remaining audit fixes — concurrency safety, memory managemen
 
 ## Phase 5.5: PR Lifecycle
 
-- [ ] 5P.1 [VERIFY] CI pipeline passes
+- [x] 5P.1 [VERIFY] CI pipeline passes (SKIPPED: no git remote configured)
   - **Do**: Verify GitHub Actions/CI passes after push
   - **Verify**: `gh pr checks` shows all green
   - **Done when**: CI pipeline passes
   - **Commit**: None
 
-- [ ] 5P.2 [VERIFY] AC checklist — verify all 49 FRs
+- [x] 5P.2 [VERIFY] AC checklist — verify all 49 FRs
   - **Do**: Programmatically verify each FR is satisfied:
     1. **FR-1**: `grep -c "import MarkdownUI" ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift` (should be 1)
     2. **FR-2**: `grep -c "import HighlightSwift" ILSApp/ILSApp/Theme/Components/CodeBlockView.swift` (should be 1)

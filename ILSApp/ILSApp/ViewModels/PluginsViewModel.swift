@@ -3,14 +3,14 @@ import ILSShared
 
 @MainActor
 class PluginsViewModel: ObservableObject {
-    @Published var plugins: [PluginItem] = []
+    @Published var plugins: [Plugin] = []
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
     @Published var marketplaceSearchText = ""
     @Published var selectedCategory: String = "All"
     @Published var isSearchingMarketplace = false
-    @Published var searchResults: [MarketplacePlugin] = []
+    @Published var searchResults: [PluginInfo] = []
 
     private var client: APIClient?
 
@@ -29,7 +29,7 @@ class PluginsViewModel: ObservableObject {
     }
 
     /// Filtered plugins based on search text
-    var filteredPlugins: [PluginItem] {
+    var filteredPlugins: [Plugin] {
         if searchText.isEmpty {
             return plugins
         }
@@ -45,7 +45,7 @@ class PluginsViewModel: ObservableObject {
         error = nil
 
         do {
-            let response: APIResponse<ListResponse<PluginItem>> = try await client.get("/plugins")
+            let response: APIResponse<ListResponse<Plugin>> = try await client.get("/plugins")
             if let data = response.data {
                 plugins = data.items
             }
@@ -65,7 +65,7 @@ class PluginsViewModel: ObservableObject {
         guard let client else { return }
         do {
             let request = InstallPluginRequest(pluginName: name, marketplace: marketplace)
-            let response: APIResponse<PluginItem> = try await client.post("/plugins/install", body: request)
+            let response: APIResponse<Plugin> = try await client.post("/plugins/install", body: request)
             if let plugin = response.data {
                 plugins.append(plugin)
             }
@@ -75,7 +75,7 @@ class PluginsViewModel: ObservableObject {
         }
     }
 
-    func uninstallPlugin(_ plugin: PluginItem) async {
+    func uninstallPlugin(_ plugin: Plugin) async {
         guard let client else { return }
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/plugins/\(plugin.name)")
@@ -86,7 +86,7 @@ class PluginsViewModel: ObservableObject {
         }
     }
 
-    func enablePlugin(_ plugin: PluginItem) async {
+    func enablePlugin(_ plugin: Plugin) async {
         guard let client else { return }
         do {
             let _: APIResponse<EnabledResponse> = try await client.post("/plugins/\(plugin.name)/enable", body: EmptyBody())
@@ -101,7 +101,7 @@ class PluginsViewModel: ObservableObject {
         }
     }
 
-    func disablePlugin(_ plugin: PluginItem) async {
+    func disablePlugin(_ plugin: Plugin) async {
         guard let client else { return }
         do {
             let _: APIResponse<EnabledResponse> = try await client.post("/plugins/\(plugin.name)/disable", body: EmptyBody())
@@ -124,7 +124,7 @@ class PluginsViewModel: ObservableObject {
         isSearchingMarketplace = true
         do {
             let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-            let response: APIResponse<ListResponse<MarketplacePlugin>> = try await client.get("/plugins/search?q=\(encoded)")
+            let response: APIResponse<ListResponse<PluginInfo>> = try await client.get("/plugins/search?q=\(encoded)")
             if let data = response.data {
                 searchResults = data.items
             }
@@ -138,7 +138,7 @@ class PluginsViewModel: ObservableObject {
         guard let client, !repo.isEmpty else { return false }
         do {
             let request = AddMarketplaceRequest(source: "github", repo: repo)
-            let _: APIResponse<MarketplaceInfo> = try await client.post("/marketplaces", body: request)
+            let _: APIResponse<PluginMarketplace> = try await client.post("/marketplaces", body: request)
             return true
         } catch {
             self.error = error

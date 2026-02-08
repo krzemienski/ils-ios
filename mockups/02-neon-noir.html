@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON NOIR — Design 02</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+            color: #E0E8F0;
+            overflow: hidden;
+        }
+
+        .phone-frame {
+            width: 390px;
+            height: 844px;
+            margin: 20px auto;
+            background: #0A0A0F;
+            border-radius: 40px;
+            border: 8px solid #1A1A24;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 212, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+
+        .screen-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .screen-content::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .screen {
+            display: none;
+            min-height: 844px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 56px 20px 16px;
+            background: #0A0A0F;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #2A2A3A;
+        }
+
+        .title {
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #8892A0;
+        }
+
+        .icon-button {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #8892A0;
+            border-radius: 10px;
+        }
+
+        .icon-button:active {
+            transform: scale(0.95);
+            background: rgba(0, 212, 255, 0.1);
+            color: #00D4FF;
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 200;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .drawer {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: #0A0A0F;
+            border-right: 1px solid #2A2A3A;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 300;
+            overflow-y: auto;
+        }
+
+        .drawer.active {
+            left: 0;
+        }
+
+        .drawer-bg {
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .drawer-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-section {
+            padding: 60px 20px 24px;
+            border-bottom: 1px solid #2A2A3A;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, #00D4FF, #0094FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #E0E8F0;
+            margin-bottom: 4px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #8892A0;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+            background: #00FF88;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+        }
+
+        .nav-menu {
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #8892A0;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .nav-item:active {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .nav-item.active {
+            color: #00D4FF;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #00D4FF;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+        }
+
+        .nav-icon {
+            width: 24px;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 12px;
+            padding: 20px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:active {
+            transform: scale(0.98);
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00D4FF;
+            margin-bottom: 4px;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8892A0;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8892A0;
+            margin-bottom: 12px;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .session-item {
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .session-item:active {
+            transform: scale(0.98);
+            border-color: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.02);
+        }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .session-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 3px;
+            background: #00D4FF;
+            box-shadow: 0 0 6px rgba(0, 212, 255, 0.6);
+        }
+
+        .session-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #E0E8F0;
+            flex: 1;
+        }
+
+        .session-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #8892A0;
+        }
+
+        .project-tag {
+            background: rgba(255, 51, 102, 0.1);
+            color: #FF3366;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 12px;
+            padding: 12px 16px;
+            width: 100%;
+            color: #E0E8F0;
+            font-size: 15px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #00D4FF;
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        }
+
+        .search-bar::placeholder {
+            color: #8892A0;
+        }
+
+        .chat-container {
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+        }
+
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-user-bubble {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 12px 16px;
+            max-width: 75%;
+            color: #E0E8F0;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .message-ai {
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-top: 2px solid #00D4FF;
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+        }
+
+        .message-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #00D4FF;
+            margin-bottom: 10px;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #E0E8F0;
+            margin-bottom: 12px;
+        }
+
+        .code-block {
+            background: #0A0A0F;
+            border-left: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-family: 'SF Mono', monospace;
+            font-size: 13px;
+            color: #B4C2D0;
+            overflow-x: auto;
+        }
+
+        .accordion {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #8892A0;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .accordion:active {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .thinking {
+            background: rgba(139, 92, 246, 0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #8892A0;
+            margin: 8px 0;
+            font-style: italic;
+        }
+
+        .chat-input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0A0A0F;
+            border-top: 1px solid #2A2A3A;
+            padding: 12px 20px 32px;
+            z-index: 50;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 24px;
+            padding: 12px 16px;
+            color: #E0E8F0;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #00D4FF;
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+        }
+
+        .send-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            background: #00D4FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #000;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+            background: #00B8E0;
+        }
+
+        .streaming-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #00D4FF;
+            font-size: 20px;
+        }
+
+        .streaming-dot {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .streaming-dot:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .streaming-dot:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; text-shadow: 0 0 8px rgba(0, 212, 255, 0.8); }
+        }
+
+        .project-item {
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+        }
+
+        .project-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #E0E8F0;
+            margin-bottom: 6px;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #8892A0;
+            margin-bottom: 4px;
+        }
+
+        .project-path {
+            font-family: 'SF Mono', monospace;
+            font-size: 11px;
+            color: #6B7585;
+        }
+
+        .gauge-container {
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .gauge-ring {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: #2A2A3A;
+            stroke-width: 12;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: #00D4FF;
+            stroke-width: 12;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #00D4FF;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .gauge-label {
+            font-size: 12px;
+            color: #8892A0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-bar {
+            margin-bottom: 20px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .metric-label {
+            color: #8892A0;
+        }
+
+        .metric-value {
+            color: #E0E8F0;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #2A2A3A;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00D4FF, #0094FF);
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+        }
+
+        .process-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+
+        .process-name {
+            font-size: 14px;
+            color: #E0E8F0;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .process-cpu {
+            font-size: 13px;
+            color: #00D4FF;
+            font-weight: 600;
+        }
+
+        .settings-item {
+            background: #12121A;
+            border: 1px solid #2A2A3A;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .settings-label {
+            font-size: 13px;
+            color: #8892A0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-value {
+            font-size: 15px;
+            color: #E0E8F0;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .settings-input {
+            width: 100%;
+            background: #0A0A0F;
+            border: 1px solid #2A2A3A;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #E0E8F0;
+            font-size: 14px;
+            font-family: 'SF Mono', monospace;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: #00D4FF;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .version-info {
+            text-align: center;
+            padding: 32px 20px;
+            color: #6B7585;
+            font-size: 12px;
+        }
+
+        .design-badge {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #00D4FF;
+            z-index: 2000;
+            font-family: 'SF Mono', monospace;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="design-badge">NEON NOIR — 02</div>
+
+    <div class="phone-frame">
+        <div class="notch"></div>
+
+        <!-- Drawer Overlay -->
+        <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+        <!-- Side Drawer -->
+        <div class="drawer" id="drawer">
+            <div class="drawer-bg"></div>
+            <div class="drawer-content">
+                <div class="profile-section">
+                    <div class="avatar">N</div>
+                    <div class="profile-name">Nick</div>
+                    <div class="connection-status">
+                        <div class="status-dot"></div>
+                        <span>Connected</span>
+                    </div>
+                </div>
+
+                <nav class="nav-menu">
+                    <div class="nav-item active" data-screen="dashboard">
+                        <div class="nav-icon">◆</div>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item" data-screen="sessions">
+                        <div class="nav-icon">◉</div>
+                        <span>Sessions</span>
+                    </div>
+                    <div class="nav-item" data-screen="projects">
+                        <div class="nav-icon">◈</div>
+                        <span>Projects</span>
+                    </div>
+                    <div class="nav-item" data-screen="system">
+                        <div class="nav-icon">◎</div>
+                        <span>System</span>
+                    </div>
+                    <div class="nav-item" data-screen="settings">
+                        <div class="nav-icon">◐</div>
+                        <span>Settings</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <div class="screen-content">
+            <!-- Dashboard Screen -->
+            <div class="screen active" id="dashboard">
+                <div class="header">
+                    <div class="icon-button" onclick="toggleDrawer()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="title">Dashboard</div>
+                    <div style="width: 44px;"></div>
+                </div>
+
+                <div class="content">
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">3</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">371</div>
+                            <div class="stat-label">Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">1.5K</div>
+                            <div class="stat-label">Skills</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">78</div>
+                            <div class="stat-label">Plugins</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Recent Sessions</div>
+
+                    <div class="session-item" onclick="navigateToChat()">
+                        <div class="session-header">
+                            <div class="session-dot"></div>
+                            <div class="session-name">Architecture Review</div>
+                        </div>
+                        <div class="session-meta">
+                            <span>24m ago</span>
+                            <div class="project-tag">ILS iOS</div>
+                        </div>
+                    </div>
+
+                    <div class="session-item">
+                        <div class="session-header">
+                            <div class="session-dot"></div>
+                            <div class="session-name">Backend API Design</div>
+                        </div>
+                        <div class="session-meta">
+                            <span>2h ago</span>
+                            <div class="project-tag">Backend</div>
+                        </div>
+                    </div>
+
+                    <div class="session-item">
+                        <div class="session-header">
+                            <div class="session-dot"></div>
+                            <div class="session-name">Data Model Refactor</div>
+                        </div>
+                        <div class="session-meta">
+                            <span>5h ago</span>
+                            <div class="project-tag">Shared</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sessions Screen -->
+            <div class="screen" id="sessions">
+                <div class="header">
+                    <div class="icon-button" onclick="toggleDrawer()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="title">Sessions</div>
+                    <div class="icon-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <input type="text" class="search-bar" placeholder="Search sessions...">
+
+                    <div class="session-item" onclick="navigateToChat()">
+                        <div class="session-header">
+                            <div class="session-dot"></div>
+                            <div class="session-name">Architecture Review</div>
+                        </div>
+                        <div class="session-meta">
+                            <span>24m ago</span>
+                            <div class="project-tag">ILS iOS</div>
+                        </div>
+                    </div>
+
+                    <div class="session-item">
+                        <div class="session-header">
+                            <div class="session-dot"></div>
+                            <div class="session-name">Backend API Design</div>
+                        </div>
+                        <div class="session-meta">
+                            <span>2h ago</span>
+                            <div class="project-tag">Backend</div>
+                        </div>
+                    </div>
+
+                    <div class="session-item">
+                        <div class="session-header">
+                            <div class="session-dot"></div>
+                            <div class="session-name">Data Model Refactor</div>
+                        </div>
+                        <div class="session-meta">
+                            <span>5h ago</span>
+                            <div class="project-tag">Shared</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Screen -->
+            <div class="screen" id="chat">
+                <div class="header">
+                    <div class="icon-button" onclick="navigateTo('sessions')">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </div>
+                    <div class="title">Architecture Review</div>
+                    <div class="icon-button">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="message message-user">
+                        <div class="message-user-bubble">
+                            Can you review the current architecture and suggest improvements?
+                        </div>
+                    </div>
+
+                    <div class="message">
+                        <div class="message-ai">
+                            <div class="message-label">Claude</div>
+                            <div class="thinking">⚡ Analyzed 12 files in the codebase...</div>
+                            <div class="message-text">
+                                I've reviewed your architecture and identified several areas for improvement. The current separation between ViewModels and Services is good, but there's some opportunity to consolidate API calls.
+                            </div>
+                            <div class="accordion">📎 Read: src/api/client.ts</div>
+                            <div class="code-block">// Suggested refactor
+class APIClient {
+  private baseURL: string
+
+  async request(endpoint) {
+    return fetch(this.baseURL + endpoint)
+  }
+}</div>
+                        </div>
+                    </div>
+
+                    <div class="message message-user">
+                        <div class="message-user-bubble">
+                            That makes sense. Can you show me how to implement the retry logic?
+                        </div>
+                    </div>
+
+                    <div class="message">
+                        <div class="message-ai">
+                            <div class="message-label">Claude</div>
+                            <div class="streaming-indicator">
+                                <span class="streaming-dot">●</span>
+                                <span class="streaming-dot">●</span>
+                                <span class="streaming-dot">●</span>
+                            </div>
+                            <div class="message-text">
+                                Here's an implementation with exponential backoff...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <input type="text" class="chat-input" placeholder="Message Claude...">
+                        <div class="send-button">↑</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Screen -->
+            <div class="screen" id="projects">
+                <div class="header">
+                    <div class="icon-button" onclick="toggleDrawer()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="title">Projects</div>
+                    <div style="width: 44px;"></div>
+                </div>
+
+                <div class="content">
+                    <input type="text" class="search-bar" placeholder="Search projects...">
+
+                    <div class="project-item">
+                        <div class="project-name">ILS iOS App</div>
+                        <div class="project-meta">
+                            <span>371 files</span>
+                            <span>Last modified 24m ago</span>
+                        </div>
+                        <div class="project-path">~/Desktop/ils-ios</div>
+                    </div>
+
+                    <div class="project-item">
+                        <div class="project-name">Backend API</div>
+                        <div class="project-meta">
+                            <span>45 files</span>
+                            <span>Last modified 2h ago</span>
+                        </div>
+                        <div class="project-path">~/Projects/ils-backend</div>
+                    </div>
+
+                    <div class="project-item">
+                        <div class="project-name">Shared Models</div>
+                        <div class="project-meta">
+                            <span>15 files</span>
+                            <span>Last modified 5h ago</span>
+                        </div>
+                        <div class="project-path">~/Projects/ils-shared</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Screen -->
+            <div class="screen" id="system">
+                <div class="header">
+                    <div class="icon-button" onclick="toggleDrawer()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="title">System</div>
+                    <div style="width: 44px;"></div>
+                </div>
+
+                <div class="content">
+                    <div class="gauge-container">
+                        <svg class="gauge-ring" viewBox="0 0 100 100">
+                            <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                            <circle class="gauge-fill" cx="50" cy="50" r="40"
+                                    stroke-dasharray="251.2"
+                                    stroke-dashoffset="165.8"></circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-value">34%</div>
+                            <div class="gauge-label">CPU</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-bar">
+                        <div class="metric-header">
+                            <span class="metric-label">Memory</span>
+                            <span class="metric-value">8.2 / 16 GB</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 51%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-bar">
+                        <div class="metric-header">
+                            <span class="metric-label">Disk</span>
+                            <span class="metric-value">234 / 500 GB</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 47%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-bar">
+                        <div class="metric-header">
+                            <span class="metric-label">Network</span>
+                            <span class="metric-value">↓ 2.4 MB/s ↑ 0.8 MB/s</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="margin-top: 32px;">Top Processes</div>
+
+                    <div class="process-item">
+                        <span class="process-name">Xcode</span>
+                        <span class="process-cpu">18.2%</span>
+                    </div>
+
+                    <div class="process-item">
+                        <span class="process-name">Simulator</span>
+                        <span class="process-cpu">12.4%</span>
+                    </div>
+
+                    <div class="process-item">
+                        <span class="process-name">claude-code</span>
+                        <span class="process-cpu">8.6%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div class="screen" id="settings">
+                <div class="header">
+                    <div class="icon-button" onclick="toggleDrawer()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="title">Settings</div>
+                    <div style="width: 44px;"></div>
+                </div>
+
+                <div class="content">
+                    <div class="settings-item">
+                        <div class="settings-label">Server URL</div>
+                        <input type="text" class="settings-input" value="http://localhost:9090">
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Connection Status</div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                            <div class="status-dot"></div>
+                            <span class="settings-value">Connected</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-label">Theme</div>
+                        <div class="settings-value">Neon Noir</div>
+                    </div>
+
+                    <div class="version-info">
+                        ILS v2.0.0 (Build 142)<br>
+                        Design Direction 02: Neon Noir
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            const overlay = document.getElementById('drawerOverlay');
+            drawer.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            const drawer = document.getElementById('drawer');
+            const overlay = document.getElementById('drawerOverlay');
+            drawer.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        function navigateTo(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Show target screen
+            document.getElementById(screenId).classList.add('active');
+
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.screen === screenId) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Close drawer
+            closeDrawer();
+
+            // Scroll to top
+            document.querySelector('.screen-content').scrollTop = 0;
+        }
+
+        function navigateToChat() {
+            navigateTo('chat');
+        }
+
+        // Setup nav items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const screen = item.dataset.screen;
+                navigateTo(screen);
+            });
+        });
+
+        // Prevent default form behavior
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

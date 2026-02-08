@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ELECTRIC GRID - 03</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system-mono, 'SF Mono', 'Monaco', 'Courier New', monospace;
+    }
+
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      background: #050510;
+      position: relative;
+      overflow: hidden;
+      border-radius: 40px;
+      box-shadow: 0 0 0 8px #1a1a1a, 0 20px 60px rgba(0, 0, 0, 0.8);
+    }
+
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 30px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 1000;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: #050510;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Grid overlay */
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        repeating-linear-gradient(0deg, #1A2332 0px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, #1A2332 0px, transparent 1px, transparent 20px);
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Scanline effect */
+    .scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 136, 0.03) 0px,
+        transparent 2px,
+        transparent 4px
+      );
+      pointer-events: none;
+      z-index: 2;
+      animation: scanline-move 8s linear infinite;
+    }
+
+    @keyframes scanline-move {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(20px); }
+    }
+
+    /* Content layer */
+    .content {
+      position: relative;
+      z-index: 10;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Hide scrollbar */
+    .content::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Drawer */
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 300px;
+      height: 100%;
+      background: #0D1117;
+      border-right: 1px solid #30363D;
+      z-index: 100;
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    .drawer.open {
+      left: 0;
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Blinking cursor */
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: #00FF88;
+      animation: blink 1s step-end infinite;
+      margin-left: 2px;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* CountUp animation */
+    @keyframes countup {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .countup {
+      animation: countup 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Corner brackets */
+    .corner-brackets {
+      position: relative;
+      padding: 16px;
+    }
+
+    .corner-brackets::before,
+    .corner-brackets::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 1px solid #00FF88;
+    }
+
+    .corner-brackets::before {
+      top: 0;
+      left: 0;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .corner-brackets::after {
+      top: 0;
+      right: 0;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      display: inline-block;
+      width: 200px;
+      height: 16px;
+      background: #161B22;
+      border: 1px solid #30363D;
+      position: relative;
+      vertical-align: middle;
+    }
+
+    .progress-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: #00FF88;
+      transition: width 0.3s;
+    }
+
+    /* HUD card */
+    .hud-card {
+      background: #0D1117;
+      border: 1px solid #30363D;
+      border-left: 3px solid #00FF88;
+      position: relative;
+    }
+
+    .hud-card-orange {
+      border-left-color: #FF6B00;
+    }
+
+    /* Scan line divider */
+    .scan-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #00FF88, transparent);
+      margin: 16px 0;
+    }
+
+    /* Active menu item */
+    .menu-item {
+      padding: 12px 20px;
+      color: #7D8590;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .menu-item:hover {
+      background: rgba(0, 255, 136, 0.05);
+    }
+
+    .menu-item.active {
+      color: #00FF88;
+      border-left-color: #00FF88;
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    /* Code block */
+    .code-block {
+      background: #050510;
+      border: 1px solid #00FF88;
+      padding: 12px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* Tool call */
+    .tool-call {
+      background: #0D1117;
+      border: 1px solid #30363D;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #7D8590;
+      margin: 8px 0;
+    }
+
+    .tool-ok {
+      color: #00FF88;
+      float: right;
+    }
+
+    /* Button */
+    .btn-primary {
+      background: transparent;
+      border: 2px solid #00FF88;
+      color: #00FF88;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary:hover {
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .btn-primary:active {
+      background: rgba(0, 255, 136, 0.2);
+    }
+
+    /* Process table */
+    .process-table {
+      width: 100%;
+      font-size: 11px;
+      color: #7D8590;
+    }
+
+    .process-table th {
+      text-align: left;
+      padding: 8px 4px;
+      border-bottom: 1px solid #30363D;
+      color: #00FF88;
+      font-weight: 600;
+    }
+
+    .process-table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #1A2332;
+    }
+
+    /* Screen transitions */
+    .screen-view {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+
+    .screen-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Status dot */
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00FF88;
+      margin-right: 8px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Streaming dots */
+    .streaming-dots::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="grid-overlay"></div>
+      <div class="scanline"></div>
+
+      <!-- Drawer Overlay -->
+      <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+      <!-- Side Drawer -->
+      <div class="drawer" id="drawer">
+        <div style="padding: 20px; border-bottom: 1px solid #30363D;">
+          <div style="color: #00FF88; font-size: 14px; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px;">
+            [ COMMAND CENTER ]
+          </div>
+          <div style="color: #00FF88; font-size: 11px; margin-bottom: 4px;">
+            <span class="status-dot"></span>> STATUS: CONNECTED
+          </div>
+          <div style="color: #7D8590; font-size: 11px;">
+            > SERVER: localhost:9090
+          </div>
+        </div>
+
+        <div style="padding: 16px 0;">
+          <div class="menu-item active" onclick="showScreen('dashboard')">
+            > DASHBOARD
+          </div>
+          <div class="menu-item" onclick="showScreen('sessions')">
+            > SESSIONS
+          </div>
+          <div class="menu-item" onclick="showScreen('projects')">
+            > PROJECTS
+          </div>
+          <div class="menu-item" onclick="showScreen('system')">
+            > SYSTEM
+          </div>
+          <div class="menu-item" onclick="showScreen('settings')">
+            > SETTINGS
+          </div>
+        </div>
+
+        <div class="scan-divider"></div>
+
+        <div style="padding: 20px;">
+          <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+            OPERATOR
+          </div>
+          <div style="color: #C9D1D9; font-size: 13px;">
+            <span class="status-dot"></span>Nick
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- Dashboard Screen -->
+        <div class="screen-view active" id="dashboard">
+          <div style="padding: 50px 20px 20px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <button onclick="openDrawer()" style="background: none; border: none; color: #00FF88; font-size: 20px; cursor: pointer; padding: 8px;">
+                ☰
+              </button>
+              <div style="color: #00FF88; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+                [ DASHBOARD ]
+              </div>
+              <div style="width: 36px;"></div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px;">
+              <!-- Sessions Stat -->
+              <div class="corner-brackets" style="background: #0D1117; border: 1px solid #30363D;">
+                <div style="color: #7D8590; font-size: 10px; margin-bottom: 8px; letter-spacing: 1px;">
+                  SESSIONS
+                </div>
+                <div style="color: #00FF88; font-size: 32px; font-weight: 700; margin-bottom: 4px;" class="countup" data-target="3">
+                  0
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  ACTIVE
+                </div>
+              </div>
+
+              <!-- Projects Stat -->
+              <div class="corner-brackets" style="background: #0D1117; border: 1px solid #30363D;">
+                <div style="color: #7D8590; font-size: 10px; margin-bottom: 8px; letter-spacing: 1px;">
+                  PROJECTS
+                </div>
+                <div style="color: #00FF88; font-size: 32px; font-weight: 700; margin-bottom: 4px;" class="countup" data-target="12">
+                  0
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  TRACKED
+                </div>
+              </div>
+
+              <!-- Skills Stat -->
+              <div class="corner-brackets" style="background: #0D1117; border: 1px solid #30363D;">
+                <div style="color: #7D8590; font-size: 10px; margin-bottom: 8px; letter-spacing: 1px;">
+                  SKILLS
+                </div>
+                <div style="color: #00FF88; font-size: 32px; font-weight: 700; margin-bottom: 4px;" class="countup" data-target="47">
+                  0
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  AVAILABLE
+                </div>
+              </div>
+
+              <!-- Uptime Stat -->
+              <div class="corner-brackets" style="background: #0D1117; border: 1px solid #30363D;">
+                <div style="color: #7D8590; font-size: 10px; margin-bottom: 8px; letter-spacing: 1px;">
+                  UPTIME
+                </div>
+                <div style="color: #00FF88; font-size: 32px; font-weight: 700; margin-bottom: 4px;" class="countup" data-target="8">
+                  0
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  HOURS
+                </div>
+              </div>
+            </div>
+
+            <div class="scan-divider"></div>
+
+            <!-- Recent Operations -->
+            <div style="margin-top: 24px;">
+              <div style="color: #00FF88; font-size: 12px; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px;">
+                RECENT OPS
+              </div>
+
+              <div class="hud-card" style="margin-bottom: 12px; padding: 12px;">
+                <div style="color: #C9D1D9; font-size: 13px; margin-bottom: 4px;">
+                  > Architecture Review
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  2h ago | PROJECT: ILS
+                </div>
+              </div>
+
+              <div class="hud-card" style="margin-bottom: 12px; padding: 12px;">
+                <div style="color: #C9D1D9; font-size: 13px; margin-bottom: 4px;">
+                  > Database Schema Update
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  5h ago | PROJECT: Backend API
+                </div>
+              </div>
+
+              <div class="hud-card" style="margin-bottom: 12px; padding: 12px;">
+                <div style="color: #C9D1D9; font-size: 13px; margin-bottom: 4px;">
+                  > UI Component Refactor
+                </div>
+                <div style="color: #7D8590; font-size: 11px;">
+                  1d ago | PROJECT: Dashboard
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sessions Screen -->
+        <div class="screen-view" id="sessions">
+          <div style="padding: 50px 20px 20px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <button onclick="openDrawer()" style="background: none; border: none; color: #00FF88; font-size: 20px; cursor: pointer; padding: 8px;">
+                ☰
+              </button>
+              <div style="color: #00FF88; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+                [ SESSIONS ]
+              </div>
+              <div style="width: 36px;"></div>
+            </div>
+
+            <!-- Search -->
+            <div style="background: #0D1117; border: 1px solid #30363D; padding: 12px; margin-bottom: 20px;">
+              <span style="color: #7D8590; font-size: 13px;">> SEARCH: </span>
+              <span class="cursor"></span>
+            </div>
+
+            <!-- Session List -->
+            <div class="hud-card" style="margin-bottom: 12px; padding: 12px;" onclick="showScreen('chat')">
+              <div style="color: #C9D1D9; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                SESSION: Architecture Review
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                STATUS: ACTIVE | TIME: 2h ago
+              </div>
+              <div style="color: #7D8590; font-size: 11px;">
+                PROJECT: ILS iOS App
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 12px; padding: 12px; border-left-color: #30363D;">
+              <div style="color: #C9D1D9; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                SESSION: Database Schema
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                STATUS: COMPLETED | TIME: 5h ago
+              </div>
+              <div style="color: #7D8590; font-size: 11px;">
+                PROJECT: Backend API
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 12px; padding: 12px; border-left-color: #30363D;">
+              <div style="color: #C9D1D9; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                SESSION: UI Components
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                STATUS: COMPLETED | TIME: 1d ago
+              </div>
+              <div style="color: #7D8590; font-size: 11px;">
+                PROJECT: Dashboard
+              </div>
+            </div>
+
+            <!-- New Session Button -->
+            <button class="btn-primary" style="width: 100%; margin-top: 24px;">
+              [ + NEW SESSION ]
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div class="screen-view" id="chat">
+          <div style="padding: 50px 20px 100px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <button onclick="showScreen('sessions')" style="background: none; border: none; color: #00FF88; font-size: 18px; cursor: pointer; padding: 8px;">
+                ← BACK
+              </button>
+              <div style="color: #00FF88; font-size: 12px; font-weight: 600; letter-spacing: 1px;">
+                [ SESSION: Architecture Review ]
+              </div>
+              <div style="width: 60px;"></div>
+            </div>
+
+            <!-- Messages -->
+            <div style="margin-bottom: 20px;">
+              <!-- User Message -->
+              <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+                <div class="hud-card hud-card-orange" style="max-width: 80%; padding: 12px;">
+                  <div style="color: #C9D1D9; font-size: 13px;">
+                    > What is the best API pattern for this project?
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Message -->
+              <div class="hud-card" style="margin-bottom: 16px; padding: 16px;">
+                <div style="color: #00FF88; font-size: 11px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px;">
+                  CLAUDE // RESPONSE
+                </div>
+                <div style="color: #C9D1D9; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+                  For this project, I recommend a repository pattern with dependency injection. This provides clean separation of concerns and makes testing easier.
+                </div>
+
+                <!-- Tool Call -->
+                <div class="tool-call">
+                  <span>[ TOOL ] Read: src/api/client.ts</span>
+                  <span class="tool-ok">OK</span>
+                </div>
+
+                <!-- Thinking -->
+                <div style="background: #050510; border: 1px solid #30363D; padding: 8px 12px; font-size: 11px; color: #7D8590; margin: 8px 0;">
+                  [ PROC ] Analyzing 12 files... COMPLETE
+                </div>
+
+                <!-- Code Block -->
+                <div class="code-block">
+                  <div style="color: #7D8590; margin-bottom: 8px;">// Example implementation</div>
+                  <div style="color: #C9D1D9;">interface Repository&lt;T&gt; {</div>
+                  <div style="color: #C9D1D9; padding-left: 16px;">findAll(): Promise&lt;T[]&gt;</div>
+                  <div style="color: #C9D1D9; padding-left: 16px;">findById(id: string): Promise&lt;T&gt;</div>
+                  <div style="color: #C9D1D9;">}</div>
+                </div>
+              </div>
+
+              <!-- Streaming Message -->
+              <div class="hud-card" style="padding: 16px;">
+                <div style="color: #00FF88; font-size: 11px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px;">
+                  CLAUDE // RESPONSE
+                </div>
+                <div style="color: #C9D1D9; font-size: 13px; line-height: 1.6;">
+                  <span class="streaming-dots">> PROCESSING</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Area -->
+          <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #0D1117; border-top: 1px solid #30363D; padding: 16px;">
+            <div style="display: flex; gap: 12px; max-width: 390px; margin: 0 auto;">
+              <div style="flex: 1; background: #050510; border: 1px solid #30363D; padding: 12px; display: flex; align-items: center;">
+                <span style="color: #7D8590; font-size: 13px;">></span>
+                <span class="cursor"></span>
+              </div>
+              <button class="btn-primary" style="padding: 12px 24px;">
+                [SEND]
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Screen -->
+        <div class="screen-view" id="projects">
+          <div style="padding: 50px 20px 20px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <button onclick="openDrawer()" style="background: none; border: none; color: #00FF88; font-size: 20px; cursor: pointer; padding: 8px;">
+                ☰
+              </button>
+              <div style="color: #00FF88; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+                [ PROJECTS ]
+              </div>
+              <div style="width: 36px;"></div>
+            </div>
+
+            <!-- Project Cards -->
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px;">
+              <div style="color: #C9D1D9; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                PROJECT: ILS iOS App
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                FILES: 371 | MODIFIED: 2h ago
+              </div>
+              <div style="color: #7D8590; font-size: 10px; font-family: monospace;">
+                PATH: /Users/nick/Desktop/ils-ios
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px; border-left-color: #30363D;">
+              <div style="color: #C9D1D9; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                PROJECT: Backend API
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                FILES: 142 | MODIFIED: 5h ago
+              </div>
+              <div style="color: #7D8590; font-size: 10px; font-family: monospace;">
+                PATH: /Users/nick/Projects/backend-api
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px; border-left-color: #30363D;">
+              <div style="color: #C9D1D9; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                PROJECT: Dashboard
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                FILES: 89 | MODIFIED: 1d ago
+              </div>
+              <div style="color: #7D8590; font-size: 10px; font-family: monospace;">
+                PATH: /Users/nick/Projects/dashboard
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px; border-left-color: #30363D;">
+              <div style="color: #C9D1D9; font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                PROJECT: Documentation
+              </div>
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                FILES: 23 | MODIFIED: 3d ago
+              </div>
+              <div style="color: #7D8590; font-size: 10px; font-family: monospace;">
+                PATH: /Users/nick/Projects/docs
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Screen -->
+        <div class="screen-view" id="system">
+          <div style="padding: 50px 20px 20px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <button onclick="openDrawer()" style="background: none; border: none; color: #00FF88; font-size: 20px; cursor: pointer; padding: 8px;">
+                ☰
+              </button>
+              <div style="color: #00FF88; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+                [ SYSTEM MONITOR ]
+              </div>
+              <div style="width: 36px;"></div>
+            </div>
+
+            <!-- System Gauges -->
+            <div class="hud-card" style="margin-bottom: 20px; padding: 16px;">
+              <div style="color: #00FF88; font-size: 11px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px;">
+                SYSTEM RESOURCES
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="color: #C9D1D9; font-size: 11px; margin-bottom: 4px;">CPU</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: 34%;"></div>
+                  </div>
+                  <span style="color: #00FF88; font-size: 12px;">34%</span>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="color: #C9D1D9; font-size: 11px; margin-bottom: 4px;">MEM</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: 51%;"></div>
+                  </div>
+                  <span style="color: #00FF88; font-size: 12px;">8.2/16 GB</span>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="color: #C9D1D9; font-size: 11px; margin-bottom: 4px;">DSK</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: 47%;"></div>
+                  </div>
+                  <span style="color: #00FF88; font-size: 12px;">234/500 GB</span>
+                </div>
+              </div>
+
+              <div>
+                <div style="color: #C9D1D9; font-size: 11px; margin-bottom: 4px;">NET</div>
+                <div style="color: #00FF88; font-size: 12px;">
+                  ↑ 1.2 MB/s  ↓ 3.4 MB/s
+                </div>
+              </div>
+            </div>
+
+            <div class="scan-divider"></div>
+
+            <!-- Process Table -->
+            <div class="hud-card" style="margin-top: 20px; padding: 16px;">
+              <div style="color: #00FF88; font-size: 11px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px;">
+                ACTIVE PROCESSES
+              </div>
+              <table class="process-table">
+                <thead>
+                  <tr>
+                    <th>PID</th>
+                    <th>NAME</th>
+                    <th style="text-align: right;">CPU%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1234</td>
+                    <td>Xcode</td>
+                    <td style="text-align: right; color: #00FF88;">23.4</td>
+                  </tr>
+                  <tr>
+                    <td>5678</td>
+                    <td>swift-build</td>
+                    <td style="text-align: right; color: #00FF88;">12.1</td>
+                  </tr>
+                  <tr>
+                    <td>9012</td>
+                    <td>Simulator</td>
+                    <td style="text-align: right; color: #00FF88;">8.7</td>
+                  </tr>
+                  <tr>
+                    <td>3456</td>
+                    <td>node</td>
+                    <td style="text-align: right;">5.2</td>
+                  </tr>
+                  <tr>
+                    <td>7890</td>
+                    <td>Terminal</td>
+                    <td style="text-align: right;">2.3</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div class="screen-view" id="settings">
+          <div style="padding: 50px 20px 20px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <button onclick="openDrawer()" style="background: none; border: none; color: #00FF88; font-size: 20px; cursor: pointer; padding: 8px;">
+                ☰
+              </button>
+              <div style="color: #00FF88; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+                [ CONFIGURATION ]
+              </div>
+              <div style="width: 36px;"></div>
+            </div>
+
+            <!-- Configuration Items -->
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px;">
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                SERVER_URL
+              </div>
+              <div style="color: #C9D1D9; font-size: 13px;">
+                http://localhost:9090
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px;">
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                CONNECTION
+              </div>
+              <div style="color: #00FF88; font-size: 13px;">
+                <span class="status-dot"></span>ONLINE
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px;">
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                THEME
+              </div>
+              <div style="color: #C9D1D9; font-size: 13px;">
+                ELECTRIC GRID
+              </div>
+            </div>
+
+            <div class="hud-card" style="margin-bottom: 16px; padding: 16px;">
+              <div style="color: #7D8590; font-size: 11px; margin-bottom: 4px;">
+                VERSION
+              </div>
+              <div style="color: #C9D1D9; font-size: 13px;">
+                1.0.0
+              </div>
+            </div>
+
+            <div class="scan-divider"></div>
+
+            <div class="hud-card" style="margin-top: 20px; padding: 16px;">
+              <div style="color: #00FF88; font-size: 11px; font-weight: 600; margin-bottom: 8px; letter-spacing: 1px;">
+                SYSTEM INFO
+              </div>
+              <div style="color: #7D8590; font-size: 11px; line-height: 1.6;">
+                DEVICE: iPhone 15 Pro<br>
+                OS: iOS 18.6<br>
+                BUILD: 22G120<br>
+                UPTIME: 8h 34m<br>
+                ARCHITECTURE: arm64
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Drawer management
+    function openDrawer() {
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('drawerOverlay').classList.add('visible');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('drawerOverlay').classList.remove('visible');
+    }
+
+    // Screen navigation
+    function showScreen(screenId) {
+      // Hide all screens
+      document.querySelectorAll('.screen-view').forEach(screen => {
+        screen.classList.remove('active');
+      });
+
+      // Show target screen
+      document.getElementById(screenId).classList.add('active');
+
+      // Update menu active state
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Close drawer
+      closeDrawer();
+    }
+
+    // CountUp animation
+    function animateCountUp(element) {
+      const target = parseInt(element.getAttribute('data-target'));
+      const duration = 1000;
+      const steps = 30;
+      const increment = target / steps;
+      const stepDuration = duration / steps;
+      let current = 0;
+
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          element.textContent = target;
+          clearInterval(timer);
+        } else {
+          element.textContent = Math.floor(current);
+        }
+      }, stepDuration);
+    }
+
+    // Initialize countup on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.countup').forEach(element => {
+        animateCountUp(element);
+      });
+    });
+  </script>
+</body>
+</html>

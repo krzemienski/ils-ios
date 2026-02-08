@@ -1,9 +1,20 @@
 import Foundation
 import ILSShared
 
+// MARK: - Hashable conformance for MCPServer (needed for NavigationLink)
+extension MCPServer: @retroactive Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    public static func == (lhs: MCPServer, rhs: MCPServer) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 @MainActor
 class MCPViewModel: ObservableObject {
-    @Published var servers: [MCPServerItem] = []
+    @Published var servers: [MCPServer] = []
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText = ""
@@ -29,13 +40,13 @@ class MCPViewModel: ObservableObject {
     }
 
     /// Filtered servers based on search text (client-side filtering for responsiveness)
-    var filteredServers: [MCPServerItem] {
+    var filteredServers: [MCPServer] {
         guard !searchText.isEmpty else { return servers }
         let query = searchText.lowercased()
         return servers.filter { server in
             server.name.lowercased().contains(query) ||
             server.command.lowercased().contains(query) ||
-            server.scope.lowercased().contains(query) ||
+            server.scope.rawValue.lowercased().contains(query) ||
             server.args.contains { $0.lowercased().contains(query) }
         }
     }
@@ -60,7 +71,7 @@ class MCPViewModel: ObservableObject {
 
         do {
             let path = refresh ? "/mcp?refresh=true" : "/mcp"
-            let response: APIResponse<ListResponse<MCPServerItem>> = try await client.get(path)
+            let response: APIResponse<ListResponse<MCPServer>> = try await client.get(path)
             if let data = response.data {
                 servers = data.items
             }
@@ -81,7 +92,7 @@ class MCPViewModel: ObservableObject {
         await loadServers()
     }
 
-    func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
+    func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServer? {
         guard let client else { return nil }
         do {
             let request = CreateMCPRequest(
@@ -90,7 +101,7 @@ class MCPViewModel: ObservableObject {
                 args: args,
                 scope: MCPScope(rawValue: scope)
             )
-            let response: APIResponse<MCPServerItem> = try await client.post("/mcp", body: request)
+            let response: APIResponse<MCPServer> = try await client.post("/mcp", body: request)
             if let server = response.data {
                 servers.append(server)
                 return server
@@ -102,10 +113,10 @@ class MCPViewModel: ObservableObject {
         return nil
     }
 
-    func deleteServer(_ server: MCPServerItem) async {
+    func deleteServer(_ server: MCPServer) async {
         guard let client else { return }
         do {
-            let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope)")
+            let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope.rawValue)")
             servers.removeAll { $0.id == server.id }
         } catch {
             self.error = error
@@ -120,7 +131,7 @@ class MCPViewModel: ObservableObject {
         selectedScope = scope
 
         do {
-            let response: APIResponse<ListResponse<MCPServerItem>> = try await client.get("/mcp?scope=\(scope)")
+            let response: APIResponse<ListResponse<MCPServer>> = try await client.get("/mcp?scope=\(scope)")
             if let data = response.data {
                 servers = data.items
             }
@@ -158,7 +169,7 @@ class MCPViewModel: ObservableObject {
 
     // MARK: - Spec 018: Batch Operations
 
-    func toggleSelection(for server: MCPServerItem) {
+    func toggleSelection(for server: MCPServer) {
         if selectedServerIDs.contains(server.id) {
             selectedServerIDs.remove(server.id)
         } else {
@@ -183,11 +194,11 @@ class MCPViewModel: ObservableObject {
         isSelecting = false
     }
 
-    func updateServer(name: String, command: String, args: [String], scope: String) async -> MCPServerItem? {
+    func updateServer(name: String, command: String, args: [String], scope: String) async -> MCPServer? {
         guard let client else { return nil }
         do {
             let request = CreateMCPRequest(name: name, command: command, args: args, scope: MCPScope(rawValue: scope))
-            let response: APIResponse<MCPServerItem> = try await client.put("/mcp/\(name)", body: request)
+            let response: APIResponse<MCPServer> = try await client.put("/mcp/\(name)", body: request)
             if let server = response.data {
                 if let index = servers.firstIndex(where: { $0.name == name }) {
                     servers[index] = server

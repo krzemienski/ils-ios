@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ILS Cyberpunk — Design Picker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: #050508;
+    font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+    color: #E0E8F0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .card:active { transform: scale(0.97); }
+  .card:hover { border-color: rgba(255,255,255,0.15); }
+  .card-ghost:hover { border-color: rgba(125,249,255,0.3); box-shadow: 0 0 20px rgba(125,249,255,0.1); }
+  .card-neon:hover { border-color: rgba(0,212,255,0.3); box-shadow: 0 0 20px rgba(0,212,255,0.1); }
+  .card-grid:hover { border-color: rgba(0,255,136,0.3); box-shadow: 0 0 20px rgba(0,255,136,0.1); }
+  .card-synth:hover { border-color: rgba(247,37,133,0.3); box-shadow: 0 0 20px rgba(247,37,133,0.1); }
+  .card-storm:hover { border-color: rgba(0,255,255,0.3); box-shadow: 0 0 20px rgba(0,255,255,0.1); }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: -apple-system-mono, 'SF Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .preview-bar {
+    height: 6px;
+    border-radius: 3px;
+    margin-top: 12px;
+  }
+  .pick-label {
+    font-family: -apple-system-mono, 'SF Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #606878;
+  }
+  .star { color: #E9C46A; }
+  h1 {
+    font-family: -apple-system-mono, 'SF Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-family: -apple-system-mono, 'SF Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  p { font-size: 14px; line-height: 1.5; color: #9BA3AF; }
+  .attr-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+  .attr-label { font-size: 12px; color: #606878; }
+  .attr-bar-bg { width: 100px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .attr-bar { height: 100%; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div style="max-width: 420px; margin: 0 auto; padding: 20px 16px 40px;">
+
+  <!-- Header -->
+  <div style="text-align: center; padding: 24px 0 8px;">
+    <div class="pick-label" style="margin-bottom: 8px;">ILS iOS Redesign</div>
+    <h1 style="margin: 0;">Design Picker</h1>
+    <p style="margin: 8px 0 0; font-size: 13px; color: #606878;">Tap a direction to preview the full interactive mockup</p>
+  </div>
+
+  <!-- User's Pick Banner -->
+  <div style="margin: 20px 0 24px; padding: 12px 16px; border-radius: 12px; background: rgba(125,249,255,0.06); border: 1px solid rgba(125,249,255,0.15);">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="star">&#9733;</span>
+      <span style="font-size: 13px; font-weight: 600; color: #7DF9FF;">Your Selection: Ghost Protocol</span>
+    </div>
+    <p style="margin: 4px 0 0; font-size: 12px; color: #606878;">SF Mono + SF Pro | AI Cards | Subtle Animations</p>
+  </div>
+
+  <!-- Card 1: Ghost Protocol (Recommended) -->
+  <a href="01-ghost-protocol.html" style="text-decoration: none; color: inherit;">
+    <div class="card card-ghost" style="margin-bottom: 16px; position: relative;">
+      <div style="position: absolute; top: 12px; right: 12px;">
+        <span class="badge" style="background: rgba(125,249,255,0.12); color: #7DF9FF;">RECOMMENDED</span>
+      </div>
+      <div style="padding: 20px;">
+        <div class="pick-label">01</div>
+        <h2 style="color: #7DF9FF; margin: 6px 0 8px;">Ghost Protocol</h2>
+        <p style="margin: 0; font-size: 13px;">Ultra-minimal stealth. Glassmorphism cards, context-shifting accent colors, surgical precision motion.</p>
+        <!-- Color swatches -->
+        <div style="display: flex; gap: 6px; margin-top: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #08080C; border: 1px solid rgba(255,255,255,0.1);"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #7DF9FF;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #B5179E;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #00FF88;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #E9C46A;"></div>
+        </div>
+        <!-- Attributes -->
+        <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+          <div class="attr-row"><span class="attr-label">Intensity</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 15%; background: #7DF9FF;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Readability</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 95%; background: #7DF9FF;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Performance</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 100%; background: #7DF9FF;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Card 2: Neon Noir -->
+  <a href="02-neon-noir.html" style="text-decoration: none; color: inherit;">
+    <div class="card card-neon" style="margin-bottom: 16px;">
+      <div style="padding: 20px;">
+        <div class="pick-label">02</div>
+        <h2 style="color: #00D4FF; margin: 6px 0 8px;">Neon Noir</h2>
+        <p style="margin: 0; font-size: 13px;">Professional cyberpunk. Bloomberg Terminal meets Blade Runner. Restrained neon on dark, information-dense.</p>
+        <div style="display: flex; gap: 6px; margin-top: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #0A0A0F; border: 1px solid rgba(255,255,255,0.1);"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #00D4FF;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #FF3366;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #2A2A3A;"></div>
+        </div>
+        <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+          <div class="attr-row"><span class="attr-label">Intensity</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 25%; background: #00D4FF;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Readability</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 90%; background: #00D4FF;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Performance</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 100%; background: #00D4FF;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Card 3: Electric Grid -->
+  <a href="03-electric-grid.html" style="text-decoration: none; color: inherit;">
+    <div class="card card-grid" style="margin-bottom: 16px;">
+      <div style="padding: 20px;">
+        <div class="pick-label">03</div>
+        <h2 style="color: #00FF88; margin: 6px 0 8px;">Electric Grid</h2>
+        <p style="margin: 0; font-size: 13px;">Military HUD command center. Grid overlays, scan lines, monospace throughout, tactical readouts.</p>
+        <div style="display: flex; gap: 6px; margin-top: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #050510; border: 1px solid rgba(255,255,255,0.1);"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #00FF88;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #FF6B00;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #00AAFF;"></div>
+        </div>
+        <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+          <div class="attr-row"><span class="attr-label">Intensity</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 50%; background: #00FF88;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Readability</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 75%; background: #00FF88;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Performance</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 90%; background: #00FF88;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Card 4: Synthwave Dreams -->
+  <a href="04-synthwave-dreams.html" style="text-decoration: none; color: inherit;">
+    <div class="card card-synth" style="margin-bottom: 16px;">
+      <div style="padding: 20px;">
+        <div class="pick-label">04</div>
+        <h2 style="margin: 6px 0 8px;"><span style="background: linear-gradient(90deg, #F72585, #4CC9F0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: -apple-system-mono, 'SF Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 1px;">Synthwave Dreams</span></h2>
+        <p style="margin: 0; font-size: 13px;">Bold retro-futuristic. Pink-to-cyan gradients, glow halos, sunset vibes. Most visually striking.</p>
+        <div style="display: flex; gap: 6px; margin-top: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #0F0418; border: 1px solid rgba(255,255,255,0.1);"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #F72585;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #4CC9F0;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #7B2CBF;"></div>
+        </div>
+        <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+          <div class="attr-row"><span class="attr-label">Intensity</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 80%; background: linear-gradient(90deg, #F72585, #4CC9F0);"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Readability</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 70%; background: linear-gradient(90deg, #F72585, #4CC9F0);"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Performance</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 85%; background: linear-gradient(90deg, #F72585, #4CC9F0);"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Card 5: Data Storm -->
+  <a href="05-data-storm.html" style="text-decoration: none; color: inherit;">
+    <div class="card card-storm" style="margin-bottom: 16px;">
+      <div style="padding: 20px;">
+        <div class="pick-label">05</div>
+        <h2 style="color: #00FFFF; margin: 6px 0 8px;">Data Storm</h2>
+        <p style="margin: 0; font-size: 13px;">Maximum immersion. Matrix rain, glitch effects, terminal-style everything. Full cyberpunk intensity.</p>
+        <div style="display: flex; gap: 6px; margin-top: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #000000; border: 1px solid rgba(255,255,255,0.1);"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #00FFFF;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #FF0066;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #FFEE00;"></div>
+        </div>
+        <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+          <div class="attr-row"><span class="attr-label">Intensity</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 100%; background: #00FFFF;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Readability</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 50%; background: #00FFFF;"></div></div></div>
+          <div class="attr-row"><span class="attr-label">Performance</span><div class="attr-bar-bg"><div class="attr-bar" style="width: 60%; background: #00FFFF;"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Footer -->
+  <div style="text-align: center; padding: 16px 0;">
+    <p style="font-size: 11px; color: #404858;">Tap any card to open the full interactive mockup</p>
+    <p style="font-size: 11px; color: #303840; margin-top: 4px;">ILS iOS | rebuild-ground-up spec | 2026-02-07</p>
+  </div>
+
+</div>
+
+</body>
+</html>

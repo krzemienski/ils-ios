@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreImage.CIFilterBuiltins
+import ILSShared
 
 /// Settings screen for managing Cloudflare tunnel remote access.
 struct TunnelSettingsView: View {
@@ -375,7 +376,7 @@ struct TunnelSettingsView: View {
 
     private func fetchStatus() async {
         do {
-            let status: TunnelStatusDTO = try await appState.apiClient.get("/tunnel/status")
+            let status: TunnelStatusResponse = try await appState.apiClient.get("/tunnel/status")
             isRunning = status.running
             tunnelURL = status.url
             uptime = status.uptime
@@ -400,8 +401,8 @@ struct TunnelSettingsView: View {
         defer { isToggling = false }
 
         do {
-            let emptyBody = EmptyTunnelRequest()
-            let response: TunnelStartDTO = try await appState.apiClient.post("/tunnel/start", body: emptyBody)
+            let request = TunnelStartRequest()
+            let response: TunnelStartResponse = try await appState.apiClient.post("/tunnel/start", body: request)
             tunnelURL = response.url
             isRunning = true
             notInstalled = false
@@ -424,8 +425,8 @@ struct TunnelSettingsView: View {
         defer { isToggling = false }
 
         do {
-            let emptyBody = EmptyTunnelRequest()
-            let _: TunnelStopDTO = try await appState.apiClient.post("/tunnel/stop", body: emptyBody)
+            let request = TunnelStartRequest()
+            let _: TunnelStopResponse = try await appState.apiClient.post("/tunnel/stop", body: request)
             isRunning = false
             tunnelURL = nil
             uptime = nil
@@ -472,28 +473,6 @@ struct TunnelSettingsView: View {
         }
     }
 }
-
-// MARK: - Local DTOs for decoding API responses
-
-/// Matches TunnelStatusResponse from backend.
-private struct TunnelStatusDTO: Decodable {
-    let running: Bool
-    let url: String?
-    let uptime: Int?
-}
-
-/// Matches TunnelStartResponse from backend.
-private struct TunnelStartDTO: Decodable {
-    let url: String
-}
-
-/// Matches TunnelStopResponse from backend.
-private struct TunnelStopDTO: Decodable {
-    let stopped: Bool
-}
-
-/// Empty request body for tunnel start/stop when no custom domain options needed.
-struct EmptyTunnelRequest: Encodable {}
 
 #Preview {
     NavigationStack {

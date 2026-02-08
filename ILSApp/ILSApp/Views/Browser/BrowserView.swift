@@ -161,10 +161,10 @@ struct BrowserView: View {
                     browserRow(
                         name: server.name,
                         subtitle: "\(server.command) \(server.args.joined(separator: " "))",
-                        status: server.status == "healthy" ? "Healthy" : (server.status == "unhealthy" ? "Unhealthy" : "Unknown"),
-                        statusColor: server.status == "healthy" ? theme.success : (server.status == "unhealthy" ? theme.error : theme.warning),
+                        status: server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown"),
+                        statusColor: server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning),
                         entityColor: theme.entityMCP,
-                        badge: server.scope.capitalized
+                        badge: server.scope.rawValue.capitalized
                     )
                 }
                 .buttonStyle(.plain)
@@ -347,7 +347,7 @@ struct BrowserView: View {
         }
     }
 
-    private var filteredPlugins: [PluginItem] {
+    private var filteredPlugins: [Plugin] {
         pluginsVM.filteredPlugins
     }
 

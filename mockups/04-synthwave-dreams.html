@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ILS Mockup - Synthwave Dreams (04)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 20s ease infinite;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .phone-container {
+      width: 390px;
+      height: 844px;
+      background: #000;
+      border-radius: 50px;
+      padding: 12px;
+      box-shadow: 0 20px 60px rgba(247, 37, 133, 0.3),
+                  0 0 80px rgba(76, 201, 240, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 30px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: #0F0418;
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .screen-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #F72585 0%, #4CC9F0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .gradient-border {
+      position: relative;
+      background: linear-gradient(135deg, #F72585 0%, #4CC9F0 100%);
+      padding: 1px;
+      border-radius: 12px;
+    }
+
+    .gradient-border-inner {
+      background: #1A0A2E;
+      border-radius: 11px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .glow-pink {
+      box-shadow: 0 0 15px rgba(247, 37, 133, 0.3);
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 15px rgba(76, 201, 240, 0.3);
+    }
+
+    .glow-purple {
+      box-shadow: 0 0 20px rgba(123, 44, 191, 0.4);
+    }
+
+    .mono-font {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .shimmer-text {
+      background: linear-gradient(90deg,
+        #F0E6FF 0%,
+        #F72585 25%,
+        #4CC9F0 50%,
+        #F72585 75%,
+        #F0E6FF 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 2s linear infinite;
+    }
+
+    .gradient-divider {
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        #F72585 20%,
+        #7B2CBF 50%,
+        #4CC9F0 80%,
+        transparent 100%);
+    }
+
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 83px;
+      background: rgba(15, 4, 24, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(247, 37, 133, 0.2);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 8px;
+      z-index: 50;
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 44px;
+      min-height: 44px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .tab-item:active {
+      transform: scale(0.95);
+    }
+
+    .tab-icon {
+      width: 28px;
+      height: 28px;
+      transition: all 0.3s ease;
+    }
+
+    .tab-item.active .tab-icon {
+      filter: drop-shadow(0 0 8px rgba(247, 37, 133, 0.6));
+    }
+
+    .tab-label {
+      font-size: 10px;
+      color: #9B8CB8;
+      transition: all 0.3s ease;
+    }
+
+    .tab-item.active .tab-label {
+      background: linear-gradient(135deg, #F72585 0%, #4CC9F0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      background: rgba(15, 4, 24, 0.98);
+      backdrop-filter: blur(20px);
+      transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 60;
+      border-right: 1px solid rgba(247, 37, 133, 0.2);
+    }
+
+    .drawer.open {
+      left: 0;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 55;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #2D1B4E 0%, #1A0A2E 100%);
+    }
+
+    .glass-card {
+      background: rgba(42, 27, 78, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(155, 140, 184, 0.1);
+    }
+
+    /* Ring Chart */
+    .ring-chart {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: rgba(155, 140, 184, 0.1);
+      stroke-width: 8;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: url(#gradient-pink-cyan);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke-dashoffset 1s ease;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #0F0418;
+      border-left: 3px solid #7B2CBF;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'SF Mono', monospace;
+      font-size: 13px;
+      color: #9B8CB8;
+      overflow-x: auto;
+    }
+
+    .code-keyword { color: #F72585; }
+    .code-string { color: #4CC9F0; }
+    .code-function { color: #7B2CBF; }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, #F72585 0%, #4CC9F0 100%);
+      color: #F0E6FF;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 15px rgba(247, 37, 133, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.95);
+      box-shadow: 0 0 25px rgba(247, 37, 133, 0.5);
+    }
+
+    /* Screen Switcher */
+    .screen-switcher {
+      position: fixed;
+      top: 50px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      z-index: 1000;
+      flex-wrap: wrap;
+      max-width: 250px;
+    }
+
+    .screen-btn {
+      background: linear-gradient(135deg, #F72585 0%, #4CC9F0 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(247, 37, 133, 0.3);
+    }
+
+    .screen-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(247, 37, 133, 0.4);
+    }
+
+    .screen-btn.active {
+      box-shadow: 0 0 20px rgba(247, 37, 133, 0.6),
+                  0 0 40px rgba(76, 201, 240, 0.4);
+    }
+
+    /* Title Bar */
+    .title-bar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #F72585 0%, #4CC9F0 100%);
+      padding: 12px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(247, 37, 133, 0.4);
+    }
+
+    .title-bar h1 {
+      font-family: 'SF Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 2px;
+    }
+
+    .title-bar .number {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Title Bar -->
+  <div class="title-bar">
+    <h1>SYNTHWAVE DREAMS <span class="number">04</span></h1>
+  </div>
+
+  <!-- Screen Switcher -->
+  <div class="screen-switcher">
+    <button class="screen-btn active" onclick="showScreen('drawer')">Drawer</button>
+    <button class="screen-btn" onclick="showScreen('dashboard')">Dashboard</button>
+    <button class="screen-btn" onclick="showScreen('sessions')">Sessions</button>
+    <button class="screen-btn" onclick="showScreen('chat')">Chat</button>
+    <button class="screen-btn" onclick="showScreen('projects')">Projects</button>
+    <button class="screen-btn" onclick="showScreen('system')">System</button>
+    <button class="screen-btn" onclick="showScreen('settings')">Settings</button>
+  </div>
+
+  <!-- Phone Container -->
+  <div class="phone-container">
+    <div class="phone-notch"></div>
+    <div class="screen">
+      <!-- SVG Gradients -->
+      <svg width="0" height="0" style="position: absolute;">
+        <defs>
+          <linearGradient id="gradient-pink-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#F72585;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#7B2CBF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4CC9F0;stop-opacity:1" />
+          </linearGradient>
+          <linearGradient id="gradient-vertical" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#F72585;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4CC9F0;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <!-- Drawer -->
+      <div class="drawer" id="drawer">
+        <div class="gradient-bg p-6 pb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full gradient-border glow-pink flex items-center justify-center">
+              <div class="gradient-border-inner flex items-center justify-center">
+                <span class="gradient-text text-xl font-bold mono-font">N</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-base font-semibold" style="color: #F0E6FF;">Nick</div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <div class="w-2 h-2 rounded-full bg-green-400 glow-cyan"></div>
+                <span class="text-xs" style="color: #9B8CB8;">Connected</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-3 py-4 space-y-1">
+          <div class="menu-item active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" style="background: linear-gradient(135deg, rgba(247, 37, 133, 0.15) 0%, rgba(76, 201, 240, 0.15) 100%); border-left: 3px solid transparent; border-image: linear-gradient(180deg, #F72585, #4CC9F0) 1;">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span class="text-sm font-medium gradient-text">Dashboard</span>
+          </div>
+
+          <div class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" style="border-left: 3px solid transparent;">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span class="text-sm font-medium" style="color: #9B8CB8;">Sessions</span>
+          </div>
+
+          <div class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" style="border-left: 3px solid transparent;">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span class="text-sm font-medium" style="color: #9B8CB8;">Projects</span>
+          </div>
+
+          <div class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" style="border-left: 3px solid transparent;">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            <span class="text-sm font-medium" style="color: #9B8CB8;">System</span>
+          </div>
+
+          <div class="gradient-divider my-3"></div>
+
+          <div class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer" style="border-left: 3px solid transparent;">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6m8.66-9l-5.2 3M8.54 14l-5.2 3m13.32 0l-5.2-3M8.54 10l-5.2-3"></path>
+            </svg>
+            <span class="text-sm font-medium" style="color: #9B8CB8;">Settings</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overlay -->
+      <div class="overlay" id="overlay" onclick="toggleDrawer()"></div>
+
+      <!-- Screen Content Container -->
+      <div class="screen-content">
+        <!-- Dashboard Screen -->
+        <div id="screen-dashboard" class="screen-view" style="padding-bottom: 100px;">
+          <!-- Header -->
+          <div class="px-5 pt-12 pb-4" style="background: linear-gradient(180deg, rgba(15, 4, 24, 0) 0%, rgba(15, 4, 24, 1) 100%);">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="toggleDrawer()" class="w-11 h-11 flex items-center justify-center rounded-xl glow-pink" style="background: rgba(247, 37, 133, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+              <button class="w-11 h-11 flex items-center justify-center rounded-xl glow-cyan" style="background: rgba(76, 201, 240, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              </button>
+            </div>
+            <h1 class="text-3xl font-bold gradient-text mono-font">Dashboard</h1>
+            <div class="gradient-divider mt-3"></div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="px-5 pb-6">
+            <div class="grid grid-cols-2 gap-3">
+              <!-- Sessions -->
+              <div class="gradient-border glow-pink">
+                <div class="gradient-border-inner p-4">
+                  <div class="text-3xl font-bold gradient-text mono-font">3</div>
+                  <div class="text-sm mt-1" style="color: #9B8CB8;">Sessions</div>
+                </div>
+              </div>
+
+              <!-- Projects -->
+              <div class="gradient-border glow-cyan">
+                <div class="gradient-border-inner p-4">
+                  <div class="text-3xl font-bold gradient-text mono-font">371</div>
+                  <div class="text-sm mt-1" style="color: #9B8CB8;">Projects</div>
+                </div>
+              </div>
+
+              <!-- Skills -->
+              <div class="gradient-border glow-pink">
+                <div class="gradient-border-inner p-4">
+                  <div class="text-3xl font-bold gradient-text mono-font">1,527</div>
+                  <div class="text-sm mt-1" style="color: #9B8CB8;">Skills</div>
+                </div>
+              </div>
+
+              <!-- Plugins -->
+              <div class="gradient-border glow-cyan">
+                <div class="gradient-border-inner p-4">
+                  <div class="text-3xl font-bold gradient-text mono-font">78</div>
+                  <div class="text-sm mt-1" style="color: #9B8CB8;">Plugins</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Sessions -->
+          <div class="px-5">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-semibold gradient-text">Recent Sessions</h2>
+            </div>
+            <div class="gradient-divider mb-4"></div>
+
+            <div class="space-y-3">
+              <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-pink-500" style="border-color: rgba(247, 37, 133, 0.2);">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-base font-medium" style="color: #F0E6FF;">iOS Design Polish</div>
+                    <div class="text-sm mt-1" style="color: #9B8CB8;">2 minutes ago</div>
+                  </div>
+                  <div class="px-2 py-1 rounded-md text-xs font-medium" style="background: rgba(247, 37, 133, 0.2); color: #F72585;">
+                    ILS iOS
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-pink-500" style="border-color: rgba(247, 37, 133, 0.2);">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-base font-medium" style="color: #F0E6FF;">Backend API Refactor</div>
+                    <div class="text-sm mt-1" style="color: #9B8CB8;">1 hour ago</div>
+                  </div>
+                  <div class="px-2 py-1 rounded-md text-xs font-medium" style="background: rgba(76, 201, 240, 0.2); color: #4CC9F0;">
+                    Backend
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-pink-500" style="border-color: rgba(247, 37, 133, 0.2);">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-base font-medium" style="color: #F0E6FF;">SSE Streaming Fix</div>
+                    <div class="text-sm mt-1" style="color: #9B8CB8;">Yesterday</div>
+                  </div>
+                  <div class="px-2 py-1 rounded-md text-xs font-medium" style="background: rgba(123, 44, 191, 0.2); color: #7B2CBF;">
+                    Full Stack
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sessions Screen -->
+        <div id="screen-sessions" class="screen-view hidden" style="padding-bottom: 100px;">
+          <!-- Header -->
+          <div class="px-5 pt-12 pb-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="toggleDrawer()" class="w-11 h-11 flex items-center justify-center rounded-xl glow-pink" style="background: rgba(247, 37, 133, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+              <button class="w-11 h-11 flex items-center justify-center rounded-full glow-cyan gradient-border">
+                <div class="gradient-border-inner w-full h-full flex items-center justify-center rounded-full">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </div>
+              </button>
+            </div>
+            <h1 class="text-3xl font-bold gradient-text mono-font">Sessions</h1>
+            <div class="gradient-divider mt-3"></div>
+          </div>
+
+          <!-- Search -->
+          <div class="px-5 pb-4">
+            <div class="gradient-border">
+              <div class="gradient-border-inner flex items-center gap-2 px-3 py-2.5">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" placeholder="Search sessions..." class="flex-1 bg-transparent border-0 outline-none text-sm" style="color: #F0E6FF;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Session List -->
+          <div class="px-5 space-y-3">
+            <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-pink-500" style="border-color: rgba(247, 37, 133, 0.2);">
+              <div class="flex items-start justify-between mb-2">
+                <div class="text-base font-medium" style="color: #F0E6FF;">iOS Design Polish</div>
+                <div class="px-2 py-1 rounded-md text-xs font-medium" style="background: rgba(247, 37, 133, 0.2); color: #F72585;">
+                  ILS iOS
+                </div>
+              </div>
+              <div class="text-sm" style="color: #9B8CB8;">2 minutes ago</div>
+            </div>
+
+            <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-cyan-500" style="border-color: rgba(76, 201, 240, 0.2);">
+              <div class="flex items-start justify-between mb-2">
+                <div class="text-base font-medium" style="color: #F0E6FF;">Backend API Refactor</div>
+                <div class="px-2 py-1 rounded-md text-xs font-medium" style="background: rgba(76, 201, 240, 0.2); color: #4CC9F0;">
+                  Backend
+                </div>
+              </div>
+              <div class="text-sm" style="color: #9B8CB8;">1 hour ago</div>
+            </div>
+
+            <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300 hover:border-purple-500" style="border-color: rgba(123, 44, 191, 0.2);">
+              <div class="flex items-start justify-between mb-2">
+                <div class="text-base font-medium" style="color: #F0E6FF;">SSE Streaming Fix</div>
+                <div class="px-2 py-1 rounded-md text-xs font-medium" style="background: rgba(123, 44, 191, 0.2); color: #7B2CBF;">
+                  Full Stack
+                </div>
+              </div>
+              <div class="text-sm" style="color: #9B8CB8;">Yesterday</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div id="screen-chat" class="screen-view hidden" style="padding-bottom: 80px;">
+          <!-- Header -->
+          <div class="px-5 pt-12 pb-3" style="background: rgba(15, 4, 24, 0.95); border-bottom: 1px solid rgba(247, 37, 133, 0.2); backdrop-filter: blur(20px);">
+            <div class="flex items-center gap-3">
+              <button class="w-9 h-9 flex items-center justify-center rounded-lg" style="background: rgba(247, 37, 133, 0.1);">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+              <div class="flex-1">
+                <div class="text-base font-semibold" style="color: #F0E6FF;">iOS Design Polish</div>
+                <div class="text-xs" style="color: #9B8CB8;">Active now</div>
+              </div>
+              <button class="w-9 h-9 flex items-center justify-center rounded-lg" style="background: rgba(76, 201, 240, 0.1);">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <circle cx="12" cy="12" r="1"></circle>
+                  <circle cx="12" cy="5" r="1"></circle>
+                  <circle cx="12" cy="19" r="1"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages -->
+          <div class="px-5 py-4 space-y-4">
+            <!-- User Message 1 -->
+            <div class="flex justify-end">
+              <div class="gradient-border glow-pink" style="max-width: 80%;">
+                <div class="gradient-border-inner px-4 py-3">
+                  <p class="text-sm" style="color: #F0E6FF;">Create a synthwave-themed design mockup for the iOS app</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Response 1 -->
+            <div class="space-y-2">
+              <div class="glass-card rounded-xl p-4" style="border-top: 2px solid transparent; border-image: linear-gradient(90deg, #F72585, #4CC9F0) 1;">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-6 h-6 rounded-full gradient-border glow-pink flex items-center justify-center">
+                    <div class="gradient-border-inner flex items-center justify-center">
+                      <span class="gradient-text text-xs font-bold">C</span>
+                    </div>
+                  </div>
+                  <span class="text-sm font-medium gradient-text">Claude</span>
+                </div>
+                <p class="text-sm leading-relaxed mb-3" style="color: #F0E6FF;">
+                  I'll create a bold synthwave design with neon gradients, glowing effects, and retro-futuristic aesthetics. Let me start by analyzing the current design system.
+                </p>
+
+                <!-- Tool Call -->
+                <div class="glass-card rounded-lg p-3 cursor-pointer" style="background: rgba(123, 44, 191, 0.15); border: 1px solid rgba(123, 44, 191, 0.3);">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#7B2CBF" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span class="text-xs font-medium" style="color: #7B2CBF;">Read: specs/DESIGN.md</span>
+                    <svg class="w-3 h-3 ml-auto" viewBox="0 0 24 24" fill="none" stroke="#7B2CBF" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Message 2 -->
+            <div class="flex justify-end">
+              <div class="gradient-border glow-cyan" style="max-width: 80%;">
+                <div class="gradient-border-inner px-4 py-3">
+                  <p class="text-sm" style="color: #F0E6FF;">What is 2+2?</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Response 2 (Streaming) -->
+            <div class="space-y-2">
+              <div class="glass-card rounded-xl p-4" style="border-top: 2px solid transparent; border-image: linear-gradient(90deg, #F72585, #4CC9F0) 1;">
+                <div class="flex items-center gap-2 mb-2">
+                  <div class="w-6 h-6 rounded-full gradient-border glow-pink flex items-center justify-center pulse">
+                    <div class="gradient-border-inner flex items-center justify-center">
+                      <span class="gradient-text text-xs font-bold">C</span>
+                    </div>
+                  </div>
+                  <span class="text-sm font-medium gradient-text">Claude</span>
+                </div>
+                <p class="text-sm leading-relaxed mb-3" style="color: #F0E6FF;">
+                  2 + 2 equals 4. Here's the implementation:
+                </p>
+
+                <!-- Code Block -->
+                <div class="code-block mb-3">
+                  <span class="code-keyword">func</span> <span class="code-function">add</span>(<span class="code-string">a</span>: Int, <span class="code-string">b</span>: Int) -> Int {
+  <span class="code-keyword">return</span> a + b
+}
+
+<span class="code-keyword">let</span> result = <span class="code-function">add</span>(a: <span class="code-string">2</span>, b: <span class="code-string">2</span>)
+                </div>
+
+                <!-- Thinking Section (Collapsed) -->
+                <div class="glass-card rounded-lg p-3 cursor-pointer" style="background: rgba(155, 140, 184, 0.05); border: 1px solid rgba(155, 140, 184, 0.2);">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 16v-4M12 8h.01"></path>
+                    </svg>
+                    <span class="text-xs font-medium" style="color: #9B8CB8;">Thinking process (click to expand)</span>
+                    <svg class="w-3 h-3 ml-auto" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Streaming Indicator -->
+              <div class="flex items-center gap-2 px-4">
+                <div class="flex gap-1">
+                  <div class="w-2 h-2 rounded-full" style="background: #F72585; animation: pulse 1.5s ease-in-out infinite;"></div>
+                  <div class="w-2 h-2 rounded-full" style="background: #7B2CBF; animation: pulse 1.5s ease-in-out 0.3s infinite;"></div>
+                  <div class="w-2 h-2 rounded-full" style="background: #4CC9F0; animation: pulse 1.5s ease-in-out 0.6s infinite;"></div>
+                </div>
+                <span class="text-xs shimmer-text">Claude is thinking...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Bar -->
+          <div class="fixed bottom-0 left-0 right-0 px-5 py-3" style="background: rgba(15, 4, 24, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(247, 37, 133, 0.2);">
+            <div class="gradient-border glow-pink">
+              <div class="gradient-border-inner flex items-center gap-2 px-3 py-2">
+                <input type="text" placeholder="Type a message..." class="flex-1 bg-transparent border-0 outline-none text-sm" style="color: #F0E6FF;">
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center btn-primary" style="padding: 0; min-width: 32px;">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Screen -->
+        <div id="screen-projects" class="screen-view hidden" style="padding-bottom: 100px;">
+          <!-- Header -->
+          <div class="px-5 pt-12 pb-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="toggleDrawer()" class="w-11 h-11 flex items-center justify-center rounded-xl glow-pink" style="background: rgba(247, 37, 133, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+              <button class="w-11 h-11 flex items-center justify-center rounded-xl glow-cyan" style="background: rgba(76, 201, 240, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+              </button>
+            </div>
+            <h1 class="text-3xl font-bold gradient-text mono-font">Projects</h1>
+            <div class="gradient-divider mt-3"></div>
+          </div>
+
+          <!-- Project Cards -->
+          <div class="px-5 space-y-3">
+            <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300" style="border-left: 3px solid #F72585;">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="text-lg font-semibold" style="color: #F0E6FF;">ILS iOS App</div>
+                  <div class="text-2xl font-bold gradient-text mono-font mt-1">371</div>
+                </div>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#F72585" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <div class="text-sm" style="color: #9B8CB8;">files</div>
+            </div>
+
+            <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300" style="border-left: 3px solid #4CC9F0;">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="text-lg font-semibold" style="color: #F0E6FF;">Backend API</div>
+                  <div class="text-2xl font-bold gradient-text mono-font mt-1">45</div>
+                </div>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#4CC9F0" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <div class="text-sm" style="color: #9B8CB8;">files</div>
+            </div>
+
+            <div class="glass-card rounded-xl p-4 cursor-pointer transition-all duration-300" style="border-left: 3px solid #7B2CBF;">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="text-lg font-semibold" style="color: #F0E6FF;">Shared Models</div>
+                  <div class="text-2xl font-bold gradient-text mono-font mt-1">15</div>
+                </div>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#7B2CBF" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <div class="text-sm" style="color: #9B8CB8;">files</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Screen -->
+        <div id="screen-system" class="screen-view hidden" style="padding-bottom: 100px;">
+          <!-- Header -->
+          <div class="px-5 pt-12 pb-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="toggleDrawer()" class="w-11 h-11 flex items-center justify-center rounded-xl glow-pink" style="background: rgba(247, 37, 133, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <h1 class="text-3xl font-bold gradient-text mono-font">System</h1>
+            <div class="gradient-divider mt-3"></div>
+          </div>
+
+          <!-- System Metrics -->
+          <div class="px-5 space-y-4">
+            <!-- CPU -->
+            <div class="glass-card rounded-xl p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <div class="text-sm" style="color: #9B8CB8;">CPU Usage</div>
+                  <div class="text-2xl font-bold gradient-text mono-font mt-1">34%</div>
+                </div>
+                <div class="ring-chart">
+                  <svg viewBox="0 0 100 100" class="w-full h-full">
+                    <circle cx="50" cy="50" r="42" class="ring-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="ring-progress" style="stroke-dasharray: 264; stroke-dashoffset: 174.24;"></circle>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-sm font-bold gradient-text mono-font">34%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Memory -->
+            <div class="glass-card rounded-xl p-5">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm" style="color: #9B8CB8;">Memory</div>
+                <div class="text-sm font-bold gradient-text mono-font">12.4 / 16 GB</div>
+              </div>
+              <div class="w-full h-2 rounded-full" style="background: rgba(155, 140, 184, 0.1);">
+                <div class="h-full rounded-full" style="width: 77.5%; background: linear-gradient(90deg, #F72585 0%, #4CC9F0 100%); box-shadow: 0 0 10px rgba(247, 37, 133, 0.5);"></div>
+              </div>
+            </div>
+
+            <!-- Disk -->
+            <div class="glass-card rounded-xl p-5">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-sm" style="color: #9B8CB8;">Disk</div>
+                <div class="text-sm font-bold gradient-text mono-font">486 / 512 GB</div>
+              </div>
+              <div class="w-full h-2 rounded-full" style="background: rgba(155, 140, 184, 0.1);">
+                <div class="h-full rounded-full" style="width: 95%; background: linear-gradient(90deg, #F72585 0%, #7B2CBF 50%, #4CC9F0 100%); box-shadow: 0 0 10px rgba(247, 37, 133, 0.5);"></div>
+              </div>
+            </div>
+
+            <!-- Network -->
+            <div class="glass-card rounded-xl p-5">
+              <div class="text-sm mb-3" style="color: #9B8CB8;">Network</div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-xs" style="color: #9B8CB8;">Download</div>
+                  <div class="text-lg font-bold gradient-text mono-font mt-1">24.3 MB/s</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-xs" style="color: #9B8CB8;">Upload</div>
+                  <div class="text-lg font-bold gradient-text mono-font mt-1">8.1 MB/s</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="screen-settings" class="screen-view hidden" style="padding-bottom: 100px;">
+          <!-- Header -->
+          <div class="px-5 pt-12 pb-4">
+            <div class="flex items-center justify-between mb-2">
+              <button onclick="toggleDrawer()" class="w-11 h-11 flex items-center justify-center rounded-xl glow-pink" style="background: rgba(247, 37, 133, 0.1);">
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <h1 class="text-3xl font-bold gradient-text mono-font">Settings</h1>
+            <div class="gradient-divider mt-3"></div>
+          </div>
+
+          <!-- Settings Content -->
+          <div class="px-5 space-y-6">
+            <!-- Server -->
+            <div>
+              <label class="text-sm font-medium block mb-2" style="color: #9B8CB8;">Server URL</label>
+              <div class="gradient-border">
+                <div class="gradient-border-inner">
+                  <input type="text" value="http://localhost:9090" class="w-full bg-transparent border-0 outline-none px-3 py-2.5 text-sm" style="color: #F0E6FF;">
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mt-2">
+                <div class="w-2 h-2 rounded-full bg-green-400 glow-cyan"></div>
+                <span class="text-xs" style="color: #9B8CB8;">Connected</span>
+              </div>
+            </div>
+
+            <div class="gradient-divider"></div>
+
+            <!-- Theme -->
+            <div>
+              <label class="text-sm font-medium block mb-3" style="color: #9B8CB8;">Theme</label>
+              <div class="glass-card rounded-xl p-4" style="border: 2px solid rgba(247, 37, 133, 0.5); box-shadow: 0 0 20px rgba(247, 37, 133, 0.3);">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium gradient-text">Synthwave Dreams</span>
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="gradient-divider"></div>
+
+            <!-- About -->
+            <div>
+              <label class="text-sm font-medium block mb-3" style="color: #9B8CB8;">About</label>
+              <div class="glass-card rounded-xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm" style="color: #9B8CB8;">Version</span>
+                  <span class="text-sm font-medium gradient-text mono-font">1.0.0</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm" style="color: #9B8CB8;">Build</span>
+                  <span class="text-sm font-medium gradient-text mono-font">2024.02.07</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="url(#gradient-pink-cyan)" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span class="tab-label">Dashboard</span>
+        </div>
+        <div class="tab-item">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="tab-label">Sessions</span>
+        </div>
+        <div class="tab-item">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="tab-label">Projects</span>
+        </div>
+        <div class="tab-item">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+          <span class="tab-label">System</span>
+        </div>
+        <div class="tab-item">
+          <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="#9B8CB8" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m8.66-9l-5.2 3M8.54 14l-5.2 3m13.32 0l-5.2-3M8.54 10l-5.2-3"></path>
+          </svg>
+          <span class="tab-label">Settings</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(screenName) {
+      // Hide all screens
+      document.querySelectorAll('.screen-view').forEach(el => {
+        el.classList.add('hidden');
+      });
+
+      // Show selected screen
+      if (screenName === 'drawer') {
+        document.getElementById('screen-dashboard').classList.remove('hidden');
+        toggleDrawer(true);
+      } else {
+        document.getElementById(`screen-${screenName}`).classList.remove('hidden');
+        toggleDrawer(false);
+      }
+
+      // Update button states
+      document.querySelectorAll('.screen-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+
+    function toggleDrawer(forceState) {
+      const drawer = document.getElementById('drawer');
+      const overlay = document.getElementById('overlay');
+
+      if (forceState !== undefined) {
+        if (forceState) {
+          drawer.classList.add('open');
+          overlay.classList.add('visible');
+        } else {
+          drawer.classList.remove('open');
+          overlay.classList.remove('visible');
+        }
+      } else {
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('visible');
+      }
+    }
+
+    // Initialize with drawer open
+    window.addEventListener('load', () => {
+      toggleDrawer(true);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "source": "spec",
+  "name": "polish-again",
+  "basePath": "specs/polish-again",
+  "phase": "execution",
+  "taskIndex": 26,
+  "totalTasks": 52,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 2,
+  "maxGlobalIterations": 100,
+  "awaitingApproval": false
+}
