@@ -49,6 +49,7 @@ struct ChatController: RouteCollection {
 
         // Get or create session — if a sessionId is provided but doesn't exist in DB
         // (e.g. client-generated UUID for "New Session"), create it on the fly.
+        // If client provides options.resume (claudeSessionId), store it on the session.
         let sessionId: UUID
         if let existingSessionId = input.sessionId {
             if try await SessionModel.find(existingSessionId, on: req.db) != nil {
@@ -56,6 +57,7 @@ struct ChatController: RouteCollection {
             } else {
                 let newSession = SessionModel(
                     id: existingSessionId,
+                    claudeSessionId: input.options?.resume,
                     projectId: input.projectId,
                     model: input.options?.model ?? "sonnet",
                     permissionMode: input.options?.permissionMode ?? .default
@@ -99,11 +101,15 @@ struct ChatController: RouteCollection {
         // Build execution options
         var options = ExecutionOptions(from: input.options)
 
-        // If resuming a session, get the Claude session ID
+        // If resuming a session, get the Claude session ID.
+        // Prefer DB-stored claudeSessionId; fall back to client-provided resume.
         if let existingSessionId = input.sessionId {
             if let session = try await SessionModel.find(existingSessionId, on: req.db) {
-                options.resume = session.claudeSessionId
-                req.logger.debug("[STREAM] Resume session: \(session.claudeSessionId ?? "nil")")
+                if let dbClaudeId = session.claudeSessionId {
+                    options.resume = dbClaudeId
+                }
+                // else: keep options.resume from client (if provided via input.options)
+                req.logger.debug("[STREAM] Resume session: \(options.resume ?? "nil")")
             }
         }
 

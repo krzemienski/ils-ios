@@ -20,7 +20,7 @@ struct MidnightTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "E2F0E8")
     let textSecondary = Color(hex: "8AA898")
-    let textTertiary = Color(hex: "506860")
+    let textTertiary = Color(hex: "7A9A90")
     let textOnAccent = Color.white
 
     // Semantic

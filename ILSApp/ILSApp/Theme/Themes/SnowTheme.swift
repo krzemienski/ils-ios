@@ -21,7 +21,7 @@ struct SnowTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "0F172A")
     let textSecondary = Color(hex: "475569")
-    let textTertiary = Color(hex: "94A3B8")
+    let textTertiary = Color(hex: "6B7A8E")
     let textOnAccent = Color.white
 
     // Semantic

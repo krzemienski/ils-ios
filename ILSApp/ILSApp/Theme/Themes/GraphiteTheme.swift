@@ -20,7 +20,7 @@ struct GraphiteTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "E0F0F0")
     let textSecondary = Color(hex: "88A0A0")
-    let textTertiary = Color(hex: "506060")
+    let textTertiary = Color(hex: "7A8E8E")
     let textOnAccent = Color.white
 
     // Semantic

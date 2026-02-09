@@ -111,12 +111,25 @@ struct AdvancedOptionsSheet: View {
 
     private var modelExecutionSection: some View {
         Section("Model & Execution") {
-            Picker("Model", selection: $config.model) {
-                Text("Sonnet").tag("sonnet")
-                Text("Opus").tag("opus")
-                Text("Haiku").tag("haiku")
+            HStack(spacing: 0) {
+                ForEach(["sonnet", "opus", "haiku"], id: \.self) { model in
+                    Button {
+                        config.model = model
+                    } label: {
+                        Text(model.capitalized)
+                            .font(.system(size: theme.fontCaption, weight: config.model == model ? .semibold : .regular))
+                            .foregroundStyle(config.model == model ? theme.textPrimary : theme.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(config.model == model ? theme.accent.opacity(0.15) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .pickerStyle(.segmented)
+            .padding(4)
+            .background(theme.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             .accessibilityLabel("Model selection picker")
 
             Picker("Permission Mode", selection: $config.permissionMode) {

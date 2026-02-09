@@ -1,81 +1,38 @@
 import SwiftUI
 
-/// Animated 3-dot typing indicator shown when the AI is generating a response.
-/// Uses a 1.2s easeInOut loop for each dot with staggered delays.
-/// When reduce-motion is enabled, shows static "Responding..." text instead.
+/// Single pulsing orange dot with "Claude is thinking..." text.
+/// Left-aligned, minimal footprint on pure black background.
 struct StreamingIndicatorView: View {
     var statusText: String?
 
-    @State private var animatingDot = 0
-    @State private var animationTask: Task<Void, Never>?
+    @State private var isPulsing = false
     @Environment(\.theme) private var theme: any AppTheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: theme.spacingXS) {
-            if reduceMotion {
-                staticIndicator
-            } else {
-                animatedDots
-            }
+        HStack(spacing: 8) {
+            // Leading accent bar to match assistant cards
+            RoundedRectangle(cornerRadius: 1)
+                .fill(theme.accent)
+                .frame(width: 2, height: 16)
 
-            if let statusText, !statusText.isEmpty {
-                Text(statusText)
-                    .font(.system(size: theme.fontCaption))
-                    .foregroundStyle(theme.textTertiary)
-            }
+            Circle()
+                .fill(theme.accent)
+                .frame(width: 6, height: 6)
+                .opacity(isPulsing ? 1.0 : 0.3)
+
+            Text(statusText ?? "Claude is thinking\u{2026}")
+                .font(.system(size: 12).leading(.tight))
+                .foregroundStyle(theme.textTertiary)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         }
-        .padding(.horizontal, theme.spacingSM)
-        .padding(.vertical, theme.spacingSM)
-        .accessibilityLabel("AI is responding")
-    }
-
-    // MARK: - Animated Dots
-
-    private var animatedDots: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<3, id: \.self) { index in
-                Circle()
-                    .fill(theme.accent)
-                    .frame(width: 8, height: 8)
-                    .scaleEffect(animatingDot == index ? 1.3 : 0.7)
-                    .opacity(animatingDot == index ? 1.0 : 0.4)
-            }
-        }
+        .padding(.leading, 10)
         .onAppear {
-            startAnimation()
-        }
-        .onDisappear {
-            animationTask?.cancel()
-            animationTask = nil
-        }
-    }
-
-    // MARK: - Static Indicator (Reduce Motion)
-
-    private var staticIndicator: some View {
-        HStack(spacing: theme.spacingXS) {
-            ProgressView()
-                .scaleEffect(0.7)
-                .tint(theme.accent)
-            Text("Responding...")
-                .font(.system(size: theme.fontCaption, weight: .medium))
-                .foregroundStyle(theme.textSecondary)
-        }
-    }
-
-    // MARK: - Animation
-
-    private func startAnimation() {
-        animationTask?.cancel()
-        animationTask = Task { @MainActor in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(400))
-                guard !Task.isCancelled, !reduceMotion else { break }
-                withAnimation(.easeInOut(duration: 0.4)) {
-                    animatingDot = (animatingDot + 1) % 3
-                }
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                isPulsing = true
             }
         }
+        .accessibilityLabel("AI is responding")
     }
 }

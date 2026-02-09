@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Full-width user message card with themed styling.
-/// NOT a bubble — uses bgSecondary background with cornerRadius.
+/// Compact right-aligned user message pill on pure black background.
+/// Max-width 80%, dark surface with no border stroke.
 struct UserMessageCard: View {
     let message: ChatMessage
     var onDelete: ((ChatMessage) -> Void)?
@@ -10,36 +10,36 @@ struct UserMessageCard: View {
     @State private var showCopyConfirmation = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: theme.spacingXS) {
-            // Role indicator
-            HStack(spacing: theme.spacingXS) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(theme.accent)
-                Text("You")
-                    .font(.system(size: theme.fontCaption, weight: .semibold))
-                    .foregroundStyle(theme.accent)
-                Spacer()
-                if let timestamp = message.timestamp {
-                    Text(formattedTimestamp(timestamp))
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(theme.textTertiary)
+        HStack {
+            Spacer(minLength: UIScreen.main.bounds.width * 0.2)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                // Message text
+                Text(message.text)
+                    .font(.system(size: theme.fontBody).leading(.tight))
+                    .foregroundStyle(theme.textPrimary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Inline metadata: "You" label + timestamp
+                HStack(spacing: 6) {
+                    Text("You")
+                        .font(.system(size: 10, weight: .semibold).leading(.tight))
+                        .foregroundStyle(theme.accent)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    if let timestamp = message.timestamp {
+                        Text(formattedTimestamp(timestamp))
+                            .font(.system(size: 10, design: .monospaced).leading(.tight))
+                            .foregroundStyle(theme.textTertiary)
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    }
                 }
             }
-
-            // Message text
-            Text(message.text)
-                .font(.system(size: theme.fontBody))
-                .foregroundStyle(theme.textPrimary)
-                .textSelection(.enabled)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(theme.borderSubtle)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-        .padding(theme.spacingMD)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: theme.cornerRadius)
-                .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
-        )
         .contextMenu {
             Button {
                 UIPasteboard.general.string = message.text

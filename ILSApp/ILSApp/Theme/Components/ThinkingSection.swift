@@ -27,7 +27,7 @@ struct ThinkingSection: View {
                 expandedContent
             }
         }
-        .background(theme.bgSecondary)
+        .background(theme.bgTertiary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .overlay(
             RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
@@ -79,14 +79,15 @@ struct ThinkingSection: View {
                     Text("·")
                         .foregroundStyle(theme.textTertiary)
                     Text(durationText)
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(.system(size: 10, design: .monospaced).leading(.tight))
                         .foregroundStyle(theme.textTertiary)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }

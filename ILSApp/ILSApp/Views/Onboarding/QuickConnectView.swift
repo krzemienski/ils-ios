@@ -80,13 +80,29 @@ struct QuickConnectView: View {
     // MARK: - Mode Picker
 
     private var modePicker: some View {
-        Picker("Connection Mode", selection: $selectedMode) {
+        HStack(spacing: 0) {
             ForEach(ConnectionMode.allCases) { mode in
-                Label(mode.rawValue, systemImage: mode.icon)
-                    .tag(mode)
+                Button {
+                    selectedMode = mode
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 11))
+                        Text(mode.rawValue)
+                            .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular))
+                    }
+                    .foregroundStyle(selectedMode == mode ? theme.textPrimary : theme.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingSM)
+                    .background(selectedMode == mode ? theme.accent.opacity(0.15) : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+                .buttonStyle(.plain)
             }
         }
-        .pickerStyle(.segmented)
+        .padding(4)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         .padding(.vertical, 4)
         .accessibilityLabel("Connection mode")
     }

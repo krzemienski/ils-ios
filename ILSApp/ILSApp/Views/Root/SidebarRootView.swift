@@ -55,7 +55,7 @@ struct SidebarRootView: View {
                 .environment(\.theme, theme)
         }
         // DEBUG: Auto-navigate for screenshot capture (revert after)
-        // .task { ... } — REVERTED for interactive testing
+        // .task { ... } — REVERTED after validation
     }
 
     // MARK: - iPad Layout (Persistent Sidebar)
@@ -125,6 +125,9 @@ struct SidebarRootView: View {
                     fleetScreen
                 }
             }
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(theme.bgPrimary, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 if showHamburger {
                     ToolbarItem(placement: .topBarLeading) {

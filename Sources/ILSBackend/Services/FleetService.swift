@@ -1,68 +1,90 @@
 import Vapor
+import Fluent
 import ILSShared
 import Foundation
 
 actor FleetService {
-    private var hosts: [UUID: FleetHost] = [:]
-    private var activeHostId: UUID?
     private var healthCheckTask: Task<Void, Never>?
     private let healthCheckInterval: TimeInterval = 30
 
-    func register(from request: RegisterFleetHostRequest) -> FleetHost {
-        let host = FleetHost(
+    func register(from request: RegisterFleetHostRequest, db: Database) async throws -> FleetHost {
+        let isFirst = try await FleetHostModel.query(on: db).count() == 0
+        let model = FleetHostModel(
             name: request.name,
             host: request.host,
             port: request.port,
             backendPort: request.backendPort,
             username: request.username,
-            authMethod: request.authMethod.flatMap { ServerConnection.AuthMethod(rawValue: $0) },
-            isActive: hosts.isEmpty,
+            authMethod: request.authMethod,
+            isActive: isFirst,
             healthStatus: .unknown
         )
-        hosts[host.id] = host
-        if hosts.count == 1 { activeHostId = host.id }
-        return host
+        try await model.save(on: db)
+        return model.toShared()
     }
 
-    func list() -> FleetListResponse {
-        FleetListResponse(
-            hosts: Array(hosts.values).sorted { $0.name < $1.name },
-            activeHostId: activeHostId
-        )
+    func list(db: Database) async throws -> FleetListResponse {
+        let models = try await FleetHostModel.query(on: db)
+            .sort(\.$name)
+            .all()
+        let hosts = models.map { $0.toShared() }
+        let activeHostId = models.first(where: { $0.isActive })?.id
+        return FleetListResponse(hosts: hosts, activeHostId: activeHostId)
     }
 
-    func getHost(id: UUID) -> FleetHost? { hosts[id] }
-
-    func remove(id: UUID) -> Bool {
-        if activeHostId == id { activeHostId = nil }
-        return hosts.removeValue(forKey: id) != nil
+    func getHost(id: UUID, db: Database) async throws -> FleetHost? {
+        guard let model = try await FleetHostModel.find(id, on: db) else {
+            return nil
+        }
+        return model.toShared()
     }
 
-    func activate(id: UUID) -> FleetHost? {
-        guard var host = hosts[id] else { return nil }
-        for key in hosts.keys { hosts[key]?.isActive = false }
-        host.isActive = true
-        hosts[id] = host
-        activeHostId = id
-        return host
+    func remove(id: UUID, db: Database) async throws -> Bool {
+        guard let model = try await FleetHostModel.find(id, on: db) else {
+            return false
+        }
+        try await model.delete(on: db)
+        return true
     }
 
-    func checkHealth(id: UUID) async -> FleetHealthResponse {
-        guard let host = hosts[id] else {
+    func activate(id: UUID, db: Database) async throws -> FleetHost? {
+        guard let model = try await FleetHostModel.find(id, on: db) else {
+            return nil
+        }
+        // Deactivate all hosts
+        let allModels = try await FleetHostModel.query(on: db).all()
+        for other in allModels {
+            if other.isActive {
+                other.isActive = false
+                try await other.save(on: db)
+            }
+        }
+        // Activate the target
+        model.isActive = true
+        try await model.save(on: db)
+        return model.toShared()
+    }
+
+    func checkHealth(id: UUID, db: Database) async -> FleetHealthResponse {
+        guard let model = try? await FleetHostModel.find(id, on: db) else {
             return FleetHealthResponse(hostId: id, status: .unreachable)
         }
 
+        let host = model.toShared()
+
         do {
             guard let url = URL(string: "http://\(host.host):\(host.backendPort)/health") else {
-                hosts[id]?.healthStatus = .unreachable
-                hosts[id]?.lastHealthCheck = Date()
+                model.healthStatus = FleetHost.HealthStatus.unreachable.rawValue
+                model.lastHealthCheck = Date()
+                try? await model.save(on: db)
                 return FleetHealthResponse(hostId: id, status: .unreachable, lastChecked: Date())
             }
             let (data, response) = try await URLSession.shared.data(from: url)
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                hosts[id]?.healthStatus = .unreachable
-                hosts[id]?.lastHealthCheck = Date()
+                model.healthStatus = FleetHost.HealthStatus.unreachable.rawValue
+                model.lastHealthCheck = Date()
+                try? await model.save(on: db)
                 return FleetHealthResponse(hostId: id, status: .unreachable, lastChecked: Date())
             }
 
@@ -75,8 +97,9 @@ actor FleetService {
 
             let health = try JSONDecoder().decode(HealthInfo.self, from: data)
             let status: FleetHost.HealthStatus = health.status == "ok" ? .healthy : .degraded
-            hosts[id]?.healthStatus = status
-            hosts[id]?.lastHealthCheck = Date()
+            model.healthStatus = status.rawValue
+            model.lastHealthCheck = Date()
+            try? await model.save(on: db)
 
             return FleetHealthResponse(
                 hostId: id,
@@ -86,17 +109,18 @@ actor FleetService {
                 lastChecked: Date()
             )
         } catch {
-            hosts[id]?.healthStatus = .unreachable
-            hosts[id]?.lastHealthCheck = Date()
+            model.healthStatus = FleetHost.HealthStatus.unreachable.rawValue
+            model.lastHealthCheck = Date()
+            try? await model.save(on: db)
             return FleetHealthResponse(hostId: id, status: .unreachable, lastChecked: Date())
         }
     }
 
-    func lifecycle(id: UUID, action: LifecycleRequest.LifecycleAction) async -> LifecycleResponse {
-        guard let host = hosts[id] else {
+    func lifecycle(id: UUID, action: LifecycleRequest.LifecycleAction, db: Database) async -> LifecycleResponse {
+        guard let model = try? await FleetHostModel.find(id, on: db) else {
             return LifecycleResponse(success: false, action: action.rawValue, message: "Host not found")
         }
-        // Forward lifecycle action to the remote backend
+        let host = model.toShared()
         do {
             let url = URL(string: "http://\(host.host):\(host.backendPort)/api/v1/lifecycle")!
             var request = URLRequest(url: url)
@@ -112,10 +136,11 @@ actor FleetService {
         }
     }
 
-    func getLogs(id: UUID, lines: Int = 100) async -> RemoteLogsResponse {
-        guard let host = hosts[id] else {
+    func getLogs(id: UUID, lines: Int = 100, db: Database) async -> RemoteLogsResponse {
+        guard let model = try? await FleetHostModel.find(id, on: db) else {
             return RemoteLogsResponse(lines: [], hostId: id)
         }
+        let host = model.toShared()
         do {
             let url = URL(string: "http://\(host.host):\(host.backendPort)/api/v1/logs?lines=\(lines)")!
             let (data, response) = try await URLSession.shared.data(from: url)
@@ -129,14 +154,14 @@ actor FleetService {
         }
     }
 
-    func startPeriodicHealthChecks() {
+    func startPeriodicHealthChecks(db: Database) {
         healthCheckTask?.cancel()
         healthCheckTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { break }
-                let hostIds = await self.allHostIds()
+                let hostIds = await self.allHostIds(db: db)
                 for id in hostIds {
-                    _ = await self.checkHealth(id: id)
+                    _ = await self.checkHealth(id: id, db: db)
                 }
                 try? await Task.sleep(nanoseconds: UInt64(30 * 1_000_000_000))
             }
@@ -148,7 +173,8 @@ actor FleetService {
         healthCheckTask = nil
     }
 
-    private func allHostIds() -> [UUID] {
-        Array(hosts.keys)
+    private func allHostIds(db: Database) async -> [UUID] {
+        let models = (try? await FleetHostModel.query(on: db).all()) ?? []
+        return models.compactMap { $0.id }
     }
 }

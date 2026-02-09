@@ -32,11 +32,11 @@ struct ToolCallAccordion: View {
                 expandedContent
             }
         }
-        .background(theme.bgSecondary)
+        .background(theme.bgTertiary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .overlay(
             RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
-                .strokeBorder(isError ? theme.error.opacity(0.5) : theme.borderSubtle, lineWidth: isError ? 2 : 0.5)
+                .strokeBorder(isError ? theme.error.opacity(0.5) : theme.borderSubtle, lineWidth: isError ? 1 : 0.5)
         )
         .onChange(of: expandAll?.wrappedValue) { _, newValue in
             if let newValue {

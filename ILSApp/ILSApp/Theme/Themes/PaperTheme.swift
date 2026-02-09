@@ -21,7 +21,7 @@ struct PaperTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "1A1A18")
     let textSecondary = Color(hex: "6B6B68")
-    let textTertiary = Color(hex: "9B9B98")
+    let textTertiary = Color(hex: "757572")
     let textOnAccent = Color.white
 
     // Semantic

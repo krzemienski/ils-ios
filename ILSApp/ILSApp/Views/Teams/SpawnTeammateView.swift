@@ -44,13 +44,25 @@ struct SpawnTeammateView: View {
                 }
 
                 Section {
-                    Picker("Model", selection: $selectedModel) {
+                    HStack(spacing: 0) {
                         ForEach(modelOptions, id: \.self) { model in
-                            Text(model.capitalized)
-                                .tag(model)
+                            Button {
+                                selectedModel = model
+                            } label: {
+                                Text(model.capitalized)
+                                    .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular))
+                                    .foregroundStyle(selectedModel == model ? theme.textPrimary : theme.textSecondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, theme.spacingSM)
+                                    .background(selectedModel == model ? theme.accent.opacity(0.15) : Color.clear)
+                                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .pickerStyle(.segmented)
+                    .padding(3)
+                    .background(theme.bgTertiary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                 } header: {
                     Text("AI Model")
                         .foregroundStyle(theme.textSecondary)

@@ -20,7 +20,7 @@ struct EmberTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "F0E8E0")
     let textSecondary = Color(hex: "A09080")
-    let textTertiary = Color(hex: "686050")
+    let textTertiary = Color(hex: "8E8678")
     let textOnAccent = Color.white
 
     // Semantic

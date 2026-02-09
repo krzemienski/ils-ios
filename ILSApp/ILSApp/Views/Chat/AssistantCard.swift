@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Full-width AI assistant message card with glass effect.
-/// Renders child content slots: markdown text, tool calls, thinking, code blocks.
+/// Borderless AI assistant message card — text directly on black background.
+/// Thin leading accent bar provides visual anchor. No glass effect.
 struct AssistantCard: View {
     let message: ChatMessage
     var onRetry: ((ChatMessage) -> Void)?
@@ -12,54 +12,51 @@ struct AssistantCard: View {
     @State private var expandAllToolCalls: Bool?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            // Role indicator + metadata
-            HStack(spacing: theme.spacingXS) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 11))
-                    .foregroundStyle(theme.entitySession)
-                Text("Assistant")
-                    .font(.system(size: theme.fontCaption, weight: .semibold))
-                    .foregroundStyle(theme.entitySession)
-                Spacer()
-                metadataRow
-            }
+        HStack(alignment: .top, spacing: 0) {
+            // Leading accent bar
+            RoundedRectangle(cornerRadius: 1)
+                .fill(theme.accent)
+                .frame(width: 2)
+                .padding(.vertical, 2)
 
-            // Thinking section
-            if let thinking = message.thinking {
-                ThinkingSection(thinking: thinking, isActive: false)
-            }
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                // Role indicator + metadata
+                HStack(spacing: theme.spacingXS) {
+                    Text("Claude")
+                        .font(.system(size: 10, weight: .semibold).leading(.tight))
+                        .foregroundStyle(theme.accent)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    Spacer()
+                    metadataRow
+                }
 
-            // Main text content
-            if !message.text.isEmpty {
-                MarkdownTextView(text: message.text)
-                    .textSelection(.enabled)
-            }
+                // Thinking section
+                if let thinking = message.thinking {
+                    ThinkingSection(thinking: thinking, isActive: false)
+                }
 
-            // Tool calls
-            if !message.toolCalls.isEmpty {
-                toolCallsSection
-            }
+                // Main text content
+                if !message.text.isEmpty {
+                    MarkdownTextView(text: message.text)
+                        .textSelection(.enabled)
+                }
 
-            // Tool results
-            ForEach(message.toolResults, id: \.toolUseId) { result in
-                ToolCallAccordion(
-                    toolName: "Result",
-                    output: result.content,
-                    isError: result.isError
-                )
-            }
-        }
-        .padding(theme.spacingMD)
-        .glassCard()
-        .overlay(
-            Group {
-                if message.isFromHistory {
-                    RoundedRectangle(cornerRadius: theme.cornerRadius)
-                        .strokeBorder(theme.textTertiary.opacity(0.2), lineWidth: 0.5)
+                // Tool calls
+                if !message.toolCalls.isEmpty {
+                    toolCallsSection
+                }
+
+                // Tool results
+                ForEach(message.toolResults, id: \.toolUseId) { result in
+                    ToolCallAccordion(
+                        toolName: "Result",
+                        output: result.content,
+                        isError: result.isError
+                    )
                 }
             }
-        )
+            .padding(.leading, 10)
+        }
         .contextMenu {
             Button {
                 UIPasteboard.general.string = message.text
@@ -114,24 +111,27 @@ struct AssistantCard: View {
         HStack(spacing: theme.spacingXS) {
             if let timestamp = message.timestamp {
                 Text(formattedTimestamp(timestamp))
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, design: .monospaced).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
 
             if let cost = message.cost {
-                Text("·")
+                Text("\u{00B7}")
                     .foregroundStyle(theme.textTertiary)
                 Text("$\(cost, specifier: "%.4f")")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, design: .monospaced).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
 
             if message.tokenCount > 0 {
-                Text("·")
+                Text("\u{00B7}")
                     .foregroundStyle(theme.textTertiary)
                 Text("\(message.tokenCount)t")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, design: .monospaced).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
         }
     }
@@ -148,9 +148,9 @@ struct AssistantCard: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: expandAllToolCalls == true ? "rectangle.compress.vertical" : "rectangle.expand.vertical")
-                            .font(.system(size: 10))
+                            .font(.system(size: 10).leading(.tight))
                         Text(expandAllToolCalls == true ? "Collapse All" : "Expand All")
-                            .font(.system(size: theme.fontCaption, weight: .medium))
+                            .font(.system(size: theme.fontCaption, weight: .medium).leading(.tight))
                     }
                     .foregroundStyle(theme.accent)
                 }

@@ -1,5 +1,6 @@
 import Vapor
 import Citadel
+import Crypto
 import NIO
 import ILSShared
 import NIOSSH
@@ -62,8 +63,22 @@ actor SSHService {
             case .password:
                 sshAuthMethod = .passwordBased(username: username, password: credential)
             case .sshKey:
-                let privateKey = try Insecure.RSA.PrivateKey(sshRsa: credential)
-                sshAuthMethod = .rsa(username: username, privateKey: privateKey)
+                // Read key file contents — credential is a file path
+                let expandedPath = (credential as NSString).expandingTildeInPath
+                let keyContents = try String(contentsOfFile: expandedPath, encoding: .utf8)
+
+                // Detect key type and use appropriate auth method
+                let keyType = try SSHKeyDetection.detectPrivateKeyType(from: keyContents)
+                switch keyType {
+                case .ed25519:
+                    let ed25519Key = try Curve25519.Signing.PrivateKey(sshEd25519: keyContents)
+                    sshAuthMethod = .ed25519(username: username, privateKey: ed25519Key)
+                case .rsa:
+                    let rsaKey = try Insecure.RSA.PrivateKey(sshRsa: keyContents)
+                    sshAuthMethod = .rsa(username: username, privateKey: rsaKey)
+                default:
+                    throw SSHError.authenticationFailed("Unsupported key type: \(keyType). Only Ed25519 and RSA are supported.")
+                }
             }
 
             // Note: In production, replace with .trustedKeys or custom validator

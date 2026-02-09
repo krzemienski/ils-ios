@@ -20,7 +20,7 @@ struct SlateTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "E2E8F0")
     let textSecondary = Color(hex: "94A3B8")
-    let textTertiary = Color(hex: "475569")
+    let textTertiary = Color(hex: "7B8DA3")
     let textOnAccent = Color.white
 
     // Semantic

@@ -20,12 +20,25 @@ struct AgentTeamDetailView: View {
                 headerSection(team)
             }
 
-            Picker("", selection: $selectedTab) {
-                Text("Members").tag(0)
-                Text("Tasks").tag(1)
-                Text("Messages").tag(2)
+            HStack(spacing: 0) {
+                ForEach(Array(["Members", "Tasks", "Messages"].enumerated()), id: \.offset) { index, label in
+                    Button {
+                        selectedTab = index
+                    } label: {
+                        Text(label)
+                            .font(.system(size: theme.fontCaption, weight: selectedTab == index ? .semibold : .regular))
+                            .foregroundStyle(selectedTab == index ? theme.textPrimary : theme.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(selectedTab == index ? theme.accent.opacity(0.15) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .pickerStyle(.segmented)
+            .padding(4)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             .padding(theme.spacingMD)
 
             Group {

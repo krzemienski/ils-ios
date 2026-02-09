@@ -21,9 +21,10 @@ final class FleetViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let response: FleetListResponse = try await apiClient.get("/fleet")
-            hosts = response.hosts
-            activeHostId = response.activeHostId
+            let response: APIResponse<FleetListResponse> = try await apiClient.get("/fleet")
+            guard let fleet = response.data else { return }
+            hosts = fleet.hosts
+            activeHostId = fleet.activeHostId
         } catch {
             loadError = "Failed to load fleet hosts: \(error.localizedDescription)"
         }

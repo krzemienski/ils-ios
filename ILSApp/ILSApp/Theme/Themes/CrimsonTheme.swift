@@ -20,7 +20,7 @@ struct CrimsonTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "F0E0E0")
     let textSecondary = Color(hex: "A08888")
-    let textTertiary = Color(hex: "685050")
+    let textTertiary = Color(hex: "907878")
     let textOnAccent = Color.white
 
     // Semantic

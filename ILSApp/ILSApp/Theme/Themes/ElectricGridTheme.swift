@@ -20,7 +20,7 @@ struct ElectricGridTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "D8E8E0")
     let textSecondary = Color(hex: "7898A0")
-    let textTertiary = Color(hex: "405860")
+    let textTertiary = Color(hex: "6E8C96")
     let textOnAccent = Color(hex: "050510")
 
     // Semantic

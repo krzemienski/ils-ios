@@ -19,13 +19,13 @@ struct FleetController: RouteCollection {
     @Sendable
     func register(req: Request) async throws -> APIResponse<FleetHost> {
         let input = try req.content.decode(RegisterFleetHostRequest.self)
-        let host = await fleetService.register(from: input)
+        let host = try await fleetService.register(from: input, db: req.db)
         return APIResponse(success: true, data: host)
     }
 
     @Sendable
     func list(req: Request) async throws -> APIResponse<FleetListResponse> {
-        let response = await fleetService.list()
+        let response = try await fleetService.list(db: req.db)
         return APIResponse(success: true, data: response)
     }
 
@@ -34,7 +34,7 @@ struct FleetController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
-        guard let host = await fleetService.getHost(id: id) else {
+        guard let host = try await fleetService.getHost(id: id, db: req.db) else {
             throw Abort(.notFound, reason: "Host not found")
         }
         return APIResponse(success: true, data: host)
@@ -45,7 +45,7 @@ struct FleetController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
-        guard await fleetService.remove(id: id) else {
+        guard try await fleetService.remove(id: id, db: req.db) else {
             throw Abort(.notFound, reason: "Host not found")
         }
         return APIResponse(success: true, data: DeletedResponse())
@@ -56,7 +56,7 @@ struct FleetController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
-        guard let host = await fleetService.activate(id: id) else {
+        guard let host = try await fleetService.activate(id: id, db: req.db) else {
             throw Abort(.notFound, reason: "Host not found")
         }
         return APIResponse(success: true, data: host)
@@ -67,7 +67,7 @@ struct FleetController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
-        let response = await fleetService.checkHealth(id: id)
+        let response = await fleetService.checkHealth(id: id, db: req.db)
         return APIResponse(success: true, data: response)
     }
 
@@ -77,7 +77,7 @@ struct FleetController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
         let input = try req.content.decode(LifecycleRequest.self)
-        let response = await fleetService.lifecycle(id: id, action: input.action)
+        let response = await fleetService.lifecycle(id: id, action: input.action, db: req.db)
         return APIResponse(success: true, data: response)
     }
 
@@ -86,7 +86,7 @@ struct FleetController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
-        let response = await fleetService.getLogs(id: id)
+        let response = await fleetService.getLogs(id: id, db: req.db)
         return APIResponse(success: true, data: response)
     }
 }

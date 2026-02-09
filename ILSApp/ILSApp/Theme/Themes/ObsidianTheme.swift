@@ -4,13 +4,13 @@ struct ObsidianTheme: AppTheme {
     let name = "Obsidian"
     let id = "obsidian"
 
-    // Backgrounds
-    let bgPrimary = Color(hex: "0A0A0F")
-    let bgSecondary = Color(hex: "12121A")
-    let bgTertiary = Color(hex: "1C1C28")
-    let bgSidebar = Color(hex: "08080C")
+    // Backgrounds — pure black base
+    let bgPrimary = Color(hex: "000000")
+    let bgSecondary = Color(hex: "111111")
+    let bgTertiary = Color(hex: "0D0D0D")
+    let bgSidebar = Color(hex: "000000")
 
-    // Accent
+    // Accent — hot orange
     let accent = Color(hex: "FF6933")
     let accentSecondary = Color(hex: "FF8C5C")
     var accentGradient: LinearGradient {
@@ -19,8 +19,8 @@ struct ObsidianTheme: AppTheme {
 
     // Text
     let textPrimary = Color(hex: "E8ECF0")
-    let textSecondary = Color(hex: "8892A0")
-    let textTertiary = Color(hex: "505868")
+    let textSecondary = Color(hex: "777777")
+    let textTertiary = Color(hex: "808080")
     let textOnAccent = Color.white
 
     // Semantic
@@ -29,14 +29,14 @@ struct ObsidianTheme: AppTheme {
     let error = Color(hex: "EF4444")
     let info = Color(hex: "3B82F6")
 
-    // Borders
-    let border = Color(hex: "1E2230")
-    let borderSubtle = Color(hex: "141820")
-    let divider = Color(hex: "1A1E28")
+    // Borders — very subtle on black
+    let border = Color(hex: "1A1A1A")
+    let borderSubtle = Color(hex: "1A1A1A")
+    let divider = Color(hex: "1A1A1A")
 
-    // Glass (dark theme = white opacity)
-    let glassBackground = Color.white.opacity(0.05)
-    let glassBorder = Color.white.opacity(0.10)
+    // Glass — minimal, near-invisible on black
+    let glassBackground = Color(hex: "111111")
+    let glassBorder = Color(hex: "1A1A1A")
 
     // Geometry
     let cornerRadius: CGFloat = 12

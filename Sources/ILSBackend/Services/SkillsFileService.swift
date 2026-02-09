@@ -47,17 +47,84 @@ struct SkillsFileService {
         return skills
     }
 
+    /// Plugin cache directory path (`~/.claude/plugins/cache`)
+    var pluginCacheDirectory: String {
+        "\(claudeDirectory)/plugins/cache"
+    }
+
     /// Scan all skills from disk without using cache.
+    /// Scans both `~/.claude/skills/` (local) and `~/.claude/plugins/cache/*/skills/` (plugin).
     /// - Returns: Array of Skill objects
     func scanSkills() throws -> [Skill] {
         var skills: [Skill] = []
 
-        guard fileManager.fileExists(atPath: skillsDirectory) else {
-            return skills
+        // 1. Scan local skills from ~/.claude/skills/
+        if fileManager.fileExists(atPath: skillsDirectory) {
+            let localSkills = try scanSkillsRecursively(at: skillsDirectory, basePath: skillsDirectory)
+            skills.append(contentsOf: localSkills)
         }
 
-        // Recursively scan for all .md files in the skills directory
-        skills = try scanSkillsRecursively(at: skillsDirectory, basePath: skillsDirectory)
+        // 2. Scan plugin-provided skills from ~/.claude/plugins/cache/
+        if fileManager.fileExists(atPath: pluginCacheDirectory) {
+            let pluginSkills = try scanPluginCacheSkills()
+            skills.append(contentsOf: pluginSkills)
+        }
+
+        return skills
+    }
+
+    /// Scan skills from the plugin cache directory.
+    /// Finds all `skills/` directories within the plugin cache tree and parses their contents.
+    /// - Returns: Array of Skill objects with source = .plugin
+    private func scanPluginCacheSkills() throws -> [Skill] {
+        var skills: [Skill] = []
+
+        // Walk plugin cache to find directories named "skills"
+        let enumerator = fileManager.enumerator(
+            at: URL(fileURLWithPath: pluginCacheDirectory),
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        )
+
+        var visitedSkillDirs: Set<String> = []
+
+        while let url = enumerator?.nextObject() as? URL {
+            // We're looking for directories named "skills"
+            guard url.lastPathComponent == "skills" else { continue }
+
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
+                  isDirectory.boolValue else {
+                continue
+            }
+
+            // Skip if we've already processed this skills directory
+            let realPath = (try? fileManager.destinationOfSymbolicLink(atPath: url.path)) ?? url.path
+            guard !visitedSkillDirs.contains(realPath) else { continue }
+            visitedSkillDirs.insert(realPath)
+
+            // Don't recurse further into this skills directory from the enumerator
+            enumerator?.skipDescendants()
+
+            // Scan this skills directory for .md files
+            let scannedSkills = try scanSkillsRecursively(at: url.path, basePath: url.path)
+
+            // Override source to .plugin for all discovered skills
+            let pluginSkills = scannedSkills.map { skill in
+                Skill(
+                    name: skill.name,
+                    description: skill.description,
+                    version: skill.version,
+                    tags: skill.tags,
+                    isActive: skill.isActive,
+                    path: skill.path,
+                    source: .plugin,
+                    content: skill.content
+                )
+            }
+
+            skills.append(contentsOf: pluginSkills)
+        }
 
         return skills
     }

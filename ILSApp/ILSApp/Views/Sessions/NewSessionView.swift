@@ -93,12 +93,25 @@ struct NewSessionView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Model")
 
-            Picker("Model", selection: $selectedModel) {
+            HStack(spacing: 0) {
                 ForEach(models, id: \.self) { model in
-                    Text(model.capitalized).tag(model)
+                    Button {
+                        selectedModel = model
+                    } label: {
+                        Text(model.capitalized)
+                            .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular))
+                            .foregroundStyle(selectedModel == model ? theme.textPrimary : theme.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(selectedModel == model ? theme.accent.opacity(0.15) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .pickerStyle(.segmented)
+            .padding(4)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             .accessibilityLabel("Claude model selection")
         }
     }

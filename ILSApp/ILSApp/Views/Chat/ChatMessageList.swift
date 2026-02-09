@@ -14,6 +14,7 @@ struct ChatMessageList: View {
     let sessionProjectId: String?
 
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -31,7 +32,11 @@ struct ChatMessageList: View {
                     scrollToBottom(proxy: proxy)
                 }
                 if !streaming {
-                    withAnimation { showJumpToBottom = false }
+                    if reduceMotion {
+                        showJumpToBottom = false
+                    } else {
+                        withAnimation { showJumpToBottom = false }
+                    }
                 }
             }
             .onChange(of: isLoadingHistory) { wasLoading, isLoading in
@@ -44,8 +49,12 @@ struct ChatMessageList: View {
                     if gesture.translation.height > 10 {
                         isUserScrolledUp = true
                         if isStreaming {
-                            withAnimation(.easeInOut(duration: 0.2)) {
+                            if reduceMotion {
                                 showJumpToBottom = true
+                            } else {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showJumpToBottom = true
+                                }
                             }
                         }
                     }
@@ -60,13 +69,18 @@ struct ChatMessageList: View {
     }
 
     private var messagesContent: some View {
-        LazyVStack(alignment: .leading, spacing: theme.spacingMD) {
-            ForEach(messages) { message in
+        LazyVStack(spacing: 0) {
+            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
+                let isSameSender = prevMessage?.isUser == message.isUser
+
                 if message.isUser {
                     UserMessageCard(
                         message: message,
                         onDelete: onDeleteMessage
                     )
+                    .padding(.horizontal, 16)
+                    .padding(.top, isSameSender ? 8 : 24)
                 } else {
                     AssistantCard(
                         message: message,
@@ -75,6 +89,8 @@ struct ChatMessageList: View {
                         },
                         onDelete: onDeleteMessage
                     )
+                    .padding(.horizontal, 16)
+                    .padding(.top, isSameSender ? 8 : 24)
                 }
             }
 
@@ -82,6 +98,8 @@ struct ChatMessageList: View {
                 StreamingIndicatorView(
                     statusText: statusText
                 )
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
                 .id("typing-indicator")
             }
 
@@ -89,7 +107,7 @@ struct ChatMessageList: View {
                 .frame(height: 1)
                 .id("bottom")
         }
-        .padding()
+        .padding(.vertical, 16)
     }
 
     private func shouldShowTypingIndicator() -> Bool {
@@ -99,24 +117,32 @@ struct ChatMessageList: View {
     private func jumpToBottomButton(proxy: ScrollViewProxy) -> some View {
         Button {
             isUserScrolledUp = false
-            withAnimation { showJumpToBottom = false }
+            if reduceMotion {
+                showJumpToBottom = false
+            } else {
+                withAnimation { showJumpToBottom = false }
+            }
             scrollToBottom(proxy: proxy)
         } label: {
             Image(systemName: "chevron.down.circle.fill")
                 .font(.system(size: 28))
                 .foregroundStyle(theme.accent)
                 .background(Circle().fill(theme.bgSecondary))
-                .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
         }
-        .padding(.trailing, theme.spacingMD)
-        .padding(.bottom, theme.spacingMD)
+        .padding(.trailing, 16)
+        .padding(.bottom, 16)
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel("Jump to bottom")
     }
 
     private func scrollToBottom(proxy: ScrollViewProxy) {
-        withAnimation(.easeOut(duration: 0.2)) {
+        if reduceMotion {
             proxy.scrollTo("bottom", anchor: .bottom)
+        } else {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo("bottom", anchor: .bottom)
+            }
         }
     }
 }

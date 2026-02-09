@@ -20,7 +20,7 @@ struct NeonNoirTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "E0E8F0")
     let textSecondary = Color(hex: "8090A0")
-    let textTertiary = Color(hex: "485060")
+    let textTertiary = Color(hex: "7C8898")
     let textOnAccent = Color.white
 
     // Semantic

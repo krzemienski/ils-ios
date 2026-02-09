@@ -69,12 +69,25 @@ struct SSHSetupView: View {
                 }
                 iconTextField("Username", text: $username, icon: "person")
 
-                Picker("Auth Method", selection: $authMethod) {
-                    Text("Password").tag(ServerConnection.AuthMethod.password)
-                    Text("SSH Key").tag(ServerConnection.AuthMethod.sshKey)
+                HStack(spacing: 0) {
+                    ForEach([ServerConnection.AuthMethod.password, .sshKey], id: \.self) { method in
+                        Button {
+                            authMethod = method
+                        } label: {
+                            Text(method == .password ? "Password" : "SSH Key")
+                                .font(.system(size: theme.fontCaption, weight: authMethod == method ? .semibold : .regular))
+                                .foregroundStyle(authMethod == method ? theme.textPrimary : theme.textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, theme.spacingSM)
+                                .background(authMethod == method ? theme.accent.opacity(0.15) : Color.clear)
+                                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .pickerStyle(.segmented)
-                .tint(theme.accent)
+                .padding(3)
+                .background(theme.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
 
                 if authMethod == .password {
                     SecureField("Password", text: $credential)

@@ -315,11 +315,37 @@ class ChatViewModel: ObservableObject {
 
     func sendMessage(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
         guard let sseClient else { return }
+
+        // For external sessions, inject claudeSessionId as resume option
+        var finalOptions = options
+        if let claudeId = claudeSessionId {
+            finalOptions = ChatOptions(
+                model: options?.model,
+                permissionMode: options?.permissionMode,
+                maxTurns: options?.maxTurns,
+                maxBudgetUSD: options?.maxBudgetUSD,
+                allowedTools: options?.allowedTools,
+                disallowedTools: options?.disallowedTools,
+                resume: claudeId,
+                forkSession: options?.forkSession,
+                systemPrompt: options?.systemPrompt,
+                appendSystemPrompt: options?.appendSystemPrompt,
+                addDirs: options?.addDirs,
+                continueConversation: options?.continueConversation,
+                includePartialMessages: options?.includePartialMessages,
+                noSessionPersistence: options?.noSessionPersistence,
+                inputFormat: options?.inputFormat,
+                agent: options?.agent,
+                betas: options?.betas,
+                debug: options?.debug
+            )
+        }
+
         let request = ChatStreamRequest(
             prompt: prompt,
             sessionId: sessionId,
             projectId: projectId,
-            options: options
+            options: finalOptions
         )
 
         sseClient.startStream(request: request)

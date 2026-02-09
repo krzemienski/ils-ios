@@ -64,7 +64,7 @@ struct CodeBlockView: View {
             codeText
         }
         .frame(maxHeight: isExpanded ? .infinity : 300)
-        .background(theme.bgSecondary)
+        .background(theme.bgTertiary)
         .overlay(alignment: .bottom) {
             if !isExpanded && lineCount > 15 {
                 Button {
@@ -79,7 +79,7 @@ struct CodeBlockView: View {
                         .padding(.vertical, theme.spacingXS)
                         .background(
                             LinearGradient(
-                                colors: [theme.bgSecondary.opacity(0), theme.bgSecondary],
+                                colors: [theme.bgTertiary.opacity(0), theme.bgTertiary],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )

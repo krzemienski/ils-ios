@@ -17,18 +17,23 @@ struct ChatInputBar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: theme.spacingSM) {
-            commandPaletteButton
-            optionsButton
-            textField
+        VStack(spacing: 0) {
+            // Top border
+            theme.divider.frame(height: 0.5)
 
-            if isStreaming {
-                cancelButton
-            } else {
-                sendButton
+            HStack(spacing: theme.spacingSM) {
+                commandPaletteButton
+                optionsButton
+                textField
+                if isStreaming {
+                    cancelButton
+                } else {
+                    sendButton
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
-        .padding()
         .background(theme.bgSecondary)
         .accessibilityIdentifier("chat-input-bar")
         .onDisappear { resetTask?.cancel() }
@@ -58,6 +63,12 @@ struct ChatInputBar: View {
             .textFieldStyle(.plain)
             .lineLimit(1...5)
             .disabled(isDisabled)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
+            )
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
     }

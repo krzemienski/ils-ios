@@ -18,18 +18,27 @@ struct ProcessListView: View {
                 Spacer()
 
                 // Sort toggle
-                Picker("Sort", selection: $viewModel.processSortBy) {
+                HStack(spacing: 0) {
                     ForEach(SystemMetricsViewModel.ProcessSortOption.allCases, id: \.self) { option in
-                        Text(option.rawValue).tag(option)
+                        Button {
+                            viewModel.processSortBy = option
+                            Task { await viewModel.loadProcesses() }
+                        } label: {
+                            Text(option.rawValue)
+                                .font(.system(size: theme.fontCaption, weight: viewModel.processSortBy == option ? .semibold : .regular))
+                                .foregroundStyle(viewModel.processSortBy == option ? theme.textPrimary : theme.textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
+                                .background(viewModel.processSortBy == option ? theme.accent.opacity(0.15) : Color.clear)
+                                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 140)
-                .onChange(of: viewModel.processSortBy) { _, _ in
-                    Task {
-                        await viewModel.loadProcesses()
-                    }
-                }
+                .padding(3)
+                .background(theme.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                .frame(width: 150)
             }
 
             // Search bar

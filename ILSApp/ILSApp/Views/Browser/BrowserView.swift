@@ -148,13 +148,26 @@ struct BrowserView: View {
     private var mcpContent: some View {
         // Scope segmented control
         VStack(spacing: theme.spacingSM) {
-            Picker("Scope", selection: $mcpScope) {
-                Text("All").tag("all")
-                Text("User").tag("user")
-                Text("Project").tag("project")
-                Text("Local").tag("local")
+            HStack(spacing: 0) {
+                ForEach(["all", "user", "project", "local"], id: \.self) { scope in
+                    Button {
+                        mcpScope = scope
+                    } label: {
+                        Text(scope.capitalized)
+                            .font(.system(size: theme.fontCaption, weight: mcpScope == scope ? .semibold : .regular))
+                            .foregroundStyle(mcpScope == scope ? theme.textPrimary : theme.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(mcpScope == scope ? theme.accent.opacity(0.15) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(scope.capitalized) scope filter")
+                }
             }
-            .pickerStyle(.segmented)
+            .padding(4)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             .padding(.horizontal, theme.spacingMD)
             .onChange(of: mcpScope) { _, newScope in
                 Task {

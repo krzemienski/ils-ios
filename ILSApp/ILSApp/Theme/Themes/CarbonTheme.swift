@@ -20,7 +20,7 @@ struct CarbonTheme: AppTheme {
     // Text
     let textPrimary = Color(hex: "E8E0F0")
     let textSecondary = Color(hex: "9088A0")
-    let textTertiary = Color(hex: "585068")
+    let textTertiary = Color(hex: "847C96")
     let textOnAccent = Color.white
 
     // Semantic

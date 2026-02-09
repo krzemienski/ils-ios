@@ -31,11 +31,6 @@ struct ChatView: View {
     @Environment(\.theme) private var theme: any AppTheme
     @Environment(\.dismiss) private var dismiss
 
-    /// Whether this is an external (read-only) session
-    private var isExternalSession: Bool {
-        session.source == .external && session.encodedProjectPath != nil
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -43,8 +38,6 @@ struct ChatView: View {
             .background(theme.bgPrimary)
             .navigationTitle(session.name ?? "Chat")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(theme.bgPrimary, for: .navigationBar)
             .toolbar { toolbarContent }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteView { command in
@@ -85,10 +78,8 @@ struct ChatView: View {
         }
         .alert("Connection Error", isPresented: $showErrorAlert) {
             Button("OK", role: .cancel) {}
-            if !isExternalSession {
-                Button("Retry") {
-                    retryLastMessage()
-                }
+            Button("Retry") {
+                retryLastMessage()
             }
         } message: {
             Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
@@ -173,7 +164,7 @@ struct ChatView: View {
 
             messageList
 
-            Divider().overlay(theme.divider)
+            theme.divider.frame(height: 0.5)
 
             bottomBar
         }
@@ -217,68 +208,42 @@ struct ChatView: View {
         )
     }
 
-    @ViewBuilder
     private var bottomBar: some View {
-        if isExternalSession {
-            externalSessionBanner
-        } else {
-            ChatInputBar(
-                text: $inputText,
-                isStreaming: viewModel.isStreaming,
-                isDisabled: viewModel.isLoadingHistory,
-                hasCustomOptions: chatOptionsConfig.hasCustomOptions,
-                onSend: sendMessage,
-                onCancel: { viewModel.cancel() },
-                onCommandPalette: { showCommandPalette = true },
-                onAdvancedOptions: { showAdvancedOptions = true }
-            )
-            .focused($isInputFocused)
-        }
-    }
-
-    /// Banner shown for external (read-only) sessions
-    private var externalSessionBanner: some View {
-        HStack(spacing: theme.spacingSM) {
-            Image(systemName: "terminal")
-                .foregroundStyle(theme.accent)
-            Text("Read-only Claude Code session")
-                .font(.system(size: theme.fontCaption))
-                .foregroundStyle(theme.textSecondary)
-            Spacer()
-            if let count = session.messageCount as Int?, count > 0 {
-                Text("\(count) messages")
-                    .font(.system(size: theme.fontCaption))
-                    .foregroundStyle(theme.textTertiary)
-            }
-        }
-        .padding()
-        .background(theme.bgSecondary)
+        ChatInputBar(
+            text: $inputText,
+            isStreaming: viewModel.isStreaming,
+            isDisabled: viewModel.isLoadingHistory,
+            hasCustomOptions: chatOptionsConfig.hasCustomOptions,
+            onSend: sendMessage,
+            onCancel: { viewModel.cancel() },
+            onCommandPalette: { showCommandPalette = true },
+            onAdvancedOptions: { showAdvancedOptions = true }
+        )
+        .focused($isInputFocused)
     }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                if !isExternalSession {
-                    Button {
-                        renameText = session.name ?? ""
-                        isRenaming = true
-                    } label: {
-                        Label("Rename", systemImage: "pencil")
-                    }
-
-                    Button {
-                        Task {
-                            if let forked = await viewModel.forkSession() {
-                                forkedSession = forked
-                                showForkAlert = true
-                            }
-                        }
-                    } label: {
-                        Label("Fork Session", systemImage: "arrow.branch")
-                    }
-                    .accessibilityIdentifier("fork-session-button")
+                Button {
+                    renameText = session.name ?? ""
+                    isRenaming = true
+                } label: {
+                    Label("Rename", systemImage: "pencil")
                 }
+
+                Button {
+                    Task {
+                        if let forked = await viewModel.forkSession() {
+                            forkedSession = forked
+                            showForkAlert = true
+                        }
+                    }
+                } label: {
+                    Label("Fork Session", systemImage: "arrow.branch")
+                }
+                .accessibilityIdentifier("fork-session-button")
 
                 Button {
                     Task { await exportSession() }
@@ -297,21 +262,18 @@ struct ChatView: View {
                 }
                 Text("Model: \(session.model)")
 
-                if isExternalSession {
-                    Divider()
-                    if let projectName = session.projectName {
-                        Text("Project: \(projectName)")
-                    }
+                if let projectName = session.projectName {
+                    Text("Project: \(projectName)")
+                }
+                if session.source == .external {
                     Text("Source: Claude Code")
                 }
 
-                if !isExternalSession {
-                    Divider()
-                    Button(role: .destructive) {
-                        showDeleteSessionConfirmation = true
-                    } label: {
-                        Label("Delete Session", systemImage: "trash")
-                    }
+                Divider()
+                Button(role: .destructive) {
+                    showDeleteSessionConfirmation = true
+                } label: {
+                    Label("Delete Session", systemImage: "trash")
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -400,8 +362,9 @@ struct StreamingStatusBanner: View {
 
             if tokenCount > 0 {
                 Text("~\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, design: .monospaced).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .accessibilityIdentifier("streaming-stats-text")
             }
         }
