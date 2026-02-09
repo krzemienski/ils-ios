@@ -25,23 +25,9 @@ ils.sqlite-wal
 # Swift Package Manager
 .swiftpm/
 
+# Node.js (Agent SDK wrapper)
+node_modules/
+
 # macOS
 .DS_Store
 *.swp
-*~
-
-# Evidence and testing artifacts (not needed in repo)
-.omc/evidence/
-.omc/state/
-.omc/sessions/
-.omc/plans/
-
-# IDE
-.idea/
-*.xcworkspace/xcuserdata/
-
-# Temporary files
-*.log
-*.tmp
-specs/.current-spec
-**/.progress.md

@@ -102,4 +102,38 @@ class SettingsViewModel: ObservableObject {
             return "Failed to save: \(error.localizedDescription)"
         }
     }
+
+    func saveConfigToggle(key: String, value: Bool) async -> String? {
+        guard let client else { return "Client not configured" }
+        isSaving = true
+        defer { isSaving = false }
+
+        guard var currentConfig = config?.content else {
+            return "No configuration loaded"
+        }
+
+        // Update the specific toggle
+        switch key {
+        case "alwaysThinkingEnabled":
+            currentConfig.alwaysThinkingEnabled = value
+        case "includeCoAuthoredBy":
+            currentConfig.includeCoAuthoredBy = value
+        default:
+            return "Unknown config key: \(key)"
+        }
+
+        do {
+            let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
+            let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
+            if let updatedConfig = response.data {
+                config = updatedConfig
+                if !updatedConfig.isValid {
+                    return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
+                }
+            }
+            return nil
+        } catch {
+            return "Failed to save: \(error.localizedDescription)"
+        }
+    }
 }

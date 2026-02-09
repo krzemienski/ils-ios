@@ -206,6 +206,8 @@ struct SystemMonitorView: View {
         }
         .padding(theme.spacingMD)
         .modifier(GlassCard())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Network usage chart, \(formatBytes(viewModel.networkBytesIn)) per second download, \(formatBytes(viewModel.networkBytesOut)) per second upload")
     }
 
     // MARK: - Live Indicator

@@ -80,4 +80,6 @@ struct ConfigController: RouteCollection {
             data: ConfigValidationResult(isValid: errors.isEmpty, errors: errors)
         )
     }
+
 }
+

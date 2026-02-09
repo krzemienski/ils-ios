@@ -5,9 +5,11 @@ struct ChatInputBar: View {
     @Binding var text: String
     let isStreaming: Bool
     var isDisabled: Bool = false
+    var hasCustomOptions: Bool = false
     let onSend: () -> Void
     let onCancel: () -> Void
     let onCommandPalette: () -> Void
+    let onAdvancedOptions: () -> Void
     @State private var sendButtonPressed = false
     @State private var resetTask: Task<Void, Never>?
 
@@ -17,7 +19,7 @@ struct ChatInputBar: View {
     var body: some View {
         HStack(spacing: theme.spacingSM) {
             commandPaletteButton
-
+            optionsButton
             textField
 
             if isStreaming {
@@ -38,6 +40,17 @@ struct ChatInputBar: View {
                 .foregroundStyle(isDisabled ? theme.textTertiary : theme.accent)
         }
         .disabled(isDisabled)
+        .accessibilityLabel("Command palette")
+    }
+
+    private var optionsButton: some View {
+        Button(action: onAdvancedOptions) {
+            Image(systemName: hasCustomOptions ? "slider.horizontal.2.gobackward" : "slider.horizontal.3")
+                .foregroundStyle(hasCustomOptions ? theme.accent : (isDisabled ? theme.textTertiary : theme.textSecondary))
+        }
+        .disabled(isDisabled)
+        .accessibilityLabel("Advanced options")
+        .accessibilityIdentifier("advanced-options-button")
     }
 
     private var textField: some View {
@@ -46,6 +59,7 @@ struct ChatInputBar: View {
             .lineLimit(1...5)
             .disabled(isDisabled)
             .accessibilityIdentifier("chat-input-field")
+            .accessibilityLabel("Message input field")
     }
 
     private var cancelButton: some View {
@@ -54,6 +68,7 @@ struct ChatInputBar: View {
                 .foregroundStyle(theme.error)
         }
         .accessibilityIdentifier("cancel-button")
+        .accessibilityLabel("Stop streaming")
     }
 
     private var sendButton: some View {
@@ -81,5 +96,6 @@ struct ChatInputBar: View {
         }
         .disabled(text.isEmpty || isDisabled)
         .accessibilityIdentifier("send-button")
+        .accessibilityLabel("Send message")
     }
 }

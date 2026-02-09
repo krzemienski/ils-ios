@@ -17,7 +17,7 @@ struct ChatController: RouteCollection {
 
         chat.post("stream", use: stream)
         chat.webSocket("ws", ":sessionId", onUpgrade: handleWebSocket)
-        chat.post("permission", ":requestId", use: permission)
+        chat.post("permission", ":sessionId", ":requestId", use: permission)
         chat.post("cancel", ":sessionId", use: cancel)
     }
 
@@ -47,12 +47,23 @@ struct ChatController: RouteCollection {
             throw Abort(.serviceUnavailable, reason: "Claude CLI is not available. Please ensure 'claude' is installed and in PATH.")
         }
 
-        // Get or create session
+        // Get or create session — if a sessionId is provided but doesn't exist in DB
+        // (e.g. client-generated UUID for "New Session"), create it on the fly.
         let sessionId: UUID
         if let existingSessionId = input.sessionId {
-            sessionId = existingSessionId
+            if try await SessionModel.find(existingSessionId, on: req.db) != nil {
+                sessionId = existingSessionId
+            } else {
+                let newSession = SessionModel(
+                    id: existingSessionId,
+                    projectId: input.projectId,
+                    model: input.options?.model ?? "sonnet",
+                    permissionMode: input.options?.permissionMode ?? .default
+                )
+                try await newSession.save(on: req.db)
+                sessionId = existingSessionId
+            }
         } else {
-            // Create a new session if none provided
             let newSession = SessionModel(
                 projectId: input.projectId,
                 model: input.options?.model ?? "sonnet",
@@ -147,18 +158,33 @@ struct ChatController: RouteCollection {
     }
 
     /// Submit permission decision for a pending request.
-    /// - Parameter req: Vapor Request with requestId parameter and PermissionDecision body
+    ///
+    /// Forwards the decision to the running Claude CLI process via stdin.
+    /// The process must be alive and in `delegate` permission mode for this to work.
+    ///
+    /// - Parameter req: Vapor Request with sessionId and requestId parameters, PermissionDecision body
     /// - Returns: APIResponse with acknowledgment
     @Sendable
     func permission(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
+        guard let sessionId = req.parameters.get("sessionId") else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
         guard let requestId = req.parameters.get("requestId") else {
             throw Abort(.badRequest, reason: "Invalid request ID")
         }
 
         let input = try req.content.decode(PermissionDecision.self)
+        req.logger.info("Permission decision for \(requestId) (session \(sessionId)): \(input.decision)")
 
-        // In a full implementation, this would communicate with the running Claude process
-        req.logger.info("Permission decision for \(requestId): \(input.decision)")
+        let sent = await executor.sendPermissionResponse(
+            sessionId: sessionId,
+            requestId: requestId,
+            decision: input.decision
+        )
+
+        guard sent else {
+            throw Abort(.gone, reason: "No active process for session \(sessionId) — it may have already exited")
+        }
 
         return APIResponse(
             success: true,

@@ -157,11 +157,6 @@ struct ThemePickerView: View {
                         .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
                         .lineLimit(1)
 
-                    if !isAvailable {
-                        Text("Coming Soon")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(theme.textTertiary)
-                    }
                 }
                 .padding(.vertical, theme.spacingSM)
             }
@@ -172,8 +167,7 @@ struct ThemePickerView: View {
             )
         }
         .buttonStyle(.plain)
-        .opacity(isAvailable ? 1.0 : 0.6)
-        .accessibilityLabel("\(preview.name) theme\(isActive ? ", active" : "")\(isAvailable ? "" : ", coming soon")")
+        .accessibilityLabel("\(preview.name) theme\(isActive ? ", active" : "")")
     }
 
     @ViewBuilder

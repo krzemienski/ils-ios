@@ -24,6 +24,8 @@ struct ChatView: View {
     @State private var exportMarkdown = ""
     @State private var isExporting = false
     @State private var showDeleteSessionConfirmation = false
+    @State private var showAdvancedOptions = false
+    @State private var chatOptionsConfig = ChatOptionsConfig()
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: any AppTheme
@@ -139,6 +141,18 @@ struct ChatView: View {
         .sheet(isPresented: $showExportSheet) {
             ShareSheet(text: exportMarkdown, fileName: "\(session.name ?? "session").md")
         }
+        .sheet(isPresented: $showAdvancedOptions) {
+            AdvancedOptionsSheet(config: $chatOptionsConfig)
+                .presentationDetents([.large])
+                .presentationBackground(theme.bgPrimary)
+        }
+        .sheet(item: $viewModel.pendingPermissionRequest) { request in
+            PermissionRequestModal(request: request) { decision in
+                viewModel.respondToPermission(requestId: request.requestId, decision: decision)
+            }
+            .presentationDetents([.medium])
+            .presentationBackground(theme.bgPrimary)
+        }
         .navigationDestination(item: $navigateToForked) { session in
             ChatView(session: session)
         }
@@ -212,9 +226,11 @@ struct ChatView: View {
                 text: $inputText,
                 isStreaming: viewModel.isStreaming,
                 isDisabled: viewModel.isLoadingHistory,
+                hasCustomOptions: chatOptionsConfig.hasCustomOptions,
                 onSend: sendMessage,
                 onCancel: { viewModel.cancel() },
-                onCommandPalette: { showCommandPalette = true }
+                onCommandPalette: { showCommandPalette = true },
+                onAdvancedOptions: { showAdvancedOptions = true }
             )
             .focused($isInputFocused)
         }
@@ -320,7 +336,7 @@ struct ChatView: View {
         inputText = ""
 
         viewModel.addUserMessage(prompt)
-        viewModel.sendMessage(prompt: prompt, projectId: session.projectId)
+        viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
     }
 
     private func exportSession() async {

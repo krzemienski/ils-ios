@@ -3,8 +3,8 @@ import ILSShared
 
 struct ConfigEditorView: View {
     @Environment(\.theme) private var theme: any AppTheme
+    @EnvironmentObject private var appState: AppState
     let scope: String
-    let apiClient: APIClient
     @StateObject private var viewModel = ConfigEditorViewModel()
     @State private var configText = ""
     @State private var originalConfigText = ""
@@ -77,7 +77,7 @@ struct ConfigEditorView: View {
             }
         }
         .task {
-            viewModel.configure(client: apiClient)
+            viewModel.configure(client: appState.apiClient)
             await viewModel.loadConfig(scope: scope)
             configText = viewModel.configJson
             originalConfigText = viewModel.configJson

@@ -56,18 +56,5 @@ public struct ServerStatus: Codable, Sendable {
     }
 }
 
-public struct ConnectRequest: Codable, Sendable {
-    public let host: String
-    public let port: Int
-    public let username: String
-    public let authMethod: String
-    public let credential: String
-
-    public init(host: String, port: Int = 22, username: String, authMethod: String, credential: String) {
-        self.host = host
-        self.port = port
-        self.username = username
-        self.authMethod = authMethod
-        self.credential = credential
-    }
-}
+// ConnectRequest removed — use SSHConnectRequest from SSHDTOs.swift instead
+// (both had identical fields: host, port, username, authMethod, credential)

@@ -18,7 +18,7 @@ actor APIClient {
         }
     }
 
-    init(baseURL: String = "http://localhost:9090") {
+    init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
         
         // Configure session with reasonable timeouts
@@ -302,6 +302,17 @@ enum APIError: Error, LocalizedError {
             return false
         case .serverError(let code, _):
             return code == "INTERNAL_ERROR" || code == "SERVICE_UNAVAILABLE"
+        }
+    }
+
+    var isNotFound: Bool {
+        switch self {
+        case .httpError(let statusCode):
+            return statusCode == 404
+        case .serverError(let code, _):
+            return code == "NOT_FOUND"
+        default:
+            return false
         }
     }
 }

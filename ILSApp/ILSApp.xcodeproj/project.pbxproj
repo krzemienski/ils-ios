@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9D5068EC575CACE8E875D0B9 /* TeamsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1202C738AD4249316D18A2D /* TeamsViewModel.swift */; };
+		B4C90B2BD8C8A071D4321B01 /* AgentTeamsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F451E5B0BF4A1DF743BBDF5A /* AgentTeamsListView.swift */; };
+		5E02CCE86E1FD71C77D400F3 /* AgentTeamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E950C91636104DCA450E509 /* AgentTeamDetailView.swift */; };
+		E8F39626237CFF58276856FF /* CreateTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8641CA078AA2D9C2403E0005 /* CreateTeamView.swift */; };
+		E9EE71B551190BAC0D44A90E /* TeamTaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8651A7A71282DC4C5E0F8ED1 /* TeamTaskListView.swift */; };
+		DAF9A95C9906AB8F8A9D2098 /* TeamMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8E52CFCAB00C94F9B06FD6 /* TeamMessagesView.swift */; };
+		66BB1958FEC8972ACDBA7B8C /* SpawnTeammateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA6A0D6B5F51D7C69B8806A /* SpawnTeammateView.swift */; };
 		000000000000000000000001 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
 		000000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000013 /* Assets.xcassets */; };
 		000000000000000000000020 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
@@ -78,10 +85,21 @@
 		HOMV00000000000000001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = HOMV00000000000000002 /* HomeView.swift */; };
 		ILSCHL0000000000000001 /* ILSCodeHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */; };
 		MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MARKDOWN0000000000000002 /* MarkdownTextView.swift */; };
+		PERM00000000000000001 /* PermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = PERM00000000000000002 /* PermissionRequestModal.swift */; };
+		ADVOPT0000000000000001 /* AdvancedOptionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADVOPT0000000000000002 /* AdvancedOptionsSheet.swift */; };
 		MARKDOWN0000000000000081 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = MARKDOWN0000000000000091 /* MarkdownUI */; };
 		METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = METRWS0000000000000002 /* MetricsWebSocketClient.swift */; };
 		MTCHRT0000000000000001 /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = MTCHRT0000000000000002 /* MetricChart.swift */; };
+		CNMODE00000000000000001 /* ConnectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CNMODE00000000000000002 /* ConnectionMode.swift */; };
 		ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBOARD0000000000000002 /* ServerSetupSheet.swift */; };
+		ONBRDV0000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBRDV0000000000000002 /* OnboardingView.swift */; };
+		QKCONN0000000000000001 /* QuickConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = QKCONN0000000000000002 /* QuickConnectView.swift */; };
+		SSHSTV0000000000000001 /* SSHSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSHSTV0000000000000002 /* SSHSetupView.swift */; };
+		SSHVM00000000000000001 /* SSHViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SSHVM00000000000000002 /* SSHViewModel.swift */; };
+		FLTVM00000000000000001 /* FleetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLTVM00000000000000002 /* FleetViewModel.swift */; };
+		STPVM00000000000000001 /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = STPVM00000000000000002 /* SetupViewModel.swift */; };
+		FLTMGV0000000000000001 /* FleetManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLTMGV0000000000000002 /* FleetManagementView.swift */; };
+		FLTHST0000000000000001 /* FleetHostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FLTHST0000000000000002 /* FleetHostDetailView.swift */; };
 		POLLMGR000000000000001 /* PollingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = POLLMGR000000000000002 /* PollingManager.swift */; };
 		PRCLST0000000000000001 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRCLST0000000000000002 /* ProcessListView.swift */; };
 		PRGRING000000000000001 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRGRING000000000000002 /* ProgressRing.swift */; };
@@ -110,6 +128,7 @@
 		500EDD3BB41A47AABAD43C34 /* SettingsConnectionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D848DF3782CF466782E87351 /* SettingsConnectionSection.swift */; };
 		7ABB646E44F445B2BCA0375B /* SettingsConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F77030BAA014E4389F53FE8 /* SettingsConfigSection.swift */; };
 		41976BA940E84DA58420730E /* SettingsAboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27B4F5DD7034FA3BD774873 /* SettingsAboutSection.swift */; };
+		267490B60BE63D7584A6F1AE /* SkillDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA1B2C74B07735084FDCFDF /* SkillDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +142,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A1202C738AD4249316D18A2D /* TeamsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamsViewModel.swift; sourceTree = "<group>"; };
+		F451E5B0BF4A1DF743BBDF5A /* AgentTeamsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTeamsListView.swift; sourceTree = "<group>"; };
+		3E950C91636104DCA450E509 /* AgentTeamDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTeamDetailView.swift; sourceTree = "<group>"; };
+		8641CA078AA2D9C2403E0005 /* CreateTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTeamView.swift; sourceTree = "<group>"; };
+		8651A7A71282DC4C5E0F8ED1 /* TeamTaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTaskListView.swift; sourceTree = "<group>"; };
+		7D8E52CFCAB00C94F9B06FD6 /* TeamMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMessagesView.swift; sourceTree = "<group>"; };
+		BFA6A0D6B5F51D7C69B8806A /* SpawnTeammateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpawnTeammateView.swift; sourceTree = "<group>"; };
 		000000000000000000000010 /* ILSApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000011 /* ILSAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSAppApp.swift; sourceTree = "<group>"; };
 		000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -194,9 +220,20 @@
 		HOMV00000000000000002 /* HomeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		ILSCHL0000000000000002 /* ILSCodeHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSCodeHighlighter.swift; sourceTree = "<group>"; };
 		MARKDOWN0000000000000002 /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
+		PERM00000000000000002 /* PermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestModal.swift; sourceTree = "<group>"; };
+		ADVOPT0000000000000002 /* AdvancedOptionsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedOptionsSheet.swift; sourceTree = "<group>"; };
 		METRWS0000000000000002 /* MetricsWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsWebSocketClient.swift; sourceTree = "<group>"; };
 		MTCHRT0000000000000002 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
+		CNMODE00000000000000002 /* ConnectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionMode.swift; sourceTree = "<group>"; };
 		ONBOARD0000000000000002 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
+		ONBRDV0000000000000002 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		QKCONN0000000000000002 /* QuickConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickConnectView.swift; sourceTree = "<group>"; };
+		SSHSTV0000000000000002 /* SSHSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHSetupView.swift; sourceTree = "<group>"; };
+		SSHVM00000000000000002 /* SSHViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHViewModel.swift; sourceTree = "<group>"; };
+		FLTVM00000000000000002 /* FleetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetViewModel.swift; sourceTree = "<group>"; };
+		STPVM00000000000000002 /* SetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupViewModel.swift; sourceTree = "<group>"; };
+		FLTMGV0000000000000002 /* FleetManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetManagementView.swift; sourceTree = "<group>"; };
+		FLTHST0000000000000002 /* FleetHostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetHostDetailView.swift; sourceTree = "<group>"; };
 		POLLMGR000000000000002 /* PollingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingManager.swift; sourceTree = "<group>"; };
 		PRCLST0000000000000002 /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
 		PRGRING000000000000002 /* ProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
@@ -226,6 +263,7 @@
 		D848DF3782CF466782E87351 /* SettingsConnectionSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConnectionSection.swift; sourceTree = "<group>"; };
 		9F77030BAA014E4389F53FE8 /* SettingsConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConfigSection.swift; sourceTree = "<group>"; };
 		C27B4F5DD7034FA3BD774873 /* SettingsAboutSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAboutSection.swift; sourceTree = "<group>"; };
+		6AA1B2C74B07735084FDCFDF /* SkillDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -249,6 +287,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		483B83434BA3F9E0B176479E /* Teams */ = {
+			isa = PBXGroup;
+			children = (
+				F451E5B0BF4A1DF743BBDF5A /* AgentTeamsListView.swift */,
+				3E950C91636104DCA450E509 /* AgentTeamDetailView.swift */,
+				8641CA078AA2D9C2403E0005 /* CreateTeamView.swift */,
+				8651A7A71282DC4C5E0F8ED1 /* TeamTaskListView.swift */,
+				7D8E52CFCAB00C94F9B06FD6 /* TeamMessagesView.swift */,
+				BFA6A0D6B5F51D7C69B8806A /* SpawnTeammateView.swift */,
+			);
+			path = Teams;
+			sourceTree = "<group>";
+		};
 		000000000000000000000007 = {
 			isa = PBXGroup;
 			children = (
@@ -327,6 +378,8 @@
 				SYSMON0000000000000003 /* System */,
 				ONBOARD0000000000000003 /* Onboarding */,
 				SBRV00000000000000003 /* Root */,
+				483B83434BA3F9E0B176479E /* Teams */,
+				FLEET00000000000000003 /* Fleet */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -344,6 +397,10 @@
 				SYSVM00000000000000002 /* SystemMetricsViewModel.swift */,
 				CFGVM0000000000000002 /* ConfigEditorViewModel.swift */,
 				SETVM0000000000000002 /* SettingsViewModel.swift */,
+				A1202C738AD4249316D18A2D /* TeamsViewModel.swift */,
+				SSHVM00000000000000002 /* SSHViewModel.swift */,
+				FLTVM00000000000000002 /* FleetViewModel.swift */,
+				STPVM00000000000000002 /* SetupViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -366,6 +423,8 @@
 				000000000000000000000036 /* ChatView.swift */,
 				16EDC1C039E5A912EDD2E05C /* ChatMessageList.swift */,
 				64F08ADC58C75EDB0B60B4B1 /* ChatInputBar.swift */,
+				PERM00000000000000002 /* PermissionRequestModal.swift */,
+				ADVOPT0000000000000002 /* AdvancedOptionsSheet.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -537,6 +596,7 @@
 		BD439714253C97CFE18DD885 /* Browser */ = {
 			isa = PBXGroup;
 			children = (
+				6AA1B2C74B07735084FDCFDF /* SkillDetailView.swift */,
 				8BDFF49EABB28E45F8F82637 /* BrowserView.swift */,
 				ABE24B4A8201ACA8EE6C5F2F /* MCPServerDetailView.swift */,
 			);
@@ -576,9 +636,22 @@
 		ONBOARD0000000000000003 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				CNMODE00000000000000002 /* ConnectionMode.swift */,
 				ONBOARD0000000000000002 /* ServerSetupSheet.swift */,
+				ONBRDV0000000000000002 /* OnboardingView.swift */,
+				QKCONN0000000000000002 /* QuickConnectView.swift */,
+				SSHSTV0000000000000002 /* SSHSetupView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		FLEET00000000000000003 /* Fleet */ = {
+			isa = PBXGroup;
+			children = (
+				FLTMGV0000000000000002 /* FleetManagementView.swift */,
+				FLTHST0000000000000002 /* FleetHostDetailView.swift */,
+			);
+			path = Fleet;
 			sourceTree = "<group>";
 		};
 		SBRV00000000000000003 /* Root */ = {
@@ -723,6 +796,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9D5068EC575CACE8E875D0B9 /* TeamsViewModel.swift in Sources */,
+				B4C90B2BD8C8A071D4321B01 /* AgentTeamsListView.swift in Sources */,
+				5E02CCE86E1FD71C77D400F3 /* AgentTeamDetailView.swift in Sources */,
+				E8F39626237CFF58276856FF /* CreateTeamView.swift in Sources */,
+				E9EE71B551190BAC0D44A90E /* TeamTaskListView.swift in Sources */,
+				DAF9A95C9906AB8F8A9D2098 /* TeamMessagesView.swift in Sources */,
+				66BB1958FEC8972ACDBA7B8C /* SpawnTeammateView.swift in Sources */,
+				267490B60BE63D7584A6F1AE /* SkillDetailView.swift in Sources */,
 				0310AFDDB11F9369D57CC482 /* BrowserView.swift in Sources */,
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
@@ -733,6 +814,8 @@
 				ASTC00000000000000001 /* AssistantCard.swift in Sources */,
 				STIV00000000000000001 /* StreamingIndicatorView.swift in Sources */,
 				MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */,
+				PERM00000000000000001 /* PermissionRequestModal.swift in Sources */,
+				ADVOPT0000000000000001 /* AdvancedOptionsSheet.swift in Sources */,
 				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
 				000000000000000000000026 /* ChatView.swift in Sources */,
 				000000000000000000000027 /* ChatViewModel.swift in Sources */,
@@ -750,7 +833,16 @@
 				C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */,
 				5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */,
 				E2C1C5D774B7BE4FAE456771 /* ThemePickerView.swift in Sources */,
+				CNMODE00000000000000001 /* ConnectionMode.swift in Sources */,
 				ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */,
+				ONBRDV0000000000000001 /* OnboardingView.swift in Sources */,
+				QKCONN0000000000000001 /* QuickConnectView.swift in Sources */,
+				SSHSTV0000000000000001 /* SSHSetupView.swift in Sources */,
+				SSHVM00000000000000001 /* SSHViewModel.swift in Sources */,
+				FLTVM00000000000000001 /* FleetViewModel.swift in Sources */,
+				STPVM00000000000000001 /* SetupViewModel.swift in Sources */,
+				FLTMGV0000000000000001 /* FleetManagementView.swift in Sources */,
+				FLTHST0000000000000001 /* FleetHostDetailView.swift in Sources */,
 				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
 				SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */,
 				CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */,

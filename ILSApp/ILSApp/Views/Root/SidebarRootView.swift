@@ -9,6 +9,8 @@ enum ActiveScreen: Hashable {
     case system
     case settings
     case browser
+    case teams
+    case fleet
 }
 
 // MARK: - Sidebar Root View
@@ -52,6 +54,8 @@ struct SidebarRootView: View {
                 .environmentObject(appState)
                 .environment(\.theme, theme)
         }
+        // DEBUG: Auto-navigate for screenshot capture (revert after)
+        // .task { ... } — REVERTED for interactive testing
     }
 
     // MARK: - iPad Layout (Persistent Sidebar)
@@ -115,6 +119,10 @@ struct SidebarRootView: View {
                     settingsScreen
                 case .browser:
                     browserScreen
+                case .teams:
+                    teamsScreen
+                case .fleet:
+                    fleetScreen
                 }
             }
             .toolbar {
@@ -188,6 +196,16 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var browserScreen: some View {
         BrowserView()
+    }
+
+    @ViewBuilder
+    private var teamsScreen: some View {
+        AgentTeamsListView(apiClient: appState.apiClient)
+    }
+
+    @ViewBuilder
+    private var fleetScreen: some View {
+        FleetManagementView()
     }
 
     // MARK: - Sidebar Logic (iPhone)

@@ -101,6 +101,13 @@ struct ProcessListView: View {
 
     private func processRow(_ process: ProcessInfoResponse) -> some View {
         HStack {
+            // Process classification badge
+            if let badge = classifyProcess(process.name) {
+                Circle()
+                    .fill(badge.color)
+                    .frame(width: 6, height: 6)
+            }
+
             Text(process.name)
                 .font(.system(size: theme.fontCaption, design: .monospaced))
                 .foregroundStyle(theme.textPrimary)
@@ -124,5 +131,29 @@ struct ProcessListView: View {
         }
         .padding(.horizontal, theme.spacingXS)
         .padding(.vertical, theme.spacingXS)
+    }
+
+    // MARK: - Process Classification
+
+    private struct ProcessBadge {
+        let label: String
+        let color: Color
+    }
+
+    private func classifyProcess(_ name: String) -> ProcessBadge? {
+        let lowered = name.lowercased()
+        if lowered.contains("claude") {
+            return ProcessBadge(label: "Claude", color: theme.entitySession)
+        }
+        if lowered.contains("ilsbackend") || lowered == "ilsbackend" {
+            return ProcessBadge(label: "ILS", color: theme.success)
+        }
+        if lowered.contains("swift") || lowered.contains("vapor") || lowered.contains("swiftc") {
+            return ProcessBadge(label: "Swift", color: theme.warning)
+        }
+        if lowered.contains("node") || lowered.contains("npm") || lowered.contains("npx") {
+            return ProcessBadge(label: "Node", color: theme.entitySkill)
+        }
+        return nil
     }
 }

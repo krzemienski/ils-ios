@@ -5,9 +5,9 @@ import ILSShared
 
 struct SettingsConfigSection: View {
     @Environment(\.theme) private var theme: any AppTheme
-    @EnvironmentObject var appState: AppState
     @ObservedObject var viewModel: SettingsViewModel
     @Binding var colorSchemePreference: String
+    @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     let availableModels: [String]
     let availableColorSchemes: [String]
@@ -66,9 +66,41 @@ struct SettingsConfigSection: View {
                         settingsRow("Updates Channel", value: channel.capitalized)
                     }
 
-                    settingsRow("Extended Thinking", icon: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle", iconColor: config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+                    Toggle(isOn: Binding(
+                        get: { config.alwaysThinkingEnabled ?? false },
+                        set: { newValue in
+                            Task {
+                                if let error = await viewModel.saveConfigToggle(key: "alwaysThinkingEnabled", value: newValue) {
+                                    print("Error saving Extended Thinking: \(error)")
+                                }
+                                await viewModel.loadConfig()
+                            }
+                        }
+                    )) {
+                        Text("Extended Thinking")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                    .tint(theme.accent)
+                    .accessibilityLabel("Enable extended thinking mode")
 
-                    settingsRow("Include Co-Author", icon: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle", iconColor: config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+                    Toggle(isOn: Binding(
+                        get: { config.includeCoAuthoredBy ?? false },
+                        set: { newValue in
+                            Task {
+                                if let error = await viewModel.saveConfigToggle(key: "includeCoAuthoredBy", value: newValue) {
+                                    print("Error saving Co-Author: \(error)")
+                                }
+                                await viewModel.loadConfig()
+                            }
+                        }
+                    )) {
+                        Text("Include Co-Author")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                    .tint(theme.accent)
+                    .accessibilityLabel("Include co-authored-by attribution")
                 } else {
                     Text("No configuration loaded")
                         .font(.system(size: theme.fontBody))
@@ -229,7 +261,7 @@ struct SettingsConfigSection: View {
                 Divider().background(theme.bgTertiary)
 
                 NavigationLink {
-                    ConfigEditorView(scope: "user", apiClient: appState.apiClient)
+                    ConfigEditorView(scope: "user")
                 } label: {
                     HStack {
                         Text("Edit User Settings")
@@ -243,7 +275,7 @@ struct SettingsConfigSection: View {
                 }
 
                 NavigationLink {
-                    ConfigEditorView(scope: "project", apiClient: appState.apiClient)
+                    ConfigEditorView(scope: "project")
                 } label: {
                     HStack {
                         Text("Edit Project Settings")
@@ -255,6 +287,7 @@ struct SettingsConfigSection: View {
                             .foregroundStyle(theme.textTertiary)
                     }
                 }
+
             }
             .padding(theme.spacingMD)
             .modifier(GlassCard())
@@ -262,6 +295,28 @@ struct SettingsConfigSection: View {
             Text("Edit raw JSON configuration files")
                 .font(.system(size: theme.fontCaption))
                 .foregroundStyle(theme.textTertiary)
+
+            // Experimental features
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                sectionLabel("Experimental")
+
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    Toggle(isOn: $enableAgentTeams) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Agent Teams")
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textPrimary)
+                            Text("Coordinate multiple AI agents working together")
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                    }
+                    .tint(theme.accent)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+            .padding(.top, theme.spacingSM)
         }
     }
 

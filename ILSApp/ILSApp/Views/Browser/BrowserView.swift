@@ -21,6 +21,8 @@ struct BrowserView: View {
 
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""
+    @State private var mcpScope: String = "all"
+    @State private var selectedPluginCategory: String = "All"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -144,30 +146,51 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var mcpContent: some View {
-        let items = mcpVM.filteredServers
-        if mcpVM.isLoading && items.isEmpty {
-            loadingRows
-        } else if items.isEmpty {
-            emptyState(
-                icon: "server.rack",
-                title: searchText.isEmpty ? "No MCP Servers" : "No Results",
-                subtitle: searchText.isEmpty ? "No servers configured" : "Try a different search"
-            )
-        } else {
-            ForEach(items) { server in
-                NavigationLink {
-                    MCPServerDetailView(server: server)
-                } label: {
-                    browserRow(
-                        name: server.name,
-                        subtitle: "\(server.command) \(server.args.joined(separator: " "))",
-                        status: server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown"),
-                        statusColor: server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning),
-                        entityColor: theme.entityMCP,
-                        badge: server.scope.rawValue.capitalized
-                    )
+        // Scope segmented control
+        VStack(spacing: theme.spacingSM) {
+            Picker("Scope", selection: $mcpScope) {
+                Text("All").tag("all")
+                Text("User").tag("user")
+                Text("Project").tag("project")
+                Text("Local").tag("local")
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, theme.spacingMD)
+            .onChange(of: mcpScope) { _, newScope in
+                Task {
+                    if newScope == "all" {
+                        await mcpVM.loadServers()
+                    } else {
+                        await mcpVM.loadServers(scope: newScope)
+                    }
                 }
-                .buttonStyle(.plain)
+            }
+
+            let items = mcpVM.filteredServers
+            if mcpVM.isLoading && items.isEmpty {
+                loadingRows
+            } else if items.isEmpty {
+                emptyState(
+                    icon: "server.rack",
+                    title: searchText.isEmpty ? "No MCP Servers" : "No Results",
+                    subtitle: searchText.isEmpty ? "No servers configured" : "Try a different search"
+                )
+            } else {
+                ForEach(items) { server in
+                    NavigationLink {
+                        MCPServerDetailView(server: server)
+                    } label: {
+                        browserRow(
+                            name: server.name,
+                            subtitle: "\(server.command) \(server.args.joined(separator: " "))",
+                            status: server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown"),
+                            statusColor: server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning),
+                            entityColor: theme.entityMCP,
+                            badge: server.scope.rawValue.capitalized
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
@@ -187,14 +210,19 @@ struct BrowserView: View {
             )
         } else {
             ForEach(items) { skill in
-                browserRow(
-                    name: skill.name,
-                    subtitle: skill.description ?? "No description",
-                    status: skill.isActive ? "Active" : "Inactive",
-                    statusColor: skill.isActive ? theme.success : theme.textTertiary,
-                    entityColor: theme.entitySkill,
-                    badge: skill.tags.first
-                )
+                NavigationLink {
+                    SkillDetailView(skill: skill)
+                } label: {
+                    browserRow(
+                        name: skill.name,
+                        subtitle: skill.description ?? "No description",
+                        status: skill.isActive ? "Active" : "Inactive",
+                        statusColor: skill.isActive ? theme.success : theme.textTertiary,
+                        entityColor: theme.entitySkill,
+                        badge: skill.tags.first
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -203,25 +231,103 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var pluginsContent: some View {
-        let items = filteredPlugins
-        if pluginsVM.isLoading && items.isEmpty {
-            loadingRows
-        } else if items.isEmpty {
-            emptyState(
-                icon: "puzzlepiece.extension",
-                title: searchText.isEmpty ? "No Plugins" : "No Results",
-                subtitle: searchText.isEmpty ? "No plugins installed" : "Try a different search"
-            )
-        } else {
-            ForEach(items) { plugin in
-                browserRow(
-                    name: plugin.name,
-                    subtitle: plugin.description ?? "No description",
-                    status: plugin.isEnabled ? "Enabled" : "Disabled",
-                    statusColor: plugin.isEnabled ? theme.success : theme.textTertiary,
-                    entityColor: theme.entityPlugin,
-                    badge: plugin.marketplace
+        VStack(spacing: theme.spacingSM) {
+            // Category filter chips
+            if !pluginCategories.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: theme.spacingSM) {
+                        ForEach(pluginCategories, id: \.self) { category in
+                            Button {
+                                selectedPluginCategory = category
+                            } label: {
+                                Text(category)
+                                    .font(.system(size: theme.fontCaption, weight: selectedPluginCategory == category ? .semibold : .regular))
+                                    .foregroundStyle(selectedPluginCategory == category ? theme.textPrimary : theme.textSecondary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        selectedPluginCategory == category
+                                            ? theme.entityPlugin.opacity(0.2)
+                                            : theme.bgSecondary
+                                    )
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, theme.spacingMD)
+                }
+            }
+
+            let items = filteredPluginsByCategory
+            if pluginsVM.isLoading && items.isEmpty {
+                loadingRows
+            } else if items.isEmpty {
+                emptyState(
+                    icon: "puzzlepiece.extension",
+                    title: searchText.isEmpty ? "No Plugins" : "No Results",
+                    subtitle: searchText.isEmpty ? "No plugins installed" : "Try a different search"
                 )
+            } else {
+                ForEach(items) { plugin in
+                    HStack(spacing: theme.spacingMD) {
+                        // Entity dot
+                        Circle()
+                            .fill(theme.entityPlugin)
+                            .frame(width: 10, height: 10)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(plugin.name)
+                                    .font(.system(size: theme.fontBody, weight: .medium))
+                                    .foregroundStyle(theme.textPrimary)
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                // Show progress indicator if installing
+                                if pluginsVM.installingPlugins.contains(plugin.name) {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .scaleEffect(0.8)
+                                } else {
+                                    // Status dot + text
+                                    HStack(spacing: 4) {
+                                        Circle()
+                                            .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
+                                            .frame(width: 6, height: 6)
+                                        Text(plugin.isEnabled ? "Enabled" : "Disabled")
+                                            .font(.system(size: theme.fontCaption))
+                                            .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
+                                    }
+                                }
+                            }
+
+                            Text(plugin.description ?? "No description")
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(1)
+
+                            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
+                                Text(marketplace)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(theme.textTertiary)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(theme.bgTertiary)
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                            }
+                        }
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
+                }
             }
         }
     }
@@ -351,6 +457,27 @@ struct BrowserView: View {
         pluginsVM.filteredPlugins
     }
 
+    private var pluginCategories: [String] {
+        var categories = Set<String>()
+        categories.insert("All")
+        for plugin in pluginsVM.plugins {
+            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
+                categories.insert(marketplace)
+            }
+        }
+        return categories.sorted()
+    }
+
+    private var filteredPluginsByCategory: [Plugin] {
+        let baseFiltered = pluginsVM.filteredPlugins
+        if selectedPluginCategory == "All" {
+            return baseFiltered
+        }
+        return baseFiltered.filter { plugin in
+            plugin.marketplace == selectedPluginCategory
+        }
+    }
+
     private func loadAll() async {
         async let m: () = mcpVM.loadServers()
         async let s: () = skillsVM.loadSkills()
@@ -364,13 +491,5 @@ struct BrowserView: View {
         case .skills: await skillsVM.refreshSkills()
         case .plugins: await pluginsVM.loadPlugins()
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        BrowserView()
-            .environmentObject(AppState())
-            .environment(\.theme, ObsidianTheme())
     }
 }

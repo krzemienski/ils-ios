@@ -39,8 +39,29 @@ func routes(_ app: Application) throws {
     try api.register(collection: ConfigController(fileSystem: fileSystem))
     try api.register(collection: StatsController(fileSystem: fileSystem))
     try api.register(collection: AuthController())
-    try api.register(collection: SystemController())
+
+    // SSH & Remote Management
+    let sshService = SSHService(eventLoopGroup: app.eventLoopGroup)
+    try api.register(collection: SSHController(sshService: sshService))
+
+    let fleetService = FleetService()
+    try api.register(collection: FleetController(fleetService: fleetService))
+
+    let setupService = SetupService(sshService: sshService)
+    try api.register(collection: SetupController(setupService: setupService))
+
+    let remoteMetricsService = RemoteMetricsService(sshService: sshService)
+    try api.register(collection: SystemController(
+        remoteMetricsService: remoteMetricsService,
+        sshService: sshService
+    ))
+
     try api.register(collection: TunnelController())
+
+    // Agent Teams
+    let teamsFileService = TeamsFileService()
+    let teamsExecutorService = TeamsExecutorService()
+    try api.register(collection: TeamsController(fileService: teamsFileService, executorService: teamsExecutorService))
 }
 
 /// Detect Claude CLI version by running `claude --version`

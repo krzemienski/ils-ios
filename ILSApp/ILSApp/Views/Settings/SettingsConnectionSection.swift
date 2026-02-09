@@ -21,7 +21,7 @@ struct SettingsConnectionSection: View {
                     Text("Server URL")
                         .font(.system(size: theme.fontCaption))
                         .foregroundStyle(theme.textTertiary)
-                    TextField("https://example.com or http://localhost:9090", text: $serverURL)
+                    TextField("https://example.com or http://localhost:9999", text: $serverURL)
                         .font(.system(size: theme.fontBody))
                         .textContentType(.URL)
                         .autocapitalization(.none)
@@ -48,6 +48,8 @@ struct SettingsConnectionSection: View {
                             .font(.system(size: theme.fontCaption))
                             .foregroundStyle(theme.textSecondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Connection status: \(appState.isConnected ? "Connected" : "Disconnected")")
                 }
 
                 Button {

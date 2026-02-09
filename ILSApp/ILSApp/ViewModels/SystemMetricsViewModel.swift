@@ -27,7 +27,7 @@ final class SystemMetricsViewModel: ObservableObject {
         case memory = "Memory"
     }
 
-    init(baseURL: String = "http://localhost:9090") {
+    init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
         self.metricsClient = MetricsWebSocketClient(baseURL: baseURL)
         let configuration = URLSessionConfiguration.default

@@ -59,7 +59,7 @@ struct ChatMessage: Identifiable, Equatable {
 struct ToolCallDisplay: Identifiable, Equatable {
     let id: String
     let name: String
-    let inputPreview: String?
+    var inputPreview: String?
     var inputPairs: [(key: String, value: String)] = []
 
     static func == (lhs: ToolCallDisplay, rhs: ToolCallDisplay) -> Bool {

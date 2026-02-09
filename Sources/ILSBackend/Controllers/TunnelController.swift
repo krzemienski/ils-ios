@@ -29,7 +29,7 @@ struct TunnelController: RouteCollection {
         }
 
         let body = try? req.content.decode(TunnelStartRequest.self)
-        let port = 9090 // Default backend port
+        let port = 9999 // Default backend port
 
         do {
             let url = try await tunnelService.start(port: port)

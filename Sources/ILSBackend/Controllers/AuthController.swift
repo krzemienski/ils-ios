@@ -32,7 +32,7 @@ struct AuthController: RouteCollection {
     /// POST /auth/connect - Connect to remote server via SSH
     @Sendable
     func connect(req: Request) async throws -> APIResponse<ConnectionResponse> {
-        let connectRequest = try req.content.decode(ConnectRequest.self)
+        let connectRequest = try req.content.decode(SSHConnectRequest.self)
 
         let authMethod: ServerConnection.AuthMethod
         switch connectRequest.authMethod.lowercased() {

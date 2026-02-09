@@ -1,0 +1,109 @@
+import SwiftUI
+import ILSShared
+
+struct SpawnTeammateView: View {
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.theme) private var theme: any AppTheme
+    @ObservedObject var viewModel: TeamsViewModel
+    let teamName: String
+    @State private var name = ""
+    @State private var agentType = ""
+    @State private var selectedModel = "sonnet"
+    @State private var prompt = ""
+    @State private var isSpawning = false
+
+    let modelOptions = ["haiku", "sonnet", "opus"]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Name", text: $name)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                } header: {
+                    Text("Teammate Name")
+                        .foregroundStyle(theme.textSecondary)
+                } footer: {
+                    Text("Unique identifier for this teammate")
+                        .foregroundStyle(theme.textTertiary)
+                        .font(.system(size: theme.fontCaption))
+                }
+
+                Section {
+                    TextField("Agent Type", text: $agentType)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                } header: {
+                    Text("Agent Type")
+                        .foregroundStyle(theme.textSecondary)
+                } footer: {
+                    Text("e.g., researcher, executor, designer")
+                        .foregroundStyle(theme.textTertiary)
+                        .font(.system(size: theme.fontCaption))
+                }
+
+                Section {
+                    Picker("Model", selection: $selectedModel) {
+                        ForEach(modelOptions, id: \.self) { model in
+                            Text(model.capitalized)
+                                .tag(model)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("AI Model")
+                        .foregroundStyle(theme.textSecondary)
+                }
+
+                Section {
+                    TextEditor(text: $prompt)
+                        .frame(minHeight: 120)
+                } header: {
+                    Text("Initial Prompt (Optional)")
+                        .foregroundStyle(theme.textSecondary)
+                } footer: {
+                    Text("Instructions for the teammate's initial task")
+                        .foregroundStyle(theme.textTertiary)
+                        .font(.system(size: theme.fontCaption))
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(theme.bgPrimary)
+            .navigationTitle("Spawn Teammate")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundStyle(theme.textSecondary)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Spawn") {
+                        spawnTeammate()
+                    }
+                    .foregroundStyle(theme.accent)
+                    .disabled(name.isEmpty || agentType.isEmpty || isSpawning)
+                }
+            }
+        }
+    }
+
+    private func spawnTeammate() {
+        isSpawning = true
+        Task {
+            let request = SpawnTeammateRequest(
+                name: name,
+                agentType: agentType,
+                model: selectedModel,
+                prompt: prompt.isEmpty ? nil : prompt
+            )
+            await viewModel.spawnTeammate(teamName: teamName, request: request)
+            await MainActor.run {
+                dismiss()
+            }
+        }
+    }
+}

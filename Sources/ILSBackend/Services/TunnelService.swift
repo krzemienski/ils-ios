@@ -34,7 +34,7 @@ actor TunnelService {
 
     /// Start a quick Cloudflare tunnel forwarding to the given local port.
     /// Returns the public tunnel URL once parsed from cloudflared output.
-    func start(port: Int = 9090) async throws -> String {
+    func start(port: Int = 9999) async throws -> String {
         // Already running?
         if let url = tunnelURL, process?.isRunning == true {
             return url

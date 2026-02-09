@@ -11,6 +11,7 @@ class PluginsViewModel: ObservableObject {
     @Published var selectedCategory: String = "All"
     @Published var isSearchingMarketplace = false
     @Published var searchResults: [PluginInfo] = []
+    @Published var installingPlugins: Set<String> = []
 
     private var client: APIClient?
 
@@ -63,6 +64,7 @@ class PluginsViewModel: ObservableObject {
 
     func installPlugin(name: String, marketplace: String) async {
         guard let client else { return }
+        installingPlugins.insert(name)
         do {
             let request = InstallPluginRequest(pluginName: name, marketplace: marketplace)
             let response: APIResponse<Plugin> = try await client.post("/plugins/install", body: request)
@@ -73,6 +75,7 @@ class PluginsViewModel: ObservableObject {
             self.error = error
             AppLogger.shared.error("Failed to install plugin '\(name)': \(error.localizedDescription)", category: "plugins")
         }
+        installingPlugins.remove(name)
     }
 
     func uninstallPlugin(_ plugin: Plugin) async {

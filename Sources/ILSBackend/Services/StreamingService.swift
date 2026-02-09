@@ -224,7 +224,7 @@ struct StreamingService {
                     claudeSessionId = resultMsg.sessionId
                     totalCostUSD = resultMsg.totalCostUSD
 
-                case .permission, .error:
+                case .user, .streamEvent, .permission, .error:
                     break
                 }
             }
@@ -298,8 +298,12 @@ struct StreamingService {
             eventType = "system"
         case .assistant:
             eventType = "assistant"
+        case .user:
+            eventType = "user"
         case .result:
             eventType = "result"
+        case .streamEvent:
+            eventType = "streamEvent"
         case .permission:
             eventType = "permission"
         case .error:

@@ -32,7 +32,7 @@ final class MetricsWebSocketClient: ObservableObject {
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
 
-    init(baseURL: String = "http://localhost:9090") {
+    init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
         self.session = URLSession(configuration: .default)
         self.decoder = JSONDecoder()

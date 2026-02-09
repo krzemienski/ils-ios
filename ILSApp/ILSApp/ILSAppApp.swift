@@ -119,6 +119,8 @@ class AppState: ObservableObject {
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
+        case "fleet":
+            navigationIntent = .fleet
         default:
             break
         }

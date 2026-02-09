@@ -168,7 +168,7 @@ extension ConnectionResponse: Content {}
 extension ServerInfo: Content {}
 extension ClaudeConfigPaths: Content {}
 extension ServerStatus: Content {}
-extension ConnectRequest: Content {}
+// ConnectRequest removed — consolidated into SSHConnectRequest
 
 // MARK: - Model Types
 extension Project: Content {}
@@ -202,3 +202,27 @@ extension UsageInfo: Content {}
 extension PermissionRequest: Content {}
 extension StreamError: Content {}
 extension AnyCodable: Content {}
+
+// MARK: - Phase 3: SSH & Fleet Types
+extension FleetHost: Content {}
+extension FleetHost.HealthStatus: Content {}
+extension SetupProgress: Content {}
+extension SetupProgress.SetupStep: Content {}
+extension SetupProgress.StepStatus: Content {}
+extension SSHConnectRequest: Content {}
+extension SSHExecuteRequest: Content {}
+extension SSHStatusResponse: Content {}
+extension SSHExecuteResponse: Content {}
+extension SSHPlatformResponse: Content {}
+extension RegisterFleetHostRequest: Content {}
+extension FleetListResponse: Content {}
+extension FleetHealthResponse: Content {}
+extension RemoteProcessInfo: Content {}
+extension RemoteProcessInfo.ProcessHighlightType: Content {}
+extension MetricsSourceResponse: Content {}
+extension MetricsSourceResponse.MetricsSource: Content {}
+extension StartSetupRequest: Content {}
+extension LifecycleRequest: Content {}
+extension LifecycleRequest.LifecycleAction: Content {}
+extension LifecycleResponse: Content {}
+extension RemoteLogsResponse: Content {}

@@ -40,6 +40,10 @@ actor SSHService {
     private var connectionInfo: ServerConnection?
     private let eventLoopGroup: EventLoopGroup
     private var connectedAt: Date?
+    private var detectedPlatform: String?
+    private var reconnectTask: Task<Void, Never>?
+    private var reconnectAttempts: Int = 0
+    private let maxReconnectDelay: TimeInterval = 30
 
     init(eventLoopGroup: EventLoopGroup) {
         self.eventLoopGroup = eventLoopGroup
@@ -62,6 +66,9 @@ actor SSHService {
                 sshAuthMethod = .rsa(username: username, privateKey: privateKey)
             }
 
+            // Note: In production, replace with .trustedKeys or custom validator
+            // that verifies against known_hosts. Using .acceptAnything() for
+            // development/trusted-network scenarios only.
             client = try await SSHClient.connect(
                 host: host,
                 port: port,
@@ -126,10 +133,16 @@ actor SSHService {
             }
         }
 
+        // Citadel's executeCommandStream does not provide exit codes.
+        // Infer failure from stderr presence when stdout is empty.
+        let trimmedStdout = stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedStderr = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        let inferredExitCode = (trimmedStdout.isEmpty && !trimmedStderr.isEmpty) ? 1 : 0
+
         return CommandResult(
-            stdout: stdout.trimmingCharacters(in: .whitespacesAndNewlines),
-            stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines),
-            exitCode: 0
+            stdout: trimmedStdout,
+            stderr: trimmedStderr,
+            exitCode: inferredExitCode
         )
     }
 
@@ -186,6 +199,73 @@ actor SSHService {
             claudeVersion: versionResult?.stdout
         )
     }
+
+    func detectPlatform() async throws -> SSHPlatformResponse {
+        let result = try await executeCommand("uname -s")
+        let platform = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        detectedPlatform = platform
+
+        let isWindows = platform.lowercased().contains("mingw") ||
+                        platform.lowercased().contains("msys") ||
+                        platform.lowercased().contains("cygwin")
+        let isSupported = !isWindows && (platform == "Linux" || platform == "Darwin")
+
+        return SSHPlatformResponse(
+            platform: platform,
+            isSupported: isSupported,
+            rejectionReason: isWindows
+                ? "Windows is not supported. Please use a Linux or macOS server."
+                : (!isSupported ? "Unsupported platform: \(platform)" : nil)
+        )
+    }
+
+    func getStatus() async -> SSHStatusResponse {
+        SSHStatusResponse(
+            connected: client != nil,
+            host: connectionInfo?.host,
+            username: connectionInfo?.username,
+            platform: detectedPlatform,
+            connectedAt: connectedAt,
+            uptime: connectedAt.map { Date().timeIntervalSince($0) }
+        )
+    }
+
+    func startAutoReconnect(
+        host: String, port: Int, username: String,
+        authMethod: ServerConnection.AuthMethod, credential: String
+    ) {
+        reconnectTask?.cancel()
+        reconnectTask = Task { [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled {
+                let delay = min(
+                    pow(2.0, Double(await self.reconnectAttempts)),
+                    await self.maxReconnectDelay
+                )
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                guard !Task.isCancelled else { break }
+
+                let result = try? await self.connect(
+                    host: host, port: port, username: username,
+                    authMethod: authMethod, credential: credential
+                )
+                if result?.success == true {
+                    await self.resetReconnectAttempts()
+                    break
+                }
+                await self.incrementReconnectAttempts()
+            }
+        }
+    }
+
+    func stopAutoReconnect() {
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempts = 0
+    }
+
+    private func resetReconnectAttempts() { reconnectAttempts = 0 }
+    private func incrementReconnectAttempts() { reconnectAttempts += 1 }
 }
 
 /// Command execution result

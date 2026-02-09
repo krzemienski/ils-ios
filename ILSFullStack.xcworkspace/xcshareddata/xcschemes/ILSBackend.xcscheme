@@ -52,7 +52,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "PORT"
-            value = "9090"
+            value = "9999"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

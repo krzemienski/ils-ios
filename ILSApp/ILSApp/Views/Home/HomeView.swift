@@ -200,8 +200,8 @@ struct HomeView: View {
                     title: "New Session",
                     color: theme.entitySession
                 ) {
-                    // Navigate to sidebar to create new session
-                    onNavigate?(.home)
+                    let newSession = ChatSession(name: "New Session", model: "sonnet")
+                    onSessionSelected?(newSession)
                 }
 
                 quickActionCard(

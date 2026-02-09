@@ -12,6 +12,7 @@ class ChatViewModel: ObservableObject {
     @Published var connectingTooLong = false
     @Published var streamTokenCount: Int = 0
     @Published var streamElapsedSeconds: Double = 0
+    @Published var pendingPermissionRequest: PermissionRequest?
     private var streamStartTime: Date?
 
     /// Computed property for current assistant message being streamed
@@ -228,7 +229,11 @@ class ChatViewModel: ObservableObject {
                 }
             }
         } catch {
-            self.error = error
+            // For new sessions, a 404 just means no messages yet — show welcome, not error
+            let isNotFound = (error as? APIError)?.isNotFound == true
+            if !isNotFound {
+                self.error = error
+            }
             AppLogger.shared.error("Failed to load message history: \(error)", category: "chat")
             if messages.isEmpty {
                 if encodedProjectPath != nil {
@@ -355,6 +360,27 @@ class ChatViewModel: ObservableObject {
         sseClient?.cancel()
     }
 
+    /// Respond to a pending permission request (allow/deny)
+    ///
+    /// Sends the decision to the backend which forwards it to the Claude CLI process via stdin.
+    /// Route: POST /chat/permission/{sessionId}/{requestId}
+    func respondToPermission(requestId: String, decision: String) {
+        guard let apiClient, let sessionId else { return }
+        pendingPermissionRequest = nil
+
+        Task {
+            do {
+                let body = PermissionDecision(decision: decision)
+                let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
+                    "/chat/permission/\(sessionId.uuidString)/\(requestId)",
+                    body: body
+                )
+            } catch {
+                AppLogger.shared.warning("Permission response failed (non-fatal): \(error)", category: "chat")
+            }
+        }
+    }
+
     /// Fork the current session
     func forkSession() async -> ChatSession? {
         guard let sessionId = sessionId, let apiClient else { return nil }
@@ -382,39 +408,22 @@ class ChatViewModel: ObservableObject {
         for streamMessage in streamMessages {
             switch streamMessage {
             case .system(let sysMsg):
-                // Could update session ID from init
                 AppLogger.shared.info("Session initialized: \(sysMsg.data.sessionId)", category: "chat")
 
             case .assistant(let assistantMsg):
-                for block in assistantMsg.content {
-                    switch block {
-                    case .text(let textBlock):
-                        currentMessage.text += textBlock.text
-
-                    case .toolUse(let toolUseBlock):
-                        currentMessage.toolCalls.append(ToolCallDisplay(
-                            id: toolUseBlock.id,
-                            name: toolUseBlock.name,
-                            inputPreview: nil
-                        ))
-
-                    case .toolResult(let resultBlock):
-                        currentMessage.toolResults.append(ToolResultDisplay(
-                            toolUseId: resultBlock.toolUseId,
-                            content: resultBlock.content,
-                            isError: resultBlock.isError
-                        ))
-
-                    case .thinking(let thinkingBlock):
-                        currentMessage.thinking = thinkingBlock.thinking
-                    }
-                }
+                handleAssistantMessage(assistantMsg, message: &currentMessage)
 
             case .result(let resultMsg):
                 currentMessage.cost = resultMsg.totalCostUSD
 
-            case .permission:
-                break
+            case .permission(let permissionReq):
+                pendingPermissionRequest = permissionReq
+
+            case .user(let userMsg):
+                handleUserMessage(userMsg, message: &currentMessage)
+
+            case .streamEvent(let event):
+                handleStreamEvent(event, message: &currentMessage)
 
             case .error(let errorMsg):
                 currentMessage.text += "\n\nError: \(errorMsg.message)"
@@ -429,5 +438,71 @@ class ChatViewModel: ObservableObject {
         streamTokenCount = max(streamTokenCount, currentMessage.text.count / 4)
 
         messages.append(currentMessage)
+    }
+
+    // MARK: - Stream Message Handlers
+
+    /// Handle assistant message: accumulate text, tool calls, tool results, and thinking blocks.
+    private func handleAssistantMessage(_ assistantMsg: AssistantMessage, message: inout ChatMessage) {
+        for block in assistantMsg.content {
+            switch block {
+            case .text(let textBlock):
+                message.text += textBlock.text
+
+            case .toolUse(let toolUseBlock):
+                message.toolCalls.append(ToolCallDisplay(
+                    id: toolUseBlock.id,
+                    name: toolUseBlock.name,
+                    inputPreview: nil
+                ))
+
+            case .toolResult(let resultBlock):
+                message.toolResults.append(ToolResultDisplay(
+                    toolUseId: resultBlock.toolUseId,
+                    content: resultBlock.content,
+                    isError: resultBlock.isError
+                ))
+
+            case .thinking(let thinkingBlock):
+                message.thinking = thinkingBlock.thinking
+            }
+        }
+    }
+
+    /// Handle user message: accumulate tool results from user content blocks.
+    private func handleUserMessage(_ userMsg: UserMessage, message: inout ChatMessage) {
+        for block in userMsg.content {
+            switch block {
+            case .toolResult(let resultBlock):
+                message.toolResults.append(ToolResultDisplay(
+                    toolUseId: resultBlock.toolUseId,
+                    content: resultBlock.content,
+                    isError: resultBlock.isError
+                ))
+            default:
+                break
+            }
+        }
+    }
+
+    /// Handle stream event: append character-by-character deltas for text, JSON, and thinking.
+    private func handleStreamEvent(_ event: StreamEventMessage, message: inout ChatMessage) {
+        guard let delta = event.delta else { return }
+
+        switch delta {
+        case .textDelta(let text):
+            message.text += text
+
+        case .inputJsonDelta(let json):
+            // Accumulate partial JSON on last tool call's inputPreview
+            if !message.toolCalls.isEmpty {
+                let lastIndex = message.toolCalls.count - 1
+                let existing = message.toolCalls[lastIndex].inputPreview ?? ""
+                message.toolCalls[lastIndex].inputPreview = existing + json
+            }
+
+        case .thinkingDelta(let thinking):
+            message.thinking = (message.thinking ?? "") + thinking
+        }
     }
 }

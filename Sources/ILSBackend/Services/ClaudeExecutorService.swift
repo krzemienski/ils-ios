@@ -3,19 +3,20 @@ import Vapor
 import ILSShared
 import Logging
 
-/// Actor managing Claude CLI subprocess execution with streaming JSON output.
+/// Actor managing Claude subprocess execution with streaming JSON output.
 ///
 /// ## Architecture
 ///
-/// This service wraps the Claude CLI (`claude -p --output-format stream-json`) as a subprocess
-/// and converts its JSON output to `ILSShared.StreamMessage` types for the iOS app.
+/// Supports two execution backends:
+/// 1. **Agent SDK** (default): Spawns `node scripts/sdk-wrapper.mjs` which calls the
+///    `@anthropic-ai/claude-agent-sdk` npm package. The SDK calls the Anthropic API directly
+///    — no `claude` subprocess — which avoids the hang that occurs when spawning `claude -p`
+///    inside an active Claude Code session.
+/// 2. **CLI fallback**: Spawns `claude -p --output-format stream-json` directly. Use this
+///    when running the backend outside a Claude Code session (standalone).
 ///
-/// ### Why Not Use ClaudeCodeSDK?
-///
-/// The official SDK uses `FileHandle.readabilityHandler` + Combine's `PassthroughSubject`,
-/// which requires a RunLoop. Vapor's NIO event loops don't pump a RunLoop, so the publisher
-/// never emits data. This service uses direct `Process` execution with `DispatchQueue` for
-/// stdout reads instead.
+/// Both backends produce NDJSON on stdout in the same format. The stdout reading, JSON
+/// parsing, and StreamMessage conversion are shared.
 ///
 /// ### Session Management
 ///
@@ -30,7 +31,7 @@ import Logging
 ///
 /// ### Message Conversion
 ///
-/// Converts Claude CLI JSON (snake_case) to ILSShared types (camelCase):
+/// Converts CLI/SDK JSON (snake_case) to ILSShared types (camelCase):
 /// - `session_id` → `sessionId`
 /// - `tool_use` → `toolUse`
 /// - `total_cost_usd` → `totalCostUSD`
@@ -38,11 +39,26 @@ actor ClaudeExecutorService {
     /// Structured logger for ClaudeExecutor operations
     private static let logger = Logger(label: "ils.claude-executor")
 
+    /// JSON decoder configured for CLI snake_case output
+    private static let cliDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.keyDecodingStrategy = .convertFromSnakeCase
+        return d
+    }()
+
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
 
+    /// Active stdin handles keyed by session ID for permission response forwarding
+    private var activeStdinHandles: [String: FileHandle] = [:]
+
     /// GCD queue for blocking stdout reads (avoids RunLoop dependency)
     private let readQueue = DispatchQueue(label: "ils.claude-stdout-reader", qos: .userInitiated)
+
+    /// When true, uses the Agent SDK (via Node.js wrapper) instead of `claude -p`.
+    /// The SDK calls the Anthropic API directly, avoiding the subprocess hang issue.
+    /// Set to false to fall back to `claude -p` when running outside Claude Code.
+    static var useAgentSDK: Bool = true
 
     // MARK: - Public API
 
@@ -85,13 +101,13 @@ actor ClaudeExecutorService {
         return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "unknown"
     }
 
-    /// Execute Claude CLI with streaming JSON output.
+    /// Execute a Claude query with streaming JSON output.
     ///
-    /// Spawns `claude -p --output-format stream-json` as a subprocess and streams
-    /// parsed messages as they arrive. Includes timeout protection (30s initial, 5min total).
+    /// Uses either the Agent SDK (Node.js wrapper) or direct `claude -p` CLI depending
+    /// on the `useAgentSDK` flag. Both produce NDJSON on stdout in the same format.
     ///
     /// - Parameters:
-    ///   - prompt: User prompt text (sent via stdin)
+    ///   - prompt: User prompt text
     ///   - workingDirectory: Optional working directory for project context
     ///   - options: Execution options (model, permissions, session ID, etc.)
     /// - Returns: AsyncThrowingStream yielding StreamMessage events
@@ -100,14 +116,37 @@ actor ClaudeExecutorService {
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        AsyncThrowingStream { continuation in
-            // Build the full shell command
-            let command = Self.buildCommand(options: options)
-            Self.logger.debug("Command: \(command)")
-            Self.logger.debug("Prompt: \(prompt.prefix(100))")
-            Self.logger.debug("Working dir: \(workingDirectory ?? "nil")")
+        if Self.useAgentSDK {
+            return executeWithSDK(prompt: prompt, workingDirectory: workingDirectory, options: options)
+        } else {
+            return executeWithCLI(prompt: prompt, workingDirectory: workingDirectory, options: options)
+        }
+    }
 
-            // Configure process
+    // MARK: - Agent SDK Execution
+
+    /// Execute via Agent SDK (Node.js wrapper).
+    ///
+    /// Spawns `node scripts/sdk-wrapper.mjs '<json-config>'` where the prompt and all
+    /// options are passed as a JSON argument. The SDK calls the Anthropic API directly,
+    /// avoiding subprocess conflicts with the parent Claude Code session.
+    private nonisolated func executeWithSDK(
+        prompt: String,
+        workingDirectory: String?,
+        options: ExecutionOptions
+    ) -> AsyncThrowingStream<StreamMessage, Error> {
+        AsyncThrowingStream { continuation in
+            // Build SDK configuration as JSON
+            let sdkConfig = Self.buildSDKConfig(prompt: prompt, options: options, workingDirectory: workingDirectory)
+            Self.logger.debug("SDK config: \(sdkConfig.prefix(200))")
+
+            // Find the sdk-wrapper.mjs script relative to the backend working directory
+            let projectRoot = workingDirectory ?? FileManager.default.currentDirectoryPath
+            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.mjs"
+
+            // Build the node command
+            let command = "node \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
+
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             process.arguments = ["-l", "-c", command]
@@ -116,7 +155,7 @@ actor ClaudeExecutorService {
                 process.currentDirectoryURL = URL(fileURLWithPath: dir)
             }
 
-            // Inherit environment for PATH (claude needs to be findable)
+            // Inherit environment — the Agent SDK uses Claude Code's auth (not ANTHROPIC_API_KEY)
             process.environment = ProcessInfo.processInfo.environment
 
             let outputPipe = Pipe()
@@ -124,41 +163,35 @@ actor ClaudeExecutorService {
             process.standardOutput = outputPipe
             process.standardError = errorPipe
 
-            // Send prompt via stdin (avoids shell escaping issues)
+            // No stdin needed for SDK mode — prompt is in the JSON config
             let stdinPipe = Pipe()
             process.standardInput = stdinPipe
-            if let data = prompt.data(using: .utf8) {
-                stdinPipe.fileHandleForWriting.write(data)
-                stdinPipe.fileHandleForWriting.closeFile()
-            }
+            stdinPipe.fileHandleForWriting.closeFile()
 
-            // Store process for cancellation
             let sessionId = options.sessionId ?? UUID().uuidString
             Task {
                 await self.storeProcess(sessionId, process: process)
             }
 
-            // Start process
             do {
                 try process.run()
-                Self.logger.debug("Process started (PID: \(process.processIdentifier))")
+                Self.logger.debug("SDK process started (PID: \(process.processIdentifier))")
             } catch {
-                Self.logger.debug("Failed to start process: \(error)")
+                Self.logger.debug("Failed to start SDK process: \(error)")
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
-                    message: "Failed to launch claude: \(error.localizedDescription)"
+                    message: "Failed to launch Agent SDK wrapper: \(error.localizedDescription)"
                 )))
                 continuation.finish()
                 return
             }
 
             // --- Timeout mechanism ---
-            // Two-tier: 30s initial (no data at all) + 5min total (process runs too long)
             var didTimeout = false
 
             let timeoutWork = DispatchWorkItem {
                 didTimeout = true
-                Self.logger.debug("TIMEOUT: No stdout data received within 30 seconds, terminating process")
+                Self.logger.debug("TIMEOUT: No SDK data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
             }
@@ -167,105 +200,267 @@ actor ClaudeExecutorService {
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
                     didTimeout = true
-                    Self.logger.debug("TOTAL TIMEOUT: Process running for >5 minutes, terminating")
+                    Self.logger.debug("TOTAL TIMEOUT: SDK process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: totalTimeoutWork)
 
-            // Read stdout on dedicated GCD queue (no RunLoop needed)
             self.readQueue.async {
-                let handle = outputPipe.fileHandleForReading
-                var buffer = Data()
-
-                while true {
-                    let chunk = handle.availableData
-                    if chunk.isEmpty { break } // EOF - process closed stdout
-
-                    // Cancel the initial 30s timeout — data is flowing
-                    timeoutWork.cancel()
-
-                    buffer.append(chunk)
-
-                    // Try to extract complete lines
-                    guard let bufferString = String(data: buffer, encoding: .utf8) else {
-                        continue
-                    }
-
-                    let lines = bufferString.components(separatedBy: "\n")
-
-                    // Process all complete lines (everything except last which may be incomplete)
-                    if lines.count > 1 {
-                        for i in 0..<(lines.count - 1) {
-                            let line = lines[i].trimmingCharacters(in: .whitespacesAndNewlines)
-                            if !line.isEmpty {
-                                Self.processJsonLine(line, continuation: continuation)
-                            }
-                        }
-
-                        // Keep last (potentially incomplete) line in buffer
-                        let lastLine = lines[lines.count - 1]
-                        buffer = lastLine.data(using: .utf8) ?? Data()
-                    }
-                }
-
-                // Process any remaining data in buffer
-                if let remaining = String(data: buffer, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
-                   !remaining.isEmpty {
-                    Self.processJsonLine(remaining, continuation: continuation)
-                }
-
-                // Wait for process to fully exit before checking status
-                process.waitUntilExit()
-
-                // Cancel both timeouts (process finished normally)
-                timeoutWork.cancel()
-                totalTimeoutWork.cancel()
-
-                let exitCode = process.terminationStatus
-                if exitCode != 0 {
-                    if didTimeout {
-                        Self.logger.debug("Process killed by timeout (exit code \(exitCode))")
-                        continuation.yield(.error(StreamError(
-                            code: "TIMEOUT",
-                            message: "Claude CLI timed out — the AI service may be busy. Please try again."
-                        )))
-                    } else {
-                        let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                        let errText = String(data: errData, encoding: .utf8)?
-                            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                        Self.logger.debug("Process exited with code \(exitCode): \(errText.prefix(500))")
-                        if !errText.isEmpty {
-                            continuation.yield(.error(StreamError(
-                                code: "PROCESS_ERROR",
-                                message: "claude exited with code \(exitCode): \(errText.prefix(200))"
-                            )))
-                        }
-                    }
-                } else {
-                    Self.logger.debug("Process exited successfully")
-                }
-
-                continuation.finish()
-
-                // Clean up process reference
-                Task {
-                    await self.removeProcess(sessionId)
-                }
+                Self.readStdout(
+                    pipe: outputPipe,
+                    errorPipe: errorPipe,
+                    process: process,
+                    sessionId: sessionId,
+                    didTimeout: &didTimeout,
+                    timeoutWork: timeoutWork,
+                    totalTimeoutWork: totalTimeoutWork,
+                    continuation: continuation,
+                    executor: self,
+                    cleanupStdin: nil // No stdin to clean up in SDK mode
+                )
             }
         }
     }
 
+    // MARK: - CLI Execution (Fallback)
+
+    /// Execute via `claude -p` CLI.
+    ///
+    /// Direct CLI invocation with stdin for prompt + permission forwarding.
+    /// Use when running the backend outside an active Claude Code session.
+    private nonisolated func executeWithCLI(
+        prompt: String,
+        workingDirectory: String?,
+        options: ExecutionOptions
+    ) -> AsyncThrowingStream<StreamMessage, Error> {
+        AsyncThrowingStream { continuation in
+            let command = Self.buildCommand(options: options)
+            Self.logger.debug("CLI command: \(command)")
+
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+            process.arguments = ["-l", "-c", command]
+
+            if let dir = workingDirectory {
+                process.currentDirectoryURL = URL(fileURLWithPath: dir)
+            }
+
+            process.environment = ProcessInfo.processInfo.environment
+
+            let outputPipe = Pipe()
+            let errorPipe = Pipe()
+            process.standardOutput = outputPipe
+            process.standardError = errorPipe
+
+            // Send prompt via stdin, keep open for permission forwarding
+            let stdinPipe = Pipe()
+            process.standardInput = stdinPipe
+            if let data = (prompt + "\n").data(using: .utf8) {
+                stdinPipe.fileHandleForWriting.write(data)
+            }
+
+            let sessionId = options.sessionId ?? UUID().uuidString
+            let stdinHandle = stdinPipe.fileHandleForWriting
+            Task {
+                await self.storeProcess(sessionId, process: process)
+                await self.storeStdinHandle(sessionId, handle: stdinHandle)
+            }
+
+            do {
+                try process.run()
+                Self.logger.debug("CLI process started (PID: \(process.processIdentifier))")
+            } catch {
+                Self.logger.debug("Failed to start CLI process: \(error)")
+                continuation.yield(.error(StreamError(
+                    code: "LAUNCH_ERROR",
+                    message: "Failed to launch claude: \(error.localizedDescription)"
+                )))
+                continuation.finish()
+                return
+            }
+
+            var didTimeout = false
+
+            let timeoutWork = DispatchWorkItem {
+                didTimeout = true
+                Self.logger.debug("TIMEOUT: No CLI data within 30s")
+                process.terminate()
+                outputPipe.fileHandleForReading.closeFile()
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 30, execute: timeoutWork)
+
+            let totalTimeoutWork = DispatchWorkItem {
+                if process.isRunning {
+                    didTimeout = true
+                    Self.logger.debug("TOTAL TIMEOUT: CLI process >5min")
+                    process.terminate()
+                    outputPipe.fileHandleForReading.closeFile()
+                }
+            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: totalTimeoutWork)
+
+            self.readQueue.async {
+                Self.readStdout(
+                    pipe: outputPipe,
+                    errorPipe: errorPipe,
+                    process: process,
+                    sessionId: sessionId,
+                    didTimeout: &didTimeout,
+                    timeoutWork: timeoutWork,
+                    totalTimeoutWork: totalTimeoutWork,
+                    continuation: continuation,
+                    executor: self,
+                    cleanupStdin: stdinHandle
+                )
+            }
+        }
+    }
+
+    // MARK: - Shared Stdout Reader
+
+    /// Shared stdout reading logic for both SDK and CLI execution paths.
+    private nonisolated static func readStdout(
+        pipe: Pipe,
+        errorPipe: Pipe,
+        process: Process,
+        sessionId: String,
+        didTimeout: inout Bool,
+        timeoutWork: DispatchWorkItem,
+        totalTimeoutWork: DispatchWorkItem,
+        continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
+        executor: ClaudeExecutorService,
+        cleanupStdin: FileHandle?
+    ) {
+        let handle = pipe.fileHandleForReading
+        var buffer = Data()
+
+        while true {
+            let chunk = handle.availableData
+            if chunk.isEmpty { break }
+
+            timeoutWork.cancel()
+            buffer.append(chunk)
+
+            guard let bufferString = String(data: buffer, encoding: .utf8) else {
+                continue
+            }
+
+            let lines = bufferString.components(separatedBy: "\n")
+            if lines.count > 1 {
+                for i in 0..<(lines.count - 1) {
+                    let line = lines[i].trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !line.isEmpty {
+                        processJsonLine(line, continuation: continuation)
+                    }
+                }
+                let lastLine = lines[lines.count - 1]
+                buffer = lastLine.data(using: .utf8) ?? Data()
+            }
+        }
+
+        if let remaining = String(data: buffer, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !remaining.isEmpty {
+            processJsonLine(remaining, continuation: continuation)
+        }
+
+        process.waitUntilExit()
+        timeoutWork.cancel()
+        totalTimeoutWork.cancel()
+
+        let exitCode = process.terminationStatus
+        if exitCode != 0 {
+            if didTimeout {
+                logger.debug("Process killed by timeout (exit \(exitCode))")
+                continuation.yield(.error(StreamError(
+                    code: "TIMEOUT",
+                    message: "Claude timed out — the AI service may be busy. Please try again."
+                )))
+            } else {
+                let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                let errText = String(data: errData, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                logger.debug("Process exited \(exitCode): \(errText.prefix(500))")
+                if !errText.isEmpty {
+                    continuation.yield(.error(StreamError(
+                        code: "PROCESS_ERROR",
+                        message: "Process exited with code \(exitCode): \(errText.prefix(200))"
+                    )))
+                }
+            }
+        } else {
+            logger.debug("Process exited successfully")
+        }
+
+        continuation.finish()
+
+        cleanupStdin?.closeFile()
+        Task {
+            await executor.removeProcess(sessionId)
+            await executor.removeStdinHandle(sessionId)
+        }
+    }
+
     /// Cancel an active session's process.
+    ///
+    /// Sends SIGINT first for graceful shutdown, then SIGTERM after 2s if still running.
+    /// Also closes the stdin handle to unblock the process if it's waiting for input.
     /// - Parameter sessionId: Session ID to cancel
     func cancel(sessionId: String) async {
+        // Close stdin first to unblock any pending reads
+        if let stdinHandle = activeStdinHandles[sessionId] {
+            stdinHandle.closeFile()
+        }
+        activeStdinHandles.removeValue(forKey: sessionId)
+
         if let process = activeProcesses[sessionId], process.isRunning {
             Self.logger.debug("Cancelling process for session: \(sessionId)")
-            process.terminate()
+            // Send SIGINT first (graceful), then SIGTERM after 2s
+            kill(process.processIdentifier, SIGINT)
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            if process.isRunning {
+                process.terminate() // SIGTERM
+            }
         }
         activeProcesses.removeValue(forKey: sessionId)
+    }
+
+    /// Send a permission response to a running Claude CLI process via stdin.
+    ///
+    /// Claude CLI in `delegate` mode reads permission responses from stdin as JSON lines.
+    /// The format is: `{"type":"permission_response","id":"<requestId>","decision":"<allow|deny>"}`
+    ///
+    /// - Parameters:
+    ///   - sessionId: Session ID whose process should receive the response
+    ///   - requestId: Permission request ID to respond to
+    ///   - decision: "allow" or "deny"
+    /// - Returns: True if the response was written successfully, false if no handle found
+    func sendPermissionResponse(sessionId: String, requestId: String, decision: String) -> Bool {
+        guard let handle = activeStdinHandles[sessionId] else {
+            Self.logger.debug("No stdin handle for session \(sessionId) — process may have exited")
+            return false
+        }
+
+        let response: [String: String] = [
+            "type": "permission_response",
+            "id": requestId,
+            "decision": decision
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: response),
+              var jsonString = String(data: jsonData, encoding: .utf8) else {
+            Self.logger.debug("Failed to serialize permission response")
+            return false
+        }
+
+        jsonString += "\n"
+        guard let data = jsonString.data(using: .utf8) else { return false }
+
+        handle.write(data)
+        Self.logger.debug("Sent permission response for \(requestId) to session \(sessionId): \(decision)")
+        return true
     }
 
     // MARK: - Process Management
@@ -278,7 +473,66 @@ actor ClaudeExecutorService {
         activeProcesses.removeValue(forKey: sessionId)
     }
 
-    // MARK: - Command Building
+    // MARK: - Stdin Handle Management
+
+    private func storeStdinHandle(_ sessionId: String, handle: FileHandle) {
+        activeStdinHandles[sessionId] = handle
+    }
+
+    private func removeStdinHandle(_ sessionId: String) {
+        activeStdinHandles.removeValue(forKey: sessionId)
+    }
+
+    // MARK: - SDK Config Building
+
+    /// Build a JSON configuration object for the Agent SDK wrapper.
+    ///
+    /// The config includes the prompt and all options in a format that
+    /// `sdk-wrapper.mjs` maps to the Agent SDK's `query()` function.
+    private static func buildSDKConfig(
+        prompt: String,
+        options: ExecutionOptions,
+        workingDirectory: String?
+    ) -> String {
+        var sdkOptions: [String: Any] = [:]
+
+        if let model = options.model { sdkOptions["model"] = model }
+        if let maxTurns = options.maxTurns { sdkOptions["maxTurns"] = maxTurns }
+        if let allowedTools = options.allowedTools { sdkOptions["allowedTools"] = allowedTools }
+        if let disallowedTools = options.disallowedTools { sdkOptions["disallowedTools"] = disallowedTools }
+
+        if let mode = options.permissionMode {
+            sdkOptions["permissionMode"] = mode.rawValue
+        }
+
+        if let systemPrompt = options.systemPrompt, !systemPrompt.isEmpty {
+            sdkOptions["systemPrompt"] = systemPrompt
+        }
+        if let appendSystemPrompt = options.appendSystemPrompt, !appendSystemPrompt.isEmpty {
+            sdkOptions["appendSystemPrompt"] = appendSystemPrompt
+        }
+
+        if let resume = options.resume { sdkOptions["resume"] = resume }
+        if options.continueConversation == true { sdkOptions["continueConversation"] = true }
+        if options.forkSession == true { sdkOptions["forkSession"] = true }
+        if let sessionId = options.sessionId { sdkOptions["sessionId"] = sessionId }
+        if let dir = workingDirectory { sdkOptions["cwd"] = dir }
+        if options.includePartialMessages == true { sdkOptions["includePartialMessages"] = true }
+
+        let config: [String: Any] = [
+            "prompt": prompt,
+            "options": sdkOptions
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: config),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            return "{\"prompt\":\"\(prompt.prefix(100))\"}"
+        }
+
+        return jsonString
+    }
+
+    // MARK: - CLI Command Building
 
     /// Build the full Claude CLI command string from execution options.
     ///
@@ -292,6 +546,9 @@ actor ClaudeExecutorService {
         // Output format: always stream-json for structured streaming
         args.append("--output-format")
         args.append("stream-json")
+
+        // Always include partial messages for character-by-character streaming
+        args.append("--include-partial-messages")
 
         // Max turns
         if let maxTurns = options.maxTurns {
@@ -318,7 +575,7 @@ actor ClaudeExecutorService {
         args.append("--setting-sources")
         args.append("project,local")
 
-        // Permission mode: use specified mode or default to bypass for non-interactive
+        // Permission mode: use specified mode or default to CLI's default (interactive permissions)
         if let mode = options.permissionMode {
             switch mode {
             case .bypassPermissions:
@@ -328,7 +585,8 @@ actor ClaudeExecutorService {
                 args.append(mode.rawValue)
             }
         } else {
-            args.append("--dangerously-skip-permissions")
+            args.append("--permission-mode")
+            args.append(PermissionMode.default.rawValue)
         }
 
         // Resume existing session
@@ -431,6 +689,63 @@ actor ClaudeExecutorService {
             args.append(inputFormat)
         }
 
+        // Agent mode
+        if let agent = options.agent, !agent.isEmpty {
+            args.append("--agent")
+            args.append(agent)
+        }
+
+        // Beta flags
+        if let betas = options.betas, !betas.isEmpty {
+            args.append("--betas")
+            args.append(betas.joined(separator: ","))
+        }
+
+        // Debug mode
+        if options.debug == true {
+            args.append("--debug")
+        }
+
+        // Debug file
+        if let debugFile = options.debugFile, !debugFile.isEmpty {
+            args.append("--debug-file")
+            args.append(debugFile)
+        }
+
+        // Disable slash commands
+        if options.disableSlashCommands == true {
+            args.append("--disable-slash-commands")
+        }
+
+        // System prompt file
+        if let systemPromptFile = options.systemPromptFile, !systemPromptFile.isEmpty {
+            args.append("--system-prompt-file")
+            args.append(systemPromptFile)
+        }
+
+        // Append system prompt file
+        if let appendSystemPromptFile = options.appendSystemPromptFile, !appendSystemPromptFile.isEmpty {
+            args.append("--append-system-prompt-file")
+            args.append(appendSystemPromptFile)
+        }
+
+        // Plugin directory
+        if let pluginDir = options.pluginDir, !pluginDir.isEmpty {
+            args.append("--plugin-dir")
+            args.append(pluginDir)
+        }
+
+        // Strict MCP config
+        if options.strictMcpConfig == true {
+            args.append("--strict-mcp-config")
+        }
+
+        // Custom settings path
+        if let settingsPath = options.settingsPath, !settingsPath.isEmpty {
+            args.append("--settings")
+            args.append(settingsPath)
+        }
+
         return args.joined(separator: " ")
     }
 
@@ -446,265 +761,25 @@ actor ClaudeExecutorService {
 
     /// Process a single JSON line from Claude CLI's stream-json output.
     ///
-    /// Each line is a complete JSON object with a "type" field:
-    /// - "system" (subtype "init"): session initialization with tools
-    /// - "assistant": response content (text, tool_use, tool_result, thinking)
-    /// - "result": completion with cost/duration/session info
-    ///
-    /// Maps CLI JSON (snake_case) to ILSShared StreamMessage types (camelCase).
+    /// Decodes each NDJSON line as a CLIMessage using Codable, then converts
+    /// to StreamMessage via CLIMessageConverter.
     private static func processJsonLine(
         _ line: String,
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
     ) {
-        guard let data = line.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let type = json["type"] as? String else {
-            Self.logger.debug("Failed to parse JSON line: \(line.prefix(200))")
+        guard let data = line.data(using: .utf8) else {
+            logger.debug("Failed to decode line as UTF-8")
             return
         }
-
-        switch type {
-        case "system":
-            processSystemMessage(json, continuation: continuation)
-
-        case "assistant":
-            processAssistantMessage(json, continuation: continuation)
-
-        case "result":
-            processResultMessage(json, continuation: continuation)
-
-        default:
-            Self.logger.debug("Unknown message type: \(type)")
-        }
-    }
-
-    /// Parse system message from CLI JSON.
-    ///
-    /// Handles subtypes: "init" (session start with tools), "completion" (token usage updates)
-    private static func processSystemMessage(
-        _ json: [String: Any],
-        continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
-    ) {
-        let subtype = json["subtype"] as? String ?? "init"
-        let sessionId = json["session_id"] as? String ?? ""
-        let tools = json["tools"] as? [String]
-
-        Self.logger.debug("System message: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), tools=\(tools?.count ?? 0)")
-
-        // Handle all known subtypes — init, completion, etc.
-        let systemData = SystemData(
-            sessionId: sessionId,
-            tools: tools
-        )
-        let message = SystemMessage(subtype: subtype, data: systemData)
-        continuation.yield(.system(message))
-    }
-
-    /// Parse assistant message from CLI JSON.
-    ///
-    /// CLI format: {"type":"assistant","session_id":"...","message":{"role":"assistant","content":[...]}}
-    /// ILSShared format: AssistantMessage(content: [ContentBlock])
-    private static func processAssistantMessage(
-        _ json: [String: Any],
-        continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
-    ) {
-        // Extract content from nested message object
-        guard let messageObj = json["message"] as? [String: Any],
-              let contentArray = messageObj["content"] as? [[String: Any]] else {
-            Self.logger.debug("Assistant message missing message.content")
-            return
-        }
-
-        var contentBlocks: [ContentBlock] = []
-
-        for item in contentArray {
-            if let block = convertContentBlock(item) {
-                contentBlocks.append(block)
+        do {
+            let cliMessage = try cliDecoder.decode(CLIMessage.self, from: data)
+            if let streamMessage = CLIMessageConverter.convert(cliMessage) {
+                continuation.yield(streamMessage)
+                logger.debug("Yielded \(cliMessage) message")
             }
+        } catch {
+            logger.debug("Failed to decode CLI message: \(error.localizedDescription) — line: \(line.prefix(200))")
         }
-
-        if !contentBlocks.isEmpty {
-            let assistantMsg = AssistantMessage(content: contentBlocks)
-            continuation.yield(.assistant(assistantMsg))
-            Self.logger.debug("Yielded assistant message with \(contentBlocks.count) content blocks")
-        }
-    }
-
-    /// Parse result message from CLI JSON.
-    ///
-    /// CLI format uses snake_case: session_id, total_cost_usd, duration_ms, etc.
-    /// ILSShared uses camelCase: sessionId, totalCostUSD, durationMs, etc.
-    private static func processResultMessage(
-        _ json: [String: Any],
-        continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
-    ) {
-        let subtype = json["subtype"] as? String ?? "success"
-        let sessionId = json["session_id"] as? String ?? ""
-        let durationMs = json["duration_ms"] as? Int
-        let durationApiMs = json["duration_api_ms"] as? Int
-        let isError = json["is_error"] as? Bool ?? false
-        let numTurns = json["num_turns"] as? Int
-        let totalCostUSD = json["total_cost_usd"] as? Double
-
-        Self.logger.debug("Result: subtype=\(subtype), sessionId=\(sessionId.prefix(20)), cost=\(totalCostUSD ?? 0), turns=\(numTurns ?? 0)")
-
-        // Parse usage stats if present
-        var usageInfo: UsageInfo?
-        if let usage = json["usage"] as? [String: Any],
-           let inputTokens = usage["input_tokens"] as? Int,
-           let outputTokens = usage["output_tokens"] as? Int {
-            let cacheRead = usage["cache_read_input_tokens"] as? Int
-            let cacheCreation = usage["cache_creation_input_tokens"] as? Int
-            usageInfo = UsageInfo(
-                inputTokens: inputTokens,
-                outputTokens: outputTokens,
-                cacheReadInputTokens: cacheRead,
-                cacheCreationInputTokens: cacheCreation
-            )
-            Self.logger.debug("Usage: input=\(inputTokens), output=\(outputTokens)")
-        }
-
-        let result = ResultMessage(
-            subtype: subtype,
-            sessionId: sessionId,
-            durationMs: durationMs,
-            durationApiMs: durationApiMs,
-            isError: isError,
-            numTurns: numTurns,
-            totalCostUSD: totalCostUSD,
-            usage: usageInfo
-        )
-        continuation.yield(.result(result))
-    }
-
-    // MARK: - Content Block Conversion Helpers
-
-    /// Convert a JSON content item to a ContentBlock.
-    ///
-    /// Reduces nesting depth in processAssistantMessage by extracting switch logic.
-    private static func convertContentBlock(_ item: [String: Any]) -> ContentBlock? {
-        guard let itemType = item["type"] as? String else { return nil }
-
-        switch itemType {
-        case "text":
-            return convertTextBlock(item)
-        case "tool_use":
-            return convertToolUseBlock(item)
-        case "tool_result":
-            return convertToolResultBlock(item)
-        case "thinking":
-            return convertThinkingBlock(item)
-        default:
-            return convertUnknownBlock(itemType)
-        }
-    }
-
-    /// Convert text content block.
-    private static func convertTextBlock(_ item: [String: Any]) -> ContentBlock? {
-        guard let text = item["text"] as? String else { return nil }
-        Self.logger.debug("Text content: \(text.prefix(100))")
-        return .text(TextBlock(text: text))
-    }
-
-    /// Convert tool_use content block.
-    private static func convertToolUseBlock(_ item: [String: Any]) -> ContentBlock? {
-        guard let id = item["id"] as? String,
-              let name = item["name"] as? String else { return nil }
-        let input = item["input"] ?? [String: Any]()
-        Self.logger.debug("Tool use: \(name)")
-        return .toolUse(ToolUseBlock(
-            id: id,
-            name: name,
-            input: AnyCodable(input)
-        ))
-    }
-
-    /// Convert tool_result content block.
-    private static func convertToolResultBlock(_ item: [String: Any]) -> ContentBlock? {
-        let toolUseId = item["tool_use_id"] as? String ?? ""
-        let isError = item["is_error"] as? Bool ?? false
-        let content: String
-        if let str = item["content"] as? String {
-            content = str
-        } else if let items = item["content"] as? [[String: Any]] {
-            content = items.compactMap { $0["text"] as? String }.joined(separator: "\n")
-        } else {
-            content = ""
-        }
-        Self.logger.debug("Tool result: toolUseId=\(toolUseId.prefix(20)), isError=\(isError)")
-        return .toolResult(ToolResultBlock(
-            toolUseId: toolUseId,
-            content: content,
-            isError: isError
-        ))
-    }
-
-    /// Convert thinking content block.
-    private static func convertThinkingBlock(_ item: [String: Any]) -> ContentBlock? {
-        guard let thinking = item["thinking"] as? String else { return nil }
-        Self.logger.debug("Thinking: \(thinking.prefix(50))")
-        return .thinking(ThinkingBlock(thinking: thinking))
-    }
-
-    /// Convert unknown content block type (forward compatibility).
-    private static func convertUnknownBlock(_ itemType: String) -> ContentBlock? {
-        Self.logger.debug("Unknown content type '\(itemType)' — forwarding as text note")
-        return .text(TextBlock(text: "[unsupported block: \(itemType)]"))
     }
 }
 
-// MARK: - Execution Options
-
-/// Options for Claude CLI execution, mirroring ChatOptions from ILSShared.
-///
-/// Supports all Claude CLI flags including session management, model selection,
-/// permissions, tool control, and output formatting.
-struct ExecutionOptions {
-    var sessionId: String?
-    var model: String?
-    var permissionMode: ILSShared.PermissionMode?
-    var maxTurns: Int?
-    var maxBudgetUSD: Double?
-    var allowedTools: [String]?
-    var disallowedTools: [String]?
-    var resume: String?
-    var forkSession: Bool?
-
-    // Claude Code CLI parity fields
-    var systemPrompt: String?
-    var appendSystemPrompt: String?
-    var addDirs: [String]?
-    var continueConversation: Bool?
-    var includePartialMessages: Bool?
-    var fallbackModel: String?
-    var jsonSchema: String?
-    var mcpConfig: String?
-    var customAgents: String?
-    var tools: [String]?
-    var noSessionPersistence: Bool?
-    var inputFormat: String?
-
-    init(from chatOptions: ChatOptions? = nil) {
-        self.model = chatOptions?.model
-        self.permissionMode = chatOptions?.permissionMode
-        self.maxTurns = chatOptions?.maxTurns
-        self.maxBudgetUSD = chatOptions?.maxBudgetUSD
-        self.allowedTools = chatOptions?.allowedTools
-        self.disallowedTools = chatOptions?.disallowedTools
-        self.resume = chatOptions?.resume
-        self.forkSession = chatOptions?.forkSession
-        self.systemPrompt = chatOptions?.systemPrompt
-        self.appendSystemPrompt = chatOptions?.appendSystemPrompt
-        self.addDirs = chatOptions?.addDirs
-        self.continueConversation = chatOptions?.continueConversation
-        self.includePartialMessages = chatOptions?.includePartialMessages
-        self.fallbackModel = chatOptions?.fallbackModel
-        self.jsonSchema = chatOptions?.jsonSchema
-        self.mcpConfig = chatOptions?.mcpConfig
-        self.customAgents = chatOptions?.customAgents
-        self.sessionId = chatOptions?.sessionId
-        self.tools = chatOptions?.tools
-        self.noSessionPersistence = chatOptions?.noSessionPersistence
-        self.inputFormat = chatOptions?.inputFormat
-    }
-}

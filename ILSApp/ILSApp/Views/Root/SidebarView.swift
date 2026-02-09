@@ -5,6 +5,7 @@ struct SidebarView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.theme) private var theme: any AppTheme
     @StateObject private var sessionsViewModel = SessionsViewModel()
+    @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @Binding var activeScreen: ActiveScreen
     @Binding var isSidebarOpen: Bool
@@ -12,6 +13,8 @@ struct SidebarView: View {
 
     @State private var searchText: String = ""
     @State private var expandedProjects: Set<String> = []
+    @State private var sessionToRename: ChatSession?
+    @State private var renameText: String = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -40,6 +43,24 @@ struct SidebarView: View {
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadSessions(refresh: true)
+        }
+        .alert("Rename Session", isPresented: Binding(
+            get: { sessionToRename != nil },
+            set: { if !$0 { sessionToRename = nil } }
+        )) {
+            TextField("Session name", text: $renameText)
+            Button("Cancel", role: .cancel) { sessionToRename = nil }
+            Button("Rename") {
+                if let session = sessionToRename {
+                    Task {
+                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                        await sessionsViewModel.loadSessions(refresh: true)
+                    }
+                }
+                sessionToRename = nil
+            }
+        } message: {
+            Text("Enter a new name for this session")
         }
     }
 
@@ -73,6 +94,10 @@ struct SidebarView: View {
             sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
             sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
             sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
+            if enableAgentTeams {
+                sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
+            }
+            sidebarNavItem(icon: "server.rack", label: "Fleet", screen: .fleet)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)
@@ -105,6 +130,7 @@ struct SidebarView: View {
                 TextField("Search sessions...", text: $searchText)
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textPrimary)
+                    .accessibilityLabel("Search sessions")
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
@@ -113,6 +139,7 @@ struct SidebarView: View {
                             .font(.system(size: theme.fontCaption))
                             .foregroundStyle(theme.textTertiary)
                     }
+                    .accessibilityLabel("Clear search")
                 }
             }
             .padding(.horizontal, theme.spacingSM)
@@ -166,12 +193,13 @@ struct SidebarView: View {
                 }
                 .contextMenu {
                     Button {
-                        // TODO: Implement rename via sessionsViewModel
+                        renameText = session.name ?? ""
+                        sessionToRename = session
                     } label: {
                         Label("Rename", systemImage: "pencil")
                     }
                     Button {
-                        // TODO: Implement export via share sheet
+                        exportSession(session)
                     } label: {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
@@ -234,6 +262,8 @@ struct SidebarView: View {
 
     private var bottomActions: some View {
         Button {
+            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            onSessionSelected(newSession)
             isSidebarOpen = false
         } label: {
             HStack(spacing: theme.spacingSM) {
@@ -249,6 +279,7 @@ struct SidebarView: View {
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.vertical, theme.spacingMD)
+        .accessibilityLabel("Create new chat session")
     }
 
     // MARK: - Navigation Item
@@ -277,11 +308,25 @@ struct SidebarView: View {
         .accessibilityLabel(label)
     }
 
+    // MARK: - Actions
+
+    private func exportSession(_ session: ChatSession) {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        let text = "Session: \(session.name ?? "Unnamed")\nModel: \(session.model)\nCreated: \(formatter.string(from: session.createdAt))\nMessages: \(session.messageCount)"
+        let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(av, animated: true)
+        }
+    }
+
     // MARK: - Helpers
 
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {
-        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser):
+        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.fleet, .fleet):
             return true
         case (.chat, .chat):
             return true
