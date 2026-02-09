@@ -1,6 +1,7 @@
 import Foundation
 import Vapor
 import ILSShared
+import CryptoKit
 
 /// Service for external Claude Code session scanning and transcript reading.
 ///
@@ -138,6 +139,50 @@ struct SessionFileService {
         sessions.sort { ($0.lastActiveAt ?? .distantPast) > ($1.lastActiveAt ?? .distantPast) }
 
         return sessions
+    }
+
+    // MARK: - Deterministic UUID
+
+    /// Generate a deterministic UUID from a Claude session ID using SHA256.
+    /// This ensures the same external session always gets the same UUID across loads.
+    private func deterministicUUID(from claudeSessionId: String) -> UUID {
+        let input = "ils-external-session:\(claudeSessionId)"
+        let hash = SHA256.hash(data: Data(input.utf8))
+        var bytes = Array(hash.prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x40  // version 4
+        bytes[8] = (bytes[8] & 0x3F) | 0x80  // variant 1 (RFC 4122)
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3],
+                           bytes[4], bytes[5], bytes[6], bytes[7],
+                           bytes[8], bytes[9], bytes[10], bytes[11],
+                           bytes[12], bytes[13], bytes[14], bytes[15]))
+    }
+
+    // MARK: - ChatSession Conversion
+
+    /// Convert an ExternalSession to a ChatSession with a deterministic UUID.
+    private func toChatSession(_ ext: ExternalSession) -> ChatSession {
+        ChatSession(
+            id: deterministicUUID(from: ext.claudeSessionId),
+            claudeSessionId: ext.claudeSessionId,
+            name: ext.name ?? ext.summary,
+            projectName: ext.projectName,
+            model: "sonnet",
+            permissionMode: .default,
+            status: .completed,
+            messageCount: ext.messageCount ?? 0,
+            source: .external,
+            createdAt: ext.createdAt ?? ext.lastActiveAt ?? Date(),
+            lastActiveAt: ext.lastActiveAt ?? Date(),
+            encodedProjectPath: ext.encodedProjectPath,
+            firstPrompt: ext.firstPrompt
+        )
+    }
+
+    /// Scan external sessions and return as ChatSession objects with deterministic IDs.
+    /// - Returns: Array of ChatSession objects sorted by lastActiveAt descending
+    func scanExternalSessionsAsChatSessions() throws -> [ChatSession] {
+        let externals = try scanExternalSessions()
+        return externals.map { toChatSession($0) }
     }
 
     // MARK: - Transcript Reading

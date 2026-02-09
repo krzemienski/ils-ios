@@ -18,9 +18,13 @@ actor FileSystemCache {
 
     private var skillsCache: CacheEntry<[Skill]>?
     private var mcpServersCache: CacheEntry<[MCPServer]>?
+    private var externalSessionsCache: CacheEntry<[ChatSession]>?
 
     /// Default TTL: 30 seconds
     private let defaultTTL: TimeInterval = 30
+
+    /// Extended TTL for expensive operations: 60 seconds
+    private let extendedTTL: TimeInterval = 60
 
     func getCachedSkills(ttl: TimeInterval? = nil) -> [Skill]? {
         guard let cache = skillsCache, cache.isValid(ttl: ttl ?? defaultTTL) else {
@@ -44,9 +48,25 @@ actor FileSystemCache {
         mcpServersCache = CacheEntry(value: servers, timestamp: Date())
     }
 
+    func getCachedExternalSessions() -> [ChatSession]? {
+        guard let cache = externalSessionsCache, cache.isValid(ttl: extendedTTL) else {
+            return nil
+        }
+        return cache.value
+    }
+
+    func setCachedExternalSessions(_ sessions: [ChatSession]) {
+        externalSessionsCache = CacheEntry(value: sessions, timestamp: Date())
+    }
+
+    func invalidateExternalSessions() {
+        externalSessionsCache = nil
+    }
+
     func invalidateAll() {
         skillsCache = nil
         mcpServersCache = nil
+        externalSessionsCache = nil
     }
 
     func invalidateSkills() {
@@ -236,6 +256,23 @@ struct FileSystemService {
     /// - Returns: Array of ExternalSession objects
     func scanExternalSessions() throws -> [ExternalSession] {
         try sessions.scanExternalSessions()
+    }
+
+    /// List external sessions as ChatSession objects with caching.
+    /// - Parameter bypassCache: If true, forces a fresh scan from disk
+    /// - Returns: Array of ChatSession objects with deterministic IDs
+    func listExternalSessionsAsChatSessions(bypassCache: Bool = false) async throws -> [ChatSession] {
+        if !bypassCache, let cached = await FileSystemCache.shared.getCachedExternalSessions() {
+            return cached
+        }
+        let converted = try sessions.scanExternalSessionsAsChatSessions()
+        await FileSystemCache.shared.setCachedExternalSessions(converted)
+        return converted
+    }
+
+    /// Invalidate the external sessions cache.
+    func invalidateExternalSessionsCache() async {
+        await FileSystemCache.shared.invalidateExternalSessions()
     }
 
     /// Read messages from a session's JSONL transcript file.

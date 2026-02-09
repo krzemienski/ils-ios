@@ -7,7 +7,8 @@ class SessionsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: Error?
     @Published var hasMore = true
-    private var currentOffset = 0
+    @Published var searchQuery: String?
+    private var currentPage = 1
     private let pageSize = 50
 
     private var client: APIClient?
@@ -32,56 +33,26 @@ class SessionsViewModel: ObservableObject {
         error = nil
 
         if refresh {
-            currentOffset = 0
+            currentPage = 1
             hasMore = true
         }
 
         do {
-            // Load ILS database sessions
-            let path = "/sessions?limit=\(pageSize)&offset=\(currentOffset)" + (refresh ? "&refresh=true" : "")
-            let response: APIResponse<ListResponse<ChatSession>> = try await client.get(path)
-            var allSessions = response.data?.items ?? []
-            hasMore = allSessions.count == pageSize
-
-            // Also load external Claude Code sessions
-            do {
-                let scanResponse: APIResponse<SessionScanResponse> = try await client.get("/sessions/scan")
-                if let externalSessions = scanResponse.data?.items {
-                    let converted = externalSessions.compactMap { ext -> ChatSession? in
-                        // Skip if already in ILS sessions (by claudeSessionId)
-                        let isDuplicate = allSessions.contains { $0.claudeSessionId == ext.claudeSessionId }
-                        guard !isDuplicate else { return nil }
-
-                        return ChatSession(
-                            id: UUID(),
-                            claudeSessionId: ext.claudeSessionId,
-                            name: ext.name ?? ext.summary,
-                            projectName: ext.projectName,
-                            model: "sonnet",
-                            permissionMode: .default,
-                            status: .completed,
-                            messageCount: ext.messageCount ?? 0,
-                            source: .external,
-                            createdAt: ext.createdAt ?? ext.lastActiveAt ?? Date(),
-                            lastActiveAt: ext.lastActiveAt ?? Date(),
-                            encodedProjectPath: ext.encodedProjectPath,
-                            firstPrompt: ext.firstPrompt
-                        )
-                    }
-                    allSessions.append(contentsOf: converted)
-                }
-            } catch {
-                // External session scan is best-effort — don't fail the whole load
-                AppLogger.shared.warning("External session scan failed: \(error.localizedDescription)", category: "sessions")
+            var path = "/sessions?page=\(currentPage)&limit=\(pageSize)"
+            if refresh { path += "&refresh=true" }
+            if let searchQuery, !searchQuery.isEmpty {
+                let encoded = searchQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? searchQuery
+                path += "&search=\(encoded)"
             }
 
-            // Sort by last active date, most recent first
-            allSessions.sort { $0.lastActiveAt > $1.lastActiveAt }
+            let response: APIResponse<PaginatedResponse<ChatSession>> = try await client.get(path)
+            let newItems = response.data?.items ?? []
+            hasMore = response.data?.hasMore ?? false
 
-            if currentOffset == 0 {
-                sessions = allSessions
+            if currentPage == 1 {
+                sessions = newItems
             } else {
-                sessions.append(contentsOf: allSessions)
+                sessions.append(contentsOf: newItems)
             }
         } catch {
             self.error = error
@@ -97,7 +68,7 @@ class SessionsViewModel: ObservableObject {
 
     func loadMore() async {
         guard hasMore, !isLoading else { return }
-        currentOffset += pageSize
+        currentPage += 1
         await loadSessions()
     }
 

@@ -25,8 +25,16 @@ struct StatsController: RouteCollection {
     func stats(req: Request) async throws -> APIResponse<StatsResponse> {
         let fm = FileManager.default
 
-        // Count sessions from DATABASE (same as SessionsController)
-        let totalSessions = try await SessionModel.query(on: req.db).count()
+        // Count sessions from DATABASE + external (unified count, deduped)
+        let dbModels = try await SessionModel.query(on: req.db).all()
+        let dbSessionCount = dbModels.count
+        let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions()
+        let dbClaudeIdSet = Set(dbModels.compactMap(\.claudeSessionId))
+        let uniqueExternalCount = externalSessions.filter { ext in
+            guard let claudeId = ext.claudeSessionId else { return true }
+            return !dbClaudeIdSet.contains(claudeId)
+        }.count
+        let totalSessions = dbSessionCount + uniqueExternalCount
 
         // Count projects from FILESYSTEM ~/.claude/projects/ (same as ProjectsController)
         var projectCount = 0
@@ -124,26 +132,33 @@ struct StatsController: RouteCollection {
         )
     }
 
-    /// GET /stats/recent - Get recent sessions for dashboard timeline
+    /// GET /stats/recent - Get recent sessions for dashboard timeline (DB + external merged)
     @Sendable
     func recentSessions(req: Request) async throws -> APIResponse<RecentSessionsResponse> {
-        // Query database for the 10 most recently active sessions
-        let sessions = try await SessionModel.query(on: req.db)
-            .sort(\.$lastActiveAt, .descending)
-            .limit(10)
+        // Load DB sessions
+        let dbSessions = try await SessionModel.query(on: req.db)
+            .with(\.$project)
             .all()
+        var merged: [ChatSession] = dbSessions.map { $0.toShared(projectName: $0.project?.name) }
 
-        // Convert SessionModel to ChatSession
-        let chatSessions = sessions.map { $0.toShared() }
+        // Load external sessions and dedup
+        let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions()
+        let dbClaudeIds = Set(dbSessions.compactMap(\.claudeSessionId))
+        let uniqueExternal = externalSessions.filter { ext in
+            guard let claudeId = ext.claudeSessionId else { return true }
+            return !dbClaudeIds.contains(claudeId)
+        }
+        merged.append(contentsOf: uniqueExternal)
 
-        // Get total count for response
-        let totalCount = try await SessionModel.query(on: req.db).count()
+        // Sort by lastActiveAt descending, take top 10
+        merged.sort { $0.lastActiveAt > $1.lastActiveAt }
+        let recent = Array(merged.prefix(10))
 
         return APIResponse(
             success: true,
             data: RecentSessionsResponse(
-                items: chatSessions,
-                total: totalCount
+                items: recent,
+                total: merged.count
             )
         )
     }

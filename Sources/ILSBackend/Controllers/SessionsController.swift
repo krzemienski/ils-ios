@@ -36,45 +36,69 @@ struct SessionsController: RouteCollection {
         transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
     }
 
-    /// List all sessions with optional project filter and pagination.
-    /// - Parameter req: Vapor Request with optional projectId, page, and limit query parameters
-    /// - Returns: APIResponse with paginated ChatSession objects
+    /// List all sessions (DB + external) with unified pagination, dedup, search, and sort.
+    ///
+    /// Query parameters:
+    /// - `projectId`: Filter to sessions belonging to a specific project
+    /// - `page`: Page number (1-based, default 1)
+    /// - `limit`: Items per page (1-100, default 50)
+    /// - `search`: Case-insensitive search across name, projectName, firstPrompt
+    /// - `refresh`: If "true", bypasses the external sessions cache
     @Sendable
     func list(req: Request) async throws -> APIResponse<PaginatedResponse<ChatSession>> {
-        // Optional project filter
         let projectId = req.query[UUID.self, at: "projectId"]
-
-        // Pagination parameters
         let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
         let offset = (page - 1) * limit
+        let search = req.query[String.self, at: "search"]
+        let refresh = req.query[String.self, at: "refresh"] == "true"
 
-        // Build count query
-        var countQuery = SessionModel.query(on: req.db)
+        // 1. Load all DB sessions (small set, ~51)
+        var dbQuery = SessionModel.query(on: req.db).with(\.$project)
         if let projectId = projectId {
-            countQuery = countQuery.filter(\.$project.$id == projectId)
+            dbQuery = dbQuery.filter(\.$project.$id == projectId)
         }
-        let total = try await countQuery.count()
+        let dbSessions = try await dbQuery.all()
+        var merged: [ChatSession] = dbSessions.map { $0.toShared(projectName: $0.project?.name) }
 
-        // Build paginated query
-        var listQuery = SessionModel.query(on: req.db)
-        if let projectId = projectId {
-            listQuery = listQuery.filter(\.$project.$id == projectId)
-        }
-        let sessions = try await listQuery
-            .with(\.$project)
-            .sort(\.$lastActiveAt, .descending)
-            .offset(offset)
-            .limit(limit)
-            .all()
+        // 2. Load external sessions (cached, ~22K) — skip if filtering by projectId
+        if projectId == nil {
+            let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions(bypassCache: refresh)
 
-        let items = sessions.map { session in
-            session.toShared(projectName: session.project?.name)
+            // 3. Dedup: build set of DB claudeSessionIds, exclude external dupes
+            let dbClaudeIds = Set(dbSessions.compactMap(\.claudeSessionId))
+            let uniqueExternal = externalSessions.filter { ext in
+                guard let claudeId = ext.claudeSessionId else { return true }
+                return !dbClaudeIds.contains(claudeId)
+            }
+            merged.append(contentsOf: uniqueExternal)
         }
+
+        // 4. Search filter (case-insensitive across name, projectName, firstPrompt)
+        if let search = search, !search.isEmpty {
+            merged = merged.filter { session in
+                (session.name?.localizedCaseInsensitiveContains(search) ?? false)
+                    || (session.projectName?.localizedCaseInsensitiveContains(search) ?? false)
+                    || (session.firstPrompt?.localizedCaseInsensitiveContains(search) ?? false)
+            }
+        }
+
+        // 5. Sort by lastActiveAt descending
+        merged.sort { $0.lastActiveAt > $1.lastActiveAt }
+
+        // 6. Paginate
+        let total = merged.count
+        let start = min(offset, total)
+        let end = min(start + limit, total)
+        let page_items = Array(merged[start..<end])
 
         return APIResponse(
             success: true,
-            data: PaginatedResponse(items: items, total: total, hasMore: offset + items.count < total)
+            data: PaginatedResponse(
+                items: page_items,
+                total: total,
+                hasMore: end < total
+            )
         )
     }
 
