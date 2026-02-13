@@ -149,7 +149,7 @@ curl -s http://localhost:8080/api/v1/skills
     "items": [
       {
         "name": "research",
-        "path": "/Users/nick/.claude/skills/research",
+        "path": "~/.claude/skills/research",
         "description": "Orchestrate parallel scientist agents for comprehensive research with AUTO mode",
         "isActive": true,
         "source": "local",
@@ -189,7 +189,7 @@ curl -s http://localhost:8080/api/v1/mcp
         "scope": "user",
         "command": "npx",
         "id": "4393F8FD-59F9-40BF-885A-55A1F5C6CD80",
-        "configPath": "/Users/nick/.claude.json"
+        "configPath": "~/.claude.json"
       }
     ],
     "total": 1
@@ -218,7 +218,7 @@ curl -s http://localhost:8080/api/v1/plugins
     "items": [
       {
         "name": "cache",
-        "path": "/Users/nick/.claude/plugins/cache",
+        "path": "~/.claude/plugins/cache",
         "agents": [],
         "isEnabled": true,
         "commands": [],
@@ -227,7 +227,7 @@ curl -s http://localhost:8080/api/v1/plugins
       },
       {
         "name": "oh-my-claudecode",
-        "path": "/Users/nick/.claude/plugins/oh-my-claudecode",
+        "path": "~/.claude/plugins/oh-my-claudecode",
         "agents": [],
         "isEnabled": true,
         "commands": [],
@@ -340,7 +340,7 @@ curl -s http://localhost:8080/api/v1/config
   "success": true,
   "data": {
     "scope": "user",
-    "path": "/Users/nick/.claude/settings.json",
+    "path": "~/.claude/settings.json",
     "isValid": true,
     "content": {
       "enabledPlugins": {

@@ -129,7 +129,7 @@ OK
         "status": "unknown",
         "args": ["-y", "firecrawl-mcp"],
         "id": "B1C92FC8-DA42-4789-8278-391057DDCB4E",
-        "configPath": "/Users/nick/.claude.json",
+        "configPath": "~/.claude.json",
         "command": "npx",
         "scope": "user",
         "name": "firecrawl"
@@ -164,7 +164,7 @@ OK
         "commands": [],
         "isInstalled": true,
         "agents": [],
-        "path": "/Users/nick/.claude/plugins/cache"
+        "path": "~/.claude/plugins/cache"
       },
       {
         "name": "oh-my-claudecode",
@@ -173,7 +173,7 @@ OK
         "commands": [],
         "isInstalled": true,
         "agents": [],
-        "path": "/Users/nick/.claude/plugins/oh-my-claudecode"
+        "path": "~/.claude/plugins/oh-my-claudecode"
       },
       {
         "name": "marketplaces",
@@ -182,7 +182,7 @@ OK
         "commands": [],
         "isInstalled": true,
         "agents": [],
-        "path": "/Users/nick/.claude/plugins/marketplaces"
+        "path": "~/.claude/plugins/marketplaces"
       }
     ]
   }

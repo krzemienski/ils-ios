@@ -159,7 +159,7 @@ OK
     "items": [
       {
         "id": "0805B870-0EF4-4607-982F-9DB17AF44593",
-        "configPath": "/Users/nick/.claude.json",
+        "configPath": "~/.claude.json",
         "args": ["-y", "firecrawl-mcp"],
         "scope": "user",
         "status": "unknown",
@@ -199,7 +199,7 @@ OK
         "id": "86F71139-D2EA-4590-809F-D1E65B03D37F",
         "isInstalled": true,
         "commands": [],
-        "path": "/Users/nick/.claude/plugins/cache",
+        "path": "~/.claude/plugins/cache",
         "name": "cache",
         "agents": []
       },
@@ -208,7 +208,7 @@ OK
         "id": "650A660D-B1FE-402B-852C-B4BB337AAF69",
         "isInstalled": true,
         "commands": [],
-        "path": "/Users/nick/.claude/plugins/oh-my-claudecode",
+        "path": "~/.claude/plugins/oh-my-claudecode",
         "name": "oh-my-claudecode",
         "agents": []
       },
@@ -217,7 +217,7 @@ OK
         "id": "5E499CF4-9D5E-4AAB-8520-060B497206B0",
         "isInstalled": true,
         "commands": [],
-        "path": "/Users/nick/.claude/plugins/marketplaces",
+        "path": "~/.claude/plugins/marketplaces",
         "name": "marketplaces",
         "agents": []
       }
@@ -335,7 +335,7 @@ OK
   "success": true,
   "data": {
     "scope": "user",
-    "path": "/Users/nick/.claude/settings.json",
+    "path": "~/.claude/settings.json",
     "isValid": true,
     "content": {
       "enabledPlugins": {
@@ -358,7 +358,7 @@ OK
 
 **Configuration Details:**
 - **Scope:** user
-- **Config Path:** /Users/nick/.claude/settings.json
+- **Config Path:** ~/.claude/settings.json
 - **Valid:** true
 - **Enabled Plugins:** 60+ plugins enabled
 - **Hooks:** PreToolUse and PostToolUse configured
