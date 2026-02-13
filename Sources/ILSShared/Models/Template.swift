@@ -10,6 +10,7 @@ public struct Template: Codable, Identifiable, Sendable {
     public var category: String?
     public let createdAt: Date
     public var lastUsedAt: Date?
+    public var modificationDate: Date
 
     public init(
         id: UUID = UUID(),
@@ -18,7 +19,8 @@ public struct Template: Codable, Identifiable, Sendable {
         description: String? = nil,
         category: String? = nil,
         createdAt: Date = Date(),
-        lastUsedAt: Date? = nil
+        lastUsedAt: Date? = nil,
+        modificationDate: Date = Date()
     ) {
         self.id = id
         self.name = name
@@ -27,6 +29,7 @@ public struct Template: Codable, Identifiable, Sendable {
         self.category = category
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt
+        self.modificationDate = modificationDate
     }
 }
 
@@ -52,6 +55,7 @@ extension Template: CloudKitSyncable {
         record["category"] = category
         record["createdAt"] = createdAt
         record["lastUsedAt"] = lastUsedAt
+        record["modificationDate"] = modificationDate
 
         return record
     }
@@ -83,6 +87,10 @@ extension Template: CloudKitSyncable {
             throw CloudKitSyncError.missingRequiredField("createdAt")
         }
 
+        guard let modificationDate = record["modificationDate"] as? Date else {
+            throw CloudKitSyncError.missingRequiredField("modificationDate")
+        }
+
         // Extract optional fields
         let description = record["description"] as? String
         let category = record["category"] as? String
@@ -96,7 +104,8 @@ extension Template: CloudKitSyncable {
             description: description,
             category: category,
             createdAt: createdAt,
-            lastUsedAt: lastUsedAt
+            lastUsedAt: lastUsedAt,
+            modificationDate: modificationDate
         )
     }
 }

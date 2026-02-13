@@ -39,6 +39,7 @@ public struct ChatSession: Codable, Identifiable, Sendable {
     public var forkedFrom: UUID?
     public let createdAt: Date
     public var lastActiveAt: Date
+    public var modificationDate: Date
 
     public init(
         id: UUID = UUID(),
@@ -54,7 +55,8 @@ public struct ChatSession: Codable, Identifiable, Sendable {
         source: SessionSource = .ils,
         forkedFrom: UUID? = nil,
         createdAt: Date = Date(),
-        lastActiveAt: Date = Date()
+        lastActiveAt: Date = Date(),
+        modificationDate: Date = Date()
     ) {
         self.id = id
         self.claudeSessionId = claudeSessionId
@@ -70,6 +72,7 @@ public struct ChatSession: Codable, Identifiable, Sendable {
         self.forkedFrom = forkedFrom
         self.createdAt = createdAt
         self.lastActiveAt = lastActiveAt
+        self.modificationDate = modificationDate
     }
 }
 
@@ -125,6 +128,7 @@ extension ChatSession: CloudKitSyncable {
         record["forkedFrom"] = forkedFrom?.uuidString
         record["createdAt"] = createdAt
         record["lastActiveAt"] = lastActiveAt
+        record["modificationDate"] = modificationDate
 
         return record
     }
@@ -175,6 +179,10 @@ extension ChatSession: CloudKitSyncable {
             throw CloudKitSyncError.missingRequiredField("lastActiveAt")
         }
 
+        guard let modificationDate = record["modificationDate"] as? Date else {
+            throw CloudKitSyncError.missingRequiredField("modificationDate")
+        }
+
         // Extract optional fields
         let claudeSessionId = record["claudeSessionId"] as? String
         let name = record["name"] as? String
@@ -198,7 +206,8 @@ extension ChatSession: CloudKitSyncable {
             source: source,
             forkedFrom: forkedFrom,
             createdAt: createdAt,
-            lastActiveAt: lastActiveAt
+            lastActiveAt: lastActiveAt,
+            modificationDate: modificationDate
         )
     }
 }
