@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import LocalAuthentication
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -33,350 +34,14 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            // MARK: - Connection Section
-            Section {
-                HStack {
-                    Text("Host")
-                        .frame(width: 50, alignment: .leading)
-                    TextField("localhost", text: $serverHost)
-                        .textContentType(.URL)
-                        .autocapitalization(.none)
-                        .keyboardType(.URL)
-                }
-
-                HStack {
-                    Text("Port")
-                        .frame(width: 50, alignment: .leading)
-                    TextField("8080", text: $serverPort)
-                        .keyboardType(.numberPad)
-                }
-
-                HStack {
-                    Text("Status")
-                    Spacer()
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(appState.isConnected ? Color.green : Color.red)
-                            .frame(width: 8, height: 8)
-                        Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                }
-
-                Button {
-                    testConnection()
-                } label: {
-                    HStack {
-                        if viewModel.isTestingConnection {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                        Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-                .disabled(viewModel.isTestingConnection)
-            } header: {
-                Text("Backend Connection")
-            } footer: {
-                Text("Configure the ILS backend server address")
-            }
-
-            // MARK: - General Settings Section
-            Section {
-                if viewModel.isLoadingConfig {
-                    HStack {
-                        ProgressView()
-                            .padding(.trailing, 8)
-                        Text("Loading configuration...")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                } else if let config = viewModel.config?.content {
-                    // Default Model - Editable
-                    if isEditing {
-                        Picker("Default Model", selection: $editedModel) {
-                            ForEach(availableModels, id: \.self) { model in
-                                Text(formatModelName(model))
-                                    .tag(model)
-                            }
-                        }
-                    } else {
-                        LabeledContent("Default Model") {
-                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
-                    }
-
-                    // Theme Color Scheme - Editable
-                    if isEditing {
-                        Picker("Color Scheme", selection: $editedColorScheme) {
-                            ForEach(availableColorSchemes, id: \.self) { scheme in
-                                Text(scheme.capitalized)
-                                    .tag(scheme)
-                            }
-                        }
-                    } else {
-                        LabeledContent("Color Scheme") {
-                            Text((config.theme?.colorScheme ?? "system").capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
-                    }
-
-                    // Auto Updates Channel (read-only)
-                    if let channel = config.autoUpdatesChannel {
-                        LabeledContent("Updates Channel") {
-                            Text(channel.capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
-                    }
-
-                    // Always Thinking (read-only)
-                    LabeledContent("Extended Thinking") {
-                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
-                    }
-
-                    // Co-authored by (read-only)
-                    LabeledContent("Include Co-Author") {
-                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
-                    }
-
-                    // Save button when editing
-                    if isEditing {
-                        Button {
-                            showSaveConfirmation = true
-                        } label: {
-                            HStack {
-                                Image(systemName: "square.and.arrow.down")
-                                Text("Save Changes")
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(viewModel.isSaving)
-                    }
-                } else {
-                    Text("No configuration loaded")
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-            } header: {
-                HStack {
-                    Text("General")
-                    Spacer()
-                    if viewModel.config != nil && !viewModel.isLoadingConfig {
-                        Button(isEditing ? "Cancel" : "Edit") {
-                            if isEditing {
-                                // Cancel editing - reset to original values
-                                resetEditedValues()
-                            }
-                            isEditing.toggle()
-                        }
-                        .font(ILSTheme.captionFont)
-                        .textCase(nil)
-                    }
-                }
-            } footer: {
-                if let config = viewModel.config {
-                    Text("Scope: \(config.scope) • \(config.path)")
-                }
-            }
-
-            // MARK: - API Key Section
-            Section {
-                if let config = viewModel.config?.content {
-                    if let apiKeyStatus = config.apiKeyStatus {
-                        HStack {
-                            Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
-                                .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
-                                    .font(ILSTheme.bodyFont)
-                                if let maskedKey = apiKeyStatus.maskedKey {
-                                    Text("Key: \(maskedKey)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
-                                }
-                                if let source = apiKeyStatus.source {
-                                    Text("Source: \(source)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
-                                }
-                            }
-                        }
-                    } else {
-                        HStack {
-                            Image(systemName: "key.fill")
-                                .foregroundColor(.orange)
-                            Text("API Key status unknown")
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
-                    }
-                } else if !viewModel.isLoadingConfig {
-                    Text("Loading API key status...")
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-            } header: {
-                Text("API Key")
-            } footer: {
-                Text("For security, API keys cannot be edited through the iOS app. Use the terminal command: claude config set apiKey <your-key>")
-            }
-
-            // MARK: - Security Section
-            Section {
-                if let biometricType = biometricType {
-                    Toggle(isOn: $biometricProtectionEnabled) {
-                        HStack {
-                            Image(systemName: biometricType.contains("Face") ? "faceid" : "touchid")
-                                .foregroundColor(.blue)
-                            Text("Require \(biometricType)")
-                        }
-                    }
-                    .onChange(of: biometricProtectionEnabled) { _, newValue in
-                        toggleBiometricProtection(enabled: newValue)
-                    }
-                } else {
-                    HStack {
-                        Image(systemName: "exclamationmark.shield")
-                            .foregroundColor(.orange)
-                        Text("Biometric authentication not available")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                }
-            } header: {
-                Text("Security")
-            } footer: {
-                if biometricType != nil {
-                    Text("When enabled, \(biometricType!) is required to access server credentials stored in the Keychain.")
-                } else {
-                    Text("Enable Face ID or Touch ID in iOS Settings to protect your credentials.")
-                }
-            }
-
-            // MARK: - Permissions Section
-            Section {
-                if let config = viewModel.config?.content, let permissions = config.permissions {
-                    // Default Permission Mode
-                    LabeledContent("Default Mode") {
-                        Text(permissions.defaultMode?.capitalized ?? "Prompt")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-
-                    // Allowed Commands
-                    if let allowed = permissions.allow, !allowed.isEmpty {
-                        DisclosureGroup {
-                            ForEach(allowed, id: \.self) { item in
-                                Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
-                            }
-                        } label: {
-                            LabeledContent("Allowed", value: "\(allowed.count) rules")
-                        }
-                    } else {
-                        LabeledContent("Allowed", value: "None")
-                    }
-
-                    // Denied Commands
-                    if let denied = permissions.deny, !denied.isEmpty {
-                        DisclosureGroup {
-                            ForEach(denied, id: \.self) { item in
-                                Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
-                            }
-                        } label: {
-                            LabeledContent("Denied", value: "\(denied.count) rules")
-                        }
-                    } else {
-                        LabeledContent("Denied", value: "None")
-                    }
-                } else if !viewModel.isLoadingConfig {
-                    Text("No permissions configured")
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-            } header: {
-                Text("Permissions")
-            }
-
-            // MARK: - Advanced Section
-            Section {
-                if let config = viewModel.config?.content {
-                    // Hooks Summary
-                    if let hooks = config.hooks {
-                        let hookCount = countHooks(hooks)
-                        LabeledContent("Hooks Configured", value: "\(hookCount)")
-                    } else {
-                        LabeledContent("Hooks Configured", value: "0")
-                    }
-
-                    // Enabled Plugins Count
-                    if let plugins = config.enabledPlugins {
-                        let enabledCount = plugins.filter { $0.value }.count
-                        LabeledContent("Enabled Plugins", value: "\(enabledCount)")
-                    } else {
-                        LabeledContent("Enabled Plugins", value: "0")
-                    }
-
-                    // Status Line
-                    if let statusLine = config.statusLine {
-                        LabeledContent("Status Line") {
-                            Text(statusLine.type ?? "disabled")
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
-                    }
-
-                    // Environment Variables
-                    if let env = config.env, !env.isEmpty {
-                        LabeledContent("Environment Vars", value: "\(env.count)")
-                    }
-                } else if !viewModel.isLoadingConfig {
-                    Text("No advanced settings")
-                        .foregroundColor(ILSTheme.secondaryText)
-                }
-
-                // Raw Config Editor Links
-                NavigationLink("Edit User Settings") {
-                    ConfigEditorView(scope: "user", apiClient: appState.apiClient)
-                }
-
-                NavigationLink("Edit Project Settings") {
-                    ConfigEditorView(scope: "project", apiClient: appState.apiClient)
-                }
-            } header: {
-                Text("Advanced")
-            } footer: {
-                Text("Edit raw JSON configuration files")
-            }
-
-            // MARK: - Statistics Section
-            Section("Statistics") {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if let stats = viewModel.stats {
-                    LabeledContent("Projects", value: "\(stats.projects.total)")
-                    LabeledContent("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
-                    LabeledContent("Skills", value: "\(stats.skills.total)")
-                    LabeledContent("MCP Servers", value: "\(stats.mcpServers.total) (\(stats.mcpServers.healthy) healthy)")
-                    LabeledContent("Plugins", value: "\(stats.plugins.total) (\(stats.plugins.enabled) enabled)")
-                }
-            }
-
-            // MARK: - About Section
-            Section("About") {
-                LabeledContent("Version", value: "1.0.0")
-                LabeledContent("Build", value: "1")
-
-                Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
-                    HStack {
-                        Text("Claude Code Documentation")
-                        Spacer()
-                        Image(systemName: "arrow.up.right.square")
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                }
-            }
+            connectionSection
+            generalSection
+            apiKeySection
+            securitySection
+            permissionsSection
+            advancedSection
+            statisticsSection
+            aboutSection
         }
         .navigationTitle("Settings")
         .refreshable {
@@ -415,32 +80,381 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Server Settings Persistence
+    // MARK: - Extracted Sections
 
-    private func loadServerSettings() {
-        // Load from AppState which reads from Keychain
-        // AppState has already loaded from Keychain or migrated from UserDefaults
+    @ViewBuilder
+    private var connectionSection: some View {
+        Section {
+            HStack {
+                Text("Host")
+                    .frame(width: 50, alignment: .leading)
+                TextField("localhost", text: $serverHost)
+                    .textContentType(.URL)
+                    .autocapitalization(.none)
+                    .keyboardType(.URL)
+            }
+
+            HStack {
+                Text("Port")
+                    .frame(width: 50, alignment: .leading)
+                TextField("8080", text: $serverPort)
+                    .keyboardType(.numberPad)
+            }
+
+            HStack {
+                Text("Status")
+                Spacer()
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(appState.isConnected ? Color.green : Color.red)
+                        .frame(width: 8, height: 8)
+                    Text(appState.isConnected ? "Connected" : "Disconnected")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            }
+
+            Button {
+                testConnection()
+            } label: {
+                HStack {
+                    if viewModel.isTestingConnection {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+                    Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.isTestingConnection)
+        } header: {
+            Text("Backend Connection")
+        } footer: {
+            Text("Configure the ILS backend server address")
+        }
+    }
+
+    @ViewBuilder
+    private var generalSection: some View {
+        Section {
+            if viewModel.isLoadingConfig {
+                HStack {
+                    ProgressView()
+                        .padding(.trailing, 8)
+                    Text("Loading configuration...")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } else if let config = viewModel.config?.content {
+                if isEditing {
+                    Picker("Default Model", selection: $editedModel) {
+                        ForEach(availableModels, id: \.self) { model in
+                            Text(formatModelName(model))
+                                .tag(model)
+                        }
+                    }
+                } else {
+                    LabeledContent("Default Model") {
+                        Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+
+                if isEditing {
+                    Picker("Color Scheme", selection: $editedColorScheme) {
+                        ForEach(availableColorSchemes, id: \.self) { scheme in
+                            Text(scheme.capitalized)
+                                .tag(scheme)
+                        }
+                    }
+                } else {
+                    LabeledContent("Color Scheme") {
+                        Text((config.theme?.colorScheme ?? "system").capitalized)
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+
+                if let channel = config.autoUpdatesChannel {
+                    LabeledContent("Updates Channel") {
+                        Text(channel.capitalized)
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+
+                LabeledContent("Extended Thinking") {
+                    Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                }
+
+                LabeledContent("Include Co-Author") {
+                    Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                }
+
+                if isEditing {
+                    Button {
+                        showSaveConfirmation = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.and.arrow.down")
+                            Text("Save Changes")
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(viewModel.isSaving)
+                }
+            } else {
+                Text("No configuration loaded")
+                    .foregroundColor(ILSTheme.secondaryText)
+            }
+        } header: {
+            HStack {
+                Text("General")
+                Spacer()
+                if viewModel.config != nil && !viewModel.isLoadingConfig {
+                    Button(isEditing ? "Cancel" : "Edit") {
+                        if isEditing {
+                            resetEditedValues()
+                        }
+                        isEditing.toggle()
+                    }
+                    .font(ILSTheme.captionFont)
+                    .textCase(nil)
+                }
+            }
+        } footer: {
+            if let config = viewModel.config {
+                Text("Scope: \(config.scope) • \(config.path)")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var apiKeySection: some View {
+        Section {
+            if let config = viewModel.config?.content {
+                if let apiKeyStatus = config.apiKeyStatus {
+                    HStack {
+                        Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
+                            .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
+                                .font(ILSTheme.bodyFont)
+                            if let maskedKey = apiKeyStatus.maskedKey {
+                                Text("Key: \(maskedKey)")
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                            if let source = apiKeyStatus.source {
+                                Text("Source: \(source)")
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        }
+                    }
+                } else {
+                    HStack {
+                        Image(systemName: "key.fill")
+                            .foregroundColor(.orange)
+                        Text("API Key status unknown")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            } else if !viewModel.isLoadingConfig {
+                Text("Loading API key status...")
+                    .foregroundColor(ILSTheme.secondaryText)
+            }
+        } header: {
+            Text("API Key")
+        } footer: {
+            Text("For security, API keys cannot be edited through the iOS app. Use the terminal command: claude config set apiKey <your-key>")
+        }
+    }
+
+    @ViewBuilder
+    private var securitySection: some View {
+        Section {
+            if let biometricType = biometricType {
+                Toggle(isOn: $biometricProtectionEnabled) {
+                    HStack {
+                        Image(systemName: biometricType.contains("Face") ? "faceid" : "touchid")
+                            .foregroundColor(.blue)
+                        Text("Require \(biometricType)")
+                    }
+                }
+                .onChange(of: biometricProtectionEnabled) { _, newValue in
+                    toggleBiometricProtection(enabled: newValue)
+                }
+            } else {
+                HStack {
+                    Image(systemName: "exclamationmark.shield")
+                        .foregroundColor(.orange)
+                    Text("Biometric authentication not available")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            }
+        } header: {
+            Text("Security")
+        } footer: {
+            if biometricType != nil {
+                Text("When enabled, \(biometricType!) is required to access server credentials stored in the Keychain.")
+            } else {
+                Text("Enable Face ID or Touch ID in iOS Settings to protect your credentials.")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var permissionsSection: some View {
+        Section {
+            if let config = viewModel.config?.content, let permissions = config.permissions {
+                LabeledContent("Default Mode") {
+                    Text(permissions.defaultMode?.capitalized ?? "Prompt")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+
+                if let allowed = permissions.allow, !allowed.isEmpty {
+                    DisclosureGroup {
+                        ForEach(allowed, id: \.self) { item in
+                            Text(item)
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    } label: {
+                        LabeledContent("Allowed", value: "\(allowed.count) rules")
+                    }
+                } else {
+                    LabeledContent("Allowed", value: "None")
+                }
+
+                if let denied = permissions.deny, !denied.isEmpty {
+                    DisclosureGroup {
+                        ForEach(denied, id: \.self) { item in
+                            Text(item)
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    } label: {
+                        LabeledContent("Denied", value: "\(denied.count) rules")
+                    }
+                } else {
+                    LabeledContent("Denied", value: "None")
+                }
+            } else if !viewModel.isLoadingConfig {
+                Text("No permissions configured")
+                    .foregroundColor(ILSTheme.secondaryText)
+            }
+        } header: {
+            Text("Permissions")
+        }
+    }
+
+    @ViewBuilder
+    private var advancedSection: some View {
+        Section {
+            if let config = viewModel.config?.content {
+                if let hooks = config.hooks {
+                    let hookCount = countHooks(hooks)
+                    LabeledContent("Hooks Configured", value: "\(hookCount)")
+                } else {
+                    LabeledContent("Hooks Configured", value: "0")
+                }
+
+                if let plugins = config.enabledPlugins {
+                    let enabledCount = plugins.filter { $0.value }.count
+                    LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                } else {
+                    LabeledContent("Enabled Plugins", value: "0")
+                }
+
+                if let statusLine = config.statusLine {
+                    LabeledContent("Status Line") {
+                        Text(statusLine.type ?? "disabled")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+
+                if let env = config.env, !env.isEmpty {
+                    LabeledContent("Environment Vars", value: "\(env.count)")
+                }
+            } else if !viewModel.isLoadingConfig {
+                Text("No advanced settings")
+                    .foregroundColor(ILSTheme.secondaryText)
+            }
+
+            NavigationLink("Edit User Settings") {
+                ConfigEditorView(scope: "user", apiClient: appState.apiClient)
+            }
+
+            NavigationLink("Edit Project Settings") {
+                ConfigEditorView(scope: "project", apiClient: appState.apiClient)
+            }
+        } header: {
+            Text("Advanced")
+        } footer: {
+            Text("Edit raw JSON configuration files")
+        }
+    }
+
+    @ViewBuilder
+    private var statisticsSection: some View {
+        Section("Statistics") {
+            if viewModel.isLoading {
+                ProgressView()
+            } else if let stats = viewModel.stats {
+                LabeledContent("Projects", value: "\(stats.projects.total)")
+                LabeledContent("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
+                LabeledContent("Skills", value: "\(stats.skills.total)")
+                LabeledContent("MCP Servers", value: "\(stats.mcpServers.total) (\(stats.mcpServers.healthy) healthy)")
+                LabeledContent("Plugins", value: "\(stats.plugins.total) (\(stats.plugins.enabled) enabled)")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var aboutSection: some View {
+        Section("About") {
+            LabeledContent("Version", value: "1.0.0")
+            LabeledContent("Build", value: "1")
+
+            Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
+                HStack {
+                    Text("Claude Code Documentation")
+                    Spacer()
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            }
+        }
+    }
+
+    // MARK: - Settings Persistence
+
+    func loadServerSettings() {
         parseServerURL()
     }
 
-    private func saveServerSettings() {
-        // Update appState serverURL
-        // AppState's didSet will automatically save to Keychain
-        let url = "http://\(serverHost):\(serverPort)"
-        appState.serverURL = url
+    func saveServerSettings() {
+        guard !serverHost.isEmpty, !serverPort.isEmpty else { return }
+        let urlString = "http://\(serverHost):\(serverPort)"
+        appState.updateServerURL(urlString)
     }
 
-    private func testConnection() {
+    func testConnection() {
         Task {
-            let url = "http://\(serverHost):\(serverPort)"
-            appState.serverURL = url
+            let urlString = "http://\(serverHost):\(serverPort)"
+            guard URL(string: urlString) != nil else { return }
+            appState.updateServerURL(urlString)
             await viewModel.testConnection()
-
-            // Save settings if connection successful
-            if appState.isConnected {
-                saveServerSettings()
-            }
+            if appState.isConnected { saveServerSettings() }
         }
+    }
+
+    func formatModelName(_ model: String) -> String {
+        if model.contains("sonnet") { return "Claude Sonnet" }
+        if model.contains("opus") { return "Claude Opus" }
+        if model.contains("haiku") { return "Claude Haiku" }
+        return model
     }
 
     private func saveConfigChanges() {
@@ -460,7 +474,6 @@ struct SettingsView: View {
     // MARK: - Helper Methods
 
     private func parseServerURL() {
-        // Parse existing server URL into host and port
         if let url = URL(string: appState.serverURL),
            let host = url.host {
             serverHost = host
@@ -480,20 +493,7 @@ struct SettingsView: View {
         return count
     }
 
-    private func formatModelName(_ model: String) -> String {
-        // Convert model ID to human-readable name
-        if model.contains("sonnet") {
-            return "Claude Sonnet"
-        } else if model.contains("opus") {
-            return "Claude Opus"
-        } else if model.contains("haiku") {
-            return "Claude Haiku"
-        }
-        return model
-    }
-
     private func resetEditedValues() {
-        // Reset edited values to current config values
         if let config = viewModel.config?.content {
             editedModel = config.model ?? "claude-sonnet-4-20250514"
             editedColorScheme = config.theme?.colorScheme ?? "system"
@@ -503,98 +503,27 @@ struct SettingsView: View {
     // MARK: - Biometric Protection Methods
 
     private func loadBiometricSettings() {
-        Task {
-            // Check if biometric authentication is available
-            biometricType = await appState.keychainService.biometricType()
-
-            // Load current preference
-            biometricProtectionEnabled = UserDefaults.standard.bool(forKey: "biometric_protection_enabled")
+        let context = LAContext()
+        var error: NSError?
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            switch context.biometryType {
+            case .faceID: biometricType = "Face ID"
+            case .touchID: biometricType = "Touch ID"
+            default: biometricType = nil
+            }
+        } else {
+            biometricType = nil
         }
+        biometricProtectionEnabled = UserDefaults.standard.bool(forKey: "biometric_protection_enabled")
     }
 
     private func toggleBiometricProtection(enabled: Bool) {
-        Task {
-            do {
-                // Save preference
-                UserDefaults.standard.set(enabled, forKey: "biometric_protection_enabled")
-
-                // Re-save server URL with updated biometric protection
-                if let serverURL = try? await appState.keychainService.getCredential(key: "ils_server_url") {
-                    try await appState.keychainService.saveCredential(
-                        key: "ils_server_url",
-                        value: serverURL,
-                        requireBiometrics: enabled
-                    )
-                }
-            } catch {
-                // If biometric setup fails, revert the toggle
-                biometricProtectionEnabled = !enabled
-                UserDefaults.standard.set(!enabled, forKey: "biometric_protection_enabled")
-            }
-        }
-    }
-}
-
-struct ConfigEditorView: View {
-    let scope: String
-    let apiClient: APIClient
-    @StateObject private var viewModel = ConfigEditorViewModel()
-    @State private var configText = ""
-    @State private var isSaving = false
-    @State private var validationErrors: [String] = []
-
-    var body: some View {
-        VStack {
-            if viewModel.isLoading {
-                ProgressView()
-            } else {
-                TextEditor(text: $configText)
-                    .font(ILSTheme.codeFont)
-                    .padding()
-
-                if !validationErrors.isEmpty {
-                    VStack(alignment: .leading) {
-                        ForEach(validationErrors, id: \.self) { error in
-                            Label(error, systemImage: "exclamationmark.triangle")
-                                .font(ILSTheme.captionFont)
-                                .foregroundColor(ILSTheme.error)
-                        }
-                    }
-                    .padding()
-                    .background(ILSTheme.error.opacity(0.1))
-                }
-            }
-        }
-        .navigationTitle("\(scope.capitalized) Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Save") {
-                    saveConfig()
-                }
-                .disabled(isSaving)
-            }
-        }
-        .task {
-            viewModel.configure(client: apiClient)
-            await viewModel.loadConfig(scope: scope)
-            configText = viewModel.configJson
-        }
-    }
-
-    private func saveConfig() {
-        isSaving = true
-        validationErrors = []
-
-        Task {
-            let errors = await viewModel.saveConfig(scope: scope, json: configText)
-            validationErrors = errors
-            isSaving = false
-        }
+        UserDefaults.standard.set(enabled, forKey: "biometric_protection_enabled")
     }
 }
 
 // MARK: - View Models
+// ConfigEditorView is in Views/Settings/ConfigEditorView.swift
 // SettingsViewModel is in ViewModels/SettingsViewModel.swift
 
 // MARK: - Models

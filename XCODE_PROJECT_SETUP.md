@@ -1,85 +1,86 @@
 # Xcode Project Setup Required
 
-## Configuration Management Features (Specs 014, 019, 020)
+## Files Created
 
-The following files have been created but need to be **manually added to the Xcode project** because they are not yet registered in the build target:
+The following Swift files have been created for syntax-highlighted code blocks:
 
-### New Files Created (Need to Add to Xcode):
+1. `ILSApp/ILSApp/Utils/MarkdownParser.swift` - Parses markdown to extract code blocks
+2. `ILSApp/ILSApp/Utils/SyntaxHighlighter.swift` - Wrapper around Splash library for syntax highlighting
+3. `ILSApp/ILSApp/Views/Chat/CodeBlockView.swift` - SwiftUI view for displaying code blocks
 
-1. **Models:**
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Models/ConfigProfile.swift`
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Models/ConfigChange.swift`
+## Required: Add Files to Xcode Project
 
-2. **Views:**
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigProfilesView.swift`
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigOverridesView.swift`
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigHistoryView.swift`
+These files need to be added to the Xcode project file (`ILSApp/ILSApp.xcodeproj/project.pbxproj`).
 
-3. **Existing Files (Also Need to Add):**
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/FleetManagementView.swift`
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/LogViewerView.swift`
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/AppLogger.swift`
-   - `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/CacheManager.swift`
+### Option 1: Using Xcode (Recommended)
 
-### Modified Files:
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift` - Updated with navigation links to new views
+1. Open `ILSApp/ILSApp.xcodeproj` in Xcode
+2. Right-click on the "ILSApp" group in the Project Navigator
+3. Select "Add Files to ILSApp"
+4. Navigate to and select:
+   - `ILSApp/Utils/MarkdownParser.swift`
+   - `ILSApp/Utils/SyntaxHighlighter.swift`
+5. Right-click on the "Views/Chat" group
+6. Select "Add Files to ILSApp"
+7. Navigate to and select:
+   - `ILSApp/Views/Chat/CodeBlockView.swift`
+8. Build the project to verify
 
-## How to Add Files to Xcode Project:
+### Option 2: Manual Project File Editing
 
-1. Open `ILSApp.xcodeproj` in Xcode
-2. Right-click on the appropriate group (Models, Views/Settings, or Services)
-3. Select "Add Files to 'ILSApp'..."
-4. Navigate to each file location and select it
-5. **CRITICAL:** Ensure "Add to targets: ILSApp" is **CHECKED**
-6. Click "Add"
-7. Repeat for all files listed above
+Add the following entries to `project.pbxproj`:
 
-## After Adding Files:
-
-Run the build again to verify:
-```bash
-cd /Users/nick/Desktop/ils-ios/ILSApp && xcodebuild -project ILSApp.xcodeproj -scheme ILSApp -destination "id=50523130-57AA-48B0-ABD0-4D59CE455F14" build
+**PBXBuildFile section** (after line 42):
+```
+00000000000000000000008A /* MarkdownParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009A /* MarkdownParser.swift */; };
+00000000000000000000008B /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009B /* SyntaxHighlighter.swift */; };
+00000000000000000000008C /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009C /* CodeBlockView.swift */; };
 ```
 
-## What Was Implemented:
+**PBXFileReference section** (after line 90):
+```
+00000000000000000000009A /* MarkdownParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownParser.swift; sourceTree = "<group>"; };
+00000000000000000000009B /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+00000000000000000000009C /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
+```
 
-### Spec 014 - Configuration Profiles
-- ✅ ConfigProfile model with name, description, servers, skills, settings
-- ✅ ConfigProfilesView with list, create, edit, delete, activate
-- ✅ Sample default profiles (Default, Minimal, Full Stack)
-- ✅ Profile activation (one active at a time)
+**Utils Group** (after Dashboard group, before UITest group):
+```
+000000000000000000000079 /* Utils */ = {
+    isa = PBXGroup;
+    children = (
+        00000000000000000000009A /* MarkdownParser.swift */,
+        00000000000000000000009B /* SyntaxHighlighter.swift */,
+    );
+    path = Utils;
+    sourceTree = "<group>";
+};
+```
 
-### Spec 019 - Config Override Visualization
-- ✅ ConfigOverridesView showing Global/User/Project precedence
-- ✅ Color-coded source indicators (blue/orange/green)
-- ✅ Effective value display with override chains
-- ✅ Categorized sections (Model, Permissions, MCP)
+**Add Utils to ILSApp group children** (in group 000000000000000000000015):
+```
+000000000000000000000079 /* Utils */,
+```
 
-### Spec 020 - Configuration History
-- ✅ ConfigChange model with timestamp, source, old/new values
-- ✅ ConfigHistoryView with chronological change list
-- ✅ ConfigDiffView showing before/after comparison
-- ✅ Context menu with restore option
-- ✅ Sample history data
+**Add CodeBlockView to Chat group children** (in group 000000000000000000000071):
+```
+00000000000000000000009C /* CodeBlockView.swift */,
+```
 
-## Current Build Issue:
+**PBXSourcesBuildPhase section** (add before closing of section ~line 421):
+```
+00000000000000000000008A /* MarkdownParser.swift in Sources */,
+00000000000000000000008B /* SyntaxHighlighter.swift in Sources */,
+00000000000000000000008C /* CodeBlockView.swift in Sources */,
+```
 
-The Swift compiler cannot find the new types because they haven't been added to the Xcode build target. Once added manually via Xcode, the build will succeed.
+## Dependencies
 
-## Note on SettingsView Refactoring:
+The Splash library has been added to `Package.swift` and resolved successfully.
 
-To fix a Swift compiler "type-checking timeout" error, I refactored SettingsView by extracting each section into separate `@ViewBuilder` computed properties:
-- `connectionSection`
-- `generalSettingsSection`
-- `quickSettingsSection`
-- `apiKeySection`
-- `permissionsSection`
-- `configManagementSection` ← **NEW SECTION WITH THE 3 CONFIG LINKS**
-- `advancedSection`
-- `statisticsSection`
-- `remoteManagementSection`
-- `diagnosticsSection`
-- `cacheSection`
-- `aboutSection`
+## Build Verification
 
-This pattern resolves SwiftUI's type-checker limits on complex view hierarchies.
+After adding files to the Xcode project, verify with:
+```bash
+cd ILSApp && xcodebuild -scheme ILSApp -destination 'platform=iOS Simulator,id=BECB3FA0-518E-4F80-8B8E-7E10C16F3B36' build
+```

@@ -1,228 +1,134 @@
 import Foundation
 
-/// Represents a code block extracted from markdown text
-public struct CodeBlock: Identifiable {
-    public let id: UUID
-    public let language: String?
-    public let code: String
-    public let range: Range<String.Index>
-
-    public init(
-        id: UUID = UUID(),
-        language: String?,
-        code: String,
-        range: Range<String.Index>
-    ) {
-        self.id = id
-        self.language = language
-        self.code = code
-        self.range = range
+/// Utility for parsing markdown text and extracting code blocks
+enum MarkdownParser {
+    /// Represents a segment of parsed text
+    enum TextSegment {
+        case plainText(String)
+        case codeBlock(CodeBlock)
+        case inlineCode(String)
     }
-}
 
-/// Represents a segment of text that can be either plain text, inline code, or a code block
-public enum TextSegment: Identifiable {
-    case text(String)
-    case inlineCode(String)
-    case codeBlock(CodeBlock)
-
-    public var id: String {
-        switch self {
-        case .text(let content):
-            return "text-\(content.hashValue)"
-        case .inlineCode(let content):
-            return "inline-\(content.hashValue)"
-        case .codeBlock(let block):
-            return "code-\(block.id)"
-        }
+    /// Represents a code block with optional language hint
+    struct CodeBlock {
+        let language: String?
+        let code: String
     }
-}
 
-/// Parser for extracting code blocks from markdown text
-public struct MarkdownParser {
-    /// Parse markdown text and extract code blocks along with plain text segments
+    /// Parse markdown text into segments of plain text and code blocks
     /// - Parameter text: The markdown text to parse
-    /// - Returns: An array of text segments (plain text, inline code, and code blocks) in order
-    public static func parse(_ text: String) -> [TextSegment] {
-        // Handle empty or whitespace-only text
-        guard !text.isEmpty else {
-            return [.text(text)]
-        }
-
+    /// - Returns: Array of text segments (plain text, code blocks, inline code)
+    static func parse(_ text: String) -> [TextSegment] {
         var segments: [TextSegment] = []
-        var currentIndex = text.startIndex
+        var currentPosition = text.startIndex
 
-        // First pass: Extract fenced code blocks (```)
-        // Pattern matches: ```optionalLanguage\n...code...\n```
-        // Made more flexible to handle edge cases:
-        // - Optional newline after opening backticks
-        // - Handles code blocks without closing backticks (malformed markdown)
-        let fencedPattern = #"```([^\n]*)\n?([\s\S]*?)(?:```|$)"#
+        // Regular expression for code blocks: ```language\ncode\n```
+        let codeBlockPattern = #"```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```"#
 
-        guard let fencedRegex = try? NSRegularExpression(pattern: fencedPattern, options: []) else {
-            // If regex creation fails (unlikely), fall back to parsing inline code only
-            return parseInlineCode(in: text, from: text.startIndex, to: text.endIndex)
+        guard let regex = try? NSRegularExpression(pattern: codeBlockPattern, options: []) else {
+            // If regex fails, return entire text as plain text
+            return [.plainText(text)]
         }
 
-        let nsString = text as NSString
-        let fencedMatches = fencedRegex.matches(in: text, options: [], range: NSRange(location: 0, length: nsString.length))
+        let nsText = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
 
-        for match in fencedMatches {
-            // Get the full match range
+        for match in matches {
             let matchRange = match.range
-            guard let swiftRange = Range(matchRange, in: text) else { continue }
+            let matchStartIndex = text.index(text.startIndex, offsetBy: matchRange.location)
 
-            // Add any text before this code block (parse for inline code)
-            if currentIndex < swiftRange.lowerBound {
-                let textSegments = parseInlineCode(in: text, from: currentIndex, to: swiftRange.lowerBound)
-                segments.append(contentsOf: textSegments)
+            // Add any plain text before this code block
+            if currentPosition < matchStartIndex {
+                let plainText = String(text[currentPosition..<matchStartIndex])
+                segments.append(contentsOf: parseInlineCode(plainText))
             }
 
-            // Extract language (if present)
-            var language: String? = nil
-            if match.numberOfRanges > 1 {
-                let languageRange = match.range(at: 1)
-                if languageRange.location != NSNotFound,
-                   let swiftLanguageRange = Range(languageRange, in: text) {
-                    let languageString = String(text[swiftLanguageRange])
-                        .trimmingCharacters(in: .whitespaces)
-                    if !languageString.isEmpty {
-                        language = languageString
-                    }
-                }
-            }
+            // Extract language and code
+            let languageRange = match.range(at: 1)
+            let codeRange = match.range(at: 2)
 
-            // Extract code content
-            var code = ""
-            if match.numberOfRanges > 2 {
-                let codeRange = match.range(at: 2)
-                if codeRange.location != NSNotFound,
-                   let swiftCodeRange = Range(codeRange, in: text) {
-                    code = String(text[swiftCodeRange])
-                }
-            }
+            let language = languageRange.location != NSNotFound ? nsText.substring(with: languageRange) : nil
+            let code = codeRange.location != NSNotFound ? nsText.substring(with: codeRange) : ""
 
-            // Only create code block if it has content or is properly formed
-            // Skip empty code blocks with no language
-            if !code.isEmpty || language != nil {
-                let codeBlock = CodeBlock(
-                    language: language,
-                    code: code,
-                    range: swiftRange
-                )
-                segments.append(.codeBlock(codeBlock))
-            }
+            // Add code block segment
+            let codeBlock = CodeBlock(
+                language: language?.isEmpty == false ? language : nil,
+                code: code
+            )
+            segments.append(.codeBlock(codeBlock))
 
-            // Move current index past this code block
-            currentIndex = swiftRange.upperBound
+            // Update current position
+            currentPosition = text.index(text.startIndex, offsetBy: matchRange.location + matchRange.length)
         }
 
-        // Add any remaining text after the last code block (parse for inline code)
-        if currentIndex < text.endIndex {
-            let textSegments = parseInlineCode(in: text, from: currentIndex, to: text.endIndex)
-            segments.append(contentsOf: textSegments)
+        // Add any remaining plain text after the last code block
+        if currentPosition < text.endIndex {
+            let remainingText = String(text[currentPosition..<text.endIndex])
+            segments.append(contentsOf: parseInlineCode(remainingText))
         }
 
-        // If no segments were created, return entire text as single segment
+        // If no code blocks found, parse for inline code
         if segments.isEmpty {
-            return [.text(text)]
+            return parseInlineCode(text)
         }
 
         return segments
     }
 
-    /// Parse inline code (single backticks) in a text range
-    /// - Parameters:
-    ///   - text: The full text
-    ///   - start: Start index of range to parse
-    ///   - end: End index of range to parse
-    /// - Returns: Array of text segments (text and inline code)
-    private static func parseInlineCode(in text: String, from start: String.Index, to end: String.Index) -> [TextSegment] {
-        let substring = String(text[start..<end])
-
-        // Handle empty substring
-        guard !substring.isEmpty else {
-            return []
-        }
-
-        // Skip if only whitespace
-        if substring.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return [.text(substring)]
-        }
-
+    /// Parse inline code (single backticks) from plain text
+    /// - Parameter text: The text to parse for inline code
+    /// - Returns: Array of text segments (plain text and inline code)
+    private static func parseInlineCode(_ text: String) -> [TextSegment] {
         var segments: [TextSegment] = []
-        var currentIndex = substring.startIndex
+        var currentPosition = text.startIndex
 
-        // Pattern to match inline code: `code`
-        // Handles edge cases:
-        // - Doesn't match code blocks (```)
-        // - Handles unclosed backticks (malformed)
-        // - Handles escaped backticks
-        let inlinePattern = #"(?<!`)(`{1})(?!`)(.+?)(?<!`)(`{1})(?!`)"#
+        // Regular expression for inline code: `code`
+        let inlineCodePattern = #"`([^`]+)`"#
 
-        guard let inlineRegex = try? NSRegularExpression(pattern: inlinePattern, options: []) else {
-            // If regex fails, return as plain text
-            return [.text(substring)]
+        guard let regex = try? NSRegularExpression(pattern: inlineCodePattern, options: []) else {
+            // If regex fails, return entire text as plain text
+            return text.isEmpty ? [] : [.plainText(text)]
         }
 
-        let nsSubstring = substring as NSString
-        let inlineMatches = inlineRegex.matches(in: substring, options: [], range: NSRange(location: 0, length: nsSubstring.length))
+        let nsText = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
 
-        for match in inlineMatches {
-            // Get the code content (group 2)
-            guard match.numberOfRanges > 2 else { continue }
-
+        for match in matches {
             let matchRange = match.range
-            guard let swiftRange = Range(matchRange, in: substring) else { continue }
+            let matchStartIndex = text.index(text.startIndex, offsetBy: matchRange.location)
 
             // Add any plain text before this inline code
-            if currentIndex < swiftRange.lowerBound {
-                let plainText = String(substring[currentIndex..<swiftRange.lowerBound])
+            if currentPosition < matchStartIndex {
+                let plainText = String(text[currentPosition..<matchStartIndex])
                 if !plainText.isEmpty {
-                    segments.append(.text(plainText))
+                    segments.append(.plainText(plainText))
                 }
             }
 
-            // Extract the code content
-            let codeRange = match.range(at: 2)
-            if codeRange.location != NSNotFound,
-               let swiftCodeRange = Range(codeRange, in: substring) {
-                let code = String(substring[swiftCodeRange])
-                // Only add non-empty inline code
-                if !code.isEmpty {
-                    segments.append(.inlineCode(code))
-                }
+            // Extract inline code content (without backticks)
+            let codeRange = match.range(at: 1)
+            if codeRange.location != NSNotFound {
+                let code = nsText.substring(with: codeRange)
+                segments.append(.inlineCode(code))
             }
 
-            currentIndex = swiftRange.upperBound
+            // Update current position
+            currentPosition = text.index(text.startIndex, offsetBy: matchRange.location + matchRange.length)
         }
 
-        // Add any remaining text after the last inline code
-        if currentIndex < substring.endIndex {
-            let remainingText = String(substring[currentIndex..<substring.endIndex])
+        // Add any remaining plain text
+        if currentPosition < text.endIndex {
+            let remainingText = String(text[currentPosition..<text.endIndex])
             if !remainingText.isEmpty {
-                segments.append(.text(remainingText))
+                segments.append(.plainText(remainingText))
             }
         }
 
-        // If no inline code was found, return entire substring as text
-        if segments.isEmpty {
-            return [.text(substring)]
+        // If no inline code found, return plain text (if not empty)
+        if segments.isEmpty && !text.isEmpty {
+            return [.plainText(text)]
         }
 
         return segments
-    }
-
-    /// Extract only code blocks from markdown text
-    /// - Parameter text: The markdown text to parse
-    /// - Returns: An array of code blocks found in the text
-    public static func extractCodeBlocks(_ text: String) -> [CodeBlock] {
-        let segments = parse(text)
-        return segments.compactMap { segment in
-            if case .codeBlock(let block) = segment {
-                return block
-            }
-            return nil
-        }
     }
 }

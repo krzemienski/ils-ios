@@ -1,395 +1,1161 @@
 import Foundation
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
+import Splash
+import SwiftUI
 
-/// Syntax highlighter with multi-language support
-/// Provides syntax highlighting for 20+ programming languages using pattern-based tokenization
-public struct SyntaxHighlighter {
-
-    /// Supported programming languages
-    public enum Language: String, CaseIterable {
-        case swift
-        case python
-        case javascript
-        case typescript
-        case java
-        case kotlin
-        case go
-        case rust
-        case c
-        case cpp
-        case csharp
-        case php
-        case ruby
-        case perl
-        case bash
-        case shell
-        case sql
-        case html
-        case css
-        case json
-        case yaml
-        case markdown
-        case xml
-        case plaintext
-
-        /// Detect language from string identifier
-        /// - Parameter identifier: Language identifier (e.g., "swift", "py", "js")
-        /// - Returns: Detected language or nil if not recognized
-        public static func detect(from identifier: String?) -> Language? {
-            guard let identifier = identifier?.lowercased() else {
-                return nil
-            }
-
-            // Direct matches
-            if let language = Language(rawValue: identifier) {
-                return language
-            }
-
-            // Common aliases
-            switch identifier {
-            case "py", "python3":
-                return .python
-            case "js", "node":
-                return .javascript
-            case "ts":
-                return .typescript
-            case "c++", "cplusplus":
-                return .cpp
-            case "c#", "cs":
-                return .csharp
-            case "sh", "zsh", "fish":
-                return .shell
-            case "yml":
-                return .yaml
-            case "htm":
-                return .html
-            case "rb":
-                return .ruby
-            case "pl":
-                return .perl
-            case "rs":
-                return .rust
-            case "md":
-                return .markdown
-            case "txt", "text":
-                return .plaintext
-            default:
-                return nil
-            }
-        }
-
-        /// Display name for the language
-        public var displayName: String {
-            switch self {
-            case .swift: return "Swift"
-            case .python: return "Python"
-            case .javascript: return "JavaScript"
-            case .typescript: return "TypeScript"
-            case .java: return "Java"
-            case .kotlin: return "Kotlin"
-            case .go: return "Go"
-            case .rust: return "Rust"
-            case .c: return "C"
-            case .cpp: return "C++"
-            case .csharp: return "C#"
-            case .php: return "PHP"
-            case .ruby: return "Ruby"
-            case .perl: return "Perl"
-            case .bash: return "Bash"
-            case .shell: return "Shell"
-            case .sql: return "SQL"
-            case .html: return "HTML"
-            case .css: return "CSS"
-            case .json: return "JSON"
-            case .yaml: return "YAML"
-            case .markdown: return "Markdown"
-            case .xml: return "XML"
-            case .plaintext: return "Plain Text"
-            }
-        }
-    }
-
-    /// Color theme for syntax highlighting
-    public struct Theme {
-        #if canImport(UIKit)
-        public let plainText: UIColor
-        public let keyword: UIColor
-        public let type: UIColor
-        public let string: UIColor
-        public let number: UIColor
-        public let comment: UIColor
-        public let property: UIColor
-        public let dotAccess: UIColor
-        public let preprocessing: UIColor
-
-        public init(
-            plainText: UIColor = .label,
-            keyword: UIColor = .systemPink,
-            type: UIColor = .systemPurple,
-            string: UIColor = .systemRed,
-            number: UIColor = .systemBlue,
-            comment: UIColor = .systemGreen,
-            property: UIColor = .systemTeal,
-            dotAccess: UIColor = .systemGray,
-            preprocessing: UIColor = .systemOrange
-        ) {
-            self.plainText = plainText
-            self.keyword = keyword
-            self.type = type
-            self.string = string
-            self.number = number
-            self.comment = comment
-            self.property = property
-            self.dotAccess = dotAccess
-            self.preprocessing = preprocessing
-        }
-        #elseif canImport(AppKit)
-        public let plainText: NSColor
-        public let keyword: NSColor
-        public let type: NSColor
-        public let string: NSColor
-        public let number: NSColor
-        public let comment: NSColor
-        public let property: NSColor
-        public let dotAccess: NSColor
-        public let preprocessing: NSColor
-
-        public init(
-            plainText: NSColor = .labelColor,
-            keyword: NSColor = .systemPink,
-            type: NSColor = .systemPurple,
-            string: NSColor = .systemRed,
-            number: NSColor = .systemBlue,
-            comment: NSColor = .systemGreen,
-            property: NSColor = .systemTeal,
-            dotAccess: NSColor = .systemGray,
-            preprocessing: NSColor = .systemOrange
-        ) {
-            self.plainText = plainText
-            self.keyword = keyword
-            self.type = type
-            self.string = string
-            self.number = number
-            self.comment = comment
-            self.property = property
-            self.dotAccess = dotAccess
-            self.preprocessing = preprocessing
-        }
-        #endif
-
-        /// Default theme using system colors
-        public static let `default` = Theme()
-    }
-
-    private let theme: Theme
-
-    /// Initialize syntax highlighter with optional theme
-    /// - Parameter theme: Color theme to use (defaults to system colors)
-    public init(theme: Theme = .default) {
-        self.theme = theme
-    }
-
-    /// Highlight code with syntax coloring
+/// Wrapper around Splash library for syntax highlighting code
+enum SyntaxHighlighter {
+    /// Highlight code with syntax colors using Splash
     /// - Parameters:
     ///   - code: The code string to highlight
-    ///   - language: Programming language (if nil, attempts to detect or uses plain text)
-    /// - Returns: Attributed string with syntax highlighting applied
-    public func highlight(_ code: String, language: Language?) -> NSAttributedString {
-        let detectedLanguage = language ?? .plaintext
-        return highlightGeneric(code, language: detectedLanguage)
-    }
+    ///   - language: Optional language identifier (e.g., "swift", "python", "javascript")
+    /// - Returns: AttributedString with syntax highlighting applied
+    static func highlight(code: String, language: String?) -> AttributedString {
+        guard let language = language?.lowercased() else {
+            // No language specified, return plain monospace text
+            return plainMonospace(code)
+        }
 
-    /// Highlight code with automatic language detection
-    /// - Parameters:
-    ///   - code: The code string to highlight
-    ///   - languageHint: Language identifier string (e.g., "swift", "python")
-    /// - Returns: Attributed string with syntax highlighting applied
-    public func highlight(_ code: String, languageHint: String?) -> NSAttributedString {
-        let language = Language.detect(from: languageHint)
-        return highlight(code, language: language)
-    }
-
-    // MARK: - Private Highlighting Methods
-
-    private func highlightGeneric(_ code: String, language: Language) -> NSAttributedString {
-        // For non-Swift languages, provide basic monospace formatting
-        // with simple pattern-based highlighting for common constructs
-
-        #if canImport(UIKit)
-        let baseFont = UIFont.monospacedSystemFont(ofSize: UIFont.systemFontSize, weight: .regular)
-        #elseif canImport(AppKit)
-        let baseFont = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        #endif
-
-        let attributedString = NSMutableAttributedString(string: code)
-        let fullRange = NSRange(location: 0, length: code.utf16.count)
-
-        // Apply base font and color
-        attributedString.addAttribute(.font, value: baseFont, range: fullRange)
-        attributedString.addAttribute(.foregroundColor, value: theme.plainText, range: fullRange)
-
-        // Apply basic syntax highlighting patterns
-        highlightComments(in: attributedString)
-        highlightStrings(in: attributedString)
-        highlightKeywords(in: attributedString, for: language)
-        highlightNumbers(in: attributedString)
-
+        // Select appropriate grammar for the language
+        let grammar = grammarForLanguage(language)
+        let highlighter = Splash.SyntaxHighlighter(format: AttributedStringOutputFormat(), grammar: grammar)
+        let attributedString = highlighter.highlight(code)
         return attributedString
     }
 
-    private func highlightComments(in attributedString: NSMutableAttributedString) {
-        // Single-line comments (// or #)
-        let singleLinePattern = #"(//|#).*$"#
-        highlightPattern(singleLinePattern, in: attributedString, color: theme.comment, options: [.anchorsMatchLines])
-
-        // Multi-line comments (/* ... */)
-        let multiLinePattern = #"/\*[\s\S]*?\*/"#
-        highlightPattern(multiLinePattern, in: attributedString, color: theme.comment)
-    }
-
-    private func highlightStrings(in attributedString: NSMutableAttributedString) {
-        // Double-quoted strings
-        let doubleQuotePattern = #""(?:[^"\\]|\\.)*""#
-        highlightPattern(doubleQuotePattern, in: attributedString, color: theme.string)
-
-        // Single-quoted strings
-        let singleQuotePattern = #"'(?:[^'\\]|\\.)*'"#
-        highlightPattern(singleQuotePattern, in: attributedString, color: theme.string)
-
-        // Template literals / backticks (JavaScript, etc.)
-        let backtickPattern = #"`(?:[^`\\]|\\.)*`"#
-        highlightPattern(backtickPattern, in: attributedString, color: theme.string)
-    }
-
-    private func highlightKeywords(in attributedString: NSMutableAttributedString, for language: Language) {
-        let keywords = keywordsForLanguage(language)
-
-        for keyword in keywords {
-            // Match whole words only using word boundaries
-            let pattern = "\\b\(keyword)\\b"
-            highlightPattern(pattern, in: attributedString, color: theme.keyword)
-        }
-    }
-
-    private func highlightNumbers(in attributedString: NSMutableAttributedString) {
-        // Match integers, floats, hex, binary
-        let numberPattern = #"\b(?:0[xX][0-9a-fA-F]+|0[bB][01]+|\d+\.?\d*(?:[eE][+-]?\d+)?)\b"#
-        highlightPattern(numberPattern, in: attributedString, color: theme.number)
-    }
-
-    private func highlightPattern(
-        _ pattern: String,
-        in attributedString: NSMutableAttributedString,
-        color: PlatformColor,
-        options: NSRegularExpression.Options = []
-    ) {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else {
-            return
-        }
-
-        let text = attributedString.string
-        let range = NSRange(location: 0, length: text.utf16.count)
-
-        regex.enumerateMatches(in: text, options: [], range: range) { match, _, _ in
-            guard let matchRange = match?.range else { return }
-            attributedString.addAttribute(.foregroundColor, value: color, range: matchRange)
-        }
-    }
-
-    private func keywordsForLanguage(_ language: Language) -> [String] {
+    /// Map language identifier to appropriate grammar
+    private static func grammarForLanguage(_ language: String) -> Splash.Grammar {
         switch language {
-        case .swift:
-            return ["class", "struct", "enum", "protocol", "extension", "func", "var", "let",
-                    "if", "else", "switch", "case", "default", "for", "while", "repeat",
-                    "return", "break", "continue", "import", "public", "private", "internal",
-                    "fileprivate", "static", "final", "override", "init", "deinit", "self",
-                    "super", "nil", "true", "false", "try", "catch", "throw", "throws",
-                    "guard", "defer", "async", "await", "actor"]
-
-        case .python:
-            return ["def", "class", "if", "elif", "else", "for", "while", "return",
-                    "import", "from", "as", "try", "except", "finally", "with", "lambda",
-                    "True", "False", "None", "and", "or", "not", "in", "is", "pass",
-                    "break", "continue", "yield", "async", "await", "raise", "assert"]
-
-        case .javascript, .typescript:
-            return ["function", "const", "let", "var", "if", "else", "for", "while",
-                    "return", "break", "continue", "switch", "case", "default", "try",
-                    "catch", "finally", "throw", "new", "class", "extends", "super",
-                    "this", "import", "export", "from", "async", "await", "yield",
-                    "typeof", "instanceof", "null", "undefined", "true", "false"]
-
-        case .java, .kotlin:
-            return ["public", "private", "protected", "class", "interface", "extends",
-                    "implements", "new", "if", "else", "for", "while", "do", "switch",
-                    "case", "default", "return", "break", "continue", "try", "catch",
-                    "finally", "throw", "throws", "static", "final", "abstract", "void",
-                    "boolean", "int", "long", "float", "double", "String", "true", "false", "null"]
-
-        case .go:
-            return ["func", "package", "import", "var", "const", "type", "struct",
-                    "interface", "if", "else", "for", "range", "return", "break",
-                    "continue", "switch", "case", "default", "defer", "go", "chan",
-                    "select", "map", "true", "false", "nil"]
-
-        case .rust:
-            return ["fn", "let", "mut", "const", "struct", "enum", "impl", "trait",
-                    "if", "else", "match", "for", "while", "loop", "return", "break",
-                    "continue", "pub", "use", "mod", "crate", "self", "super", "async",
-                    "await", "true", "false", "Some", "None", "Ok", "Err"]
-
-        case .c, .cpp:
-            return ["int", "char", "float", "double", "void", "if", "else", "for",
-                    "while", "do", "switch", "case", "default", "return", "break",
-                    "continue", "struct", "union", "enum", "typedef", "sizeof",
-                    "static", "const", "extern", "auto", "register", "volatile",
-                    "true", "false", "NULL"]
-
-        case .csharp:
-            return ["public", "private", "protected", "class", "interface", "struct",
-                    "namespace", "using", "if", "else", "for", "foreach", "while",
-                    "do", "switch", "case", "default", "return", "break", "continue",
-                    "try", "catch", "finally", "throw", "new", "async", "await",
-                    "var", "const", "static", "readonly", "true", "false", "null"]
-
-        case .ruby:
-            return ["def", "class", "module", "if", "elsif", "else", "unless", "case",
-                    "when", "for", "while", "until", "begin", "end", "rescue", "ensure",
-                    "return", "break", "next", "yield", "true", "false", "nil", "self",
-                    "super", "require", "include", "extend", "attr_accessor"]
-
-        case .php:
-            return ["function", "class", "interface", "trait", "namespace", "use",
-                    "if", "else", "elseif", "for", "foreach", "while", "do", "switch",
-                    "case", "default", "return", "break", "continue", "try", "catch",
-                    "finally", "throw", "new", "public", "private", "protected",
-                    "static", "final", "abstract", "true", "false", "null"]
-
-        case .bash, .shell:
-            return ["if", "then", "else", "elif", "fi", "case", "esac", "for", "while",
-                    "do", "done", "function", "return", "break", "continue", "exit",
-                    "export", "local", "readonly", "true", "false"]
-
-        case .sql:
-            return ["SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "CREATE",
-                    "DROP", "ALTER", "TABLE", "INDEX", "VIEW", "JOIN", "INNER", "LEFT",
-                    "RIGHT", "ON", "AS", "AND", "OR", "NOT", "IN", "LIKE", "ORDER BY",
-                    "GROUP BY", "HAVING", "LIMIT", "OFFSET", "NULL", "TRUE", "FALSE"]
-
+        case "swift":
+            return SwiftGrammar()
+        case "python", "py":
+            return PythonGrammar()
+        case "javascript", "js":
+            return JavaScriptGrammar()
+        case "typescript", "ts":
+            return TypeScriptGrammar()
+        case "go", "golang":
+            return GoGrammar()
+        case "rust", "rs":
+            return RustGrammar()
+        case "java":
+            return JavaGrammar()
+        case "kotlin", "kt":
+            return KotlinGrammar()
+        case "c":
+            return CGrammar()
+        case "cpp", "c++":
+            return CppGrammar()
+        case "csharp", "cs", "c#":
+            return CSharpGrammar()
+        case "ruby", "rb":
+            return RubyGrammar()
+        case "php":
+            return PHPGrammar()
+        case "bash", "shell", "sh", "zsh":
+            return BashGrammar()
+        case "sql":
+            return SQLGrammar()
+        case "json":
+            return JSONGrammar()
+        case "yaml", "yml":
+            return YAMLGrammar()
+        case "html":
+            return HTMLGrammar()
+        case "css", "scss", "sass":
+            return CSSGrammar()
+        case "markdown", "md":
+            return MarkdownGrammar()
+        case "objective-c", "objc":
+            return ObjectiveCGrammar()
         default:
-            return []
+            // For unknown languages, use a plain text grammar
+            return PlainTextGrammar()
+        }
+    }
+
+    /// Return plain monospace text
+    private static func plainMonospace(_ code: String) -> AttributedString {
+        var attributedString = AttributedString(code)
+        attributedString.font = .system(.body, design: .monospaced)
+        attributedString.foregroundColor = SwiftUI.Color.primary
+        return attributedString
+    }
+}
+
+/// Custom output format for Splash that generates AttributedString
+private struct AttributedStringOutputFormat: OutputFormat {
+    func makeBuilder() -> Builder {
+        Builder()
+    }
+
+    struct Builder: OutputBuilder {
+        private var components: [(text: String, token: Splash.TokenType?)] = []
+
+        mutating func addToken(_ token: String, ofType type: Splash.TokenType) {
+            components.append((token, type))
+        }
+
+        mutating func addPlainText(_ text: String) {
+            components.append((text, nil))
+        }
+
+        mutating func addWhitespace(_ whitespace: String) {
+            components.append((whitespace, nil))
+        }
+
+        func build() -> AttributedString {
+            var result = AttributedString()
+
+            for component in components {
+                var segment = AttributedString(component.text)
+                segment.font = .system(.body, design: .monospaced)
+
+                // Apply color based on token type
+                if let tokenType = component.token {
+                    segment.foregroundColor = colorForTokenType(tokenType)
+                }
+
+                result.append(segment)
+            }
+
+            return result
+        }
+
+        private func colorForTokenType(_ type: Splash.TokenType) -> SwiftUI.Color {
+            switch type {
+            case .keyword:
+                return SwiftUI.Color(red: 0.9, green: 0.2, blue: 0.5) // Pink
+            case .string:
+                return SwiftUI.Color(red: 0.9, green: 0.3, blue: 0.2) // Red
+            case .type:
+                return SwiftUI.Color(red: 0.4, green: 0.6, blue: 0.9) // Blue
+            case .call:
+                return SwiftUI.Color(red: 0.3, green: 0.7, blue: 0.5) // Green
+            case .number:
+                return SwiftUI.Color(red: 0.7, green: 0.4, blue: 0.9) // Purple
+            case .comment:
+                return SwiftUI.Color(red: 0.5, green: 0.5, blue: 0.5) // Gray
+            case .property:
+                return SwiftUI.Color(red: 0.3, green: 0.7, blue: 0.8) // Cyan
+            case .dotAccess:
+                return SwiftUI.Color(red: 0.5, green: 0.5, blue: 0.5) // Gray
+            case .preprocessing:
+                return SwiftUI.Color(red: 0.9, green: 0.6, blue: 0.2) // Orange
+            case .custom:
+                return SwiftUI.Color.primary
+            @unknown default:
+                return SwiftUI.Color.primary
+            }
         }
     }
 }
 
-// MARK: - Platform-specific Type Alias
+// MARK: - Custom Language Grammars
 
-#if canImport(UIKit)
-private typealias PlatformColor = UIColor
-#elseif canImport(AppKit)
-private typealias PlatformColor = NSColor
-#endif
+/// Base helper functions for creating syntax rules
+private extension Splash.Segment {
+    func isNumber() -> Bool {
+        let token = tokens.current.trimmingCharacters(in: .whitespaces)
+        return !token.isEmpty && token.allSatisfy { $0.isNumber || $0 == "." || $0 == "_" }
+    }
+}
+
+/// Python Grammar
+private struct PythonGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("'")
+        set.remove("#")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            PythonCommentRule(),
+            PythonStringRule(),
+            NumberRule(),
+            PythonKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct PythonCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("#") ||
+                   segment.tokens.onSameLine.contains("#")
+        }
+    }
+
+    struct PythonStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("\"\"\"") || token.hasSuffix("\"\"\"") ||
+                   token.hasPrefix("'''") || token.hasSuffix("'''") ||
+                   (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct PythonKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "def", "class", "if", "elif", "else", "for", "while", "return",
+            "import", "from", "as", "try", "except", "finally", "with",
+            "lambda", "yield", "pass", "break", "continue", "True", "False",
+            "None", "and", "or", "not", "is", "in", "async", "await", "raise"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// JavaScript Grammar
+private struct JavaScriptGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("$")
+        set.remove("\"")
+        set.remove("'")
+        set.remove("`")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            JavaScriptStringRule(),
+            NumberRule(),
+            JavaScriptKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct JavaScriptStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'")) ||
+                   (token.hasPrefix("`") && token.hasSuffix("`"))
+        }
+    }
+
+    struct JavaScriptKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "var", "let", "const", "function", "return", "if", "else",
+            "for", "while", "switch", "case", "break", "continue",
+            "class", "extends", "import", "export", "default", "async",
+            "await", "try", "catch", "finally", "throw", "new", "this",
+            "super", "static", "typeof", "instanceof", "delete", "in", "of"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// TypeScript Grammar (extends JavaScript)
+private struct TypeScriptGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("$")
+        set.remove("\"")
+        set.remove("'")
+        set.remove("`")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            JavaScriptGrammar.JavaScriptStringRule(),
+            NumberRule(),
+            TypeScriptKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct TypeScriptKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "var", "let", "const", "function", "return", "if", "else",
+            "for", "while", "switch", "case", "break", "continue",
+            "class", "extends", "implements", "interface", "type", "enum",
+            "import", "export", "default", "async", "await", "try", "catch",
+            "finally", "throw", "new", "this", "super", "static", "typeof",
+            "instanceof", "delete", "in", "of", "as", "readonly", "public",
+            "private", "protected", "abstract", "namespace", "module", "declare"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Go Grammar
+private struct GoGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("`")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            GoStringRule(),
+            NumberRule(),
+            GoKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct GoStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("`") && token.hasSuffix("`"))
+        }
+    }
+
+    struct GoKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "func", "var", "const", "type", "struct", "interface", "if",
+            "else", "for", "range", "return", "package", "import", "go",
+            "defer", "chan", "select", "case", "default", "break",
+            "continue", "fallthrough", "goto", "map", "make", "new",
+            "true", "false", "nil"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Rust Grammar
+private struct RustGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("'")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            RustStringRule(),
+            NumberRule(),
+            RustKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct RustStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct RustKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "fn", "let", "mut", "const", "static", "if", "else", "match",
+            "for", "while", "loop", "return", "struct", "enum", "impl",
+            "trait", "type", "use", "mod", "pub", "crate", "self", "Self",
+            "super", "true", "false", "as", "break", "continue", "where",
+            "unsafe", "async", "await", "move", "ref", "dyn"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Java Grammar
+private struct JavaGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("@")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            JavaStringRule(),
+            NumberRule(),
+            JavaKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct JavaStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct JavaKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "class", "interface", "enum", "extends", "implements", "public",
+            "private", "protected", "static", "final", "abstract",
+            "synchronized", "volatile", "if", "else", "for", "while", "do",
+            "switch", "case", "default", "break", "continue", "return",
+            "try", "catch", "finally", "throw", "throws", "new", "this",
+            "super", "void", "int", "long", "short", "byte", "float",
+            "double", "char", "boolean", "true", "false", "null", "import",
+            "package"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Kotlin Grammar
+private struct KotlinGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("@")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            JavaGrammar.JavaStringRule(),
+            NumberRule(),
+            KotlinKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct KotlinKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "fun", "val", "var", "class", "interface", "object", "if",
+            "else", "when", "for", "while", "do", "return", "break",
+            "continue", "try", "catch", "finally", "throw", "throws",
+            "public", "private", "protected", "internal", "abstract",
+            "final", "open", "override", "companion", "data", "sealed",
+            "true", "false", "null", "is", "in", "as", "this", "super",
+            "import", "package"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// C Grammar
+private struct CGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("#")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            PreprocessorRule(),
+            CStyleCommentRule(),
+            CStringRule(),
+            NumberRule(),
+            CKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct CStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct CKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "int", "float", "double", "char", "void", "if", "else", "for",
+            "while", "return", "struct", "typedef", "enum", "union", "const",
+            "static", "extern", "auto", "register", "volatile", "sizeof",
+            "switch", "case", "default", "break", "continue", "goto", "do",
+            "unsigned", "signed", "long", "short"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// C++ Grammar
+private struct CppGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("#")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            PreprocessorRule(),
+            CStyleCommentRule(),
+            CGrammar.CStringRule(),
+            NumberRule(),
+            CppKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct CppKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "int", "float", "double", "char", "void", "bool", "if", "else",
+            "for", "while", "return", "class", "struct", "typedef", "enum",
+            "union", "const", "static", "extern", "auto", "register",
+            "volatile", "sizeof", "switch", "case", "default", "break",
+            "continue", "goto", "do", "namespace", "using", "public",
+            "private", "protected", "virtual", "template", "typename",
+            "try", "catch", "throw", "new", "delete", "this", "true",
+            "false", "nullptr"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// C# Grammar
+private struct CSharpGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("@")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            CGrammar.CStringRule(),
+            NumberRule(),
+            CSharpKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct CSharpKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "class", "struct", "interface", "enum", "namespace", "using",
+            "public", "private", "protected", "internal", "static", "const",
+            "readonly", "virtual", "override", "abstract", "sealed", "if",
+            "else", "for", "foreach", "while", "do", "switch", "case",
+            "default", "break", "continue", "return", "try", "catch",
+            "finally", "throw", "new", "this", "base", "true", "false",
+            "null", "var", "void", "int", "string", "bool", "async", "await"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Ruby Grammar
+private struct RubyGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("'")
+        set.remove("#")
+        set.remove("@")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            RubyCommentRule(),
+            RubyStringRule(),
+            NumberRule(),
+            RubyKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct RubyCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("#") ||
+                   segment.tokens.onSameLine.contains("#")
+        }
+    }
+
+    struct RubyStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct RubyKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "def", "end", "class", "module", "if", "elsif", "else", "unless",
+            "case", "when", "for", "while", "until", "return", "yield",
+            "break", "next", "redo", "retry", "true", "false", "nil", "and",
+            "or", "not", "do", "begin", "rescue", "ensure", "raise", "include",
+            "extend", "require"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// PHP Grammar
+private struct PHPGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("$")
+        set.remove("\"")
+        set.remove("'")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CStyleCommentRule(),
+            PHPCommentRule(),
+            PHPStringRule(),
+            NumberRule(),
+            PHPKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct PHPCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("#") ||
+                   segment.tokens.onSameLine.contains("#")
+        }
+    }
+
+    struct PHPStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct PHPKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "function", "class", "interface", "trait", "extends", "implements",
+            "public", "private", "protected", "static", "final", "abstract",
+            "if", "else", "elseif", "for", "foreach", "while", "do", "switch",
+            "case", "default", "break", "continue", "return", "try", "catch",
+            "finally", "throw", "new", "this", "self", "parent", "var",
+            "const", "echo", "print", "true", "false", "null", "array", "as",
+            "namespace", "use"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Bash Grammar
+private struct BashGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("$")
+        set.remove("\"")
+        set.remove("'")
+        set.remove("#")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            BashCommentRule(),
+            BashStringRule(),
+            NumberRule(),
+            BashKeywordRule()
+        ]
+    }
+
+    struct BashCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("#") ||
+                   segment.tokens.onSameLine.contains("#")
+        }
+    }
+
+    struct BashStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct BashKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "if", "then", "else", "elif", "fi", "case", "esac", "for",
+            "while", "until", "do", "done", "function", "in", "select"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// SQL Grammar
+private struct SQLGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("\"")
+        set.remove("'")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            SQLCommentRule(),
+            SQLStringRule(),
+            NumberRule(),
+            SQLKeywordRule()
+        ]
+    }
+
+    struct SQLCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("--") ||
+                   segment.tokens.onSameLine.contains("--")
+        }
+    }
+
+    struct SQLStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct SQLKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE",
+            "CREATE", "ALTER", "DROP", "TABLE", "INDEX", "VIEW", "JOIN",
+            "INNER", "LEFT", "RIGHT", "OUTER", "ON", "AS", "AND", "OR",
+            "NOT", "NULL", "IS", "IN", "LIKE", "BETWEEN", "ORDER", "BY",
+            "GROUP", "HAVING", "LIMIT", "OFFSET", "UNION", "ALL", "DISTINCT"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current.uppercased())
+        }
+    }
+}
+
+/// JSON Grammar
+private struct JSONGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("\"")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            JSONStringRule(),
+            NumberRule(),
+            JSONKeywordRule()
+        ]
+    }
+
+    struct JSONStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("\"") && token.hasSuffix("\"")
+        }
+    }
+
+    struct JSONKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = ["true", "false", "null"]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// YAML Grammar
+private struct YAMLGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("-")
+        set.remove("\"")
+        set.remove("'")
+        set.remove("#")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            YAMLCommentRule(),
+            YAMLStringRule(),
+            NumberRule(),
+            YAMLKeywordRule()
+        ]
+    }
+
+    struct YAMLCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("#") ||
+                   segment.tokens.onSameLine.contains("#")
+        }
+    }
+
+    struct YAMLStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct YAMLKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = ["true", "false", "null", "yes", "no"]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// HTML Grammar
+private struct HTMLGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("-")
+        set.remove("_")
+        set.remove("\"")
+        set.remove("'")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            HTMLCommentRule(),
+            HTMLTagRule(),
+            HTMLStringRule()
+        ]
+    }
+
+    struct HTMLCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("<!--") ||
+                   segment.tokens.current.hasSuffix("-->")
+        }
+    }
+
+    struct HTMLTagRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("<") || token.hasSuffix(">")
+        }
+    }
+
+    struct HTMLStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+}
+
+/// CSS Grammar
+private struct CSSGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("-")
+        set.remove("_")
+        set.remove("#")
+        set.remove(".")
+        set.remove("\"")
+        set.remove("'")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            CSSCommentRule(),
+            CSSStringRule(),
+            NumberRule(),
+            CSSSelectorRule()
+        ]
+    }
+
+    struct CSSCommentRule: SyntaxRule {
+        var tokenType: TokenType { .comment }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("/*") ||
+                   segment.tokens.current.hasSuffix("*/")
+        }
+    }
+
+    struct CSSStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return (token.hasPrefix("\"") && token.hasSuffix("\"")) ||
+                   (token.hasPrefix("'") && token.hasSuffix("'"))
+        }
+    }
+
+    struct CSSSelectorRule: SyntaxRule {
+        var tokenType: TokenType { .type }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("#") || token.hasPrefix(".")
+        }
+    }
+}
+
+/// Markdown Grammar
+private struct MarkdownGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("#")
+        set.remove("`")
+        set.remove("*")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            MarkdownCodeRule(),
+            MarkdownHeaderRule(),
+            MarkdownBoldRule()
+        ]
+    }
+
+    struct MarkdownCodeRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("`") || token.hasSuffix("`")
+        }
+    }
+
+    struct MarkdownHeaderRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        func matches(_ segment: Segment) -> Bool {
+            return segment.tokens.current.hasPrefix("#")
+        }
+    }
+
+    struct MarkdownBoldRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("**") || token.hasPrefix("__")
+        }
+    }
+}
+
+/// Objective-C Grammar
+private struct ObjectiveCGrammar: Grammar {
+    var delimiters: CharacterSet = {
+        var set = CharacterSet.alphanumerics.inverted
+        set.remove("_")
+        set.remove("@")
+        set.remove("\"")
+        set.remove("#")
+        return set
+    }()
+
+    var syntaxRules: [SyntaxRule] {
+        [
+            PreprocessorRule(),
+            CStyleCommentRule(),
+            ObjectiveCStringRule(),
+            NumberRule(),
+            ObjectiveCKeywordRule(),
+            CallRule()
+        ]
+    }
+
+    struct ObjectiveCStringRule: SyntaxRule {
+        var tokenType: TokenType { .string }
+        func matches(_ segment: Segment) -> Bool {
+            let token = segment.tokens.current
+            return token.hasPrefix("@\"") ||
+                   (token.hasPrefix("\"") && token.hasSuffix("\""))
+        }
+    }
+
+    struct ObjectiveCKeywordRule: SyntaxRule {
+        var tokenType: TokenType { .keyword }
+        let keywords: Set<String> = [
+            "int", "float", "double", "char", "void", "BOOL", "YES", "NO",
+            "nil", "if", "else", "for", "while", "return", "struct",
+            "typedef", "enum", "const", "static", "extern", "switch",
+            "case", "default", "break", "continue", "@interface",
+            "@implementation", "@end", "@property", "@synthesize",
+            "@protocol", "@class", "@selector", "@try", "@catch",
+            "@finally", "@throw", "self", "super", "id", "instancetype"
+        ]
+
+        func matches(_ segment: Segment) -> Bool {
+            return keywords.contains(segment.tokens.current)
+        }
+    }
+}
+
+/// Plain Text Grammar (fallback for unknown languages)
+private struct PlainTextGrammar: Grammar {
+    var delimiters: CharacterSet = .alphanumerics.inverted
+    var syntaxRules: [SyntaxRule] { [] }
+}
+
+// MARK: - Shared Syntax Rules
+
+/// C-style comment rule (// and /* */)
+private struct CStyleCommentRule: SyntaxRule {
+    var tokenType: TokenType { .comment }
+
+    func matches(_ segment: Segment) -> Bool {
+        if segment.tokens.current.hasPrefix("/*") {
+            return true
+        }
+
+        if segment.tokens.current.hasPrefix("//") {
+            return true
+        }
+
+        if segment.tokens.onSameLine.contains("//") {
+            return true
+        }
+
+        let multiLineStartCount = segment.tokens.count(of: "/*")
+        return multiLineStartCount != segment.tokens.count(of: "*/")
+    }
+}
+
+/// Preprocessor directive rule (#include, #define, etc.)
+private struct PreprocessorRule: SyntaxRule {
+    var tokenType: TokenType { .preprocessing }
+
+    func matches(_ segment: Segment) -> Bool {
+        return segment.tokens.current.hasPrefix("#")
+    }
+}
+
+/// Generic number rule
+private struct NumberRule: SyntaxRule {
+    var tokenType: TokenType { .number }
+
+    func matches(_ segment: Segment) -> Bool {
+        let token = segment.tokens.current.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
+
+        guard !token.isEmpty else { return false }
+        guard let first = token.first else { return false }
+
+        // Check if it's a number
+        if first.isNumber {
+            return true
+        }
+
+        // Handle decimal numbers like .5
+        if first == ".", token.count > 1 {
+            return token.dropFirst().allSatisfy { $0.isNumber }
+        }
+
+        return false
+    }
+}
+
+/// Generic function call rule
+private struct CallRule: SyntaxRule {
+    var tokenType: TokenType { .call }
+
+    func matches(_ segment: Segment) -> Bool {
+        guard let first = segment.tokens.current.first else { return false }
+        guard first.isLetter || first == "_" else { return false }
+
+        return segment.tokens.next?.hasPrefix("(") ?? false
+    }
+}

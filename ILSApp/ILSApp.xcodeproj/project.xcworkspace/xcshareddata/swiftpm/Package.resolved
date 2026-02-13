@@ -1,5 +1,5 @@
 {
-  "originHash" : "1296ff74ddd61738df76f347d393ac54a551322b50b2e5c2fda99ba0c57f4ec7",
+  "originHash" : "2a04815619f647465bc3c00ce9209eb6c1259994053a6e5af66083f459b874eb",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -65,15 +65,6 @@
       }
     },
     {
-      "identity" : "highlightswift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/appstefan/HighlightSwift",
-      "state" : {
-        "revision" : "784ca3ccfc8a2cf724fbb2f06cb6ec3329424da3",
-        "version" : "1.1.0"
-      }
-    },
-    {
       "identity" : "multipart-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/multipart-kit.git",
@@ -83,21 +74,21 @@
       }
     },
     {
-      "identity" : "networkimage",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gonzalezreal/NetworkImage",
-      "state" : {
-        "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
-        "version" : "6.0.1"
-      }
-    },
-    {
       "identity" : "routing-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/routing-kit.git",
       "state" : {
         "revision" : "1a10ccea61e4248effd23b6e814999ce7bdf0ee0",
         "version" : "4.9.3"
+      }
+    },
+    {
+      "identity" : "splash",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JohnSundell/Splash.git",
+      "state" : {
+        "revision" : "7f4df436eb78fe64fe2c32c58006e9949fa28ad8",
+        "version" : "0.16.0"
       }
     },
     {
@@ -173,15 +164,6 @@
       }
     },
     {
-      "identity" : "swift-cmark",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-cmark",
-      "state" : {
-        "revision" : "5d9bdaa4228b381639fff09403e39a04926e2dbe",
-        "version" : "0.7.1"
-      }
-    },
-    {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections.git",
@@ -195,8 +177,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "95ba0316a9b733e92bb6b071255ff46263bbe7dc",
-        "version" : "3.15.1"
+        "revision" : "6f70fa9eab24c1fd982af18c281c4525d05e3095",
+        "version" : "4.2.0"
       }
     },
     {
@@ -233,15 +215,6 @@
       "state" : {
         "revision" : "2778fd4e5a12a8aaa30a3ee8285f4ce54c5f3181",
         "version" : "1.9.1"
-      }
-    },
-    {
-      "identity" : "swift-markdown-ui",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/gonzalezreal/swift-markdown-ui",
-      "state" : {
-        "revision" : "5f613358148239d0292c0cef674a3c2314737f9e",
-        "version" : "2.4.1"
       }
     },
     {

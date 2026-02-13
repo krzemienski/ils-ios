@@ -214,26 +214,32 @@
   "hotPaths": [
     {
       "path": "ILSApp/ILSApp.xcodeproj/project.pbxproj",
-      "accessCount": 48,
-      "lastAccessed": 1770960249325,
+      "accessCount": 57,
+      "lastAccessed": 1770960613282,
       "type": "directory"
     },
     {
       "path": "ILSApp/ILSApp",
-      "accessCount": 35,
-      "lastAccessed": 1770960396864,
+      "accessCount": 39,
+      "lastAccessed": 1770961053097,
       "type": "directory"
     },
     {
       "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
-      "accessCount": 9,
-      "lastAccessed": 1770960504532,
+      "accessCount": 33,
+      "lastAccessed": 1770961569438,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
+      "accessCount": 13,
+      "lastAccessed": 1770961200857,
       "type": "file"
     },
     {
       "path": "ILSApp/ILSApp/Views/Chat/MessageView.swift",
-      "accessCount": 8,
-      "lastAccessed": 1770958406671,
+      "accessCount": 10,
+      "lastAccessed": 1770960868075,
       "type": "file"
     },
     {
@@ -244,14 +250,14 @@
     },
     {
       "path": "",
-      "accessCount": 6,
-      "lastAccessed": 1770958417239,
+      "accessCount": 7,
+      "lastAccessed": 1770960644114,
       "type": "directory"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
-      "accessCount": 5,
-      "lastAccessed": 1770960497117,
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsViewSections.swift",
+      "accessCount": 6,
+      "lastAccessed": 1770961018940,
       "type": "file"
     },
     {
@@ -285,10 +291,10 @@
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Settings/SettingsViewSections.swift",
+      "path": "ILSApp/ILSApp/Theme/AppTheme.swift",
       "accessCount": 3,
-      "lastAccessed": 1770960415792,
-      "type": "file"
+      "lastAccessed": 1770960867123,
+      "type": "directory"
     },
     {
       "path": "Sources/ILSBackend",
@@ -319,12 +325,6 @@
       "accessCount": 2,
       "lastAccessed": 1770959024569,
       "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/AppTheme.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770948822188,
-      "type": "directory"
     },
     {
       "path": "Sources/ILSShared/Models/FleetHost.swift",

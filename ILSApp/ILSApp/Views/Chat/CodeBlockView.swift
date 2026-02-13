@@ -1,266 +1,189 @@
 import SwiftUI
 
-/// A view that displays a code block with syntax highlighting and line numbers
+/// View that displays a code block with syntax highlighting, line numbers, and actions
 struct CodeBlockView: View {
-    let codeBlock: CodeBlock
-    @State private var showLineNumbers: Bool = true
+    let code: String
+    let language: String?
     @State private var showCopyConfirmation = false
+    @State private var isExpanded = true
     @State private var showShareSheet = false
-    @State private var isExpanded: Bool
 
-    /// Syntax highlighter instance
-    private let highlighter = SyntaxHighlighter()
+    /// Maximum number of lines to show when collapsed
+    private let collapsedLineLimit = 3
 
-    /// Number of lines to show when collapsed
-    private let previewLineCount = 3
-
-    /// Threshold for collapsible behavior
-    private let collapsibleThreshold = 10
-
-    /// Detected language for this code block
-    private var language: SyntaxHighlighter.Language? {
-        SyntaxHighlighter.Language.detect(from: codeBlock.language)
-    }
-
-    /// Lines of code split for line numbering
+    /// Split code into lines for line numbering
     private var codeLines: [String] {
-        codeBlock.code.components(separatedBy: .newlines)
+        code.components(separatedBy: .newlines)
     }
 
-    /// Whether this code block should be collapsible
-    private var isCollapsible: Bool {
-        codeLines.count > collapsibleThreshold
+    /// Whether the code block should be collapsible (more than 10 lines)
+    private var shouldBeCollapsible: Bool {
+        codeLines.count > 10
     }
 
-    /// Lines to display (all lines if expanded or not collapsible, preview lines if collapsed)
-    private var displayedLines: Range<Int> {
-        if isCollapsible && !isExpanded {
-            return 0..<min(previewLineCount, codeLines.count)
+    /// Lines to display based on expanded state
+    private var displayedLines: [String] {
+        if shouldBeCollapsible && !isExpanded {
+            return Array(codeLines.prefix(collapsedLineLimit))
         }
-        return 0..<codeLines.count
-    }
-
-    init(codeBlock: CodeBlock) {
-        self.codeBlock = codeBlock
-        // Start collapsed if code block is longer than threshold
-        let lines = codeBlock.code.components(separatedBy: .newlines)
-        _isExpanded = State(initialValue: lines.count <= collapsibleThreshold)
+        return codeLines
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header with language and actions
+            // Header with language badge and action buttons
             HStack {
                 // Language badge
                 if let language = language {
-                    Text(language.displayName.uppercased())
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    Text(language.uppercased())
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
                         .foregroundColor(ILSTheme.accent)
                         .padding(.horizontal, ILSTheme.spacingS)
                         .padding(.vertical, ILSTheme.spacingXS)
-                        .background(ILSTheme.accent.opacity(0.1))
+                        .background(ILSTheme.accent.opacity(0.15))
                         .cornerRadius(ILSTheme.cornerRadiusS)
                         .accessibilityIdentifier("code-block-language-label")
-                }
-
-                // Expand/collapse button for long code blocks
-                if isCollapsible {
-                    Button(action: { isExpanded.toggle() }) {
-                        HStack(spacing: ILSTheme.spacingXS) {
-                            Text(isExpanded ? "Collapse" : "Expand")
-                                .font(ILSTheme.captionFont)
-                                .foregroundColor(ILSTheme.secondaryText)
-                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 12))
-                                .foregroundColor(ILSTheme.secondaryText)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(isExpanded ? "Collapse code" : "Expand code")
-                    .accessibilityIdentifier("code-block-expand-button")
+                        .accessibilityLabel("Code language: \(language)")
                 }
 
                 Spacer()
 
-                // Copy confirmation overlay
-                if showCopyConfirmation {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(ILSTheme.success)
-                        Text("Copied")
-                            .font(ILSTheme.captionFont)
-                            .foregroundColor(ILSTheme.success)
-                    }
-                    .padding(.horizontal, ILSTheme.spacingS)
-                    .padding(.vertical, ILSTheme.spacingXS)
-                    .background(ILSTheme.success.opacity(0.1))
-                    .cornerRadius(ILSTheme.cornerRadiusS)
-                    .transition(.scale.combined(with: .opacity))
-                    .accessibilityHidden(true)
-                }
-
-                // Action buttons
-                HStack(spacing: ILSTheme.spacingXS) {
-                    // Copy button
-                    Button(action: copyCode) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 14))
+                // Expand/Collapse button (only if collapsible)
+                if shouldBeCollapsible {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isExpanded.toggle()
+                        }
+                    }) {
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(ILSTheme.secondaryText)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Copy code")
-                    .accessibilityIdentifier("code-block-copy-button")
-
-                    // Share button
-                    Button(action: { showShareSheet = true }) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 14))
-                            .foregroundColor(ILSTheme.secondaryText)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Share code")
-                    .accessibilityIdentifier("code-block-share-button")
+                    .accessibilityIdentifier("code-block-expand-button")
+                    .accessibilityLabel(isExpanded ? "Collapse code" : "Expand code")
                 }
+
+                // Copy button
+                Button(action: {
+                    UIPasteboard.general.string = code
+                    // Haptic feedback
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.notificationOccurred(.success)
+                    showCopyConfirmation = true
+                    // Hide confirmation after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showCopyConfirmation = false
+                    }
+                }) {
+                    Image(systemName: showCopyConfirmation ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(showCopyConfirmation ? ILSTheme.success : ILSTheme.secondaryText)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("code-block-copy-button")
+                .accessibilityLabel("Copy code")
+
+                // Share button
+                Button(action: {
+                    showShareSheet = true
+                }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("code-block-share-button")
+                .accessibilityLabel("Share code")
             }
             .padding(.horizontal, ILSTheme.spacingS)
             .padding(.vertical, ILSTheme.spacingXS)
             .background(ILSTheme.tertiaryBackground.opacity(0.5))
 
-            // Code content with optional line numbers
-            HStack(alignment: .top, spacing: ILSTheme.spacingS) {
-                // Line numbers (if enabled)
-                if showLineNumbers {
+            Divider()
+
+            // Code content with line numbers
+            ScrollView(.horizontal, showsIndicators: true) {
+                HStack(alignment: .top, spacing: 0) {
+                    // Line numbers
                     VStack(alignment: .trailing, spacing: 0) {
-                        ForEach(displayedLines, id: \.self) { index in
+                        ForEach(Array(displayedLines.enumerated()), id: \.offset) { index, _ in
                             Text("\(index + 1)")
-                                .font(ILSTheme.codeFont)
+                                .font(.system(.caption, design: .monospaced))
                                 .foregroundColor(ILSTheme.tertiaryText)
-                                .frame(minWidth: lineNumberWidth)
-                                .accessibilityHidden(true)
+                                .padding(.vertical, 2)
+                                .frame(minWidth: 30, alignment: .trailing)
                         }
 
-                        // Ellipsis for collapsed state
-                        if isCollapsible && !isExpanded {
+                        // Ellipsis indicator when collapsed
+                        if shouldBeCollapsible && !isExpanded {
                             Text("⋮")
-                                .font(ILSTheme.codeFont)
+                                .font(.system(.caption, design: .monospaced))
                                 .foregroundColor(ILSTheme.tertiaryText)
-                                .frame(minWidth: lineNumberWidth)
-                                .accessibilityHidden(true)
+                                .padding(.vertical, 2)
+                                .frame(minWidth: 30, alignment: .trailing)
                         }
                     }
-                    .padding(.trailing, ILSTheme.spacingXS)
+                    .padding(.trailing, ILSTheme.spacingS)
+                    .padding(.leading, ILSTheme.spacingS)
+                    .accessibilityHidden(true) // Line numbers are visual only
 
-                    // Separator line
+                    // Separator
                     Rectangle()
                         .fill(ILSTheme.tertiaryText.opacity(0.3))
                         .frame(width: 1)
                         .accessibilityHidden(true)
-                }
 
-                // Syntax-highlighted code
-                ScrollView(.horizontal, showsIndicators: false) {
+                    // Code text with syntax highlighting
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(displayedLines, id: \.self) { index in
-                            Text(attributedLine(at: index))
-                                .font(ILSTheme.codeFont)
-                                .textSelection(.enabled)
-                        }
-
-                        // Ellipsis indicator for collapsed state
-                        if isCollapsible && !isExpanded {
-                            Text("⋮")
-                                .font(ILSTheme.codeFont)
-                                .foregroundColor(ILSTheme.tertiaryText)
-                                .padding(.vertical, ILSTheme.spacingXS)
-                                .accessibilityHidden(true)
-                        }
+                        Text(SyntaxHighlighter.highlight(
+                            code: displayedLines.joined(separator: "\n"),
+                            language: language
+                        ))
+                        .textSelection(.enabled)
+                        .padding(.leading, ILSTheme.spacingS)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .accessibilityIdentifier("code-block-content")
+                    .accessibilityLabel(accessibilityCodeLabel)
                 }
-                .accessibilityIdentifier("code-block-content")
-                .accessibilityLabel(accessibilityCodeLabel)
+                .padding(.vertical, ILSTheme.spacingS)
             }
-            .padding(ILSTheme.spacingS)
             .background(ILSTheme.tertiaryBackground)
-            .cornerRadius(ILSTheme.cornerRadiusM)
         }
-        .accessibilityElement(children: .contain)
+        .cornerRadius(ILSTheme.cornerRadiusM)
+        .overlay(
+            RoundedRectangle(cornerRadius: ILSTheme.cornerRadiusM)
+                .strokeBorder(ILSTheme.tertiaryText.opacity(0.2), lineWidth: 1)
+        )
         .accessibilityIdentifier("code-block-container")
         .sheet(isPresented: $showShareSheet) {
-            ShareSheet(items: [codeBlock.code])
+            ShareSheet(activityItems: [code])
         }
     }
 
-    // MARK: - Actions
-
-    /// Copy code to clipboard with haptic feedback and confirmation
-    private func copyCode() {
-        UIPasteboard.general.string = codeBlock.code
-
-        // Haptic feedback on copy
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
-
-        withAnimation {
-            showCopyConfirmation = true
-        }
-
-        // Hide confirmation after 2 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation {
-                showCopyConfirmation = false
-            }
-        }
-    }
-
-    // MARK: - Private Helpers
-
-    /// Calculate the width needed for line numbers based on total line count
-    private var lineNumberWidth: CGFloat {
-        let digits = String(codeLines.count).count
-        return CGFloat(digits) * 10 + 4
-    }
-
-    /// Get syntax-highlighted attributed string for a specific line
-    /// - Parameter index: The line index
-    /// - Returns: AttributedString with syntax highlighting
-    private func attributedLine(at index: Int) -> AttributedString {
-        guard index < codeLines.count else {
-            return AttributedString("")
-        }
-
-        let line = codeLines[index]
-
-        // For empty lines, return a space to maintain vertical spacing
-        if line.isEmpty {
-            return AttributedString(" ")
-        }
-
-        // Highlight the entire code block once and cache it would be more efficient,
-        // but for simplicity we'll highlight line by line
-        let highlightedLine = highlighter.highlight(line, language: language)
-        return AttributedString(highlightedLine)
-    }
-
-    /// Accessibility label describing the code block
+    /// Accessibility label for the code content
     private var accessibilityCodeLabel: String {
-        let languageName = language?.displayName ?? "code"
-        let lineCount = codeLines.count
-        return "\(languageName) code block with \(lineCount) line\(lineCount == 1 ? "" : "s")"
+        var label = "Code block"
+        if let language = language {
+            label += " in \(language)"
+        }
+        label += ", \(codeLines.count) lines"
+        if shouldBeCollapsible && !isExpanded {
+            label += ", showing first \(collapsedLineLimit) lines"
+        }
+        return label
     }
 }
 
-// MARK: - ShareSheet Helper
+// MARK: - Share Sheet
 
-/// UIActivityViewController wrapper for SwiftUI
+/// UIKit wrapper for UIActivityViewController (Share Sheet)
 struct ShareSheet: UIViewControllerRepresentable {
-    let items: [Any]
+    let activityItems: [Any]
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: items,
-            applicationActivities: nil
-        )
-        return controller
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
@@ -270,117 +193,74 @@ struct ShareSheet: UIViewControllerRepresentable {
 
 // MARK: - Preview
 
-#Preview("Swift Code") {
-    let swiftCode = """
-    func greet(name: String) -> String {
-        let greeting = "Hello, \\(name)!"
-        return greeting
-    }
-    """
+#Preview("Swift Code Block") {
+    VStack {
+        CodeBlockView(
+            code: """
+            func greet(name: String) -> String {
+                return "Hello, \\(name)!"
+            }
 
-    let codeBlock = CodeBlock(
-        language: "swift",
-        code: swiftCode,
-        range: swiftCode.startIndex..<swiftCode.endIndex
-    )
-
-    MessageView(
-        message: ChatMessage(
-            id: UUID(),
-            isUser: false,
-            text: "Here's a Swift function:",
-            timestamp: Date()
+            let message = greet(name: "World")
+            print(message)
+            """,
+            language: "swift"
         )
+
+        CodeBlockView(
+            code: """
+            def fibonacci(n):
+                if n <= 1:
+                    return n
+                return fibonacci(n-1) + fibonacci(n-2)
+
+            # Calculate first 10 Fibonacci numbers
+            for i in range(10):
+                print(fibonacci(i))
+            """,
+            language: "python"
+        )
+    }
+    .padding()
+}
+
+#Preview("Long Code Block (Collapsed)") {
+    CodeBlockView(
+        code: """
+        import SwiftUI
+
+        struct ContentView: View {
+            @State private var counter = 0
+
+            var body: some View {
+                VStack {
+                    Text("Count: \\(counter)")
+                    Button("Increment") {
+                        counter += 1
+                    }
+                    Button("Decrement") {
+                        counter -= 1
+                    }
+                    Button("Reset") {
+                        counter = 0
+                    }
+                }
+            }
+        }
+        """,
+        language: "swift"
     )
     .padding()
 }
 
-#Preview("Python Code") {
-    let pythonCode = """
-    def calculate_sum(numbers):
-        total = 0
-        for num in numbers:
-            total += num
-        return total
-    """
-
-    let codeBlock = CodeBlock(
-        language: "python",
-        code: pythonCode,
-        range: pythonCode.startIndex..<pythonCode.endIndex
+#Preview("Code Without Language") {
+    CodeBlockView(
+        code: """
+        This is some code
+        without a specific language
+        specified
+        """,
+        language: nil
     )
-
-    return CodeBlockView(codeBlock: codeBlock)
-        .padding()
-}
-
-#Preview("JavaScript Code") {
-    let jsCode = """
-    const fetchData = async (url) => {
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-    """
-
-    let codeBlock = CodeBlock(
-        language: "javascript",
-        code: jsCode,
-        range: jsCode.startIndex..<jsCode.endIndex
-    )
-
-    return CodeBlockView(codeBlock: codeBlock)
-        .padding()
-}
-
-#Preview("No Language Specified") {
-    let plainCode = """
-    This is some code
-    without a specific language
-    so it gets basic highlighting
-    """
-
-    let codeBlock = CodeBlock(
-        language: nil,
-        code: plainCode,
-        range: plainCode.startIndex..<plainCode.endIndex
-    )
-
-    return CodeBlockView(codeBlock: codeBlock)
-        .padding()
-}
-
-#Preview("Long Code Block - Collapsible") {
-    let longCode = """
-    func processData(items: [String]) -> [String] {
-        var processed: [String] = []
-
-        for item in items {
-            let cleaned = item.trimmingCharacters(in: .whitespaces)
-            if !cleaned.isEmpty {
-                processed.append(cleaned.uppercased())
-            }
-        }
-
-        return processed.sorted()
-    }
-
-    func validateInput(_ input: String) -> Bool {
-        guard !input.isEmpty else { return false }
-        return input.count >= 3
-    }
-    """
-
-    let codeBlock = CodeBlock(
-        language: "swift",
-        code: longCode,
-        range: longCode.startIndex..<longCode.endIndex
-    )
-
-    return CodeBlockView(codeBlock: codeBlock)
-        .padding()
+    .padding()
 }

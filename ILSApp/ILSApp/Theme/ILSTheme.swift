@@ -1,5 +1,41 @@
 import SwiftUI
 
+// MARK: - ILSTheme Compatibility Shim
+// Bridges legacy static `ILSTheme.property` access to the AppTheme protocol system.
+// Used by CodeBlockView, MessageView, and SettingsView. New views should use
+// `@Environment(\.theme) private var theme: any AppTheme` instead.
+
+enum ILSTheme {
+    private static let defaultTheme = ObsidianTheme()
+
+    // Colors
+    static var accent: Color { defaultTheme.accent }
+    static var primaryText: Color { defaultTheme.textPrimary }
+    static var secondaryText: Color { defaultTheme.textSecondary }
+    static var tertiaryText: Color { defaultTheme.textTertiary }
+    static var tertiaryBackground: Color { defaultTheme.bgTertiary }
+    static var success: Color { defaultTheme.success }
+    static var error: Color { defaultTheme.error }
+    static var info: Color { defaultTheme.info }
+    static var userBubble: Color { defaultTheme.accent.opacity(0.15) }
+    static var assistantBubble: Color { defaultTheme.bgSecondary }
+
+    // Spacing
+    static var spacingXS: CGFloat { defaultTheme.spacingXS }
+    static var spacingS: CGFloat { defaultTheme.spacingSM }
+
+    // Corner Radius
+    static var cornerRadiusS: CGFloat { defaultTheme.cornerRadiusSmall }
+    static var cornerRadiusM: CGFloat { defaultTheme.cornerRadius }
+    static var cornerRadiusL: CGFloat { defaultTheme.cornerRadiusLarge }
+
+    // Fonts
+    static var captionFont: Font { .system(size: defaultTheme.fontCaption) }
+    static var codeFont: Font { .system(size: defaultTheme.fontCaption, design: .monospaced) }
+    static var bodyFont: Font { .system(size: defaultTheme.fontBody) }
+    static var headlineFont: Font { .system(size: defaultTheme.fontTitle3, weight: .semibold) }
+}
+
 // MARK: - Haptic Feedback Manager
 
 #if os(iOS)

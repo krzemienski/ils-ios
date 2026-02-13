@@ -35,7 +35,9 @@ let package = Package(
         // Shared models between iOS and backend
         .target(
             name: "ILSShared",
-            dependencies: [],
+            dependencies: [
+                .product(name: "Splash", package: "Splash"),
+            ],
             path: "Sources/ILSShared",
             exclude: ["Models/CLAUDE.md"]
         ),

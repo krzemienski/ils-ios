@@ -20,55 +20,19 @@ struct MessageView: View {
         return formatter
     }()
 
-    /// Parsed markdown segments from message text
-    private var messageSegments: [TextSegment] {
-        message.text.isEmpty ? [] : MarkdownParser.parse(message.text)
-    }
-
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: ILSTheme.spacingXS) {
             HStack {
                 if message.isUser { Spacer() }
 
                 VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
-                    // Text content with markdown parsing
-                    if !messageSegments.isEmpty {
-                        ForEach(messageSegments) { segment in
-                            switch segment {
-                            case .text(let content):
-                                Text(content)
-                                    .font(ILSTheme.bodyFont)
-                                    .textSelection(.enabled)
-                                    .accessibilityIdentifier(message.isUser ? "user-message-text" : "assistant-message-text")
-                                    .contextMenu {
-                                        Button(action: {
-                                            UIPasteboard.general.string = message.text
-                                            // Haptic feedback on copy
-                                            let generator = UINotificationFeedbackGenerator()
-                                            generator.notificationOccurred(.success)
-                                            showCopyConfirmation = true
-                                            // Hide confirmation after 2 seconds
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                                showCopyConfirmation = false
-                                            }
-                                        }) {
-                                            Label("Copy Message", systemImage: "doc.on.doc")
-                                        }
-                                    }
-                            case .inlineCode(let code):
-                                Text(code)
-                                    .font(ILSTheme.codeFont)
-                                    .foregroundColor(ILSTheme.primaryText)
-                                    .padding(.horizontal, 4)
-                                    .padding(.vertical, 2)
-                                    .background(ILSTheme.tertiaryBackground)
-                                    .cornerRadius(4)
-                                    .textSelection(.enabled)
-                                    .accessibilityIdentifier("inline-code")
-                            case .codeBlock(let codeBlock):
-                                CodeBlockView(codeBlock: codeBlock)
-                            }
-                        }
+                    // Text content with code block parsing
+                    if !message.text.isEmpty {
+                        MessageContentView(
+                            text: message.text,
+                            isUser: message.isUser,
+                            showCopyConfirmation: $showCopyConfirmation
+                        )
                     }
 
                     // Tool calls
@@ -156,7 +120,7 @@ struct MessageView: View {
 }
 
 struct ToolCallView: View {
-    let toolCall: ToolCallDisplay
+    let toolCall: ToolCall
     @State private var isExpanded = false
 
     var body: some View {
@@ -190,7 +154,7 @@ struct ToolCallView: View {
 }
 
 struct ToolResultView: View {
-    let result: ToolResultDisplay
+    let result: ToolResult
     @State private var isExpanded = false
 
     var body: some View {
@@ -260,8 +224,110 @@ struct ThinkingView: View {
     }
 }
 
-// MARK: - Type Aliases (canonical types in Models/ChatMessage.swift)
-// ChatMessage, ToolCallDisplay, ToolResultDisplay are defined in Models/ChatMessage.swift
+// MARK: - Message Content View with Code Block Support
+
+struct MessageContentView: View {
+    let text: String
+    let isUser: Bool
+    @Binding var showCopyConfirmation: Bool
+
+    /// Parse message text into segments
+    private var segments: [MarkdownParser.TextSegment] {
+        MarkdownParser.parse(text)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ILSTheme.spacingS) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+                switch segment {
+                case .plainText(let plainText):
+                    Text(plainText)
+                        .font(ILSTheme.bodyFont)
+                        .textSelection(.enabled)
+                        .accessibilityIdentifier(isUser ? "user-message-text" : "assistant-message-text")
+                        .contextMenu {
+                            Button(action: {
+                                UIPasteboard.general.string = plainText
+                                // Haptic feedback on copy
+                                let generator = UINotificationFeedbackGenerator()
+                                generator.notificationOccurred(.success)
+                                showCopyConfirmation = true
+                                // Hide confirmation after 2 seconds
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    showCopyConfirmation = false
+                                }
+                            }) {
+                                Label("Copy Text", systemImage: "doc.on.doc")
+                            }
+                        }
+
+                case .codeBlock(let codeBlock):
+                    CodeBlockView(
+                        code: codeBlock.code,
+                        language: codeBlock.language
+                    )
+
+                case .inlineCode(let code):
+                    Text(code)
+                        .font(ILSTheme.codeFont)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(ILSTheme.tertiaryBackground)
+                        .cornerRadius(4)
+                        .textSelection(.enabled)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Data Models
+
+struct ChatMessage: Identifiable {
+    let id: UUID
+    let isUser: Bool
+    var text: String
+    var toolCalls: [ToolCall] = []
+    var toolResults: [ToolResult] = []
+    var thinking: String?
+    var cost: Double?
+    var timestamp: Date?
+    var isFromHistory: Bool = false
+
+    init(
+        id: UUID = UUID(),
+        isUser: Bool,
+        text: String,
+        toolCalls: [ToolCall] = [],
+        toolResults: [ToolResult] = [],
+        thinking: String? = nil,
+        cost: Double? = nil,
+        timestamp: Date? = nil,
+        isFromHistory: Bool = false
+    ) {
+        self.id = id
+        self.isUser = isUser
+        self.text = text
+        self.toolCalls = toolCalls
+        self.toolResults = toolResults
+        self.thinking = thinking
+        self.cost = cost
+        self.timestamp = timestamp
+        self.isFromHistory = isFromHistory
+    }
+}
+
+struct ToolCall: Identifiable {
+    let id: String
+    let name: String
+    let inputPreview: String?
+}
+
+struct ToolResult {
+    let toolUseId: String
+    let content: String
+    let isError: Bool
+}
 
 #Preview {
     VStack {
@@ -274,7 +340,7 @@ struct ThinkingView: View {
             isUser: false,
             text: "Of course! I'd be happy to help. What would you like me to do?",
             toolCalls: [
-                ToolCallDisplay(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
+                ToolCall(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
             ]
         ))
     }
