@@ -57,7 +57,9 @@ struct BrowserView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Browse")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .task {
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
@@ -121,7 +123,9 @@ struct BrowserView: View {
                 .font(.system(size: theme.fontBody))
                 .foregroundStyle(theme.textPrimary)
                 .autocorrectionDisabled()
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
             if !searchText.isEmpty {
                 Button {
                     searchText = ""

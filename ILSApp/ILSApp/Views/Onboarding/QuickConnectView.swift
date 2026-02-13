@@ -68,7 +68,9 @@ struct QuickConnectView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Quick Connect")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .onAppear {
             loadHistory()
             if !appState.serverURL.isEmpty {
@@ -133,9 +135,13 @@ struct QuickConnectView: View {
 
             TextField("Server URL", text: $localURL)
                 .textFieldStyle(.roundedBorder)
+                #if os(iOS)
                 .keyboardType(.URL)
+                #endif
                 .autocorrectionDisabled()
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 .accessibilityIdentifier("server-url-field")
                 .accessibilityLabel("Server URL")
         }
@@ -157,15 +163,21 @@ struct QuickConnectView: View {
             HStack(spacing: 12) {
                 TextField("Hostname / IP", text: $remoteHost)
                     .textFieldStyle(.roundedBorder)
+                    #if os(iOS)
                     .keyboardType(.URL)
+                    #endif
                     .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
+                    #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
                     .accessibilityIdentifier("remote-host-field")
                     .accessibilityLabel("Remote hostname or IP address")
 
                 TextField("Port", text: $remotePort)
                     .textFieldStyle(.roundedBorder)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .frame(width: 80)
                     .accessibilityIdentifier("remote-port-field")
                     .accessibilityLabel("Port number")
@@ -188,9 +200,13 @@ struct QuickConnectView: View {
 
             TextField("https://your-tunnel.trycloudflare.com", text: $tunnelURL)
                 .textFieldStyle(.roundedBorder)
+                #if os(iOS)
                 .keyboardType(.URL)
+                #endif
                 .autocorrectionDisabled()
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 .accessibilityIdentifier("tunnel-url-field")
                 .accessibilityLabel("Cloudflare tunnel URL")
 

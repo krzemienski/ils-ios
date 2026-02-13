@@ -24,8 +24,10 @@ struct SettingsConnectionSection: View {
                     TextField("https://example.com or http://localhost:9999", text: $serverURL)
                         .font(.system(size: theme.fontBody))
                         .textContentType(.URL)
+                        #if os(iOS)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
+                        #endif
                         .autocorrectionDisabled()
                         .foregroundStyle(theme.textPrimary)
                         .padding(theme.spacingSM)

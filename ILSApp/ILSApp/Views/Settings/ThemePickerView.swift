@@ -58,7 +58,9 @@ struct ThemePickerView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Theme")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     // MARK: - Theme Card

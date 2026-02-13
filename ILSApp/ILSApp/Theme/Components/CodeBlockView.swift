@@ -137,8 +137,13 @@ struct CodeBlockView: View {
     // MARK: - Actions
 
     private func copyCode() {
+        #if os(iOS)
         UIPasteboard.general.string = code
         HapticManager.notification(.success)
+        #elseif os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(code, forType: .string)
+        #endif
         showCopied = true
         Task {
             try? await Task.sleep(for: .seconds(2))

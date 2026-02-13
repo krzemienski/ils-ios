@@ -37,7 +37,9 @@ struct ChatView: View {
         mainContent
             .background(theme.bgPrimary)
             .navigationTitle(session.name ?? "Chat")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar { toolbarContent }
         .sheet(isPresented: $showCommandPalette) {
             CommandPaletteView { command in

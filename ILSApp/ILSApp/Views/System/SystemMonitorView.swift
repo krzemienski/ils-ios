@@ -117,9 +117,15 @@ struct SystemMonitorView: View {
         .background(theme.bgPrimary)
         .navigationTitle("System")
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
                 liveIndicator
             }
+            #else
+            ToolbarItem(placement: .automatic) {
+                liveIndicator
+            }
+            #endif
         }
         .onAppear {
             if viewModel.metricsClient.baseURL != appState.serverURL {

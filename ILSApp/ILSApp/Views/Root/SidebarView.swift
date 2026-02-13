@@ -315,11 +315,24 @@ struct SidebarView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         let text = "Session: \(session.name ?? "Unnamed")\nModel: \(session.model)\nCreated: \(formatter.string(from: session.createdAt))\nMessages: \(session.messageCount)"
+
+        #if os(iOS)
         let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let root = scene.windows.first?.rootViewController {
             root.present(av, animated: true)
         }
+        #else
+        // macOS: Use NSSharingService
+        let sharingService = NSSharingService(named: .sendViaAirDrop)
+        if let service = sharingService {
+            service.perform(withItems: [text])
+        } else {
+            // Fallback: copy to pasteboard
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+        }
+        #endif
     }
 
     // MARK: - Helpers

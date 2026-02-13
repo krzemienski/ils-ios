@@ -56,6 +56,7 @@ struct FleetManagementView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Fleet")
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink {
                     SSHSetupView()
@@ -64,6 +65,16 @@ struct FleetManagementView: View {
                         .foregroundStyle(theme.accent)
                 }
             }
+            #else
+            ToolbarItem(placement: .automatic) {
+                NavigationLink {
+                    SSHSetupView()
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(theme.accent)
+                }
+            }
+            #endif
         }
         .task { await viewModel.loadHosts() }
         .onAppear { viewModel.startHealthPolling() }

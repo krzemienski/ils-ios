@@ -50,7 +50,9 @@ struct SSHSetupView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("SSH Setup")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     // MARK: - Credential Form
@@ -65,7 +67,9 @@ struct SSHSetupView: View {
                     iconTextField("Host", text: $host, icon: "server.rack")
                     iconTextField("Port", text: $port, icon: "number")
                         .frame(width: 80)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 }
                 iconTextField("Username", text: $username, icon: "person")
 
@@ -92,13 +96,17 @@ struct SSHSetupView: View {
                 if authMethod == .password {
                     SecureField("Password", text: $credential)
                         .textFieldStyle(.roundedBorder)
+                        #if os(iOS)
                         .textInputAutocapitalization(.never)
+                        #endif
                 } else {
                     iconTextField("Private Key Path", text: $credential, icon: "key")
                 }
 
                 iconTextField("Backend Port", text: $backendPort, icon: "network")
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
             }
             .padding(theme.spacingMD)
             .modifier(GlassCard())
@@ -274,7 +282,9 @@ struct SSHSetupView: View {
                 .frame(width: 20)
             TextField(placeholder, text: text)
                 .textFieldStyle(.roundedBorder)
+                #if os(iOS)
                 .textInputAutocapitalization(.never)
+                #endif
                 .autocorrectionDisabled()
         }
     }

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1770478187999,
+  "lastScanned": 1770948814705,
   "projectRoot": "/Users/nick/Desktop/ils-ios",
   "techStack": {
     "languages": [],
@@ -32,18 +32,20 @@
   },
   "customNotes": [],
   "directoryMap": {
-    "Auto Run Docs": {
-      "path": "Auto Run Docs",
+    "DerivedData": {
+      "path": "DerivedData",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1770478187990,
-      "keyFiles": []
+      "lastAccessed": 1770948814701,
+      "keyFiles": [
+        "info.plist"
+      ]
     },
     "ILSApp": {
       "path": "ILSApp",
       "purpose": null,
-      "fileCount": 6,
-      "lastAccessed": 1770478187991,
+      "fileCount": 5,
+      "lastAccessed": 1770948814701,
       "keyFiles": [
         "CLAUDE.md",
         "ILSApp.xctestplan",
@@ -56,7 +58,7 @@
       "path": "ILSAppUITests",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1770478187991,
+      "lastAccessed": 1770948814701,
       "keyFiles": [
         "README.md"
       ]
@@ -64,9 +66,10 @@
     "ILSFullStack.xcworkspace": {
       "path": "ILSFullStack.xcworkspace",
       "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1770478187991,
+      "fileCount": 2,
+      "lastAccessed": 1770948814701,
       "keyFiles": [
+        "CLAUDE.md",
         "contents.xcworkspacedata"
       ]
     },
@@ -74,14 +77,14 @@
       "path": "Sources",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1770478187991,
+      "lastAccessed": 1770948814701,
       "keyFiles": []
     },
     "TestResults_20260206_160138.xcresult": {
       "path": "TestResults_20260206_160138.xcresult",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1770478187992,
+      "lastAccessed": 1770948814701,
       "keyFiles": [
         "Info.plist"
       ]
@@ -90,7 +93,7 @@
       "path": "TestResults_20260206_160930.xcresult",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1770478187992,
+      "lastAccessed": 1770948814701,
       "keyFiles": [
         "Info.plist"
       ]
@@ -99,21 +102,28 @@
       "path": "Tests",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1770478187993,
+      "lastAccessed": 1770948814701,
       "keyFiles": []
     },
     "build": {
       "path": "build",
       "purpose": "Build output",
       "fileCount": 0,
-      "lastAccessed": 1770478187994,
+      "lastAccessed": 1770948814702,
+      "keyFiles": []
+    },
+    "design-system": {
+      "path": "design-system",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1770948814702,
       "keyFiles": []
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 7,
-      "lastAccessed": 1770478187995,
+      "lastAccessed": 1770948814702,
       "keyFiles": [
         "API-REFERENCE.md",
         "API_REFERENCE.md",
@@ -122,25 +132,31 @@
         "ils-spec.md"
       ]
     },
+    "mockups": {
+      "path": "mockups",
+      "purpose": null,
+      "fileCount": 8,
+      "lastAccessed": 1770948814702,
+      "keyFiles": [
+        "01-ghost-protocol.html",
+        "02-neon-noir.html",
+        "03-electric-grid.html",
+        "04-synthwave-dreams.html",
+        "05-data-storm.html"
+      ]
+    },
     "plans": {
       "path": "plans",
       "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1770478187995,
-      "keyFiles": []
-    },
-    "scratch": {
-      "path": "scratch",
-      "purpose": null,
-      "fileCount": 0,
-      "lastAccessed": 1770478187995,
+      "fileCount": 1,
+      "lastAccessed": 1770948814702,
       "keyFiles": []
     },
     "scripts": {
       "path": "scripts",
       "purpose": "Build/utility scripts",
-      "fileCount": 2,
-      "lastAccessed": 1770478187995,
+      "fileCount": 3,
+      "lastAccessed": 1770948814702,
       "keyFiles": [
         "reinstall-plugins.sh",
         "run_regression_tests.sh"
@@ -149,17 +165,34 @@
     "specs": {
       "path": "specs",
       "purpose": null,
-      "fileCount": 3,
-      "lastAccessed": 1770478187996,
+      "fileCount": 2,
+      "lastAccessed": 1770948814702,
       "keyFiles": [
         "CLAUDE.md"
+      ]
+    },
+    "DerivedData/Build": {
+      "path": "DerivedData/Build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1770948814702,
+      "keyFiles": []
+    },
+    "ILSApp/scripts": {
+      "path": "ILSApp/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 2,
+      "lastAccessed": 1770948814703,
+      "keyFiles": [
+        "CLAUDE.md",
+        "run-ui-tests.sh"
       ]
     },
     "TestResults_20260206_160138.xcresult/Data": {
       "path": "TestResults_20260206_160138.xcresult/Data",
       "purpose": "Data files",
       "fileCount": 6,
-      "lastAccessed": 1770478187998,
+      "lastAccessed": 1770948814703,
       "keyFiles": [
         "data.0~4y0iMm6GWwI-Ye5sp33uWyvoSRZ_4DhAjMHaQUF_Pd8FH0cynhT9-yj5b2EBekP1LFSQAJFPpugJ3a2GX9U8iA==",
         "data.0~9W3bavdKyo33khGQqHgDkL2iBynoRKVbgml1s1mXbQefLuUONevFn3G81MtfJBKOzufv0IJ7QNF2KkRvec9GsQ==",
@@ -170,7 +203,7 @@
       "path": "TestResults_20260206_160930.xcresult/Data",
       "purpose": "Data files",
       "fileCount": 6,
-      "lastAccessed": 1770478187999,
+      "lastAccessed": 1770948814703,
       "keyFiles": [
         "data.0~5sQCg_i487-jK5_1bHbWXfokwAOsvghfOtWOztizRND-Nh_p-Yc18C7THbM4F9vojoRPEd3uLsMLQklC5GuQzw==",
         "data.0~BHMdIUEvdrnjp8rUGugoY54ZdGomAhChcOAx_lIGOffpaBSxb8Xk3CqjTqJyiBXNdvBk3LqLX3AQKtPewuJL3w==",
@@ -180,303 +213,69 @@
   },
   "hotPaths": [
     {
-      "path": "ILSApp/ILSApp",
-      "accessCount": 75,
-      "lastAccessed": 1770516029064,
-      "type": "directory"
-    },
-    {
-      "path": "ILSApp/ILSApp/ILSAppApp.swift",
-      "accessCount": 52,
-      "lastAccessed": 1770515098033,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
-      "accessCount": 29,
-      "lastAccessed": 1770514890592,
-      "type": "file"
-    },
-    {
-      "path": "",
-      "accessCount": 26,
-      "lastAccessed": 1770515786138,
-      "type": "directory"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Sessions/NewSessionView.swift",
-      "accessCount": 23,
-      "lastAccessed": 1770512029833,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/ILSTheme.swift",
+      "path": "ILSApp/ILSApp.xcodeproj/project.pbxproj",
       "accessCount": 19,
-      "lastAccessed": 1770512062596,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Chat/ChatView.swift",
-      "accessCount": 18,
-      "lastAccessed": 1770513417461,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/EntityType.swift",
-      "accessCount": 17,
-      "lastAccessed": 1770514039556,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/Components/ToolCallAccordion.swift",
-      "accessCount": 15,
-      "lastAccessed": 1770512235318,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/ViewModels/PluginsViewModel.swift",
-      "accessCount": 14,
-      "lastAccessed": 1770515925661,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Sessions/SessionInfoView.swift",
-      "accessCount": 12,
-      "lastAccessed": 1770515149200,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/System/SystemMonitorView.swift",
-      "accessCount": 12,
-      "lastAccessed": 1770515428079,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Services/APIClient.swift",
-      "accessCount": 12,
-      "lastAccessed": 1770515767989,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/ViewModels/DashboardViewModel.swift",
-      "accessCount": 11,
-      "lastAccessed": 1770513422293,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift",
-      "accessCount": 11,
-      "lastAccessed": 1770515048554,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/ViewModels/MCPViewModel.swift",
-      "accessCount": 11,
-      "lastAccessed": 1770515849195,
-      "type": "file"
-    },
-    {
-      "path": "Sources/ILSShared",
-      "accessCount": 9,
-      "lastAccessed": 1770515720732,
+      "lastAccessed": 1770949785636,
       "type": "directory"
     },
     {
-      "path": "ILSApp/ILSApp/ViewModels/ChatViewModel.swift",
-      "accessCount": 8,
-      "lastAccessed": 1770513416503,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/Components/ILSCodeHighlighter.swift",
-      "accessCount": 8,
-      "lastAccessed": 1770513422855,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Chat/MessageView.swift",
-      "accessCount": 7,
-      "lastAccessed": 1770499581975,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/Components/EmptyEntityState.swift",
-      "accessCount": 7,
-      "lastAccessed": 1770512247383,
-      "type": "file"
-    },
-    {
-      "path": "Sources/ILSShared/DTOs/Requests.swift",
-      "accessCount": 7,
-      "lastAccessed": 1770515777630,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/ContentView.swift",
-      "accessCount": 6,
-      "lastAccessed": 1770495059069,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/MCP/MCPServerListView.swift",
-      "accessCount": 6,
-      "lastAccessed": 1770499673919,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Theme/Components/ThinkingSection.swift",
-      "accessCount": 6,
-      "lastAccessed": 1770512234698,
-      "type": "file"
-    },
-    {
-      "path": "specs/.current-spec",
-      "accessCount": 5,
-      "lastAccessed": 1770511870669,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Models/ChatMessage.swift",
+      "path": "Sources/ILSBackend/App/configure.swift",
       "accessCount": 4,
-      "lastAccessed": 1770512000654,
+      "lastAccessed": 1770949050347,
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/ViewModels/SessionsViewModel.swift",
-      "accessCount": 4,
-      "lastAccessed": 1770512010965,
-      "type": "file"
-    },
-    {
-      "path": "Sources/ILSShared/Models/Session.swift",
-      "accessCount": 4,
-      "lastAccessed": 1770512279293,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Plugins/PluginsListView.swift",
-      "accessCount": 3,
-      "lastAccessed": 1770499655736,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Services/SSEClient.swift",
-      "accessCount": 3,
-      "lastAccessed": 1770511999084,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/ViewModels/SkillsViewModel.swift",
-      "accessCount": 3,
-      "lastAccessed": 1770512019681,
-      "type": "file"
-    },
-    {
-      "path": "mockups/01-ghost-protocol.html",
+      "path": "Sources/ILSBackend",
       "accessCount": 2,
-      "lastAccessed": 1770479689952,
-      "type": "file"
-    },
-    {
-      "path": "Package.swift",
-      "accessCount": 2,
-      "lastAccessed": 1770511991674,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/ViewModels/ProjectsViewModel.swift",
-      "accessCount": 2,
-      "lastAccessed": 1770512011455,
-      "type": "file"
-    },
-    {
-      "path": "Sources/ILSShared/Models/StreamMessage.swift",
-      "accessCount": 2,
-      "lastAccessed": 1770512280177,
-      "type": "file"
-    },
-    {
-      "path": "specs/ios-app-polish2/.progress.md",
-      "accessCount": 1,
-      "lastAccessed": 1770478610404,
-      "type": "file"
-    },
-    {
-      "path": "design-system/ils-ios-cyberpunk/MASTER.md",
-      "accessCount": 1,
-      "lastAccessed": 1770478927647,
-      "type": "file"
-    },
-    {
-      "path": "mockups/02-neon-noir.html",
-      "accessCount": 1,
-      "lastAccessed": 1770479556910,
-      "type": "file"
-    },
-    {
-      "path": "mockups/03-electric-grid.html",
-      "accessCount": 1,
-      "lastAccessed": 1770479576394,
-      "type": "file"
-    },
-    {
-      "path": "mockups/05-data-storm.html",
-      "accessCount": 1,
-      "lastAccessed": 1770479632385,
-      "type": "file"
-    },
-    {
-      "path": "mockups/04-synthwave-dreams.html",
-      "accessCount": 1,
-      "lastAccessed": 1770479650821,
-      "type": "file"
-    },
-    {
-      "path": "mockups/index.html",
-      "accessCount": 1,
-      "lastAccessed": 1770479765722,
-      "type": "file"
-    },
-    {
-      "path": "mockups/evidence-index.png",
-      "accessCount": 1,
-      "lastAccessed": 1770479800801,
-      "type": "file"
-    },
-    {
-      "path": "specs",
-      "accessCount": 1,
-      "lastAccessed": 1770480150041,
+      "lastAccessed": 1770948930352,
       "type": "directory"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Dashboard/DashboardView.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770480158046,
+      "path": "Sources/ILSBackend/Services/FleetService.swift",
+      "accessCount": 2,
+      "lastAccessed": 1770949009260,
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Sessions/SessionsListView.swift",
+      "path": "ILSApp/ILSApp/Theme/AppTheme.swift",
       "accessCount": 1,
-      "lastAccessed": 1770480158226,
+      "lastAccessed": 1770948822188,
+      "type": "directory"
+    },
+    {
+      "path": "Sources/ILSShared/Models/FleetHost.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770949009749,
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Projects/ProjectsListView.swift",
+      "path": "Sources/ILSBackend/Models/SessionModel.swift",
       "accessCount": 1,
-      "lastAccessed": 1770480160221,
+      "lastAccessed": 1770949010156,
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Projects/ProjectDetailView.swift",
+      "path": "Sources/ILSBackend/Migrations/CreateSessions.swift",
       "accessCount": 1,
-      "lastAccessed": 1770480166579,
+      "lastAccessed": 1770949016961,
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Skills/SkillsListView.swift",
+      "path": "Sources/ILSBackend/Models/FleetHostModel.swift",
       "accessCount": 1,
-      "lastAccessed": 1770480167173,
+      "lastAccessed": 1770949034406,
+      "type": "file"
+    },
+    {
+      "path": "Sources/ILSBackend/Migrations/CreateFleetHosts.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770949036742,
+      "type": "file"
+    },
+    {
+      "path": "Sources/ILSShared/DTOs/FleetDTOs.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770949054195,
       "type": "file"
     }
   ],

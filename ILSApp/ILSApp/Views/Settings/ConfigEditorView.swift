@@ -58,7 +58,9 @@ struct ConfigEditorView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("\(scope.capitalized) Settings")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {

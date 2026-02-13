@@ -59,7 +59,12 @@ struct AssistantCard: View {
         }
         .contextMenu {
             Button {
+                #if os(iOS)
                 UIPasteboard.general.string = message.text
+                #else
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(message.text, forType: .string)
+                #endif
                 showCopyConfirmation = true
                 Task {
                     try? await Task.sleep(for: .seconds(2))

@@ -71,7 +71,9 @@ struct AdvancedOptionsSheet: View {
             .background(theme.bgPrimary)
             .tint(theme.accent)
             .navigationTitle("Chat Options")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -149,7 +151,9 @@ struct AdvancedOptionsSheet: View {
                     .foregroundColor(theme.textPrimary)
                 Spacer()
                 TextField("No limit", value: $config.maxBudgetUSD, format: .number)
+                    #if os(iOS)
                     .keyboardType(.decimalPad)
+                    #endif
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: 100)
                     .accessibilityLabel("Max budget USD text field")

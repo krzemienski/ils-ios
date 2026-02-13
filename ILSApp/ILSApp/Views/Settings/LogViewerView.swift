@@ -25,33 +25,36 @@ struct LogViewerView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Logs")
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    Task {
-                        logs = await AppLogger.shared.recentLogs()
-                    }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundStyle(theme.accent)
-                }
-                .accessibilityLabel("Refresh logs")
+                refreshButton
             }
+            #else
+            ToolbarItem(placement: .automatic) {
+                refreshButton
+            }
+            #endif
         }
         .task {
             logs = await AppLogger.shared.recentLogs()
         }
     }
 
+    private var refreshButton: some View {
+        Button {
+            Task {
+                logs = await AppLogger.shared.recentLogs()
+            }
+        } label: {
+            Image(systemName: "arrow.clockwise")
+                .foregroundStyle(theme.accent)
+        }
+        .accessibilityLabel("Refresh logs")
+    }
+
     private func logColor(for line: String) -> Color {
         if line.contains("[ERROR]") { return theme.error }
         if line.contains("[WARN]") { return theme.warning }
         return theme.textSecondary
-    }
-}
-
-#Preview {
-    NavigationStack {
-        LogViewerView()
-            .environment(\.theme, ObsidianTheme())
     }
 }

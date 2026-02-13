@@ -99,7 +99,9 @@ struct NotificationPreferencesView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Notifications")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     // MARK: - Components

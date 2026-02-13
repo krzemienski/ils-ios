@@ -51,7 +51,9 @@ struct CommandPaletteView: View {
             .background(theme.bgPrimary)
             .searchable(text: $searchText, prompt: "Search commands...")
             .navigationTitle("Commands")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

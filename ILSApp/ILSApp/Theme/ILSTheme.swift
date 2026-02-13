@@ -2,6 +2,7 @@ import SwiftUI
 
 // MARK: - Haptic Feedback Manager
 
+#if os(iOS)
 enum HapticManager {
     static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
@@ -11,6 +12,15 @@ enum HapticManager {
         UINotificationFeedbackGenerator().notificationOccurred(type)
     }
 }
+#else
+// macOS has no haptic feedback
+enum HapticManager {
+    enum FeedbackStyle { case medium }
+    enum FeedbackType { case success, warning, error }
+    static func impact(_ style: FeedbackStyle = .medium) {}
+    static func notification(_ type: FeedbackType) {}
+}
+#endif
 
 // MARK: - Toast Component
 

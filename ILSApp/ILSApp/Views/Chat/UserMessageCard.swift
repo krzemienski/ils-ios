@@ -11,7 +11,11 @@ struct UserMessageCard: View {
 
     var body: some View {
         HStack {
+            #if os(iOS)
             Spacer(minLength: UIScreen.main.bounds.width * 0.2)
+            #else
+            Spacer(minLength: NSScreen.main?.frame.width ?? 800 * 0.2)
+            #endif
 
             VStack(alignment: .trailing, spacing: 4) {
                 // Message text
@@ -42,7 +46,12 @@ struct UserMessageCard: View {
         }
         .contextMenu {
             Button {
+                #if os(iOS)
                 UIPasteboard.general.string = message.text
+                #else
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(message.text, forType: .string)
+                #endif
                 showCopyConfirmation = true
                 Task {
                     try? await Task.sleep(for: .seconds(2))

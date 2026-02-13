@@ -19,7 +19,9 @@ struct CreateTeamView: View {
             Form {
                 Section {
                     TextField("Team Name", text: $name)
+                        #if os(iOS)
                         .autocapitalization(.none)
+                        #endif
                         .disableAutocorrection(true)
                 } header: {
                     Text("Name")
@@ -41,7 +43,9 @@ struct CreateTeamView: View {
             .scrollContentBackground(.hidden)
             .background(theme.bgPrimary)
             .navigationTitle("Create Team")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

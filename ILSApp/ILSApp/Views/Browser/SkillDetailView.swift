@@ -40,7 +40,9 @@ struct SkillDetailView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle(skill.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: theme.spacingSM) {
@@ -409,7 +411,12 @@ struct SkillDetailView: View {
     }
 
     private func copyContent() {
+        #if os(iOS)
         UIPasteboard.general.string = skill.rawContent ?? skill.content ?? ""
+        #else
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(skill.rawContent ?? skill.content ?? "", forType: .string)
+        #endif
         showCopiedToast = true
         Task {
             try? await Task.sleep(for: .seconds(2))

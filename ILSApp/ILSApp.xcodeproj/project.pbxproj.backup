@@ -8,78 +8,48 @@
 
 /* Begin PBXBuildFile section */
 		000000000000000000000001 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
-		000000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000012 /* ContentView.swift */; };
 		000000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000013 /* Assets.xcassets */; };
 		000000000000000000000020 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
 		000000000000000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
 		000000000000000000000022 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
-		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
+		000000000000000000000023 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
 		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
 		000000000000000000000026 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
 		000000000000000000000027 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
-		000000000000000000000028 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000038 /* ProjectsListView.swift */; };
-		00000000000000000000002A /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003A /* ProjectDetailView.swift */; };
 		00000000000000000000002B /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
-		00000000000000000000002C /* PluginsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003C /* PluginsListView.swift */; };
 		00000000000000000000002D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
-		00000000000000000000002E /* MCPServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003E /* MCPServerListView.swift */; };
 		00000000000000000000002F /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
-		000000000000000000000040 /* SkillsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000050 /* SkillsListView.swift */; };
 		000000000000000000000041 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
 		000000000000000000000042 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* SettingsView.swift */; };
-		000000000000000000000043 /* SessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000053 /* SessionsListView.swift */; };
 		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
 		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
-		000000000000000000000046 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* DashboardView.swift */; };
 		000000000000000000000047 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
-		0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000E2 /* ProjectSessionsListView.swift */; };
-		01D90FD32F366E1D0072CFC0 /* XCUITestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD22F366E1D0072CFC0 /* XCUITestBase.swift */; };
-		01D90FD62F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD52F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift */; };
-		01D90FD82F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD72F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift */; };
-		01D90FDA2F366E8E0072CFC0 /* Scenario03_StreamingAndCancellation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FD92F366E8E0072CFC0 /* Scenario03_StreamingAndCancellation.swift */; };
-		01D90FDC2F366E8E0072CFC0 /* Scenario04_ErrorHandlingAndRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FDB2F366E8E0072CFC0 /* Scenario04_ErrorHandlingAndRecovery.swift */; };
-		01D90FDE2F366E8F0072CFC0 /* Scenario05_ProjectManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FDD2F366E8F0072CFC0 /* Scenario05_ProjectManagement.swift */; };
-		01D90FE02F366E8F0072CFC0 /* Scenario06_PluginOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FDF2F366E8F0072CFC0 /* Scenario06_PluginOperations.swift */; };
-		01D90FE22F366EDA0072CFC0 /* Scenario07_MCPServerManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE12F366EDA0072CFC0 /* Scenario07_MCPServerManagement.swift */; };
-		01D90FE42F366EDA0072CFC0 /* Scenario08_SettingsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE32F366EDA0072CFC0 /* Scenario08_SettingsConfiguration.swift */; };
-		01D90FE62F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE52F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift */; };
-		01D90FE82F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE72F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift */; };
-		01D90FEA2F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D90FE92F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift */; };
-		4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */; };
-		55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */; };
-		5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */; };
-		5FAB32D6951B376A319E321F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D1A53A5156A8D8D724FDCB /* EntityType.swift */; };
-		71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5959087095F5F603D0B826 /* AppLogger.swift */; };
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
-		9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E0683F219C707581CC1582 /* BaseListViewModel.swift */; };
-		C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */; };
-		FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */; };
-		FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8864999F593F3FBA35FE5962 /* SessionTemplate.swift */; };
-		MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MARKDOWN0000000000000002 /* MarkdownTextView.swift */; };
-		ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ONBOARD0000000000000002 /* ServerSetupSheet.swift */; };
-		SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSMON0000000000000002 /* SystemMonitorView.swift */; };
-		CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CONNBN0000000000000002 /* ConnectionBanner.swift */; };
-		METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = METRWS0000000000000002 /* MetricsWebSocketClient.swift */; };
-		SYSVM00000000000000001 /* SystemMetricsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SYSVM00000000000000002 /* SystemMetricsViewModel.swift */; };
-		MTCHRT0000000000000001 /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = MTCHRT0000000000000002 /* MetricChart.swift */; };
-		PRGRING000000000000001 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRGRING000000000000002 /* ProgressRing.swift */; };
-		PRCLST0000000000000001 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PRCLST0000000000000002 /* ProcessListView.swift */; };
-		FILBRW0000000000000001 /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FILBRW0000000000000002 /* FileBrowserView.swift */; };
-		TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TUNSET0000000000000002 /* TunnelSettingsView.swift */; };
-		CODEBL0000000000000001 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CODEBL0000000000000002 /* CodeBlockView.swift */; };
-		TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = TOOLAC0000000000000002 /* ToolCallAccordion.swift */; };
-		THNKSC0000000000000001 /* ThinkingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = THNKSC0000000000000002 /* ThinkingSection.swift */; };
-		CNSTP00000000000000001 /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = CNSTP00000000000000002 /* ConnectionSteps.swift */; };
-		STCARD0000000000000001 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = STCARD0000000000000002 /* StatCard.swift */; };
-		SPRKCR0000000000000001 /* SparklineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = SPRKCR0000000000000002 /* SparklineChart.swift */; };
-		EMTYST0000000000000001 /* EmptyEntityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EMTYST0000000000000002 /* EmptyEntityState.swift */; };
-		SHIMMR0000000000000001 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHIMMR0000000000000002 /* ShimmerModifier.swift */; };
-		SKLROW0000000000000001 /* SkeletonRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = SKLROW0000000000000002 /* SkeletonRow.swift */; };
 		UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A1 /* ValidationGateTests.swift */; };
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
+		MAC000000000000000000000100 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
+		MAC000000000000000000000102 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
+		MAC000000000000000000000103 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
+		MAC000000000000000000000104 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
+		MAC000000000000000000000105 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
+		MAC000000000000000000000107 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
+		MAC000000000000000000000108 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
+		MAC000000000000000000000109 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
+		MAC000000000000000000000113 /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
+		MAC000000000000000000000115 /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
+		MAC000000000000000000000117 /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
+		MAC000000000000000000000119 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
+		MAC000000000000000000000120 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* SettingsView.swift */; };
+		MAC000000000000000000000122 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
+		MAC000000000000000000000123 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
+		MAC000000000000000000000125 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
+		MAC000000000000000000000126 /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
+		MAC0000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = MAC0000000000000000000013 /* Assets.xcassets */; };
+		MAC0000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
+
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,79 +65,34 @@
 /* Begin PBXFileReference section */
 		000000000000000000000010 /* ILSApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000011 /* ILSAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSAppApp.swift; sourceTree = "<group>"; };
-		000000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		000000000000000000000014 /* ILSApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSApp.entitlements; sourceTree = "<group>"; };
 		000000000000000000000030 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
 		000000000000000000000031 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		000000000000000000000032 /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
-		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
+		000000000000000000000033 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		000000000000000000000036 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		000000000000000000000037 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000000038 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
-		00000000000000000000003A /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
 		00000000000000000000003B /* ProjectsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsViewModel.swift; sourceTree = "<group>"; };
-		00000000000000000000003C /* PluginsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003D /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
-		00000000000000000000003E /* MCPServerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerListView.swift; sourceTree = "<group>"; };
 		00000000000000000000003F /* MCPViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000000050 /* SkillsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000051 /* SkillsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000052 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		000000000000000000000053 /* SessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListView.swift; sourceTree = "<group>"; };
 		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000000056 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
-		0000000000000000000000E2 /* ProjectSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSessionsListView.swift; sourceTree = "<group>"; };
-		01D90FD22F366E1D0072CFC0 /* XCUITestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCUITestBase.swift; sourceTree = "<group>"; };
-		01D90FD52F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario01_CompleteSessionLifecycle.swift; sourceTree = "<group>"; };
-		01D90FD72F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario02_MultiSectionNavigation.swift; sourceTree = "<group>"; };
-		01D90FD92F366E8E0072CFC0 /* Scenario03_StreamingAndCancellation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario03_StreamingAndCancellation.swift; sourceTree = "<group>"; };
-		01D90FDB2F366E8E0072CFC0 /* Scenario04_ErrorHandlingAndRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario04_ErrorHandlingAndRecovery.swift; sourceTree = "<group>"; };
-		01D90FDD2F366E8F0072CFC0 /* Scenario05_ProjectManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario05_ProjectManagement.swift; sourceTree = "<group>"; };
-		01D90FDF2F366E8F0072CFC0 /* Scenario06_PluginOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario06_PluginOperations.swift; sourceTree = "<group>"; };
-		01D90FE12F366EDA0072CFC0 /* Scenario07_MCPServerManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario07_MCPServerManagement.swift; sourceTree = "<group>"; };
-		01D90FE32F366EDA0072CFC0 /* Scenario08_SettingsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario08_SettingsConfiguration.swift; sourceTree = "<group>"; };
-		01D90FE52F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario09_SkillsManagement.swift; sourceTree = "<group>"; };
-		01D90FE72F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario10_DashboardAndAnalytics.swift; sourceTree = "<group>"; };
-		01D90FE92F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario11_ExtendedChatConversation.swift; sourceTree = "<group>"; };
-		0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EditMCPServerView.swift; sourceTree = "<group>"; };
-		16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplatesView.swift; sourceTree = "<group>"; };
-		4F5959087095F5F603D0B826 /* AppLogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppLogger.swift; path = Services/AppLogger.swift; sourceTree = "<group>"; };
-		68E0683F219C707581CC1582 /* BaseListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BaseListViewModel.swift; sourceTree = "<group>"; };
-		6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MCPImportExportView.swift; sourceTree = "<group>"; };
-		8864999F593F3FBA35FE5962 /* SessionTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
-		B1D1A53A5156A8D8D724FDCB /* EntityType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
-		CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LogViewerView.swift; path = Views/Settings/LogViewerView.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
-		FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
-		MARKDOWN0000000000000002 /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
-		ONBOARD0000000000000002 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
-		SYSMON0000000000000002 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
-		CONNBN0000000000000002 /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
-		METRWS0000000000000002 /* MetricsWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsWebSocketClient.swift; sourceTree = "<group>"; };
-		SYSVM00000000000000002 /* SystemMetricsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsViewModel.swift; sourceTree = "<group>"; };
-		MTCHRT0000000000000002 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
-		PRGRING000000000000002 /* ProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
-		PRCLST0000000000000002 /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
-		FILBRW0000000000000002 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
-		TUNSET0000000000000002 /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
-		CODEBL0000000000000002 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
-		TOOLAC0000000000000002 /* ToolCallAccordion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallAccordion.swift; sourceTree = "<group>"; };
-		THNKSC0000000000000002 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
-		CNSTP00000000000000002 /* ConnectionSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSteps.swift; sourceTree = "<group>"; };
-		STCARD0000000000000002 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
-		SPRKCR0000000000000002 /* SparklineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparklineChart.swift; sourceTree = "<group>"; };
-		EMTYST0000000000000002 /* EmptyEntityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyEntityState.swift; sourceTree = "<group>"; };
-		SHIMMR0000000000000002 /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
-		SKLROW0000000000000002 /* SkeletonRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonRow.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		UITEST0000000000000000A1 /* ValidationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
+		MAC0000000000000000000010 /* ILSMacApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSMacApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		MAC0000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		MAC0000000000000000000012 /* ILSMacApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSMacApp.entitlements; sourceTree = "<group>"; };
+		MAC0000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -179,7 +104,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		UITEST00000000000000000D /* Frameworks */ = {
+			MAC000000000000000000000D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				MAC0000000000000000000080 /* ILSShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+	UITEST00000000000000000D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -193,6 +126,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000015 /* ILSApp */,
+				MAC0000000000000000000015 /* ILSMacApp */,
 				UITEST00000000000000GRP1 /* ILSAppUITests */,
 				00000000000000000000000F /* Products */,
 			);
@@ -202,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* ILSApp.app */,
+				MAC0000000000000000000010 /* ILSMacApp.app */,
 				UITEST0000000000000000A0 /* ILSAppUITests.xctest */,
 			);
 			name = Products;
@@ -211,15 +146,12 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000011 /* ILSAppApp.swift */,
-				000000000000000000000012 /* ContentView.swift */,
 				000000000000000000000060 /* Theme */,
 				000000000000000000000061 /* Services */,
 				000000000000000000000062 /* Views */,
 				000000000000000000000063 /* ViewModels */,
 				000000000000000000000013 /* Assets.xcassets */,
 				000000000000000000000014 /* ILSApp.entitlements */,
-				2F5AAE5FE7854694374E1A23 /* Models */,
-				AB0C0191D24E0DA6E658ED6D /* ILSApp */,
 			);
 			path = ILSApp;
 			sourceTree = "<group>";
@@ -228,29 +160,8 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000030 /* ILSTheme.swift */,
-				B1D1A53A5156A8D8D724FDCB /* EntityType.swift */,
-				CONNBN0000000000000003 /* Components */,
 			);
 			path = Theme;
-			sourceTree = "<group>";
-		};
-		CONNBN0000000000000003 /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				CONNBN0000000000000002 /* ConnectionBanner.swift */,
-				MTCHRT0000000000000002 /* MetricChart.swift */,
-				PRGRING000000000000002 /* ProgressRing.swift */,
-				CODEBL0000000000000002 /* CodeBlockView.swift */,
-				TOOLAC0000000000000002 /* ToolCallAccordion.swift */,
-				THNKSC0000000000000002 /* ThinkingSection.swift */,
-				CNSTP00000000000000002 /* ConnectionSteps.swift */,
-				STCARD0000000000000002 /* StatCard.swift */,
-				SPRKCR0000000000000002 /* SparklineChart.swift */,
-				EMTYST0000000000000002 /* EmptyEntityState.swift */,
-				SHIMMR0000000000000002 /* ShimmerModifier.swift */,
-				SKLROW0000000000000002 /* SkeletonRow.swift */,
-			);
-			path = Components;
 			sourceTree = "<group>";
 		};
 		000000000000000000000061 /* Services */ = {
@@ -258,7 +169,6 @@
 			children = (
 				000000000000000000000031 /* APIClient.swift */,
 				000000000000000000000032 /* SSEClient.swift */,
-				METRWS0000000000000002 /* MetricsWebSocketClient.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -266,7 +176,7 @@
 		000000000000000000000062 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000070 /* Sidebar */,
+				000000000000000000000070 /* Root */,
 				000000000000000000000071 /* Chat */,
 				000000000000000000000078 /* Dashboard */,
 				000000000000000000000072 /* Projects */,
@@ -275,8 +185,6 @@
 				000000000000000000000075 /* Skills */,
 				000000000000000000000076 /* Sessions */,
 				000000000000000000000077 /* Settings */,
-				SYSMON0000000000000003 /* System */,
-				ONBOARD0000000000000003 /* Onboarding */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -291,8 +199,6 @@
 				00000000000000000000003F /* MCPViewModel.swift */,
 				000000000000000000000051 /* SkillsViewModel.swift */,
 				000000000000000000000055 /* SessionsViewModel.swift */,
-				68E0683F219C707581CC1582 /* BaseListViewModel.swift */,
-				SYSVM00000000000000002 /* SystemMetricsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -300,15 +206,14 @@
 		000000000000000000000070 /* Sidebar */ = {
 			isa = PBXGroup;
 			children = (
+				000000000000000000000033 /* SidebarView.swift */,
 			);
-			path = Sidebar;
+			path = Root;
 			sourceTree = "<group>";
 		};
 		000000000000000000000071 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000034 /* MessageView.swift */,
-				MARKDOWN0000000000000002 /* MarkdownTextView.swift */,
 				000000000000000000000035 /* CommandPaletteView.swift */,
 				000000000000000000000036 /* ChatView.swift */,
 			);
@@ -318,9 +223,6 @@
 		000000000000000000000072 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000038 /* ProjectsListView.swift */,
-				00000000000000000000003A /* ProjectDetailView.swift */,
-				0000000000000000000000E2 /* ProjectSessionsListView.swift */,
 			);
 			path = Projects;
 			sourceTree = "<group>";
@@ -328,7 +230,6 @@
 		000000000000000000000073 /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000003C /* PluginsListView.swift */,
 			);
 			path = Plugins;
 			sourceTree = "<group>";
@@ -336,9 +237,6 @@
 		000000000000000000000074 /* MCP */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000000003E /* MCPServerListView.swift */,
-				0A74F62B0F128D862C9E8D0A /* EditMCPServerView.swift */,
-				6994FAC9502DFF7B192415CF /* MCPImportExportView.swift */,
 			);
 			path = MCP;
 			sourceTree = "<group>";
@@ -346,7 +244,6 @@
 		000000000000000000000075 /* Skills */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000050 /* SkillsListView.swift */,
 			);
 			path = Skills;
 			sourceTree = "<group>";
@@ -354,10 +251,8 @@
 		000000000000000000000076 /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000053 /* SessionsListView.swift */,
 				000000000000000000000054 /* NewSessionView.swift */,
 				D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */,
-				16813F7725F3A02DE00DE950 /* SessionTemplatesView.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -366,8 +261,6 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000052 /* SettingsView.swift */,
-				FA43B94192D862C7E878A1C0 /* NotificationPreferencesView.swift */,
-				TUNSET0000000000000002 /* TunnelSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -375,102 +268,18 @@
 		000000000000000000000078 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000056 /* DashboardView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
 		};
-		01D90FD12F366E0A0072CFC0 /* TestHelpers */ = {
+		MAC0000000000000000000015 /* ILSMacApp */ = {
 			isa = PBXGroup;
 			children = (
-				01D90FD22F366E1D0072CFC0 /* XCUITestBase.swift */,
+				MAC0000000000000000000013 /* Assets.xcassets */,
+				MAC0000000000000000000012 /* ILSMacApp.entitlements */,
+				MAC0000000000000000000011 /* Info.plist */,
 			);
-			path = TestHelpers;
-			sourceTree = "<group>";
-		};
-		01D90FD42F366E370072CFC0 /* RegressionTests */ = {
-			isa = PBXGroup;
-			children = (
-				01D90FD52F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift */,
-				01D90FD72F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift */,
-				01D90FD92F366E8E0072CFC0 /* Scenario03_StreamingAndCancellation.swift */,
-				01D90FDB2F366E8E0072CFC0 /* Scenario04_ErrorHandlingAndRecovery.swift */,
-				01D90FDD2F366E8F0072CFC0 /* Scenario05_ProjectManagement.swift */,
-				01D90FDF2F366E8F0072CFC0 /* Scenario06_PluginOperations.swift */,
-				01D90FE12F366EDA0072CFC0 /* Scenario07_MCPServerManagement.swift */,
-				01D90FE32F366EDA0072CFC0 /* Scenario08_SettingsConfiguration.swift */,
-				01D90FE52F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift */,
-				01D90FE72F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift */,
-				01D90FE92F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift */,
-			);
-			path = RegressionTests;
-			sourceTree = "<group>";
-		};
-		2F5AAE5FE7854694374E1A23 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				8864999F593F3FBA35FE5962 /* SessionTemplate.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		627DA2386F49F2D249D329AC /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				4F5959087095F5F603D0B826 /* AppLogger.swift */,
-			);
-			name = Services;
-			sourceTree = "<group>";
-		};
-		70FB461EE474670EAD9CB4CE /* Settings */ = {
-			isa = PBXGroup;
-			children = (
-				CAA2816DB4F66722A95EBE3A /* LogViewerView.swift */,
-			);
-			name = Settings;
-			sourceTree = "<group>";
-		};
-		9A167A2D45391F003B1893E5 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				70FB461EE474670EAD9CB4CE /* Settings */,
-			);
-			name = Views;
-			sourceTree = "<group>";
-		};
-		AB0C0191D24E0DA6E658ED6D /* ILSApp */ = {
-			isa = PBXGroup;
-			children = (
-				B5C3B62EE996DF49627006B8 /* Models */,
-				627DA2386F49F2D249D329AC /* Services */,
-				9A167A2D45391F003B1893E5 /* Views */,
-			);
-			name = ILSApp;
-			sourceTree = "<group>";
-		};
-		B5C3B62EE996DF49627006B8 /* Models */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Models;
-			sourceTree = "<group>";
-		};
-		ONBOARD0000000000000003 /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				ONBOARD0000000000000002 /* ServerSetupSheet.swift */,
-			);
-			path = Onboarding;
-			sourceTree = "<group>";
-		};
-		SYSMON0000000000000003 /* System */ = {
-			isa = PBXGroup;
-			children = (
-				SYSMON0000000000000002 /* SystemMonitorView.swift */,
-				PRCLST0000000000000002 /* ProcessListView.swift */,
-				FILBRW0000000000000002 /* FileBrowserView.swift */,
-			);
-			path = System;
+			path = ILSMacApp;
 			sourceTree = "<group>";
 		};
 		UITEST00000000000000GRP1 /* ILSAppUITests */ = {
@@ -480,8 +289,6 @@
 				UITEST0000000000000000A2 /* FeatureGateTests.swift */,
 				UITEST0000000000000000A3 /* ErrorHandlingTests.swift */,
 				UITEST0000000000000000A4 /* NavigationTests.swift */,
-				01D90FD12F366E0A0072CFC0 /* TestHelpers */,
-				01D90FD42F366E370072CFC0 /* RegressionTests */,
 			);
 			path = ILSAppUITests;
 			sourceTree = "<group>";
@@ -509,7 +316,27 @@
 			productReference = 000000000000000000000010 /* ILSApp.app */;
 			productType = "com.apple.product-type.application";
 		};
-		UITEST000000000000TARGET /* ILSAppUITests */ = {
+			MAC000000000000000000000E /* ILSMacApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = MAC000000000000000000001D /* Build configuration list for PBXNativeTarget "ILSMacApp" */;
+			buildPhases = (
+				MAC000000000000000000000B /* Sources */,
+				MAC000000000000000000000C /* Resources */,
+				MAC000000000000000000000D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ILSMacApp;
+			packageProductDependencies = (
+				000000000000000000000090 /* ILSShared */,
+			);
+			productName = ILSMacApp;
+			productReference = MAC0000000000000000000010 /* ILSMacApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+	UITEST000000000000TARGET /* ILSAppUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = UITEST000000000000CFGLST /* Build configuration list for PBXNativeTarget "ILSAppUITests" */;
 			buildPhases = (
@@ -539,6 +366,9 @@
 					00000000000000000000000E = {
 						CreatedOnToolsVersion = 15.4;
 					};
+					MAC000000000000000000000E = {
+						CreatedOnToolsVersion = 15.4;
+					};
 					UITEST000000000000TARGET = {
 						CreatedOnToolsVersion = 15.4;
 						TestTargetID = 00000000000000000000000E;
@@ -562,6 +392,7 @@
 			projectRoot = "";
 			targets = (
 				00000000000000000000000E /* ILSApp */,
+				MAC000000000000000000000E /* ILSMacApp */,
 				UITEST000000000000TARGET /* ILSAppUITests */,
 			);
 		};
@@ -576,6 +407,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		MAC000000000000000000000C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				MAC0000000000000000000003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -584,81 +423,57 @@
 			buildActionMask = 2147483647;
 			files = (
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
-				000000000000000000000002 /* ContentView.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
 				000000000000000000000021 /* APIClient.swift in Sources */,
 				000000000000000000000022 /* SSEClient.swift in Sources */,
-				000000000000000000000024 /* MessageView.swift in Sources */,
-				MARKDOWN0000000000000001 /* MarkdownTextView.swift in Sources */,
+				000000000000000000000023 /* SidebarView.swift in Sources */,
 				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
 				000000000000000000000026 /* ChatView.swift in Sources */,
 				000000000000000000000027 /* ChatViewModel.swift in Sources */,
-				000000000000000000000046 /* DashboardView.swift in Sources */,
 				000000000000000000000047 /* DashboardViewModel.swift in Sources */,
-				000000000000000000000028 /* ProjectsListView.swift in Sources */,
-				00000000000000000000002A /* ProjectDetailView.swift in Sources */,
-				0000000000000000000000E1 /* ProjectSessionsListView.swift in Sources */,
 				00000000000000000000002B /* ProjectsViewModel.swift in Sources */,
-				00000000000000000000002C /* PluginsListView.swift in Sources */,
 				00000000000000000000002D /* PluginsViewModel.swift in Sources */,
-				00000000000000000000002E /* MCPServerListView.swift in Sources */,
 				00000000000000000000002F /* MCPViewModel.swift in Sources */,
-				000000000000000000000040 /* SkillsListView.swift in Sources */,
 				000000000000000000000041 /* SkillsViewModel.swift in Sources */,
 				000000000000000000000042 /* SettingsView.swift in Sources */,
-				000000000000000000000043 /* SessionsListView.swift in Sources */,
 				000000000000000000000044 /* NewSessionView.swift in Sources */,
 				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
 				76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */,
-				55D105F74AB2F6B40E6A80A4 /* EditMCPServerView.swift in Sources */,
-				FF4D77C5607B96DEE404BAAB /* SessionTemplate.swift in Sources */,
-				FB15B890F1FC4F5FFAE19853 /* SessionTemplatesView.swift in Sources */,
-				71151930BF65ADAFF132A06F /* AppLogger.swift in Sources */,
-				C46DA2181892AEDAAB8E4C07 /* LogViewerView.swift in Sources */,
-				5DDB0691F8A5C5649F77C60D /* NotificationPreferencesView.swift in Sources */,
-				4CE62C223B74623C4DEDB421 /* MCPImportExportView.swift in Sources */,
-				9250EC2BC131BBC64E9FC6A4 /* BaseListViewModel.swift in Sources */,
-				ONBOARD0000000000000001 /* ServerSetupSheet.swift in Sources */,
-				5FAB32D6951B376A319E321F /* EntityType.swift in Sources */,
-				SYSMON0000000000000001 /* SystemMonitorView.swift in Sources */,
-				CONNBN0000000000000001 /* ConnectionBanner.swift in Sources */,
-				METRWS0000000000000001 /* MetricsWebSocketClient.swift in Sources */,
-				SYSVM00000000000000001 /* SystemMetricsViewModel.swift in Sources */,
-				MTCHRT0000000000000001 /* MetricChart.swift in Sources */,
-				PRGRING000000000000001 /* ProgressRing.swift in Sources */,
-				PRCLST0000000000000001 /* ProcessListView.swift in Sources */,
-				FILBRW0000000000000001 /* FileBrowserView.swift in Sources */,
-				TUNSET0000000000000001 /* TunnelSettingsView.swift in Sources */,
-				CODEBL0000000000000001 /* CodeBlockView.swift in Sources */,
-				TOOLAC0000000000000001 /* ToolCallAccordion.swift in Sources */,
-				THNKSC0000000000000001 /* ThinkingSection.swift in Sources */,
-				CNSTP00000000000000001 /* ConnectionSteps.swift in Sources */,
-				STCARD0000000000000001 /* StatCard.swift in Sources */,
-				SPRKCR0000000000000001 /* SparklineChart.swift in Sources */,
-				EMTYST0000000000000001 /* EmptyEntityState.swift in Sources */,
-				SHIMMR0000000000000001 /* ShimmerModifier.swift in Sources */,
-				SKLROW0000000000000001 /* SkeletonRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		UITEST00000000000000000B /* Sources */ = {
+			MAC000000000000000000000B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				01D90FE02F366E8F0072CFC0 /* Scenario06_PluginOperations.swift in Sources */,
-				01D90FD32F366E1D0072CFC0 /* XCUITestBase.swift in Sources */,
-				01D90FDE2F366E8F0072CFC0 /* Scenario05_ProjectManagement.swift in Sources */,
+				MAC000000000000000000000100 /* ILSAppApp.swift in Sources */,
+				MAC000000000000000000000102 /* ILSTheme.swift in Sources */,
+				MAC000000000000000000000103 /* APIClient.swift in Sources */,
+				MAC000000000000000000000104 /* SSEClient.swift in Sources */,
+				MAC000000000000000000000105 /* SidebarView.swift in Sources */,
+				MAC000000000000000000000106 /* SidebarRootView.swift in Sources */,
+				MAC000000000000000000000110 /* SidebarSessionRow.swift in Sources */,
+				MAC000000000000000000000107 /* CommandPaletteView.swift in Sources */,
+				MAC000000000000000000000108 /* ChatView.swift in Sources */,
+				MAC000000000000000000000109 /* ChatViewModel.swift in Sources */,
+				MAC000000000000000000000113 /* ProjectsViewModel.swift in Sources */,
+				MAC000000000000000000000115 /* PluginsViewModel.swift in Sources */,
+				MAC000000000000000000000117 /* MCPViewModel.swift in Sources */,
+				MAC000000000000000000000119 /* SkillsViewModel.swift in Sources */,
+				MAC000000000000000000000120 /* SettingsView.swift in Sources */,
+				MAC000000000000000000000122 /* NewSessionView.swift in Sources */,
+				MAC000000000000000000000123 /* SessionsViewModel.swift in Sources */,
+				MAC000000000000000000000125 /* DashboardViewModel.swift in Sources */,
+				MAC000000000000000000000126 /* SessionInfoView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+	UITEST00000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 				UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */,
-				01D90FD82F366E500072CFC0 /* Scenario02_MultiSectionNavigation.swift in Sources */,
-				01D90FEA2F3676450072CFC0 /* Scenario11_ExtendedChatConversation.swift in Sources */,
 				UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */,
-				01D90FE42F366EDA0072CFC0 /* Scenario08_SettingsConfiguration.swift in Sources */,
-				01D90FDA2F366E8E0072CFC0 /* Scenario03_StreamingAndCancellation.swift in Sources */,
-				01D90FE82F366EDC0072CFC0 /* Scenario10_DashboardAndAnalytics.swift in Sources */,
-				01D90FDC2F366E8E0072CFC0 /* Scenario04_ErrorHandlingAndRecovery.swift in Sources */,
-				01D90FE62F366EDB0072CFC0 /* Scenario09_SkillsManagement.swift in Sources */,
-				01D90FD62F366E4F0072CFC0 /* Scenario01_CompleteSessionLifecycle.swift in Sources */,
-				01D90FE22F366EDA0072CFC0 /* Scenario07_MCPServerManagement.swift in Sources */,
 				UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */,
 				UITEST0000000000000000B4 /* NavigationTests.swift in Sources */,
 			);
@@ -854,7 +669,37 @@
 			};
 			name = Release;
 		};
-		UITEST00000000000000CFG1 /* Debug */ = {
+			MAC000000000000000000001B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ILSMacApp/ILSMacApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC36V7B67Z;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ILSMacApp/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ils.macapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+	UITEST00000000000000CFG1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -877,7 +722,37 @@
 			};
 			name = Debug;
 		};
-		UITEST00000000000000CFG2 /* Release */ = {
+			MAC000000000000000000001C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ILSMacApp/ILSMacApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC36V7B67Z;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ILSMacApp/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ils.macapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+	UITEST00000000000000CFG2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -921,7 +796,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		UITEST000000000000CFGLST /* Build configuration list for PBXNativeTarget "ILSAppUITests" */ = {
+			MAC000000000000000000001D /* Build configuration list for PBXNativeTarget "ILSMacApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				MAC000000000000000000001B /* Debug */,
+				MAC000000000000000000001C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+	UITEST000000000000CFGLST /* Build configuration list for PBXNativeTarget "ILSAppUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				UITEST00000000000000CFG1 /* Debug */,

@@ -81,7 +81,9 @@ struct SessionInfoView: View {
             }
             .background(theme.bgPrimary)
             .navigationTitle("Session Info")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 12) {
@@ -98,7 +100,12 @@ struct SessionInfoView: View {
                         .disabled(isExporting)
 
                         Button {
+                            #if os(iOS)
                             UIPasteboard.general.string = session.id.uuidString
+                            #else
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(session.id.uuidString, forType: .string)
+                            #endif
                             showCopiedToast = true
                             Task {
                                 try? await Task.sleep(for: .seconds(2))

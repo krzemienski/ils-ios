@@ -19,7 +19,9 @@ struct SpawnTeammateView: View {
             Form {
                 Section {
                     TextField("Name", text: $name)
+                        #if os(iOS)
                         .autocapitalization(.none)
+                        #endif
                         .disableAutocorrection(true)
                 } header: {
                     Text("Teammate Name")
@@ -32,7 +34,9 @@ struct SpawnTeammateView: View {
 
                 Section {
                     TextField("Agent Type", text: $agentType)
+                        #if os(iOS)
                         .autocapitalization(.none)
+                        #endif
                         .disableAutocorrection(true)
                 } header: {
                     Text("Agent Type")
@@ -83,7 +87,9 @@ struct SpawnTeammateView: View {
             .scrollContentBackground(.hidden)
             .background(theme.bgPrimary)
             .navigationTitle("Spawn Teammate")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

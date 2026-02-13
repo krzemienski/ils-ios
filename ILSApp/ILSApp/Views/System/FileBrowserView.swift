@@ -71,7 +71,9 @@ struct FileBrowserView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Files")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .task {
             await loadDirectory()
         }
@@ -203,7 +205,9 @@ struct FileBrowserView: View {
             }
             .background(theme.bgPrimary)
             .navigationTitle(file.name)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {

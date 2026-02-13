@@ -41,7 +41,9 @@ struct NewSessionView: View {
             }
             .background(theme.bgPrimary)
             .navigationTitle("New Session")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -181,7 +183,9 @@ struct NewSessionView: View {
                     .foregroundStyle(theme.textPrimary)
                 Spacer()
                 TextField("No limit", text: $maxBudget)
+                    #if os(iOS)
                     .keyboardType(.decimalPad)
+                    #endif
                     .multilineTextAlignment(.trailing)
                     .font(.system(size: theme.fontBody, design: .monospaced))
                     .foregroundStyle(theme.textPrimary)
@@ -197,7 +201,9 @@ struct NewSessionView: View {
                     .foregroundStyle(theme.textPrimary)
                 Spacer()
                 TextField("1", text: $maxTurns)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .multilineTextAlignment(.trailing)
                     .font(.system(size: theme.fontBody, design: .monospaced))
                     .foregroundStyle(theme.textPrimary)

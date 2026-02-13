@@ -2,6 +2,14 @@ import SwiftUI
 import CoreImage.CIFilterBuiltins
 import ILSShared
 
+#if os(iOS)
+import UIKit
+typealias PlatformImage = UIImage
+#else
+import AppKit
+typealias PlatformImage = NSImage
+#endif
+
 /// Settings screen for managing Cloudflare tunnel remote access.
 struct TunnelSettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -16,7 +24,7 @@ struct TunnelSettingsView: View {
     @State private var installURL: String?
     @State private var showCopiedToast = false
     @State private var toastTask: Task<Void, Never>?
-    @State private var qrImage: UIImage?
+    @State private var qrImage: PlatformImage?
 
     // Custom domain fields
     @State private var cfToken = ""
@@ -41,7 +49,9 @@ struct TunnelSettingsView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Remote Access")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toast(isPresented: $showCopiedToast, message: "URL copied to clipboard")
         .task {
             await fetchStatus()
@@ -157,7 +167,12 @@ struct TunnelSettingsView: View {
 
                 // Copy button
                 Button {
+                    #if os(iOS)
                     UIPasteboard.general.string = url
+                    #else
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(url, forType: .string)
+                    #endif
                     showCopiedToast = true
                     toastTask?.cancel()
                     toastTask = Task {
@@ -180,12 +195,21 @@ struct TunnelSettingsView: View {
                 if let qrImage = qrImage {
                     HStack {
                         Spacer()
+                        #if os(iOS)
                         Image(uiImage: qrImage)
                             .interpolation(.none)
                             .resizable()
                             .scaledToFit()
                             .frame(width: 200, height: 200)
                             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        #else
+                        Image(nsImage: qrImage)
+                            .interpolation(.none)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 200, height: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        #endif
                         Spacer()
                     }
                     .padding(.vertical, theme.spacingSM)
@@ -274,7 +298,9 @@ struct TunnelSettingsView: View {
 
                         fieldGroup(label: "Tunnel Name") {
                             TextField("my-ils-tunnel", text: $cfTunnelName)
+                                #if os(iOS)
                                 .autocapitalization(.none)
+                                #endif
                                 .autocorrectionDisabled()
                                 .font(.system(size: theme.fontBody))
                                 .foregroundStyle(theme.textPrimary)
@@ -286,9 +312,13 @@ struct TunnelSettingsView: View {
 
                         fieldGroup(label: "Custom Domain") {
                             TextField("ils.example.com", text: $cfDomain)
+                                #if os(iOS)
                                 .autocapitalization(.none)
+                                #endif
                                 .autocorrectionDisabled()
+                                #if os(iOS)
                                 .keyboardType(.URL)
+                                #endif
                                 .font(.system(size: theme.fontBody))
                                 .foregroundStyle(theme.textPrimary)
                                 .padding(theme.spacingSM)
@@ -439,7 +469,7 @@ struct TunnelSettingsView: View {
 
     private static let ciContext = CIContext()
 
-    private static func generateQRCode(from string: String) -> UIImage? {
+    private static func generateQRCode(from string: String) -> PlatformImage? {
         let filter = CIFilter.qrCodeGenerator()
 
         guard let data = string.data(using: .ascii) else { return nil }
@@ -455,7 +485,11 @@ struct TunnelSettingsView: View {
             return nil
         }
 
+        #if os(iOS)
         return UIImage(cgImage: cgImage)
+        #else
+        return NSImage(cgImage: cgImage, size: NSSize(width: scaledImage.extent.width, height: scaledImage.extent.height))
+        #endif
     }
 
     // MARK: - Helpers

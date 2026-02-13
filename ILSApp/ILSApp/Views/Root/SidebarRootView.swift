@@ -125,11 +125,14 @@ struct SidebarRootView: View {
                     fleetScreen
                 }
             }
+            #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(theme.bgPrimary, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .toolbar {
                 if showHamburger {
+                    #if os(iOS)
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
                             openSidebar()
@@ -140,6 +143,18 @@ struct SidebarRootView: View {
                         }
                         .accessibilityLabel("Open sidebar")
                     }
+                    #else
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            openSidebar()
+                        } label: {
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: theme.fontTitle3, weight: .medium))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+                        .accessibilityLabel("Open sidebar")
+                    }
+                    #endif
                 }
             }
         }

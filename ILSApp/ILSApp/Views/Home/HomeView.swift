@@ -24,8 +24,10 @@ struct HomeView: View {
             .padding(.vertical, theme.spacingMD)
         }
         .background(theme.bgPrimary)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        #endif
         .task {
             dashboardVM.configure(client: appState.apiClient)
             sessionsVM.configure(client: appState.apiClient)

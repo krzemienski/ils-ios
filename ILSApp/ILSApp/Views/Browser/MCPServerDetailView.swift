@@ -112,7 +112,9 @@ struct MCPServerDetailView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle(server.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -181,7 +183,12 @@ struct MCPServerDetailView: View {
     }
 
     private func copyToClipboard() {
+        #if os(iOS)
         UIPasteboard.general.string = fullCommand
+        #else
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(fullCommand, forType: .string)
+        #endif
         showCopiedToast = true
         Task {
             try? await Task.sleep(for: .seconds(2))
