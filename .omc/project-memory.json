@@ -225,6 +225,12 @@
       "type": "directory"
     },
     {
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
+      "accessCount": 9,
+      "lastAccessed": 1770960504532,
+      "type": "file"
+    },
+    {
       "path": "ILSApp/ILSApp/Views/Chat/MessageView.swift",
       "accessCount": 8,
       "lastAccessed": 1770958406671,
@@ -237,16 +243,16 @@
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
-      "accessCount": 7,
-      "lastAccessed": 1770960416590,
-      "type": "file"
-    },
-    {
       "path": "",
       "accessCount": 6,
       "lastAccessed": 1770958417239,
       "type": "directory"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
+      "accessCount": 5,
+      "lastAccessed": 1770960497117,
+      "type": "file"
     },
     {
       "path": "Sources/ILSBackend/App/configure.swift",
@@ -258,12 +264,6 @@
       "path": "fix_pbxproj.py",
       "accessCount": 4,
       "lastAccessed": 1770960104794,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
-      "accessCount": 4,
-      "lastAccessed": 1770960405898,
       "type": "file"
     },
     {
