@@ -13,14 +13,17 @@ ILS provides a mobile interface for interacting with Claude Code sessions, manag
 
 ## Features
 
-- **Chat with Claude** - Real-time streaming responses via SSE
-- **Session Management** - Create, view, and fork chat sessions
+- **Chat with Claude** - Real-time streaming responses via SSE with markdown rendering
+- **Session Management** - Create, view, fork, rename, and export chat sessions
 - **Project Browser** - Browse and manage Claude Code projects
-- **Skills Explorer** - View 1,500+ available Claude Code skills
-- **Plugin Management** - Enable/disable Claude Code plugins
+- **Skills Explorer** - View and search 1,500+ available Claude Code skills
+- **Plugin Management** - Browse marketplace, install, enable/disable Claude Code plugins
 - **MCP Server Status** - Monitor Model Context Protocol servers
+- **System Monitoring** - View CPU, memory, disk, network metrics and running processes
+- **Team Coordination** - Manage multi-agent teams with tasks and messaging
+- **Custom Themes** - Create and customize your own themes or choose from 12 built-in themes
+- **Cloudflare Tunnel** - Expose your local backend via secure tunnel
 - **macOS Native** - Full macOS app with 3-column NavigationSplitView, multi-window support, keyboard shortcuts, and Touch Bar
-- **12 Themes** - Choose from Obsidian, Nord, Dracula, Solarized, and more
 - **Dark Mode** - Native iOS dark theme throughout
 
 ## Screenshots
@@ -45,18 +48,16 @@ ils-ios/
 │       ├── Models/            # Fluent ORM database models
 │       ├── Migrations/        # Database schema migrations
 │       └── Services/          # Business logic (streaming, filesystem)
-├── ILSApp/                    # iOS Application (Xcode project)
-│   └── ILSApp/
-│       ├── Views/             # SwiftUI views by feature
-│       ├── ViewModels/        # MVVM view models
-│       ├── Services/          # API client, SSE client
-│       └── Theme/             # Design system
-├── ILSMacApp/                 # macOS Application
-│   └── ILSMacApp/
-│       ├── Views/             # macOS-specific SwiftUI views
-│       ├── ViewModels/        # Shared view models
-│       ├── Services/          # Shared services
-│       └── Theme/             # macOS design system
+├── ILSApp/                    # iOS & macOS Application (Xcode project)
+│   ├── ILSApp/                # iOS app target
+│   │   ├── Views/             # SwiftUI views by feature
+│   │   ├── ViewModels/        # MVVM view models
+│   │   ├── Services/          # API client, SSE client
+│   │   └── Theme/             # Design system
+│   └── ILSMacApp/             # macOS app target
+│       ├── Views/             # macOS-specific views
+│       ├── Managers/          # macOS managers
+│       └── TouchBar/          # Touch Bar support
 ├── Tests/                     # Backend tests
 ├── Package.swift              # Swift Package manifest
 └── ils.sqlite                 # SQLite database (auto-created)
@@ -142,13 +143,18 @@ ILSApp/
 │   │   ├── ChatView.swift    # Main chat screen
 │   │   ├── MessageView.swift # Individual message bubbles
 │   │   └── CommandPaletteView.swift
-│   ├── Dashboard/            # Stats overview
+│   ├── Home/                 # Home dashboard screen
+│   ├── Dashboard/            # Dashboard stats
 │   ├── Sessions/             # Session list & creation
 │   ├── Projects/             # Project browser
-│   ├── Plugins/              # Plugin management
+│   ├── Browser/              # Plugin browser & management
 │   ├── MCP/                  # MCP server status
 │   ├── Skills/               # Skills explorer
+│   ├── System/               # System monitoring
+│   ├── Fleet/                # Fleet management
+│   ├── Teams/                # Team coordination
 │   ├── Settings/             # App configuration
+│   ├── Themes/               # Custom theme management
 │   └── Sidebar/              # Navigation sidebar
 ├── ViewModels/               # Business logic per feature
 ├── Services/
@@ -165,17 +171,47 @@ Base URL: `http://localhost:9999/api/v1`
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/health` | Health check |
-| `GET` | `/projects` | List all projects |
-| `GET` | `/sessions` | List all sessions |
-| `POST` | `/sessions` | Create a new session |
-| `GET` | `/sessions/:id/messages` | Get session messages |
-| `POST` | `/sessions/:id/fork` | Fork a session |
-| `POST` | `/chat/stream` | Send message (SSE streaming) |
-| `GET` | `/skills` | List available skills |
-| `GET` | `/mcp` | List MCP servers |
-| `GET` | `/plugins` | List installed plugins |
-| `GET` | `/config` | Get Claude configuration |
-| `GET` | `/stats` | Dashboard statistics |
+| `GET` | `/api/v1/sessions` | List all sessions (DB + external) |
+| `POST` | `/api/v1/sessions` | Create a new session |
+| `GET` | `/api/v1/sessions/:id` | Get a specific session |
+| `PUT` | `/api/v1/sessions/:id` | Rename a session |
+| `DELETE` | `/api/v1/sessions/:id` | Delete a session |
+| `POST` | `/api/v1/sessions/:id/fork` | Fork a session |
+| `GET` | `/api/v1/sessions/:id/messages` | Get session messages |
+| `GET` | `/api/v1/sessions/scan` | Scan for external sessions |
+| `POST` | `/api/v1/chat/stream` | Send message (SSE streaming) |
+| `POST` | `/api/v1/chat/cancel` | Cancel running chat |
+| `GET` | `/api/v1/projects` | List all projects |
+| `GET` | `/api/v1/skills` | List available skills |
+| `GET` | `/api/v1/skills/search` | Search skills by name/tags |
+| `GET` | `/api/v1/mcp` | List MCP servers |
+| `GET` | `/api/v1/plugins` | List installed plugins |
+| `GET` | `/api/v1/plugins/search` | Search plugins |
+| `GET` | `/api/v1/plugins/marketplace` | Browse plugin marketplace |
+| `POST` | `/api/v1/plugins/install` | Install a plugin |
+| `GET` | `/api/v1/config` | Get Claude configuration |
+| `GET` | `/api/v1/stats` | Dashboard statistics |
+| `GET` | `/api/v1/stats/recent` | Recent sessions for timeline |
+| `GET` | `/api/v1/settings` | Get user settings |
+| `GET` | `/api/v1/server/status` | Server connection status |
+| `GET` | `/api/v1/themes` | List custom themes |
+| `POST` | `/api/v1/themes` | Create a custom theme |
+| `PUT` | `/api/v1/themes/:id` | Update a custom theme |
+| `DELETE` | `/api/v1/themes/:id` | Delete a custom theme |
+| `GET` | `/api/v1/teams` | List all teams |
+| `POST` | `/api/v1/teams` | Create a new team |
+| `GET` | `/api/v1/teams/:name` | Get team details |
+| `DELETE` | `/api/v1/teams/:name` | Delete a team |
+| `POST` | `/api/v1/teams/:name/spawn` | Spawn a teammate |
+| `GET` | `/api/v1/teams/:name/tasks` | List team tasks |
+| `POST` | `/api/v1/teams/:name/tasks` | Create a team task |
+| `GET` | `/api/v1/system/metrics` | Current system metrics |
+| `GET` | `/api/v1/system/processes` | Running processes |
+| `GET` | `/api/v1/system/files` | Directory listing |
+| `WS` | `/api/v1/system/metrics/live` | Live metrics stream |
+| `GET` | `/api/v1/tunnel/status` | Cloudflare tunnel status |
+| `POST` | `/api/v1/tunnel/start` | Start tunnel |
+| `POST` | `/api/v1/tunnel/stop` | Stop tunnel |
 
 ## Shared Models
 
@@ -191,6 +227,12 @@ Both the iOS app and backend use the same model definitions from `ILSShared`:
 | `Plugin` | Installed plugin information |
 | `ClaudeConfig` | Claude Code settings |
 | `StreamMessage` | Real-time streaming events |
+| `CustomTheme` | Custom theme definition |
+| `FleetHost` | Remote host configuration |
+| `CLIMessage` | Claude CLI message structure |
+| `ContentBlocks` | Message content blocks |
+| `ServerConnection` | Server connection state |
+| `SetupProgress` | Setup workflow progress |
 
 ## Development
 
@@ -238,11 +280,15 @@ The app supports deep linking via the `ils://` URL scheme:
 
 | URL | Action |
 |-----|--------|
+| `ils://home` | Open Home tab |
 | `ils://sessions` | Open Sessions tab |
 | `ils://projects` | Open Projects tab |
-| `ils://plugins` | Open Plugins tab |
+| `ils://plugins` | Open Plugins/Browser tab |
 | `ils://mcp` | Open MCP Servers tab |
 | `ils://skills` | Open Skills tab |
+| `ils://system` | Open System monitoring tab |
+| `ils://fleet` | Open Fleet management tab |
+| `ils://teams` | Open Teams tab |
 | `ils://settings` | Open Settings tab |
 
 ## Troubleshooting

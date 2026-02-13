@@ -351,13 +351,13 @@ struct MacSettingsView: View {
                 }
 
                 HStack(spacing: theme.spacingLG) {
-                    Link(destination: URL(string: "https://github.com")!) {
+                    Link(destination: URL(string: "https://github.com/krzemienski/ils-ios")!) {
                         Label("GitHub", systemImage: "link")
                             .font(.system(size: theme.fontCaption))
                     }
 
-                    Link(destination: URL(string: "https://docs.example.com")!) {
-                        Label("Documentation", systemImage: "book")
+                    Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
+                        Label("Claude Code Docs", systemImage: "book")
                             .font(.system(size: theme.fontCaption))
                     }
                 }

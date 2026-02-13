@@ -99,6 +99,18 @@ struct SettingsAboutSection: View {
 
                 settingsRow("Backend URL", value: serverURL)
 
+                Link(destination: URL(string: "https://github.com/krzemienski/ils-ios")!) {
+                    HStack {
+                        Text("GitHub Repository")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+
                 Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                     HStack {
                         Text("Claude Code Documentation")
