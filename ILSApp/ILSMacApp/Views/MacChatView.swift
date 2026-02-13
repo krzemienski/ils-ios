@@ -37,6 +37,17 @@ struct MacChatView: View {
             .navigationTitle(session.name ?? "Chat")
             .navigationSubtitle(sessionSubtitle)
             .toolbar { toolbarContent }
+            #if os(macOS)
+            .chatTouchBar(
+                inputText: inputText,
+                isStreaming: viewModel.isStreaming,
+                isDisabled: viewModel.isLoadingHistory,
+                onSend: sendMessage,
+                onCommandPalette: { showCommandPalette = true },
+                onSessionInfo: { showSessionInfo = true },
+                onNewSession: createNewSession
+            )
+            #endif
             .sheet(isPresented: $showCommandPalette) {
                 CommandPaletteView { command in
                     inputText = command
@@ -310,6 +321,12 @@ struct MacChatView: View {
     }
 
     // MARK: - Actions
+
+    private func createNewSession() {
+        // Post notification for creating a new session
+        // This is handled by the main content view or app delegate
+        NotificationCenter.default.post(name: Notification.Name("NewSession"), object: nil)
+    }
 
     private func retryLastMessage() {
         if let lastUserMessage = viewModel.messages.last(where: { $0.isUser }) {
