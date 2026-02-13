@@ -306,6 +306,75 @@ actor CloudKitService {
         try await delete(recordID)
     }
 
+    // MARK: - Subscriptions
+
+    /// Sets up query subscriptions for remote change notifications
+    /// Creates subscriptions for ChatSession, Template, and Snippet record types
+    func setupSubscriptions() async throws {
+        // Create subscriptions for each record type
+        try await setupSubscription(for: "ChatSession", subscriptionID: "ChatSessionChanges")
+        try await setupSubscription(for: "Template", subscriptionID: "TemplateChanges")
+        try await setupSubscription(for: "Snippet", subscriptionID: "SnippetChanges")
+    }
+
+    /// Sets up a query subscription for a specific record type
+    /// - Parameters:
+    ///   - recordType: The CloudKit record type to subscribe to
+    ///   - subscriptionID: Unique identifier for this subscription
+    private func setupSubscription(for recordType: String, subscriptionID: String) async throws {
+        // Check if subscription already exists
+        do {
+            _ = try await database.subscription(for: subscriptionID)
+            // Subscription already exists, no need to create
+            return
+        } catch let ckError as CKError where ckError.code == .unknownItem {
+            // Subscription doesn't exist, create it
+        } catch {
+            // Other error occurred
+            throw mapCloudKitError(error as? CKError)
+        }
+
+        // Create a query subscription for all records of this type in our custom zone
+        let predicate = NSPredicate(value: true)
+        let subscription = CKQuerySubscription(
+            recordType: recordType,
+            predicate: predicate,
+            subscriptionID: subscriptionID,
+            options: [.firesOnRecordCreation, .firesOnRecordUpdate, .firesOnRecordDeletion]
+        )
+
+        // Configure notification info (silent push notifications)
+        let notificationInfo = CKSubscription.NotificationInfo()
+        notificationInfo.shouldSendContentAvailable = true
+        subscription.notificationInfo = notificationInfo
+
+        // Set the zone ID to only get notifications for our custom zone
+        subscription.zoneID = zone.zoneID
+
+        // Save the subscription
+        do {
+            _ = try await database.save(subscription)
+        } catch let ckError as CKError {
+            throw mapCloudKitError(ckError)
+        }
+    }
+
+    /// Removes all subscriptions
+    func removeAllSubscriptions() async throws {
+        let subscriptionIDs = ["ChatSessionChanges", "TemplateChanges", "SnippetChanges"]
+
+        for subscriptionID in subscriptionIDs {
+            do {
+                _ = try await database.deleteSubscription(withID: subscriptionID)
+            } catch let ckError as CKError where ckError.code == .unknownItem {
+                // Subscription doesn't exist, that's fine
+                continue
+            } catch let ckError as CKError {
+                throw mapCloudKitError(ckError)
+            }
+        }
+    }
+
     // MARK: - Account Status
 
     /// Checks if iCloud is available and user is signed in
@@ -375,6 +444,7 @@ enum CloudKitServiceError: Error, LocalizedError {
     case recordNotFound
     case conflictDetected(Error)
     case partialFailure(Error)
+    case subscriptionFailed(Error)
     case operationFailed(Error)
     case unknownError
 
@@ -406,6 +476,8 @@ enum CloudKitServiceError: Error, LocalizedError {
             return "Sync conflict detected: \(error.localizedDescription)"
         case .partialFailure(let error):
             return "Some operations failed: \(error.localizedDescription)"
+        case .subscriptionFailed(let error):
+            return "Failed to create subscription: \(error.localizedDescription)"
         case .operationFailed(let error):
             return "CloudKit operation failed: \(error.localizedDescription)"
         case .unknownError:
@@ -417,7 +489,7 @@ enum CloudKitServiceError: Error, LocalizedError {
         switch self {
         case .networkUnavailable, .temporarilyUnavailable, .quotaExceeded:
             return true
-        case .operationFailed, .partialFailure:
+        case .operationFailed, .partialFailure, .subscriptionFailed:
             return true
         case .noiCloudAccount, .iCloudRestricted, .notAuthenticated, .permissionDenied:
             return false
