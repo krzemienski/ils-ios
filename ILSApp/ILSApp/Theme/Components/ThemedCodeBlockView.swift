@@ -3,7 +3,7 @@ import HighlightSwift
 
 /// Renders a fenced code block with language header, grammar-aware syntax highlighting,
 /// optional line numbers, and copy button. All colors from theme tokens.
-struct CodeBlockView: View {
+struct ThemedCodeBlockView: View {
     let language: String?
     let code: String
     @State private var showCopied = false

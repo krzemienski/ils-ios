@@ -156,7 +156,7 @@ struct MessageView: View {
 }
 
 struct ToolCallView: View {
-    let toolCall: ToolCall
+    let toolCall: ToolCallDisplay
     @State private var isExpanded = false
 
     var body: some View {
@@ -190,7 +190,7 @@ struct ToolCallView: View {
 }
 
 struct ToolResultView: View {
-    let result: ToolResult
+    let result: ToolResultDisplay
     @State private var isExpanded = false
 
     var body: some View {
@@ -260,53 +260,8 @@ struct ThinkingView: View {
     }
 }
 
-// MARK: - Data Models
-
-struct ChatMessage: Identifiable {
-    let id: UUID
-    let isUser: Bool
-    var text: String
-    var toolCalls: [ToolCall] = []
-    var toolResults: [ToolResult] = []
-    var thinking: String?
-    var cost: Double?
-    var timestamp: Date?
-    var isFromHistory: Bool = false
-
-    init(
-        id: UUID = UUID(),
-        isUser: Bool,
-        text: String,
-        toolCalls: [ToolCall] = [],
-        toolResults: [ToolResult] = [],
-        thinking: String? = nil,
-        cost: Double? = nil,
-        timestamp: Date? = nil,
-        isFromHistory: Bool = false
-    ) {
-        self.id = id
-        self.isUser = isUser
-        self.text = text
-        self.toolCalls = toolCalls
-        self.toolResults = toolResults
-        self.thinking = thinking
-        self.cost = cost
-        self.timestamp = timestamp
-        self.isFromHistory = isFromHistory
-    }
-}
-
-struct ToolCall: Identifiable {
-    let id: String
-    let name: String
-    let inputPreview: String?
-}
-
-struct ToolResult {
-    let toolUseId: String
-    let content: String
-    let isError: Bool
-}
+// MARK: - Type Aliases (canonical types in Models/ChatMessage.swift)
+// ChatMessage, ToolCallDisplay, ToolResultDisplay are defined in Models/ChatMessage.swift
 
 #Preview {
     VStack {
@@ -319,7 +274,7 @@ struct ToolResult {
             isUser: false,
             text: "Of course! I'd be happy to help. What would you like me to do?",
             toolCalls: [
-                ToolCall(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
+                ToolCallDisplay(id: "1", name: "Read", inputPreview: "file_path: /src/main.swift")
             ]
         ))
     }

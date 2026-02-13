@@ -7,12 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		000000000000000000000096 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000095 /* SyntaxHighlighter.swift */; };
+		000000000000000000000092 /* MarkdownParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000091 /* MarkdownParser.swift */; };
+		000000000000000000000094 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000093 /* CodeBlockView.swift */; };
 		000000000000000000000001 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
 		000000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000013 /* Assets.xcassets */; };
 		000000000000000000000020 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
 		000000000000000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
 		000000000000000000000022 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
-		000000000000000000000023 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
+		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
 		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
 		000000000000000000000026 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
 		000000000000000000000027 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
@@ -30,26 +33,6 @@
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
-		MAC000000000000000000000100 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000011 /* ILSAppApp.swift */; };
-		MAC000000000000000000000102 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* ILSTheme.swift */; };
-		MAC000000000000000000000103 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
-		MAC000000000000000000000104 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
-		MAC000000000000000000000105 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
-		MAC000000000000000000000107 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
-		MAC000000000000000000000108 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000036 /* ChatView.swift */; };
-		MAC000000000000000000000109 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000037 /* ChatViewModel.swift */; };
-		MAC000000000000000000000113 /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003B /* ProjectsViewModel.swift */; };
-		MAC000000000000000000000115 /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003D /* PluginsViewModel.swift */; };
-		MAC000000000000000000000117 /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000003F /* MCPViewModel.swift */; };
-		MAC000000000000000000000119 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000051 /* SkillsViewModel.swift */; };
-		MAC000000000000000000000120 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000052 /* SettingsView.swift */; };
-		MAC000000000000000000000122 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
-		MAC000000000000000000000123 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
-		MAC000000000000000000000125 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
-		MAC000000000000000000000126 /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
-		MAC0000000000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = MAC0000000000000000000013 /* Assets.xcassets */; };
-		MAC0000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
-
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +46,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		000000000000000000000095 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		000000000000000000000091 /* MarkdownParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownParser.swift; sourceTree = "<group>"; };
+		000000000000000000000093 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
 		000000000000000000000010 /* ILSApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000011 /* ILSAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSAppApp.swift; sourceTree = "<group>"; };
 		000000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -70,7 +56,7 @@
 		000000000000000000000030 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
 		000000000000000000000031 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		000000000000000000000032 /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
-		000000000000000000000033 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		000000000000000000000036 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		000000000000000000000037 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
@@ -88,11 +74,6 @@
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
-		MAC0000000000000000000010 /* ILSMacApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ILSMacApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		MAC0000000000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		MAC0000000000000000000012 /* ILSMacApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSMacApp.entitlements; sourceTree = "<group>"; };
-		MAC0000000000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,15 +85,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-			MAC000000000000000000000D /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				MAC0000000000000000000080 /* ILSShared in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-	UITEST00000000000000000D /* Frameworks */ = {
+		UITEST00000000000000000D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -126,7 +99,6 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000015 /* ILSApp */,
-				MAC0000000000000000000015 /* ILSMacApp */,
 				UITEST00000000000000GRP1 /* ILSAppUITests */,
 				00000000000000000000000F /* Products */,
 			);
@@ -136,7 +108,6 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* ILSApp.app */,
-				MAC0000000000000000000010 /* ILSMacApp.app */,
 				UITEST0000000000000000A0 /* ILSAppUITests.xctest */,
 			);
 			name = Products;
@@ -148,6 +119,7 @@
 				000000000000000000000011 /* ILSAppApp.swift */,
 				000000000000000000000060 /* Theme */,
 				000000000000000000000061 /* Services */,
+				000000000000000000000064 /* Utils */,
 				000000000000000000000062 /* Views */,
 				000000000000000000000063 /* ViewModels */,
 				000000000000000000000013 /* Assets.xcassets */,
@@ -173,10 +145,19 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		000000000000000000000064 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000091 /* MarkdownParser.swift */,
+				000000000000000000000095 /* SyntaxHighlighter.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
 		000000000000000000000062 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000070 /* Root */,
+				000000000000000000000070 /* Sidebar */,
 				000000000000000000000071 /* Chat */,
 				000000000000000000000078 /* Dashboard */,
 				000000000000000000000072 /* Projects */,
@@ -206,14 +187,15 @@
 		000000000000000000000070 /* Sidebar */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000033 /* SidebarView.swift */,
 			);
-			path = Root;
+			path = Sidebar;
 			sourceTree = "<group>";
 		};
 		000000000000000000000071 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
+				000000000000000000000093 /* CodeBlockView.swift */,
+				000000000000000000000034 /* MessageView.swift */,
 				000000000000000000000035 /* CommandPaletteView.swift */,
 				000000000000000000000036 /* ChatView.swift */,
 			);
@@ -272,16 +254,6 @@
 			path = Dashboard;
 			sourceTree = "<group>";
 		};
-		MAC0000000000000000000015 /* ILSMacApp */ = {
-			isa = PBXGroup;
-			children = (
-				MAC0000000000000000000013 /* Assets.xcassets */,
-				MAC0000000000000000000012 /* ILSMacApp.entitlements */,
-				MAC0000000000000000000011 /* Info.plist */,
-			);
-			path = ILSMacApp;
-			sourceTree = "<group>";
-		};
 		UITEST00000000000000GRP1 /* ILSAppUITests */ = {
 			isa = PBXGroup;
 			children = (
@@ -316,27 +288,7 @@
 			productReference = 000000000000000000000010 /* ILSApp.app */;
 			productType = "com.apple.product-type.application";
 		};
-			MAC000000000000000000000E /* ILSMacApp */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = MAC000000000000000000001D /* Build configuration list for PBXNativeTarget "ILSMacApp" */;
-			buildPhases = (
-				MAC000000000000000000000B /* Sources */,
-				MAC000000000000000000000C /* Resources */,
-				MAC000000000000000000000D /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = ILSMacApp;
-			packageProductDependencies = (
-				000000000000000000000090 /* ILSShared */,
-			);
-			productName = ILSMacApp;
-			productReference = MAC0000000000000000000010 /* ILSMacApp.app */;
-			productType = "com.apple.product-type.application";
-		};
-	UITEST000000000000TARGET /* ILSAppUITests */ = {
+		UITEST000000000000TARGET /* ILSAppUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = UITEST000000000000CFGLST /* Build configuration list for PBXNativeTarget "ILSAppUITests" */;
 			buildPhases = (
@@ -366,9 +318,6 @@
 					00000000000000000000000E = {
 						CreatedOnToolsVersion = 15.4;
 					};
-					MAC000000000000000000000E = {
-						CreatedOnToolsVersion = 15.4;
-					};
 					UITEST000000000000TARGET = {
 						CreatedOnToolsVersion = 15.4;
 						TestTargetID = 00000000000000000000000E;
@@ -392,7 +341,6 @@
 			projectRoot = "";
 			targets = (
 				00000000000000000000000E /* ILSApp */,
-				MAC000000000000000000000E /* ILSMacApp */,
 				UITEST000000000000TARGET /* ILSAppUITests */,
 			);
 		};
@@ -407,14 +355,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		MAC000000000000000000000C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				MAC0000000000000000000003 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -422,11 +362,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				000000000000000000000092 /* MarkdownParser.swift in Sources */,
+				000000000000000000000096 /* SyntaxHighlighter.swift in Sources */,
+				000000000000000000000094 /* CodeBlockView.swift in Sources */,
 				000000000000000000000001 /* ILSAppApp.swift in Sources */,
 				000000000000000000000020 /* ILSTheme.swift in Sources */,
 				000000000000000000000021 /* APIClient.swift in Sources */,
 				000000000000000000000022 /* SSEClient.swift in Sources */,
-				000000000000000000000023 /* SidebarView.swift in Sources */,
+				000000000000000000000024 /* MessageView.swift in Sources */,
 				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
 				000000000000000000000026 /* ChatView.swift in Sources */,
 				000000000000000000000027 /* ChatViewModel.swift in Sources */,
@@ -442,36 +385,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-			MAC000000000000000000000B /* Sources */ = {
+		UITEST00000000000000000B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				MAC000000000000000000000100 /* ILSAppApp.swift in Sources */,
-				MAC000000000000000000000102 /* ILSTheme.swift in Sources */,
-				MAC000000000000000000000103 /* APIClient.swift in Sources */,
-				MAC000000000000000000000104 /* SSEClient.swift in Sources */,
-				MAC000000000000000000000105 /* SidebarView.swift in Sources */,
-				MAC000000000000000000000106 /* SidebarRootView.swift in Sources */,
-				MAC000000000000000000000110 /* SidebarSessionRow.swift in Sources */,
-				MAC000000000000000000000107 /* CommandPaletteView.swift in Sources */,
-				MAC000000000000000000000108 /* ChatView.swift in Sources */,
-				MAC000000000000000000000109 /* ChatViewModel.swift in Sources */,
-				MAC000000000000000000000113 /* ProjectsViewModel.swift in Sources */,
-				MAC000000000000000000000115 /* PluginsViewModel.swift in Sources */,
-				MAC000000000000000000000117 /* MCPViewModel.swift in Sources */,
-				MAC000000000000000000000119 /* SkillsViewModel.swift in Sources */,
-				MAC000000000000000000000120 /* SettingsView.swift in Sources */,
-				MAC000000000000000000000122 /* NewSessionView.swift in Sources */,
-				MAC000000000000000000000123 /* SessionsViewModel.swift in Sources */,
-				MAC000000000000000000000125 /* DashboardViewModel.swift in Sources */,
-				MAC000000000000000000000126 /* SessionInfoView.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-	UITEST00000000000000000B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				000000000000000000000092 /* MarkdownParser.swift in Sources */,
+				000000000000000000000096 /* SyntaxHighlighter.swift in Sources */,
+				000000000000000000000094 /* CodeBlockView.swift in Sources */,
 				UITEST0000000000000000B1 /* ValidationGateTests.swift in Sources */,
 				UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */,
 				UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */,
@@ -669,37 +589,7 @@
 			};
 			name = Release;
 		};
-			MAC000000000000000000001B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ILSMacApp/ILSMacApp.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HC36V7B67Z;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = ILSMacApp/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ils.macapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-	UITEST00000000000000CFG1 /* Debug */ = {
+		UITEST00000000000000CFG1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -722,37 +612,7 @@
 			};
 			name = Debug;
 		};
-			MAC000000000000000000001C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = ILSMacApp/ILSMacApp.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HC36V7B67Z;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = ILSMacApp/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ils.macapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-	UITEST00000000000000CFG2 /* Release */ = {
+		UITEST00000000000000CFG2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -796,16 +656,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-			MAC000000000000000000001D /* Build configuration list for PBXNativeTarget "ILSMacApp" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				MAC000000000000000000001B /* Debug */,
-				MAC000000000000000000001C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-	UITEST000000000000CFGLST /* Build configuration list for PBXNativeTarget "ILSAppUITests" */ = {
+		UITEST000000000000CFGLST /* Build configuration list for PBXNativeTarget "ILSAppUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				UITEST00000000000000CFG1 /* Debug */,

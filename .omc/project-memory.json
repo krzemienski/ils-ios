@@ -214,8 +214,38 @@
   "hotPaths": [
     {
       "path": "ILSApp/ILSApp.xcodeproj/project.pbxproj",
-      "accessCount": 21,
-      "lastAccessed": 1770957752581,
+      "accessCount": 48,
+      "lastAccessed": 1770960249325,
+      "type": "directory"
+    },
+    {
+      "path": "ILSApp/ILSApp",
+      "accessCount": 35,
+      "lastAccessed": 1770960396864,
+      "type": "directory"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/MessageView.swift",
+      "accessCount": 8,
+      "lastAccessed": 1770958406671,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/ILSAppApp.swift",
+      "accessCount": 7,
+      "lastAccessed": 1770959881067,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
+      "accessCount": 7,
+      "lastAccessed": 1770960416590,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 6,
+      "lastAccessed": 1770958417239,
       "type": "directory"
     },
     {
@@ -225,10 +255,40 @@
       "type": "file"
     },
     {
-      "path": "",
+      "path": "fix_pbxproj.py",
+      "accessCount": 4,
+      "lastAccessed": 1770960104794,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
+      "accessCount": 4,
+      "lastAccessed": 1770960405898,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Browser/SkillDetailView.swift",
       "accessCount": 3,
-      "lastAccessed": 1770957106214,
-      "type": "directory"
+      "lastAccessed": 1770958124618,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Root/SidebarRootView.swift",
+      "accessCount": 3,
+      "lastAccessed": 1770959157674,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Root/SidebarView.swift",
+      "accessCount": 3,
+      "lastAccessed": 1770959665783,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsViewSections.swift",
+      "accessCount": 3,
+      "lastAccessed": 1770960415792,
+      "type": "file"
     },
     {
       "path": "Sources/ILSBackend",
@@ -243,10 +303,22 @@
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp",
+      "path": "ILSApp/ILSApp/Theme/Components/ThemedCodeBlockView.swift",
       "accessCount": 2,
-      "lastAccessed": 1770957149120,
-      "type": "directory"
+      "lastAccessed": 1770958118577,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift",
+      "accessCount": 2,
+      "lastAccessed": 1770958125741,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Home/HomeView.swift",
+      "accessCount": 2,
+      "lastAccessed": 1770959024569,
+      "type": "file"
     },
     {
       "path": "ILSApp/ILSApp/Theme/AppTheme.swift",
@@ -297,24 +369,6 @@
       "type": "directory"
     },
     {
-      "path": "ILSApp/ILSApp/ILSAppApp.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957152247,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Root/SidebarRootView.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957152785,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Home/HomeView.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957153366,
-      "type": "file"
-    },
-    {
       "path": "ILSApp/ILSApp/Views/Browser/BrowserView.swift",
       "accessCount": 1,
       "lastAccessed": 1770957156795,
@@ -327,21 +381,9 @@
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957157907,
-      "type": "file"
-    },
-    {
       "path": "ILSApp/ILSApp/Views/Chat/ChatView.swift",
       "accessCount": 1,
       "lastAccessed": 1770957158496,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Root/SidebarView.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957159106,
       "type": "file"
     },
     {
@@ -372,12 +414,6 @@
       "path": "ILSApp/ILSApp/Views/Browser/MCPServerDetailView.swift",
       "accessCount": 1,
       "lastAccessed": 1770957165803,
-      "type": "file"
-    },
-    {
-      "path": "ILSApp/ILSApp/Views/Browser/SkillDetailView.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957166333,
       "type": "file"
     },
     {
@@ -435,12 +471,6 @@
       "type": "file"
     },
     {
-      "path": "ILSApp/ILSApp/Views/Settings/SettingsViewSections.swift",
-      "accessCount": 1,
-      "lastAccessed": 1770957180745,
-      "type": "file"
-    },
-    {
       "path": ".claude/plan/visual-inspection.md",
       "accessCount": 1,
       "lastAccessed": 1770957338554,
@@ -456,6 +486,30 @@
       "path": "specs/visual-inspection-v2/evidence/01-after-cancel.png",
       "accessCount": 1,
       "lastAccessed": 1770957502888,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Theme/Components/CodeBlockView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770958089146,
+      "type": "file"
+    },
+    {
+      "path": "Package.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770958153098,
+      "type": "file"
+    },
+    {
+      "path": "ILSFullStack.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+      "accessCount": 1,
+      "lastAccessed": 1770958169309,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Models/ChatMessage.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770958336031,
       "type": "file"
     }
   ],

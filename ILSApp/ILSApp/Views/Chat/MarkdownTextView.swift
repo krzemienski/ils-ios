@@ -67,7 +67,7 @@ struct MarkdownTextView: View {
                 .markdownMargin(top: 4, bottom: 4)
             }
             .codeBlock { configuration in
-                CodeBlockView(
+                ThemedCodeBlockView(
                     language: configuration.language,
                     code: configuration.content
                 )
