@@ -36,8 +36,9 @@ func configure(_ app: Application) async throws {
     try routes(app)
 
     // Server configuration
+    let port = Int(Environment.get("PORT") ?? "9999") ?? 9999
     app.http.server.configuration.hostname = "0.0.0.0"
-    app.http.server.configuration.port = 8080
+    app.http.server.configuration.port = port
 
-    app.logger.info("ILS Backend starting on http://0.0.0.0:8080")
+    app.logger.info("ILS Backend starting on http://0.0.0.0:\(port)")
 }

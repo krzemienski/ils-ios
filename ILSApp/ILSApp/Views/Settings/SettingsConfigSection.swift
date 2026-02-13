@@ -70,9 +70,7 @@ struct SettingsConfigSection: View {
                         get: { config.alwaysThinkingEnabled ?? false },
                         set: { newValue in
                             Task {
-                                if let error = await viewModel.saveConfigToggle(key: "alwaysThinkingEnabled", value: newValue) {
-                                    print("Error saving Extended Thinking: \(error)")
-                                }
+                                _ = await viewModel.saveConfigToggle(key: "alwaysThinkingEnabled", value: newValue)
                                 await viewModel.loadConfig()
                             }
                         }
@@ -88,9 +86,7 @@ struct SettingsConfigSection: View {
                         get: { config.includeCoAuthoredBy ?? false },
                         set: { newValue in
                             Task {
-                                if let error = await viewModel.saveConfigToggle(key: "includeCoAuthoredBy", value: newValue) {
-                                    print("Error saving Co-Author: \(error)")
-                                }
+                                _ = await viewModel.saveConfigToggle(key: "includeCoAuthoredBy", value: newValue)
                                 await viewModel.loadConfig()
                             }
                         }
