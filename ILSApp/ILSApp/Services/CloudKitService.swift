@@ -391,40 +391,165 @@ actor CloudKitService {
 
     // MARK: - Conflict Resolution
 
-    /// Resolves a conflict using last-write-wins strategy
+    /// Resolves a conflict using intelligent field-level merge strategy
     /// - Parameters:
     ///   - clientRecord: The client's version of the record
     ///   - error: The CKError containing server record information
-    /// - Returns: The winning record after conflict resolution
+    /// - Returns: The merged record after conflict resolution
     private func resolveConflict(clientRecord: CKRecord, error: CKError) async throws -> CKRecord {
         // Extract server record from error userInfo
         guard let serverRecord = error.userInfo[CKRecordChangedErrorServerRecordKey] as? CKRecord else {
             throw CloudKitServiceError.conflictDetected(error)
         }
 
-        // Compare modification dates - last write wins
-        let clientModDate = clientRecord.modificationDate ?? clientRecord.creationDate ?? Date.distantPast
-        let serverModDate = serverRecord.modificationDate ?? serverRecord.creationDate ?? Date.distantPast
+        // Get modification dates for comparison
+        let clientModDate = clientRecord["modificationDate"] as? Date
+            ?? clientRecord.modificationDate
+            ?? clientRecord.creationDate
+            ?? Date.distantPast
+        let serverModDate = serverRecord["modificationDate"] as? Date
+            ?? serverRecord.modificationDate
+            ?? serverRecord.creationDate
+            ?? Date.distantPast
 
-        if clientModDate >= serverModDate {
-            // Client record is newer or same age, retry save with server's change tag
-            // Copy all client values to server record to preserve client changes
-            for key in clientRecord.allKeys() {
-                serverRecord[key] = clientRecord[key]
-            }
+        // Perform field-level merge based on record type
+        let mergedRecord = mergeRecordFields(
+            client: clientRecord,
+            server: serverRecord,
+            clientModDate: clientModDate,
+            serverModDate: serverModDate
+        )
 
-            // Retry save with updated server record (has correct change tag)
-            do {
-                let savedRecord = try await database.save(serverRecord)
-                return savedRecord
-            } catch let ckError as CKError {
-                // If conflict happens again, throw error to prevent infinite loop
-                throw mapCloudKitError(ckError)
+        // Retry save with merged record (has correct change tag from server)
+        do {
+            let savedRecord = try await database.save(mergedRecord)
+            return savedRecord
+        } catch let ckError as CKError {
+            // If conflict happens again, throw error to prevent infinite loop
+            throw mapCloudKitError(ckError)
+        }
+    }
+
+    /// Performs intelligent field-level merge between client and server records
+    /// - Parameters:
+    ///   - client: The client's record
+    ///   - server: The server's record (has correct change tag)
+    ///   - clientModDate: Client's modification date
+    ///   - serverModDate: Server's modification date
+    /// - Returns: Merged record with server's change tag
+    private func mergeRecordFields(
+        client: CKRecord,
+        server: CKRecord,
+        clientModDate: Date,
+        serverModDate: Date
+    ) -> CKRecord {
+        let recordType = server.recordType
+
+        // Start with server record (has correct change tag)
+        let merged = server
+
+        // Determine which version is newer for last-write-wins fields
+        let clientIsNewer = clientModDate >= serverModDate
+
+        switch recordType {
+        case "ChatSession":
+            mergeSessionFields(client: client, server: merged, clientIsNewer: clientIsNewer)
+
+        case "Template", "Snippet":
+            mergeTemplateOrSnippetFields(client: client, server: merged, clientIsNewer: clientIsNewer)
+
+        default:
+            // Unknown record type: use simple last-write-wins for all fields
+            if clientIsNewer {
+                for key in client.allKeys() {
+                    merged[key] = client[key]
+                }
             }
-        } else {
-            // Server record is newer, accept server version (last write wins)
-            // No need to save, just return the server record
-            return serverRecord
+        }
+
+        return merged
+    }
+
+    /// Merges ChatSession fields with intelligent conflict resolution
+    private func mergeSessionFields(client: CKRecord, server: CKRecord, clientIsNewer: Bool) {
+        // Last-write-wins fields (user-editable content)
+        let lastWriteWinsFields = ["name", "projectName", "model", "permissionMode", "status"]
+        for field in lastWriteWinsFields {
+            if clientIsNewer {
+                server[field] = client[field]
+            }
+        }
+
+        // Immutable fields (never change after creation)
+        let immutableFields = ["claudeSessionId", "projectId", "source", "forkedFrom", "createdAt"]
+        for field in immutableFields {
+            // Keep whichever value is non-nil, preferring client if both exist
+            if client[field] != nil {
+                server[field] = client[field]
+            }
+        }
+
+        // Numeric fields - take the maximum value (indicates more progress)
+        if let clientCount = client["messageCount"] as? Int,
+           let serverCount = server["messageCount"] as? Int {
+            server["messageCount"] = max(clientCount, serverCount)
+        } else if let clientCount = client["messageCount"] as? Int {
+            server["messageCount"] = clientCount
+        }
+
+        if let clientCost = client["totalCostUSD"] as? Double,
+           let serverCost = server["totalCostUSD"] as? Double {
+            server["totalCostUSD"] = max(clientCost, serverCost)
+        } else if let clientCost = client["totalCostUSD"] as? Double {
+            server["totalCostUSD"] = clientCost
+        }
+
+        // Date fields - take the most recent date
+        if let clientLastActive = client["lastActiveAt"] as? Date,
+           let serverLastActive = server["lastActiveAt"] as? Date {
+            server["lastActiveAt"] = max(clientLastActive, serverLastActive)
+        } else if let clientLastActive = client["lastActiveAt"] as? Date {
+            server["lastActiveAt"] = clientLastActive
+        }
+
+        // Modification date - take the most recent
+        if let clientModDate = client["modificationDate"] as? Date,
+           let serverModDate = server["modificationDate"] as? Date {
+            server["modificationDate"] = max(clientModDate, serverModDate)
+        } else if let clientModDate = client["modificationDate"] as? Date {
+            server["modificationDate"] = clientModDate
+        }
+    }
+
+    /// Merges Template or Snippet fields with intelligent conflict resolution
+    private func mergeTemplateOrSnippetFields(client: CKRecord, server: CKRecord, clientIsNewer: Bool) {
+        // Last-write-wins fields (content fields)
+        let lastWriteWinsFields = ["name", "content", "description", "category", "language"]
+        for field in lastWriteWinsFields {
+            if clientIsNewer {
+                server[field] = client[field]
+            }
+        }
+
+        // Immutable fields
+        if client["createdAt"] != nil {
+            server["createdAt"] = client["createdAt"]
+        }
+
+        // lastUsedAt - take the most recent usage
+        if let clientLastUsed = client["lastUsedAt"] as? Date,
+           let serverLastUsed = server["lastUsedAt"] as? Date {
+            server["lastUsedAt"] = max(clientLastUsed, serverLastUsed)
+        } else if let clientLastUsed = client["lastUsedAt"] as? Date {
+            server["lastUsedAt"] = clientLastUsed
+        }
+
+        // Modification date - take the most recent
+        if let clientModDate = client["modificationDate"] as? Date,
+           let serverModDate = server["modificationDate"] as? Date {
+            server["modificationDate"] = max(clientModDate, serverModDate)
+        } else if let clientModDate = client["modificationDate"] as? Date {
+            server["modificationDate"] = clientModDate
         }
     }
 
