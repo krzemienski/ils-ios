@@ -1,42 +1,50 @@
 # Contributing to ILS
 
-Thank you for your interest in contributing to ILS! This document provides guidelines and information for contributors.
+Welcome! ILS is a native iOS and macOS client for Claude Code, providing a rich interface for AI-powered development workflows. We appreciate your interest in contributing.
 
 ## Code of Conduct
 
 By participating in this project, you agree to maintain a respectful and inclusive environment. Be kind, constructive, and professional in all interactions.
 
-## Getting Started
+## Development Setup
 
 ### Prerequisites
 
-- macOS 14.0+ (Sonoma or later)
-- Xcode 15.0+ with iOS 17 SDK
-- Swift 5.9+
-- Git
+- macOS 14.0 or later
+- Xcode 15.0 or later
+- Swift 6.0 or later
 
-### Setting Up Your Development Environment
+### Getting Started
 
-1. **Fork the repository** on GitHub
-
-2. **Clone your fork**
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ils-ios.git
+   git clone https://github.com/yourusername/ils-ios.git
    cd ils-ios
    ```
 
-3. **Build the backend**
+2. **Run setup script**
    ```bash
-   swift build
-   swift run ILSBackend
+   scripts/setup.sh
    ```
 
-4. **Open the iOS project**
+3. **Open in Xcode**
    ```bash
    open ILSApp/ILSApp.xcodeproj
    ```
 
-5. **Run the app** in Xcode (Cmd+R)
+4. **Select your target**
+   - For iOS development: Select the **ILSApp** scheme
+   - For macOS development: Select the **ILSMacApp** scheme
+
+### Running the Backend
+
+The ILS backend server provides API endpoints for sessions, projects, skills, and more.
+
+```bash
+PORT=9999 swift run ILSBackend
+```
+
+The backend will start on port 9999 by default. See `docs/RUNNING_BACKEND.md` for more details.
 
 ## Project Structure
 
@@ -52,21 +60,19 @@ ils-ios/
 
 ## How to Contribute
 
-### Reporting Bugs
+## Issue Reporting
 
-1. **Search existing issues** to avoid duplicates
-2. **Create a new issue** with:
-   - Clear, descriptive title
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - iOS version, Xcode version, device/simulator info
-   - Screenshots if applicable
+Found a bug or have a feature request? Please use our GitHub issue templates:
 
-### Suggesting Features
+- **Bug Report**: For reporting bugs in the iOS app, macOS app, or backend
+- **Feature Request**: For suggesting new features or improvements
 
-1. **Open a discussion** or issue with `[Feature Request]` prefix
-2. Describe the feature and its use case
-3. Explain why it would benefit users
+### What to Include
+
+- Device and OS information
+- App version and build number
+- Steps to reproduce (for bugs)
+- Screenshots or screen recordings (when applicable)
 
 ### Submitting Code
 
@@ -97,14 +103,54 @@ swift test
 - Test on multiple device sizes (iPhone, iPad)
 - Verify both light and dark modes work (currently dark-only)
 
-#### 4. Submit a Pull Request
+#### 4. Build and Verify
+
+```bash
+swift build
+```
+
+Also build in Xcode to ensure iOS/macOS targets compile without warnings.
+
+#### 5. Submit a Pull Request
 
 1. Push your branch to your fork
-2. Open a PR against the `main` branch
+2. Open a PR against the `master` branch
 3. Fill out the PR template
 4. Link related issues
 
-## Code Style Guidelines
+### Pull Request Guidelines
+
+- Keep PRs focused on a single feature or fix
+- Include a clear title and description
+- Add screenshots for UI changes
+- Ensure all builds pass without warnings
+- Respond to review feedback promptly
+
+## Code Style
+
+We use SwiftLint to enforce consistent code style across the project.
+
+### Before Committing
+
+1. **Run SwiftLint**
+   ```bash
+   swiftlint lint
+   ```
+
+2. **Fix auto-fixable issues**
+   ```bash
+   swiftlint --fix
+   ```
+
+Our SwiftLint configuration is defined in `.swiftlint.yml` at the repository root.
+
+### Key Style Guidelines
+
+- Use 2-space indentation
+- Follow Swift API Design Guidelines
+- Prefer immutable data structures
+- Keep files focused and under 800 lines
+- Write descriptive variable and function names
 
 ### Swift Style
 
