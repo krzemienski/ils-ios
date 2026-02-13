@@ -18,6 +18,9 @@ struct SettingsView: View {
     @State private var saveErrorMessage = ""
     @State private var showSaveSuccess = false
 
+    // iCloud sync
+    private let iCloudStore = iCloudKeyValueStore()
+
     // Available options
     private let availableModels = [
         "claude-sonnet-4-20250514",
@@ -174,8 +177,17 @@ struct SettingsView: View {
                     }
                 }
             } footer: {
-                if let config = viewModel.config {
-                    Text("Scope: \(config.scope) • \(config.path)")
+                VStack(alignment: .leading, spacing: 4) {
+                    if let config = viewModel.config {
+                        Text("Scope: \(config.scope) • \(config.path)")
+                    }
+                    HStack(spacing: 4) {
+                        Image(systemName: "icloud")
+                            .font(.caption2)
+                        Text("Settings sync via iCloud")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(ILSTheme.secondaryText)
                 }
             }
 
@@ -382,25 +394,37 @@ struct SettingsView: View {
     // MARK: - Server Settings Persistence
 
     private func loadServerSettings() {
-        // Load from UserDefaults
-        if let savedHost = UserDefaults.standard.string(forKey: "ils_server_host") {
-            serverHost = savedHost
+        Task {
+            // Load from iCloud Key-Value Store
+            if let savedHost = await iCloudStore.getString(forKey: "ils_server_host") {
+                serverHost = savedHost
+            }
+            if let savedPort = await iCloudStore.getString(forKey: "ils_server_port") {
+                serverPort = savedPort
+            }
+
+            // Also parse from appState if available
+            parseServerURL()
         }
-        if let savedPort = UserDefaults.standard.string(forKey: "ils_server_port") {
-            serverPort = savedPort
-        }
-        // Also parse from appState if available
-        parseServerURL()
     }
 
     private func saveServerSettings() {
-        // Save to UserDefaults
-        UserDefaults.standard.set(serverHost, forKey: "ils_server_host")
-        UserDefaults.standard.set(serverPort, forKey: "ils_server_port")
+        Task {
+            // Save to iCloud Key-Value Store
+            do {
+                try await iCloudStore.setString(serverHost, forKey: "ils_server_host")
+                try await iCloudStore.setString(serverPort, forKey: "ils_server_port")
 
-        // Update appState serverURL
-        let url = "http://\(serverHost):\(serverPort)"
-        appState.serverURL = url
+                // Explicitly synchronize with iCloud
+                _ = await iCloudStore.synchronize()
+            } catch {
+                print("❌ Failed to save server settings to iCloud: \(error.localizedDescription)")
+            }
+
+            // Update appState serverURL
+            let url = "http://\(serverHost):\(serverPort)"
+            appState.serverURL = url
+        }
     }
 
     private func testConnection() {
@@ -418,11 +442,23 @@ struct SettingsView: View {
 
     private func saveConfigChanges() {
         Task {
+            // Save to backend API
             let result = await viewModel.saveConfig(model: editedModel, colorScheme: editedColorScheme)
             if let error = result {
                 saveErrorMessage = error
                 showSaveError = true
             } else {
+                // Also save to iCloud Key-Value Store for cross-device sync
+                do {
+                    try await iCloudStore.setString(editedModel, forKey: "ils_default_model")
+                    try await iCloudStore.setString(editedColorScheme, forKey: "ils_color_scheme")
+
+                    // Explicitly synchronize with iCloud
+                    _ = await iCloudStore.synchronize()
+                } catch {
+                    print("❌ Failed to save settings to iCloud: \(error.localizedDescription)")
+                }
+
                 isEditing = false
                 showSaveSuccess = true
                 await viewModel.loadConfig()
@@ -466,10 +502,20 @@ struct SettingsView: View {
     }
 
     private func resetEditedValues() {
-        // Reset edited values to current config values
-        if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-sonnet-4-20250514"
-            editedColorScheme = config.theme?.colorScheme ?? "system"
+        Task {
+            // Load from iCloud Key-Value Store first (for cross-device sync)
+            let iCloudModel = await iCloudStore.getString(forKey: "ils_default_model")
+            let iCloudColorScheme = await iCloudStore.getString(forKey: "ils_color_scheme")
+
+            // Prefer iCloud values if available, otherwise use config from API
+            if let config = viewModel.config?.content {
+                editedModel = iCloudModel ?? config.model ?? "claude-sonnet-4-20250514"
+                editedColorScheme = iCloudColorScheme ?? config.theme?.colorScheme ?? "system"
+            } else {
+                // If no config loaded yet, use iCloud or defaults
+                editedModel = iCloudModel ?? "claude-sonnet-4-20250514"
+                editedColorScheme = iCloudColorScheme ?? "system"
+            }
         }
     }
 }
