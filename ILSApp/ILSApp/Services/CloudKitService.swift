@@ -231,6 +231,31 @@ actor CloudKitService {
         return models
     }
 
+    // MARK: - Session Operations
+
+    /// Saves a session to CloudKit
+    /// - Parameter session: The ChatSession to save
+    /// - Returns: The saved CKRecord
+    func saveSession(_ session: ChatSession) async throws -> CKRecord {
+        return try await save(session)
+    }
+
+    /// Fetches all sessions from CloudKit
+    /// - Returns: Array of ChatSession objects
+    func fetchSessions() async throws -> [ChatSession] {
+        return try await fetchAll(ofType: ChatSession.self)
+    }
+
+    /// Deletes a session from CloudKit
+    /// - Parameter sessionId: The UUID of the session to delete
+    func deleteSession(_ sessionId: UUID) async throws {
+        let recordID = CKRecord.ID(
+            recordName: sessionId.uuidString,
+            zoneID: zone.zoneID
+        )
+        try await delete(recordID)
+    }
+
     // MARK: - Account Status
 
     /// Checks if iCloud is available and user is signed in
