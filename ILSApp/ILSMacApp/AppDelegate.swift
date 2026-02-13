@@ -28,6 +28,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Add Edit menu
         setupEditMenu(mainMenu)
+
+        // Add View menu
+        setupViewMenu(mainMenu)
     }
 
     private func setupFileMenu(_ mainMenu: NSMenu) {
@@ -154,6 +157,88 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(selectAllItem)
     }
 
+    private func setupViewMenu(_ mainMenu: NSMenu) {
+        // Check if View menu already exists (SwiftUI may have created one)
+        let viewMenu: NSMenu
+        if let existingViewMenuItem = mainMenu.items.first(where: { $0.title == "View" }),
+           let existingViewMenu = existingViewMenuItem.submenu {
+            viewMenu = existingViewMenu
+            viewMenu.removeAllItems() // Clear existing items to rebuild
+        } else {
+            // Create new View menu
+            viewMenu = NSMenu(title: "View")
+            let viewMenuItem = NSMenuItem(title: "View", action: nil, keyEquivalent: "")
+            viewMenuItem.submenu = viewMenu
+            mainMenu.insertItem(viewMenuItem, at: 3) // Insert after Edit menu
+        }
+
+        // Toggle Sidebar (Cmd+Ctrl+S)
+        let toggleSidebarItem = NSMenuItem(
+            title: "Toggle Sidebar",
+            action: #selector(toggleSidebar),
+            keyEquivalent: "s"
+        )
+        toggleSidebarItem.keyEquivalentModifierMask = [.command, .control]
+        toggleSidebarItem.target = self
+        viewMenu.addItem(toggleSidebarItem)
+
+        viewMenu.addItem(NSMenuItem.separator())
+
+        // Show Dashboard (Cmd+1)
+        let showDashboardItem = NSMenuItem(
+            title: "Show Dashboard",
+            action: #selector(showDashboard),
+            keyEquivalent: "1"
+        )
+        showDashboardItem.target = self
+        viewMenu.addItem(showDashboardItem)
+
+        // Show Sessions (Cmd+2)
+        let showSessionsItem = NSMenuItem(
+            title: "Show Sessions",
+            action: #selector(showSessions),
+            keyEquivalent: "2"
+        )
+        showSessionsItem.target = self
+        viewMenu.addItem(showSessionsItem)
+
+        // Show Projects (Cmd+3)
+        let showProjectsItem = NSMenuItem(
+            title: "Show Projects",
+            action: #selector(showProjects),
+            keyEquivalent: "3"
+        )
+        showProjectsItem.target = self
+        viewMenu.addItem(showProjectsItem)
+
+        // Show System (Cmd+4)
+        let showSystemItem = NSMenuItem(
+            title: "Show System",
+            action: #selector(showSystem),
+            keyEquivalent: "4"
+        )
+        showSystemItem.target = self
+        viewMenu.addItem(showSystemItem)
+
+        // Show Browser (Cmd+5)
+        let showBrowserItem = NSMenuItem(
+            title: "Show Browser",
+            action: #selector(showBrowser),
+            keyEquivalent: "5"
+        )
+        showBrowserItem.target = self
+        viewMenu.addItem(showBrowserItem)
+
+        // Show Settings (Cmd+6)
+        let showSettingsItem = NSMenuItem(
+            title: "Show Settings",
+            action: #selector(showSettings),
+            keyEquivalent: "6"
+        )
+        showSettingsItem.target = self
+        viewMenu.addItem(showSettingsItem)
+    }
+
     private func customizeAppMenu(_ menu: NSMenu) {
         // The app menu already has standard items from SwiftUI:
         // - About ILS
@@ -196,5 +281,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Post notification to save current session
         // This will be handled by the ChatViewModel to export/save the session
         NotificationCenter.default.post(name: NSNotification.Name("SaveSession"), object: nil)
+    }
+
+    @objc private func toggleSidebar() {
+        // Post notification to toggle sidebar visibility
+        // This will be handled by the main ContentView
+        NotificationCenter.default.post(name: NSNotification.Name("ToggleSidebar"), object: nil)
+    }
+
+    @objc private func showDashboard() {
+        // Post notification to navigate to Dashboard
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateTo"), object: "dashboard")
+    }
+
+    @objc private func showSessions() {
+        // Post notification to navigate to Sessions
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateTo"), object: "sessions")
+    }
+
+    @objc private func showProjects() {
+        // Post notification to navigate to Projects
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateTo"), object: "projects")
+    }
+
+    @objc private func showSystem() {
+        // Post notification to navigate to System
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateTo"), object: "system")
+    }
+
+    @objc private func showBrowser() {
+        // Post notification to navigate to Browser
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateTo"), object: "browser")
+    }
+
+    @objc private func showSettings() {
+        // Post notification to navigate to Settings
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateTo"), object: "settings")
     }
 }
