@@ -1,0 +1,20 @@
+ILS requires a companion backend server running on a Mac to function. The backend is included in the open-source repository and can be started with:
+
+  PORT=9999 swift run ILSBackend
+
+The app connects to this backend server over the local network. Without the backend running, the app will show a "Disconnected" state and prompt the user to configure a server connection.
+
+To test:
+1. Clone the repository: https://github.com/krzemienski/ils-ios
+2. Run the backend: PORT=9999 swift run ILSBackend
+3. Install the app on a simulator or device on the same network
+4. The app should auto-discover the backend and show connected status
+
+Key features to review:
+- Dashboard with real-time statistics
+- Chat interface with Claude (requires Claude Code CLI installed)
+- Session, project, and skills browsing
+- System monitoring
+- Settings with theme customization
+
+Note: Full chat functionality requires Claude Code CLI to be installed on the Mac running the backend. Without it, sessions and browsing features still work with existing data.

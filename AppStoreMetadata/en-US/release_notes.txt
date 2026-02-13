@@ -1,0 +1,8 @@
+Initial release of ILS — your native Claude Code companion.
+
+• Real-time streaming chat with Claude
+• Session, project, and skills management
+• MCP server monitoring
+• System monitoring dashboard
+• 12 custom themes
+• macOS native app with multi-window support
