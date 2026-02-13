@@ -9,7 +9,7 @@ cd /path/to/ils-ios
 swift run ILSBackend
 ```
 
-The server starts at `http://localhost:8080`. Press `Ctrl+C` to stop.
+The server starts at `http://localhost:9999`. Press `Ctrl+C` to stop.
 
 ---
 
@@ -159,7 +159,7 @@ COPY --from=builder /app/.build/release/ILSBackend ./
 # Volume for database and config
 VOLUME ["/app/data"]
 
-EXPOSE 8080
+EXPOSE 9999
 
 # Run with data directory
 CMD ["./ILSBackend"]
@@ -173,7 +173,7 @@ services:
   ils-backend:
     build: .
     ports:
-      - "8080:8080"
+      - "9999:9999"
     volumes:
       # Mount for database persistence
       - ./ils.sqlite:/app/ils.sqlite
@@ -246,12 +246,12 @@ tmux kill-session -t ils-backend
 |----------|---------|-------------|
 | `VAPOR_ENV` | `development` | Environment mode |
 | `DATABASE_PATH` | `./ils.sqlite` | SQLite database location |
-| `PORT` | `8080` | Server port |
+| `PORT` | `9999` | Server port |
 
 ### Server Settings
 
 Edit `Sources/ILSBackend/App/configure.swift` to change:
-- Port (default: 8080)
+- Port (default: 9999)
 - Hostname (default: 0.0.0.0)
 - Database path
 
@@ -261,14 +261,14 @@ Edit `Sources/ILSBackend/App/configure.swift` to change:
 
 ```bash
 # Health check
-curl http://localhost:8080/health
+curl http://localhost:9999/health
 # Returns: OK
 
 # Check if process is running
 pgrep -f ILSBackend
 
 # Check port
-lsof -i :8080
+lsof -i :9999
 ```
 
 ---
@@ -278,8 +278,8 @@ lsof -i :8080
 ### Port Already in Use
 
 ```bash
-# Find what's using port 8080
-lsof -i :8080
+# Find what's using port 9999
+lsof -i :9999
 
 # Kill the process
 kill -9 <PID>

@@ -1,13 +1,15 @@
 # ILS - Intelligent Language System
 
-> A native iOS client for [Claude Code](https://claude.ai/claude-code) with a Swift backend
+> A native iOS & macOS client for [Claude Code](https://claude.ai/claude-code) with a Swift backend
 
+[![Build](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml/badge.svg)](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml)
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-blue.svg)](https://developer.apple.com/ios/)
+[![macOS](https://img.shields.io/badge/macOS-14.0+-blue.svg)](https://developer.apple.com/macos/)
 [![Vapor](https://img.shields.io/badge/Vapor-4.0-purple.svg)](https://vapor.codes)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-ILS provides a mobile interface for interacting with Claude Code sessions, managing projects, viewing skills, and configuring MCP servers - all from your iPhone or iPad.
+ILS provides a mobile interface for interacting with Claude Code sessions, managing projects, viewing skills, and configuring MCP servers - all from your iPhone, iPad, or Mac.
 
 ## Features
 
@@ -17,6 +19,8 @@ ILS provides a mobile interface for interacting with Claude Code sessions, manag
 - **Skills Explorer** - View 1,500+ available Claude Code skills
 - **Plugin Management** - Enable/disable Claude Code plugins
 - **MCP Server Status** - Monitor Model Context Protocol servers
+- **macOS Native** - Full macOS app with 3-column NavigationSplitView, multi-window support, keyboard shortcuts, and Touch Bar
+- **12 Themes** - Choose from Obsidian, Nord, Dracula, Solarized, and more
 - **Dark Mode** - Native iOS dark theme throughout
 
 ## Screenshots
@@ -47,6 +51,12 @@ ils-ios/
 │       ├── ViewModels/        # MVVM view models
 │       ├── Services/          # API client, SSE client
 │       └── Theme/             # Design system
+├── ILSMacApp/                 # macOS Application
+│   └── ILSMacApp/
+│       ├── Views/             # macOS-specific SwiftUI views
+│       ├── ViewModels/        # Shared view models
+│       ├── Services/          # Shared services
+│       └── Theme/             # macOS design system
 ├── Tests/                     # Backend tests
 ├── Package.swift              # Swift Package manifest
 └── ils.sqlite                 # SQLite database (auto-created)
@@ -64,7 +74,7 @@ ils-ios/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/ils-ios.git
+git clone https://github.com/krzemienski/ils-ios.git
 cd ils-ios
 ```
 
@@ -72,20 +82,20 @@ cd ils-ios
 
 ```bash
 # Build and run the backend server
-PORT=9090 swift run ILSBackend
+PORT=9999 swift run ILSBackend
 
 # You should see:
-# [ NOTICE ] Server started on http://0.0.0.0:9090
+# [ NOTICE ] Server started on http://0.0.0.0:9999
 ```
 
 The backend will:
 - Create `ils.sqlite` database on first run
 - Run database migrations automatically
-- Start listening on port 9090
+- Start listening on port 9999
 
 **Verify it's running:**
 ```bash
-curl http://localhost:9090/health
+curl http://localhost:9999/health
 # Returns: OK
 ```
 
@@ -95,7 +105,7 @@ curl http://localhost:9090/health
 ```bash
 open ILSApp/ILSApp.xcodeproj
 ```
-Press `Cmd+R` to build and run on Simulator.
+Select the **ILSApp** scheme and press `Cmd+R` to build and run on Simulator.
 
 **Option B: Command Line**
 ```bash
@@ -105,9 +115,16 @@ xcodebuild -project ILSApp/ILSApp.xcodeproj \
   build
 ```
 
-### 4. Configure Connection
+### 4. Run the macOS App
 
-The iOS app connects to `http://localhost:9090` by default.
+```bash
+open ILSApp/ILSApp.xcodeproj
+```
+Select the **ILSMacApp** scheme and press `Cmd+R`.
+
+### 5. Configure Connection
+
+The iOS app connects to `http://localhost:9999` by default.
 
 - **Simulator**: Works automatically (shares localhost with Mac)
 - **Physical Device**: Go to Settings in the app and update the host to your Mac's IP address
@@ -143,7 +160,7 @@ ILSApp/
 
 ## API Endpoints
 
-Base URL: `http://localhost:9090/api/v1`
+Base URL: `http://localhost:9999/api/v1`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -233,8 +250,8 @@ The app supports deep linking via the `ils://` URL scheme:
 ### Backend won't start
 
 ```bash
-# Check if port 9090 is in use
-lsof -i :9090
+# Check if port 9999 is in use
+lsof -i :9999
 
 # Kill existing process if needed
 kill -9 <PID>
@@ -242,7 +259,7 @@ kill -9 <PID>
 
 ### iOS can't connect to backend
 
-1. Verify backend is running: `curl http://localhost:9090/health`
+1. Verify backend is running: `curl http://localhost:9999/health`
 2. For physical device, use your Mac's IP address in Settings
 3. Ensure both devices are on the same network
 
@@ -264,6 +281,7 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*
 | Backend Framework | [Vapor 4](https://vapor.codes) |
 | Database | SQLite via [Fluent](https://docs.vapor.codes/fluent/overview/) |
 | iOS UI | SwiftUI (iOS 18+) |
+| macOS UI | SwiftUI (macOS 14+) |
 | Architecture | MVVM |
 | Networking | URLSession + SSE |
 | Streaming | Server-Sent Events |
