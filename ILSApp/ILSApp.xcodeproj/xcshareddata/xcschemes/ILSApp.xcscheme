@@ -40,6 +40,17 @@
                ReferencedContainer = "container:ILSApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "8ca6c3ced76c51c7b77dd1f4"
+               BuildableName = "ILSAppTests.xctest"
+               BlueprintName = "ILSAppTests"
+               ReferencedContainer = "container:ILSApp.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

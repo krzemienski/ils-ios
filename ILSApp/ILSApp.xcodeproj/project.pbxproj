@@ -44,10 +44,23 @@
 		UITEST0000000000000000B2 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A2 /* FeatureGateTests.swift */; };
 		UITEST0000000000000000B3 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A3 /* ErrorHandlingTests.swift */; };
 		UITEST0000000000000000B4 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = UITEST0000000000000000A4 /* NavigationTests.swift */; };
+		6E7B1442FEB468DE64ECEFAB /* CloudKitServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393502FE4ECF50328166AF8D /* CloudKitServiceTests.swift */; };
+		F6E4C4E24DA451A3619CCC86 /* CloudKitSyncableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E0237640D3BF5E3657BCE2 /* CloudKitSyncableTests.swift */; };
+		1870C8D0F9EC31E4067B654D /* iCloudKeyValueStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CB25CC3079454F5B464C89 /* iCloudKeyValueStoreTests.swift */; };
+		4001931F4BF1D9F640B7A59C /* SyncViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCCC95314A5F49BE93063278 /* SyncViewModelTests.swift */; };
+		950F0AD20B795541EE24A4A7 /* CloudKitSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050B75943DF3FFFE77585927 /* CloudKitSyncTests.swift */; };
+		67836E8736F064EAD909060F /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 56A9F427C0238A84EF53AFE5 /* CloudKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		UITEST0000000000000PROXY /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000008 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00000000000000000000000E;
+			remoteInfo = ILSApp;
+		};
+		914B425D3F9ACCBCE0709B82 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 000000000000000000000008 /* Project object */;
 			proxyType = 1;
@@ -96,6 +109,14 @@
 		UITEST0000000000000000A2 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A3 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A4 /* NavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTests.swift; sourceTree = "<group>"; };
+		D02639BAF78237BF784FFC43 /* ILSAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		393502FE4ECF50328166AF8D /* CloudKitServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitServiceTests.swift; sourceTree = "<group>"; };
+		44E0237640D3BF5E3657BCE2 /* CloudKitSyncableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncableTests.swift; sourceTree = "<group>"; };
+		C8CB25CC3079454F5B464C89 /* iCloudKeyValueStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudKeyValueStoreTests.swift; sourceTree = "<group>"; };
+		DCCC95314A5F49BE93063278 /* SyncViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncViewModelTests.swift; sourceTree = "<group>"; };
+		050B75943DF3FFFE77585927 /* CloudKitSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncTests.swift; sourceTree = "<group>"; };
+		4137503CE5F94AC3B5AF04C0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		56A9F427C0238A84EF53AFE5 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +135,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EA1819B5ADFEC314417DDB77 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				67836E8736F064EAD909060F /* CloudKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -122,6 +151,7 @@
 			children = (
 				000000000000000000000015 /* ILSApp */,
 				UITEST00000000000000GRP1 /* ILSAppUITests */,
+				6DD0364CD5D926958567E1CD /* ILSAppTests */,
 				00000000000000000000000F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -131,6 +161,7 @@
 			children = (
 				000000000000000000000010 /* ILSApp.app */,
 				UITEST0000000000000000A0 /* ILSAppUITests.xctest */,
+				D02639BAF78237BF784FFC43 /* ILSAppTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -290,6 +321,19 @@
 			path = ILSAppUITests;
 			sourceTree = "<group>";
 		};
+		6DD0364CD5D926958567E1CD /* ILSAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				393502FE4ECF50328166AF8D /* CloudKitServiceTests.swift */,
+				44E0237640D3BF5E3657BCE2 /* CloudKitSyncableTests.swift */,
+				C8CB25CC3079454F5B464C89 /* iCloudKeyValueStoreTests.swift */,
+				DCCC95314A5F49BE93063278 /* SyncViewModelTests.swift */,
+				050B75943DF3FFFE77585927 /* CloudKitSyncTests.swift */,
+				4137503CE5F94AC3B5AF04C0 /* Info.plist */,
+			);
+			path = ILSAppTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -330,6 +374,24 @@
 			productReference = UITEST0000000000000000A0 /* ILSAppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		D1BBB3985D4B0ECA2BA41A60 /* ILSAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F6FBC50B1E82264E1754ED4F /* Build configuration list for PBXNativeTarget "ILSAppTests" */;
+			buildPhases = (
+				EFBB6D620C783071380D24C6 /* Sources */,
+				EA1819B5ADFEC314417DDB77 /* Frameworks */,
+				E41FB8A91251092045388BAC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				92461AB99D857127975D7333 /* PBXTargetDependency */,
+			);
+			name = ILSAppTests;
+			productName = ILSAppTests;
+			productReference = D02639BAF78237BF784FFC43 /* ILSAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -367,7 +429,8 @@
 			targets = (
 				00000000000000000000000E /* ILSApp */,
 				UITEST000000000000TARGET /* ILSAppUITests */,
-			);
+			
+				D1BBB3985D4B0ECA2BA41A60 /* ILSAppTests */,);
 		};
 /* End PBXProject section */
 
@@ -377,6 +440,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				000000000000000000000003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E41FB8A91251092045388BAC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,6 +502,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EFBB6D620C783071380D24C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6E7B1442FEB468DE64ECEFAB /* CloudKitServiceTests.swift in Sources */,
+				F6E4C4E24DA451A3619CCC86 /* CloudKitSyncableTests.swift in Sources */,
+				1870C8D0F9EC31E4067B654D /* iCloudKeyValueStoreTests.swift in Sources */,
+				4001931F4BF1D9F640B7A59C /* SyncViewModelTests.swift in Sources */,
+				950F0AD20B795541EE24A4A7 /* CloudKitSyncTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -439,6 +521,11 @@
 			isa = PBXTargetDependency;
 			target = 00000000000000000000000E /* ILSApp */;
 			targetProxy = UITEST0000000000000PROXY /* PBXContainerItemProxy */;
+		};
+		92461AB99D857127975D7333 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00000000000000000000000E /* ILSApp */;
+			targetProxy = 914B425D3F9ACCBCE0709B82 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -668,6 +755,57 @@
 			};
 			name = Release;
 		};
+		55591B9491A5E24B5C05E0F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ILSAppTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.ILSAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ILSApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ILSApp";
+			};
+			name = Debug;
+		};
+		33666792B31ABFD8E30A35C7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ILSAppTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.ILSAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ILSApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ILSApp";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -694,6 +832,15 @@
 			buildConfigurations = (
 				UITEST00000000000000CFG1 /* Debug */,
 				UITEST00000000000000CFG2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F6FBC50B1E82264E1754ED4F /* Build configuration list for PBXNativeTarget "ILSAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				55591B9491A5E24B5C05E0F3 /* Debug */,
+				33666792B31ABFD8E30A35C7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
