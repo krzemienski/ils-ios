@@ -1,5 +1,6 @@
 import Foundation
 import ILSShared
+import CloudKit
 
 @MainActor
 class SessionsViewModel: ObservableObject {
@@ -8,11 +9,22 @@ class SessionsViewModel: ObservableObject {
     @Published var error: Error?
 
     private var client: APIClient?
+    private var cloudKitService: CloudKitService?
 
     init() {}
 
-    func configure(client: APIClient) {
+    func configure(client: APIClient, cloudKitService: CloudKitService? = nil) {
         self.client = client
+        self.cloudKitService = cloudKitService
+    }
+
+    /// Check if iCloud sync is enabled
+    private var isSyncEnabled: Bool {
+        // Default to true if key doesn't exist (first launch)
+        if UserDefaults.standard.object(forKey: "ils_icloud_sync_enabled_v2") == nil {
+            return true
+        }
+        return UserDefaults.standard.bool(forKey: "ils_icloud_sync_enabled_v2")
     }
 
     /// Empty state text for UI display
@@ -24,14 +36,21 @@ class SessionsViewModel: ObservableObject {
     }
 
     func loadSessions() async {
-        guard let client else { return }
         isLoading = true
         error = nil
 
         do {
-            let response: APIResponse<ListResponse<ChatSession>> = try await client.get("/sessions")
-            if let data = response.data {
-                sessions = data.items
+            // Load from CloudKit if sync is enabled, otherwise use API
+            if isSyncEnabled, let cloudKitService {
+                // Load from CloudKit
+                let cloudSessions = try await cloudKitService.fetchSessions()
+                sessions = cloudSessions.sorted { $0.lastActiveAt > $1.lastActiveAt }
+            } else if let client {
+                // Fallback to API
+                let response: APIResponse<ListResponse<ChatSession>> = try await client.get("/sessions")
+                if let data = response.data {
+                    sessions = data.items
+                }
             }
         } catch {
             self.error = error
@@ -56,6 +75,18 @@ class SessionsViewModel: ObservableObject {
             let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
             if let session = response.data {
                 sessions.insert(session, at: 0)
+
+                // Sync to CloudKit if enabled
+                if isSyncEnabled, let cloudKitService {
+                    Task {
+                        do {
+                            _ = try await cloudKitService.saveSession(session)
+                        } catch {
+                            print("❌ Failed to sync session to CloudKit: \(error.localizedDescription)")
+                        }
+                    }
+                }
+
                 return session
             }
         } catch {
@@ -66,9 +97,16 @@ class SessionsViewModel: ObservableObject {
     }
 
     func deleteSession(_ session: ChatSession) async {
-        guard let client else { return }
         do {
-            let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
+            // Delete from CloudKit if sync is enabled
+            if isSyncEnabled, let cloudKitService {
+                try await cloudKitService.deleteSession(session.id)
+            } else if let client {
+                // Fallback to API
+                let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
+            }
+
+            // Remove from local list
             sessions.removeAll { $0.id == session.id }
         } catch {
             self.error = error
@@ -82,6 +120,18 @@ class SessionsViewModel: ObservableObject {
             let response: APIResponse<ChatSession> = try await client.post("/sessions/\(session.id)/fork", body: EmptyBody())
             if let forked = response.data {
                 sessions.insert(forked, at: 0)
+
+                // Sync to CloudKit if enabled
+                if isSyncEnabled, let cloudKitService {
+                    Task {
+                        do {
+                            _ = try await cloudKitService.saveSession(forked)
+                        } catch {
+                            print("❌ Failed to sync forked session to CloudKit: \(error.localizedDescription)")
+                        }
+                    }
+                }
+
                 return forked
             }
         } catch {

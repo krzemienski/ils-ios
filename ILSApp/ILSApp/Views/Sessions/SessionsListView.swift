@@ -5,6 +5,7 @@ struct SessionsListView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SessionsViewModel()
     @State private var showingNewSession = false
+    private let cloudKitService = CloudKitService()
 
     var body: some View {
         List {
@@ -79,7 +80,7 @@ struct SessionsListView: View {
             }
         }
         .task {
-            viewModel.configure(client: appState.apiClient)
+            viewModel.configure(client: appState.apiClient, cloudKitService: cloudKitService)
             await viewModel.loadSessions()
         }
         .accessibilityIdentifier("sessions-list")
