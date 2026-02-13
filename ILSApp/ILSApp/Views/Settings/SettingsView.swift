@@ -3,38 +3,381 @@ import ILSShared
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var themeManager: ThemeManager
-    @Environment(\.theme) var theme: any AppTheme
-    @StateObject var viewModel = SettingsViewModel()
-    @State var serverURL: String = ""
-    @AppStorage("colorScheme") var colorSchemePreference: String = "dark"
+    @StateObject private var viewModel = SettingsViewModel()
+    @State private var serverHost: String = "localhost"
+    @State private var serverPort: String = "8080"
 
-    let availableModels = [
+    // Editing state
+    @State private var isEditing = false
+    @State private var editedModel: String = ""
+    @State private var editedColorScheme: String = "system"
+
+    // Alert state
+    @State private var showSaveConfirmation = false
+    @State private var showSaveError = false
+    @State private var saveErrorMessage = ""
+    @State private var showSaveSuccess = false
+
+    // Biometric protection state
+    @State private var biometricProtectionEnabled = false
+    @State private var biometricType: String?
+
+    // Available options
+    private let availableModels = [
         "claude-sonnet-4-20250514",
         "claude-opus-4-20250514",
         "claude-haiku-3-5-20241022"
     ]
 
-    let availableColorSchemes = ["system", "light", "dark"]
+    private let availableColorSchemes = ["system", "light", "dark"]
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: theme.spacingMD) {
-                connectionSection
-                remoteAccessSection
-                appearanceSection
-                generalSettingsSection
-                apiKeySection
-                permissionsSection
-                advancedSection
-                statisticsSection
-                diagnosticsSection
-                aboutSection
+        Form {
+            // MARK: - Connection Section
+            Section {
+                HStack {
+                    Text("Host")
+                        .frame(width: 50, alignment: .leading)
+                    TextField("localhost", text: $serverHost)
+                        .textContentType(.URL)
+                        .autocapitalization(.none)
+                        .keyboardType(.URL)
+                }
+
+                HStack {
+                    Text("Port")
+                        .frame(width: 50, alignment: .leading)
+                    TextField("8080", text: $serverPort)
+                        .keyboardType(.numberPad)
+                }
+
+                HStack {
+                    Text("Status")
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(appState.isConnected ? Color.green : Color.red)
+                            .frame(width: 8, height: 8)
+                        Text(appState.isConnected ? "Connected" : "Disconnected")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+
+                Button {
+                    testConnection()
+                } label: {
+                    HStack {
+                        if viewModel.isTestingConnection {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                        Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(viewModel.isTestingConnection)
+            } header: {
+                Text("Backend Connection")
+            } footer: {
+                Text("Configure the ILS backend server address")
             }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.vertical, theme.spacingSM)
+
+            // MARK: - General Settings Section
+            Section {
+                if viewModel.isLoadingConfig {
+                    HStack {
+                        ProgressView()
+                            .padding(.trailing, 8)
+                        Text("Loading configuration...")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                } else if let config = viewModel.config?.content {
+                    // Default Model - Editable
+                    if isEditing {
+                        Picker("Default Model", selection: $editedModel) {
+                            ForEach(availableModels, id: \.self) { model in
+                                Text(formatModelName(model))
+                                    .tag(model)
+                            }
+                        }
+                    } else {
+                        LabeledContent("Default Model") {
+                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Theme Color Scheme - Editable
+                    if isEditing {
+                        Picker("Color Scheme", selection: $editedColorScheme) {
+                            ForEach(availableColorSchemes, id: \.self) { scheme in
+                                Text(scheme.capitalized)
+                                    .tag(scheme)
+                            }
+                        }
+                    } else {
+                        LabeledContent("Color Scheme") {
+                            Text((config.theme?.colorScheme ?? "system").capitalized)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Auto Updates Channel (read-only)
+                    if let channel = config.autoUpdatesChannel {
+                        LabeledContent("Updates Channel") {
+                            Text(channel.capitalized)
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Always Thinking (read-only)
+                    LabeledContent("Extended Thinking") {
+                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                    }
+
+                    // Co-authored by (read-only)
+                    LabeledContent("Include Co-Author") {
+                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                    }
+
+                    // Save button when editing
+                    if isEditing {
+                        Button {
+                            showSaveConfirmation = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Save Changes")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(viewModel.isSaving)
+                    }
+                } else {
+                    Text("No configuration loaded")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                HStack {
+                    Text("General")
+                    Spacer()
+                    if viewModel.config != nil && !viewModel.isLoadingConfig {
+                        Button(isEditing ? "Cancel" : "Edit") {
+                            if isEditing {
+                                // Cancel editing - reset to original values
+                                resetEditedValues()
+                            }
+                            isEditing.toggle()
+                        }
+                        .font(ILSTheme.captionFont)
+                        .textCase(nil)
+                    }
+                }
+            } footer: {
+                if let config = viewModel.config {
+                    Text("Scope: \(config.scope) • \(config.path)")
+                }
+            }
+
+            // MARK: - API Key Section
+            Section {
+                if let config = viewModel.config?.content {
+                    if let apiKeyStatus = config.apiKeyStatus {
+                        HStack {
+                            Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
+                                .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
+                                    .font(ILSTheme.bodyFont)
+                                if let maskedKey = apiKeyStatus.maskedKey {
+                                    Text("Key: \(maskedKey)")
+                                        .font(ILSTheme.captionFont)
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                }
+                                if let source = apiKeyStatus.source {
+                                    Text("Source: \(source)")
+                                        .font(ILSTheme.captionFont)
+                                        .foregroundColor(ILSTheme.secondaryText)
+                                }
+                            }
+                        }
+                    } else {
+                        HStack {
+                            Image(systemName: "key.fill")
+                                .foregroundColor(.orange)
+                            Text("API Key status unknown")
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+                } else if !viewModel.isLoadingConfig {
+                    Text("Loading API key status...")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                Text("API Key")
+            } footer: {
+                Text("For security, API keys cannot be edited through the iOS app. Use the terminal command: claude config set apiKey <your-key>")
+            }
+
+            // MARK: - Security Section
+            Section {
+                if let biometricType = biometricType {
+                    Toggle(isOn: $biometricProtectionEnabled) {
+                        HStack {
+                            Image(systemName: biometricType.contains("Face") ? "faceid" : "touchid")
+                                .foregroundColor(.blue)
+                            Text("Require \(biometricType)")
+                        }
+                    }
+                    .onChange(of: biometricProtectionEnabled) { _, newValue in
+                        toggleBiometricProtection(enabled: newValue)
+                    }
+                } else {
+                    HStack {
+                        Image(systemName: "exclamationmark.shield")
+                            .foregroundColor(.orange)
+                        Text("Biometric authentication not available")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            } header: {
+                Text("Security")
+            } footer: {
+                if biometricType != nil {
+                    Text("When enabled, \(biometricType!) is required to access server credentials stored in the Keychain.")
+                } else {
+                    Text("Enable Face ID or Touch ID in iOS Settings to protect your credentials.")
+                }
+            }
+
+            // MARK: - Permissions Section
+            Section {
+                if let config = viewModel.config?.content, let permissions = config.permissions {
+                    // Default Permission Mode
+                    LabeledContent("Default Mode") {
+                        Text(permissions.defaultMode?.capitalized ?? "Prompt")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+
+                    // Allowed Commands
+                    if let allowed = permissions.allow, !allowed.isEmpty {
+                        DisclosureGroup {
+                            ForEach(allowed, id: \.self) { item in
+                                Text(item)
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        } label: {
+                            LabeledContent("Allowed", value: "\(allowed.count) rules")
+                        }
+                    } else {
+                        LabeledContent("Allowed", value: "None")
+                    }
+
+                    // Denied Commands
+                    if let denied = permissions.deny, !denied.isEmpty {
+                        DisclosureGroup {
+                            ForEach(denied, id: \.self) { item in
+                                Text(item)
+                                    .font(ILSTheme.captionFont)
+                                    .foregroundColor(ILSTheme.secondaryText)
+                            }
+                        } label: {
+                            LabeledContent("Denied", value: "\(denied.count) rules")
+                        }
+                    } else {
+                        LabeledContent("Denied", value: "None")
+                    }
+                } else if !viewModel.isLoadingConfig {
+                    Text("No permissions configured")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+            } header: {
+                Text("Permissions")
+            }
+
+            // MARK: - Advanced Section
+            Section {
+                if let config = viewModel.config?.content {
+                    // Hooks Summary
+                    if let hooks = config.hooks {
+                        let hookCount = countHooks(hooks)
+                        LabeledContent("Hooks Configured", value: "\(hookCount)")
+                    } else {
+                        LabeledContent("Hooks Configured", value: "0")
+                    }
+
+                    // Enabled Plugins Count
+                    if let plugins = config.enabledPlugins {
+                        let enabledCount = plugins.filter { $0.value }.count
+                        LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                    } else {
+                        LabeledContent("Enabled Plugins", value: "0")
+                    }
+
+                    // Status Line
+                    if let statusLine = config.statusLine {
+                        LabeledContent("Status Line") {
+                            Text(statusLine.type ?? "disabled")
+                                .foregroundColor(ILSTheme.secondaryText)
+                        }
+                    }
+
+                    // Environment Variables
+                    if let env = config.env, !env.isEmpty {
+                        LabeledContent("Environment Vars", value: "\(env.count)")
+                    }
+                } else if !viewModel.isLoadingConfig {
+                    Text("No advanced settings")
+                        .foregroundColor(ILSTheme.secondaryText)
+                }
+
+                // Raw Config Editor Links
+                NavigationLink("Edit User Settings") {
+                    ConfigEditorView(scope: "user", apiClient: appState.apiClient)
+                }
+
+                NavigationLink("Edit Project Settings") {
+                    ConfigEditorView(scope: "project", apiClient: appState.apiClient)
+                }
+            } header: {
+                Text("Advanced")
+            } footer: {
+                Text("Edit raw JSON configuration files")
+            }
+
+            // MARK: - Statistics Section
+            Section("Statistics") {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else if let stats = viewModel.stats {
+                    LabeledContent("Projects", value: "\(stats.projects.total)")
+                    LabeledContent("Sessions", value: "\(stats.sessions.total) (\(stats.sessions.active) active)")
+                    LabeledContent("Skills", value: "\(stats.skills.total)")
+                    LabeledContent("MCP Servers", value: "\(stats.mcpServers.total) (\(stats.mcpServers.healthy) healthy)")
+                    LabeledContent("Plugins", value: "\(stats.plugins.total) (\(stats.plugins.enabled) enabled)")
+                }
+            }
+
+            // MARK: - About Section
+            Section("About") {
+                LabeledContent("Version", value: "1.0.0")
+                LabeledContent("Build", value: "1")
+
+                Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
+                    HStack {
+                        Text("Claude Code Documentation")
+                        Spacer()
+                        Image(systemName: "arrow.up.right.square")
+                            .foregroundColor(ILSTheme.secondaryText)
+                    }
+                }
+            }
         }
-        .background(theme.bgPrimary)
         .navigationTitle("Settings")
         .refreshable {
             await viewModel.loadAll()
@@ -42,16 +385,386 @@ struct SettingsView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             loadServerSettings()
+            loadBiometricSettings()
             await viewModel.loadAll()
+            resetEditedValues()
+        }
+        .confirmationDialog("Save Configuration Changes?", isPresented: $showSaveConfirmation, titleVisibility: .visible) {
+            Button("Save Changes") {
+                saveConfigChanges()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will update your Claude Code configuration. Changes will take effect immediately.")
+        }
+        .alert("Save Failed", isPresented: $showSaveError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
+        .alert("Configuration Saved", isPresented: $showSaveSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your configuration has been updated successfully.")
+        }
+        .onChange(of: serverHost) { _, newValue in
+            saveServerSettings()
+        }
+        .onChange(of: serverPort) { _, newValue in
+            saveServerSettings()
+        }
+    }
+
+    // MARK: - Server Settings Persistence
+
+    private func loadServerSettings() {
+        // Load from AppState which reads from Keychain
+        // AppState has already loaded from Keychain or migrated from UserDefaults
+        parseServerURL()
+    }
+
+    private func saveServerSettings() {
+        // Update appState serverURL
+        // AppState's didSet will automatically save to Keychain
+        let url = "http://\(serverHost):\(serverPort)"
+        appState.serverURL = url
+    }
+
+    private func testConnection() {
+        Task {
+            let url = "http://\(serverHost):\(serverPort)"
+            appState.serverURL = url
+            await viewModel.testConnection()
+
+            // Save settings if connection successful
+            if appState.isConnected {
+                saveServerSettings()
+            }
+        }
+    }
+
+    private func saveConfigChanges() {
+        Task {
+            let result = await viewModel.saveConfig(model: editedModel, colorScheme: editedColorScheme)
+            if let error = result {
+                saveErrorMessage = error
+                showSaveError = true
+            } else {
+                isEditing = false
+                showSaveSuccess = true
+                await viewModel.loadConfig()
+            }
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private func parseServerURL() {
+        // Parse existing server URL into host and port
+        if let url = URL(string: appState.serverURL),
+           let host = url.host {
+            serverHost = host
+            if let port = url.port {
+                serverPort = String(port)
+            }
+        }
+    }
+
+    private func countHooks(_ hooks: HooksConfig) -> Int {
+        var count = 0
+        if let h = hooks.sessionStart { count += h.count }
+        if let h = hooks.subagentStart { count += h.count }
+        if let h = hooks.userPromptSubmit { count += h.count }
+        if let h = hooks.preToolUse { count += h.count }
+        if let h = hooks.postToolUse { count += h.count }
+        return count
+    }
+
+    private func formatModelName(_ model: String) -> String {
+        // Convert model ID to human-readable name
+        if model.contains("sonnet") {
+            return "Claude Sonnet"
+        } else if model.contains("opus") {
+            return "Claude Opus"
+        } else if model.contains("haiku") {
+            return "Claude Haiku"
+        }
+        return model
+    }
+
+    private func resetEditedValues() {
+        // Reset edited values to current config values
+        if let config = viewModel.config?.content {
+            editedModel = config.model ?? "claude-sonnet-4-20250514"
+            editedColorScheme = config.theme?.colorScheme ?? "system"
+        }
+    }
+
+    // MARK: - Biometric Protection Methods
+
+    private func loadBiometricSettings() {
+        Task {
+            // Check if biometric authentication is available
+            biometricType = await appState.keychainService.biometricType()
+
+            // Load current preference
+            biometricProtectionEnabled = UserDefaults.standard.bool(forKey: "biometric_protection_enabled")
+        }
+    }
+
+    private func toggleBiometricProtection(enabled: Bool) {
+        Task {
+            do {
+                // Save preference
+                UserDefaults.standard.set(enabled, forKey: "biometric_protection_enabled")
+
+                // Re-save server URL with updated biometric protection
+                if let serverURL = try? await appState.keychainService.getCredential(key: "ils_server_url") {
+                    try await appState.keychainService.saveCredential(
+                        key: "ils_server_url",
+                        value: serverURL,
+                        requireBiometrics: enabled
+                    )
+                }
+            } catch {
+                // If biometric setup fails, revert the toggle
+                biometricProtectionEnabled = !enabled
+                UserDefaults.standard.set(!enabled, forKey: "biometric_protection_enabled")
+            }
         }
     }
 }
+
+struct ConfigEditorView: View {
+    let scope: String
+    let apiClient: APIClient
+    @StateObject private var viewModel = ConfigEditorViewModel()
+    @State private var configText = ""
+    @State private var isSaving = false
+    @State private var validationErrors: [String] = []
+
+    var body: some View {
+        VStack {
+            if viewModel.isLoading {
+                ProgressView()
+            } else {
+                TextEditor(text: $configText)
+                    .font(ILSTheme.codeFont)
+                    .padding()
+
+                if !validationErrors.isEmpty {
+                    VStack(alignment: .leading) {
+                        ForEach(validationErrors, id: \.self) { error in
+                            Label(error, systemImage: "exclamationmark.triangle")
+                                .font(ILSTheme.captionFont)
+                                .foregroundColor(ILSTheme.error)
+                        }
+                    }
+                    .padding()
+                    .background(ILSTheme.error.opacity(0.1))
+                }
+            }
+        }
+        .navigationTitle("\(scope.capitalized) Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Save") {
+                    saveConfig()
+                }
+                .disabled(isSaving)
+            }
+        }
+        .task {
+            viewModel.configure(client: apiClient)
+            await viewModel.loadConfig(scope: scope)
+            configText = viewModel.configJson
+        }
+    }
+
+    private func saveConfig() {
+        isSaving = true
+        validationErrors = []
+
+        Task {
+            let errors = await viewModel.saveConfig(scope: scope, json: configText)
+            validationErrors = errors
+            isSaving = false
+        }
+    }
+}
+
+// MARK: - View Models
+
+@MainActor
+class SettingsViewModel: ObservableObject {
+    @Published var stats: StatsResponse?
+    @Published var config: ConfigInfo?
+    @Published var isLoading = false
+    @Published var isLoadingConfig = false
+    @Published var isSaving = false
+    @Published var isTestingConnection = false
+    @Published var error: Error?
+
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
+
+    func loadAll() async {
+        async let statsTask: () = loadStats()
+        async let configTask: () = loadConfig()
+        _ = await (statsTask, configTask)
+    }
+
+    func loadStats() async {
+        guard let client else { return }
+        isLoading = true
+
+        do {
+            let response: APIResponse<StatsResponse> = try await client.get("/stats")
+            stats = response.data
+        } catch {
+            self.error = error
+        }
+
+        isLoading = false
+    }
+
+    func loadConfig(scope: String = "user") async {
+        guard let client else { return }
+        isLoadingConfig = true
+
+        do {
+            let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
+            config = response.data
+        } catch {
+            self.error = error
+        }
+
+        isLoadingConfig = false
+    }
+
+    func testConnection() async {
+        guard let client else { return }
+        isTestingConnection = true
+        defer { isTestingConnection = false }
+
+        do {
+            _ = try await client.healthCheck()
+        } catch {
+            self.error = error
+        }
+    }
+
+    func saveConfig(model: String, colorScheme: String) async -> String? {
+        guard let client else { return "Client not configured" }
+        isSaving = true
+        defer { isSaving = false }
+
+        // Build updated config from current config
+        guard var currentConfig = config?.content else {
+            return "No configuration loaded"
+        }
+
+        // Update model
+        currentConfig.model = model
+
+        // Update theme (create if doesn't exist)
+        if currentConfig.theme == nil {
+            currentConfig.theme = ThemeConfig(colorScheme: colorScheme, accentColor: nil)
+        } else {
+            currentConfig.theme?.colorScheme = colorScheme
+        }
+
+        do {
+            let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
+            let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
+
+            // Update local config with response
+            if let updatedConfig = response.data {
+                config = updatedConfig
+
+                // Check for validation errors
+                if !updatedConfig.isValid {
+                    return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
+                }
+            }
+
+            return nil // Success
+        } catch {
+            return "Failed to save: \(error.localizedDescription)"
+        }
+    }
+}
+
+@MainActor
+class ConfigEditorViewModel: ObservableObject {
+    @Published var configJson = ""
+    @Published var isLoading = false
+    @Published var error: Error?
+
+    private var client: APIClient?
+
+    init() {}
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
+
+    func loadConfig(scope: String) async {
+        guard let client else { return }
+        isLoading = true
+
+        do {
+            let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
+            if let config = response.data {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                if let data = try? encoder.encode(config.content),
+                   let json = String(data: data, encoding: .utf8) {
+                    configJson = json
+                }
+            }
+        } catch {
+            self.error = error
+        }
+
+        isLoading = false
+    }
+
+    func saveConfig(scope: String, json: String) async -> [String] {
+        guard let client else { return ["Client not configured"] }
+        guard let data = json.data(using: .utf8),
+              let content = try? JSONDecoder().decode(ClaudeConfig.self, from: data) else {
+            return ["Invalid JSON format"]
+        }
+
+        do {
+            let request = UpdateConfigRequest(scope: scope, content: content)
+            let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
+
+            if let config = response.data, !config.isValid {
+                return config.errors ?? []
+            }
+        } catch {
+            return ["Failed to save: \(error.localizedDescription)"]
+        }
+
+        return []
+    }
+}
+
+// MARK: - Models
+// Using models from ILSShared: StatsResponse, CountStat, SessionStat, MCPStat, PluginStat,
+// ConfigInfo, ClaudeConfig, PermissionsConfig, UpdateConfigRequest
 
 #Preview {
     NavigationStack {
         SettingsView()
             .environmentObject(AppState())
-            .environmentObject(ThemeManager())
-            .environment(\.theme, ObsidianTheme())
     }
 }

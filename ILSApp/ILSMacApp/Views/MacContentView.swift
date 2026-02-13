@@ -69,7 +69,7 @@ struct MacContentView: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar (left column)
             sidebarContent
-                .navigationSplitViewColumnWidth(min: 200, ideal: 280, max: 400)
+                .navigationSplitViewColumnWidth(min: 150, ideal: 250, max: 400)
         } content: {
             // Middle column (sessions list or secondary content)
             middleContent

@@ -1,126 +1,132 @@
 import SwiftUI
 import ILSShared
-import Combine
 
 @main
 struct ILSAppApp: App {
     @StateObject private var appState = AppState()
-    @StateObject private var themeManager = ThemeManager()
-    @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
-
-    private var computedColorScheme: ColorScheme? {
-        switch colorSchemePreference {
-        case "light": return .light
-        case "dark": return .dark
-        default: return nil  // "system" follows device setting
-        }
-    }
 
     var body: some Scene {
         WindowGroup {
-            SidebarRootView()
+            ContentView()
                 .environmentObject(appState)
-                .environmentObject(themeManager)
-                .environment(\.theme, themeManager.currentTheme)
-                .preferredColorScheme(computedColorScheme)
+                .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     appState.handleURL(url)
                 }
         }
-        .onChange(of: scenePhase) { _, newPhase in
-            appState.handleScenePhase(newPhase)
-        }
     }
 }
 
-/// Global application state — thin coordinator delegating to focused managers.
+/// Global application state
 @MainActor
 class AppState: ObservableObject {
     @Published var selectedProject: Project?
-    @Published var selectedTab: String = "dashboard"
-    @Published var navigationIntent: ActiveScreen?
-    @Published var lastSessionId: UUID?
-    @Published var isOffline: Bool = false
-    @Published var showOnboarding: Bool = false
+    @Published var isConnected: Bool = false
+    @Published var serverURL: String = "http://localhost:8080" {
+        didSet {
+            apiClient = APIClient(baseURL: serverURL)
+            sseClient = SSEClient(baseURL: serverURL)
+            checkConnection()
 
-    let connectionManager: ConnectionManager
-    let pollingManager: PollingManager
+            // Save to Keychain with biometric protection if enabled
+            Task {
+                do {
+                    let requireBiometrics = UserDefaults.standard.bool(forKey: "biometric_protection_enabled")
+                    try await keychainService.saveCredential(
+                        key: "ils_server_url",
+                        value: serverURL,
+                        requireBiometrics: requireBiometrics
+                    )
+                } catch {
+                    // Silently fail - not critical if save fails
+                }
+            }
+        }
+    }
+    @Published var selectedTab: String = "sessions"
 
-    private var cancellables = Set<AnyCancellable>()
-
-    // MARK: - Forwarding Properties
-
-    var isConnected: Bool { connectionManager.isConnected }
-    var serverURL: String { connectionManager.serverURL }
-    var apiClient: APIClient { connectionManager.apiClient }
-    var sseClient: SSEClient { connectionManager.sseClient }
+    var apiClient: APIClient
+    var sseClient: SSEClient
+    let keychainService = KeychainService()
 
     init() {
-        let cm = ConnectionManager()
-        self.connectionManager = cm
-        self.pollingManager = PollingManager(connectionManager: cm)
+        let url = "http://localhost:9090" // Default
+        self.serverURL = url
+        self.apiClient = APIClient(baseURL: url)
+        self.sseClient = SSEClient(baseURL: url)
 
-        // Forward ConnectionManager changes so SwiftUI views observing AppState update
-        cm.objectWillChange.sink { [weak self] (_: Void) in
-            self?.objectWillChange.send()
-        }.store(in: &cancellables)
-
-        // Sync showOnboarding bidirectionally with removeDuplicates to prevent
-        // infinite recursion (@Published emits on willSet before storage updates,
-        // so property-read guards are unreliable — use stream dedup instead)
-        cm.$showOnboarding.removeDuplicates().sink { [weak self] (value: Bool) in
-            self?.showOnboarding = value
-        }.store(in: &cancellables)
-
-        $showOnboarding.dropFirst().removeDuplicates().sink { [weak cm] (value: Bool) in
-            cm?.showOnboarding = value
-        }.store(in: &cancellables)
-
-        pollingManager.checkConnection()
+        // Migrate from UserDefaults to Keychain
+        Task {
+            await migrateCredentials()
+            checkConnection()
+        }
     }
 
-    func updateServerURL(_ url: String) {
-        connectionManager.updateServerURL(url)
-        pollingManager.checkConnection()
-    }
+    /// Migrate credentials from UserDefaults to Keychain
+    private func migrateCredentials() async {
+        do {
+            // Try to load from Keychain first
+            if let savedURL = try? await keychainService.getCredential(key: "ils_server_url") {
+                serverURL = savedURL
+                return
+            }
 
-    func connectToServer(url: String) async throws {
-        try await connectionManager.connectToServer(url: url)
-        pollingManager.stopRetryPolling()
-        pollingManager.startHealthPolling()
+            // Keychain is empty - migrate from UserDefaults
+            let host = UserDefaults.standard.string(forKey: "serverHost")
+            let port = UserDefaults.standard.integer(forKey: "serverPort")
+
+            if let host = host, port > 0 {
+                // Found UserDefaults data - migrate it
+                let migratedURL = "http://\(host):\(port)"
+                try await keychainService.saveCredential(key: "ils_server_url", value: migratedURL)
+                serverURL = migratedURL
+
+                // Clean up old UserDefaults keys
+                UserDefaults.standard.removeObject(forKey: "serverHost")
+                UserDefaults.standard.removeObject(forKey: "serverPort")
+            } else if let host = host {
+                // Only host found, use default port
+                let migratedURL = "http://\(host):9090"
+                try await keychainService.saveCredential(key: "ils_server_url", value: migratedURL)
+                serverURL = migratedURL
+
+                UserDefaults.standard.removeObject(forKey: "serverHost")
+                UserDefaults.standard.removeObject(forKey: "serverPort")
+            }
+        } catch {
+            // Migration failed - fall back to defaults
+            // serverURL is already set to default in init
+        }
     }
 
     func checkConnection() {
-        pollingManager.checkConnection()
-    }
-
-    func handleScenePhase(_ phase: ScenePhase) {
-        pollingManager.handleScenePhase(phase)
-    }
-
-    func updateLastSessionId(_ id: UUID?) {
-        lastSessionId = id
-        if let id {
-            UserDefaults.standard.set(id.uuidString, forKey: "ils_last_session_id")
+        Task {
+            do {
+                let client = APIClient(baseURL: serverURL)
+                _ = try await client.healthCheck()
+                isConnected = true
+            } catch {
+                isConnected = false
+            }
         }
     }
 
     func handleURL(_ url: URL) {
         guard url.scheme == "ils" else { return }
+
         switch url.host {
-        case "home":
-            navigationIntent = .home
+        case "projects":
+            selectedTab = "projects"
+        case "plugins":
+            selectedTab = "plugins"
+        case "mcp":
+            selectedTab = "mcp"
         case "sessions":
-            navigationIntent = .home
-        case "projects", "plugins", "mcp", "skills":
-            navigationIntent = .browser
+            selectedTab = "sessions"
         case "settings":
-            navigationIntent = .settings
-        case "system":
-            navigationIntent = .system
-        case "fleet":
-            navigationIntent = .fleet
+            selectedTab = "settings"
+        case "skills":
+            selectedTab = "skills"
         default:
             break
         }
