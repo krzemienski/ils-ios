@@ -115,9 +115,17 @@ fi
 # Verify
 echo ""
 echo "Verifying service..."
-sleep 3
-if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
-    ok "Backend is running on http://localhost:9999"
-else
-    warn "Backend not responding yet. Check logs: tail -f /tmp/ils-backend.log"
+SERVICE_OK=false
+for i in $(seq 1 15); do
+    if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+        ok "Backend is running on http://localhost:9999"
+        SERVICE_OK=true
+        break
+    fi
+    echo "  Waiting for backend... ($i/15)"
+    sleep 2
+done
+
+if [ "$SERVICE_OK" = false ]; then
+    warn "Backend not responding after 30s. Check logs: tail -f /tmp/ils-backend.log"
 fi

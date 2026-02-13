@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 echo "ILS - Setup Script"
 echo "==================="
@@ -54,9 +55,8 @@ fi
 echo ""
 echo "Building backend..."
 cd "$(dirname "$0")/.."
-swift build 2>&1 | tail -5
 
-if [ $? -eq 0 ]; then
+if swift build 2>&1 | tail -20; then
     ok "Backend built successfully"
 else
     fail "Backend build failed. Check errors above."
@@ -66,9 +66,24 @@ echo ""
 echo "Running database migrations..."
 PORT=9999 swift run ILSBackend &
 BACKEND_PID=$!
-sleep 8
+
+MIGRATION_OK=false
+for i in $(seq 1 30); do
+    if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+        ok "Backend started, migrations complete"
+        MIGRATION_OK=true
+        break
+    fi
+    echo "  Waiting for backend to start... ($i/30)"
+    sleep 2
+done
+
 kill $BACKEND_PID 2>/dev/null || true
 wait $BACKEND_PID 2>/dev/null || true
+
+if [ "$MIGRATION_OK" = false ]; then
+    warn "Backend didn't respond within 60s — migrations may not have completed"
+fi
 
 if [ -f "ils.sqlite" ]; then
     ok "Database created: ils.sqlite"
