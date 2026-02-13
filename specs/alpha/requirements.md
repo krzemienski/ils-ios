@@ -17,7 +17,7 @@ Deliver a verified, unified ILS iOS app where the Xcode workspace builds both ba
 **Acceptance Criteria:**
 - [ ] AC-1.1: Shared scheme `ILSBackend` exists at `ILSFullStack.xcworkspace/xcshareddata/xcschemes/ILSBackend.xcscheme`
 - [ ] AC-1.2: `xcodebuild -workspace ILSFullStack.xcworkspace -scheme ILSBackend -destination 'platform=macOS' build` succeeds
-- [ ] AC-1.3: Scheme sets custom working directory to project root (`/Users/nick/Desktop/ils-ios`) so Vapor finds `ils.sqlite` and `.env`
+- [ ] AC-1.3: Scheme sets custom working directory to project root (`<project-root>`) so Vapor finds `ils.sqlite` and `.env`
 - [ ] AC-1.4: Scheme sets environment variable `PORT=9090`
 - [ ] AC-1.5: `curl http://localhost:9090/health` returns 200 after launching from scheme
 

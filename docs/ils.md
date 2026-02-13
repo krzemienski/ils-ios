@@ -2260,7 +2260,7 @@ struct ServerConnectionView: View {
     
     // Mock recent connections
     let recentConnections = [
-        ("home-server", "192.168.1.100", true),
+        ("home-server", "<your-local-ip>", true),
         ("dev-box", "10.0.0.5", false)
     ]
     
@@ -2283,7 +2283,7 @@ struct ServerConnectionView: View {
                         // Host
                         ILSTextField(
                             title: "Host",
-                            placeholder: "192.168.1.100 or hostname",
+                            placeholder: "<your-local-ip> or hostname",
                             text: $host
                         )
                         

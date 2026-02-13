@@ -614,7 +614,7 @@ struct ProgressRing: View {
 │ └─────┴──────────┴─────────┘    │
 │                                 │
 │ ┌─────────────────────────┐     │
-│ │ http://192.168.1.100    │     │  ← URL input field
+│ │ http://<your-local-ip>    │     │  ← URL input field
 │ │ :9090                    │     │
 │ └─────────────────────────┘     │
 │                                 │

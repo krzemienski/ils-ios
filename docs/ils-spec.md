@@ -146,7 +146,7 @@ TokenValueUsage`background.primary#000000`Main app background`background.seconda
 │  └─────────────────────────────┘   │
 │                                     │
 │  Host: ┌───────────────────────┐   │
-│        │ 192.168.1.100         │   │
+│        │ <your-local-ip>         │   │
 │        └───────────────────────┘   │
 │                                     │
 │  Port: ┌───────────────────────┐   │
@@ -460,7 +460,7 @@ Server Connection
 POST /auth/connect
 Request:
 {
-  "host": "192.168.1.100",
+  "host": "<your-local-ip>",
   "port": 22,
   "username": "admin",
   "authMethod": "key" | "password",

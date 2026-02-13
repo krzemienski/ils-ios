@@ -412,16 +412,16 @@ Stitch MCP can be leveraged for:
 
 ## Sources
 
-- `/Users/nick/Desktop/ils-ios/docs/ils-spec.md` - Original feature specification
-- `/Users/nick/Desktop/ils-ios/docs/ils.md` - Master build orchestration specification
-- `/Users/nick/Desktop/ils-ios/Package.swift` - Current dependency manifest
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/*.swift` - All shared model files
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/DTOs/Requests.swift` - All DTOs and request types
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/*.swift` - All 8 controllers
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/*.swift` - All 4 services
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/App/routes.swift` - Route registration
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/App/configure.swift` - App configuration
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/ILSTheme.swift` - Current theme
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift` - iOS HTTP client
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/**/*.swift` - All 16 view files
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/*.swift` - All 8 view models
+- `<project-root>/docs/ils-spec.md` - Original feature specification
+- `<project-root>/docs/ils.md` - Master build orchestration specification
+- `<project-root>/Package.swift` - Current dependency manifest
+- `<project-root>/Sources/ILSShared/Models/*.swift` - All shared model files
+- `<project-root>/Sources/ILSShared/DTOs/Requests.swift` - All DTOs and request types
+- `<project-root>/Sources/ILSBackend/Controllers/*.swift` - All 8 controllers
+- `<project-root>/Sources/ILSBackend/Services/*.swift` - All 4 services
+- `<project-root>/Sources/ILSBackend/App/routes.swift` - Route registration
+- `<project-root>/Sources/ILSBackend/App/configure.swift` - App configuration
+- `<project-root>/ILSApp/ILSApp/Theme/ILSTheme.swift` - Current theme
+- `<project-root>/ILSApp/ILSApp/Services/APIClient.swift` - iOS HTTP client
+- `<project-root>/ILSApp/ILSApp/Views/**/*.swift` - All 16 view files
+- `<project-root>/ILSApp/ILSApp/ViewModels/*.swift` - All 8 view models

@@ -413,4 +413,4 @@ curl -s -X POST http://localhost:8080/api/v1/chat/stream \
 - API infrastructure is production-ready
 - All data models return proper JSON structure with `success` flag
 
-**Evidence File Location:** `/Users/nick/Desktop/ils-ios/docs/evidence/GATE_2A_API_ENDPOINTS.md`
+**Evidence File Location:** `<project-root>/docs/evidence/GATE_2A_API_ENDPOINTS.md`

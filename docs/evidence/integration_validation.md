@@ -331,7 +331,7 @@ To verify end-to-end integration:
 
 1. **Start Backend:**
    ```bash
-   cd /Users/nick/Desktop/ils-ios
+   cd <project-root>
    swift run ILSBackend
    ```
 
@@ -349,7 +349,7 @@ To verify end-to-end integration:
    - ✅ Sessions: Create, list, fork, delete
 
 4. **Verify Data Persistence:**
-   - Check `/Users/nick/Desktop/ils-ios/ils.sqlite`
+   - Check `<project-root>/ils.sqlite`
    - Projects and sessions should persist
    - Skills/MCP/Plugins read from filesystem
 

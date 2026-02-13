@@ -252,7 +252,7 @@ ILSAppUITests/
 
 ```bash
 # Build backend first (optional if already running)
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift build
 
 # Run backend in background

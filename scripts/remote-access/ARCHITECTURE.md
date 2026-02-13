@@ -177,7 +177,7 @@ Response back through tunnel
 iPhone (on Tailscale network)
     │
     │ HTTP Request (WireGuard encrypted)
-    │ GET http://100.101.102.103:9090/api/v1/sessions
+    │ GET http://<your-tailscale-ip>:9090/api/v1/sessions
     │
     ▼
 Tailscale Network (P2P or relay)
@@ -186,7 +186,7 @@ Tailscale Network (P2P or relay)
     │ DERP relay when NAT traversal fails
     │
     ▼
-Mac (Tailscale IP: 100.101.102.103)
+Mac (Tailscale IP: <your-tailscale-ip>)
     │
     │ HTTP (local after decryption)
     │ GET http://localhost:9090/api/v1/sessions
@@ -244,7 +244,7 @@ cloudflared tunnel --url http://localhost:9090
 ## File System Layout
 
 ```
-/Users/nick/Desktop/ils-ios/
+<project-root>/
 │
 ├── scripts/
 │   └── remote-access/

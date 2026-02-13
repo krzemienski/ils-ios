@@ -2,7 +2,7 @@
 require 'xcodeproj'
 
 # Open the existing Xcode project
-project_path = '/Users/nick/Desktop/ils-ios/ILSApp/ILSApp.xcodeproj'
+project_path = File.join(File.dirname(__FILE__), 'ILSApp', 'ILSApp.xcodeproj')
 project = Xcodeproj::Project.open(project_path)
 
 puts "📦 Opening project: #{project_path}"

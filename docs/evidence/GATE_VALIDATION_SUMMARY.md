@@ -25,7 +25,7 @@
 
 **Validation Command:**
 ```bash
-find /Users/nick/Desktop/ils-ios/Sources /Users/nick/Desktop/ils-ios/ILSApp -type d -maxdepth 2 | sort
+find <project-root>/Sources <project-root>/ILSApp -type d -maxdepth 2 | sort
 ```
 
 **Expected Directories Found:**
@@ -129,7 +129,7 @@ find /Users/nick/Desktop/ils-ios/Sources /Users/nick/Desktop/ils-ios/ILSApp -typ
 
 #### 4.1 SSE Streaming Infrastructure - ✅ Code Complete
 
-**ChatController Implementation:** `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift`
+**ChatController Implementation:** `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift`
 
 | Endpoint | Method | Purpose | Implementation |
 |----------|--------|---------|----------------|
@@ -187,7 +187,7 @@ curl -s http://localhost:8080/api/v1/sessions
 
 ### Gate Validation Documents
 ```
-/Users/nick/Desktop/ils-ios/docs/evidence/
+<project-root>/docs/evidence/
 ├── GATE_0_1_2B_BUILDS.md              (Environment, Shared Models, Design System)
 ├── GATE_2A_API_ENDPOINTS.md           (Backend API validation)
 ├── GATE_3_IOS_VIEWS.md                (iOS views and screenshots)
@@ -367,4 +367,4 @@ The implementation is **code-complete** and **architecture-sound**. All required
 ---
 
 **Document Generated:** 2026-02-01
-**Location:** `/Users/nick/Desktop/ils-ios/docs/evidence/GATE_VALIDATION_SUMMARY.md`
+**Location:** `<project-root>/docs/evidence/GATE_VALIDATION_SUMMARY.md`

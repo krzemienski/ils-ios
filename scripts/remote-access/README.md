@@ -5,7 +5,7 @@ Access your ILS backend from anywhere using Cloudflare Tunnel or Tailscale.
 ## 🚀 Quick Start
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/remote-access/start-remote-access.sh
 ```
 
@@ -96,12 +96,12 @@ Press Ctrl+C to stop
 ═══════════════════════════════════════════════════
 
   Local URL:       http://localhost:9090
-  Tailscale URL:   http://100.101.102.103:9090
+  Tailscale URL:   http://<your-tailscale-ip>:9090
 
 ═══════════════════════════════════════════════════
 
 Configure your iOS app with:
-  http://100.101.102.103:9090
+  http://<your-tailscale-ip>:9090
 
 Note: This URL works on any device connected to your Tailscale network
 ```
@@ -200,7 +200,7 @@ lsof -ti :9090 | xargs kill -9
 tail -f .remote-access/backend.log
 
 # Try manual build
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift build --product ILSBackend
 ```
 

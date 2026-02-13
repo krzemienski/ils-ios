@@ -1,6 +1,6 @@
 # Tools, Skills, MCPs & SDKs Inventory
 
-> Generated: 2026-02-07 | Project: ILS iOS (`/Users/nick/Desktop/ils-ios`)
+> Generated: 2026-02-07 | Project: ILS iOS (`<project-root>`)
 
 ---
 

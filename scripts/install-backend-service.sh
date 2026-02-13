@@ -22,7 +22,8 @@ echo "Building release binary..."
 cd "$PROJECT_DIR"
 swift build -c release 2>&1 | tail -3
 
-BINARY_PATH="$PROJECT_DIR/.build/release/ILSBackend"
+# Detect actual binary path (handles arm64-apple-macosx on Apple Silicon)
+BINARY_PATH=$(swift build -c release --show-bin-path)/ILSBackend
 if [ ! -f "$BINARY_PATH" ]; then
     fail "Release binary not found at $BINARY_PATH"
 fi

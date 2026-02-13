@@ -24,7 +24,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
     - `Sources/ILSShared/Models/TeamTask.swift` (create)
     - `Sources/ILSShared/Models/TeamMessage.swift` (create)
   - **Done when**: `swift build` compiles with zero errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(shared): add Agent Teams models (AgentTeam, TeamMember, TeamTask, TeamMessage)`
   - _Requirements: FR-4_
   - _Design: Shared Models section_
@@ -46,7 +46,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
   - **Files**:
     - `Sources/ILSShared/DTOs/TeamRequests.swift` (create)
   - **Done when**: `swift build` compiles with zero errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(shared): add Agent Teams DTOs and SSH/Fleet request types`
   - _Requirements: FR-4_
   - _Design: Team DTOs section_
@@ -69,7 +69,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
   - **Files**:
     - `Sources/ILSBackend/Services/TeamsFileService.swift` (create)
   - **Done when**: `swift build` compiles; service reads/writes team and task JSON correctly
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add TeamsFileService for ~/.claude/teams/ filesystem access`
   - _Requirements: FR-1, FR-15_
   - _Design: TeamsFileService section_
@@ -99,14 +99,14 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
   - **Files**:
     - `Sources/ILSBackend/Services/TeamsExecutorService.swift` (create)
   - **Done when**: `swift build` compiles; actor tracks PIDs correctly
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add TeamsExecutorService for process spawning and PID tracking`
   - _Requirements: FR-3, FR-10, FR-14_
   - _Design: TeamsExecutorService section_
 
 - [ ] 1.5 [VERIFY] Backend core builds: `swift build`
   - **Do**: Run `swift build` and verify zero errors for shared models + backend services
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -10`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -10`
   - **Done when**: Build succeeds with zero errors
   - **Commit**: `chore(backend): fix compilation issues` (only if fixes needed)
 
@@ -132,7 +132,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
   - **Files**:
     - `Sources/ILSBackend/Controllers/TeamsController.swift` (create)
   - **Done when**: `swift build` compiles; all 12 endpoints registered
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add TeamsController with 12 REST endpoints`
   - _Requirements: FR-2_
   - _Design: TeamsController section_
@@ -156,7 +156,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
     - `Sources/ILSBackend/Controllers/SSHController.swift` (create)
     - `Sources/ILSBackend/Controllers/FleetController.swift` (create)
   - **Done when**: `swift build` compiles; endpoints return correct types
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add SSHController and FleetController for real SSH testing`
   - _Requirements: FR-17, FR-18, FR-20, FR-21_
   - _Design: SSHController + FleetController sections_
@@ -173,7 +173,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
     - `Sources/ILSBackend/Controllers/ConfigController.swift` (modify)
     - `Sources/ILSShared/Models/ClaudeConfig.swift` (modify — add `ConfigChange` if needed)
   - **Done when**: `swift build` compiles; new routes registered
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add config profiles, overrides, and history endpoints`
   - _Requirements: FR-19_
   - _Design: Stub Fix Design Group 2_
@@ -190,7 +190,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
   - **Files**:
     - `Sources/ILSBackend/App/routes.swift` (modify)
   - **Done when**: `swift build` compiles; backend starts and serves all routes
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): register TeamsController, SSHController, FleetController`
   - _Requirements: FR-2_
   - _Design: routes.swift Registration_
@@ -204,7 +204,7 @@ Focus: Build all backend services + controllers, verify via curl. Quality-first.
     5. Verify fleet endpoint: `curl -s http://localhost:9090/api/v1/fleet | python3 -m json.tool`
     6. Verify config profiles: `curl -s http://localhost:9090/api/v1/config/profiles | python3 -m json.tool`
     7. Kill backend process after testing
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && echo "BUILD OK"`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && echo "BUILD OK"`
   - **Done when**: Build succeeds, all endpoints return valid JSON responses
   - **Commit**: `chore(backend): pass backend smoke test` (only if fixes needed)
 
@@ -234,7 +234,7 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
   - **Files**:
     - `ILSApp/ILSApp/Views/Settings/SettingsView.swift` (modify)
   - **Done when**: Both toggles save real values via backend; no `.disabled(true)` remains
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix(ios): wire Extended Thinking and Co-Author toggles to real backend config`
   - _Requirements: FR-22, FR-23, AC-12.1 through AC-12.6_
   - _Design: Stub Fix Design Group 1_
@@ -254,7 +254,7 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
   - **Files**:
     - `ILSApp/ILSApp/Views/Settings/ConfigHistoryView.swift` (modify)
   - **Done when**: Both Restore buttons perform real restore; data loads from API
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix(ios): wire Config History restore buttons and load from API`
   - _Requirements: FR-24, AC-13.1 through AC-13.6_
   - _Design: Stub Fix Design Group 1_
@@ -273,14 +273,14 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
   - **Files**:
     - `ILSApp/ILSApp/Services/SSHConnectionManager.swift` (modify)
   - **Done when**: `testConnection()` calls real backend SSH; no `Task.sleep` simulation
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix(ios): wire SSH testConnection to real backend SSHService`
   - _Requirements: FR-17, AC-9.1 through AC-9.5_
   - _Design: Stub Fix Design Group 1_
 
 - [ ] 2.4 [VERIFY] iOS build after stub fixes batch 1: `xcodebuild`
   - **Do**: Run iOS build to catch any compilation errors from tasks 2.1-2.3
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -10`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -10`
   - **Done when**: Build succeeds with zero errors
   - **Commit**: `chore(ios): fix compilation issues from stub fixes` (only if fixes needed)
 
@@ -298,7 +298,7 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
   - **Files**:
     - `ILSApp/ILSApp/Views/Settings/FleetManagementView.swift` (modify)
   - **Done when**: Fleet data loads from API; zero hardcoded data
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix(ios): wire FleetManagementView to real /fleet API`
   - _Requirements: FR-18, AC-10.1 through AC-10.6_
   - _Design: Stub Fix Design Group 2_
@@ -323,7 +323,7 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
     - `ILSApp/ILSApp/Views/Settings/ConfigOverridesView.swift` (modify)
     - `ILSApp/ILSApp/Views/Settings/ConfigHistoryView.swift` (modify if needed)
   - **Done when**: All 3 views load real data from API; zero hardcoded sample data
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix(ios): wire Config Profiles, Overrides, History views to real API`
   - _Requirements: FR-19, AC-11.1 through AC-11.5_
   - _Design: Stub Fix Design Group 2_
@@ -349,7 +349,7 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
     - `ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift` (modify)
     - `ILSApp/ILSApp/Views/Settings/LogViewerView.swift` (modify)
   - **Done when**: 3 views show "Coming Soon"; LogViewer loads logs on appear
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix(ios): mark CloudSync/Automation/Notifications as Coming Soon, wire LogViewer`
   - _Requirements: S-6, S-7, S-8, S-9_
   - _Design: Stub Fix Design Group 3_
@@ -374,14 +374,14 @@ Focus: Fix all 14 identified stubs. Wire to real backend.
     - `ILSApp/ILSApp/Views/Sessions/SessionTemplatesView.swift` (modify)
     - `Sources/ILSBackend/Controllers/PluginsController.swift` (modify — real install)
   - **Done when**: Templates load from API; plugin install clones real repo
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `fix: wire SessionTemplates to API and implement real plugin install`
   - _Requirements: FR-25, FR-26, AC-14.1 through AC-14.5, AC-15.1 through AC-15.5_
   - _Design: Stub Fix Design Group 2_
 
 - [ ] 2.9 [VERIFY] Full build after all stub fixes: `swift build && xcodebuild`
   - **Do**: Run both backend and iOS builds to verify all stub fixes compile
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both builds succeed with zero errors
   - **Commit**: `chore: pass full build after stub fixes` (only if fixes needed)
 
@@ -412,7 +412,7 @@ Focus: Build all iOS views, viewmodels, navigation, and settings integration.
     - `ILSApp/ILSApp/ViewModels/AgentTeamDetailViewModel.swift` (create)
     - `ILSApp/ILSApp/ViewModels/TeamTasksViewModel.swift` (create)
   - **Done when**: All 3 viewmodels compile; follow existing MVVM pattern
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `feat(ios): add Agent Teams ViewModels with polling support`
   - _Requirements: FR-5, FR-6, FR-7, FR-16_
   - _Design: iOS ViewModels section_
@@ -439,7 +439,7 @@ Focus: Build all iOS views, viewmodels, navigation, and settings integration.
     - `ILSApp/ILSApp/Views/Teams/AgentTeamsListView.swift` (create)
     - `ILSApp/ILSApp/Views/Teams/CreateTeamView.swift` (create)
   - **Done when**: List view shows teams; create form validates and submits
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `feat(ios): add AgentTeamsListView and CreateTeamView`
   - _Requirements: FR-5, FR-8, AC-2.1 through AC-2.5, AC-3.1 through AC-3.7_
   - _Design: AgentTeamsListView + CreateTeamView sections_
@@ -462,14 +462,14 @@ Focus: Build all iOS views, viewmodels, navigation, and settings integration.
     - `ILSApp/ILSApp/Views/Teams/AgentTeamDetailView.swift` (create)
     - `ILSApp/ILSApp/Views/Teams/SpawnTeammateView.swift` (create)
   - **Done when**: Detail view shows members with status; spawn form submits
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `feat(ios): add AgentTeamDetailView and SpawnTeammateView`
   - _Requirements: FR-6, FR-10, AC-4.1 through AC-4.5, AC-6.1 through AC-6.7_
   - _Design: AgentTeamDetailView + SpawnTeammateView sections_
 
 - [ ] 3.4 [VERIFY] iOS build after views batch 1: `xcodebuild`
   - **Do**: Run iOS build to verify viewmodels + views compile
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -10`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -10`
   - **Done when**: Build succeeds with zero errors
   - **Commit**: `chore(ios): fix compilation issues` (only if fixes needed)
 
@@ -494,7 +494,7 @@ Focus: Build all iOS views, viewmodels, navigation, and settings integration.
     - `ILSApp/ILSApp/Views/Teams/TeamTaskListView.swift` (create)
     - `ILSApp/ILSApp/Views/Teams/TeamMessagesView.swift` (create)
   - **Done when**: Task list with filtering and CRUD; message view with send
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `feat(ios): add TeamTaskListView and TeamMessagesView`
   - _Requirements: FR-7, FR-9, AC-5.1 through AC-5.8, AC-7.1 through AC-7.7_
   - _Design: TeamTaskListView + TeamMessagesView sections_
@@ -515,7 +515,7 @@ Focus: Build all iOS views, viewmodels, navigation, and settings integration.
     - `ILSApp/ILSApp/ILSAppApp.swift` (modify — add isAgentTeamsEnabled to AppState)
     - `ILSApp/ILSApp/Views/Settings/SettingsView.swift` (modify — add experimentalSection)
   - **Done when**: Experimental section visible; toggle writes real config; flag propagates to AppState
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `feat(ios): add Experimental section in Settings with Agent Teams toggle`
   - _Requirements: FR-11, FR-12, FR-13, AC-1.1 through AC-1.5_
   - _Design: Settings Integration section_
@@ -538,14 +538,14 @@ Focus: Build all iOS views, viewmodels, navigation, and settings integration.
     - `ILSApp/ILSApp/Views/Sidebar/SidebarView.swift` (modify)
     - `ILSApp/ILSApp/ILSAppApp.swift` (modify — add URL handler case)
   - **Done when**: Agent Teams tab visible when flag on; hidden when off; navigation works
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Commit**: `feat(ios): add Agent Teams navigation gated behind experimental flag`
   - _Requirements: FR-13, AC-2.5_
   - _Design: Navigation Integration section_
 
 - [ ] 3.8 [VERIFY] Full local CI: `swift build && xcodebuild`
   - **Do**: Run complete build for both targets
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both builds succeed with zero errors
   - **Commit**: `chore: pass full local CI` (only if fixes needed)
 
@@ -696,7 +696,7 @@ Simulator UDID: 50523130-57AA-48B0-ABD0-4D59CE455F14
 - [ ] 5.1 Local quality check
   - **Do**: Run ALL quality checks locally
   - **Verify**: All commands must pass:
-    - Backend: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+    - Backend: `cd <project-root> && swift build 2>&1 | tail -5`
     - iOS: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator build 2>&1 | tail -5`
   - **Done when**: Both builds pass with zero errors
   - **Commit**: `fix(agent-teams): address build issues` (if fixes needed)

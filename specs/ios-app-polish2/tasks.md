@@ -47,7 +47,7 @@ Focus: Update theme system, remove dead dependency, fix two critical bugs. No ne
     3. Grep for any `import ClaudeCodeSDK` in backend sources and remove if found
   - **Files**: `Package.swift` (MODIFY)
   - **Done when**: `swift build` succeeds without ClaudeCodeSDK dependency
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `chore(deps): remove unused ClaudeCodeSDK dependency`
   - _Requirements: AC-20.1, FR-8.5_
 
@@ -82,7 +82,7 @@ Focus: Update theme system, remove dead dependency, fix two critical bugs. No ne
     2. Run iOS build: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build`
     3. Verify EntityType enum accessible from any view
     4. Verify ClaudeCodeSDK no longer in resolved packages
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Done when**: Both builds succeed with zero errors
   - **Commit**: `chore(ios): pass phase 0 foundation checkpoint` (only if fixes needed)
 
@@ -207,7 +207,7 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
     7. Refresh session list after rename
   - **Files**: `Sources/ILSBackend/Controllers/SessionsController.swift` (MODIFY), `ILSApp/ILSApp/Views/Sessions/SessionsListView.swift` (MODIFY), `ILSApp/ILSApp/Services/APIClient.swift` (MODIFY)
   - **Done when**: Swipe left on session reveals "Rename"; renaming updates session name via API
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Commit**: `feat(sessions): add rename via swipe action and PUT endpoint`
   - _Requirements: AC-11.1, AC-11.2, FR-5.6_
 
@@ -252,7 +252,7 @@ Focus: Fix 8 broken features identified in audit. No new features, just making e
     1. Run backend build
     2. Run iOS build
     3. Verify no compile errors from all Phase 2 changes
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Done when**: Both builds succeed
   - **Commit**: `chore(ios): pass phase 2 feature parity checkpoint` (only if fixes needed)
 
@@ -276,7 +276,7 @@ Focus: Create 3 new API endpoints + 1 WebSocket for system metrics. macOS-first,
     10. Restrict file browsing to user home directory — reject paths not starting with `~` or `$HOME`
   - **Files**: `Sources/ILSBackend/Services/SystemMetricsService.swift` (NEW)
   - **Done when**: `swift build` succeeds; service can collect real metrics
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add SystemMetricsService for CPU/memory/disk/network/processes`
   - _Requirements: FR-3.1, FR-3.5, FR-3.6_
   - _Design: System Monitoring_
@@ -291,7 +291,7 @@ Focus: Create 3 new API endpoints + 1 WebSocket for system metrics. macOS-first,
     6. Register in `routes.swift`: `try api.register(collection: SystemController())`
   - **Files**: `Sources/ILSBackend/Controllers/SystemController.swift` (NEW), `Sources/ILSBackend/App/routes.swift` (MODIFY)
   - **Done when**: `curl http://localhost:9090/api/v1/system/metrics` returns JSON with cpu/memory/disk/network
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add system metrics, processes, and files REST endpoints`
   - _Requirements: FR-3.1, FR-3.3, FR-3.4_
 
@@ -304,7 +304,7 @@ Focus: Create 3 new API endpoints + 1 WebSocket for system metrics. macOS-first,
     5. JSON format: `{ "timestamp": ISO8601, "cpu": 45.2, "memory": {...}, "disk": {...}, "network": {...} }`
   - **Files**: `Sources/ILSBackend/Controllers/SystemController.swift` (MODIFY)
   - **Done when**: WebSocket client receives metrics JSON every 2 seconds
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add WebSocket endpoint for live system metrics streaming`
   - _Requirements: FR-3.2, AC-5.3_
 
@@ -317,7 +317,7 @@ Focus: Create 3 new API endpoints + 1 WebSocket for system metrics. macOS-first,
     5. Test files: `curl 'http://localhost:9090/api/v1/system/files?path=~' | python3 -m json.tool`
     6. Test path restriction: `curl 'http://localhost:9090/api/v1/system/files?path=/etc' -w '%{http_code}'` should return 403
     7. Kill backend after testing
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3`
   - **Done when**: All 3 REST endpoints return valid JSON; path restriction works
   - **Commit**: `chore(backend): pass system monitoring checkpoint` (only if fixes needed)
 
@@ -330,7 +330,7 @@ Focus: Create 3 new API endpoints + 1 WebSocket for system metrics. macOS-first,
     5. These will be used by both backend (Content conformance) and iOS (Decodable)
   - **Files**: `Sources/ILSShared/DTOs/SystemDTOs.swift` (NEW)
   - **Done when**: Shared DTOs compile in both backend and iOS targets
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Commit**: `feat(shared): add system metrics DTOs for backend and iOS`
   - _Requirements: FR-3.1, FR-4.1_
 
@@ -419,7 +419,7 @@ Focus: Build System tab UI with live charts, process list, file browser. Depends
   - **Do**:
     1. Build both backend and iOS
     2. Verify all System tab views compile
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Done when**: Both builds succeed
   - **Commit**: `chore(ios): pass system monitoring checkpoint` (only if fixes needed)
 
@@ -443,7 +443,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
     10. Add SIGTERM handler to kill cloudflared on backend shutdown
   - **Files**: `Sources/ILSBackend/Services/TunnelService.swift` (NEW)
   - **Done when**: Service can start/stop cloudflared and parse tunnel URL
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add TunnelService for Cloudflare quick tunnel management`
   - _Requirements: FR-1.1, FR-1.2, FR-1.3, FR-1.4, AC-1.2, AC-1.3_
 
@@ -457,7 +457,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
     6. Register in `routes.swift`
   - **Files**: `Sources/ILSBackend/Controllers/TunnelController.swift` (NEW), `Sources/ILSBackend/App/routes.swift` (MODIFY)
   - **Done when**: cURL to start/stop/status endpoints works correctly
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -5`
   - **Commit**: `feat(backend): add tunnel start/stop/status REST endpoints`
   - _Requirements: FR-1.1, FR-1.2, FR-1.3_
 
@@ -470,7 +470,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
     5. `TunnelStartRequest`: optional token String?, tunnelName String?, domain String? (for named tunnel)
   - **Files**: `Sources/ILSShared/DTOs/TunnelDTOs.swift` (NEW)
   - **Done when**: DTOs compile in both targets
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Commit**: `feat(shared): add tunnel DTOs`
 
 - [x] 5.4 Create TunnelSettingsView.swift in iOS
@@ -494,7 +494,7 @@ Focus: Backend tunnel service + iOS settings UI. Quick tunnel first, named tunne
   - **Do**:
     1. Build both backend and iOS
     2. Verify TunnelService, TunnelController, TunnelSettingsView all compile
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Done when**: Both builds succeed
   - **Commit**: `feat(tunnel): complete Cloudflare tunnel POC` (only if fixes needed)
 
@@ -814,7 +814,7 @@ Focus: Remove unused code, apply consistent styling, basic accessibility pass.
     1. Build both backend and iOS
     2. Check for compiler warnings
     3. Verify no unused imports
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
   - **Done when**: Both builds succeed with minimal warnings
   - **Commit**: `chore(cleanup): pass final cleanup checkpoint` (only if fixes needed)
 
@@ -830,7 +830,7 @@ Focus: Full local CI, run all 13 validation scenarios, create PR.
     2. `swift build` for backend
     3. `xcodebuild clean build` for iOS
     4. Fix any remaining compile errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' clean build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' clean build 2>&1 | tail -5`
   - **Done when**: Clean build succeeds for both targets
   - **Commit**: `chore(build): pass local CI` (only if fixes needed)
 
@@ -858,7 +858,7 @@ Focus: Full local CI, run all 13 validation scenarios, create PR.
     7. For VS-11: use cURL commands, save terminal output
   - **Files**: Screenshots saved to `.omc/evidence/ios-app-polish2/` (NEW dir)
   - **Done when**: 13/13 scenarios pass with screenshot/terminal evidence
-  - **Verify**: `ls -la /Users/nick/Desktop/ils-ios/.omc/evidence/ios-app-polish2/ | wc -l` (should show 20+ evidence files)
+  - **Verify**: `ls -la <project-root>/.omc/evidence/ios-app-polish2/ | wc -l` (should show 20+ evidence files)
   - **Commit**: `chore(validation): capture evidence for all 13 scenarios`
 
 - [ ] 10.3 [VERIFY] AC checklist — verify all acceptance criteria

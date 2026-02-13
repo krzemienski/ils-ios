@@ -41,6 +41,8 @@ struct ExecutionOptions {
     var settingsPath: String?
 
     init(from chatOptions: ChatOptions? = nil) {
+        // Only copy properties that exist on the shared ChatOptions DTO.
+        // Remaining ExecutionOptions fields (CLI-only flags) default to nil.
         self.model = chatOptions?.model
         self.permissionMode = chatOptions?.permissionMode
         self.maxTurns = chatOptions?.maxTurns
@@ -54,23 +56,10 @@ struct ExecutionOptions {
         self.addDirs = chatOptions?.addDirs
         self.continueConversation = chatOptions?.continueConversation
         self.includePartialMessages = chatOptions?.includePartialMessages
-        self.fallbackModel = chatOptions?.fallbackModel
-        self.jsonSchema = chatOptions?.jsonSchema
-        self.mcpConfig = chatOptions?.mcpConfig
-        self.customAgents = chatOptions?.customAgents
-        self.sessionId = chatOptions?.sessionId
-        self.tools = chatOptions?.tools
         self.noSessionPersistence = chatOptions?.noSessionPersistence
         self.inputFormat = chatOptions?.inputFormat
         self.agent = chatOptions?.agent
         self.betas = chatOptions?.betas
         self.debug = chatOptions?.debug
-        self.debugFile = chatOptions?.debugFile
-        self.disableSlashCommands = chatOptions?.disableSlashCommands
-        self.systemPromptFile = chatOptions?.systemPromptFile
-        self.appendSystemPromptFile = chatOptions?.appendSystemPromptFile
-        self.pluginDir = chatOptions?.pluginDir
-        self.strictMcpConfig = chatOptions?.strictMcpConfig
-        self.settingsPath = chatOptions?.settingsPath
     }
 }

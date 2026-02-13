@@ -3771,7 +3771,7 @@ struct ServerConnectionView: View {
 
                         ILSTextField(
                             label: "Host",
-                            placeholder: "192.168.1.100 or hostname",
+                            placeholder: "<your-local-ip> or hostname",
                             text: $host,
                             icon: "network"
                         )

@@ -28,7 +28,7 @@ All deliverables have been **functionally validated** and confirmed working:
 
 **Build Command:**
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift build --product ILSBackend
 ```
 
@@ -213,7 +213,7 @@ xcodebuild -list -workspace ILSFullStack.xcworkspace
 The test suite is now ready to execute. To run:
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/run_regression_tests.sh
 ```
 

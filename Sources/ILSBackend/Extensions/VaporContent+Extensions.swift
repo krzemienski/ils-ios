@@ -104,7 +104,49 @@ extension ValidateConfigRequest: Content {}
 extension CreateCustomThemeRequest: Content {}
 extension UpdateCustomThemeRequest: Content {}
 
+// MARK: - Paginated Response
+extension PaginatedResponse: AsyncResponseEncodable where T: Content {
+    public func encodeResponse(for request: Request) async throws -> Response {
+        let response = Response()
+        try response.content.encode(self)
+        return response
+    }
+}
+
+extension PaginatedResponse: ResponseEncodable where T: Content {
+    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+        let response = Response()
+        do {
+            try response.content.encode(self)
+            return request.eventLoop.makeSucceededFuture(response)
+        } catch {
+            return request.eventLoop.makeFailedFuture(error)
+        }
+    }
+}
+
+extension PaginatedResponse: RequestDecodable where T: Content {
+    public static func decodeRequest(_ request: Request) -> EventLoopFuture<Self> {
+        do {
+            let decoded = try request.content.decode(Self.self)
+            return request.eventLoop.makeSucceededFuture(decoded)
+        } catch {
+            return request.eventLoop.makeFailedFuture(error)
+        }
+    }
+}
+
+extension PaginatedResponse: AsyncRequestDecodable where T: Content {
+    public static func decodeRequest(_ request: Request) async throws -> Self {
+        try request.content.decode(Self.self)
+    }
+}
+
+extension PaginatedResponse: Content where T: Content {}
+extension PaginatedResponse: @unchecked Sendable where T: Sendable {}
+
 // MARK: - Response Types
+extension RenameSessionRequest: Content {}
 extension ConfigValidationResult: Content {}
 extension StatsResponse: Content {}
 extension CountStat: Content {}
@@ -115,6 +157,9 @@ extension DeletedResponse: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
+extension ServerStatus: Content {}
+extension Marketplace: Content {}
+extension GitHubSearchResult: Content {}
 
 // MARK: - Model Types
 extension Project: Content {}

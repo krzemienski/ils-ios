@@ -17,13 +17,6 @@ actor WebSocketCancellation {
 /// - `WS  /system/metrics/live` — live metrics stream every 2 seconds
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
-    var remoteMetricsService: RemoteMetricsService?
-    var sshService: SSHService?
-
-    init(remoteMetricsService: RemoteMetricsService? = nil, sshService: SSHService? = nil) {
-        self.remoteMetricsService = remoteMetricsService
-        self.sshService = sshService
-    }
 
     func boot(routes: RoutesBuilder) throws {
         let system = routes.grouped("system")
@@ -40,16 +33,6 @@ struct SystemController: RouteCollection {
     /// GET /system/metrics — returns current system metrics.
     @Sendable
     func metrics(req: Request) async throws -> Response {
-        let source = req.query[String.self, at: "source"]
-        if source == "remote", let remoteService = remoteMetricsService,
-           let ssh = sshService, await ssh.isConnected() {
-            let remoteMetrics = try await remoteService.getMetrics()
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(remoteMetrics)
-            return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
-        }
-
         let stats = await metricsService.getMetrics()
 
         let response = SystemMetricsResponse(
@@ -85,16 +68,6 @@ struct SystemController: RouteCollection {
     /// GET /system/processes — returns running processes, optionally sorted.
     @Sendable
     func processes(req: Request) async throws -> Response {
-        let source = req.query[String.self, at: "source"]
-        let highlight = req.query[Bool.self, at: "highlight"] ?? false
-        if source == "remote", let remoteService = remoteMetricsService,
-           let ssh = sshService, await ssh.isConnected() {
-            let remoteProcs = try await remoteService.getProcesses(highlight: highlight)
-            let encoder = JSONEncoder()
-            let data = try encoder.encode(remoteProcs)
-            return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
-        }
-
         let sortBy = req.query[String.self, at: "sort"] ?? "cpu"
         var procs = await metricsService.getProcesses()
 
@@ -213,14 +186,9 @@ struct SystemController: RouteCollection {
 
     @Sendable
     func metricsSource(req: Request) async throws -> Response {
-        var isRemote = false
-        if let ssh = sshService {
-            isRemote = await ssh.isConnected()
-        }
-        let status = isRemote ? await sshService!.getStatus() : nil
         let response = MetricsSourceResponse(
-            source: isRemote ? .remote : .local,
-            hostName: status?.host
+            source: .local,
+            hostName: nil
         )
         let encoder = JSONEncoder()
         let data = try encoder.encode(response)

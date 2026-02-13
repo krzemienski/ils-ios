@@ -352,13 +352,13 @@ xcode-select --print-path
 
 ### Build Backend
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift build -c release
 ```
 
 ### Build iOS App
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 xcodebuild build -scheme ILSApp -destination "generic/platform=iOS"
 ```
 
@@ -373,13 +373,13 @@ swift test
 
 | Component | Location |
 |-----------|----------|
-| Package manifest | `/Users/nick/Desktop/ils-ios/Package.swift` |
-| Shared models | `/Users/nick/Desktop/ils-ios/Sources/ILSShared/` |
-| Backend | `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/` |
-| iOS app | `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/` |
-| Database | `/Users/nick/Desktop/ils-ios/ils.sqlite` |
-| Docs | `/Users/nick/Desktop/ils-ios/docs/` |
-| Test reports | `/Users/nick/Desktop/ils-ios/docs/evidence/` |
+| Package manifest | `<project-root>/Package.swift` |
+| Shared models | `<project-root>/Sources/ILSShared/` |
+| Backend | `<project-root>/Sources/ILSBackend/` |
+| iOS app | `<project-root>/ILSApp/ILSApp/` |
+| Database | `<project-root>/ils.sqlite` |
+| Docs | `<project-root>/docs/` |
+| Test reports | `<project-root>/docs/evidence/` |
 
 ---
 
@@ -387,11 +387,11 @@ swift test
 
 | Document | Purpose | Location |
 |----------|---------|----------|
-| Master Spec | Build orchestration | `/Users/nick/Desktop/ils-ios/docs/ils.md` |
-| Technical Spec | Architecture details | `/Users/nick/Desktop/ils-ios/docs/ils-spec.md` |
-| Progress Report | Implementation status | `/Users/nick/Desktop/ils-ios/docs/evidence/implementation_progress.md` |
-| Test Report | UI testing results | `/Users/nick/Desktop/ils-ios/docs/evidence/test_report.md` |
-| This Summary | Dashboard view | `/Users/nick/Desktop/ils-ios/docs/evidence/VALIDATION_SUMMARY.md` |
+| Master Spec | Build orchestration | `<project-root>/docs/ils.md` |
+| Technical Spec | Architecture details | `<project-root>/docs/ils-spec.md` |
+| Progress Report | Implementation status | `<project-root>/docs/evidence/implementation_progress.md` |
+| Test Report | UI testing results | `<project-root>/docs/evidence/test_report.md` |
+| This Summary | Dashboard view | `<project-root>/docs/evidence/VALIDATION_SUMMARY.md` |
 
 ---
 

@@ -128,7 +128,7 @@ The ILS iOS app has a solid architectural foundation (MVVM + Vapor backend, Swif
 1. User installs app, opens for first time
 2. Sees "disconnected" state
 3. Goes to Settings > Backend Connection
-4. Types server URL (e.g., `http://192.168.1.100:9090`)
+4. Types server URL (e.g., `http://<your-local-ip>:9090`)
 5. Taps "Test Connection"
 6. Sees green "Connected" status
 7. Returns to Dashboard, sees real stats
@@ -345,28 +345,28 @@ The ILS iOS app has a solid architectural foundation (MVVM + Vapor backend, Swif
 
 ## Sources
 
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/SessionsController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ProjectsController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/MCPController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/PluginsController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/SkillsController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/StatsController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ConfigController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/AuthController.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSHConnectionManager.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ILSAppApp.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ContentView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/SessionsListView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/NewSessionView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Plugins/PluginsListView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/PluginsViewModel.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Projects/ProjectsListView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Projects/ProjectDetailView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SSHConnectionsView.swift`
-- `/Users/nick/Desktop/ils-ios/specs/ils-complete-rebuild/.progress.md`
+- `<project-root>/Sources/ILSBackend/Controllers/SessionsController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/ProjectsController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/MCPController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/PluginsController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/SkillsController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/StatsController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/ConfigController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/AuthController.swift`
+- `<project-root>/ILSApp/ILSApp/Services/APIClient.swift`
+- `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift`
+- `<project-root>/ILSApp/ILSApp/Services/SSHConnectionManager.swift`
+- `<project-root>/ILSApp/ILSApp/ILSAppApp.swift`
+- `<project-root>/ILSApp/ILSApp/ContentView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Settings/SettingsView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Sessions/SessionsListView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Sessions/NewSessionView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Chat/ChatView.swift`
+- `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Plugins/PluginsListView.swift`
+- `<project-root>/ILSApp/ILSApp/ViewModels/PluginsViewModel.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Projects/ProjectsListView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Projects/ProjectDetailView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Settings/SSHConnectionsView.swift`
+- `<project-root>/specs/ils-complete-rebuild/.progress.md`

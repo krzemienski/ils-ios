@@ -165,7 +165,7 @@ func getChatMessageCount() -> Int
 ### Run All Tests (Including New Chat Tests)
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/run_regression_tests.sh
 ```
 

@@ -434,4 +434,4 @@ OK
 
 **Summary:** All 10 backend API endpoints tested and validated. The Vapor backend is fully functional with proper JSON responses, error handling, and RESTful patterns. Ready for iOS client integration.
 
-**Evidence Location:** `/Users/nick/Desktop/ils-ios/docs/evidence/backend_validation.md`
+**Evidence Location:** `<project-root>/docs/evidence/backend_validation.md`

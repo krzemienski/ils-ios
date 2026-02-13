@@ -61,7 +61,7 @@ trap cleanup EXIT INT TERM
 
 check_backend() {
     log_info "Checking if backend is running..."
-    if curl -s -f http://localhost:9090/health > /dev/null 2>&1; then
+    if curl -s -f http://localhost:9999/health > /dev/null 2>&1; then
         log_success "Backend is already running"
         return 0
     else
@@ -79,7 +79,7 @@ start_backend() {
     swift build --product ILSBackend
 
     # Start backend in background
-    swift run ILSBackend > "${PROJECT_DIR}/backend_test.log" 2>&1 &
+    PORT=9999 swift run ILSBackend > "${PROJECT_DIR}/backend_test.log" 2>&1 &
     BACKEND_PID=$!
     echo "$BACKEND_PID" > "$BACKEND_PID_FILE"
 
@@ -91,7 +91,7 @@ start_backend() {
     WAITED=0
 
     while [ $WAITED -lt $MAX_WAIT ]; do
-        if curl -s -f http://localhost:9090/health > /dev/null 2>&1; then
+        if curl -s -f http://localhost:9999/health > /dev/null 2>&1; then
             log_success "Backend is ready!"
             return 0
         fi

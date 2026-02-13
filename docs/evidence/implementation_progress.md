@@ -29,7 +29,7 @@ The ILS (Intelligent Local Server) application has achieved significant progress
 | Task | Description | Status | Evidence |
 |------|-------------|--------|----------|
 | 0.1 | Create project directory structure | ✅ PASS | Directory tree verified |
-| 0.2 | Create root Package.swift with dependencies | ✅ PASS | File present at `/Users/nick/Desktop/ils-ios/Package.swift` |
+| 0.2 | Create root Package.swift with dependencies | ✅ PASS | File present at `<project-root>/Package.swift` |
 | 0.3 | Verify Swift and Xcode environment | ✅ PASS | Swift 5.9 configured, Xcode build succeeds |
 
 **Gate Check 0:** Environment & Xcode Setup - **PASSED**
@@ -142,7 +142,7 @@ Sources/ILSBackend/
 - SQLite via Fluent ORM
 - Migrations auto-applied on startup
 - Type-safe queries
-- Database file: `/Users/nick/Desktop/ils-ios/ils.sqlite`
+- Database file: `<project-root>/ils.sqlite`
 
 **Gate Check 2A:** Backend API validation - **PASSED**
 - All controllers compile without errors
@@ -335,7 +335,7 @@ ILSApp/ILSApp/
 ### Project Structure
 
 ```
-/Users/nick/Desktop/ils-ios/
+<project-root>/
 ├── Package.swift                        # Workspace manifest
 ├── Sources/
 │   ├── ILSShared/                       # Shared models (500+ lines)

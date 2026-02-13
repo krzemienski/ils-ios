@@ -156,7 +156,7 @@ Testing and validation evidence:
 ## Project Structure Overview
 
 ```
-/Users/nick/Desktop/ils-ios/
+<project-root>/
 ├── Package.swift                              # Workspace manifest
 ├── Sources/
 │   ├── ILSShared/                             # Shared models (500+ LOC)
@@ -284,7 +284,7 @@ Testing and validation evidence:
 1. Read **VALIDATION_SUMMARY.md** for project overview
 2. Review **implementation_progress.md** for architecture
 3. Check **test_report.md** to see what's been tested
-4. Read `/Users/nick/Desktop/ils-ios/docs/ils-spec.md` for full technical details
+4. Read `<project-root>/docs/ils-spec.md` for full technical details
 
 ### For Continuing Development
 1. Check **implementation_progress.md** for current Phase 4 status
@@ -305,7 +305,7 @@ Testing and validation evidence:
 ### Build & Run
 ```bash
 # Build all targets
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift build
 
 # Run backend
@@ -331,10 +331,10 @@ xcodebuild test -scheme ILSApp -destination "platform=iOS Simulator,name=iPhone 
 ### Database
 ```bash
 # Check database exists
-ls -lh /Users/nick/Desktop/ils-ios/ils.sqlite
+ls -lh <project-root>/ils.sqlite
 
 # Reset database
-rm /Users/nick/Desktop/ils-ios/ils.sqlite
+rm <project-root>/ils.sqlite
 # Will be recreated on next backend start
 ```
 

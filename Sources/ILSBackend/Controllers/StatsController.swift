@@ -163,10 +163,10 @@ struct StatsController: RouteCollection {
         )
     }
 
-    /// GET /server/status - Get remote server connection status
+    /// GET /server/status - Get local server connection status
     @Sendable
     func serverStatus(req: Request) async throws -> APIResponse<ServerStatus> {
-        let status = try await req.application.sshService.getServerStatus()
-        return APIResponse(success: true, data: status)
+        // Local server is always connected
+        return APIResponse(success: true, data: ServerStatus(connected: true))
     }
 }

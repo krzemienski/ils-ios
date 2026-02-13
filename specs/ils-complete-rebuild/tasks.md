@@ -41,7 +41,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Create: `Sources/ILSShared/DTOs/ConnectionResponse.swift`
   - Create: `Sources/ILSShared/DTOs/SearchResult.swift`
 - **Done when**: `swift build --target ILSShared` compiles with zero errors
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSShared 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSShared 2>&1 | tail -5`
 - **Commit**: `feat(shared): add ServerConnection, SearchResult, ConnectionResponse models and Citadel/Yams deps`
 - _Requirements: FR-26, FR-27, FR-31_
 - _Design: New Shared Models_
@@ -66,7 +66,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `Sources/ILSShared/Models/Plugin.swift`
   - Modify: `Sources/ILSShared/DTOs/Requests.swift`
 - **Done when**: `swift build --target ILSShared` compiles; `swift build --target ILSBackend` compiles
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `feat(shared): enhance Skill and Plugin models with GitHub fields and PluginSource`
 - _Requirements: FR-28, FR-29, FR-30_
 - _Design: Modified Shared Models_
@@ -74,7 +74,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 ### 1.3 [VERIFY] Quality checkpoint: backend compiles
 
 - **Do**: Build both ILSShared and ILSBackend targets to ensure model changes don't break existing code
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -10`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -10`
 - **Done when**: Zero compile errors on backend
 - **Commit**: `chore(backend): fix compilation after model updates` (only if fixes needed)
 
@@ -91,7 +91,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 - **Files**:
   - Create: `Sources/ILSBackend/Services/SSHService.swift`
 - **Done when**: `swift build --target ILSBackend` compiles
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `feat(backend): add SSHService with Citadel for remote server connections`
 - _Requirements: FR-13, FR-1_
 - _Design: SSHService (P0)_
@@ -111,7 +111,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `Sources/ILSBackend/Controllers/StatsController.swift`
   - Modify: `Sources/ILSBackend/App/routes.swift`
 - **Done when**: `swift build --target ILSBackend` compiles; `curl -X POST localhost:9090/api/v1/auth/connect -H 'Content-Type: application/json' -d '{"host":"localhost","port":22,"username":"test","authMethod":"password","credential":"test"}' | jq .` returns JSON (success or error)
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `feat(backend): add AuthController with SSH connect/disconnect and server/status endpoint`
 - _Requirements: FR-1, FR-2_
 - _Design: AuthController, StatsController server status_
@@ -136,7 +136,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Create: `Sources/ILSBackend/Services/GitHubService.swift`
   - Modify: `Sources/ILSBackend/Controllers/SkillsController.swift`
 - **Done when**: Backend compiles; `curl 'localhost:9090/api/v1/skills/search?q=code-review' | jq .` returns results (with GITHUB_TOKEN set)
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `feat(backend): add GitHubService and skill search/install endpoints`
 - _Requirements: FR-3, FR-4, FR-11, FR-40, FR-41_
 - _Design: GitHubService, SkillsController search+install_
@@ -158,7 +158,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `Sources/ILSBackend/Controllers/MCPController.swift`
   - Modify: `Sources/ILSBackend/Controllers/PluginsController.swift`
 - **Done when**: Backend compiles; `curl -X PUT localhost:9090/api/v1/mcp/test-server -H 'Content-Type: application/json' -d '{"name":"test-server","command":"npx","args":["-y","test"]}' | jq .success` returns true
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `feat(backend): add MCP update, plugin search, and marketplace registration endpoints`
 - _Requirements: FR-5, FR-6, FR-7_
 - _Design: MCPController update, PluginsController search+marketplace_
@@ -169,7 +169,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   1. Build backend: `swift build --target ILSBackend`
   2. Start backend briefly and test all new endpoints respond (even if with error)
   3. Verify existing endpoints still work: `curl localhost:9090/health | jq .status`
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -3`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -3`
 - **Done when**: Backend compiles cleanly; all existing endpoints unchanged
 - **Commit**: `chore(backend): pass quality checkpoint after new endpoints` (only if fixes needed)
 
@@ -201,7 +201,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `ILSApp/ILSApp/Theme/ILSTheme.swift`
   - Modify: All views referencing `cornerRadiusM`, `cornerRadiusL`, `cornerRadiusXL`
 - **Done when**: iOS app compiles with updated theme
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(theme): align all color tokens and corner radii to spec values`
 - _Requirements: FR-34, FR-35, FR-36, FR-37, AC-18.1 through AC-18.5_
 - _Design: Color Tokens, Corner Radius Alignment_
@@ -218,7 +218,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 - **Files**:
   - Create: `ILSApp/ILSApp/Services/KeychainService.swift`
 - **Done when**: iOS app compiles
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add KeychainService for secure credential storage`
 - _Requirements: FR-23, NFR-5, NFR-6_
 - _Design: KeychainService_
@@ -252,7 +252,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `ILSApp/ILSApp/ILSAppApp.swift`
   - Modify: `ILSApp/ILSApp/ContentView.swift`
 - **Done when**: iOS app compiles; ServerConnectionView is navigable from Settings
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add ServerConnectionView with SSH form and recent connections`
 - _Requirements: FR-15, US-1, AC-1.1 through AC-1.7_
 - _Design: ServerConnectionView, ServerConnectionViewModel_
@@ -260,7 +260,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 ### 1.12 [VERIFY] iOS app builds after SSH foundation
 
 - **Do**: Full iOS build to catch any compilation issues from theme + new files
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Done when**: `BUILD SUCCEEDED`
 - **Commit**: `chore(ios): fix compilation issues` (only if fixes needed)
 
@@ -285,7 +285,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Create: `ILSApp/ILSApp/ViewModels/SkillDetailViewModel.swift`
   - Create: `ILSApp/ILSApp/Views/Skills/SkillDetailView.swift`
 - **Done when**: iOS app compiles; SkillDetailView exists
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add SkillDetailView with SKILL.md preview, edit, and uninstall`
 - _Requirements: FR-17, US-8, AC-8.1 through AC-8.7_
 - _Design: SkillDetailView_
@@ -311,7 +311,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `ILSApp/ILSApp/ViewModels/SkillsViewModel.swift`
   - Modify: `ILSApp/ILSApp/Views/Skills/SkillsListView.swift`
 - **Done when**: iOS compiles; SkillsListView has GitHub search section and navigates to SkillDetailView
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add GitHub skill search and SkillDetailView navigation to SkillsListView`
 - _Requirements: FR-18, US-5, US-6, US-7, AC-5.1 through AC-7.5_
 - _Design: SkillsListView GitHub search, SkillDetailView navigation_
@@ -344,7 +344,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Create: `ILSApp/ILSApp/Views/MCP/EditMCPServerView.swift`
   - Modify: `ILSApp/ILSApp/Views/MCP/MCPServerListView.swift`
 - **Done when**: iOS compiles; MCP list shows scope tabs with Add/Edit/Delete actions
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add MCP scope tabs, Add/Edit server forms, and CRUD actions`
 - _Requirements: FR-19, US-9, US-10, US-11, AC-9.1 through AC-11.5_
 - _Design: MCPServerListView scope tabs, AddMCPServerView, EditMCPServerView_
@@ -352,7 +352,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 ### 1.16 [VERIFY] iOS mid-build quality checkpoint
 
 - **Do**: Full iOS build after MCP + Skills changes
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Done when**: `BUILD SUCCEEDED`
 - **Commit**: `chore(ios): fix mid-build compilation issues` (only if fixes needed)
 
@@ -382,7 +382,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Create: `ILSApp/ILSApp/Views/Plugins/PluginMarketplaceView.swift`
   - Modify: `ILSApp/ILSApp/Views/Plugins/PluginsListView.swift`
 - **Done when**: iOS compiles; PluginMarketplaceView opens from PluginsListView
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add PluginMarketplaceView with search, categories, and install`
 - _Requirements: FR-20, US-12, US-13, US-14, AC-12.1 through AC-14.5_
 - _Design: PluginMarketplaceView, PluginsListView marketplace button_
@@ -406,7 +406,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 - **Files**:
   - Modify: `ILSApp/ILSApp/Views/Settings/SettingsView.swift`
 - **Done when**: iOS compiles; SettingsView shows JSON editor with scope picker
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add JSON config editor, scope selector, and Quick Settings to SettingsView`
 - _Requirements: FR-21, US-15, US-16, AC-15.1 through AC-16.6_
 - _Design: SettingsView JSON editor + Quick Settings_
@@ -428,7 +428,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `ILSApp/ILSApp/ViewModels/DashboardViewModel.swift`
   - Modify: `ILSApp/ILSApp/Views/Dashboard/DashboardView.swift`
 - **Done when**: iOS compiles; Dashboard shows Quick Actions and activity feed
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add Quick Actions and Recent Activity feed to DashboardView`
 - _Requirements: FR-16, US-3, AC-3.1 through AC-3.5_
 - _Design: DashboardView Quick Actions + Activity_
@@ -448,7 +448,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
   - Modify: `ILSApp/ILSApp/Views/Chat/CommandPaletteView.swift`
   - Possibly modify: `ILSApp/ILSApp/ViewModels/SkillsViewModel.swift`
 - **Done when**: No `SkillItem` references remain; app compiles
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -c 'SkillItem' && echo "Should be 0"`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -c 'SkillItem' && echo "Should be 0"`
 - **Commit**: `refactor(ios): unify SkillItem to Skill from ILSShared`
 - _Requirements: FR-33_
 - _Design: Technical Decisions - SkillItem unification_
@@ -456,7 +456,7 @@ Focus: Get all new features compiling and responding to API calls. Accept hardco
 ### 1.21 [VERIFY] Full build checkpoint (backend + iOS)
 
 - **Do**: Build both targets to verify everything compiles
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
 - **Done when**: Both targets compile successfully
 - **Commit**: `chore: fix full build issues` (only if fixes needed)
 
@@ -503,7 +503,7 @@ After POC validated, clean up code structure and error handling.
   - Modify: `Sources/ILSBackend/Controllers/AuthController.swift`
   - Modify: `Sources/ILSBackend/Controllers/SkillsController.swift`
 - **Done when**: Backend compiles; services properly lifecycle-managed
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `refactor(backend): extract service singletons and add rate limit handling`
 - _Design: SSHService NIO conflict mitigation, GitHubService rate limiting_
 
@@ -521,7 +521,7 @@ After POC validated, clean up code structure and error handling.
   - Modify: `ILSApp/ILSApp/ViewModels/SkillsViewModel.swift`
   - Modify: `ILSApp/ILSApp/Views/Settings/SettingsView.swift`
 - **Done when**: All ViewModels have consistent error handling; debounce works on search
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `refactor(ios): add comprehensive error handling and debounced search`
 - _Design: Error Handling patterns_
 
@@ -540,7 +540,7 @@ After POC validated, clean up code structure and error handling.
   - Create: `ILSApp/ILSApp/Services/ConfigurationManager.swift`
   - Modify: `ILSApp/ILSApp/Views/Settings/SettingsView.swift`
 - **Done when**: SettingsView uses ConfigurationManager; server-side validation works
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `refactor(ios): extract ConfigurationManager for settings lifecycle`
 - _Requirements: FR-24_
 - _Design: ConfigurationManager_
@@ -548,7 +548,7 @@ After POC validated, clean up code structure and error handling.
 ### 2.4 [VERIFY] Quality checkpoint after refactoring
 
 - **Do**: Build both backend and iOS
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
 - **Done when**: Both targets compile with zero errors
 - **Commit**: `chore: pass refactoring quality checkpoint` (only if fixes needed)
 
@@ -626,7 +626,7 @@ Real UI validation with simulator screenshots. No mocks, no stubs, no unit tests
 ### 3.4 [VERIFY] Quality checkpoint after validation
 
 - **Do**: Confirm both targets build and all screenshots captured
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
 - **Done when**: Both build; validation evidence exists
 - **Commit**: `chore: pass validation quality checkpoint` (only if fixes needed)
 
@@ -651,7 +651,7 @@ Real UI validation with simulator screenshots. No mocks, no stubs, no unit tests
   - Modify: `Sources/ILSBackend/App/configure.swift`
   - Modify: `Sources/ILSBackend/Services/GitHubService.swift`
 - **Done when**: Backend compiles; cached results table created on startup
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -5`
 - **Commit**: `feat(backend): add IndexingService with SQLite cache and CreateCachedResults migration`
 - _Requirements: FR-12_
 - _Design: IndexingService_
@@ -678,7 +678,7 @@ Real UI validation with simulator screenshots. No mocks, no stubs, no unit tests
   - Create/Modify: `ILSApp/ILSApp/PrivacyInfo.xcprivacy`
   - Modify: New views (add `.accessibilityLabel()` to buttons/fields)
 - **Done when**: Privacy manifest exists; all new interactive elements have accessibility labels
-- **Verify**: `ls /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/PrivacyInfo.xcprivacy && echo "exists"`
+- **Verify**: `ls <project-root>/ILSApp/ILSApp/PrivacyInfo.xcprivacy && echo "exists"`
 - **Commit**: `feat(ios): add Privacy Manifest and accessibility labels for App Store compliance`
 - _Requirements: NFR-1, NFR-7_
 
@@ -695,14 +695,14 @@ Real UI validation with simulator screenshots. No mocks, no stubs, no unit tests
   - Modify: `ILSApp/ILSApp/ILSAppApp.swift`
   - Modify: `ILSApp/ILSApp/Views/Sidebar/SidebarView.swift`
 - **Done when**: Connection status shows in sidebar; auto-reconnect works
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
+- **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -5`
 - **Commit**: `feat(ios): add server connection status polling and auto-reconnect`
 - _Requirements: US-2, AC-2.1 through AC-2.4_
 
 ### 4.4 [VERIFY] Full local CI
 
 - **Do**: Run complete build verification
-- **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
+- **Verify**: `cd <project-root> && swift build --target ILSBackend 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | tail -3`
 - **Done when**: Both targets build successfully with zero errors and zero warnings on new code
 - **Commit**: `chore: pass local CI` (only if fixes needed)
 

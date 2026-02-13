@@ -19,7 +19,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     4. Grep entire ILSApp directory for `isServerConnected` and `serverConnectionInfo` to confirm zero remaining references
   - **Files**: `ILSApp/ILSApp/ILSAppApp.swift`
   - **Done when**: Both properties removed, grep returns 0 matches, build succeeds
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -rn 'isServerConnected\|serverConnectionInfo' ILSApp/ILSApp/ | grep -v '\.build/' | wc -l` returns 0
+  - **Verify**: `cd <project-root> && grep -rn 'isServerConnected\|serverConnectionInfo' ILSApp/ILSApp/ | grep -v '\.build/' | wc -l` returns 0
   - **Commit**: `fix(app): remove dead isServerConnected and serverConnectionInfo properties`
   - _Requirements: FR-C1, FR-C2, AC-1.2, AC-1.3_
   - _Design: Phase 1 step 1_
@@ -33,14 +33,14 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. Add migration code at the start of init: if stored theme ID is "ghost" map to "ghost-protocol", if "electric" map to "electric-grid", persist the corrected value
   - **Files**: `ILSApp/ILSApp/Views/Settings/ThemePickerView.swift`, `ILSApp/ILSApp/Theme/AppTheme.swift`
   - **Done when**: ThemePreview.all uses correct IDs "ghost-protocol" and "electric-grid"; ThemeManager.init() migrates legacy IDs
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -n '"ghost"' ILSApp/ILSApp/Views/Settings/ThemePickerView.swift | grep -v ghost-protocol | wc -l` returns 0 && `grep -n '"electric"' ILSApp/ILSApp/Views/Settings/ThemePickerView.swift | grep -v electric-grid | wc -l` returns 0
+  - **Verify**: `cd <project-root> && grep -n '"ghost"' ILSApp/ILSApp/Views/Settings/ThemePickerView.swift | grep -v ghost-protocol | wc -l` returns 0 && `grep -n '"electric"' ILSApp/ILSApp/Views/Settings/ThemePickerView.swift | grep -v electric-grid | wc -l` returns 0
   - **Commit**: `fix(theme): correct Ghost Protocol and Electric Grid theme IDs with UserDefaults migration`
   - _Requirements: FR-C3, AC-1.1_
   - _Design: Theme Fix Design, ThemePickerView ID Fix_
 
 - [x] 1.3 [VERIFY] Build checkpoint after critical fixes
   - **Do**: Build the project and verify zero errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED with zero errors
   - **Commit**: `chore(app): pass build checkpoint after critical fixes` (only if fixes needed)
 
@@ -55,7 +55,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. Line 218 in `connectToServer()`: replace `let client = APIClient(baseURL: cleanURL)` -- note this one uses a different URL, so create client with cleanURL BEFORE calling updateServerURL, or call healthCheck on the new apiClient AFTER updateServerURL
   - **Files**: `ILSApp/ILSApp/ILSAppApp.swift`
   - **Done when**: Grep for `APIClient(baseURL:` in ILSAppApp.swift shows only lines 79 (init) and 95 (updateServerURL)
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -n 'APIClient(baseURL:' ILSApp/ILSApp/ILSAppApp.swift | wc -l` returns exactly 2 (init + updateServerURL)
+  - **Verify**: `cd <project-root> && grep -n 'APIClient(baseURL:' ILSApp/ILSApp/ILSAppApp.swift | wc -l` returns exactly 2 (init + updateServerURL)
   - **Commit**: `fix(app): use self.apiClient instead of creating redundant APIClient instances`
   - _Requirements: FR-H1, AC-2.1_
   - _Design: Phase 2 step 5_
@@ -68,7 +68,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     4. Keep `icon`, `displayName`, and `themeColor(from:)` intact
   - **Files**: `ILSApp/ILSApp/Theme/EntityType.swift`
   - **Done when**: EntityType.swift contains only `icon`, `displayName`, `themeColor(from:)`. No callers existed (confirmed via grep)
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -n 'var color:\|var gradient:' ILSApp/ILSApp/Theme/EntityType.swift | wc -l` returns 0
+  - **Verify**: `cd <project-root> && grep -n 'var color:\|var gradient:' ILSApp/ILSApp/Theme/EntityType.swift | wc -l` returns 0
   - **Commit**: `refactor(theme): remove dead EntityType.color and .gradient properties`
   - _Requirements: FR-H4, AC-2.4_
   - _Design: EntityType Color Unification_
@@ -82,7 +82,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. The Task version naturally handles cancellation via `Task.isCancelled` check
   - **Files**: `ILSApp/ILSApp/Views/Chat/StreamingIndicatorView.swift`
   - **Done when**: No `Timer.scheduledTimer` in file; Task cancels on disappear
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -n 'Timer.scheduledTimer' ILSApp/ILSApp/Views/Chat/StreamingIndicatorView.swift | wc -l` returns 0
+  - **Verify**: `cd <project-root> && grep -n 'Timer.scheduledTimer' ILSApp/ILSApp/Views/Chat/StreamingIndicatorView.swift | wc -l` returns 0
   - **Commit**: `fix(chat): replace Timer with Task-based animation in StreamingIndicatorView`
   - _Requirements: FR-H6, AC-2.6_
   - _Design: StreamingIndicatorView Timer Leak Fix_
@@ -99,7 +99,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     8. Line 126: change `.dark(.xcode)` to `isLight ? .light(.xcode) : .dark(.xcode)`
   - **Files**: `ILSApp/ILSApp/Views/System/SystemMonitorView.swift`, `ILSApp/ILSApp/Theme/Components/CodeBlockView.swift`
   - **Done when**: WebSocket client reuses existing connection; CodeBlockView uses light highlighting on light themes
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -n 'isLight' ILSApp/ILSApp/Theme/Components/CodeBlockView.swift | wc -l` returns at least 1 && `grep -c '.dark(.xcode)' ILSApp/ILSApp/Theme/Components/CodeBlockView.swift` returns 0
+  - **Verify**: `cd <project-root> && grep -n 'isLight' ILSApp/ILSApp/Theme/Components/CodeBlockView.swift | wc -l` returns at least 1 && `grep -c '.dark(.xcode)' ILSApp/ILSApp/Theme/Components/CodeBlockView.swift` returns 0
   - **Commit**: `fix(system,theme): guard WebSocket recreation, fix CodeBlockView light theme highlighting`
   - _Requirements: FR-H7, FR-H8, AC-2.7, AC-2.8_
   - _Design: SystemMonitorView WebSocket Fix, CodeBlockView Light Theme Fix_
@@ -113,14 +113,14 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. Grep for any other `APIErrorResponse` references in ILSApp and update them
   - **Files**: `ILSApp/ILSApp/Services/APIClient.swift`
   - **Done when**: No `APIErrorResponse` in codebase; `APIErrorDetail` used instead; doc comment present
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -rn 'APIErrorResponse' ILSApp/ILSApp/ | wc -l` returns 0
+  - **Verify**: `cd <project-root> && grep -rn 'APIErrorResponse' ILSApp/ILSApp/ | wc -l` returns 0
   - **Commit**: `refactor(api): rename APIErrorResponse to APIErrorDetail with documentation`
   - _Requirements: FR-H5, AC-2.5_
   - _Design: APIResponse/APIError Unification_
 
 - [x] 2.6 [VERIFY] Build checkpoint after high-priority fixes
   - **Do**: Build the project and verify zero errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED with zero errors
   - **Commit**: `chore(app): pass build checkpoint after high-priority fixes` (only if fixes needed)
 
@@ -135,7 +135,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. ConnectionManager is `@MainActor class: ObservableObject` with `@Published` properties
   - **Files**: `ILSApp/ILSApp/Services/ConnectionManager.swift` (create)
   - **Done when**: ConnectionManager owns connection state, URL persistence, client lifecycle
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/ConnectionManager.swift && echo "EXISTS"`
+  - **Verify**: `test -f <project-root>/ILSApp/ILSApp/Services/ConnectionManager.swift && echo "EXISTS"`
   - **Commit**: `refactor(app): create ConnectionManager extracted from AppState`
   - _Requirements: FR-H2, AC-2.2_
   - _Design: ConnectionManager component_
@@ -150,7 +150,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. Updates `connectionManager?.isConnected` on success/failure
   - **Files**: `ILSApp/ILSApp/Services/PollingManager.swift` (create)
   - **Done when**: PollingManager owns all polling tasks and scene phase handling
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/PollingManager.swift && echo "EXISTS"`
+  - **Verify**: `test -f <project-root>/ILSApp/ILSApp/Services/PollingManager.swift && echo "EXISTS"`
   - **Commit**: `refactor(app): create PollingManager extracted from AppState`
   - _Requirements: FR-H2, AC-2.2_
   - _Design: PollingManager component_
@@ -174,7 +174,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     10. Forward `checkConnection()` to `pollingManager.checkConnection()`
   - **Files**: `ILSApp/ILSApp/ILSAppApp.swift`
   - **Done when**: AppState is <150 lines, delegates to ConnectionManager and PollingManager
-  - **Verify**: `wc -l /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ILSAppApp.swift | awk '{print ($1 < 150) ? "PASS" : "FAIL: " $1 " lines"}'`
+  - **Verify**: `wc -l <project-root>/ILSApp/ILSApp/ILSAppApp.swift | awk '{print ($1 < 150) ? "PASS" : "FAIL: " $1 " lines"}'`
   - **Commit**: `refactor(app): slim AppState to thin coordinator with forwarding properties`
   - _Requirements: FR-H2, AC-2.2_
   - _Design: AppState Simplified_
@@ -185,7 +185,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     2. Install on simulator
     3. Launch and verify app opens to home screen
     4. Capture screenshot as evidence
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED, app launches on simulator
   - **Commit**: `chore(app): pass build checkpoint after AppState decomposition` (only if fixes needed)
 
@@ -201,7 +201,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. Verify SettingsView.swift still compiles (ConfigEditorView references ConfigEditorViewModel)
   - **Files**: `ILSApp/ILSApp/ViewModels/ConfigEditorViewModel.swift` (create), `ILSApp/ILSApp/Views/Settings/SettingsView.swift` (modify)
   - **Done when**: ConfigEditorViewModel in separate file, SettingsView.swift compiles
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ConfigEditorViewModel.swift && echo "EXISTS"`
+  - **Verify**: `test -f <project-root>/ILSApp/ILSApp/ViewModels/ConfigEditorViewModel.swift && echo "EXISTS"`
   - **Commit**: `refactor(settings): extract ConfigEditorViewModel to separate file`
   - _Requirements: FR-H3, AC-2.3_
   - _Design: SettingsView Split Design_
@@ -215,7 +215,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. Paste with `import SwiftUI` and `import ILSShared` at top
   - **Files**: `ILSApp/ILSApp/ViewModels/SettingsViewModel.swift` (create), `ILSApp/ILSApp/Views/Settings/SettingsView.swift` (modify)
   - **Done when**: SettingsViewModel in separate file
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/SettingsViewModel.swift && echo "EXISTS"`
+  - **Verify**: `test -f <project-root>/ILSApp/ILSApp/ViewModels/SettingsViewModel.swift && echo "EXISTS"`
   - **Commit**: `refactor(settings): extract SettingsViewModel to separate file`
   - _Requirements: FR-H3, AC-2.3_
   - _Design: SettingsView Split Design_
@@ -230,7 +230,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. ConfigEditorView uses ConfigEditorViewModel (already extracted)
   - **Files**: `ILSApp/ILSApp/Views/Settings/ConfigEditorView.swift` (create), `ILSApp/ILSApp/Views/Settings/SettingsView.swift` (modify)
   - **Done when**: ConfigEditorView in separate file, SettingsView.swift is only the SettingsView struct + helper extensions
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigEditorView.swift && echo "EXISTS"`
+  - **Verify**: `test -f <project-root>/ILSApp/ILSApp/Views/Settings/ConfigEditorView.swift && echo "EXISTS"`
   - **Commit**: `refactor(settings): extract ConfigEditorView to separate file`
   - _Requirements: FR-H3, AC-2.3_
   - _Design: SettingsView Split Design_
@@ -240,7 +240,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     1. Build the project
     2. Verify SettingsView.swift is now <300 lines
     3. Verify all 4 files exist and build
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5` && `wc -l ILSApp/ILSApp/Views/Settings/SettingsView.swift | awk '{print ($1 < 300) ? "PASS" : "FAIL: " $1}'`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5` && `wc -l ILSApp/ILSApp/Views/Settings/SettingsView.swift | awk '{print ($1 < 300) ? "PASS" : "FAIL: " $1}'`
   - **Done when**: BUILD SUCCEEDED, SettingsView.swift <300 lines
   - **Commit**: `chore(settings): pass build checkpoint after SettingsView split` (only if fixes needed)
 
@@ -255,7 +255,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. Replace comments with actual implementation notes or remove entirely
   - **Files**: `ILSApp/ILSApp/Views/Root/SidebarView.swift`
   - **Done when**: Zero "wired in Phase" comments in SidebarView.swift
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'wired in Phase' ILSApp/ILSApp/Views/Root/SidebarView.swift` returns 0
+  - **Verify**: `cd <project-root> && grep -c 'wired in Phase' ILSApp/ILSApp/Views/Root/SidebarView.swift` returns 0
   - **Commit**: `fix(sidebar): wire or remove Phase placeholder comments`
   - _Requirements: FR-M1, AC-3.1_
   - _Design: Phase 5 step 22_
@@ -270,7 +270,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. Add `import SwiftUI` and `import UIKit` to new file
   - **Files**: `ILSApp/ILSApp/Views/Shared/ShareSheet.swift` (create), `ILSApp/ILSApp/Views/Sessions/SessionInfoView.swift` (modify)
   - **Done when**: Single ShareSheet definition in shared file; both views compile
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -rn 'struct ShareSheet' ILSApp/ILSApp/ | wc -l` returns 1
+  - **Verify**: `cd <project-root> && grep -rn 'struct ShareSheet' ILSApp/ILSApp/ | wc -l` returns 1
   - **Commit**: `refactor(views): extract ShareSheet to shared file, remove duplicate`
   - _Requirements: FR-M2, AC-3.2_
   - _Design: Phase 5 step 23_
@@ -282,7 +282,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     3. Remove both from Xcode project if needed (may auto-detect)
   - **Files**: `ILSApp/ILSApp/ViewModels/BaseListViewModel.swift` (delete), `ILSApp/ILSApp/Theme/ThemeManager.swift` (delete)
   - **Done when**: Both files deleted, build succeeds
-  - **Verify**: `test ! -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/BaseListViewModel.swift && test ! -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/ThemeManager.swift && echo "DELETED"`
+  - **Verify**: `test ! -f <project-root>/ILSApp/ILSApp/ViewModels/BaseListViewModel.swift && test ! -f <project-root>/ILSApp/ILSApp/Theme/ThemeManager.swift && echo "DELETED"`
   - **Commit**: `refactor(app): delete dead BaseListViewModel and empty ThemeManager redirect`
   - _Requirements: FR-M3, FR-M4, AC-3.3, AC-3.4_
   - _Design: Phase 5 steps 24-25_
@@ -296,14 +296,14 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. ConnectionBannerModifier keeps its `@State` management and `.onChange` auto-dismiss logic
   - **Files**: `ILSApp/ILSApp/Theme/Components/ConnectionBanner.swift`
   - **Done when**: Single HStack definition; modifier delegates to ConnectionBanner struct
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'Reconnecting' ILSApp/ILSApp/Theme/Components/ConnectionBanner.swift` returns 1 (was 2)
+  - **Verify**: `cd <project-root> && grep -c 'Reconnecting' ILSApp/ILSApp/Theme/Components/ConnectionBanner.swift` returns 1 (was 2)
   - **Commit**: `refactor(ui): consolidate ConnectionBanner duplicate HStack UI`
   - _Requirements: FR-M5, AC-3.5_
   - _Design: ConnectionBanner Consolidation_
 
 - [x] 5.5 [VERIFY] Build checkpoint after medium fixes batch 1
   - **Do**: Build the project
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED
   - **Commit**: `chore(app): pass build checkpoint after medium fixes batch 1` (only if fixes needed)
 
@@ -315,7 +315,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     4. Verify SidebarView already creates these VMs and they can be shared
   - **Files**: `ILSApp/ILSApp/Views/Home/HomeView.swift`, potentially `ILSApp/ILSApp/Views/Root/SidebarRootView.swift`
   - **Done when**: HomeView receives VMs via injection, no duplicate `= SessionsViewModel()` or `= DashboardViewModel()` in HomeView
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'SessionsViewModel()' ILSApp/ILSApp/Views/Home/HomeView.swift` returns 0 && `grep -c 'DashboardViewModel()' ILSApp/ILSApp/Views/Home/HomeView.swift` returns 0
+  - **Verify**: `cd <project-root> && grep -c 'SessionsViewModel()' ILSApp/ILSApp/Views/Home/HomeView.swift` returns 0 && `grep -c 'DashboardViewModel()' ILSApp/ILSApp/Views/Home/HomeView.swift` returns 0
   - **Commit**: `refactor(home): share ViewModels with SidebarView via injection`
   - _Requirements: FR-M6, AC-3.6_
   - _Design: Phase 5 step 27_
@@ -332,7 +332,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
        - `@AppStorage("notif_quiet_hours") private var quietHoursEnabled = false`
   - **Files**: `ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift`, `ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift`
   - **Done when**: ServerSetupSheet uses AppState's client; notification toggles persist via @AppStorage
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'APIClient(baseURL:' ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift` returns 0 && `grep -c '@AppStorage' ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift` returns 4
+  - **Verify**: `cd <project-root> && grep -c 'APIClient(baseURL:' ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift` returns 0 && `grep -c '@AppStorage' ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift` returns 4
   - **Commit**: `fix(onboarding,settings): use shared APIClient, persist notification preferences`
   - _Requirements: FR-M7, FR-M8, AC-3.7, AC-3.8_
   - _Design: Phase 5 steps 28-29_
@@ -347,14 +347,14 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. Handle response using existing APIClient pattern
   - **Files**: `ILSApp/ILSApp/Views/System/FileBrowserView.swift`
   - **Done when**: Zero `URLSession.shared` in FileBrowserView; uses APIClient for all requests
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'URLSession.shared' ILSApp/ILSApp/Views/System/FileBrowserView.swift` returns 0
+  - **Verify**: `cd <project-root> && grep -c 'URLSession.shared' ILSApp/ILSApp/Views/System/FileBrowserView.swift` returns 0
   - **Commit**: `fix(system): use APIClient instead of raw URLSession in FileBrowserView`
   - _Requirements: FR-M10, AC-3.10_
   - _Design: Phase 5 step 30_
 
 - [x] 5.9 [VERIFY] Build checkpoint after medium fixes batch 2
   - **Do**: Build the project
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED
   - **Commit**: `chore(app): pass build checkpoint after medium fixes batch 2` (only if fixes needed)
 
@@ -372,7 +372,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     8. Delete `ILSApp/ILSApp/Models/MCPServerItem.swift`
   - **Files**: `ILSApp/ILSApp/ViewModels/MCPViewModel.swift`, `ILSApp/ILSApp/Views/Browser/MCPServerDetailView.swift`, `ILSApp/ILSApp/Views/Browser/BrowserView.swift`, `ILSApp/ILSApp/Models/MCPServerItem.swift` (delete)
   - **Done when**: MCPServerItem.swift deleted; all views use MCPServer from ILSShared; build succeeds
-  - **Verify**: `test ! -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Models/MCPServerItem.swift && echo "DELETED"` && `cd /Users/nick/Desktop/ils-ios && grep -rn 'MCPServerItem' ILSApp/ILSApp/ | wc -l` returns 0
+  - **Verify**: `test ! -f <project-root>/ILSApp/ILSApp/Models/MCPServerItem.swift && echo "DELETED"` && `cd <project-root> && grep -rn 'MCPServerItem' ILSApp/ILSApp/ | wc -l` returns 0
   - **Commit**: `refactor(models): unify MCPServerItem to MCPServer from ILSShared`
   - _Requirements: FR-DM1, AC-4.1_
   - _Design: MCPServerItem -> MCPServer migration_
@@ -386,7 +386,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     5. Delete `ILSApp/ILSApp/Models/PluginModels.swift`
   - **Files**: `ILSApp/ILSApp/ViewModels/PluginsViewModel.swift`, `ILSApp/ILSApp/Views/Browser/BrowserView.swift`, `ILSApp/ILSApp/Models/PluginModels.swift` (delete)
   - **Done when**: PluginModels.swift deleted; all views use Plugin from ILSShared; build succeeds
-  - **Verify**: `test ! -f /Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Models/PluginModels.swift && echo "DELETED"` && `cd /Users/nick/Desktop/ils-ios && grep -rn 'PluginItem\|MarketplaceInfo\|MarketplacePlugin' ILSApp/ILSApp/ | wc -l` returns 0
+  - **Verify**: `test ! -f <project-root>/ILSApp/ILSApp/Models/PluginModels.swift && echo "DELETED"` && `cd <project-root> && grep -rn 'PluginItem\|MarketplaceInfo\|MarketplacePlugin' ILSApp/ILSApp/ | wc -l` returns 0
   - **Commit**: `refactor(models): unify PluginItem to Plugin from ILSShared`
   - _Requirements: FR-DM2, AC-4.2_
   - _Design: PluginItem -> Plugin migration_
@@ -401,14 +401,14 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. ILSShared is already imported at top of file
   - **Files**: `ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift`
   - **Done when**: Private DTO structs deleted; ILSShared types used; build succeeds
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'private struct Tunnel\|EmptyTunnelRequest' ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift` returns 0
+  - **Verify**: `cd <project-root> && grep -c 'private struct Tunnel\|EmptyTunnelRequest' ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift` returns 0
   - **Commit**: `refactor(tunnel): replace private DTOs with ILSShared types`
   - _Requirements: FR-DM4, FR-M9, AC-3.9, AC-4.4_
   - _Design: TunnelSettingsView DTOs migration_
 
 - [ ] 6.4 [VERIFY] Build checkpoint after model unification
   - **Do**: Build the project
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED
   - **Commit**: `chore(app): pass build checkpoint after model unification` (only if fixes needed)
 
@@ -422,7 +422,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     4. Line 24: change `let textOnAccent = Color.white` to `let textOnAccent = Color(hex: "050510")` (dark bgPrimary for contrast against green #00FF88 accent)
   - **Files**: `ILSApp/ILSApp/Theme/Themes/GhostProtocolTheme.swift`, `ILSApp/ILSApp/Theme/Themes/ElectricGridTheme.swift`
   - **Done when**: Both themes use dark text on their light accent colors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep 'textOnAccent' ILSApp/ILSApp/Theme/Themes/GhostProtocolTheme.swift ILSApp/ILSApp/Theme/Themes/ElectricGridTheme.swift | grep -c 'Color.white'` returns 0
+  - **Verify**: `cd <project-root> && grep 'textOnAccent' ILSApp/ILSApp/Theme/Themes/GhostProtocolTheme.swift ILSApp/ILSApp/Theme/Themes/ElectricGridTheme.swift | grep -c 'Color.white'` returns 0
   - **Commit**: `fix(theme): use dark textOnAccent for Ghost Protocol and Electric Grid`
   - _Requirements: FR-L2, AC-5.1_
   - _Design: textOnAccent Contrast Fix_
@@ -435,7 +435,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     4. Change warning from `#EAB308` to `#FBBF24` (Tailwind amber-400, lighter amber distinct from accent #F59E0B)
   - **Files**: `ILSApp/ILSApp/Theme/Themes/CrimsonTheme.swift`, `ILSApp/ILSApp/Theme/Themes/EmberTheme.swift`
   - **Done when**: Crimson accent != error; Ember warning != accent (visually distinct)
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep 'accent.*=.*Color' ILSApp/ILSApp/Theme/Themes/CrimsonTheme.swift | grep -c 'DC2626'` returns 1 && `grep 'warning.*=.*Color' ILSApp/ILSApp/Theme/Themes/EmberTheme.swift | grep -c 'FBBF24'` returns 1
+  - **Verify**: `cd <project-root> && grep 'accent.*=.*Color' ILSApp/ILSApp/Theme/Themes/CrimsonTheme.swift | grep -c 'DC2626'` returns 1 && `grep 'warning.*=.*Color' ILSApp/ILSApp/Theme/Themes/EmberTheme.swift | grep -c 'FBBF24'` returns 1
   - **Commit**: `fix(theme): differentiate Crimson accent from error, Ember warning from accent`
   - _Requirements: FR-L3, FR-L4, AC-5.2, AC-5.3_
   - _Design: Crimson/Ember color fixes_
@@ -450,7 +450,7 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     6. The sparkline data is synthetic from `generateSparkline(count:seed:)`. Add a comment documenting this is synthetic or add a "Sample Data" label in the StatCard that shows sparklines
   - **Files**: `ILSApp/ILSApp/Views/Chat/ChatView.swift`, `ILSApp/ILSApp/ViewModels/ChatViewModel.swift`, `ILSApp/ILSApp/ViewModels/DashboardViewModel.swift`
   - **Done when**: onSubmit reviewed and fixed; token count shows "~"; sparkline labeled or documented
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'Sample\|approximate\|~.*token' ILSApp/ILSApp/ViewModels/ChatViewModel.swift ILSApp/ILSApp/ViewModels/DashboardViewModel.swift | grep -v ':0$' | wc -l` returns at least 1
+  - **Verify**: `cd <project-root> && grep -c 'Sample\|approximate\|~.*token' ILSApp/ILSApp/ViewModels/ChatViewModel.swift ILSApp/ILSApp/ViewModels/DashboardViewModel.swift | grep -v ':0$' | wc -l` returns at least 1
   - **Commit**: `fix(chat,dashboard): fix onSubmit, label token count approximate, document sparklines`
   - _Requirements: FR-L5, FR-L6, FR-L1, AC-5.4, AC-5.5, AC-5.7_
   - _Design: Phase 7 steps 41-44_
@@ -463,14 +463,14 @@ Focus: Fix the 3 critical bugs and verify the app still builds and runs.
     4. This is documentation-only, not a code fix
   - **Files**: `ILSApp/ILSApp/Theme/Components/ILSCodeHighlighter.swift`
   - **Done when**: Doc comment clearly explains the design decision
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -c 'CodeBlockView\|intentional\|Fenced' ILSApp/ILSApp/Theme/Components/ILSCodeHighlighter.swift` returns at least 1
+  - **Verify**: `cd <project-root> && grep -c 'CodeBlockView\|intentional\|Fenced' ILSApp/ILSApp/Theme/Components/ILSCodeHighlighter.swift` returns at least 1
   - **Commit**: `docs(theme): document ILSCodeHighlighter as intentional passthrough to CodeBlockView`
   - _Requirements: FR-L7, AC-5.6_
   - _Design: Phase 7 step 43_
 
 - [ ] 7.5 [VERIFY] Build checkpoint after low polish
   - **Do**: Build the project
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -5`
   - **Done when**: BUILD SUCCEEDED
   - **Commit**: `chore(app): pass build checkpoint after low polish` (only if fixes needed)
 
@@ -481,7 +481,7 @@ Prerequisites for ALL chat scenarios:
 # Boot simulator
 xcrun simctl boot 50523130-57AA-48B0-ABD0-4D59CE455F14 2>/dev/null; echo "Booted"
 # Start backend
-cd /Users/nick/Desktop/ils-ios && PORT=9090 swift run ILSBackend &
+cd <project-root> && PORT=9090 swift run ILSBackend &
 # Wait for backend
 sleep 15 && curl -s http://localhost:9090/api/v1/health | head -1
 # Build + install + launch
@@ -498,11 +498,11 @@ sleep 3
     3. Type "What is 2+2?" in input bar (use `xcrun simctl io ... type-text` or `idb ui type` if available)
     4. Tap Send button
     5. Wait 15-30 seconds for Claude response
-    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs1-chat-response.png`
+    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs1-chat-response.png`
     7. Verify screenshot shows response containing "4"
   - **Files**: Evidence only
   - **Done when**: Screenshot shows completed response with "4" visible; input bar cleared
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs1-chat-response.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs1-chat-response.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS1 basic send-receive-render evidence captured`
   - _Requirements: FR-CS1, AC-6.1 through AC-6.7_
   - _Design: Chat Scenario 1_
@@ -514,13 +514,13 @@ sleep 3
     3. Wait 3-5 seconds for streaming to start (streaming indicator visible)
     4. Tap the Stop/Cancel button
     5. Wait 2 seconds for cancellation
-    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs2-partial.png`
+    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs2-partial.png`
     7. Type follow-up: "Never mind, just say hello"
     8. Tap Send, wait for response
-    9. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs2-followup.png`
+    9. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs2-followup.png`
   - **Files**: Evidence only
   - **Done when**: Screenshots show partial response + successful follow-up
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs2-partial.png && test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs2-followup.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs2-partial.png && test -f <project-root>/specs/polish-again/evidence/cs2-followup.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS2 streaming cancellation evidence captured`
   - _Requirements: FR-CS2, AC-7.1 through AC-7.7_
   - _Design: Chat Scenario 2_
@@ -530,11 +530,11 @@ sleep 3
     1. In a session, type: "Read the file Package.swift and tell me what dependencies are used"
     2. Tap Send, wait 30-60 seconds for response with tool calls
     3. Verify ToolCallAccordion renders (expand if needed)
-    4. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs3-tool-accordion.png`
+    4. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs3-tool-accordion.png`
     5. Verify screenshot shows accordion header, tool icon, file_path input, output content
   - **Files**: Evidence only
   - **Done when**: Screenshot shows expanded tool call accordion with inputs and output
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs3-tool-accordion.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs3-tool-accordion.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS3 tool call rendering evidence captured`
   - _Requirements: FR-CS3, AC-8.1 through AC-8.7_
   - _Design: Chat Scenario 3_
@@ -544,22 +544,22 @@ sleep 3
     1. With app open and connected to backend
     2. Kill backend: `pkill -f 'ILSBackend' || kill $(lsof -ti:9090) 2>/dev/null`
     3. Wait 10 seconds for ConnectionBanner to appear
-    4. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs4-disconnected.png`
-    5. Restart backend: `cd /Users/nick/Desktop/ils-ios && PORT=9090 swift run ILSBackend &`
+    4. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs4-disconnected.png`
+    5. Restart backend: `cd <project-root> && PORT=9090 swift run ILSBackend &`
     6. Wait 15 seconds for health check to reconnect
-    7. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs4-recovered.png`
+    7. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs4-recovered.png`
     8. Send message "Are you still there?" and wait for response
-    9. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs4-post-recovery.png`
+    9. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs4-post-recovery.png`
   - **Files**: Evidence only
   - **Done when**: Screenshots show disconnected banner, recovery, and successful post-recovery message
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs4-disconnected.png && test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs4-recovered.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs4-disconnected.png && test -f <project-root>/specs/polish-again/evidence/cs4-recovered.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS4 error recovery after backend restart evidence captured`
   - _Requirements: FR-CS4, AC-9.1 through AC-9.8_
   - _Design: Chat Scenario 4_
 
 - [ ] 8.5 [VERIFY] Chat scenarios 1-4 evidence checkpoint
   - **Do**: Verify all 6 evidence screenshots exist and are non-empty
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios/specs/polish-again/evidence && ls -la cs1-*.png cs2-*.png cs3-*.png cs4-*.png 2>&1 | grep -c '.png'` returns at least 6
+  - **Verify**: `cd <project-root>/specs/polish-again/evidence && ls -la cs1-*.png cs2-*.png cs3-*.png cs4-*.png 2>&1 | grep -c '.png'` returns at least 6
   - **Done when**: All P0 chat scenario evidence files present
   - **Commit**: none
 
@@ -570,13 +570,13 @@ sleep 3
     1. Open a session with 3+ messages
     2. Tap toolbar menu (3 dots) to open menu
     3. Tap "Fork Session"
-    4. Capture screenshot of fork alert: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs5-fork-alert.png`
+    4. Capture screenshot of fork alert: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs5-fork-alert.png`
     5. Tap "Open Fork" in the alert
     6. Wait for navigation to forked session
-    7. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs5-forked.png`
+    7. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs5-forked.png`
   - **Files**: Evidence only
   - **Done when**: Screenshots show fork alert and forked session
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs5-fork-alert.png && test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs5-forked.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs5-fork-alert.png && test -f <project-root>/specs/polish-again/evidence/cs5-forked.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS5 session fork and navigate evidence captured`
   - _Requirements: FR-CS5, AC-10.1 through AC-10.7_
 
@@ -587,28 +587,28 @@ sleep 3
     3. Immediately type "Message 2" and tap Send (before first response completes)
     4. Observe behavior: does input bar disable during streaming? Does second send get blocked?
     5. Wait for all responses to complete
-    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs6-rapid.png`
+    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs6-rapid.png`
     7. Document observed behavior in commit message
   - **Files**: Evidence only
   - **Done when**: Screenshot shows message sequence; behavior documented
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs6-rapid.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs6-rapid.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS6 rapid-fire message sending evidence captured`
   - _Requirements: FR-CS6, AC-11.1 through AC-11.6_
 
 - [ ] 9.3 CS7: Theme Switching During Active Chat
   - **Do**:
     1. Open a chat with messages visible (Obsidian theme, the default)
-    2. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs7-obsidian.png`
+    2. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs7-obsidian.png`
     3. Navigate to Settings > Theme > select Slate
     4. Return to chat
-    5. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs7-slate.png`
+    5. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs7-slate.png`
     6. Navigate to Settings > Theme > select Paper (light theme)
     7. Return to chat
-    8. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs7-paper.png`
+    8. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs7-paper.png`
     9. Verify code blocks are readable on Paper (light theme fix from task 2.4)
   - **Files**: Evidence only
   - **Done when**: 3 screenshots showing same chat in Obsidian, Slate, Paper themes
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs7-obsidian.png && test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs7-paper.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs7-obsidian.png && test -f <project-root>/specs/polish-again/evidence/cs7-paper.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS7 theme switching during active chat evidence captured`
   - _Requirements: FR-CS7, AC-12.1 through AC-12.7_
 
@@ -617,12 +617,12 @@ sleep 3
     1. In a session, type: "Think step by step about how to implement a binary search tree in Swift, then show me the code"
     2. Tap Send, wait 60+ seconds for full response with thinking + code
     3. Scroll to ThinkingSection if visible, expand it
-    4. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs8-thinking.png`
+    4. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs8-thinking.png`
     5. Scroll to code blocks
-    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs8-code.png`
+    6. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs8-code.png`
   - **Files**: Evidence only
   - **Done when**: Screenshots show thinking section and syntax-highlighted code block
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs8-thinking.png && test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs8-code.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs8-thinking.png && test -f <project-root>/specs/polish-again/evidence/cs8-code.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS8 long message with code and thinking evidence captured`
   - _Requirements: FR-CS8, AC-13.1 through AC-13.7_
 
@@ -632,10 +632,10 @@ sleep 3
     2. If external sessions exist: open sidebar, find one, tap to open
     3. Verify read-only indicator and disabled input
     4. If NO external sessions exist: document this in commit message as "no external sessions in backend data; CS9 requires external session test data"
-    5. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs9-external.png`
+    5. Capture screenshot: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs9-external.png`
   - **Files**: Evidence only
   - **Done when**: Screenshot captured or documented that no external sessions exist
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs9-external.png && echo "CAPTURED" || echo "NO_EXTERNAL_SESSIONS"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs9-external.png && echo "CAPTURED" || echo "NO_EXTERNAL_SESSIONS"`
   - **Commit**: `test(chat): CS9 external session read-only browsing evidence captured`
   - _Requirements: FR-CS9, AC-14.1 through AC-14.5_
 
@@ -644,20 +644,20 @@ sleep 3
     1. Open a session in ChatView
     2. Tap toolbar menu > Rename
     3. Enter "Test Renamed Session", confirm
-    4. Capture screenshot of renamed session in sidebar: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs10-renamed.png`
+    4. Capture screenshot of renamed session in sidebar: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs10-renamed.png`
     5. Tap menu > Session Info
-    6. Capture screenshot of info sheet: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs10-info.png`
+    6. Capture screenshot of info sheet: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs10-info.png`
     7. Dismiss info, tap menu > Export
-    8. Capture screenshot of share sheet: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs10-export.png`
+    8. Capture screenshot of share sheet: `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <project-root>/specs/polish-again/evidence/cs10-export.png`
   - **Files**: Evidence only
   - **Done when**: 3 screenshots showing rename, info sheet, export sheet
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs10-renamed.png && test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/cs10-info.png && echo "CAPTURED"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/cs10-renamed.png && test -f <project-root>/specs/polish-again/evidence/cs10-info.png && echo "CAPTURED"`
   - **Commit**: `test(chat): CS10 session rename, export, info sheet evidence captured`
   - _Requirements: FR-CS10, AC-15.1 through AC-15.6_
 
 - [ ] 9.7 [VERIFY] Chat scenarios 5-10 evidence checkpoint
   - **Do**: Verify all P1 chat scenario evidence screenshots exist
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios/specs/polish-again/evidence && ls -la cs5-*.png cs6-*.png cs7-*.png cs8-*.png cs10-*.png 2>&1 | grep -c '.png'` returns at least 10
+  - **Verify**: `cd <project-root>/specs/polish-again/evidence && ls -la cs5-*.png cs6-*.png cs7-*.png cs8-*.png cs10-*.png 2>&1 | grep -c '.png'` returns at least 10
   - **Done when**: All P1 chat scenario evidence files present
   - **Commit**: none
 
@@ -667,8 +667,8 @@ sleep 3
   - **Do**:
     1. Build with full output to check for warnings: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E 'warning:|error:|BUILD' | tail -20`
     2. Fix any warnings found
-    3. Capture clean build log: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tee /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/build-log.txt | tail -5`
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -3 | grep -c 'BUILD SUCCEEDED'` returns 1
+    3. Capture clean build log: `xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tee <project-root>/specs/polish-again/evidence/build-log.txt | tail -5`
+  - **Verify**: `cd <project-root> && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build 2>&1 | tail -3 | grep -c 'BUILD SUCCEEDED'` returns 1
   - **Done when**: BUILD SUCCEEDED with zero warnings, zero errors
   - **Commit**: `fix(build): resolve all compiler warnings for clean build` (if fixes needed)
   - _Requirements: NFR-1, AC-2.9, AC-16.6_
@@ -685,7 +685,7 @@ sleep 3
     8. Fix any violations found
   - **Files**: Various (fix any violations)
   - **Done when**: All 7 grep audits return 0 matches
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && grep -rn 'isServerConnected\|MCPServerItem\|PluginItem\|APIErrorResponse\|BaseListViewModel\|wired in Phase\|Timer.scheduledTimer' ILSApp/ILSApp/ | grep -v '\.build/' | wc -l` returns 0
+  - **Verify**: `cd <project-root> && grep -rn 'isServerConnected\|MCPServerItem\|PluginItem\|APIErrorResponse\|BaseListViewModel\|wired in Phase\|Timer.scheduledTimer' ILSApp/ILSApp/ | grep -v '\.build/' | wc -l` returns 0
   - **Commit**: `chore(app): pass grep audit for dead code, duplicates, and violations` (if fixes needed)
   - _Requirements: NFR-4, NFR-5, NFR-6_
 
@@ -696,7 +696,7 @@ sleep 3
     3. If any exceed 500, they may need further splitting (but SettingsView was already split)
   - **Files**: Various
   - **Done when**: No Swift file in ILSApp/ exceeds 500 lines
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && find ILSApp/ILSApp -name '*.swift' -exec wc -l {} + | awk '$1 > 500 {print "FAIL: " $0}' | wc -l` returns 0
+  - **Verify**: `cd <project-root> && find ILSApp/ILSApp -name '*.swift' -exec wc -l {} + | awk '$1 > 500 {print "FAIL: " $0}' | wc -l` returns 0
   - **Commit**: `refactor(app): reduce oversized files` (if any found)
   - _Requirements: NFR-2_
 
@@ -727,7 +727,7 @@ sleep 3
     3. Include spec name, date, simulator UDID at top
   - **Files**: `specs/polish-again/evidence/INDEX.md` (create)
   - **Done when**: INDEX.md lists all evidence files with descriptions
-  - **Verify**: `test -f /Users/nick/Desktop/ils-ios/specs/polish-again/evidence/INDEX.md && echo "EXISTS"`
+  - **Verify**: `test -f <project-root>/specs/polish-again/evidence/INDEX.md && echo "EXISTS"`
   - **Commit**: `docs(polish): create evidence index for all screenshots and build logs`
   - _Requirements: AC-16.7_
 
@@ -758,7 +758,7 @@ sleep 3
        - AC-4.1: MCPServerItem.swift deleted
        - AC-4.2: PluginModels.swift deleted
        - AC-16.5: evidence/ directory has 15+ screenshots
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && test ! -f ILSApp/ILSApp/Models/MCPServerItem.swift && test ! -f ILSApp/ILSApp/Models/PluginModels.swift && test ! -f ILSApp/ILSApp/ViewModels/BaseListViewModel.swift && test -f ILSApp/ILSApp/Services/ConnectionManager.swift && test -f ILSApp/ILSApp/Services/PollingManager.swift && test -f ILSApp/ILSApp/ViewModels/ConfigEditorViewModel.swift && test -f ILSApp/ILSApp/ViewModels/SettingsViewModel.swift && test -f ILSApp/ILSApp/Views/Settings/ConfigEditorView.swift && echo "ALL AC PASS"`
+  - **Verify**: `cd <project-root> && test ! -f ILSApp/ILSApp/Models/MCPServerItem.swift && test ! -f ILSApp/ILSApp/Models/PluginModels.swift && test ! -f ILSApp/ILSApp/ViewModels/BaseListViewModel.swift && test -f ILSApp/ILSApp/Services/ConnectionManager.swift && test -f ILSApp/ILSApp/Services/PollingManager.swift && test -f ILSApp/ILSApp/ViewModels/ConfigEditorViewModel.swift && test -f ILSApp/ILSApp/ViewModels/SettingsViewModel.swift && test -f ILSApp/ILSApp/Views/Settings/ConfigEditorView.swift && echo "ALL AC PASS"`
   - **Done when**: All acceptance criteria confirmed met
   - **Commit**: none
 

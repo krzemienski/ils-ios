@@ -297,20 +297,20 @@ The ILS iOS app has a functional chat interface with custom markdown parsing, ba
 - [SwiftUI Markdown — SwiftLee](https://www.avanderlee.com/swiftui/markdown-text/)
 
 ### Internal Files
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/MessageView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/Components/CodeBlockView.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/Components/ToolCallAccordion.swift`
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/Components/ThinkingSection.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/SessionsController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/StreamingService.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/ClaudeExecutorService.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/StreamMessage.swift`
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/Message.swift`
-- `/Users/nick/Desktop/ils-ios/specs/remaining-audit-fixes/research.md`
-- `/Users/nick/Desktop/ils-ios/specs/remaining-audit-fixes/requirements.md`
+- `<project-root>/ILSApp/ILSApp/Views/Chat/ChatView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Chat/MessageView.swift`
+- `<project-root>/ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift`
+- `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
+- `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift`
+- `<project-root>/ILSApp/ILSApp/Services/APIClient.swift`
+- `<project-root>/ILSApp/ILSApp/Theme/Components/CodeBlockView.swift`
+- `<project-root>/ILSApp/ILSApp/Theme/Components/ToolCallAccordion.swift`
+- `<project-root>/ILSApp/ILSApp/Theme/Components/ThinkingSection.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/SessionsController.swift`
+- `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift`
+- `<project-root>/Sources/ILSBackend/Services/StreamingService.swift`
+- `<project-root>/Sources/ILSBackend/Services/ClaudeExecutorService.swift`
+- `<project-root>/Sources/ILSShared/Models/StreamMessage.swift`
+- `<project-root>/Sources/ILSShared/Models/Message.swift`
+- `<project-root>/specs/remaining-audit-fixes/research.md`
+- `<project-root>/specs/remaining-audit-fixes/requirements.md`

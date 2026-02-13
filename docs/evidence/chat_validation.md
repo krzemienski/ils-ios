@@ -20,7 +20,7 @@ All components follow proper architectural patterns with clear separation of con
 
 ## 1. Backend: ChatController
 
-**File:** `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift`
+**File:** `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift`
 
 ### ✅ Endpoints Implemented
 
@@ -64,7 +64,7 @@ func stream(req: Request) async throws -> Response {
 
 ## 2. Backend: StreamingService
 
-**File:** `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/StreamingService.swift`
+**File:** `<project-root>/Sources/ILSBackend/Services/StreamingService.swift`
 
 ### ✅ SSE Response Creation
 
@@ -100,7 +100,7 @@ data: <json>
 
 ## 3. Backend: ClaudeExecutorService
 
-**File:** `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/ClaudeExecutorService.swift`
+**File:** `<project-root>/Sources/ILSBackend/Services/ClaudeExecutorService.swift`
 
 ### ✅ Claude CLI Execution
 
@@ -157,7 +157,7 @@ Properly terminates process and cleans up state.
 
 ## 4. iOS: SSEClient
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift`
 
 ### ✅ Client Implementation
 
@@ -214,7 +214,7 @@ for try await line in asyncBytes.lines {
 
 ## 5. iOS: ChatViewModel
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
+**File:** `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
 
 ### ✅ State Management
 
@@ -295,7 +295,7 @@ sseClient.$messages.sink { [weak self] in
 
 ```bash
 # 1. Start backend
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift run ILSBackend
 
 # 2. Test SSE endpoint
@@ -358,11 +358,11 @@ The chat/SSE streaming implementation is architecturally sound and production-re
 **Summary:** Chat/SSE streaming is fully implemented across all layers. Backend properly executes Claude CLI with stream-json format, StreamingService formats SSE events correctly, SSEClient parses streams on iOS, and ChatViewModel manages message state. Architecture is clean with proper separation of concerns. Minor issues exist (type duplication, permission stub, missing error type) but do not block functionality.
 
 **Files Validated:**
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift` ✅
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/StreamingService.swift` ✅
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/ClaudeExecutorService.swift` ✅
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift` ✅
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift` ✅
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/StreamMessage.swift` ✅
+- `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift` ✅
+- `<project-root>/Sources/ILSBackend/Services/StreamingService.swift` ✅
+- `<project-root>/Sources/ILSBackend/Services/ClaudeExecutorService.swift` ✅
+- `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift` ✅
+- `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift` ✅
+- `<project-root>/Sources/ILSShared/Models/StreamMessage.swift` ✅
 
 **Next Steps:** Proceed to Phase 5 validation (UI implementation).

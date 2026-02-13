@@ -443,7 +443,7 @@ All views use `@Environment(\.theme)` correctly. No remaining hardcoded `ILSThem
 | Install | `xcrun simctl install 50523130-57AA-48B0-ABD0-4D59CE455F14 <path-to-app>` | simctl |
 | Launch | `xcrun simctl launch 50523130-57AA-48B0-ABD0-4D59CE455F14 com.ils.app` | simctl |
 | Screenshot | `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot <path>.png` | simctl |
-| Backend | `cd /Users/nick/Desktop/ils-ios && PORT=9090 swift run ILSBackend` | docs/RUNNING_BACKEND.md |
+| Backend | `cd <project-root> && PORT=9090 swift run ILSBackend` | docs/RUNNING_BACKEND.md |
 | Lint | Not found | N/A |
 | TypeCheck | Not found (Swift compiler handles this during build) | N/A |
 | Unit Test | Not found (project has no test targets configured) | N/A |

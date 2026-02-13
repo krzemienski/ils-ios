@@ -3,13 +3,13 @@
 ## Location
 
 ```
-/Users/nick/Desktop/ils-ios/ILSFullStack.xcworkspace
+<project-root>/ILSFullStack.xcworkspace
 ```
 
 ## Opening the Workspace
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 open ILSFullStack.xcworkspace
 ```
 
@@ -46,7 +46,7 @@ xcodebuild -workspace ILSFullStack.xcworkspace \
 
 ### Build Backend
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift build --product ILSBackend
 ```
 

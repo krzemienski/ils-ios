@@ -132,20 +132,20 @@ The Custom Themes Creator feature has been fully implemented across all services
 
 1. **Start Backend Server:**
    ```bash
-   cd /Users/nick/Desktop/ils-ios
+   cd <project-root>
    swift run ILSBackend serve --hostname 0.0.0.0 --port 8080
    ```
 
 2. **Verify Backend API:**
    ```bash
-   cd /Users/nick/Desktop/ils-ios/.auto-claude/worktrees/tasks/002-custom-themes-creator
+   cd <project-root>/.auto-claude/worktrees/tasks/002-custom-themes-creator
    ./.auto-claude/specs/002-custom-themes-creator/verify-api.sh
    ```
    Expected: All API tests pass (GET, POST, PUT, DELETE)
 
 3. **Launch iOS App:**
    ```bash
-   cd /Users/nick/Desktop/ils-ios
+   cd <project-root>
    open ILSApp/ILSApp.xcodeproj
    # Build and run on simulator
    ```

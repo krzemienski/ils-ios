@@ -186,7 +186,7 @@ Each scenario is a **complete functional test** that flows through real user int
 
 ### Simplest Way
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/run_regression_tests.sh
 ```
 
@@ -298,7 +298,7 @@ Metrics and analytics validation
 ## 📝 File Structure
 
 ```
-/Users/nick/Desktop/ils-ios/
+<project-root>/
 ├── ILSFullStack.xcworkspace          ← Open this!
 │
 ├── scripts/

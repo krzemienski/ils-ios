@@ -432,14 +432,14 @@ Add "Agent Teams" tab or sidebar entry in `ContentView.swift` (gated behind expe
 - [Paddo.dev "The Switch Got Flipped"](https://paddo.dev/blog/agent-teams-the-switch-got-flipped/) -- file locking and self-claiming details
 - [Superpowers Issue #429](https://github.com/obra/superpowers/issues/429) -- TeammateTool, SendMessage, TaskList tool schemas
 - `~/.claude/tasks/08434310-*/1.json` -- verified on-disk task format (session-scoped)
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/ClaudeExecutorService.swift` -- existing Process execution pattern
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/FileSystemService.swift` -- existing `~/.claude/` reading pattern
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift` -- SSE streaming pattern
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift` -- iOS SSE consumption pattern
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSHConnectionManager.swift` -- confirmed simulated testConnection (line 84-88)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/FleetManagementView.swift` -- confirmed hardcoded sampleFleet (line 4)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigProfilesView.swift` -- confirmed hardcoded defaults (line 4)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigOverridesView.swift` -- confirmed sampleData (line 4)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigHistoryView.swift` -- confirmed sampleHistory (line 4)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/CloudSyncView.swift` -- confirmed local-only state
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/AutomationScriptsView.swift` -- confirmed hardcoded samples
+- `<project-root>/Sources/ILSBackend/Services/ClaudeExecutorService.swift` -- existing Process execution pattern
+- `<project-root>/Sources/ILSBackend/Services/FileSystemService.swift` -- existing `~/.claude/` reading pattern
+- `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift` -- SSE streaming pattern
+- `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift` -- iOS SSE consumption pattern
+- `<project-root>/ILSApp/ILSApp/Services/SSHConnectionManager.swift` -- confirmed simulated testConnection (line 84-88)
+- `<project-root>/ILSApp/ILSApp/Views/Settings/FleetManagementView.swift` -- confirmed hardcoded sampleFleet (line 4)
+- `<project-root>/ILSApp/ILSApp/Views/Settings/ConfigProfilesView.swift` -- confirmed hardcoded defaults (line 4)
+- `<project-root>/ILSApp/ILSApp/Views/Settings/ConfigOverridesView.swift` -- confirmed sampleData (line 4)
+- `<project-root>/ILSApp/ILSApp/Views/Settings/ConfigHistoryView.swift` -- confirmed sampleHistory (line 4)
+- `<project-root>/ILSApp/ILSApp/Views/Settings/CloudSyncView.swift` -- confirmed local-only state
+- `<project-root>/ILSApp/ILSApp/Views/Settings/AutomationScriptsView.swift` -- confirmed hardcoded samples

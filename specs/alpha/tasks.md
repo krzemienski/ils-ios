@@ -12,7 +12,7 @@
 **AC:** AC-2.1
 
 ### Task 1.2: Create ILSBackend workspace scheme
-- [ ] Write `ILSBackend.xcscheme` with BlueprintIdentifier `ILSBackend`, ReferencedContainer `container:`, customWorkingDirectory `/Users/nick/Desktop/ils-ios`, PORT=9090 env var (XML from design.md section 1.3)
+- [ ] Write `ILSBackend.xcscheme` with BlueprintIdentifier `ILSBackend`, ReferencedContainer `container:`, customWorkingDirectory `<project-root>`, PORT=9090 env var (XML from design.md section 1.3)
 
 **Files:** `ILSFullStack.xcworkspace/xcshareddata/xcschemes/ILSBackend.xcscheme` (create)
 **Verify:** `grep -c "customWorkingDirectory" ILSFullStack.xcworkspace/xcshareddata/xcschemes/ILSBackend.xcscheme && grep -c 'PORT' ILSFullStack.xcworkspace/xcshareddata/xcschemes/ILSBackend.xcscheme`
@@ -436,7 +436,7 @@
 ## Notes
 
 ### POC shortcuts taken
-- Backend scheme uses absolute path `/Users/nick/Desktop/ils-ios` (machine-specific, acceptable for single-dev alpha)
+- Backend scheme uses absolute path `<project-root>` (machine-specific, acceptable for single-dev alpha)
 - CS2/CS3 may be limited by Claude CLI subprocess constraint in active CC session -- curl validates API independently
 - CS9 may document N/A if no external sessions exist
 - CS8 thinking section depends on model config -- may be N/A

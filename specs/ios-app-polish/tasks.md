@@ -76,7 +76,7 @@ created: 2026-02-06T18:40:00-05:00
 
 - [x] 1.4 [VERIFY] Build checkpoint after gap analysis
   - **Do**: Build backend + iOS, verify zero errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E "(error:|BUILD)" | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E "(error:|BUILD)" | tail -5`
   - **Done when**: Both builds pass
   - **Commit**: `chore: pass build checkpoint` (only if fixes needed)
 
@@ -249,7 +249,7 @@ Each task captures screenshots to `.omc/evidence/ios-app-polish/` using:
 
 - [x] 3.1 [VERIFY] Full build: backend + iOS
   - **Do**: Build both targets, verify zero errors
-  - **Verify**: `cd /Users/nick/Desktop/ils-ios && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E "(error:|BUILD)" | tail -5`
+  - **Verify**: `cd <project-root> && swift build 2>&1 | tail -3 && xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' build 2>&1 | grep -E "(error:|BUILD)" | tail -5`
   - **Done when**: Both builds succeed
 
 - [x] 3.2 [VERIFY] Evidence completeness check

@@ -13,7 +13,7 @@
 
 ```bash
 # Terminal 1: Start backend
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 PORT=9999 swift run ILSBackend
 ```
 
@@ -36,7 +36,7 @@ Expected: `{"status":"ok","version":"1.0.0"}`
 # Press Cmd+R to run ILSMacApp scheme
 
 # Option B: From terminal
-cd /Users/nick/Desktop/ils-ios/ILSApp
+cd <project-root>/ILSApp
 xcodebuild -project ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' build
 open ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug/ILSMacApp.app
 ```

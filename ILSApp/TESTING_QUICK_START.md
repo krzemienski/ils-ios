@@ -4,7 +4,7 @@
 
 ### Option 1: Quick Smoke Tests (Recommended for Development)
 ```bash
-cd /Users/nick/Desktop/ils-ios/ILSApp
+cd <project-root>/ILSApp
 ./scripts/run-ui-tests.sh --quick
 ```
 **Runs**: 5 essential tests in ~2-3 minutes

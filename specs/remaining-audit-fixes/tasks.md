@@ -257,7 +257,7 @@ Per FUNCTIONAL VALIDATION MANDATE: no mocks, no test files — real app, real si
 
 - [x] 3.2 Capture evidence screenshots (6 key screens)
   - **Do**:
-    1. Start backend: `cd /Users/nick/Desktop/ils-ios && PORT=9090 swift run ILSBackend &`
+    1. Start backend: `cd <project-root> && PORT=9090 swift run ILSBackend &`
     2. Wait for backend health: `curl -s http://localhost:9090/api/v1/health | head -1`
     3. Navigate to each screen and capture via `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot`:
        - `specs/remaining-audit-fixes/evidence/audit-fix-01-dashboard.png` — Dashboard

@@ -546,28 +546,28 @@ For the UI/UX redesign, consider:
 - [Apple Developer Forums - CPU usage](https://developer.apple.com/forums/thread/655349)
 
 ### Internal (key files read)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ILSAppApp.swift` -- App entry point + AppState
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ContentView.swift` -- Navigation container
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift` -- Chat UI
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift` -- Chat logic
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift` -- HTTP client
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift` -- SSE streaming
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/ILSTheme.swift` -- Design system
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift` -- Onboarding
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift` -- Settings
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Dashboard/DashboardView.swift` -- Dashboard
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/SessionsListView.swift` -- Sessions list
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/NewSessionView.swift` -- Session creation
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Projects/ProjectsListView.swift` -- Projects
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Skills/SkillsListView.swift` -- Skills
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/MCP/MCPServerListView.swift` -- MCP servers
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Plugins/PluginsListView.swift` -- Plugins
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sidebar/SidebarView.swift` -- Sidebar nav
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift` -- Chat API
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/ClaudeExecutorService.swift` -- Claude CLI wrapper
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services/SSHService.swift` -- SSH client
-- `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/App/routes.swift` -- Route registration
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/Session.swift` -- Session model
-- `/Users/nick/Desktop/ils-ios/Package.swift` -- Dependencies
-- `/Users/nick/Desktop/ils-ios/specs/ios-app-polish/.progress.md` -- Previous spec progress
-- `/Users/nick/Desktop/ils-ios/specs/ils-complete-rebuild/.progress.md` -- Rebuild spec progress
+- `<project-root>/ILSApp/ILSApp/ILSAppApp.swift` -- App entry point + AppState
+- `<project-root>/ILSApp/ILSApp/ContentView.swift` -- Navigation container
+- `<project-root>/ILSApp/ILSApp/Views/Chat/ChatView.swift` -- Chat UI
+- `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift` -- Chat logic
+- `<project-root>/ILSApp/ILSApp/Services/APIClient.swift` -- HTTP client
+- `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift` -- SSE streaming
+- `<project-root>/ILSApp/ILSApp/Theme/ILSTheme.swift` -- Design system
+- `<project-root>/ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift` -- Onboarding
+- `<project-root>/ILSApp/ILSApp/Views/Settings/SettingsView.swift` -- Settings
+- `<project-root>/ILSApp/ILSApp/Views/Dashboard/DashboardView.swift` -- Dashboard
+- `<project-root>/ILSApp/ILSApp/Views/Sessions/SessionsListView.swift` -- Sessions list
+- `<project-root>/ILSApp/ILSApp/Views/Sessions/NewSessionView.swift` -- Session creation
+- `<project-root>/ILSApp/ILSApp/Views/Projects/ProjectsListView.swift` -- Projects
+- `<project-root>/ILSApp/ILSApp/Views/Skills/SkillsListView.swift` -- Skills
+- `<project-root>/ILSApp/ILSApp/Views/MCP/MCPServerListView.swift` -- MCP servers
+- `<project-root>/ILSApp/ILSApp/Views/Plugins/PluginsListView.swift` -- Plugins
+- `<project-root>/ILSApp/ILSApp/Views/Sidebar/SidebarView.swift` -- Sidebar nav
+- `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift` -- Chat API
+- `<project-root>/Sources/ILSBackend/Services/ClaudeExecutorService.swift` -- Claude CLI wrapper
+- `<project-root>/Sources/ILSBackend/Services/SSHService.swift` -- SSH client
+- `<project-root>/Sources/ILSBackend/App/routes.swift` -- Route registration
+- `<project-root>/Sources/ILSShared/Models/Session.swift` -- Session model
+- `<project-root>/Package.swift` -- Dependencies
+- `<project-root>/specs/ios-app-polish/.progress.md` -- Previous spec progress
+- `<project-root>/specs/ils-complete-rebuild/.progress.md` -- Rebuild spec progress

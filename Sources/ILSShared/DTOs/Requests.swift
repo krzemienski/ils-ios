@@ -200,6 +200,15 @@ public struct ChatOptions: Codable, Sendable {
     }
 }
 
+/// Request to rename a session
+public struct RenameSessionRequest: Codable, Sendable {
+    public let name: String
+
+    public init(name: String) {
+        self.name = name
+    }
+}
+
 /// Permission decision from client
 public struct PermissionDecision: Codable, Sendable {
     public let decision: String // "allow" or "deny"

@@ -21,14 +21,26 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE_PATH" ]; then
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          else
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          fi
 
       - name: Start backend
         run: |
           swift build
           PORT=9999 swift run ILSBackend &
-          sleep 5
-          curl -sf http://localhost:9999/health || echo "Backend not ready"
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+              echo "Backend ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
 
       - name: Run UI tests
         run: |

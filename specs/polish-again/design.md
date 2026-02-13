@@ -499,7 +499,7 @@ This eliminates the duplicated 30-line HStack while keeping both the standalone 
 # Boot simulator
 xcrun simctl boot 50523130-57AA-48B0-ABD0-4D59CE455F14
 # Start backend
-cd /Users/nick/Desktop/ils-ios && PORT=9090 swift run ILSBackend &
+cd <project-root> && PORT=9090 swift run ILSBackend &
 # Build and install
 xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -sdk iphonesimulator \
   -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet build

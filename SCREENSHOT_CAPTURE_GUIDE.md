@@ -171,7 +171,7 @@ Assistant: [Edge case explanation]
 ### Run All Tests
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/run_regression_tests.sh
 ```
 

@@ -24,7 +24,7 @@
 
 ### Entry Point: `ILSAppApp.swift`
 
-**Location:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ILSAppApp.swift`
+**Location:** `<project-root>/ILSApp/ILSApp/ILSAppApp.swift`
 
 **Purpose:** App entry point, global state management, URL scheme handling
 
@@ -52,7 +52,7 @@
 
 ### Root Navigation: `ContentView.swift`
 
-**Location:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ContentView.swift`
+**Location:** `<project-root>/ILSApp/ILSApp/ContentView.swift`
 
 **Purpose:** Tab-based navigation container
 
@@ -121,7 +121,7 @@ First-Run Only:
 
 #### **DashboardView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Dashboard/DashboardView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Dashboard/DashboardView.swift`
 **ViewModel:** `DashboardViewModel.swift`
 
 **Purpose:** Overview of system stats, recent activity, quick actions
@@ -189,7 +189,7 @@ First-Run Only:
 
 #### **SessionsListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/SessionsListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Sessions/SessionsListView.swift`
 **ViewModel:** `SessionsViewModel.swift`
 
 **Purpose:** List all chat sessions (ILS database + external Claude Code sessions)
@@ -251,7 +251,7 @@ First-Run Only:
 
 #### **NewSessionView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/NewSessionView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Sessions/NewSessionView.swift`
 
 **Purpose:** Create new chat session with advanced configuration
 
@@ -301,7 +301,7 @@ First-Run Only:
 
 #### **ChatView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Chat/ChatView.swift`
 **ViewModel:** `ChatViewModel.swift`
 
 **Purpose:** Real-time chat interface with Claude, SSE streaming, message history
@@ -387,7 +387,7 @@ First-Run Only:
 
 #### **SessionInfoView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/SessionInfoView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Sessions/SessionInfoView.swift`
 
 **Purpose:** Display session metadata and export functionality
 
@@ -435,7 +435,7 @@ First-Run Only:
 
 #### **CommandPaletteView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/CommandPaletteView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Chat/CommandPaletteView.swift`
 
 **Purpose:** Quick access to common Claude commands
 
@@ -457,7 +457,7 @@ First-Run Only:
 
 #### **SessionTemplatesView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Sessions/SessionTemplatesView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Sessions/SessionTemplatesView.swift`
 
 **Purpose:** Select predefined session configurations
 
@@ -480,7 +480,7 @@ First-Run Only:
 
 #### **ProjectsListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Projects/ProjectsListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Projects/ProjectsListView.swift`
 **ViewModel:** `ProjectsViewModel.swift`
 
 **Purpose:** List all Claude Code projects discovered from filesystem
@@ -525,7 +525,7 @@ First-Run Only:
 
 #### **ProjectDetailView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Projects/ProjectDetailView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Projects/ProjectDetailView.swift`
 
 **Purpose:** View/edit project details, access project sessions
 
@@ -569,7 +569,7 @@ First-Run Only:
 
 #### **ProjectSessionsListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Projects/ProjectSessionsListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Projects/ProjectSessionsListView.swift`
 
 **Purpose:** List all sessions for a specific project
 
@@ -595,7 +595,7 @@ First-Run Only:
 
 #### **SystemMonitorView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/System/SystemMonitorView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/System/SystemMonitorView.swift`
 **ViewModel:** `SystemMetricsViewModel.swift`
 
 **Purpose:** Real-time system performance monitoring via WebSocket
@@ -648,7 +648,7 @@ First-Run Only:
 
 #### **ProcessListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/System/ProcessListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/System/ProcessListView.swift`
 
 **Purpose:** List running system processes
 
@@ -672,7 +672,7 @@ First-Run Only:
 
 #### **FileBrowserView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/System/FileBrowserView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/System/FileBrowserView.swift`
 
 **Purpose:** Browse filesystem directories and files
 
@@ -700,7 +700,7 @@ First-Run Only:
 
 #### **SettingsView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Settings/SettingsView.swift`
 **ViewModel:** `SettingsViewModel.swift`
 
 **Purpose:** App configuration, backend connection, Claude Code settings
@@ -790,7 +790,7 @@ First-Run Only:
 
 #### **SkillsListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Skills/SkillsListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Skills/SkillsListView.swift`
 **ViewModel:** `SkillsViewModel.swift`
 
 **Purpose:** Manage Claude Code skills (from ~/.claude/skills/)
@@ -856,7 +856,7 @@ First-Run Only:
 
 #### **MCPServerListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/MCP/MCPServerListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/MCP/MCPServerListView.swift`
 **ViewModel:** `MCPViewModel.swift`
 
 **Purpose:** Manage MCP (Model Context Protocol) servers
@@ -932,7 +932,7 @@ First-Run Only:
 
 #### **PluginsListView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Plugins/PluginsListView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Plugins/PluginsListView.swift`
 **ViewModel:** `PluginsViewModel.swift`
 
 **Purpose:** Manage Claude Code plugins
@@ -994,7 +994,7 @@ First-Run Only:
 
 #### **TunnelSettingsView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift`
 
 **Purpose:** Configure Cloudflare Tunnel for remote access
 
@@ -1023,7 +1023,7 @@ First-Run Only:
 
 #### **LogViewerView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/LogViewerView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Settings/LogViewerView.swift`
 
 **Purpose:** View application logs for debugging
 
@@ -1050,7 +1050,7 @@ First-Run Only:
 
 #### **NotificationPreferencesView**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift`
 
 **Purpose:** Configure notification preferences
 
@@ -1073,7 +1073,7 @@ First-Run Only:
 
 #### **ConfigEditorView** (sub-view of SettingsView)
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift` (embedded)
+**File:** `<project-root>/ILSApp/ILSApp/Views/Settings/SettingsView.swift` (embedded)
 **ViewModel:** `ConfigEditorViewModel.swift`
 
 **Purpose:** Raw JSON editor for Claude Code configuration
@@ -1113,7 +1113,7 @@ First-Run Only:
 
 #### **ServerSetupSheet**
 
-**File:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift`
+**File:** `<project-root>/ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift`
 
 **Purpose:** First-run backend connection setup
 
@@ -1177,7 +1177,7 @@ First-Run Only:
 
 ### Theme Components
 
-**Location:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/Components/`
+**Location:** `<project-root>/ILSApp/ILSApp/Theme/Components/`
 
 #### **StatCard**
 - **Purpose:** Dashboard stat display with sparkline
@@ -1241,7 +1241,7 @@ First-Run Only:
 
 ### Message Components
 
-**Location:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/`
+**Location:** `<project-root>/ILSApp/ILSApp/Views/Chat/`
 
 #### **MessageView**
 - **Purpose:** Chat message bubble (user/assistant)
@@ -1269,7 +1269,7 @@ First-Run Only:
 
 ### Core Models (ILSShared)
 
-**Location:** `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/`
+**Location:** `<project-root>/Sources/ILSShared/Models/`
 
 #### **ChatSession**
 - `id: UUID` - Unique identifier
@@ -1345,7 +1345,7 @@ First-Run Only:
 
 ### View Models (ChatMessage)
 
-**Location:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Models/ChatMessage.swift`
+**Location:** `<project-root>/ILSApp/ILSApp/Models/ChatMessage.swift`
 
 #### **ChatMessage**
 - `id: UUID`
@@ -1455,7 +1455,7 @@ All endpoints prefixed with `/api/v1` unless noted.
 
 ### Color Palette (ILSTheme)
 
-**Location:** `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/ILSTheme.swift`
+**Location:** `<project-root>/ILSApp/ILSApp/Theme/ILSTheme.swift`
 
 #### Background Scale
 - `bg0: #000000` - Pure black

@@ -4,7 +4,7 @@
 
 ### 1. Test Plan Configuration
 **File**: `ILSApp.xctestplan`
-**Location**: `/Users/nick/Desktop/ils-ios/ILSApp/`
+**Location**: `<project-root>/ILSApp/`
 
 Xcode Test Plan with 6 configurations:
 
@@ -146,7 +146,7 @@ Feature views:
 
 **Quick validation:**
 ```bash
-cd /Users/nick/Desktop/ils-ios/ILSApp
+cd <project-root>/ILSApp
 ./scripts/run-ui-tests.sh --quick
 ```
 

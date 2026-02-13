@@ -36,7 +36,7 @@ brew install cloudflared
 #### Quick Start (One Command)
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/remote-access/setup-cloudflare-tunnel.sh
 ```
 
@@ -153,14 +153,14 @@ open -a Tailscale
 #### 3. Run Setup Script
 
 ```bash
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 ./scripts/remote-access/setup-tailscale.sh
 ```
 
 The script will:
 1. ✅ Build the ILS backend
 2. ✅ Start the backend on port 9090
-3. ✅ Get your Tailscale IP (e.g., `100.101.102.103`)
+3. ✅ Get your Tailscale IP (e.g., `<your-tailscale-ip>`)
 4. ✅ Provide connection URL
 5. ✅ Monitor the backend process
 
@@ -172,12 +172,12 @@ The script will:
 ═══════════════════════════════════════════════════
 
   Local URL:       http://localhost:9090
-  Tailscale URL:   http://100.101.102.103:9090
+  Tailscale URL:   http://<your-tailscale-ip>:9090
 
 ═══════════════════════════════════════════════════
 
 Configure your iOS app with:
-  http://100.101.102.103:9090
+  http://<your-tailscale-ip>:9090
 
 Note: This URL works on any device connected to your Tailscale network
 ```
@@ -186,7 +186,7 @@ Note: This URL works on any device connected to your Tailscale network
 
 1. Open ILS app on your iPhone
 2. Go to **Settings** → **Server Configuration**
-3. Enter the Tailscale URL: `http://100.101.102.103:9090`
+3. Enter the Tailscale URL: `http://<your-tailscale-ip>:9090`
 4. Tap **Save**
 
 Done! Your iPhone can now access your Mac over Tailscale.
@@ -287,7 +287,7 @@ Create `~/Library/LaunchAgents/com.ils.backend.plist`:
     <string>com.ils.backend</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/nick/Desktop/ils-ios/scripts/remote-access/setup-tailscale.sh</string>
+        <string><project-root>/scripts/remote-access/setup-tailscale.sh</string>
     </array>
     <key>RunAtLoad</key>
     <true/>

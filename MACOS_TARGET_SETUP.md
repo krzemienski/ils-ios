@@ -2,7 +2,7 @@
 
 ## Current Status
 
-✅ **All source files created**: 13 Swift files + assets exist in `/Users/nick/Desktop/ils-ios/ILSApp/ILSMacApp/`
+✅ **All source files created**: 13 Swift files + assets exist in `<project-root>/ILSApp/ILSMacApp/`
 ❌ **Xcode target missing**: ILSMacApp target not added to ILSApp.xcodeproj
 ❌ **Cannot build**: Target required before E2E verification can proceed
 
@@ -15,7 +15,7 @@ The implementation for the native macOS app is complete (Phases 1-5), but all so
 ### Step 1: Open Project in Xcode
 
 ```bash
-cd /Users/nick/Desktop/ils-ios/ILSApp
+cd <project-root>/ILSApp
 open ILSApp.xcodeproj
 ```
 
@@ -41,7 +41,7 @@ open ILSApp.xcodeproj
 The following files already exist and need to be added to the ILSMacApp target:
 
 1. Right-click ILSMacApp group → **Add Files to "ILSApp"**
-2. Navigate to `/Users/nick/Desktop/ils-ios/ILSApp/ILSMacApp/`
+2. Navigate to `<project-root>/ILSApp/ILSMacApp/`
 3. Select all existing files:
    - ✅ `ILSMacApp.swift` (main app file)
    - ✅ `AppDelegate.swift`
@@ -115,7 +115,7 @@ The files already exist - just verify they're referenced correctly:
 
 ```bash
 # From terminal:
-cd /Users/nick/Desktop/ils-ios/ILSApp
+cd <project-root>/ILSApp
 xcodebuild -project ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' clean build
 ```
 

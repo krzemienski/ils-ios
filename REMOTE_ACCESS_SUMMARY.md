@@ -86,12 +86,12 @@ Configure your iOS app with:
 ═══════════════════════════════════════════════════
 
   Local URL:       http://localhost:9090
-  Tailscale URL:   http://100.101.102.103:9090
+  Tailscale URL:   http://<your-tailscale-ip>:9090
 
 ═══════════════════════════════════════════════════
 
 Configure your iOS app with:
-  http://100.101.102.103:9090
+  http://<your-tailscale-ip>:9090
 
 Note: This URL works on any device connected to your Tailscale network
 ```
@@ -127,7 +127,7 @@ Note: This URL works on any device connected to your Tailscale network
 
 1. **Run the script:**
    ```bash
-   cd /Users/nick/Desktop/ils-ios
+   cd <project-root>
    ./scripts/remote-access/start-remote-access.sh
    ```
 

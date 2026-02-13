@@ -43,7 +43,7 @@ graph TB
 | Scheme | Target | Destination | Working Dir | Env Vars |
 |--------|--------|-------------|-------------|----------|
 | ILSApp | ILSApp.app | Simulator 50523130 | N/A | N/A |
-| ILSBackend | ILSBackend (SPM exec) | My Mac | `/Users/nick/Desktop/ils-ios` | `PORT=9090` |
+| ILSBackend | ILSBackend (SPM exec) | My Mac | `<project-root>` | `PORT=9090` |
 
 ### 2. SSE Heartbeat (Enhancement)
 
@@ -204,7 +204,7 @@ We create an explicit shared scheme. The `BlueprintIdentifier` for SPM package t
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/nick/Desktop/ils-ios"
+      customWorkingDirectory = "<project-root>"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -232,7 +232,7 @@ We create an explicit shared scheme. The `BlueprintIdentifier` for SPM package t
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/nick/Desktop/ils-ios"
+      customWorkingDirectory = "<project-root>"
       debugDocumentVersioning = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
@@ -255,7 +255,7 @@ We create an explicit shared scheme. The `BlueprintIdentifier` for SPM package t
 </Scheme>
 ```
 
-**Critical**: `useCustomWorkingDirectory = "YES"` + `customWorkingDirectory = "/Users/nick/Desktop/ils-ios"` ensures Vapor finds `ils.sqlite` and `.env` at runtime. The `EnvironmentVariables` block sets `PORT=9090`.
+**Critical**: `useCustomWorkingDirectory = "YES"` + `customWorkingDirectory = "<project-root>"` ensures Vapor finds `ils.sqlite` and `.env` at runtime. The `EnvironmentVariables` block sets `PORT=9090`.
 
 ### 1.4 Workspace Navigator Update
 
@@ -727,7 +727,7 @@ swiftlint lint --path ILSApp/ILSApp/ --quiet
 | Decision | Options Considered | Choice | Rationale |
 |----------|-------------------|--------|-----------|
 | Workspace approach | XcodeGen, Tuist, Manual, Pure SPM | Manual workspace + schemes | 90% done already; Apple WWDC22 pattern; 1-2hr effort vs 4-12hr |
-| Backend scheme working dir | `$(SRCROOT)`, Absolute path, Env var | Absolute path `/Users/nick/Desktop/ils-ios` | Most reliable; `$(SRCROOT)` varies by workspace context |
+| Backend scheme working dir | `$(SRCROOT)`, Absolute path, Env var | Absolute path `<project-root>` | Most reliable; `$(SRCROOT)` varies by workspace context |
 | SSE heartbeat timeout | 30s, 45s, 60s | 45s (3x heartbeat interval) | Backend sends every 15s; 45s tolerates 2 missed heartbeats |
 | Heartbeat detection location | Backend change, Client change, Both | Client-only change | Backend already sends heartbeats; only client lacks timeout detection |
 | File split granularity | 2 files, 3 files, 4+ files | 3-4 files per large file | Target 120-200 lines/file; high cohesion per section |

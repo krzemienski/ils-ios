@@ -8,34 +8,34 @@
 
 **Command:**
 ```bash
-find /Users/nick/Desktop/ils-ios/Sources /Users/nick/Desktop/ils-ios/ILSApp -type d -maxdepth 2 | sort
+find <project-root>/Sources <project-root>/ILSApp -type d -maxdepth 2 | sort
 ```
 
 **Output:**
 ```
-/Users/nick/Desktop/ils-ios/ILSApp
-/Users/nick/Desktop/ils-ios/ILSApp/.omc
-/Users/nick/Desktop/ils-ios/ILSApp/.omc/state
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp.xcodeproj
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp.xcodeproj/project.xcworkspace
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/.omc
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Assets.xcassets
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels
-/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views
-/Users/nick/Desktop/ils-ios/Sources
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend/App
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Extensions
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Migrations
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Models
-/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Services
-/Users/nick/Desktop/ils-ios/Sources/ILSShared
-/Users/nick/Desktop/ils-ios/Sources/ILSShared/DTOs
-/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models
+<project-root>/ILSApp
+<project-root>/ILSApp/.omc
+<project-root>/ILSApp/.omc/state
+<project-root>/ILSApp/ILSApp
+<project-root>/ILSApp/ILSApp.xcodeproj
+<project-root>/ILSApp/ILSApp.xcodeproj/project.xcworkspace
+<project-root>/ILSApp/ILSApp/.omc
+<project-root>/ILSApp/ILSApp/Assets.xcassets
+<project-root>/ILSApp/ILSApp/Services
+<project-root>/ILSApp/ILSApp/Theme
+<project-root>/ILSApp/ILSApp/ViewModels
+<project-root>/ILSApp/ILSApp/Views
+<project-root>/Sources
+<project-root>/Sources/ILSBackend
+<project-root>/Sources/ILSBackend/App
+<project-root>/Sources/ILSBackend/Controllers
+<project-root>/Sources/ILSBackend/Extensions
+<project-root>/Sources/ILSBackend/Migrations
+<project-root>/Sources/ILSBackend/Models
+<project-root>/Sources/ILSBackend/Services
+<project-root>/Sources/ILSShared
+<project-root>/Sources/ILSShared/DTOs
+<project-root>/Sources/ILSShared/Models
 ```
 
 **Expected Directories Found:**
@@ -87,28 +87,28 @@ Build of target: 'ILSShared' complete! (2.32s)
 
 **Command:**
 ```bash
-cd /Users/nick/Desktop/ils-ios/ILSApp && xcodebuild -project ILSApp.xcodeproj -scheme ILSApp -destination 'id=08826637-D2B9-458C-A6F9-BDE4A07E9210' build 2>&1 | tail -20
+cd <project-root>/ILSApp && xcodebuild -project ILSApp.xcodeproj -scheme ILSApp -destination 'id=08826637-D2B9-458C-A6F9-BDE4A07E9210' build 2>&1 | tail -20
 ```
 
 **Output (last 20 lines):**
 ```
-CodeSign /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app/ILSApp.debug.dylib (in target 'ILSApp' from project 'ILSApp' at path '/Users/nick/Desktop/ils-ios/ILSApp/ILSApp.xcodeproj')
-    cd /Users/nick/Desktop/ils-ios/ILSApp
+CodeSign ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app/ILSApp.debug.dylib (in target 'ILSApp' from project 'ILSApp' at path '<project-root>/ILSApp/ILSApp.xcodeproj')
+    cd <project-root>/ILSApp
 
     Signing Identity:     "Sign to Run Locally"
 
-    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app/ILSApp.debug.dylib
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app/ILSApp.debug.dylib
 
-CodeSign /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app (in target 'ILSApp' from project 'ILSApp' at path '/Users/nick/Desktop/ils-ios/ILSApp/ILSApp.xcodeproj')
-    cd /Users/nick/Desktop/ils-ios/ILSApp
+CodeSign ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app (in target 'ILSApp' from project 'ILSApp' at path '<project-root>/ILSApp/ILSApp.xcodeproj')
+    cd <project-root>/ILSApp
 
     Signing Identity:     "Sign to Run Locally"
 
-    /usr/bin/codesign --force --sign - --entitlements /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Intermediates.noindex/ILSApp.build/Debug-iphonesimulator/ILSApp.build/ILSApp.app.xcent --timestamp\=none --generate-entitlement-der /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app
+    /usr/bin/codesign --force --sign - --entitlements ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Intermediates.noindex/ILSApp.build/Debug-iphonesimulator/ILSApp.build/ILSApp.app.xcent --timestamp\=none --generate-entitlement-der ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app
 
-Validate /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app (in target 'ILSApp' from project 'ILSApp' at path '/Users/nick/Desktop/ils-ios/ILSApp/ILSApp.xcodeproj')
-    cd /Users/nick/Desktop/ils-ios/ILSApp
-    builtin-validationUtility /Users/nick/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app -shallow-bundle -infoplist-subpath Info.plist
+Validate ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app (in target 'ILSApp' from project 'ILSApp' at path '<project-root>/ILSApp/ILSApp.xcodeproj')
+    cd <project-root>/ILSApp
+    builtin-validationUtility ~/Library/Developer/Xcode/DerivedData/ILSApp-dcfyrisermdykvdcbzcjkljzdben/Build/Products/Debug-iphonesimulator/ILSApp.app -shallow-bundle -infoplist-subpath Info.plist
 
 ** BUILD SUCCEEDED **
 ```

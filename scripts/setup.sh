@@ -64,9 +64,9 @@ fi
 
 echo ""
 echo "Running database migrations..."
-PORT=9999 timeout 10 swift run ILSBackend &
+PORT=9999 swift run ILSBackend &
 BACKEND_PID=$!
-sleep 5
+sleep 8
 kill $BACKEND_PID 2>/dev/null || true
 wait $BACKEND_PID 2>/dev/null || true
 

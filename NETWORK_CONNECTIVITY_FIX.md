@@ -193,7 +193,7 @@ LabeledContent("Backend URL", value: serverURL)
 
 3. **Custom Ports**
    ```
-   http://192.168.1.100:8080
+   http://<your-local-ip>:8080
    https://my-server.com:9090
    ```
 

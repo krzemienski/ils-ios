@@ -41,7 +41,7 @@ curl -s -N -X POST http://localhost:8080/api/v1/chat/stream \
 
 ## 4.2 ChatController Implementation
 
-### File: `/Users/nick/Desktop/ils-ios/Sources/ILSBackend/Controllers/ChatController.swift`
+### File: `<project-root>/Sources/ILSBackend/Controllers/ChatController.swift`
 
 **Status:** ✅ **PASS**
 
@@ -105,7 +105,7 @@ curl -s http://localhost:8080/api/v1/sessions
 
 ## 4.4 iOS Chat Integration
 
-### File: `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift`
+### File: `<project-root>/ILSApp/ILSApp/Views/Chat/ChatView.swift`
 
 **Status:** ✅ **PASS**
 
@@ -132,7 +132,7 @@ curl -s http://localhost:8080/api/v1/sessions
 
 ---
 
-### File: `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
+### File: `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift`
 
 **Status:** ✅ **PASS**
 
@@ -166,7 +166,7 @@ ChatViewModel (@MainActor)
 
 ## 4.5 SSEClient Implementation
 
-### File: `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift`
+### File: `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift`
 
 **Status:** ✅ **PASS**
 
@@ -237,7 +237,7 @@ struct ChatStreamRequest: Encodable {
 **For Production Deployment:**
 ```bash
 # 1. Start the backend
-cd /Users/nick/Desktop/ils-ios
+cd <project-root>
 swift run ILSBackend
 
 # 2. Verify Claude CLI

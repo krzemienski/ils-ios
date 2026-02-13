@@ -451,16 +451,16 @@ ILSApp/
 - [Muzli — Dark Mode Designs](https://muz.li/inspiration/dark-mode/)
 
 ### Codebase Files (Key References)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ILSAppApp.swift` — App entry + AppState
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ContentView.swift` — Current 5-tab navigation
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/ILSTheme.swift` — Current theme system
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Theme/EntityType.swift` — Entity colors
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/APIClient.swift` — HTTP client (preserve)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Services/SSEClient.swift` — SSE streaming (preserve)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/ViewModels/ChatViewModel.swift` — Chat logic (preserve)
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Chat/ChatView.swift` — Current chat UI
-- `/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Models/ChatMessage.swift` — Chat message model
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/StreamMessage.swift` — SSE protocol
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/DTOs/Requests.swift` — All API DTOs
-- `/Users/nick/Desktop/ils-ios/Sources/ILSShared/Models/Session.swift` — Session model
-- `/Users/nick/Desktop/ils-ios/Package.swift` — Swift package manifest
+- `<project-root>/ILSApp/ILSApp/ILSAppApp.swift` — App entry + AppState
+- `<project-root>/ILSApp/ILSApp/ContentView.swift` — Current 5-tab navigation
+- `<project-root>/ILSApp/ILSApp/Theme/ILSTheme.swift` — Current theme system
+- `<project-root>/ILSApp/ILSApp/Theme/EntityType.swift` — Entity colors
+- `<project-root>/ILSApp/ILSApp/Services/APIClient.swift` — HTTP client (preserve)
+- `<project-root>/ILSApp/ILSApp/Services/SSEClient.swift` — SSE streaming (preserve)
+- `<project-root>/ILSApp/ILSApp/ViewModels/ChatViewModel.swift` — Chat logic (preserve)
+- `<project-root>/ILSApp/ILSApp/Views/Chat/ChatView.swift` — Current chat UI
+- `<project-root>/ILSApp/ILSApp/Models/ChatMessage.swift` — Chat message model
+- `<project-root>/Sources/ILSShared/Models/StreamMessage.swift` — SSE protocol
+- `<project-root>/Sources/ILSShared/DTOs/Requests.swift` — All API DTOs
+- `<project-root>/Sources/ILSShared/Models/Session.swift` — Session model
+- `<project-root>/Package.swift` — Swift package manifest

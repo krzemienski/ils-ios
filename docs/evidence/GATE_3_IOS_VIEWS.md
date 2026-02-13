@@ -248,6 +248,6 @@ All required iOS views successfully validated. Navigation system fully operation
 ---
 
 **Test Completed**: February 1, 2026 22:46  
-**Evidence Location**: `/Users/nick/Desktop/ils-ios/docs/evidence/`  
+**Evidence Location**: `<project-root>/docs/evidence/`  
 **Automation Tool**: AXe CLI + simctl  
 **Test Duration**: ~1 minute

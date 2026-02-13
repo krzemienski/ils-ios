@@ -11,7 +11,7 @@ Systematically inspect every screen in the ILS iOS app on the dedicated simulato
 - [ ] Build iOS app: `xcodebuild -workspace ILSFullStack.xcworkspace -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet`
 - [ ] Boot simulator if needed: `xcrun simctl boot 50523130-57AA-48B0-ABD0-4D59CE455F14`
 - [ ] Install app to simulator
-- [ ] Start backend: `PORT=9999 swift run ILSBackend` (from `/Users/nick/Desktop/ils-ios/`)
+- [ ] Start backend: `PORT=9999 swift run ILSBackend` (from `<project-root>/`)
 - [ ] Verify backend health: `curl -s http://localhost:9999/api/v1/health`
 
 ## Evidence Directory

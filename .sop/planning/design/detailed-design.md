@@ -1299,7 +1299,7 @@ extension Animation {
 | `header_icon` | Image | SF Symbol: "desktopcomputer", size: 48pt, color: accentPrimary |
 | `header_title` | Text | "Connect to Server", font: title1, color: textPrimary |
 | `header_subtitle` | Text | "Connect to a remote host running Claude Code", font: subheadline, color: textSecondary |
-| `host_field` | TextField | Label: "Host", placeholder: "192.168.1.100 or hostname", icon: "network" |
+| `host_field` | TextField | Label: "Host", placeholder: "<your-local-ip> or hostname", icon: "network" |
 | `port_field` | TextField | Label: "Port", placeholder: "22", icon: "number", keyboard: numberPad |
 | `username_field` | TextField | Label: "Username", placeholder: "admin", icon: "person.fill" |
 | `auth_picker` | SegmentedControl | Options: ["Password", "SSH Key"], default: "SSH Key" |
