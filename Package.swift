@@ -27,7 +27,7 @@ let package = Package(
         // YAML parsing for skill files
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
         // Claude Code SDK for CLI integration (forked for customization)
-        .package(url: "https://github.com/krzemienski/ClaudeCodeSDK.git", branch: "main"),
+        .package(url: "https://github.com/krzemienski/ClaudeCodeSDK.git", revision: "f626d1d1eab3bf43a1eef2f70b2a493903f7e5e8"),
         // Splash syntax highlighting for code blocks
         .package(url: "https://github.com/JohnSundell/Splash.git", from: "0.16.0"),
     ],
