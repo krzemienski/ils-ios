@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var showSaveSuccess = false
 
     // iCloud sync
+    @State private var iCloudSyncEnabled = true
     private let iCloudStore = iCloudKeyValueStore()
 
     // Available options
@@ -181,14 +182,25 @@ struct SettingsView: View {
                     if let config = viewModel.config {
                         Text("Scope: \(config.scope) • \(config.path)")
                     }
-                    HStack(spacing: 4) {
-                        Image(systemName: "icloud")
-                            .font(.caption2)
-                        Text("Settings sync via iCloud")
-                            .font(.caption2)
-                    }
-                    .foregroundColor(ILSTheme.secondaryText)
                 }
+            }
+
+            // MARK: - iCloud Sync Section
+            Section {
+                Toggle(isOn: $iCloudSyncEnabled) {
+                    HStack(spacing: 8) {
+                        Image(systemName: iCloudSyncEnabled ? "icloud.fill" : "icloud.slash")
+                            .foregroundColor(iCloudSyncEnabled ? .blue : ILSTheme.secondaryText)
+                        Text("Sync Settings")
+                    }
+                }
+                .onChange(of: iCloudSyncEnabled) { _, newValue in
+                    saveSyncPreference(enabled: newValue)
+                }
+            } header: {
+                Text("iCloud Sync")
+            } footer: {
+                Text(iCloudSyncEnabled ? "Settings are synced across your devices using iCloud Key-Value Store" : "Settings sync is disabled. Changes will only apply to this device")
             }
 
             // MARK: - API Key Section
@@ -395,12 +407,22 @@ struct SettingsView: View {
 
     private func loadServerSettings() {
         Task {
-            // Load from iCloud Key-Value Store
-            if let savedHost = await iCloudStore.getString(forKey: "ils_server_host") {
-                serverHost = savedHost
+            // Load sync preference from UserDefaults
+            iCloudSyncEnabled = UserDefaults.standard.bool(forKey: "ils_icloud_sync_enabled_v2")
+            // Default to true if key doesn't exist (first launch)
+            if UserDefaults.standard.object(forKey: "ils_icloud_sync_enabled_v2") == nil {
+                iCloudSyncEnabled = true
+                UserDefaults.standard.set(true, forKey: "ils_icloud_sync_enabled_v2")
             }
-            if let savedPort = await iCloudStore.getString(forKey: "ils_server_port") {
-                serverPort = savedPort
+
+            // Load from iCloud Key-Value Store if sync is enabled
+            if iCloudSyncEnabled {
+                if let savedHost = await iCloudStore.getString(forKey: "ils_server_host") {
+                    serverHost = savedHost
+                }
+                if let savedPort = await iCloudStore.getString(forKey: "ils_server_port") {
+                    serverPort = savedPort
+                }
             }
 
             // Also parse from appState if available
@@ -410,20 +432,42 @@ struct SettingsView: View {
 
     private func saveServerSettings() {
         Task {
-            // Save to iCloud Key-Value Store
-            do {
-                try await iCloudStore.setString(serverHost, forKey: "ils_server_host")
-                try await iCloudStore.setString(serverPort, forKey: "ils_server_port")
+            // Save to iCloud Key-Value Store only if sync is enabled
+            if iCloudSyncEnabled {
+                do {
+                    try await iCloudStore.setString(serverHost, forKey: "ils_server_host")
+                    try await iCloudStore.setString(serverPort, forKey: "ils_server_port")
 
-                // Explicitly synchronize with iCloud
-                _ = await iCloudStore.synchronize()
-            } catch {
-                print("❌ Failed to save server settings to iCloud: \(error.localizedDescription)")
+                    // Explicitly synchronize with iCloud
+                    _ = await iCloudStore.synchronize()
+                } catch {
+                    print("❌ Failed to save server settings to iCloud: \(error.localizedDescription)")
+                }
             }
 
             // Update appState serverURL
             let url = "http://\(serverHost):\(serverPort)"
             appState.serverURL = url
+        }
+    }
+
+    private func saveSyncPreference(enabled: Bool) {
+        // Save to UserDefaults (local preference)
+        UserDefaults.standard.set(enabled, forKey: "ils_icloud_sync_enabled_v2")
+
+        // If sync was just enabled, push current settings to iCloud
+        if enabled {
+            Task {
+                do {
+                    try await iCloudStore.setString(serverHost, forKey: "ils_server_host")
+                    try await iCloudStore.setString(serverPort, forKey: "ils_server_port")
+                    try await iCloudStore.setString(editedModel, forKey: "ils_default_model")
+                    try await iCloudStore.setString(editedColorScheme, forKey: "ils_color_scheme")
+                    _ = await iCloudStore.synchronize()
+                } catch {
+                    print("❌ Failed to sync settings to iCloud: \(error.localizedDescription)")
+                }
+            }
         }
     }
 
@@ -448,15 +492,17 @@ struct SettingsView: View {
                 saveErrorMessage = error
                 showSaveError = true
             } else {
-                // Also save to iCloud Key-Value Store for cross-device sync
-                do {
-                    try await iCloudStore.setString(editedModel, forKey: "ils_default_model")
-                    try await iCloudStore.setString(editedColorScheme, forKey: "ils_color_scheme")
+                // Also save to iCloud Key-Value Store for cross-device sync if enabled
+                if iCloudSyncEnabled {
+                    do {
+                        try await iCloudStore.setString(editedModel, forKey: "ils_default_model")
+                        try await iCloudStore.setString(editedColorScheme, forKey: "ils_color_scheme")
 
-                    // Explicitly synchronize with iCloud
-                    _ = await iCloudStore.synchronize()
-                } catch {
-                    print("❌ Failed to save settings to iCloud: \(error.localizedDescription)")
+                        // Explicitly synchronize with iCloud
+                        _ = await iCloudStore.synchronize()
+                    } catch {
+                        print("❌ Failed to save settings to iCloud: \(error.localizedDescription)")
+                    }
                 }
 
                 isEditing = false
@@ -503,9 +549,14 @@ struct SettingsView: View {
 
     private func resetEditedValues() {
         Task {
-            // Load from iCloud Key-Value Store first (for cross-device sync)
-            let iCloudModel = await iCloudStore.getString(forKey: "ils_default_model")
-            let iCloudColorScheme = await iCloudStore.getString(forKey: "ils_color_scheme")
+            // Load from iCloud Key-Value Store first if sync is enabled
+            var iCloudModel: String?
+            var iCloudColorScheme: String?
+
+            if iCloudSyncEnabled {
+                iCloudModel = await iCloudStore.getString(forKey: "ils_default_model")
+                iCloudColorScheme = await iCloudStore.getString(forKey: "ils_color_scheme")
+            }
 
             // Prefer iCloud values if available, otherwise use config from API
             if let config = viewModel.config?.content {
