@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - ILS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e7;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a1a1aa;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #fafafa;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #d4d4d8;
+        }
+
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            color: #d4d4d8;
+        }
+
+        a {
+            color: #818cf8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: #a5b4fc;
+        }
+
+        .highlight {
+            background: rgba(129, 140, 248, 0.1);
+            border-left: 3px solid #818cf8;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">Last updated: February 2026</p>
+
+        <div class="highlight">
+            <p><strong>TL;DR:</strong> ILS collects NO user data, has NO tracking, NO analytics, and NO third-party SDKs. All data stays on your device and local network.</p>
+        </div>
+
+        <h2>Our Commitment to Privacy</h2>
+        <p>ILS (Intelligent Language System) is a native iOS and macOS client for Claude Code that puts your privacy first. We believe that developer tools should respect your data and your workflow.</p>
+
+        <h2>Data Collection</h2>
+        <p>ILS does <strong>not</strong> collect, transmit, or store any user data. Specifically:</p>
+        <ul>
+            <li>No personal information is collected</li>
+            <li>No usage analytics or telemetry</li>
+            <li>No crash reporting to external services</li>
+            <li>No advertising or tracking SDKs</li>
+            <li>No cookies or persistent identifiers</li>
+        </ul>
+
+        <h2>How ILS Works</h2>
+        <p>ILS is designed to work entirely within your local environment:</p>
+        <ul>
+            <li><strong>Local Backend:</strong> The app connects to a backend server that runs on your own Mac</li>
+            <li><strong>On-Device Storage:</strong> All session data, projects, and preferences are stored locally in the app's sandbox</li>
+            <li><strong>Network Communication:</strong> Communication occurs only between your iOS/macOS device and your self-hosted backend server on your local network</li>
+            <li><strong>No Internet Dependency:</strong> ILS does not require internet connectivity except when your Claude Code instance needs to communicate with Anthropic's API</li>
+        </ul>
+
+        <h2>Third-Party Services</h2>
+        <p>ILS does not integrate with any third-party services, analytics platforms, or advertising networks. The only external communication is:</p>
+        <ul>
+            <li><strong>Anthropic API:</strong> When Claude Code (your backend) makes requests to Claude, those requests are governed by Anthropic's privacy policy, not ILS</li>
+            <li><strong>Optional Cloudflare Tunnels:</strong> If you choose to enable remote access via Cloudflare Tunnel, your traffic passes through Cloudflare's infrastructure governed by their privacy policy</li>
+        </ul>
+
+        <h2>Data Security</h2>
+        <p>Since all data remains on your device and local network:</p>
+        <ul>
+            <li>Your conversations, projects, and settings never leave your control</li>
+            <li>No data is transmitted to ILS developers or any third party</li>
+            <li>You maintain complete ownership of all data</li>
+        </ul>
+
+        <h2>Children's Privacy</h2>
+        <p>ILS does not collect any data from anyone, including children under the age of 13.</p>
+
+        <h2>Open Source</h2>
+        <p>ILS is open source software. You can review the complete source code to verify these privacy claims at: <a href="https://github.com/krzemienski/ils-ios" target="_blank">https://github.com/krzemienski/ils-ios</a></p>
+
+        <h2>Changes to This Policy</h2>
+        <p>If we make changes to this privacy policy, we will update the "Last updated" date at the top of this page. Since ILS is open source, all changes will be visible in the Git history.</p>
+
+        <h2>Contact Us</h2>
+        <p>If you have questions about this privacy policy, please open an issue on GitHub:</p>
+        <p><a href="https://github.com/krzemienski/ils-ios/issues" target="_blank">https://github.com/krzemienski/ils-ios/issues</a></p>
+
+        <div class="footer">
+            <p>&copy; 2026 ILS Contributors. Licensed under MIT.</p>
+        </div>
+    </div>
+</body>
+</html>

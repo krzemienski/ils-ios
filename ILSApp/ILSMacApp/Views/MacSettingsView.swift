@@ -360,6 +360,16 @@ struct MacSettingsView: View {
                         Label("Claude Code Docs", systemImage: "book")
                             .font(.system(size: theme.fontCaption))
                     }
+
+                    Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/privacy")!) {
+                        Label("Privacy", systemImage: "hand.raised")
+                            .font(.system(size: theme.fontCaption))
+                    }
+
+                    Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/support")!) {
+                        Label("Support", systemImage: "questionmark.circle")
+                            .font(.system(size: theme.fontCaption))
+                    }
                 }
 
                 Divider()

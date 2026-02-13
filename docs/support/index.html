@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - ILS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e7;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a1a1aa;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: #fafafa;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #818cf8;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #d4d4d8;
+        }
+
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            color: #d4d4d8;
+        }
+
+        a {
+            color: #818cf8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: #a5b4fc;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #a5b4fc;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .highlight {
+            background: rgba(129, 140, 248, 0.1);
+            border-left: 3px solid #818cf8;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .warning {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 3px solid #fbbf24;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.25rem;
+            }
+
+            h3 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Support</h1>
+        <p class="subtitle">Get help with ILS for iOS and macOS</p>
+
+        <h2>What is ILS?</h2>
+        <p>ILS (Intelligent Language System) is a native iOS and macOS client for <strong>Claude Code</strong>, Anthropic's official CLI for Claude. It provides a beautiful, mobile-first interface to interact with your AI coding assistant directly from your iPhone, iPad, or Mac.</p>
+
+        <div class="highlight">
+            <p><strong>Key Features:</strong></p>
+            <ul>
+                <li>Real-time chat with Claude Code via Server-Sent Events (SSE)</li>
+                <li>Session management with fork/branch support</li>
+                <li>Project and skill browsing</li>
+                <li>MCP server and plugin management</li>
+                <li>System monitoring (CPU, memory, disk, network)</li>
+                <li>Optional remote access via Cloudflare Tunnel</li>
+            </ul>
+        </div>
+
+        <h2>Getting Started</h2>
+
+        <h3>Prerequisites</h3>
+        <ul>
+            <li>macOS device with Claude Code installed</li>
+            <li>Xcode 15+ (for building the app)</li>
+            <li>iOS 17+ or macOS 14+ device</li>
+        </ul>
+
+        <h3>Installation</h3>
+        <ol>
+            <li>Clone the repository:
+                <pre><code>git clone https://github.com/krzemienski/ils-ios.git
+cd ils-ios</code></pre>
+            </li>
+            <li>Run the setup script to install backend dependencies:
+                <pre><code>./setup.sh</code></pre>
+            </li>
+            <li>Open <code>ILSFullStack.xcworkspace</code> in Xcode</li>
+            <li>Select the <code>ILSApp</code> scheme and your target device</li>
+            <li>Build and run (⌘R)</li>
+        </ol>
+
+        <h3>Starting the Backend</h3>
+        <p>The backend must be running on your Mac for the iOS/macOS app to connect:</p>
+        <pre><code>PORT=9999 swift run ILSBackend</code></pre>
+
+        <p>The backend will:</p>
+        <ul>
+            <li>Start an HTTP server on port 9999</li>
+            <li>Connect to your Claude Code CLI</li>
+            <li>Provide API endpoints for sessions, projects, skills, MCP servers, and plugins</li>
+        </ul>
+
+        <h3>Connecting the App</h3>
+        <ol>
+            <li>Launch the ILS app on your iOS/macOS device</li>
+            <li>On first run, you'll see the server setup sheet</li>
+            <li>Enter your Mac's local IP address (e.g., <code>192.168.1.100:9999</code>)</li>
+            <li>Tap "Connect" - the app will perform a health check</li>
+            <li>Once connected, you can browse sessions, chat with Claude, and manage projects</li>
+        </ol>
+
+        <h2>FAQ</h2>
+
+        <h3>What is ILS?</h3>
+        <p>ILS is a native iOS and macOS client for Claude Code, allowing you to interact with your AI coding assistant from your mobile device or Mac with a beautiful, responsive interface.</p>
+
+        <h3>How do I install ILS?</h3>
+        <p>Clone the GitHub repository, run <code>./setup.sh</code> to install backend dependencies, then open <code>ILSFullStack.xcworkspace</code> in Xcode and build the app.</p>
+
+        <h3>How do I connect the app to my Mac?</h3>
+        <p>Start the backend on your Mac with <code>PORT=9999 swift run ILSBackend</code>, then launch the iOS/macOS app and enter your Mac's local IP address (e.g., <code>192.168.1.100:9999</code>) in the server setup sheet.</p>
+
+        <h3>Can I use ILS remotely (outside my local network)?</h3>
+        <p>Yes! ILS supports Cloudflare Tunnel for secure remote access. Configure a tunnel in Settings → Cloudflare Tunnel, and the app will connect via your tunnel URL.</p>
+
+        <h3>Is my data secure?</h3>
+        <p>Yes. ILS does not collect any user data. All communication happens between your iOS/macOS device and your self-hosted backend server. See our <a href="../privacy/">Privacy Policy</a> for details.</p>
+
+        <h3>Does ILS require an internet connection?</h3>
+        <p>Only when Claude Code needs to communicate with Anthropic's API. The app itself communicates with your local backend server, which can work offline for local tasks.</p>
+
+        <h2>Troubleshooting</h2>
+
+        <h3>Backend not running</h3>
+        <div class="warning">
+            <p><strong>Error:</strong> "Failed to connect to server" or "Health check failed"</p>
+            <p><strong>Solution:</strong> Verify the backend is running on your Mac:</p>
+            <pre><code>lsof -i :9999 -P -n</code></pre>
+            <p>You should see a process named <code>ILSBackend</code> listening on port 9999. If not, start the backend:</p>
+            <pre><code>cd /Users/your-username/Desktop/ils-ios
+PORT=9999 swift run ILSBackend</code></pre>
+        </div>
+
+        <h3>Wrong port</h3>
+        <div class="warning">
+            <p><strong>Error:</strong> Connection works but no data loads</p>
+            <p><strong>Solution:</strong> Verify the backend is running on port <strong>9999</strong> (not 8080 or 9090). Check the backend logs - the first line should say:</p>
+            <pre><code>[ NOTICE ] Server starting on http://0.0.0.0:9999</code></pre>
+        </div>
+
+        <h3>Cannot find backend binary</h3>
+        <div class="warning">
+            <p><strong>Error:</strong> <code>swift run ILSBackend</code> fails with "no executable product"</p>
+            <p><strong>Solution:</strong> Make sure you're in the correct directory:</p>
+            <pre><code>cd /Users/your-username/Desktop/ils-ios
+ls Package.swift  # should exist</code></pre>
+            <p>If <code>Package.swift</code> doesn't exist, you're in the wrong directory.</p>
+        </div>
+
+        <h3>App crashes on launch</h3>
+        <div class="warning">
+            <p><strong>Solution:</strong> Clean build in Xcode:</p>
+            <ol>
+                <li>Product → Clean Build Folder (⇧⌘K)</li>
+                <li>Delete DerivedData: <code>rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*</code></li>
+                <li>Build and run again (⌘R)</li>
+            </ol>
+        </div>
+
+        <h3>Chat messages not sending</h3>
+        <div class="warning">
+            <p><strong>Solution:</strong> Check that:</p>
+            <ul>
+                <li>Backend is running and connected</li>
+                <li>Claude Code CLI is installed on your Mac (<code>claude --version</code>)</li>
+                <li>You have an active Anthropic API key configured</li>
+                <li>Check backend logs for errors</li>
+            </ul>
+        </div>
+
+        <h3>SSE streaming stuck</h3>
+        <div class="warning">
+            <p><strong>Error:</strong> "Taking longer than expected..." appears but no response</p>
+            <p><strong>Solution:</strong> This can happen if Claude Code is slow to respond. The backend has a 30-second initial timeout. If it persists:</p>
+            <ul>
+                <li>Check your internet connection</li>
+                <li>Verify your Anthropic API key is valid</li>
+                <li>Try sending a simpler message first</li>
+                <li>Check backend logs for errors</li>
+            </ul>
+        </div>
+
+        <h2>Report a Bug</h2>
+        <p>Found an issue? Please report it on GitHub:</p>
+        <p><a href="https://github.com/krzemienski/ils-ios/issues" target="_blank">https://github.com/krzemienski/ils-ios/issues</a></p>
+
+        <p>When reporting a bug, please include:</p>
+        <ul>
+            <li>iOS/macOS version</li>
+            <li>Device model (iPhone, iPad, Mac)</li>
+            <li>Steps to reproduce</li>
+            <li>Expected vs actual behavior</li>
+            <li>Backend logs (if relevant)</li>
+            <li>Screenshots (if helpful)</li>
+        </ul>
+
+        <h2>Contributing</h2>
+        <p>ILS is open source and welcomes contributions! Visit the repository to get started:</p>
+        <p><a href="https://github.com/krzemienski/ils-ios" target="_blank">https://github.com/krzemienski/ils-ios</a></p>
+
+        <div class="footer">
+            <p>&copy; 2026 ILS Contributors. Licensed under MIT.</p>
+            <p><a href="../privacy/">Privacy Policy</a> | <a href="https://github.com/krzemienski/ils-ios" target="_blank">GitHub</a></p>
+        </div>
+    </div>
+</body>
+</html>

@@ -122,6 +122,30 @@ struct SettingsAboutSection: View {
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
+
+                Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/privacy")!) {
+                    HStack {
+                        Text("Privacy Policy")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+
+                Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/support")!) {
+                    HStack {
+                        Text("Support")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
             }
             .padding(theme.spacingMD)
             .modifier(GlassCard())
