@@ -14,6 +14,8 @@
 		000000000000000000000021 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000031 /* APIClient.swift */; };
 		000000000000000000000022 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* SSEClient.swift */; };
 		00000000000000000000009A /* iCloudKeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000009B /* iCloudKeyValueStore.swift */; };
+		00000000000000000000CKS1 /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000CKS2 /* CloudKitService.swift */; };
+		00000000000000000000CKS3 /* CloudKitSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000CKS4 /* CloudKitSchema.swift */; };
 		000000000000000000000023 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* SidebarView.swift */; };
 		000000000000000000000024 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* MessageView.swift */; };
 		000000000000000000000025 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000035 /* CommandPaletteView.swift */; };
@@ -34,6 +36,7 @@
 		000000000000000000000044 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000054 /* NewSessionView.swift */; };
 		000000000000000000000045 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000055 /* SessionsViewModel.swift */; };
 		000000000000000000000046 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000056 /* DashboardView.swift */; };
+		0000000000000000000000SV /* SyncViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000000SW /* SyncViewModel.swift */; };
 		000000000000000000000047 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000057 /* DashboardViewModel.swift */; };
 		000000000000000000000080 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000090 /* ILSShared */; };
 		76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */; };
@@ -63,6 +66,8 @@
 		000000000000000000000031 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		000000000000000000000032 /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
 		00000000000000000000009B /* iCloudKeyValueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudKeyValueStore.swift; sourceTree = "<group>"; };
+		00000000000000000000CKS2 /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
+		00000000000000000000CKS4 /* CloudKitSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSchema.swift; sourceTree = "<group>"; };
 		000000000000000000000033 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		000000000000000000000034 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		000000000000000000000035 /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
@@ -83,6 +88,7 @@
 		000000000000000000000054 /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		000000000000000000000055 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000056 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		0000000000000000000000SW /* SyncViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncViewModel.swift; sourceTree = "<group>"; };
 		000000000000000000000057 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		D49E0C15B3D472F1ED3CB709 /* SessionInfoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
 		UITEST0000000000000000A0 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -158,6 +164,8 @@
 				000000000000000000000031 /* APIClient.swift */,
 				000000000000000000000032 /* SSEClient.swift */,
 				00000000000000000000009B /* iCloudKeyValueStore.swift */,
+				00000000000000000000CKS2 /* CloudKitService.swift */,
+				00000000000000000000CKS4 /* CloudKitSchema.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -188,6 +196,7 @@
 				00000000000000000000003F /* MCPViewModel.swift */,
 				000000000000000000000051 /* SkillsViewModel.swift */,
 				000000000000000000000055 /* SessionsViewModel.swift */,
+				0000000000000000000000SW /* SyncViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -384,6 +393,8 @@
 				000000000000000000000021 /* APIClient.swift in Sources */,
 				000000000000000000000022 /* SSEClient.swift in Sources */,
 				00000000000000000000009A /* iCloudKeyValueStore.swift in Sources */,
+				00000000000000000000CKS1 /* CloudKitService.swift in Sources */,
+				00000000000000000000CKS3 /* CloudKitSchema.swift in Sources */,
 				000000000000000000000023 /* SidebarView.swift in Sources */,
 				000000000000000000000024 /* MessageView.swift in Sources */,
 				000000000000000000000025 /* CommandPaletteView.swift in Sources */,
@@ -405,6 +416,7 @@
 				000000000000000000000043 /* SessionsListView.swift in Sources */,
 				000000000000000000000044 /* NewSessionView.swift in Sources */,
 				000000000000000000000045 /* SessionsViewModel.swift in Sources */,
+				0000000000000000000000SV /* SyncViewModel.swift in Sources */,
 				76A4CB36EF4500608662F95F /* SessionInfoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

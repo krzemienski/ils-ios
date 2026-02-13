@@ -3,6 +3,7 @@ import ILSShared
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var syncViewModel = SyncViewModel()
     @State private var showingSidebar = false
 
     private var selectedTab: SidebarItem {
@@ -39,6 +40,10 @@ struct ContentView: View {
                         }
                         .accessibilityIdentifier("sidebarButton")
                         .accessibilityLabel("Open Sidebar")
+                    }
+
+                    ToolbarItem(placement: .topBarTrailing) {
+                        syncStatusIndicator
                     }
                 }
                 .overlay(alignment: .topLeading) {
@@ -95,6 +100,42 @@ struct ContentView: View {
                 }
         }
         .tint(ILSTheme.accent)
+    }
+
+    @ViewBuilder
+    private var syncStatusIndicator: some View {
+        HStack(spacing: 4) {
+            if syncViewModel.isSyncing {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(0.7)
+                    .tint(ILSTheme.accent)
+            } else if let _ = syncViewModel.syncError {
+                Image(systemName: "exclamationmark.icloud")
+                    .imageScale(.medium)
+                    .foregroundColor(.red)
+            } else if !syncViewModel.isAccountAvailable {
+                Image(systemName: "icloud.slash")
+                    .imageScale(.medium)
+                    .foregroundColor(.secondary)
+            } else if !syncViewModel.isSyncEnabled {
+                Image(systemName: "icloud.slash")
+                    .imageScale(.medium)
+                    .foregroundColor(.secondary)
+            } else if syncViewModel.lastSyncDate != nil {
+                Image(systemName: "icloud.and.arrow.up")
+                    .imageScale(.medium)
+                    .foregroundColor(.green)
+            } else {
+                Image(systemName: "icloud")
+                    .imageScale(.medium)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+        .accessibilityIdentifier("syncStatusIndicator")
+        .accessibilityLabel(syncViewModel.statusText)
     }
 
     @ViewBuilder
