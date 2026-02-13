@@ -5,6 +5,7 @@ import ILSShared
 struct MacSessionsListView: View {
     @StateObject private var viewModel = SessionsViewModel()
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var windowManager: WindowManager
     @Environment(\.theme) private var theme: any AppTheme
 
     // Callbacks
@@ -168,6 +169,14 @@ struct MacSessionsListView: View {
         }
         .contextMenu {
             Button {
+                windowManager.openSessionWindow(session)
+            } label: {
+                Label("Open in New Window", systemImage: "macwindow.badge.plus")
+            }
+
+            Divider()
+
+            Button {
                 let currentName = session.name ?? ""
                 onRenameSession(session, currentName)
             } label: {
@@ -310,6 +319,7 @@ struct MacSessionRowContent: View {
         onExportSession: { _ in }
     )
     .environmentObject(AppState())
+    .environmentObject(WindowManager.shared)
     .environment(\.theme, ObsidianTheme())
     .frame(width: 320, height: 600)
 }
