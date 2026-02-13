@@ -26,18 +26,18 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.6.0"),
         // YAML parsing for skill files
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
-        // SSH client for remote server connections
-        .package(url: "https://github.com/orlandos-nl/Citadel.git", from: "0.7.0"),
+        // Claude Code SDK for CLI integration (forked for customization)
+        .package(url: "https://github.com/krzemienski/ClaudeCodeSDK.git", branch: "main"),
+        // Splash syntax highlighting for code blocks
+        .package(url: "https://github.com/JohnSundell/Splash.git", from: "0.16.0"),
     ],
     targets: [
         // Shared models between iOS and backend
         .target(
             name: "ILSShared",
-            dependencies: [
-                .product(name: "Yams", package: "Yams"),
-            ],
+            dependencies: [],
             path: "Sources/ILSShared",
-            exclude: ["Models/CLAUDE.md", "DTOs/CLAUDE.md"]
+            exclude: ["Models/CLAUDE.md"]
         ),
         // Vapor backend
         .executableTarget(
@@ -48,7 +48,7 @@ let package = Package(
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Yams", package: "Yams"),
-                .product(name: "Citadel", package: "Citadel"),
+                .product(name: "ClaudeCodeSDK", package: "ClaudeCodeSDK"),
             ],
             path: "Sources/ILSBackend",
             exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"]
