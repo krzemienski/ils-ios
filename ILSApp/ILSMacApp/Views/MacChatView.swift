@@ -151,6 +151,17 @@ struct MacChatView: View {
                     }
                 }
             }
+            .onKeyPress(.init("k", modifiers: .command)) {
+                showCommandPalette = true
+                return .handled
+            }
+            .onKeyPress(.init(.return, modifiers: .command)) {
+                if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming {
+                    sendMessage()
+                    return .handled
+                }
+                return .ignored
+            }
     }
 
     // MARK: - View Components

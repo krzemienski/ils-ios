@@ -63,6 +63,7 @@ struct MacContentView: View {
     @State private var sessionToRename: ChatSession?
     @State private var renameText: String = ""
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -85,6 +86,10 @@ struct MacContentView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
             handleNavigationIntent(intent)
+        }
+        .onKeyPress(.init("/", modifiers: .command)) {
+            isSearchFocused = true
+            return .handled
         }
         .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
@@ -197,6 +202,7 @@ struct MacContentView: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textPrimary)
+                    .focused($isSearchFocused)
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
