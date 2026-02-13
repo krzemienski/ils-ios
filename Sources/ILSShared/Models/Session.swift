@@ -1,4 +1,5 @@
 import Foundation
+import CloudKit
 
 /// Session status enumeration
 public enum SessionStatus: String, Codable, Sendable {
@@ -92,5 +93,112 @@ public struct ExternalSession: Codable, Sendable {
         self.projectPath = projectPath
         self.source = source
         self.lastActiveAt = lastActiveAt
+    }
+}
+
+// MARK: - CloudKitSyncable Conformance
+
+extension ChatSession: CloudKitSyncable {
+    public static var recordType: String {
+        return "ChatSession"
+    }
+
+    public var recordName: String {
+        return id.uuidString
+    }
+
+    public func toCKRecord(zoneID: CKRecordZone.ID?) -> CKRecord {
+        let recordID = CKRecord.ID(recordName: recordName, zoneID: zoneID ?? CKRecordZone.default().zoneID)
+        let record = CKRecord(recordType: Self.recordType, recordID: recordID)
+
+        // Store all properties
+        record["claudeSessionId"] = claudeSessionId
+        record["name"] = name
+        record["projectId"] = projectId?.uuidString
+        record["projectName"] = projectName
+        record["model"] = model
+        record["permissionMode"] = permissionMode.rawValue
+        record["status"] = status.rawValue
+        record["messageCount"] = messageCount
+        record["totalCostUSD"] = totalCostUSD
+        record["source"] = source.rawValue
+        record["forkedFrom"] = forkedFrom?.uuidString
+        record["createdAt"] = createdAt
+        record["lastActiveAt"] = lastActiveAt
+
+        return record
+    }
+
+    public init(from record: CKRecord) throws {
+        // Validate record type
+        guard record.recordType == Self.recordType else {
+            throw CloudKitSyncError.typeMismatch(
+                expected: Self.recordType,
+                actual: record.recordType
+            )
+        }
+
+        // Parse record name as UUID
+        guard let id = UUID(uuidString: record.recordID.recordName) else {
+            throw CloudKitSyncError.invalidRecord
+        }
+
+        // Extract required fields
+        guard let model = record["model"] as? String else {
+            throw CloudKitSyncError.missingRequiredField("model")
+        }
+
+        guard let permissionModeRaw = record["permissionMode"] as? String,
+              let permissionMode = PermissionMode(rawValue: permissionModeRaw) else {
+            throw CloudKitSyncError.missingRequiredField("permissionMode")
+        }
+
+        guard let statusRaw = record["status"] as? String,
+              let status = SessionStatus(rawValue: statusRaw) else {
+            throw CloudKitSyncError.missingRequiredField("status")
+        }
+
+        guard let messageCount = record["messageCount"] as? Int else {
+            throw CloudKitSyncError.missingRequiredField("messageCount")
+        }
+
+        guard let sourceRaw = record["source"] as? String,
+              let source = SessionSource(rawValue: sourceRaw) else {
+            throw CloudKitSyncError.missingRequiredField("source")
+        }
+
+        guard let createdAt = record["createdAt"] as? Date else {
+            throw CloudKitSyncError.missingRequiredField("createdAt")
+        }
+
+        guard let lastActiveAt = record["lastActiveAt"] as? Date else {
+            throw CloudKitSyncError.missingRequiredField("lastActiveAt")
+        }
+
+        // Extract optional fields
+        let claudeSessionId = record["claudeSessionId"] as? String
+        let name = record["name"] as? String
+        let projectId = (record["projectId"] as? String).flatMap { UUID(uuidString: $0) }
+        let projectName = record["projectName"] as? String
+        let totalCostUSD = record["totalCostUSD"] as? Double
+        let forkedFrom = (record["forkedFrom"] as? String).flatMap { UUID(uuidString: $0) }
+
+        // Initialize the struct
+        self.init(
+            id: id,
+            claudeSessionId: claudeSessionId,
+            name: name,
+            projectId: projectId,
+            projectName: projectName,
+            model: model,
+            permissionMode: permissionMode,
+            status: status,
+            messageCount: messageCount,
+            totalCostUSD: totalCostUSD,
+            source: source,
+            forkedFrom: forkedFrom,
+            createdAt: createdAt,
+            lastActiveAt: lastActiveAt
+        )
     }
 }
