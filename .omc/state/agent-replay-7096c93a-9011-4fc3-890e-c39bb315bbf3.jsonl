@@ -1,0 +1,5 @@
+{"t":0,"agent":"ac5304d","agent_type":"Explore","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a83cc19","agent_type":"Bash","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a83cc19","agent_type":"Bash","event":"agent_stop","success":true,"duration_ms":12224}
+{"t":0,"agent":"ac5304d","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":95598}
+{"t":0,"agent":"system","event":"skill_invoked","skill_name":"executing-plans"}

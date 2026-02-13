@@ -225,6 +225,12 @@
       "type": "file"
     },
     {
+      "path": "",
+      "accessCount": 3,
+      "lastAccessed": 1770957106214,
+      "type": "directory"
+    },
+    {
       "path": "Sources/ILSBackend",
       "accessCount": 2,
       "lastAccessed": 1770948930352,
@@ -235,6 +241,12 @@
       "accessCount": 2,
       "lastAccessed": 1770949009260,
       "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp",
+      "accessCount": 2,
+      "lastAccessed": 1770957149120,
+      "type": "directory"
     },
     {
       "path": "ILSApp/ILSApp/Theme/AppTheme.swift",
@@ -276,6 +288,174 @@
       "path": "Sources/ILSShared/DTOs/FleetDTOs.swift",
       "accessCount": 1,
       "lastAccessed": 1770949054195,
+      "type": "file"
+    },
+    {
+      "path": ".claude",
+      "accessCount": 1,
+      "lastAccessed": 1770957100280,
+      "type": "directory"
+    },
+    {
+      "path": "ILSApp/ILSApp/ILSAppApp.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957152247,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Root/SidebarRootView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957152785,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Home/HomeView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957153366,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Browser/BrowserView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957156795,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/System/SystemMonitorView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957157423,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957157907,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/ChatView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957158496,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Root/SidebarView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957159106,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Sessions/NewSessionView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957163272,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Sessions/SessionInfoView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957163888,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Teams/AgentTeamsListView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957164469,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Fleet/FleetManagementView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957165001,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Browser/MCPServerDetailView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957165803,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Browser/SkillDetailView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957166333,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Onboarding/ServerSetupSheet.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957171308,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/CommandPaletteView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957172064,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Chat/AdvancedOptionsSheet.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957172697,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/System/ProcessListView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957173292,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/System/FileBrowserView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957173821,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Settings/ThemePickerView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957174441,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Teams/AgentTeamDetailView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957179048,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Fleet/FleetHostDetailView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957179480,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Onboarding/OnboardingView.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957180072,
+      "type": "file"
+    },
+    {
+      "path": "ILSApp/ILSApp/Views/Settings/SettingsViewSections.swift",
+      "accessCount": 1,
+      "lastAccessed": 1770957180745,
+      "type": "file"
+    },
+    {
+      "path": ".claude/plan/visual-inspection.md",
+      "accessCount": 1,
+      "lastAccessed": 1770957338554,
+      "type": "file"
+    },
+    {
+      "path": "specs/visual-inspection-v2/evidence/00-current-state.png",
+      "accessCount": 1,
+      "lastAccessed": 1770957457635,
+      "type": "file"
+    },
+    {
+      "path": "specs/visual-inspection-v2/evidence/01-after-cancel.png",
+      "accessCount": 1,
+      "lastAccessed": 1770957502888,
       "type": "file"
     }
   ],
