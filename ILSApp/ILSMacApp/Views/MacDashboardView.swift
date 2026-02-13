@@ -11,7 +11,7 @@ struct MacDashboardView: View {
     @StateObject private var sessionsVM = SessionsViewModel()
 
     var onSessionSelected: ((ChatSession) -> Void)?
-    var onNavigate: ((MacActiveScreen) -> Void)?
+    var onNavigate: ((ActiveScreen) -> Void)?
 
     @State private var showingNewSession: Bool = false
 

@@ -42,6 +42,7 @@ struct ILSMacApp: App {
                 .environmentObject(notificationManager)
                 .environment(\.theme, themeManager.currentTheme)
                 .preferredColorScheme(computedColorScheme)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .onOpenURL { url in
                     appState.handleURL(url)
                 }
@@ -63,7 +64,7 @@ struct ILSMacApp: App {
                 OpenNewSessionWindowCommand(windowManager: windowManager)
             }
         }
-        .windowRestorationBehavior(.enabled)
+        // .windowRestorationBehavior(.enabled) // Requires macOS 15+
 
         // Session windows for multi-window support
         WindowGroup("Session", for: UUID.self) { $sessionId in
@@ -75,13 +76,14 @@ struct ILSMacApp: App {
                     .environmentObject(notificationManager)
                     .environment(\.theme, themeManager.currentTheme)
                     .preferredColorScheme(computedColorScheme)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             } else {
                 Text("No session selected")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .handlesExternalEvents(matching: Set(["session"]))
-        .windowRestorationBehavior(.enabled)
+        // .windowRestorationBehavior(.enabled) // Requires macOS 15+
     }
 }
 
@@ -176,11 +178,23 @@ class AppState: ObservableObject {
 
     func handleURL(_ url: URL) {
         guard url.scheme == "ils" else { return }
+
+        // Extract resource ID from path (e.g., ils://sessions/{uuid})
+        let resourceId: UUID? = {
+            let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            guard !path.isEmpty else { return nil }
+            return UUID(uuidString: path)
+        }()
+
         switch url.host {
         case "home":
             navigationIntent = .home
         case "sessions":
-            navigationIntent = .home
+            if let resourceId {
+                navigateToSession(id: resourceId)
+            } else {
+                navigationIntent = .home
+            }
         case "projects", "plugins", "mcp", "skills":
             navigationIntent = .browser
         case "settings":
@@ -191,6 +205,20 @@ class AppState: ObservableObject {
             navigationIntent = .fleet
         default:
             break
+        }
+    }
+
+    private func navigateToSession(id: UUID) {
+        Task {
+            do {
+                let response: APIResponse<ChatSession> = try await apiClient.get("/sessions/\(id.uuidString)")
+                if let session = response.data {
+                    navigationIntent = .chat(session)
+                }
+            } catch {
+                // Session not found or network error — fall back to sessions list
+                navigationIntent = .home
+            }
         }
     }
 }

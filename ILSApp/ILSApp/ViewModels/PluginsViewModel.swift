@@ -29,6 +29,27 @@ class PluginsViewModel: ObservableObject {
         return plugins.isEmpty ? "No plugins installed" : ""
     }
 
+    /// Available plugin categories derived from marketplace field
+    var pluginCategories: [String] {
+        var categories = Set<String>()
+        categories.insert("All")
+        for plugin in plugins {
+            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
+                categories.insert(marketplace)
+            }
+        }
+        return categories.sorted()
+    }
+
+    /// Plugins filtered by search text and selected category
+    var filteredPluginsByCategory: [Plugin] {
+        let baseFiltered = filteredPlugins
+        if selectedCategory == "All" {
+            return baseFiltered
+        }
+        return baseFiltered.filter { $0.marketplace == selectedCategory }
+    }
+
     /// Filtered plugins based on search text
     var filteredPlugins: [Plugin] {
         if searchText.isEmpty {

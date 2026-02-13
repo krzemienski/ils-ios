@@ -1,18 +1,6 @@
 import SwiftUI
 import ILSShared
 
-// MARK: - Active Screen (macOS)
-
-enum MacActiveScreen: Hashable {
-    case home
-    case chat(ChatSession)
-    case system
-    case settings
-    case browser
-    case teams
-    case fleet
-}
-
 // MARK: - Sidebar Section
 
 enum SidebarSection: String, CaseIterable, Identifiable {
@@ -36,7 +24,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         }
     }
 
-    var screen: MacActiveScreen {
+    var screen: ActiveScreen {
         switch self {
         case .home: return .home
         case .system: return .system
@@ -57,8 +45,7 @@ struct MacContentView: View {
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
-    @State private var activeScreen: MacActiveScreen = .home
-    @State private var searchText: String = ""
+    @State private var activeScreen: ActiveScreen = .home
     @State private var expandedProjects: Set<String> = []
     @State private var sessionToRename: ChatSession?
     @State private var renameText: String = ""
@@ -87,7 +74,7 @@ struct MacContentView: View {
             guard let intent else { return }
             handleNavigationIntent(intent)
         }
-        .onKeyPress(.init("/", modifiers: .command)) {
+        .onKeyPress(.init("/")) {
             isSearchFocused = true
             return .handled
         }
@@ -104,10 +91,7 @@ struct MacContentView: View {
             Button("Cancel", role: .cancel) { sessionToRename = nil }
             Button("Rename") {
                 if let session = sessionToRename {
-                    Task {
-                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
-                        await sessionsViewModel.loadSessions(refresh: true)
-                    }
+                    Task { await sessionsViewModel.renameSession(session, to: renameText) }
                 }
                 sessionToRename = nil
             }
@@ -198,14 +182,14 @@ struct MacContentView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textTertiary)
-                TextField("Search sessions...", text: $searchText)
+                TextField("Search sessions...", text: $sessionsViewModel.searchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textPrimary)
                     .focused($isSearchFocused)
-                if !searchText.isEmpty {
+                if !sessionsViewModel.searchText.isEmpty {
                     Button {
-                        searchText = ""
+                        sessionsViewModel.searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: theme.fontCaption))
@@ -225,10 +209,10 @@ struct MacContentView: View {
             List {
                 if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
                     loadingView
-                } else if filteredSessions.isEmpty {
+                } else if sessionsViewModel.filteredSessions.isEmpty {
                     emptyView
                 } else {
-                    ForEach(groupedSessions, id: \.key) { project, sessions in
+                    ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
                         projectGroup(name: project, sessions: sessions)
                     }
                 }
@@ -274,7 +258,7 @@ struct MacContentView: View {
                     activeScreen = .chat(session)
                 },
                 onNavigate: { screen in
-                    handleIOSNavigationIntent(screen)
+                    handleNavigationIntent(screen)
                 }
             )
         case .chat(let session):
@@ -323,7 +307,7 @@ struct MacContentView: View {
                         Label("Rename", systemImage: "pencil")
                     }
                     Button {
-                        exportSession(session)
+                        SessionExporter.share(session)
                     } label: {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
@@ -372,7 +356,7 @@ struct MacContentView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.system(size: 24))
                 .foregroundStyle(theme.textTertiary)
-            Text(searchText.isEmpty ? "No sessions yet" : "No matching sessions")
+            Text(sessionsViewModel.searchText.isEmpty ? "No sessions yet" : "No matching sessions")
                 .font(.system(size: theme.fontCaption))
                 .foregroundStyle(theme.textTertiary)
         }
@@ -391,72 +375,20 @@ struct MacContentView: View {
         }
     }
 
-    private var filteredSessions: [ChatSession] {
-        guard !searchText.isEmpty else { return sessionsViewModel.sessions }
-        let query = searchText.lowercased()
-        return sessionsViewModel.sessions.filter { session in
-            (session.name?.lowercased().contains(query) ?? false) ||
-            (session.projectName?.lowercased().contains(query) ?? false) ||
-            (session.firstPrompt?.lowercased().contains(query) ?? false)
-        }
-    }
-
-    private var groupedSessions: [(key: String, value: [ChatSession])] {
-        let grouped = Dictionary(grouping: filteredSessions) { session in
-            session.projectName ?? "Ungrouped"
-        }
-        return grouped.sorted { group1, group2 in
-            let latest1 = group1.value.map(\.lastActiveAt).max() ?? .distantPast
-            let latest2 = group2.value.map(\.lastActiveAt).max() ?? .distantPast
-            return latest1 > latest2
-        }
-    }
-
-    private func exportSession(_ session: ChatSession) {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        let text = "Session: \(session.name ?? "Unnamed")\nModel: \(session.model)\nCreated: \(formatter.string(from: session.createdAt))\nMessages: \(session.messageCount)"
-
-        let panel = NSSavePanel()
-        panel.nameFieldStringValue = "\(session.name ?? "session").txt"
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                try? text.write(to: url, atomically: true, encoding: .utf8)
-            }
-        }
-    }
 
     private func handleNavigationIntent(_ intent: ActiveScreen) {
+        // Sync sidebar selection for non-chat screens
         switch intent {
-        case .home:
-            selectedSection = .home
-            activeScreen = .home
-        case .system:
-            selectedSection = .system
-            activeScreen = .system
-        case .settings:
-            selectedSection = .settings
-            activeScreen = .settings
-        case .browser:
-            selectedSection = .browser
-            activeScreen = .browser
-        case .teams:
-            selectedSection = .teams
-            activeScreen = .teams
-        case .fleet:
-            selectedSection = .fleet
-            activeScreen = .fleet
-        case .chat(let session):
-            selectedSection = .home
-            activeScreen = .chat(session)
+        case .home: selectedSection = .home
+        case .system: selectedSection = .system
+        case .settings: selectedSection = .settings
+        case .browser: selectedSection = .browser
+        case .teams: selectedSection = .teams
+        case .fleet: selectedSection = .fleet
+        case .chat: selectedSection = .home
         }
+        activeScreen = intent
         appState.navigationIntent = nil
-    }
-
-    private func handleIOSNavigationIntent(_ screen: ActiveScreen) {
-        // Convert iOS ActiveScreen to macOS MacActiveScreen
-        handleNavigationIntent(screen)
     }
 }
 

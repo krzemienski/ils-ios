@@ -11,6 +11,32 @@ enum ActiveScreen: Hashable {
     case browser
     case teams
     case fleet
+
+    /// String key for @SceneStorage persistence (excludes associated values).
+    var storageKey: String {
+        switch self {
+        case .home: return "home"
+        case .chat: return "chat"
+        case .system: return "system"
+        case .settings: return "settings"
+        case .browser: return "browser"
+        case .teams: return "teams"
+        case .fleet: return "fleet"
+        }
+    }
+
+    /// Restore from a storage key. Chat requires a session, so returns nil if unavailable.
+    static func fromStorageKey(_ key: String) -> ActiveScreen? {
+        switch key {
+        case "home": return .home
+        case "system": return .system
+        case "settings": return .settings
+        case "browser": return .browser
+        case "teams": return .teams
+        case "fleet": return .fleet
+        default: return nil  // "chat" requires session — handled separately
+        }
+    }
 }
 
 // MARK: - Sidebar Root View
@@ -21,17 +47,18 @@ struct SidebarRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
+    @SceneStorage("activeScreenKey") private var activeScreenKey: String = "home"
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
+    @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
     }
 
-    private var sidebarWidth: CGFloat {
-        isRegularWidth ? 320 : 280
-    }
+    private var sidebarWidth: CGFloat { 280 }
 
     var body: some View {
         Group {
@@ -44,9 +71,19 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
             activeScreen = screen
+            navigationPath = NavigationPath()
             appState.navigationIntent = nil
             if !isRegularWidth {
                 closeSidebar()
+            }
+        }
+        .onChange(of: activeScreen) { _, newScreen in
+            navigationPath = NavigationPath()
+            activeScreenKey = newScreen.storageKey
+        }
+        .onAppear {
+            if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
+                activeScreen = restored
             }
         }
         .sheet(isPresented: $appState.showOnboarding) {
@@ -61,7 +98,7 @@ struct SidebarRootView: View {
     // MARK: - iPad Layout (Persistent Sidebar)
 
     private var iPadLayout: some View {
-        HStack(spacing: 0) {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(
                 activeScreen: $activeScreen,
                 isSidebarOpen: .constant(true),
@@ -69,14 +106,10 @@ struct SidebarRootView: View {
                     activeScreen = .chat(session)
                 }
             )
-            .frame(width: sidebarWidth)
             .background(theme.bgSidebar)
-
-            Divider()
-                .background(theme.divider)
-
+            .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
+        } detail: {
             mainContent(showHamburger: false)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -106,7 +139,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 switch activeScreen {
                 case .home:

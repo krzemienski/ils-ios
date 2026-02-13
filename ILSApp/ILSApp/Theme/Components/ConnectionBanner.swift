@@ -51,6 +51,7 @@ struct ConnectionBannerModifier: ViewModifier {
     @State private var showConnectedBanner = false
     @State private var wasDisconnected = false
     @State private var dismissTask: Task<Void, Never>?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var shouldShowBanner: Bool {
         !isConnected || showConnectedBanner
@@ -63,7 +64,7 @@ struct ConnectionBannerModifier: ViewModifier {
                     ConnectionBanner(isConnected: isConnected)
                 }
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: shouldShowBanner)
+            .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: shouldShowBanner)
             .onChange(of: isConnected) { oldValue, newValue in
                 if !oldValue && newValue {
                     showConnectedBanner = true
@@ -72,8 +73,12 @@ struct ConnectionBannerModifier: ViewModifier {
                     dismissTask = Task {
                         try? await Task.sleep(nanoseconds: 2_000_000_000)
                         guard !Task.isCancelled else { return }
-                        withAnimation {
+                        if reduceMotion {
                             showConnectedBanner = false
+                        } else {
+                            withAnimation {
+                                showConnectedBanner = false
+                            }
                         }
                     }
                 } else if oldValue && !newValue {

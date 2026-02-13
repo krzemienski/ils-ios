@@ -17,7 +17,7 @@ func configure(_ app: Application) async throws {
     app.middleware.use(cors, at: .beginning)
 
     // Error middleware
-    app.middleware.use(ILSErrorMiddleware())
+    app.middleware.use(ErrorMiddleware.default(environment: app.environment))
 
     // Database configuration
     let dbPath = app.directory.workingDirectory + "ils.sqlite"
@@ -27,8 +27,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateProjects())
     app.migrations.add(CreateSessions())
     app.migrations.add(CreateMessages())
-    app.migrations.add(CreateCachedResults())
-    app.migrations.add(CreateFleetHosts())
+    app.migrations.add(CreateThemes())
 
     // Run migrations
     try await app.autoMigrate()
@@ -38,8 +37,7 @@ func configure(_ app: Application) async throws {
 
     // Server configuration
     app.http.server.configuration.hostname = "0.0.0.0"
-    let port = Int(Environment.get("PORT") ?? "9999") ?? 9999
-    app.http.server.configuration.port = port
+    app.http.server.configuration.port = 8080
 
-    app.logger.info("ILS Backend starting on http://0.0.0.0:\(port)")
+    app.logger.info("ILS Backend starting on http://0.0.0.0:8080")
 }

@@ -8,6 +8,7 @@ class SessionsViewModel: ObservableObject {
     @Published var error: Error?
     @Published var hasMore = true
     @Published var searchQuery: String?
+    @Published var searchText: String = ""
     private var currentPage = 1
     private let pageSize = 50
 
@@ -17,6 +18,29 @@ class SessionsViewModel: ObservableObject {
 
     func configure(client: APIClient) {
         self.client = client
+    }
+
+    /// Sessions filtered by the local search text
+    var filteredSessions: [ChatSession] {
+        guard !searchText.isEmpty else { return sessions }
+        let query = searchText.lowercased()
+        return sessions.filter { session in
+            (session.name?.lowercased().contains(query) ?? false) ||
+            (session.projectName?.lowercased().contains(query) ?? false) ||
+            (session.firstPrompt?.lowercased().contains(query) ?? false)
+        }
+    }
+
+    /// Filtered sessions grouped by project, sorted by most recently active
+    var groupedSessions: [(key: String, value: [ChatSession])] {
+        let grouped = Dictionary(grouping: filteredSessions) { session in
+            session.projectName ?? "Ungrouped"
+        }
+        return grouped.sorted { group1, group2 in
+            let latest1 = group1.value.map(\.lastActiveAt).max() ?? .distantPast
+            let latest2 = group2.value.map(\.lastActiveAt).max() ?? .distantPast
+            return latest1 > latest2
+        }
     }
 
     /// Empty state text for UI display
@@ -94,6 +118,17 @@ class SessionsViewModel: ObservableObject {
             AppLogger.shared.error("Failed to create session: \(error.localizedDescription)", category: "sessions")
         }
         return nil
+    }
+
+    func renameSession(_ session: ChatSession, to newName: String) async {
+        guard let client else { return }
+        do {
+            let _: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
+            await loadSessions(refresh: true)
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to rename session: \(error.localizedDescription)", category: "sessions")
+        }
     }
 
     func deleteSession(_ session: ChatSession) async {

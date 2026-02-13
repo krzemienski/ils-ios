@@ -12,6 +12,7 @@ struct ThemedCodeBlockView: View {
     @State private var isExpanded = false
 
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -68,8 +69,12 @@ struct ThemedCodeBlockView: View {
         .overlay(alignment: .bottom) {
             if !isExpanded && lineCount > 15 {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    if reduceMotion {
                         isExpanded = true
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isExpanded = true
+                        }
                     }
                 } label: {
                     Text("Show more (\(lineCount) lines)")

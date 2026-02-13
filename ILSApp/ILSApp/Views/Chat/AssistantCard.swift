@@ -8,6 +8,7 @@ struct AssistantCard: View {
     var onDelete: ((ChatMessage) -> Void)?
 
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showCopyConfirmation = false
     @State private var expandAllToolCalls: Bool?
 
@@ -147,8 +148,13 @@ struct AssistantCard: View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
             if message.toolCalls.count >= 2 {
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        expandAllToolCalls = (expandAllToolCalls == true) ? false : true
+                    let newValue = (expandAllToolCalls == true) ? false : true
+                    if reduceMotion {
+                        expandAllToolCalls = newValue
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            expandAllToolCalls = newValue
+                        }
                     }
                 } label: {
                     HStack(spacing: 4) {

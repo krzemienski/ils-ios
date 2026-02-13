@@ -129,7 +129,6 @@ struct MacSettingsView: View {
                 Text("Enable experimental multi-agent collaboration features")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
-                    .padding(.leading, 160)
             }
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
@@ -146,9 +145,12 @@ struct MacSettingsView: View {
 
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 settingRow(label: "Theme") {
-                    Picker("Theme", selection: $themeManager.selectedTheme) {
-                        ForEach(themeManager.availableThemes, id: \.self) { themeName in
-                            Text(themeName.capitalized).tag(themeName)
+                    Picker("Theme", selection: Binding(
+                        get: { themeManager.currentTheme.id },
+                        set: { themeManager.setTheme($0) }
+                    )) {
+                        ForEach(themeManager.availableThemes, id: \.id) { t in
+                            Text(t.name).tag(t.id)
                         }
                     }
                     .pickerStyle(.menu)
@@ -170,7 +172,6 @@ struct MacSettingsView: View {
                 Text("Choose how the app appears")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
-                    .padding(.leading, 160)
             }
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
@@ -278,7 +279,6 @@ struct MacSettingsView: View {
                 Text("Enable verbose logging for troubleshooting")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
-                    .padding(.leading, 160)
 
                 Divider()
 
@@ -293,7 +293,6 @@ struct MacSettingsView: View {
                 Text("Remove cached data and force refresh")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
-                    .padding(.leading, 160)
 
                 Divider()
 
@@ -307,7 +306,6 @@ struct MacSettingsView: View {
                 Text("Restore all settings to their default values")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
-                    .padding(.leading, 160)
             }
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
@@ -465,7 +463,7 @@ struct MacSettingsView: View {
         enableAgentTeams = false
         enableDebugMode = false
         serverURL = "http://localhost:9999"
-        themeManager.selectedTheme = "obsidian"
+        themeManager.setTheme("obsidian")
     }
 
     func formatModelName(_ model: String) -> String {

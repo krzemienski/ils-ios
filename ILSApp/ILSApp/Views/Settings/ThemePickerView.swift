@@ -34,6 +34,7 @@ private struct ThemePreview: Identifiable {
 struct ThemePickerView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -72,8 +73,12 @@ struct ThemePickerView: View {
 
         Button {
             if isAvailable {
-                withAnimation(.easeInOut(duration: 0.3)) {
+                if reduceMotion {
                     themeManager.setTheme(preview.id)
+                } else {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        themeManager.setTheme(preview.id)
+                    }
                 }
             }
         } label: {

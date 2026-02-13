@@ -11,7 +11,6 @@ struct SidebarView: View {
     @Binding var isSidebarOpen: Bool
     var onSessionSelected: (ChatSession) -> Void
 
-    @State private var searchText: String = ""
     @State private var expandedProjects: Set<String> = []
     @State private var sessionToRename: ChatSession?
     @State private var renameText: String = ""
@@ -52,10 +51,7 @@ struct SidebarView: View {
             Button("Cancel", role: .cancel) { sessionToRename = nil }
             Button("Rename") {
                 if let session = sessionToRename {
-                    Task {
-                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
-                        await sessionsViewModel.loadSessions(refresh: true)
-                    }
+                    Task { await sessionsViewModel.renameSession(session, to: renameText) }
                 }
                 sessionToRename = nil
             }
@@ -127,13 +123,13 @@ struct SidebarView: View {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textTertiary)
-                TextField("Search sessions...", text: $searchText)
+                TextField("Search sessions...", text: $sessionsViewModel.searchText)
                     .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textPrimary)
                     .accessibilityLabel("Search sessions")
-                if !searchText.isEmpty {
+                if !sessionsViewModel.searchText.isEmpty {
                     Button {
-                        searchText = ""
+                        sessionsViewModel.searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: theme.fontCaption))
@@ -154,10 +150,10 @@ struct SidebarView: View {
                 LazyVStack(spacing: 2) {
                     if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
                         loadingView
-                    } else if filteredSessions.isEmpty {
+                    } else if sessionsViewModel.filteredSessions.isEmpty {
                         emptyView
                     } else {
-                        ForEach(groupedSessions, id: \.key) { project, sessions in
+                        ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
                             projectGroup(name: project, sessions: sessions)
                         }
                     }
@@ -199,7 +195,7 @@ struct SidebarView: View {
                         Label("Rename", systemImage: "pencil")
                     }
                     Button {
-                        exportSession(session)
+                        SessionExporter.share(session)
                     } label: {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
@@ -250,7 +246,7 @@ struct SidebarView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.system(size: 24))
                 .foregroundStyle(theme.textTertiary)
-            Text(searchText.isEmpty ? "No sessions yet" : "No matching sessions")
+            Text(sessionsViewModel.searchText.isEmpty ? "No sessions yet" : "No matching sessions")
                 .font(.system(size: theme.fontCaption))
                 .foregroundStyle(theme.textTertiary)
         }
@@ -308,33 +304,6 @@ struct SidebarView: View {
         .accessibilityLabel(label)
     }
 
-    // MARK: - Actions
-
-    private func exportSession(_ session: ChatSession) {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        let text = "Session: \(session.name ?? "Unnamed")\nModel: \(session.model)\nCreated: \(formatter.string(from: session.createdAt))\nMessages: \(session.messageCount)"
-
-        #if os(iOS)
-        let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
-            root.present(av, animated: true)
-        }
-        #else
-        // macOS: Use NSSharingService
-        let sharingService = NSSharingService(named: .sendViaAirDrop)
-        if let service = sharingService {
-            service.perform(withItems: [text])
-        } else {
-            // Fallback: copy to pasteboard
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(text, forType: .string)
-        }
-        #endif
-    }
-
     // MARK: - Helpers
 
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
@@ -348,25 +317,4 @@ struct SidebarView: View {
         }
     }
 
-    private var filteredSessions: [ChatSession] {
-        guard !searchText.isEmpty else { return sessionsViewModel.sessions }
-        let query = searchText.lowercased()
-        return sessionsViewModel.sessions.filter { session in
-            (session.name?.lowercased().contains(query) ?? false) ||
-            (session.projectName?.lowercased().contains(query) ?? false) ||
-            (session.firstPrompt?.lowercased().contains(query) ?? false)
-        }
-    }
-
-    private var groupedSessions: [(key: String, value: [ChatSession])] {
-        let grouped = Dictionary(grouping: filteredSessions) { session in
-            session.projectName ?? "Ungrouped"
-        }
-        // Sort groups: most recently active first
-        return grouped.sorted { group1, group2 in
-            let latest1 = group1.value.map(\.lastActiveAt).max() ?? .distantPast
-            let latest2 = group2.value.map(\.lastActiveAt).max() ?? .distantPast
-            return latest1 > latest2
-        }
-    }
 }

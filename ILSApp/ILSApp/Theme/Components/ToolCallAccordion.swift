@@ -15,6 +15,7 @@ struct ToolCallAccordion: View {
     @State private var showFullOutput = false
 
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(toolName: String, input: String? = nil, inputPairs: [(key: String, value: String)] = [], output: String? = nil, isError: Bool = false, expandAll: Binding<Bool?>? = nil) {
         self.toolName = toolName
@@ -40,8 +41,12 @@ struct ToolCallAccordion: View {
         )
         .onChange(of: expandAll?.wrappedValue) { _, newValue in
             if let newValue {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                if reduceMotion {
                     isExpanded = newValue
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isExpanded = newValue
+                    }
                 }
             }
         }
@@ -54,10 +59,17 @@ struct ToolCallAccordion: View {
 
     private var headerButton: some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            if reduceMotion {
                 isExpanded.toggle()
                 if let expandAll = expandAll {
                     expandAll.wrappedValue = isExpanded
+                }
+            } else {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                    if let expandAll = expandAll {
+                        expandAll.wrappedValue = isExpanded
+                    }
                 }
             }
         } label: {

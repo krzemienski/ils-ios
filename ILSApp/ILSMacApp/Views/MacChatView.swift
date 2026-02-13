@@ -32,73 +32,14 @@ struct MacChatView: View {
     // MARK: - Body
 
     var body: some View {
-        mainContent
-            .background(theme.bgPrimary)
-            .navigationTitle(session.name ?? "Chat")
-            .navigationSubtitle(sessionSubtitle)
-            .toolbar { toolbarContent }
-            #if os(macOS)
-            .chatTouchBar(
-                inputText: inputText,
-                isStreaming: viewModel.isStreaming,
-                isDisabled: viewModel.isLoadingHistory,
-                onSend: sendMessage,
-                onCommandPalette: { showCommandPalette = true },
-                onSessionInfo: { showSessionInfo = true },
-                onNewSession: createNewSession
-            )
-            #endif
-            .sheet(isPresented: $showCommandPalette) {
-                CommandPaletteView { command in
-                    inputText = command
-                    showCommandPalette = false
-                    isInputFocused = true
-                }
-                .frame(minWidth: 600, minHeight: 400)
-                .presentationBackground(theme.bgPrimary)
-            }
-            .sheet(isPresented: $showSessionInfo) {
-                SessionInfoView(session: session)
-                    .environmentObject(appState)
-                    .frame(minWidth: 500, minHeight: 400)
-                    .presentationBackground(theme.bgPrimary)
-            }
-            .sheet(isPresented: $showAdvancedOptions) {
-                AdvancedOptionsSheet(config: $chatOptionsConfig)
-                    .frame(minWidth: 500, minHeight: 600)
-                    .presentationBackground(theme.bgPrimary)
-            }
-            .sheet(item: $viewModel.pendingPermissionRequest) { request in
-                PermissionRequestModal(request: request) { decision in
-                    viewModel.respondToPermission(requestId: request.requestId, decision: decision)
-                }
-                .frame(minWidth: 500, minHeight: 300)
-                .presentationBackground(theme.bgPrimary)
-            }
-            .task {
-                viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
-                viewModel.sessionId = session.id
-                viewModel.encodedProjectPath = session.encodedProjectPath
-                viewModel.claudeSessionId = session.claudeSessionId
+        chatWithAlerts
+    }
 
-                // Run error monitor and history loading as child tasks
-                // so both are cancelled when the view disappears
-                await withTaskGroup(of: Void.self) { group in
-                    group.addTask { @MainActor in
-                        for await _ in viewModel.$error.values {
-                            guard !Task.isCancelled else { return }
-                            if viewModel.error != nil {
-                                errorId = UUID()
-                                showErrorAlert = true
-                            }
-                        }
-                    }
+    // MARK: - Body Sub-Expressions (split to help type checker)
 
-                    group.addTask { @MainActor in
-                        await viewModel.loadMessageHistory()
-                    }
-                }
-            }
+    @ViewBuilder
+    private var chatWithAlerts: some View {
+        styledContent
             .alert("Connection Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) {}
                 Button("Retry") {
@@ -162,16 +103,84 @@ struct MacChatView: View {
                     }
                 }
             }
-            .onKeyPress(.init("k", modifiers: .command)) {
+            .onKeyPress(.init("k")) {
                 showCommandPalette = true
                 return .handled
             }
-            .onKeyPress(.init(.return, modifiers: .command)) {
+            .onKeyPress(.return) {
                 if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming {
                     sendMessage()
                     return .handled
                 }
                 return .ignored
+            }
+    }
+
+    @ViewBuilder
+    private var styledContent: some View {
+        mainContent
+            .background(theme.bgPrimary)
+            .navigationTitle(session.name ?? "Chat")
+            .navigationSubtitle(sessionSubtitle)
+            .toolbar { toolbarContent }
+            #if os(macOS)
+            .chatTouchBar(
+                inputText: inputText,
+                isStreaming: viewModel.isStreaming,
+                isDisabled: viewModel.isLoadingHistory,
+                onSend: sendMessage,
+                onCommandPalette: { showCommandPalette = true },
+                onSessionInfo: { showSessionInfo = true },
+                onNewSession: createNewSession
+            )
+            #endif
+            .sheet(isPresented: $showCommandPalette) {
+                CommandPaletteView { command in
+                    inputText = command
+                    showCommandPalette = false
+                    isInputFocused = true
+                }
+                .frame(minWidth: 600, minHeight: 400)
+                .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $showSessionInfo) {
+                SessionInfoView(session: session)
+                    .environmentObject(appState)
+                    .frame(minWidth: 500, minHeight: 400)
+                    .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $showAdvancedOptions) {
+                AdvancedOptionsSheet(config: $chatOptionsConfig)
+                    .frame(minWidth: 500, minHeight: 600)
+                    .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(item: $viewModel.pendingPermissionRequest) { request in
+                PermissionRequestModal(request: request) { decision in
+                    viewModel.respondToPermission(requestId: request.requestId, decision: decision)
+                }
+                .frame(minWidth: 500, minHeight: 300)
+                .presentationBackground(theme.bgPrimary)
+            }
+            .task {
+                viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
+                viewModel.sessionId = session.id
+                viewModel.encodedProjectPath = session.encodedProjectPath
+                viewModel.claudeSessionId = session.claudeSessionId
+
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { @MainActor in
+                        for await _ in viewModel.$error.values {
+                            guard !Task.isCancelled else { return }
+                            if viewModel.error != nil {
+                                errorId = UUID()
+                                showErrorAlert = true
+                            }
+                        }
+                    }
+                    group.addTask { @MainActor in
+                        await viewModel.loadMessageHistory()
+                    }
+                }
             }
     }
 

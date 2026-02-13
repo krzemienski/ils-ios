@@ -110,7 +110,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Undo (Cmd+Z)
         let undoItem = NSMenuItem(
             title: "Undo",
-            action: #selector(NSResponder.undo(_:)),
+            action: Selector(("undo:")),
             keyEquivalent: "z"
         )
         editMenu.addItem(undoItem)
@@ -118,7 +118,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Redo (Cmd+Shift+Z)
         let redoItem = NSMenuItem(
             title: "Redo",
-            action: #selector(NSResponder.redo(_:)),
+            action: Selector(("redo:")),
             keyEquivalent: "Z"
         )
         editMenu.addItem(redoItem)

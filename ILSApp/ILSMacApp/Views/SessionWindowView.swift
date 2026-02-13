@@ -19,7 +19,7 @@ struct SessionWindowView: View {
 
     init(sessionId: UUID) {
         self.sessionId = sessionId
-        _viewModel = StateObject(wrappedValue: ChatViewModel(sessionId: sessionId))
+        _viewModel = StateObject(wrappedValue: ChatViewModel())
     }
 
     var body: some View {
@@ -49,8 +49,7 @@ struct SessionWindowView: View {
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let session {
-                // TODO: Replace with actual MacChatView when implemented in Phase 2
-                chatPlaceholderView(for: session)
+                MacChatView(session: session)
             }
         }
         .frame(minWidth: 600, minHeight: 400)
@@ -64,49 +63,13 @@ struct SessionWindowView: View {
         }
     }
 
-    // MARK: - Placeholder View
-
-    /// Placeholder view until MacChatView is implemented
-    private func chatPlaceholderView(for session: ChatSession) -> some View {
-        VStack(spacing: 20) {
-            Text("Session: \(session.name)")
-                .font(.title)
-
-            Text("Session ID: \(session.id.uuidString)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            if let project = session.projectName {
-                Text("Project: \(project)")
-                    .font(.subheadline)
-            }
-
-            Divider()
-
-            Text("Multi-window support active!")
-                .font(.headline)
-                .foregroundColor(theme.accentColor)
-
-            Text("Chat view will be implemented in Phase 2")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Button("Close Window") {
-                closeWindow()
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
     // MARK: - Helper Methods
 
     private func loadSession() {
         Task {
             do {
-                let sessions = try await appState.apiClient.getSessions()
-                if let foundSession = sessions.first(where: { $0.id == sessionId }) {
+                let response: APIResponse<ListResponse<ChatSession>> = try await appState.apiClient.get("/sessions")
+                if let foundSession = response.data?.items.first(where: { $0.id == sessionId }) {
                     await MainActor.run {
                         self.session = foundSession
                         self.isLoading = false

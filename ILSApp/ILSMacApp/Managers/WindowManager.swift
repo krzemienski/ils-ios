@@ -169,8 +169,8 @@ class WindowManager: ObservableObject {
 
     /// Get saved window frame for a session
     private func getSavedWindowFrame(for sessionId: UUID) -> NSRect? {
-        guard let allFrames = getAllSavedFrames(),
-              let frameDict = allFrames[sessionId.uuidString] as? [String: CGFloat],
+        let allFrames = getAllSavedFrames()
+        guard let frameDict = allFrames[sessionId.uuidString] as? [String: CGFloat],
               let x = frameDict["x"],
               let y = frameDict["y"],
               let width = frameDict["width"],

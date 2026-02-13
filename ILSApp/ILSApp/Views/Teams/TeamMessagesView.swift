@@ -97,8 +97,6 @@ struct TeamMessagesView: View {
     }
 
     private func formatTimestamp(_ date: Date) -> String {
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "h:mm a"
-        return displayFormatter.string(from: date)
+        DateFormatters.time.string(from: date)
     }
 }

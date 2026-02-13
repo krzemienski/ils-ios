@@ -14,6 +14,7 @@ enum BrowserSegment: String, CaseIterable {
 struct BrowserView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @StateObject private var mcpVM = MCPViewModel()
     @StateObject private var skillsVM = SkillsViewModel()
@@ -22,7 +23,6 @@ struct BrowserView: View {
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""
     @State private var mcpScope: String = "all"
-    @State private var selectedPluginCategory: String = "All"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -79,8 +79,12 @@ struct BrowserView: View {
         HStack(spacing: 0) {
             ForEach(BrowserSegment.allCases, id: \.self) { seg in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    if reduceMotion {
                         segment = seg
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            segment = seg
+                        }
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -250,20 +254,20 @@ struct BrowserView: View {
     private var pluginsContent: some View {
         VStack(spacing: theme.spacingSM) {
             // Category filter chips
-            if !pluginCategories.isEmpty {
+            if !pluginsVM.pluginCategories.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: theme.spacingSM) {
-                        ForEach(pluginCategories, id: \.self) { category in
+                        ForEach(pluginsVM.pluginCategories, id: \.self) { category in
                             Button {
-                                selectedPluginCategory = category
+                                pluginsVM.selectedCategory = category
                             } label: {
                                 Text(category)
-                                    .font(.system(size: theme.fontCaption, weight: selectedPluginCategory == category ? .semibold : .regular))
-                                    .foregroundStyle(selectedPluginCategory == category ? theme.textPrimary : theme.textSecondary)
+                                    .font(.system(size: theme.fontCaption, weight: pluginsVM.selectedCategory == category ? .semibold : .regular))
+                                    .foregroundStyle(pluginsVM.selectedCategory == category ? theme.textPrimary : theme.textSecondary)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
                                     .background(
-                                        selectedPluginCategory == category
+                                        pluginsVM.selectedCategory == category
                                             ? theme.entityPlugin.opacity(0.2)
                                             : theme.bgSecondary
                                     )
@@ -276,7 +280,7 @@ struct BrowserView: View {
                 }
             }
 
-            let items = filteredPluginsByCategory
+            let items = pluginsVM.filteredPluginsByCategory
             if pluginsVM.isLoading && items.isEmpty {
                 loadingRows
             } else if items.isEmpty {
@@ -467,31 +471,6 @@ struct BrowserView: View {
         case .mcp: return mcpVM.servers.count
         case .skills: return skillsVM.skills.count
         case .plugins: return pluginsVM.plugins.count
-        }
-    }
-
-    private var filteredPlugins: [Plugin] {
-        pluginsVM.filteredPlugins
-    }
-
-    private var pluginCategories: [String] {
-        var categories = Set<String>()
-        categories.insert("All")
-        for plugin in pluginsVM.plugins {
-            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
-                categories.insert(marketplace)
-            }
-        }
-        return categories.sorted()
-    }
-
-    private var filteredPluginsByCategory: [Plugin] {
-        let baseFiltered = pluginsVM.filteredPlugins
-        if selectedPluginCategory == "All" {
-            return baseFiltered
-        }
-        return baseFiltered.filter { plugin in
-            plugin.marketplace == selectedPluginCategory
         }
     }
 

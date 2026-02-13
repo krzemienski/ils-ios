@@ -7,6 +7,8 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
+    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Maximum number of lines to show when collapsed
     private let collapsedLineLimit = 3
@@ -36,12 +38,12 @@ struct CodeBlockView: View {
                 // Language badge
                 if let language = language {
                     Text(language.uppercased())
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(ILSTheme.accent)
-                        .padding(.horizontal, ILSTheme.spacingS)
-                        .padding(.vertical, ILSTheme.spacingXS)
-                        .background(ILSTheme.accent.opacity(0.15))
-                        .cornerRadius(ILSTheme.cornerRadiusS)
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundColor(theme.accent)
+                        .padding(.horizontal, theme.spacingSM)
+                        .padding(.vertical, theme.spacingXS)
+                        .background(theme.accent.opacity(0.15))
+                        .cornerRadius(theme.cornerRadiusSmall)
                         .accessibilityIdentifier("code-block-language-label")
                         .accessibilityLabel("Code language: \(language)")
                 }
@@ -51,13 +53,19 @@ struct CodeBlockView: View {
                 // Expand/Collapse button (only if collapsible)
                 if shouldBeCollapsible {
                     Button(action: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        if reduceMotion {
                             isExpanded.toggle()
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isExpanded.toggle()
+                            }
                         }
                     }) {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(theme.textSecondary)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("code-block-expand-button")
@@ -66,10 +74,14 @@ struct CodeBlockView: View {
 
                 // Copy button
                 Button(action: {
+                    #if os(iOS)
                     UIPasteboard.general.string = code
-                    // Haptic feedback
                     let generator = UINotificationFeedbackGenerator()
                     generator.notificationOccurred(.success)
+                    #else
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(code, forType: .string)
+                    #endif
                     showCopyConfirmation = true
                     // Hide confirmation after 2 seconds
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -77,8 +89,10 @@ struct CodeBlockView: View {
                     }
                 }) {
                     Image(systemName: showCopyConfirmation ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(showCopyConfirmation ? ILSTheme.success : ILSTheme.secondaryText)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(showCopyConfirmation ? theme.success : theme.textSecondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("code-block-copy-button")
@@ -89,16 +103,18 @@ struct CodeBlockView: View {
                     showShareSheet = true
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(theme.textSecondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("code-block-share-button")
                 .accessibilityLabel("Share code")
             }
-            .padding(.horizontal, ILSTheme.spacingS)
-            .padding(.vertical, ILSTheme.spacingXS)
-            .background(ILSTheme.tertiaryBackground.opacity(0.5))
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.vertical, theme.spacingXS)
+            .background(theme.bgTertiary.opacity(0.5))
 
             Divider()
 
@@ -110,27 +126,27 @@ struct CodeBlockView: View {
                         ForEach(Array(displayedLines.enumerated()), id: \.offset) { index, _ in
                             Text("\(index + 1)")
                                 .font(.system(.caption, design: .monospaced))
-                                .foregroundColor(ILSTheme.tertiaryText)
+                                .foregroundColor(theme.textTertiary)
                                 .padding(.vertical, 2)
                                 .frame(minWidth: 30, alignment: .trailing)
                         }
 
                         // Ellipsis indicator when collapsed
                         if shouldBeCollapsible && !isExpanded {
-                            Text("⋮")
+                            Text("\u{22EE}")
                                 .font(.system(.caption, design: .monospaced))
-                                .foregroundColor(ILSTheme.tertiaryText)
+                                .foregroundColor(theme.textTertiary)
                                 .padding(.vertical, 2)
                                 .frame(minWidth: 30, alignment: .trailing)
                         }
                     }
-                    .padding(.trailing, ILSTheme.spacingS)
-                    .padding(.leading, ILSTheme.spacingS)
+                    .padding(.trailing, theme.spacingSM)
+                    .padding(.leading, theme.spacingSM)
                     .accessibilityHidden(true) // Line numbers are visual only
 
                     // Separator
                     Rectangle()
-                        .fill(ILSTheme.tertiaryText.opacity(0.3))
+                        .fill(theme.textTertiary.opacity(0.3))
                         .frame(width: 1)
                         .accessibilityHidden(true)
 
@@ -141,24 +157,24 @@ struct CodeBlockView: View {
                             language: language
                         ))
                         .textSelection(.enabled)
-                        .padding(.leading, ILSTheme.spacingS)
+                        .padding(.leading, theme.spacingSM)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .accessibilityIdentifier("code-block-content")
                     .accessibilityLabel(accessibilityCodeLabel)
                 }
-                .padding(.vertical, ILSTheme.spacingS)
+                .padding(.vertical, theme.spacingSM)
             }
-            .background(ILSTheme.tertiaryBackground)
+            .background(theme.bgTertiary)
         }
-        .cornerRadius(ILSTheme.cornerRadiusM)
+        .cornerRadius(theme.cornerRadius)
         .overlay(
-            RoundedRectangle(cornerRadius: ILSTheme.cornerRadiusM)
-                .strokeBorder(ILSTheme.tertiaryText.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: theme.cornerRadius)
+                .strokeBorder(theme.textTertiary.opacity(0.2), lineWidth: 1)
         )
         .accessibilityIdentifier("code-block-container")
         .sheet(isPresented: $showShareSheet) {
-            ShareSheet(activityItems: [code])
+            ShareSheet(items: [code])
         }
     }
 
@@ -176,20 +192,6 @@ struct CodeBlockView: View {
     }
 }
 
-// MARK: - Share Sheet
-
-/// UIKit wrapper for UIActivityViewController (Share Sheet)
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-        // No updates needed
-    }
-}
 
 // MARK: - Preview
 

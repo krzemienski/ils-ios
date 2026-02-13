@@ -31,8 +31,8 @@ struct ChatInputBar: View {
                     sendButton
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
         }
         .background(theme.bgSecondary)
         .accessibilityIdentifier("chat-input-bar")
@@ -66,7 +66,7 @@ struct ChatInputBar: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
             )
             .accessibilityIdentifier("chat-input-field")

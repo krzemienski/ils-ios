@@ -54,8 +54,12 @@ struct ThinkingSection: View {
 
     private var headerButton: some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            if reduceMotion {
                 isExpanded.toggle()
+            } else {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
             }
         } label: {
             HStack(spacing: theme.spacingSM) {
