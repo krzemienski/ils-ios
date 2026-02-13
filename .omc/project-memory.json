@@ -1,0 +1,131 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1771003276518,
+  "projectRoot": "/Users/nick/.zenflow/worktrees/set-up-project-config-a9a0",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "Auto Run Docs": {
+      "path": "Auto Run Docs",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1771003276513,
+      "keyFiles": []
+    },
+    "ILSApp": {
+      "path": "ILSApp",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1771003276513,
+      "keyFiles": [
+        "CLAUDE.md",
+        "ILSApp.xctestplan",
+        "README.md",
+        "TESTING_QUICK_START.md",
+        "TEST_PLAN_SUMMARY.md"
+      ]
+    },
+    "Sources": {
+      "path": "Sources",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1771003276513,
+      "keyFiles": []
+    },
+    "Tests": {
+      "path": "Tests",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1771003276514,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 5,
+      "lastAccessed": 1771003276514,
+      "keyFiles": [
+        "API_REFERENCE.md",
+        "CLAUDE.md",
+        "RUNNING_BACKEND.md",
+        "ils-spec.md",
+        "ils.md"
+      ]
+    },
+    "ILSApp/scripts": {
+      "path": "ILSApp/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 2,
+      "lastAccessed": 1771003276514,
+      "keyFiles": [
+        "CLAUDE.md",
+        "run-ui-tests.sh"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "",
+      "accessCount": 6,
+      "lastAccessed": 1771003332204,
+      "type": "directory"
+    },
+    {
+      "path": ".zenflow/settings.json",
+      "accessCount": 3,
+      "lastAccessed": 1771003390854,
+      "type": "file"
+    },
+    {
+      "path": ".zenflow/tasks/set-up-project-config-a9a0/plan.md",
+      "accessCount": 2,
+      "lastAccessed": 1771003368968,
+      "type": "file"
+    },
+    {
+      "path": "Package.swift",
+      "accessCount": 1,
+      "lastAccessed": 1771003310431,
+      "type": "file"
+    },
+    {
+      "path": "Dockerfile",
+      "accessCount": 1,
+      "lastAccessed": 1771003310443,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1771003332106,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

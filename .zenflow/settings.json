@@ -1,0 +1,5 @@
+{
+  "setup_script": "swift package resolve",
+  "dev_script": "swift run ILSBackend",
+  "verification_script": "swift build"
+}
