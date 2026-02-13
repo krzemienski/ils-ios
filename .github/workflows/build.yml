@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push:
+    branches: [master, design/v2-redesign]
+  pull_request:
+    branches: [master]
+
+jobs:
+  backend:
+    name: Backend (Swift)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend
+        run: swift build
+
+      - name: Run backend tests
+        run: swift test
+
+  ios:
+    name: iOS App
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Resolve packages
+        run: xcodebuild -resolvePackageDependencies -project ILSApp/ILSApp.xcodeproj -scheme ILSApp
+
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
+
+  macos:
+    name: macOS App
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Resolve packages
+        run: xcodebuild -resolvePackageDependencies -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp
+
+      - name: Build macOS app
+        run: |
+          xcodebuild build \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSMacApp \
+            -destination 'platform=macOS' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
