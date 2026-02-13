@@ -9,7 +9,7 @@ echo "🚀 Starting ILS Backend Server for macOS App Testing"
 echo ""
 
 # Change to project root
-cd /Users/nick/Desktop/ils-ios
+cd "$(dirname "$0")"
 
 # Verify we're in the right directory
 if [ ! -f "Package.swift" ]; then
