@@ -31,3 +31,19 @@ node_modules/
 # macOS
 .DS_Store
 *.swp
+
+# OMC / AI session data
+.omc/
+
+# Environment files
+.env*
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# SOP planning artifacts
+.sop/
