@@ -20,6 +20,7 @@ struct ILSMacApp: App {
     }
 
     var body: some Scene {
+        // Main application window
         WindowGroup {
             MacContentView()
                 .environmentObject(appState)
@@ -34,6 +35,22 @@ struct ILSMacApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
         }
+
+        // Session windows for multi-window support
+        WindowGroup("Session", for: UUID.self) { $sessionId in
+            if let sessionId {
+                SessionWindowView(sessionId: sessionId)
+                    .environmentObject(appState)
+                    .environmentObject(themeManager)
+                    .environmentObject(windowManager)
+                    .environment(\.theme, themeManager.currentTheme)
+                    .preferredColorScheme(computedColorScheme)
+            } else {
+                Text("No session selected")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .handlesExternalEvents(matching: Set(["session"]))
     }
 }
 
