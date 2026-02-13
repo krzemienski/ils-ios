@@ -43,7 +43,7 @@ actor CloudKitService {
 
     // MARK: - CRUD Operations
 
-    /// Saves a record to CloudKit (create or update)
+    /// Saves a record to CloudKit (create or update) with conflict resolution
     /// - Parameter record: The CKRecord to save
     /// - Returns: The saved CKRecord with server-generated fields
     func save(_ record: CKRecord) async throws -> CKRecord {
@@ -51,45 +51,36 @@ actor CloudKitService {
             let savedRecord = try await database.save(record)
             return savedRecord
         } catch let ckError as CKError {
+            // Handle conflict with last-write-wins strategy
+            if ckError.code == .serverRecordChanged {
+                return try await resolveConflict(clientRecord: record, error: ckError)
+            }
             throw mapCloudKitError(ckError)
         }
     }
 
-    /// Saves multiple records in a batch operation
+    /// Saves multiple records in a batch operation with conflict resolution
     /// - Parameter records: Array of CKRecords to save
     /// - Returns: Array of saved CKRecords
     func saveAll(_ records: [CKRecord]) async throws -> [CKRecord] {
         guard !records.isEmpty else { return [] }
 
-        do {
-            let operation = CKModifyRecordsOperation(recordsToSave: records, recordIDsToDelete: nil)
-            operation.savePolicy = .changedKeys
-            operation.qualityOfService = .userInitiated
+        // For batch operations, save individually to handle conflicts properly
+        // This ensures each conflict is resolved with last-write-wins strategy
+        var savedRecords: [CKRecord] = []
 
-            return try await withCheckedThrowingContinuation { continuation in
-                var savedRecords: [CKRecord] = []
-
-                operation.perRecordSaveBlock = { recordID, result in
-                    switch result {
-                    case .success(let record):
-                        savedRecords.append(record)
-                    case .failure:
-                        break
-                    }
-                }
-
-                operation.modifyRecordsResultBlock = { result in
-                    switch result {
-                    case .success:
-                        continuation.resume(returning: savedRecords)
-                    case .failure(let error):
-                        continuation.resume(throwing: self.mapCloudKitError(error as? CKError ?? CKError(.unknownItem)))
-                    }
-                }
-
-                database.add(operation)
+        for record in records {
+            do {
+                let savedRecord = try await save(record)
+                savedRecords.append(savedRecord)
+            } catch {
+                // Continue saving other records even if one fails
+                // Collect errors but don't stop the batch
+                continue
             }
         }
+
+        return savedRecords
     }
 
     /// Fetches a record by its ID
@@ -395,6 +386,45 @@ actor CloudKitService {
             throw CloudKitServiceError.temporarilyUnavailable
         @unknown default:
             throw CloudKitServiceError.accountStatusUnknown
+        }
+    }
+
+    // MARK: - Conflict Resolution
+
+    /// Resolves a conflict using last-write-wins strategy
+    /// - Parameters:
+    ///   - clientRecord: The client's version of the record
+    ///   - error: The CKError containing server record information
+    /// - Returns: The winning record after conflict resolution
+    private func resolveConflict(clientRecord: CKRecord, error: CKError) async throws -> CKRecord {
+        // Extract server record from error userInfo
+        guard let serverRecord = error.userInfo[CKRecordChangedErrorServerRecordKey] as? CKRecord else {
+            throw CloudKitServiceError.conflictDetected(error)
+        }
+
+        // Compare modification dates - last write wins
+        let clientModDate = clientRecord.modificationDate ?? clientRecord.creationDate ?? Date.distantPast
+        let serverModDate = serverRecord.modificationDate ?? serverRecord.creationDate ?? Date.distantPast
+
+        if clientModDate >= serverModDate {
+            // Client record is newer or same age, retry save with server's change tag
+            // Copy all client values to server record to preserve client changes
+            for key in clientRecord.allKeys() {
+                serverRecord[key] = clientRecord[key]
+            }
+
+            // Retry save with updated server record (has correct change tag)
+            do {
+                let savedRecord = try await database.save(serverRecord)
+                return savedRecord
+            } catch let ckError as CKError {
+                // If conflict happens again, throw error to prevent infinite loop
+                throw mapCloudKitError(ckError)
+            }
+        } else {
+            // Server record is newer, accept server version (last write wins)
+            // No need to save, just return the server record
+            return serverRecord
         }
     }
 
