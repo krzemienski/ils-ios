@@ -25,6 +25,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Add File menu
         setupFileMenu(mainMenu)
+
+        // Add Edit menu
+        setupEditMenu(mainMenu)
     }
 
     private func setupFileMenu(_ mainMenu: NSMenu) {
@@ -81,6 +84,74 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         saveItem.target = self
         fileMenu.addItem(saveItem)
+    }
+
+    private func setupEditMenu(_ mainMenu: NSMenu) {
+        // Check if Edit menu already exists (SwiftUI may have created one)
+        let editMenu: NSMenu
+        if let existingEditMenuItem = mainMenu.items.first(where: { $0.title == "Edit" }),
+           let existingEditMenu = existingEditMenuItem.submenu {
+            editMenu = existingEditMenu
+            editMenu.removeAllItems() // Clear existing items to rebuild
+        } else {
+            // Create new Edit menu
+            editMenu = NSMenu(title: "Edit")
+            let editMenuItem = NSMenuItem(title: "Edit", action: nil, keyEquivalent: "")
+            editMenuItem.submenu = editMenu
+            mainMenu.insertItem(editMenuItem, at: 2) // Insert after File menu
+        }
+
+        // Undo (Cmd+Z)
+        let undoItem = NSMenuItem(
+            title: "Undo",
+            action: #selector(NSResponder.undo(_:)),
+            keyEquivalent: "z"
+        )
+        editMenu.addItem(undoItem)
+
+        // Redo (Cmd+Shift+Z)
+        let redoItem = NSMenuItem(
+            title: "Redo",
+            action: #selector(NSResponder.redo(_:)),
+            keyEquivalent: "Z"
+        )
+        editMenu.addItem(redoItem)
+
+        editMenu.addItem(NSMenuItem.separator())
+
+        // Cut (Cmd+X)
+        let cutItem = NSMenuItem(
+            title: "Cut",
+            action: #selector(NSText.cut(_:)),
+            keyEquivalent: "x"
+        )
+        editMenu.addItem(cutItem)
+
+        // Copy (Cmd+C)
+        let copyItem = NSMenuItem(
+            title: "Copy",
+            action: #selector(NSText.copy(_:)),
+            keyEquivalent: "c"
+        )
+        editMenu.addItem(copyItem)
+
+        // Paste (Cmd+V)
+        let pasteItem = NSMenuItem(
+            title: "Paste",
+            action: #selector(NSText.paste(_:)),
+            keyEquivalent: "v"
+        )
+        editMenu.addItem(pasteItem)
+
+        editMenu.addItem(NSMenuItem.separator())
+
+        // Select All (Cmd+A)
+        let selectAllItem = NSMenuItem(
+            title: "Select All",
+            action: #selector(NSText.selectAll(_:)),
+            keyEquivalent: "a"
+        )
+        editMenu.addItem(selectAllItem)
     }
 
     private func customizeAppMenu(_ menu: NSMenu) {
