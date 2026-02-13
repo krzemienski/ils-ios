@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import AppKit
 
 /// A dedicated window view for displaying a single session.
 /// Used in multi-window scenarios where a session is opened in its own window.
@@ -53,9 +54,10 @@ struct SessionWindowView: View {
             }
         }
         .frame(minWidth: 600, minHeight: 400)
+        .focusedSceneValue(\.selectedSession, session)
+        .background(WindowAccessor(sessionId: sessionId, windowManager: windowManager))
         .onAppear {
             loadSession()
-            windowManager.registerWindow(for: sessionId, windowId: "session-\(sessionId.uuidString)")
         }
         .onDisappear {
             windowManager.unregisterWindow(for: sessionId)
@@ -127,6 +129,27 @@ struct SessionWindowView: View {
     private func closeWindow() {
         windowManager.closeSessionWindow(sessionId)
     }
+}
+
+// MARK: - Window Accessor
+
+/// Helper to access the NSWindow from SwiftUI and set up window persistence
+struct WindowAccessor: NSViewRepresentable {
+    let sessionId: UUID
+    let windowManager: WindowManager
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            if let window = view.window {
+                let windowId = "session-\(sessionId.uuidString)"
+                windowManager.registerWindow(for: sessionId, windowId: windowId, window: window)
+            }
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 #Preview {

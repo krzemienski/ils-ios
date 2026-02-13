@@ -14,6 +14,12 @@ class WindowManager: ObservableObject {
     /// Singleton instance for app-wide access
     static let shared = WindowManager()
 
+    /// UserDefaults key for storing window frames
+    private let windowFramesKey = "ils_window_frames"
+
+    /// Map of session IDs to window delegates for tracking frame changes
+    private var windowDelegates: [UUID: WindowFrameDelegate] = [:]
+
     private init() {}
 
     // MARK: - Window Management
@@ -21,10 +27,30 @@ class WindowManager: ObservableObject {
     /// Register a window for a session
     func registerWindow(for sessionId: UUID, windowId: String) {
         openWindows[sessionId] = windowId
+
+        // Set up frame autosave and delegate for window frame tracking
+        // Try to find window by identifier or by session window title
+        if let window = findWindow(withId: windowId) ?? findSessionWindow(for: sessionId) {
+            setupWindowPersistence(window: window, sessionId: sessionId)
+        }
+    }
+
+    /// Register a window for a session with the actual NSWindow object
+    func registerWindow(for sessionId: UUID, windowId: String, window: NSWindow) {
+        openWindows[sessionId] = windowId
+        setupWindowPersistence(window: window, sessionId: sessionId)
     }
 
     /// Unregister a window for a session
     func unregisterWindow(for sessionId: UUID) {
+        // Save final frame before unregistering
+        if let windowId = openWindows[sessionId], let window = findWindow(withId: windowId) {
+            saveWindowFrame(window: window, sessionId: sessionId)
+        }
+
+        // Clean up delegate
+        windowDelegates.removeValue(forKey: sessionId)
+
         openWindows.removeValue(forKey: sessionId)
         if focusedSessionId == sessionId {
             focusedSessionId = nil
@@ -105,5 +131,112 @@ class WindowManager: ObservableObject {
     /// Get the count of open windows
     var openWindowCount: Int {
         return openWindows.count
+    }
+
+    // MARK: - Window Persistence
+
+    /// Set up window frame persistence for a session window
+    private func setupWindowPersistence(window: NSWindow, sessionId: UUID) {
+        // Set frameAutosaveName for macOS automatic frame persistence
+        let autosaveName = "session-window-\(sessionId.uuidString)"
+        window.setFrameAutosaveName(autosaveName)
+
+        // Restore saved frame if available
+        if let savedFrame = getSavedWindowFrame(for: sessionId) {
+            window.setFrame(savedFrame, display: true)
+        }
+
+        // Set up delegate to track frame changes
+        let delegate = WindowFrameDelegate(sessionId: sessionId, windowManager: self)
+        windowDelegates[sessionId] = delegate
+        window.delegate = delegate
+    }
+
+    /// Save window frame to UserDefaults
+    func saveWindowFrame(window: NSWindow, sessionId: UUID) {
+        let frame = window.frame
+        let frameDict: [String: CGFloat] = [
+            "x": frame.origin.x,
+            "y": frame.origin.y,
+            "width": frame.size.width,
+            "height": frame.size.height
+        ]
+
+        var allFrames = getAllSavedFrames()
+        allFrames[sessionId.uuidString] = frameDict
+        UserDefaults.standard.set(allFrames, forKey: windowFramesKey)
+    }
+
+    /// Get saved window frame for a session
+    private func getSavedWindowFrame(for sessionId: UUID) -> NSRect? {
+        guard let allFrames = getAllSavedFrames(),
+              let frameDict = allFrames[sessionId.uuidString] as? [String: CGFloat],
+              let x = frameDict["x"],
+              let y = frameDict["y"],
+              let width = frameDict["width"],
+              let height = frameDict["height"] else {
+            return nil
+        }
+
+        return NSRect(x: x, y: y, width: width, height: height)
+    }
+
+    /// Get all saved window frames from UserDefaults
+    private func getAllSavedFrames() -> [String: Any] {
+        return UserDefaults.standard.dictionary(forKey: windowFramesKey) ?? [:]
+    }
+
+    /// Find window by identifier
+    private func findWindow(withId windowId: String) -> NSWindow? {
+        return NSApplication.shared.windows.first { window in
+            window.identifier?.rawValue == windowId
+        }
+    }
+
+    /// Find session window by looking for "Session" title
+    private func findSessionWindow(for sessionId: UUID) -> NSWindow? {
+        return NSApplication.shared.windows.first { window in
+            window.title == "Session" || window.title.contains(sessionId.uuidString)
+        }
+    }
+
+    /// Clear saved frame for a session
+    func clearSavedFrame(for sessionId: UUID) {
+        var allFrames = getAllSavedFrames()
+        allFrames.removeValue(forKey: sessionId.uuidString)
+        UserDefaults.standard.set(allFrames, forKey: windowFramesKey)
+    }
+
+    /// Clear all saved window frames
+    func clearAllSavedFrames() {
+        UserDefaults.standard.removeObject(forKey: windowFramesKey)
+    }
+}
+
+// MARK: - Window Frame Delegate
+
+/// NSWindowDelegate to track and save window frame changes
+class WindowFrameDelegate: NSObject, NSWindowDelegate {
+    let sessionId: UUID
+    weak var windowManager: WindowManager?
+
+    init(sessionId: UUID, windowManager: WindowManager) {
+        self.sessionId = sessionId
+        self.windowManager = windowManager
+        super.init()
+    }
+
+    func windowDidResize(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+        Task { @MainActor in
+            windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        }
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+        Task { @MainActor in
+            windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        }
     }
 }

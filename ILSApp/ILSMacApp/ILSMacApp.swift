@@ -63,6 +63,7 @@ struct ILSMacApp: App {
                 OpenNewSessionWindowCommand(windowManager: windowManager)
             }
         }
+        .windowRestorationBehavior(.enabled)
 
         // Session windows for multi-window support
         WindowGroup("Session", for: UUID.self) { $sessionId in
@@ -80,6 +81,7 @@ struct ILSMacApp: App {
             }
         }
         .handlesExternalEvents(matching: Set(["session"]))
+        .windowRestorationBehavior(.enabled)
     }
 }
 
