@@ -1,4 +1,5 @@
 import Foundation
+import CloudKit
 
 /// Represents a reusable code snippet
 public struct Snippet: Codable, Identifiable, Sendable {
@@ -29,5 +30,79 @@ public struct Snippet: Codable, Identifiable, Sendable {
         self.category = category
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt
+    }
+}
+
+// MARK: - CloudKitSyncable Conformance
+
+extension Snippet: CloudKitSyncable {
+    public static var recordType: String {
+        return "Snippet"
+    }
+
+    public var recordName: String {
+        return id.uuidString
+    }
+
+    public func toCKRecord(zoneID: CKRecordZone.ID?) -> CKRecord {
+        let recordID = CKRecord.ID(recordName: recordName, zoneID: zoneID ?? CKRecordZone.default().zoneID)
+        let record = CKRecord(recordType: Self.recordType, recordID: recordID)
+
+        // Store all properties
+        record["name"] = name
+        record["content"] = content
+        record["description"] = description
+        record["language"] = language
+        record["category"] = category
+        record["createdAt"] = createdAt
+        record["lastUsedAt"] = lastUsedAt
+
+        return record
+    }
+
+    public init(from record: CKRecord) throws {
+        // Validate record type
+        guard record.recordType == Self.recordType else {
+            throw CloudKitSyncError.typeMismatch(
+                expected: Self.recordType,
+                actual: record.recordType
+            )
+        }
+
+        // Parse record name as UUID
+        guard let id = UUID(uuidString: record.recordID.recordName) else {
+            throw CloudKitSyncError.invalidRecord
+        }
+
+        // Extract required fields
+        guard let name = record["name"] as? String else {
+            throw CloudKitSyncError.missingRequiredField("name")
+        }
+
+        guard let content = record["content"] as? String else {
+            throw CloudKitSyncError.missingRequiredField("content")
+        }
+
+        guard let createdAt = record["createdAt"] as? Date else {
+            throw CloudKitSyncError.missingRequiredField("createdAt")
+        }
+
+        // Extract optional fields
+        let description = record["description"] as? String
+        let language = record["language"] as? String
+        let category = record["category"] as? String
+        let lastUsedAt = record["lastUsedAt"] as? Date
+
+        // Initialize the model
+        self.init(
+            id: id,
+            name: name,
+            content: content,
+            description: description,
+            language: language,
+            category: category,
+            createdAt: createdAt,
+            lastUsedAt: lastUsedAt
+        )
     }
 }

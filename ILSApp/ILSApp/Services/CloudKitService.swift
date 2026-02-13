@@ -281,6 +281,31 @@ actor CloudKitService {
         try await delete(recordID)
     }
 
+    // MARK: - Snippet Operations
+
+    /// Saves a snippet to CloudKit
+    /// - Parameter snippet: The Snippet to save
+    /// - Returns: The saved CKRecord
+    func saveSnippet(_ snippet: Snippet) async throws -> CKRecord {
+        return try await save(snippet)
+    }
+
+    /// Fetches all snippets from CloudKit
+    /// - Returns: Array of Snippet objects
+    func fetchSnippets() async throws -> [Snippet] {
+        return try await fetchAll(ofType: Snippet.self)
+    }
+
+    /// Deletes a snippet from CloudKit
+    /// - Parameter snippetId: The UUID of the snippet to delete
+    func deleteSnippet(_ snippetId: UUID) async throws {
+        let recordID = CKRecord.ID(
+            recordName: snippetId.uuidString,
+            zoneID: zone.zoneID
+        )
+        try await delete(recordID)
+    }
+
     // MARK: - Account Status
 
     /// Checks if iCloud is available and user is signed in
