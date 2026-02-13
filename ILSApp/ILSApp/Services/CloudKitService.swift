@@ -256,6 +256,31 @@ actor CloudKitService {
         try await delete(recordID)
     }
 
+    // MARK: - Template Operations
+
+    /// Saves a template to CloudKit
+    /// - Parameter template: The Template to save
+    /// - Returns: The saved CKRecord
+    func saveTemplate(_ template: Template) async throws -> CKRecord {
+        return try await save(template)
+    }
+
+    /// Fetches all templates from CloudKit
+    /// - Returns: Array of Template objects
+    func fetchTemplates() async throws -> [Template] {
+        return try await fetchAll(ofType: Template.self)
+    }
+
+    /// Deletes a template from CloudKit
+    /// - Parameter templateId: The UUID of the template to delete
+    func deleteTemplate(_ templateId: UUID) async throws {
+        let recordID = CKRecord.ID(
+            recordName: templateId.uuidString,
+            zoneID: zone.zoneID
+        )
+        try await delete(recordID)
+    }
+
     // MARK: - Account Status
 
     /// Checks if iCloud is available and user is signed in
