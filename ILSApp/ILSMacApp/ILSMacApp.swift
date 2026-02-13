@@ -7,6 +7,7 @@ struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @StateObject private var themeManager = ThemeManager()
+    @StateObject private var windowManager = WindowManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
@@ -23,6 +24,7 @@ struct ILSMacApp: App {
             MacContentView()
                 .environmentObject(appState)
                 .environmentObject(themeManager)
+                .environmentObject(windowManager)
                 .environment(\.theme, themeManager.currentTheme)
                 .preferredColorScheme(computedColorScheme)
                 .onOpenURL { url in
