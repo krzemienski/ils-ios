@@ -31,6 +31,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Add View menu
         setupViewMenu(mainMenu)
+
+        // Add Window menu
+        setupWindowMenu(mainMenu)
     }
 
     private func setupFileMenu(_ mainMenu: NSMenu) {
@@ -237,6 +240,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         showSettingsItem.target = self
         viewMenu.addItem(showSettingsItem)
+    }
+
+    private func setupWindowMenu(_ mainMenu: NSMenu) {
+        // Check if Window menu already exists (SwiftUI may have created one)
+        let windowMenu: NSMenu
+        if let existingWindowMenuItem = mainMenu.items.first(where: { $0.title == "Window" }),
+           let existingWindowMenu = existingWindowMenuItem.submenu {
+            windowMenu = existingWindowMenu
+            windowMenu.removeAllItems() // Clear existing items to rebuild
+        } else {
+            // Create new Window menu
+            windowMenu = NSMenu(title: "Window")
+            let windowMenuItem = NSMenuItem(title: "Window", action: nil, keyEquivalent: "")
+            windowMenuItem.submenu = windowMenu
+            mainMenu.insertItem(windowMenuItem, at: 4) // Insert after View menu
+        }
+
+        // Minimize (Cmd+M)
+        let minimizeItem = NSMenuItem(
+            title: "Minimize",
+            action: #selector(NSWindow.miniaturize(_:)),
+            keyEquivalent: "m"
+        )
+        windowMenu.addItem(minimizeItem)
+
+        // Zoom
+        let zoomItem = NSMenuItem(
+            title: "Zoom",
+            action: #selector(NSWindow.zoom(_:)),
+            keyEquivalent: ""
+        )
+        windowMenu.addItem(zoomItem)
+
+        windowMenu.addItem(NSMenuItem.separator())
+
+        // Bring All to Front
+        let bringAllToFrontItem = NSMenuItem(
+            title: "Bring All to Front",
+            action: #selector(NSApplication.arrangeInFront(_:)),
+            keyEquivalent: ""
+        )
+        windowMenu.addItem(bringAllToFrontItem)
+
+        // Tell macOS this is the Windows menu (automatically adds window list)
+        NSApp.windowsMenu = windowMenu
     }
 
     private func customizeAppMenu(_ menu: NSMenu) {
