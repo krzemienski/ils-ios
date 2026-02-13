@@ -2,12 +2,25 @@ import SwiftUI
 import ILSShared
 import Combine
 
+/// Focused value key for the currently selected session
+struct FocusedSessionKey: FocusedValueKey {
+    typealias Value = ChatSession
+}
+
+extension FocusedValues {
+    var selectedSession: ChatSession? {
+        get { self[FocusedSessionKey.self] }
+        set { self[FocusedSessionKey.self] = newValue }
+    }
+}
+
 @main
 struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var windowManager = WindowManager.shared
+    @StateObject private var notificationManager = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
@@ -26,14 +39,29 @@ struct ILSMacApp: App {
                 .environmentObject(appState)
                 .environmentObject(themeManager)
                 .environmentObject(windowManager)
+                .environmentObject(notificationManager)
                 .environment(\.theme, themeManager.currentTheme)
                 .preferredColorScheme(computedColorScheme)
                 .onOpenURL { url in
                     appState.handleURL(url)
                 }
+                .task {
+                    // Request notification permissions on first launch
+                    do {
+                        try await notificationManager.requestAuthorization()
+                    } catch {
+                        print("Failed to request notification permissions: \(error)")
+                    }
+                }
         }
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
+        }
+        .commands {
+            // Add keyboard shortcut Cmd+N for opening session in new window
+            CommandGroup(after: .newItem) {
+                OpenNewSessionWindowCommand(windowManager: windowManager)
+            }
         }
 
         // Session windows for multi-window support
@@ -43,6 +71,7 @@ struct ILSMacApp: App {
                     .environmentObject(appState)
                     .environmentObject(themeManager)
                     .environmentObject(windowManager)
+                    .environmentObject(notificationManager)
                     .environment(\.theme, themeManager.currentTheme)
                     .preferredColorScheme(computedColorScheme)
             } else {
@@ -54,17 +83,22 @@ struct ILSMacApp: App {
     }
 }
 
-/// AppDelegate for macOS-specific app lifecycle and menu bar customization
-class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        // Menu bar customization will be added in Phase 4
-    }
+/// Command for opening a session in a new window
+struct OpenNewSessionWindowCommand: View {
+    let windowManager: WindowManager
+    @FocusedValue(\.selectedSession) private var selectedSession: ChatSession?
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        // Keep app running when last window closes (standard macOS behavior)
-        return false
+    var body: some View {
+        Button("Open in New Window") {
+            if let session = selectedSession {
+                windowManager.openSessionWindow(session)
+            }
+        }
+        .keyboardShortcut("n", modifiers: [.command])
+        .disabled(selectedSession == nil)
     }
 }
+
 
 /// Global application state — thin coordinator delegating to focused managers.
 @MainActor
