@@ -9,6 +9,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case browser = "Browse"
     case teams = "Agent Teams"
     case fleet = "Fleet"
+    case themes = "Themes"
     case settings = "Settings"
 
     var id: String { rawValue }
@@ -20,6 +21,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
         case .fleet: return "server.rack"
+        case .themes: return "paintpalette.fill"
         case .settings: return "gearshape.fill"
         }
     }
@@ -31,6 +33,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .browser: return .browser
         case .teams: return .teams
         case .fleet: return .fleet
+        case .themes: return .themes
         case .settings: return .settings
         }
     }
@@ -273,6 +276,8 @@ struct MacContentView: View {
             AgentTeamsListView(apiClient: appState.apiClient)
         case .fleet:
             FleetManagementView()
+        case .themes:
+            ThemesListView()
         }
     }
 
@@ -385,6 +390,7 @@ struct MacContentView: View {
         case .browser: selectedSection = .browser
         case .teams: selectedSection = .teams
         case .fleet: selectedSection = .fleet
+        case .themes: selectedSection = .themes
         case .chat: selectedSection = .home
         }
         activeScreen = intent
