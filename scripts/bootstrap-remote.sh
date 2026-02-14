@@ -7,7 +7,7 @@
 # Designed for non-interactive execution with machine-parseable output.
 #
 # Usage (from iOS app via SSH):
-#   curl -sSL https://raw.githubusercontent.com/nicholaskrzemienski/ils-ios/master/scripts/bootstrap-remote.sh | bash -s -- [OPTIONS]
+#   curl -sSL https://raw.githubusercontent.com/krzemienski/ils-ios/master/scripts/bootstrap-remote.sh | bash -s -- [OPTIONS]
 #
 # Options:
 #   --port PORT         Backend port (default: 9999)
@@ -32,7 +32,7 @@ set -euo pipefail
 BACKEND_PORT="${PORT:-9999}"
 BUILD_MODE="auto"  # auto, docker, native
 SETUP_TUNNEL=true
-REPO_URL="https://github.com/nicholaskrzemienski/ils-ios.git"
+REPO_URL="https://github.com/krzemienski/ils-ios.git"
 BRANCH="master"
 INSTALL_DIR="$HOME/ils-ios"
 

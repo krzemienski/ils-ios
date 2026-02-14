@@ -8,6 +8,7 @@ final class SetupViewModel: ObservableObject {
     @Published var isComplete = false
     @Published var error: String?
     @Published var tunnelURL: String?
+    @Published var logLines: [String] = []
 
     private let sshService = CitadelSSHService()
 
@@ -19,6 +20,7 @@ final class SetupViewModel: ObservableObject {
         isComplete = false
         error = nil
         tunnelURL = nil
+        logLines = []
 
         // Initialize all steps as pending
         steps = SetupProgress.SetupStep.allCases.map {
@@ -64,11 +66,20 @@ final class SetupViewModel: ObservableObject {
             let urlHolder = TunnelURLHolder()
 
             let result = try await sshService.executeStreamingCommand(command) { [weak self, urlHolder] chunk in
-                // Parse each chunk for ILS_ markers
+                // Parse each chunk for ILS_ markers and capture all output
                 let lines = chunk.components(separatedBy: "\n")
                 for line in lines {
                     let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !trimmed.isEmpty else { continue }
+
+                    // Append every line to the log for the live console view
+                    Task { @MainActor in
+                        self?.logLines.append(trimmed)
+                        // Cap at 500 lines to prevent unbounded memory growth
+                        if let count = self?.logLines.count, count > 500 {
+                            self?.logLines.removeFirst(count - 500)
+                        }
+                    }
 
                     if trimmed.hasPrefix("ILS_STEP:") {
                         Self.parseStepMarker(trimmed, viewModel: self)

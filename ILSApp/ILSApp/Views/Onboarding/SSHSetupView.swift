@@ -19,6 +19,7 @@ struct SSHSetupView: View {
     @State private var isSettingUp = false
     @State private var platformRejected = false
     @State private var rejectionMessage = ""
+    @State private var showLogs = false
 
     var body: some View {
         ScrollView {
@@ -26,6 +27,7 @@ struct SSHSetupView: View {
                 credentialForm
                 if isSettingUp || !viewModel.steps.isEmpty {
                     setupProgressView
+                    logConsoleSection
                 }
                 if platformRejected {
                     rejectionBanner
@@ -141,6 +143,80 @@ struct SSHSetupView: View {
         }
     }
 
+    // MARK: - Log Console
+
+    @ViewBuilder
+    private var logConsoleSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Button {
+                withAnimation { showLogs.toggle() }
+            } label: {
+                HStack {
+                    Image(systemName: "terminal")
+                        .foregroundStyle(theme.textTertiary)
+                    Text("Console Output")
+                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .foregroundStyle(theme.textTertiary)
+                        .textCase(.uppercase)
+                    Spacer()
+                    if !viewModel.logLines.isEmpty {
+                        Text("\(viewModel.logLines.count) lines")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    Image(systemName: showLogs ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(theme.textTertiary)
+                        .font(.system(size: theme.fontCaption))
+                }
+            }
+            .buttonStyle(.plain)
+
+            if showLogs {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 1) {
+                            ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { idx, line in
+                                Text(line)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(logLineColor(line))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .id(idx)
+                            }
+                        }
+                        .padding(theme.spacingSM)
+                    }
+                    .frame(maxHeight: 250)
+                    .background(Color.black.opacity(0.85))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                    .onChange(of: viewModel.logLines.count) {
+                        if let lastIdx = viewModel.logLines.indices.last {
+                            withAnimation(.easeOut(duration: 0.15)) {
+                                proxy.scrollTo(lastIdx, anchor: .bottom)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func logLineColor(_ line: String) -> Color {
+        if line.hasPrefix("ILS_STEP:") && line.contains(":success:") {
+            return .green
+        } else if line.hasPrefix("ILS_STEP:") && line.contains(":failure:") {
+            return .red
+        } else if line.hasPrefix("ILS_STEP:") && line.contains(":in_progress:") {
+            return .cyan
+        } else if line.hasPrefix("ILS_ERROR:") {
+            return .red
+        } else if line.hasPrefix("ILS_TUNNEL_URL:") || line.hasPrefix("ILS_COMPLETE") {
+            return .green
+        } else if line.hasPrefix("[ILS]") {
+            return .yellow
+        }
+        return .white.opacity(0.8)
+    }
+
     // MARK: - Rejection Banner
 
     @ViewBuilder
@@ -195,6 +271,7 @@ struct SSHSetupView: View {
     private func startSetup() async {
         isSettingUp = true
         platformRejected = false
+        showLogs = true
 
         // Go straight to SetupViewModel which handles SSH connection (Step 1),
         // platform detection (Step 2), and all remaining steps with progress UI.
