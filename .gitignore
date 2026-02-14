@@ -41,6 +41,22 @@ Pods/
 # OMC / AI session data
 .omc/
 
+# Claude Code internal files
+.claude/audit/
+.claude/plan/
+.claude/skills/
+.claude/hooks/
+.claude/ralph-loop.local.md
+
+# Ralph TUI
+.ralph-tui/
+
+# Scratch / temporary
+scratch/
+
+# Local docs/specs
+docs/specs/
+
 # Environment files
 .env*
 

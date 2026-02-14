@@ -10,7 +10,6 @@ jobs:
   lint:
     name: SwiftLint
     runs-on: macos-14
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -87,3 +86,55 @@ jobs:
             -destination 'platform=macOS' \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO
+
+  ui-tests:
+    name: UI Tests (Quick Smoke)
+    runs-on: macos-14
+    needs: [ios, backend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE_PATH" ]; then
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          else
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          fi
+
+      - name: Start backend
+        run: |
+          PORT=9999 swift run ILSBackend &
+          BACKEND_STARTED=false
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+              BACKEND_STARTED=true
+              echo "Backend started after $((i * 2))s"
+              break
+            fi
+            sleep 2
+          done
+          if [ "$BACKEND_STARTED" = false ]; then
+            echo "::error::Backend failed to start within 60s"
+            exit 1
+          fi
+
+      - name: Run Quick Smoke Tests
+        run: |
+          xcodebuild test \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -testPlan "Quick Smoke Tests" \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults.xcresult
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results
+          path: TestResults.xcresult
+          retention-days: 14
