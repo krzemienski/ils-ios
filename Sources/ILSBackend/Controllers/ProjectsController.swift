@@ -2,7 +2,11 @@ import Vapor
 import Fluent
 import ILSShared
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 /// Controller for project management operations.
 ///

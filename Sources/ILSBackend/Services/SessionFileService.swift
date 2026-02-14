@@ -1,7 +1,11 @@
 import Foundation
 import Vapor
 import ILSShared
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 /// Service for external Claude Code session scanning and transcript reading.
 ///
