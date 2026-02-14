@@ -175,25 +175,25 @@ struct SSHSetupView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 1) {
-                            ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { idx, line in
+                            ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { _, line in
                                 Text(line)
                                     .font(.system(size: 11, design: .monospaced))
                                     .foregroundStyle(logLineColor(line))
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .id(idx)
                             }
+                            // Invisible anchor at the bottom for auto-scroll
+                            Color.clear
+                                .frame(height: 1)
+                                .id("log-bottom")
                         }
                         .padding(theme.spacingSM)
                     }
-                    .frame(maxHeight: 250)
+                    .defaultScrollAnchor(.bottom)
+                    .frame(height: 300)
                     .background(Color.black.opacity(0.85))
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     .onChange(of: viewModel.logLines.count) {
-                        if let lastIdx = viewModel.logLines.indices.last {
-                            withAnimation(.easeOut(duration: 0.15)) {
-                                proxy.scrollTo(lastIdx, anchor: .bottom)
-                            }
-                        }
+                        proxy.scrollTo("log-bottom", anchor: .bottom)
                     }
                 }
             }

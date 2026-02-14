@@ -3,7 +3,7 @@
 # ILS Backend — Remote Bootstrap Script
 # =============================================================================
 #
-# Downloads from raw GitHub and executes on a remote server via SSH.
+# Downloads a pre-built ILS Backend binary and starts it on a remote server.
 # Designed for non-interactive execution with machine-parseable output.
 #
 # Usage (from iOS app via SSH):
@@ -11,12 +11,12 @@
 #
 # Options:
 #   --port PORT         Backend port (default: 9999)
-#   --docker            Force Docker mode (default: auto-detect)
-#   --native            Force native Swift mode (default: auto-detect)
 #   --no-tunnel         Skip Cloudflare tunnel setup
-#   --repo URL          Custom repository URL
-#   --branch BRANCH     Git branch to use (default: master)
-#   --install-dir DIR   Installation directory (default: ~/ils-ios)
+#   --repo URL          GitHub repository for releases (default: krzemienski/ils-ios)
+#   --version TAG       Specific version tag (default: latest)
+#   --install-dir DIR   Installation directory (default: ~/ils-backend)
+#   --from-source       Build from source instead of downloading binary (fallback)
+#   --branch BRANCH     Git branch for --from-source mode (default: master)
 #
 # Output markers (parsed by iOS app):
 #   ILS_STEP:name:status:message     Step progress
@@ -30,23 +30,34 @@ set -euo pipefail
 
 # ── Defaults ─────────────────────────────────────────────────────────────────
 BACKEND_PORT="${PORT:-9999}"
-BUILD_MODE="auto"  # auto, docker, native
 SETUP_TUNNEL=true
-REPO_URL="https://github.com/krzemienski/ils-ios.git"
+GITHUB_REPO="krzemienski/ils-ios"
+VERSION_TAG="latest"
+INSTALL_DIR="$HOME/ils-backend"
+FROM_SOURCE=false
 BRANCH="master"
-INSTALL_DIR="$HOME/ils-ios"
 
 # ── Parse Arguments ──────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --port)       BACKEND_PORT="$2"; shift 2 ;;
-        --docker)     BUILD_MODE="docker"; shift ;;
-        --native)     BUILD_MODE="native"; shift ;;
-        --no-tunnel)  SETUP_TUNNEL=false; shift ;;
-        --repo)       REPO_URL="$2"; shift 2 ;;
-        --branch)     BRANCH="$2"; shift 2 ;;
+        --port)        BACKEND_PORT="$2"; shift 2 ;;
+        --no-tunnel)   SETUP_TUNNEL=false; shift ;;
+        --repo)
+            # Accept full URL or owner/repo format
+            REPO_ARG="$2"
+            if [[ "$REPO_ARG" == https://* ]]; then
+                # Extract owner/repo from URL
+                GITHUB_REPO=$(echo "$REPO_ARG" | sed -E 's|https://github.com/||; s|\.git$||')
+            else
+                GITHUB_REPO="$REPO_ARG"
+            fi
+            shift 2
+            ;;
+        --version)     VERSION_TAG="$2"; shift 2 ;;
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
-        *)            shift ;;
+        --from-source) FROM_SOURCE=true; shift ;;
+        --branch)      BRANCH="$2"; shift 2 ;;
+        *)             shift ;;
     esac
 done
 
@@ -85,13 +96,22 @@ step "detect_platform" "in_progress" "Detecting platform..."
 PLATFORM="$(uname -s)"
 ARCH="$(uname -m)"
 
+# Normalize architecture names to match binary naming convention
+case "$ARCH" in
+    x86_64|amd64)   NORM_ARCH="amd64" ;;
+    aarch64|arm64)   NORM_ARCH="arm64" ;;
+    *)               NORM_ARCH="$ARCH" ;;
+esac
+
 case "$PLATFORM" in
     Linux)
-        log "Platform: Linux ($ARCH)"
+        BINARY_SUFFIX="linux-${NORM_ARCH}"
+        log "Platform: Linux ($ARCH → $BINARY_SUFFIX)"
         step "detect_platform" "success" "Linux ($ARCH)"
         ;;
     Darwin)
-        log "Platform: macOS ($ARCH)"
+        BINARY_SUFFIX="darwin-${NORM_ARCH}"
+        log "Platform: macOS ($ARCH → $BINARY_SUFFIX)"
         step "detect_platform" "success" "macOS ($ARCH)"
         ;;
     *)
@@ -101,94 +121,80 @@ case "$PLATFORM" in
         ;;
 esac
 
-# ── Step 2: Check Dependencies & Decide Build Mode ──────────────────────────
+# ── Step 2: Check Dependencies ───────────────────────────────────────────────
 step "install_dependencies" "in_progress" "Checking dependencies..."
 
-HAS_SWIFT=false
-HAS_DOCKER=false
-HAS_GIT=false
 HAS_CURL=false
 HAS_CLOUDFLARED=false
 
-command -v git    &>/dev/null && HAS_GIT=true
 command -v curl   &>/dev/null && HAS_CURL=true
-command -v swift  &>/dev/null && HAS_SWIFT=true
-command -v docker &>/dev/null && HAS_DOCKER=true
 command -v cloudflared &>/dev/null && HAS_CLOUDFLARED=true
-
-if ! $HAS_GIT; then
-    step "install_dependencies" "failure" "git is not installed"
-    emit_error "git is required but not installed. Install with: apt install git (Linux) or xcode-select --install (macOS)"
-    exit 1
-fi
 
 if ! $HAS_CURL; then
     step "install_dependencies" "failure" "curl is not installed"
-    emit_error "curl is required but not installed. Install with: apt install curl"
+    emit_error "curl is required but not installed. Install with: apt install curl (Linux) or it should be pre-installed (macOS)"
     exit 1
 fi
 
-# Auto-detect build mode
-if [ "$BUILD_MODE" = "auto" ]; then
-    if $HAS_SWIFT; then
-        BUILD_MODE="native"
-        log "Auto-detected: native Swift build"
-    elif $HAS_DOCKER; then
-        BUILD_MODE="docker"
-        log "Auto-detected: Docker build (Swift not found)"
-    else
-        step "install_dependencies" "failure" "Neither Swift nor Docker found"
-        emit_error "Neither Swift nor Docker is installed. Install Swift (https://swift.org/install) or Docker (https://docs.docker.com/engine/install/)."
+if $FROM_SOURCE; then
+    # Source mode needs git and swift
+    HAS_GIT=false
+    HAS_SWIFT=false
+    command -v git   &>/dev/null && HAS_GIT=true
+    command -v swift &>/dev/null && HAS_SWIFT=true
+
+    if ! $HAS_GIT; then
+        step "install_dependencies" "failure" "git is not installed (required for --from-source)"
+        emit_error "git is required for source builds. Install with: apt install git"
         exit 1
     fi
-fi
+    if ! $HAS_SWIFT; then
+        step "install_dependencies" "failure" "Swift is not installed (required for --from-source)"
+        emit_error "Swift is required for source builds. Install from https://swift.org/install"
+        exit 1
+    fi
 
-# Validate chosen mode
-if [ "$BUILD_MODE" = "native" ] && ! $HAS_SWIFT; then
-    step "install_dependencies" "failure" "Swift not installed (required for native mode)"
-    emit_error "Swift is not installed. Install from https://swift.org/install or use --docker flag."
-    exit 1
-fi
-
-if [ "$BUILD_MODE" = "docker" ] && ! $HAS_DOCKER; then
-    step "install_dependencies" "failure" "Docker not installed (required for docker mode)"
-    emit_error "Docker is not installed. Install from https://docs.docker.com/engine/install/ or use --native flag."
-    exit 1
-fi
-
-DEPS_MSG="git:ok"
-$HAS_SWIFT && DEPS_MSG="$DEPS_MSG swift:ok"
-$HAS_DOCKER && DEPS_MSG="$DEPS_MSG docker:ok"
-$HAS_CLOUDFLARED && DEPS_MSG="$DEPS_MSG cloudflared:ok"
-step "install_dependencies" "success" "Dependencies OK ($DEPS_MSG) — mode: $BUILD_MODE"
-
-# ── Step 3: Clone or Update Repository ───────────────────────────────────────
-step "clone_repository" "in_progress" "Setting up repository..."
-
-if [ -d "$INSTALL_DIR/.git" ]; then
-    log "Repository exists at $INSTALL_DIR, updating..."
-    cd "$INSTALL_DIR"
-    git fetch origin "$BRANCH" 2>&1 || true
-    git checkout "$BRANCH" 2>&1 || true
-    git pull origin "$BRANCH" 2>&1 || true
-    step "clone_repository" "success" "Repository updated ($BRANCH)"
+    DEPS_MSG="curl:ok git:ok swift:ok"
 else
-    log "Cloning repository to $INSTALL_DIR..."
-    git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$INSTALL_DIR" 2>&1
-    cd "$INSTALL_DIR"
-    step "clone_repository" "success" "Repository cloned ($BRANCH)"
+    DEPS_MSG="curl:ok"
 fi
 
-# ── Step 4: Build Backend ────────────────────────────────────────────────────
-step "build_backend" "in_progress" "Building backend ($BUILD_MODE mode)..."
+$HAS_CLOUDFLARED && DEPS_MSG="$DEPS_MSG cloudflared:ok"
+step "install_dependencies" "success" "Dependencies OK ($DEPS_MSG)"
 
-if [ "$BUILD_MODE" = "native" ]; then
-    # Native Swift build
+# ── Step 3: Download or Build Backend ─────────────────────────────────────────
+
+if $FROM_SOURCE; then
+    # ── Source Build Path ────────────────────────────────────────────────────
+    SOURCE_DIR="$HOME/ils-ios"
+    step "clone_repository" "in_progress" "Setting up repository..."
+
+    REPO_URL="https://github.com/${GITHUB_REPO}.git"
+
+    if [ -d "$SOURCE_DIR/.git" ]; then
+        log "Repository exists at $SOURCE_DIR, updating..."
+        cd "$SOURCE_DIR"
+        git fetch origin "$BRANCH" 2>&1 || true
+        git checkout "$BRANCH" 2>&1 || true
+        git pull origin "$BRANCH" 2>&1 || true
+        step "clone_repository" "success" "Repository updated ($BRANCH)"
+    else
+        log "Cloning repository to $SOURCE_DIR..."
+        git clone --branch "$BRANCH" --depth 1 "$REPO_URL" "$SOURCE_DIR" 2>&1
+        cd "$SOURCE_DIR"
+        step "clone_repository" "success" "Repository cloned ($BRANCH)"
+    fi
+
+    step "build_backend" "in_progress" "Building backend from source..."
     log "Running: swift build -c release --product ILSBackend"
     if swift build -c release --product ILSBackend 2>&1; then
         BINARY_PATH="$(swift build -c release --show-bin-path)/ILSBackend"
         if [ -f "$BINARY_PATH" ]; then
-            step "build_backend" "success" "Backend built successfully (native)"
+            # Copy binary to install dir
+            mkdir -p "$INSTALL_DIR"
+            cp "$BINARY_PATH" "$INSTALL_DIR/ILSBackend"
+            chmod +x "$INSTALL_DIR/ILSBackend"
+            step "build_backend" "success" "Backend built from source"
         else
             step "build_backend" "failure" "Binary not found after build"
             emit_error "Swift build succeeded but binary not found at expected path"
@@ -200,39 +206,46 @@ if [ "$BUILD_MODE" = "native" ]; then
         exit 1
     fi
 
-elif [ "$BUILD_MODE" = "docker" ]; then
-    # Docker build
-    log "Building Docker image..."
+else
+    # ── Pre-built Binary Path (default) ──────────────────────────────────────
+    step "clone_repository" "skipped" "Using pre-built binary (no clone needed)"
 
-    # Create a Dockerfile if one doesn't exist
-    if [ ! -f "$INSTALL_DIR/Dockerfile.backend" ]; then
-        cat > "$INSTALL_DIR/Dockerfile.backend" << 'DOCKERFILE'
-FROM swift:6.0 AS builder
-WORKDIR /app
-COPY Package.swift Package.resolved ./
-COPY Sources/ Sources/
-RUN swift build -c release --product ILSBackend
+    step "build_backend" "in_progress" "Downloading pre-built backend binary..."
 
-FROM swift:6.0-slim
-WORKDIR /app
-COPY --from=builder /app/.build/release/ILSBackend /app/ILSBackend
-COPY --from=builder /app/.build/release/ /app/.build/release/
-EXPOSE 9999
-ENV PORT=9999
-CMD ["/app/ILSBackend"]
-DOCKERFILE
+    mkdir -p "$INSTALL_DIR"
+    BINARY_NAME="ILSBackend-${BINARY_SUFFIX}"
+
+    if [ "$VERSION_TAG" = "latest" ]; then
+        DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/${BINARY_NAME}"
+    else
+        DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION_TAG}/${BINARY_NAME}"
     fi
 
-    if docker build -f "$INSTALL_DIR/Dockerfile.backend" -t ils-backend:latest "$INSTALL_DIR" 2>&1; then
-        step "build_backend" "success" "Docker image built successfully"
+    log "Downloading: $DOWNLOAD_URL"
+
+    HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$INSTALL_DIR/ILSBackend" "$DOWNLOAD_URL" 2>&1)
+
+    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "000" ]; then
+        # 000 means curl followed redirects successfully (common with GitHub releases)
+        if [ -f "$INSTALL_DIR/ILSBackend" ] && [ -s "$INSTALL_DIR/ILSBackend" ]; then
+            chmod +x "$INSTALL_DIR/ILSBackend"
+            FILE_SIZE=$(stat -c%s "$INSTALL_DIR/ILSBackend" 2>/dev/null || stat -f%z "$INSTALL_DIR/ILSBackend" 2>/dev/null || echo "unknown")
+            log "Binary downloaded: $FILE_SIZE bytes"
+            step "build_backend" "success" "Binary downloaded ($FILE_SIZE bytes)"
+        else
+            step "build_backend" "failure" "Downloaded file is empty"
+            emit_error "Downloaded binary is empty. Release may not exist yet. Try --from-source flag."
+            exit 1
+        fi
     else
-        step "build_backend" "failure" "Docker build failed"
-        emit_error "Docker build failed. Check Dockerfile and Swift version."
+        step "build_backend" "failure" "Download failed (HTTP $HTTP_CODE)"
+        log "URL: $DOWNLOAD_URL"
+        emit_error "Failed to download binary (HTTP $HTTP_CODE). Release may not exist for this platform. Try --from-source flag or check https://github.com/${GITHUB_REPO}/releases"
         exit 1
     fi
 fi
 
-# ── Step 5: Start Backend ────────────────────────────────────────────────────
+# ── Step 4: Start Backend ────────────────────────────────────────────────────
 step "start_backend" "in_progress" "Starting backend on port $BACKEND_PORT..."
 
 # Kill any existing backend on that port
@@ -243,32 +256,19 @@ elif command -v fuser &>/dev/null; then
 fi
 sleep 1
 
-# Create log/pid directory
-STATE_DIR="$INSTALL_DIR/.remote-access"
+# Create state directory
+STATE_DIR="$INSTALL_DIR/.state"
 mkdir -p "$STATE_DIR"
 
-if [ "$BUILD_MODE" = "native" ]; then
-    cd "$INSTALL_DIR"
-    PORT="$BACKEND_PORT" nohup "$BINARY_PATH" > "$STATE_DIR/backend.log" 2>&1 &
-    BACKEND_PID=$!
-    echo "$BACKEND_PID" > "$STATE_DIR/backend.pid"
-    log "Backend started (PID: $BACKEND_PID)"
+cd "$INSTALL_DIR"
+PORT="$BACKEND_PORT" nohup "$INSTALL_DIR/ILSBackend" > "$STATE_DIR/backend.log" 2>&1 &
+BACKEND_PID=$!
+echo "$BACKEND_PID" > "$STATE_DIR/backend.pid"
+log "Backend started (PID: $BACKEND_PID)"
 
-elif [ "$BUILD_MODE" = "docker" ]; then
-    # Stop existing container if running
-    docker stop ils-backend 2>/dev/null || true
-    docker rm ils-backend 2>/dev/null || true
+step "start_backend" "success" "Backend started (PID: $BACKEND_PID)"
 
-    docker run -d \
-        --name ils-backend \
-        -p "$BACKEND_PORT:$BACKEND_PORT" \
-        -v "$INSTALL_DIR/ils.sqlite:/app/ils.sqlite" \
-        -e "PORT=$BACKEND_PORT" \
-        ils-backend:latest > "$STATE_DIR/docker-container-id.txt" 2>&1
-    log "Docker container started"
-fi
-
-# ── Step 6: Health Check ─────────────────────────────────────────────────────
+# ── Step 5: Health Check ─────────────────────────────────────────────────────
 step "health_check" "in_progress" "Waiting for backend to be ready..."
 
 HEALTHY=false
@@ -294,7 +294,7 @@ else
     exit 1
 fi
 
-# ── Step 7: Setup Tunnel ─────────────────────────────────────────────────────
+# ── Step 6: Setup Tunnel ─────────────────────────────────────────────────────
 if $SETUP_TUNNEL; then
     step "setup_tunnel" "in_progress" "Setting up Cloudflare tunnel..."
 
@@ -391,7 +391,7 @@ log "  Local:  http://localhost:$BACKEND_PORT"
 if [ -n "${TUNNEL_URL:-}" ]; then
     log "  Tunnel: $TUNNEL_URL"
 fi
-log "  Mode:   $BUILD_MODE"
+log "  Binary: $INSTALL_DIR/ILSBackend"
 log "  Logs:   $STATE_DIR/"
 log "============================================"
 log ""

@@ -1,0 +1,118 @@
+name: Release Backend Binary
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v0.1.0'
+
+jobs:
+  build-linux-amd64:
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend (release)
+        run: swift build -c release --product ILSBackend
+
+      - name: Get binary path
+        run: |
+          BINARY=$(swift build -c release --show-bin-path)/ILSBackend
+          cp "$BINARY" ILSBackend-linux-amd64
+          chmod +x ILSBackend-linux-amd64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ILSBackend-linux-amd64
+          path: ILSBackend-linux-amd64
+
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend (release)
+        run: swift build -c release --product ILSBackend
+
+      - name: Get binary path
+        run: |
+          BINARY=$(swift build -c release --show-bin-path)/ILSBackend
+          cp "$BINARY" ILSBackend-linux-arm64
+          chmod +x ILSBackend-linux-arm64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ILSBackend-linux-arm64
+          path: ILSBackend-linux-arm64
+
+  build-darwin-arm64:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend (release)
+        run: swift build -c release --product ILSBackend
+
+      - name: Get binary path
+        run: |
+          BINARY=$(swift build -c release --show-bin-path)/ILSBackend
+          cp "$BINARY" ILSBackend-darwin-arm64
+          chmod +x ILSBackend-darwin-arm64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ILSBackend-darwin-arm64
+          path: ILSBackend-darwin-arm64
+
+  release:
+    needs: [build-linux-amd64, build-linux-arm64, build-darwin-arm64]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ILS Backend ${{ steps.version.outputs.tag }}
+          body: |
+            ## ILS Backend Binary Release
+
+            Pre-built binaries for remote server deployment.
+            Download the binary matching your platform and architecture.
+
+            | Platform | Architecture | Binary |
+            |----------|-------------|--------|
+            | Linux | x86_64 | `ILSBackend-linux-amd64` |
+            | Linux | ARM64 | `ILSBackend-linux-arm64` |
+            | macOS | Apple Silicon | `ILSBackend-darwin-arm64` |
+          files: |
+            binaries/ILSBackend-linux-amd64/ILSBackend-linux-amd64
+            binaries/ILSBackend-linux-arm64/ILSBackend-linux-arm64
+            binaries/ILSBackend-darwin-arm64/ILSBackend-darwin-arm64
+          draft: false
+          prerelease: false
