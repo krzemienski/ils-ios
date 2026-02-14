@@ -14,11 +14,11 @@ class XCUITestBase: XCTestCase {
         app.launchArguments = ["--uitesting"]
         app.launchEnvironment = [
             "UITEST_MODE": "1",
-            "BACKEND_URL": "http://localhost:9090"
+            "BACKEND_URL": "http://localhost:9999"
         ]
-        
+
         // Verify backend is running before starting tests
-        XCTAssertTrue(isBackendRunning(), "Backend server must be running on port 9090. Run: ./scripts/run_regression_tests.sh")
+        XCTAssertTrue(isBackendRunning(), "Backend server must be running on port 9999. Run: PORT=9999 swift run ILSBackend")
     }
     
     override func tearDownWithError() throws {
@@ -32,7 +32,7 @@ class XCUITestBase: XCTestCase {
         let semaphore = DispatchSemaphore(value: 0)
         var isRunning = false
         
-        guard let url = URL(string: "http://localhost:9090/health") else { return false }
+        guard let url = URL(string: "http://localhost:9999/health") else { return false }
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let httpResponse = response as? HTTPURLResponse,

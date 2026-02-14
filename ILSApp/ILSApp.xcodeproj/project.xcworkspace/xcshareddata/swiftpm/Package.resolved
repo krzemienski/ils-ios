@@ -23,7 +23,6 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/krzemienski/ClaudeCodeSDK.git",
       "state" : {
-        "branch" : "main",
         "revision" : "f626d1d1eab3bf43a1eef2f70b2a493903f7e5e8"
       }
     },

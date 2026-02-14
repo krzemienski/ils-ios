@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00000000000000000000000E"
+               BlueprintIdentifier = "D645525C5887D056718B993A"
                BuildableName = "ILSApp.app"
                BlueprintName = "ILSApp"
                ReferencedContainer = "container:ILSApp/ILSApp.xcodeproj">
@@ -43,7 +43,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "00000000000000000000000E"
+            BlueprintIdentifier = "D645525C5887D056718B993A"
             BuildableName = "ILSApp.app"
             BlueprintName = "ILSApp"
             ReferencedContainer = "container:ILSApp/ILSApp.xcodeproj">
@@ -60,7 +60,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "00000000000000000000000E"
+            BlueprintIdentifier = "D645525C5887D056718B993A"
             BuildableName = "ILSApp.app"
             BlueprintName = "ILSApp"
             ReferencedContainer = "container:ILSApp/ILSApp.xcodeproj">

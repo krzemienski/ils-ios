@@ -139,8 +139,8 @@ jobs:
           xcodebuild test \
             -project ILSApp/ILSApp.xcodeproj \
             -scheme ILSApp \
-            -testPlan "Quick Smoke Tests" \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -only-testing:ILSAppUITests/CISmokeTests \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults.xcresult

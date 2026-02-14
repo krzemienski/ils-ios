@@ -1,4 +1,7 @@
 name: ILSApp
+fileGroups:
+  - ILSApp.xctestplan
+
 options:
   bundleIdPrefix: com.ils
   deploymentTarget:
@@ -72,6 +75,36 @@ targets:
   # ──────────────────────────────────────────────
   # macOS App
   # ──────────────────────────────────────────────
+  # ──────────────────────────────────────────────
+  # UI Tests
+  # ──────────────────────────────────────────────
+  ILSAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ILSAppUITests
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ils.app.uitests
+        SWIFT_VERSION: "5.0"
+        DEVELOPMENT_TEAM: HC36V7B67Z
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: ""
+        TEST_TARGET_NAME: ILSApp
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+    dependencies:
+      - target: ILSApp
+
+  # ──────────────────────────────────────────────
+  # macOS App
+  # ──────────────────────────────────────────────
   ILSMacApp:
     type: application
     platform: macOS
@@ -138,8 +171,13 @@ schemes:
     build:
       targets:
         ILSApp: all
+        ILSAppUITests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - name: ILSAppUITests
 
   ILSMacApp:
     build:
