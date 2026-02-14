@@ -113,11 +113,14 @@ jobs:
             sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           fi
 
+      - name: Build backend
+        run: swift build --product ILSBackend
+
       - name: Start backend
         run: |
           PORT=9999 swift run ILSBackend &
           BACKEND_STARTED=false
-          for i in $(seq 1 30); do
+          for i in $(seq 1 60); do
             if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
               BACKEND_STARTED=true
               echo "Backend started after $((i * 2))s"
@@ -126,7 +129,7 @@ jobs:
             sleep 2
           done
           if [ "$BACKEND_STARTED" = false ]; then
-            echo "::error::Backend failed to start within 60s"
+            echo "::error::Backend failed to start within 120s"
             exit 1
           fi
 
