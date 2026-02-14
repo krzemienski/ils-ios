@@ -37,14 +37,6 @@
       }
     },
     {
-      "identity" : "claudecodesdk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/krzemienski/ClaudeCodeSDK.git",
-      "state" : {
-        "revision" : "f626d1d1eab3bf43a1eef2f70b2a493903f7e5e8"
-      }
-    },
-    {
       "identity" : "console-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/console-kit.git",
@@ -366,15 +358,6 @@
       "state" : {
         "revision" : "7c6ad0fc39d0763e0b699210e4124afd5041c5df",
         "version" : "1.6.4"
-      }
-    },
-    {
-      "identity" : "swiftanthropic",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jamesrochabrun/SwiftAnthropic",
-      "state" : {
-        "revision" : "4f9e21b94e491138003903ff6c14ab4f04b6ba6c",
-        "version" : "2.2.0"
       }
     },
     {

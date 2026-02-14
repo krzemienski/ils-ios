@@ -1,10 +1,15 @@
 import Foundation
+#if canImport(Darwin)
 import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
 
 /// Actor that collects system metrics: CPU, memory, disk, network, processes, and file listings.
 ///
 /// Uses macOS system calls (`host_processor_info`, `host_statistics64`) for CPU and memory,
-/// `FileManager` for disk, and `netstat -ib` for network statistics.
+/// `FileManager` for disk, and `getifaddrs` for network statistics.
+/// On Linux, CPU and memory use `/proc` filesystem; network returns empty metrics.
 actor SystemMetricsService {
     private let fileManager = FileManager.default
 
@@ -144,6 +149,7 @@ actor SystemMetricsService {
 
     // MARK: - Private Helpers
 
+#if os(macOS) || os(iOS)
     /// Get CPU usage percentage via host_processor_info().
     private func getCPUUsage() -> Double {
         var numCPUs: natural_t = 0
@@ -221,26 +227,7 @@ actor SystemMetricsService {
         )
     }
 
-    /// Get disk usage via FileManager.attributesOfFileSystem.
-    private func getDiskMetrics() -> DiskMetrics {
-        do {
-            let attrs = try fileManager.attributesOfFileSystem(forPath: "/")
-            let total = (attrs[.systemSize] as? UInt64) ?? 0
-            let free = (attrs[.systemFreeSize] as? UInt64) ?? 0
-            let used = total > free ? total - free : 0
-            let percentage = total > 0 ? (Double(used) / Double(total)) * 100.0 : 0.0
-
-            return DiskMetrics(
-                used: used,
-                total: total,
-                percentage: (percentage * 10).rounded() / 10
-            )
-        } catch {
-            return DiskMetrics(used: 0, total: 0, percentage: 0)
-        }
-    }
-
-    /// Get network byte counters via `getifaddrs()` system call (no subprocess needed).
+    /// Get network byte counters via `getifaddrs()` system call.
     private func getNetworkMetrics() -> NetworkMetrics {
         var totalBytesIn: UInt64 = 0
         var totalBytesOut: UInt64 = 0
@@ -269,6 +256,92 @@ actor SystemMetricsService {
         }
 
         return NetworkMetrics(bytesIn: totalBytesIn, bytesOut: totalBytesOut)
+    }
+
+#else
+    // MARK: - Linux Fallbacks
+
+    /// Get CPU usage from /proc/stat on Linux.
+    private func getCPUUsage() -> Double {
+        guard let contents = try? String(contentsOfFile: "/proc/stat", encoding: .utf8) else {
+            return 0.0
+        }
+        // Parse first "cpu " line: user nice system idle iowait irq softirq steal
+        guard let cpuLine = contents.components(separatedBy: "\n").first(where: { $0.hasPrefix("cpu ") }) else {
+            return 0.0
+        }
+        let parts = cpuLine.split(separator: " ").compactMap { Double($0) }
+        guard parts.count >= 4 else { return 0.0 }
+
+        let user = parts[0]
+        let nice = parts[1]
+        let system = parts[2]
+        let idle = parts[3]
+        let total = user + nice + system + idle
+        guard total > 0 else { return 0.0 }
+
+        let usage = ((user + nice + system) / total) * 100.0
+        return (usage * 10).rounded() / 10
+    }
+
+    /// Get memory metrics from /proc/meminfo on Linux.
+    private func getMemoryMetrics() -> MemoryMetrics {
+        guard let contents = try? String(contentsOfFile: "/proc/meminfo", encoding: .utf8) else {
+            return MemoryMetrics(used: 0, total: 0, percentage: 0)
+        }
+
+        var totalKB: UInt64 = 0
+        var availableKB: UInt64 = 0
+
+        for line in contents.components(separatedBy: "\n") {
+            if line.hasPrefix("MemTotal:") {
+                totalKB = parseMemInfoValue(line)
+            } else if line.hasPrefix("MemAvailable:") {
+                availableKB = parseMemInfoValue(line)
+            }
+        }
+
+        let totalBytes = totalKB * 1024
+        let usedBytes = totalBytes - (availableKB * 1024)
+        let percentage = totalBytes > 0 ? (Double(usedBytes) / Double(totalBytes)) * 100.0 : 0.0
+
+        return MemoryMetrics(
+            used: usedBytes,
+            total: totalBytes,
+            percentage: (percentage * 10).rounded() / 10
+        )
+    }
+
+    private func parseMemInfoValue(_ line: String) -> UInt64 {
+        // Format: "MemTotal:       16384000 kB"
+        let parts = line.split(separator: " ")
+        guard parts.count >= 2, let value = UInt64(parts[1]) else { return 0 }
+        return value
+    }
+
+    /// Network metrics stub on Linux (returns zeros).
+    private func getNetworkMetrics() -> NetworkMetrics {
+        return NetworkMetrics(bytesIn: 0, bytesOut: 0)
+    }
+#endif
+
+    /// Get disk usage via FileManager.attributesOfFileSystem.
+    private func getDiskMetrics() -> DiskMetrics {
+        do {
+            let attrs = try fileManager.attributesOfFileSystem(forPath: "/")
+            let total = (attrs[.systemSize] as? UInt64) ?? 0
+            let free = (attrs[.systemFreeSize] as? UInt64) ?? 0
+            let used = total > free ? total - free : 0
+            let percentage = total > 0 ? (Double(used) / Double(total)) * 100.0 : 0.0
+
+            return DiskMetrics(
+                used: used,
+                total: total,
+                percentage: (percentage * 10).rounded() / 10
+            )
+        } catch {
+            return DiskMetrics(used: 0, total: 0, percentage: 0)
+        }
     }
 
     /// Get system load averages.
