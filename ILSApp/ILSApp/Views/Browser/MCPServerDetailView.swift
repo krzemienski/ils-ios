@@ -113,7 +113,7 @@ struct MCPServerDetailView: View {
         .background(theme.bgPrimary)
         .navigationTitle(server.name)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

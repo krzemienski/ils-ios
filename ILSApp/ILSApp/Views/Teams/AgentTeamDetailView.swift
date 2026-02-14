@@ -57,7 +57,7 @@ struct AgentTeamDetailView: View {
         .background(theme.bgPrimary)
         .navigationTitle(teamName)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .sheet(isPresented: $showSpawnSheet) {
             SpawnTeammateView(viewModel: viewModel, teamName: teamName)

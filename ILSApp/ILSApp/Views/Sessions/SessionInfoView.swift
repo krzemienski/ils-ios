@@ -82,7 +82,7 @@ struct SessionInfoView: View {
             .background(theme.bgPrimary)
             .navigationTitle("Session Info")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             #endif
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

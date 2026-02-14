@@ -51,7 +51,7 @@ struct SSHSetupView: View {
         .background(theme.bgPrimary)
         .navigationTitle("SSH Setup")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
     }
 

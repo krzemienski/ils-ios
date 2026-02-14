@@ -23,7 +23,7 @@ struct FleetHostDetailView: View {
         .background(theme.bgPrimary)
         .navigationTitle(host.name)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .task { await loadLogs() }
     }

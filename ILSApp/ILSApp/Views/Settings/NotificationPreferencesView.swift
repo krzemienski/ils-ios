@@ -100,7 +100,7 @@ struct NotificationPreferencesView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Notifications")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
     }
 

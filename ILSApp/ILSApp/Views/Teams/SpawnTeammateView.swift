@@ -88,7 +88,7 @@ struct SpawnTeammateView: View {
             .background(theme.bgPrimary)
             .navigationTitle("Spawn Teammate")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

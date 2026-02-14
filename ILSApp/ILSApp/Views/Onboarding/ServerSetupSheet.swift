@@ -14,7 +14,7 @@ struct ServerSetupSheet: View {
             OnboardingView()
                 .navigationTitle("Welcome")
                 #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
+                .inlineNavigationBarTitle()
                 #endif
         }
         .interactiveDismissDisabled(true)

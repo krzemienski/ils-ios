@@ -41,7 +41,7 @@ struct SkillDetailView: View {
         .background(theme.bgPrimary)
         .navigationTitle(skill.name)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

@@ -60,7 +60,7 @@ struct ThemePickerView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Theme")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
     }
 

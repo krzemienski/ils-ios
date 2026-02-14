@@ -42,7 +42,7 @@ struct NewSessionView: View {
             .background(theme.bgPrimary)
             .navigationTitle("New Session")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

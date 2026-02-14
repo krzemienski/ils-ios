@@ -58,7 +58,7 @@ struct BrowserView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Browse")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .task {
             mcpVM.configure(client: appState.apiClient)

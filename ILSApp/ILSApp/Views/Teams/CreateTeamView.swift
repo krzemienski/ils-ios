@@ -44,7 +44,7 @@ struct CreateTeamView: View {
             .background(theme.bgPrimary)
             .navigationTitle("Create Team")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

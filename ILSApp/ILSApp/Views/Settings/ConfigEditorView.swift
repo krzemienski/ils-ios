@@ -59,7 +59,7 @@ struct ConfigEditorView: View {
         .background(theme.bgPrimary)
         .navigationTitle("\(scope.capitalized) Settings")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

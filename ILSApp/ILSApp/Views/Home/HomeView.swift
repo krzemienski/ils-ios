@@ -25,7 +25,7 @@ struct HomeView: View {
         }
         .background(theme.bgPrimary)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .toolbar(.hidden, for: .navigationBar)
         #endif
         .task {

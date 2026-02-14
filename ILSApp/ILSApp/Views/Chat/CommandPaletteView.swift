@@ -52,7 +52,7 @@ struct CommandPaletteView: View {
             .searchable(text: $searchText, prompt: "Search commands...")
             .navigationTitle("Commands")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

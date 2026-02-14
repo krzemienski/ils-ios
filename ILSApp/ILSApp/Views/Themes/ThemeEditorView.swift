@@ -438,7 +438,7 @@ struct ThemeEditorView: View {
                     }
             }
             .navigationTitle(isNewTheme ? "New Theme" : "Edit Theme")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

@@ -69,7 +69,7 @@ struct QuickConnectView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Quick Connect")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .onAppear {
             loadHistory()

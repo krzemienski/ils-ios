@@ -72,7 +72,7 @@ struct AdvancedOptionsSheet: View {
             .tint(theme.accent)
             .navigationTitle("Chat Options")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

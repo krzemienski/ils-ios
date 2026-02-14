@@ -4,6 +4,22 @@
 
 import SwiftUI
 
+// MARK: - Cross-Platform Navigation Bar Title
+
+// NavigationBarTitleDisplayMode availability varies across macOS SDK versions,
+// causing ambiguity or unavailability errors depending on the Xcode toolchain.
+// This wrapper eliminates the problem entirely with a compile-time #if guard.
+extension View {
+    @ViewBuilder
+    func inlineNavigationBarTitle() -> some View {
+        #if os(iOS)
+        self.navigationBarTitleDisplayMode(.inline)
+        #else
+        self
+        #endif
+    }
+}
+
 #if os(macOS)
 
 // MARK: - Keyboard Type
@@ -55,20 +71,6 @@ enum TextInputAutocapitalization {
 
 extension View {
     func textInputAutocapitalization(_ autocapitalization: TextInputAutocapitalization?) -> some View {
-        self
-    }
-}
-
-// MARK: - Navigation Bar Title Display Mode
-
-enum NavigationBarTitleDisplayMode {
-    case automatic
-    case inline
-    case large
-}
-
-extension View {
-    func navigationBarTitleDisplayMode(_ displayMode: NavigationBarTitleDisplayMode) -> some View {
         self
     }
 }

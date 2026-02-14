@@ -50,7 +50,7 @@ struct TunnelSettingsView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Remote Access")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         #endif
         .toast(isPresented: $showCopiedToast, message: "URL copied to clipboard")
         .task {
