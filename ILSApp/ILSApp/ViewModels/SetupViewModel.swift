@@ -12,7 +12,7 @@ final class SetupViewModel: ObservableObject {
     private let sshService = CitadelSSHService()
 
     // Raw GitHub URL for the bootstrap script
-    private let bootstrapScriptURL = "https://raw.githubusercontent.com/krzemienski/ils-ios/design/v2-redesign/scripts/bootstrap-remote.sh"
+    private let bootstrapScriptURL = "https://raw.githubusercontent.com/krzemienski/ils-ios/master/scripts/bootstrap-remote.sh"
 
     func startSetup(request: StartSetupRequest) async {
         isRunning = true
