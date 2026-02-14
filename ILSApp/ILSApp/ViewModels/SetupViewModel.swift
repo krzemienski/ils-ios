@@ -50,11 +50,10 @@ final class SetupViewModel: ObservableObject {
         // The script emits ILS_STEP: markers that we parse in real-time
         // to update the progress UI.
         do {
-            var scriptArgs = "--port \(request.backendPort)"
-
-            if let repoURL = request.repositoryURL {
-                scriptArgs += " --repo \(repoURL)"
-            }
+            // Always pass the correct repo URL so we don't depend on the script's default
+            // (which may be stale due to GitHub raw CDN caching)
+            let repoURL = request.repositoryURL ?? "https://github.com/krzemienski/ils-ios.git"
+            var scriptArgs = "--port \(request.backendPort) --repo \(repoURL)"
 
             if request.tunnelType == nil {
                 scriptArgs += " --no-tunnel"
