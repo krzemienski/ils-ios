@@ -59,10 +59,16 @@ struct CommandPaletteView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            #if os(iOS)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(theme.bgPrimary, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            #endif
             .task {
                 await loadSkills()
             }
         }
+        .preferredColorScheme(.dark)
     }
 
     private static let allBuiltInCommands: [CommandItem] = [

@@ -28,6 +28,12 @@ ils.sqlite-wal
 # Node.js (Agent SDK wrapper)
 node_modules/
 
+# Databases
+*.db
+
+# CocoaPods
+Pods/
+
 # macOS
 .DS_Store
 *.swp

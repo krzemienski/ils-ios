@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKSPACE="${PROJECT_DIR}/ILSFullStack.xcworkspace"
 SCHEME="ILSApp"
-DESTINATION="platform=iOS Simulator,name=iPhone 15 Pro"
+DESTINATION="platform=iOS Simulator,id=50523130-57AA-48B0-ABD0-4D59CE455F14"
 RESULT_BUNDLE="${PROJECT_DIR}/TestResults_$(date +%Y%m%d_%H%M%S).xcresult"
 BACKEND_PID_FILE="${PROJECT_DIR}/.backend_test.pid"
 

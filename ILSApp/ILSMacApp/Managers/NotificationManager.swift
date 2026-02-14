@@ -146,7 +146,7 @@ class NotificationManager: NSObject, ObservableObject {
 
 // MARK: - UNUserNotificationCenterDelegate
 
-extension NotificationManager: UNUserNotificationCenterDelegate {
+extension NotificationManager: @preconcurrency UNUserNotificationCenterDelegate {
     /// Handle notification when app is in foreground
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,

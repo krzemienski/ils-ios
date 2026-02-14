@@ -240,29 +240,35 @@ actor SystemMetricsService {
         }
     }
 
-    /// Get network byte counters by parsing `netstat -ib` output.
+    /// Get network byte counters via `getifaddrs()` system call (no subprocess needed).
     private func getNetworkMetrics() -> NetworkMetrics {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/netstat")
-        process.arguments = ["-ib"]
+        var totalBytesIn: UInt64 = 0
+        var totalBytesOut: UInt64 = 0
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            guard let output = String(data: data, encoding: .utf8) else {
-                return NetworkMetrics(bytesIn: 0, bytesOut: 0)
-            }
-
-            return parseNetstatOutput(output)
-        } catch {
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
             return NetworkMetrics(bytesIn: 0, bytesOut: 0)
         }
+        defer { freeifaddrs(ifaddr) }
+
+        var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddr
+        while let addr = cursor {
+            let name = String(cString: addr.pointee.ifa_name)
+
+            // Skip loopback interfaces
+            if !name.hasPrefix("lo"),
+               let ifaAddr = addr.pointee.ifa_addr,
+               ifaAddr.pointee.sa_family == UInt8(AF_LINK),
+               let data = addr.pointee.ifa_data {
+                let networkData = data.assumingMemoryBound(to: if_data.self).pointee
+                totalBytesIn += UInt64(networkData.ifi_ibytes)
+                totalBytesOut += UInt64(networkData.ifi_obytes)
+            }
+
+            cursor = addr.pointee.ifa_next
+        }
+
+        return NetworkMetrics(bytesIn: totalBytesIn, bytesOut: totalBytesOut)
     }
 
     /// Get system load averages.
@@ -309,45 +315,4 @@ actor SystemMetricsService {
         }
     }
 
-    /// Parse `netstat -ib` output to sum bytes in/out across all interfaces.
-    private func parseNetstatOutput(_ output: String) -> NetworkMetrics {
-        let lines = output.components(separatedBy: "\n")
-        var totalBytesIn: UInt64 = 0
-        var totalBytesOut: UInt64 = 0
-
-        // Find header to determine column positions
-        guard let headerLine = lines.first else {
-            return NetworkMetrics(bytesIn: 0, bytesOut: 0)
-        }
-
-        let headerParts = headerLine.split(separator: " ", omittingEmptySubsequences: true)
-        var ibytesIdx: Int?
-        var obytesIdx: Int?
-
-        for (i, col) in headerParts.enumerated() {
-            if col == "Ibytes" { ibytesIdx = i }
-            if col == "Obytes" { obytesIdx = i }
-        }
-
-        guard let inIdx = ibytesIdx, let outIdx = obytesIdx else {
-            return NetworkMetrics(bytesIn: 0, bytesOut: 0)
-        }
-
-        for line in lines.dropFirst() {
-            let parts = line.split(separator: " ", omittingEmptySubsequences: true)
-            guard parts.count > max(inIdx, outIdx) else { continue }
-
-            // Skip loopback
-            if parts[0].hasPrefix("lo") { continue }
-
-            if let bytesIn = UInt64(parts[inIdx]) {
-                totalBytesIn += bytesIn
-            }
-            if let bytesOut = UInt64(parts[outIdx]) {
-                totalBytesOut += bytesOut
-            }
-        }
-
-        return NetworkMetrics(bytesIn: totalBytesIn, bytesOut: totalBytesOut)
-    }
 }

@@ -126,7 +126,7 @@ class AppState: ObservableObject {
             } else {
                 navigationIntent = .home
             }
-        case "projects", "plugins", "mcp", "skills":
+        case "browser", "projects", "plugins", "mcp", "skills":
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings
@@ -145,10 +145,15 @@ class AppState: ObservableObject {
                 let response: APIResponse<ChatSession> = try await apiClient.get("/sessions/\(id.uuidString)")
                 if let session = response.data {
                     navigationIntent = .chat(session)
+                } else {
+                    // API returned no data — open a minimal session
+                    let session = ChatSession(id: id, name: "Session")
+                    navigationIntent = .chat(session)
                 }
             } catch {
-                // Session not found or network error — fall back to sessions list
-                navigationIntent = .home
+                // Session not found in DB (may be external) — open with minimal info
+                let session = ChatSession(id: id, name: "Session")
+                navigationIntent = .chat(session)
             }
         }
     }

@@ -146,23 +146,23 @@ struct SystemController: RouteCollection {
 
                 let stats = await service.getMetrics()
 
-                let response = LiveMetricsMessage(
-                    timestamp: ISO8601DateFormatter().string(from: Date()),
+                let response = SystemMetricsResponse(
                     cpu: stats.cpu,
-                    memory: LiveMetricsMessage.MemoryInfo(
+                    memory: SystemMetricsResponse.MemoryInfo(
                         used: stats.memory.used,
                         total: stats.memory.total,
                         percentage: stats.memory.percentage
                     ),
-                    disk: LiveMetricsMessage.DiskInfo(
+                    disk: SystemMetricsResponse.DiskInfo(
                         used: stats.disk.used,
                         total: stats.disk.total,
                         percentage: stats.disk.percentage
                     ),
-                    network: LiveMetricsMessage.NetworkInfo(
+                    network: SystemMetricsResponse.NetworkInfo(
                         bytesIn: stats.network.bytesIn,
                         bytesOut: stats.network.bytesOut
-                    )
+                    ),
+                    loadAverage: stats.loadAverage
                 )
 
                 do {

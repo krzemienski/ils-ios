@@ -17,7 +17,7 @@ NC='\033[0m'
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-BACKEND_PORT=9090
+BACKEND_PORT="${PORT:-9999}"
 PID_DIR="${PROJECT_DIR}/.remote-access"
 BACKEND_PID_FILE="${PID_DIR}/backend.pid"
 TUNNEL_PID_FILE="${PID_DIR}/cloudflare-tunnel.pid"
