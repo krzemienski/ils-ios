@@ -1,5 +1,26 @@
 import Foundation
 
+// MARK: - Tunnel Types
+
+public enum TunnelType: String, Codable, Sendable {
+    case cloudflare
+    case sshPortForward
+}
+
+public struct TunnelConfig: Codable, Sendable {
+    public let type: TunnelType
+    public let url: String
+    public let remotePort: Int
+    public let pid: Int?
+
+    public init(type: TunnelType, url: String, remotePort: Int, pid: Int? = nil) {
+        self.type = type
+        self.url = url
+        self.remotePort = remotePort
+        self.pid = pid
+    }
+}
+
 // MARK: - Setup Requests
 
 public struct StartSetupRequest: Codable, Sendable {
@@ -10,6 +31,7 @@ public struct StartSetupRequest: Codable, Sendable {
     public let credential: String
     public let backendPort: Int
     public let repositoryURL: String?
+    public var tunnelType: TunnelType?
 
     public init(
         host: String,
@@ -18,7 +40,8 @@ public struct StartSetupRequest: Codable, Sendable {
         authMethod: String,
         credential: String,
         backendPort: Int = 9090,
-        repositoryURL: String? = nil
+        repositoryURL: String? = nil,
+        tunnelType: TunnelType? = nil
     ) {
         self.host = host
         self.port = port
@@ -27,6 +50,7 @@ public struct StartSetupRequest: Codable, Sendable {
         self.credential = credential
         self.backendPort = backendPort
         self.repositoryURL = repositoryURL
+        self.tunnelType = tunnelType
     }
 }
 

@@ -7,13 +7,9 @@ final class SSHViewModel: ObservableObject {
     @Published var isConnecting = false
     @Published var platform: String?
     @Published var connectionError: String?
-    @Published var status: SSHStatusResponse?
+    @Published var connectedAt: Date?
 
-    private let apiClient: APIClient
-
-    init(apiClient: APIClient = APIClient()) {
-        self.apiClient = apiClient
-    }
+    private let sshService = CitadelSSHService()
 
     func connect(host: String, port: Int, username: String, authMethod: String, credential: String) async {
         isConnecting = true
@@ -21,33 +17,53 @@ final class SSHViewModel: ObservableObject {
         defer { isConnecting = false }
 
         do {
-            let request = SSHConnectRequest(host: host, port: port, username: username, authMethod: authMethod, credential: credential)
-            let wrapper: APIResponse<ConnectionResponse> = try await apiClient.post("/ssh/connect", body: request)
-            let response = wrapper.data
-            isConnected = response?.success ?? false
-            if response?.success != true { connectionError = response?.error ?? "Unknown error" }
+            isConnected = try await sshService.connect(
+                host: host,
+                port: port,
+                username: username,
+                authMethod: authMethod,
+                credential: credential
+            )
+            
+            if isConnected {
+                let status = await sshService.getStatus()
+                connectedAt = status.connectedAt
+            }
         } catch {
             connectionError = error.localizedDescription
+            isConnected = false
         }
     }
 
     func disconnect() async {
-        let _: APIResponse<AcknowledgedResponse>? = try? await apiClient.post("/ssh/disconnect", body: EmptyBody())
+        await sshService.disconnect()
         isConnected = false
         platform = nil
+        connectedAt = nil
     }
 
     func detectPlatform() async -> SSHPlatformResponse? {
-        let wrapper: APIResponse<SSHPlatformResponse>? = try? await apiClient.get("/ssh/platform")
-        let response = wrapper?.data
-        platform = response?.platform
-        return response
+        do {
+            let (platformName, isSupported, rejectionReason) = try await sshService.detectPlatform()
+            platform = platformName
+            return SSHPlatformResponse(
+                platform: platformName,
+                isSupported: isSupported,
+                rejectionReason: rejectionReason
+            )
+        } catch {
+            connectionError = error.localizedDescription
+            return nil
+        }
     }
 
     func refreshStatus() async {
-        let wrapper: APIResponse<SSHStatusResponse>? = try? await apiClient.get("/ssh/status")
-        status = wrapper?.data
-        isConnected = status?.connected ?? false
-        platform = status?.platform
+        let status = await sshService.getStatus()
+        isConnected = status.connected
+        connectedAt = status.connectedAt
+    }
+    
+    func executeCommand(_ command: String, timeout: Int? = 30) async throws -> (stdout: String, stderr: String, exitCode: Int32) {
+        return try await sshService.executeCommand(command, timeout: timeout)
     }
 }

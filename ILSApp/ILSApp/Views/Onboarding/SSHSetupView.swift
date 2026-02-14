@@ -196,35 +196,10 @@ struct SSHSetupView: View {
         isSettingUp = true
         platformRejected = false
 
-        // First connect SSH
-        await sshViewModel.connect(
-            host: host,
-            port: Int(port) ?? 22,
-            username: username,
-            authMethod: authMethod.rawValue,
-            credential: credential
-        )
-
-        guard sshViewModel.isConnected else {
-            isSettingUp = false
-            if let error = sshViewModel.connectionError {
-                rejectionMessage = error
-                platformRejected = true
-            }
-            return
-        }
-
-        // Detect platform
-        if let platform = await sshViewModel.detectPlatform() {
-            if !platform.isSupported {
-                platformRejected = true
-                rejectionMessage = platform.rejectionReason ?? "Unsupported platform"
-                isSettingUp = false
-                return
-            }
-        }
-
-        // Start full setup
+        // Go straight to SetupViewModel which handles SSH connection (Step 1),
+        // platform detection (Step 2), and all remaining steps with progress UI.
+        // No need to connect via sshViewModel separately — that creates a duplicate
+        // SSH connection with no visual feedback.
         let request = StartSetupRequest(
             host: host,
             port: Int(port) ?? 22,
@@ -238,9 +213,19 @@ struct SSHSetupView: View {
 
         if viewModel.isComplete {
             // Connect appState to the newly-set-up remote backend
-            appState.updateServerURL("http://\(host):\(backendPort)")
-            try? await appState.connectToServer(url: "http://\(host):\(backendPort)")
-            dismiss()
+            // Use tunnel URL if available, otherwise direct HTTP connection
+            let serverURL = viewModel.tunnelURL ?? "http://\(host):\(backendPort)"
+            appState.updateServerURL(serverURL)
+
+            do {
+                try await appState.connectToServer(url: serverURL)
+                // Connection successful - dismiss and navigate to dashboard
+                dismiss()
+            } catch {
+                // Connection failed - show error and keep setup view open
+                viewModel.error = "Failed to connect to server: \(error.localizedDescription)"
+                // User can retry connection by tapping the connect button again
+            }
         }
     }
 

@@ -14,6 +14,7 @@ public struct SetupProgress: Codable, Sendable {
         case buildBackend = "build_backend"
         case startBackend = "start_backend"
         case healthCheck = "health_check"
+        case setupTunnel = "setup_tunnel"
     }
 
     public enum StepStatus: String, Codable, Sendable {

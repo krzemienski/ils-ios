@@ -34,13 +34,9 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>CFBundleDisplayName</key>
-	<string>ILS</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>ILS connects to your local development server to manage Claude Code sessions, projects, and tools.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID is used to protect your server credentials stored in the Keychain.</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>
