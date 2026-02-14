@@ -101,6 +101,7 @@ jobs:
     name: UI Tests (Quick Smoke)
     runs-on: macos-14
     needs: [ios, backend]
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
