@@ -4,6 +4,7 @@ import ILSShared
 @MainActor
 class SessionsViewModel: ObservableObject {
     @Published var sessions: [ChatSession] = []
+    @Published var totalCount: Int = 0
     @Published var isLoading = false
     @Published var error: Error?
     @Published var hasMore = true
@@ -72,6 +73,7 @@ class SessionsViewModel: ObservableObject {
             let response: APIResponse<PaginatedResponse<ChatSession>> = try await client.get(path)
             let newItems = response.data?.items ?? []
             hasMore = response.data?.hasMore ?? false
+            totalCount = response.data?.total ?? totalCount
 
             if currentPage == 1 {
                 sessions = newItems

@@ -172,7 +172,7 @@ struct MacContentView: View {
                     .font(.system(size: theme.fontCaption, weight: .semibold, design: .monospaced))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
-                Text("\(sessionsViewModel.sessions.count)")
+                Text("\(sessionsViewModel.totalCount)")
                     .font(.system(size: theme.fontCaption, design: .monospaced))
                     .foregroundStyle(theme.textTertiary)
             }

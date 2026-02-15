@@ -49,7 +49,7 @@ struct MacSessionsListView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold, design: .monospaced))
                 .foregroundStyle(theme.textTertiary)
             Spacer()
-            Text("\(viewModel.sessions.count)")
+            Text("\(viewModel.totalCount)")
                 .font(.system(size: theme.fontCaption, design: .monospaced))
                 .foregroundStyle(theme.textTertiary)
         }

@@ -115,7 +115,7 @@ struct HomeView: View {
 
                     Spacer()
 
-                    Text("\(sessionsVM.sessions.count)")
+                    Text("\(sessionsVM.totalCount)")
                         .font(.system(size: theme.fontCaption, design: .monospaced))
                         .foregroundStyle(theme.textTertiary)
                 }

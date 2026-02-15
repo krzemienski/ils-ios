@@ -205,7 +205,7 @@ struct MacDashboardView: View {
                 Spacer()
 
                 if !recent.isEmpty {
-                    Text("\(sessionsVM.sessions.count) total")
+                    Text("\(sessionsVM.totalCount) total")
                         .font(.system(size: theme.fontCaption, design: .monospaced))
                         .foregroundStyle(theme.textTertiary)
                 }
