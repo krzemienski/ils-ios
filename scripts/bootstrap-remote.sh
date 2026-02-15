@@ -223,22 +223,34 @@ else
 
     log "Downloading: $DOWNLOAD_URL"
 
-    # Download binary using stdout redirect instead of curl's -o flag.
-    # curl -o uses an internal write callback that fails with "client returned
-    # ERROR on write" in certain SSH exec contexts (Citadel). Redirecting stdout
-    # to a file uses bash's file descriptor handling which works reliably.
-    CURL_ERR="$INSTALL_DIR/.curl-error"
+    # Kill any existing backend first — Linux returns ETXTBSY ("Text file busy")
+    # if you try to overwrite a running executable. This was the root cause of
+    # all the "curl exit 23 / client returned ERROR on write" failures.
+    if [ -f "$INSTALL_DIR/ILSBackend" ]; then
+        log "Stopping existing backend before update..."
+        if [ -f "$STATE_DIR/backend.pid" ]; then
+            kill "$(cat "$STATE_DIR/backend.pid")" 2>/dev/null || true
+            sleep 1
+        fi
+        # Also kill by name in case PID file is stale
+        pkill -f "$INSTALL_DIR/ILSBackend" 2>/dev/null || true
+        sleep 1
+        rm -f "$INSTALL_DIR/ILSBackend"
+    fi
+
+    # Download to a temp file first, then move into place.
+    TEMP_BINARY="$INSTALL_DIR/ILSBackend.tmp"
     set +e
-    curl -fsSL "$DOWNLOAD_URL" > "$INSTALL_DIR/ILSBackend" 2>"$CURL_ERR"
+    curl -fsSL "$DOWNLOAD_URL" -o "$TEMP_BINARY" 2>"$INSTALL_DIR/.curl-error"
     CURL_EXIT=$?
     set -e
 
     if [ "$CURL_EXIT" -ne 0 ]; then
         step "build_backend" "failure" "Download failed (curl exit $CURL_EXIT)"
         log "URL: $DOWNLOAD_URL"
-        [ -f "$CURL_ERR" ] && log "curl error: $(cat "$CURL_ERR")"
+        [ -f "$INSTALL_DIR/.curl-error" ] && log "curl error: $(cat "$INSTALL_DIR/.curl-error")"
         log "Disk space: $(df -h "$INSTALL_DIR" 2>/dev/null | tail -1 || echo 'unknown')"
-        rm -f "$CURL_ERR"
+        rm -f "$INSTALL_DIR/.curl-error" "$TEMP_BINARY"
         if [ "$CURL_EXIT" -eq 22 ]; then
             emit_error "Binary not found (HTTP 404). Release may not exist for this platform ($BINARY_SUFFIX). Check https://github.com/${GITHUB_REPO}/releases"
         else
@@ -246,9 +258,10 @@ else
         fi
         exit 1
     fi
-    rm -f "$CURL_ERR"
+    rm -f "$INSTALL_DIR/.curl-error"
 
-    if [ -f "$INSTALL_DIR/ILSBackend" ] && [ -s "$INSTALL_DIR/ILSBackend" ]; then
+    if [ -f "$TEMP_BINARY" ] && [ -s "$TEMP_BINARY" ]; then
+        mv "$TEMP_BINARY" "$INSTALL_DIR/ILSBackend"
         chmod +x "$INSTALL_DIR/ILSBackend"
         FILE_SIZE=$(stat -c%s "$INSTALL_DIR/ILSBackend" 2>/dev/null || stat -f%z "$INSTALL_DIR/ILSBackend" 2>/dev/null || echo "unknown")
         log "Binary downloaded: $FILE_SIZE bytes"
@@ -256,6 +269,7 @@ else
     else
         step "build_backend" "failure" "Downloaded file is empty"
         log "URL: $DOWNLOAD_URL"
+        rm -f "$TEMP_BINARY"
         emit_error "Downloaded binary is empty. Release may not exist for this platform. Try --from-source flag or check https://github.com/${GITHUB_REPO}/releases"
         exit 1
     fi
