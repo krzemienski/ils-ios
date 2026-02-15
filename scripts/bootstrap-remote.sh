@@ -223,26 +223,29 @@ else
 
     log "Downloading: $DOWNLOAD_URL"
 
-    # Download binary — capture HTTP code and curl exit code separately.
-    # Must disable set -e temporarily because curl returns non-zero on HTTP errors
-    # and set -e would kill the script before we can report a useful error.
-    CURL_ERR_FILE=$(mktemp)
+    # Download binary — simple direct curl, no command substitution or pipes.
+    # The -o + -w + $() pattern breaks inside bash -s (piped script) contexts
+    # with "client returned E9808 on write" errors. Keep it simple: just -o.
+    CURL_ERR="$INSTALL_DIR/.curl-error"
     set +e
-    HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$INSTALL_DIR/ILSBackend" "$DOWNLOAD_URL" 2>"$CURL_ERR_FILE")
+    curl -fsSL -o "$INSTALL_DIR/ILSBackend" "$DOWNLOAD_URL" 2>"$CURL_ERR"
     CURL_EXIT=$?
     set -e
-
-    CURL_ERR=$(cat "$CURL_ERR_FILE" 2>/dev/null || true)
-    rm -f "$CURL_ERR_FILE"
 
     if [ "$CURL_EXIT" -ne 0 ]; then
         step "build_backend" "failure" "Download failed (curl exit $CURL_EXIT)"
         log "URL: $DOWNLOAD_URL"
-        [ -n "$CURL_ERR" ] && log "curl error: $CURL_ERR"
+        [ -f "$CURL_ERR" ] && log "curl error: $(cat "$CURL_ERR")"
         log "Disk space: $(df -h "$INSTALL_DIR" 2>/dev/null | tail -1 || echo 'unknown')"
-        emit_error "Failed to download binary (curl exit $CURL_EXIT). Check disk space and network. URL: $DOWNLOAD_URL"
+        rm -f "$CURL_ERR"
+        if [ "$CURL_EXIT" -eq 22 ]; then
+            emit_error "Binary not found (HTTP 404). Release may not exist for this platform ($BINARY_SUFFIX). Check https://github.com/${GITHUB_REPO}/releases"
+        else
+            emit_error "Failed to download binary (curl exit $CURL_EXIT). URL: $DOWNLOAD_URL"
+        fi
         exit 1
     fi
+    rm -f "$CURL_ERR"
 
     if [ -f "$INSTALL_DIR/ILSBackend" ] && [ -s "$INSTALL_DIR/ILSBackend" ]; then
         chmod +x "$INSTALL_DIR/ILSBackend"
@@ -250,7 +253,7 @@ else
         log "Binary downloaded: $FILE_SIZE bytes"
         step "build_backend" "success" "Binary downloaded ($FILE_SIZE bytes)"
     else
-        step "build_backend" "failure" "Downloaded file is empty or missing (HTTP $HTTP_CODE)"
+        step "build_backend" "failure" "Downloaded file is empty"
         log "URL: $DOWNLOAD_URL"
         emit_error "Downloaded binary is empty. Release may not exist for this platform. Try --from-source flag or check https://github.com/${GITHUB_REPO}/releases"
         exit 1
