@@ -7,13 +7,13 @@ KEY FEATURES
 • Real-Time AI Chat — Stream responses from Claude with rich markdown rendering, code syntax highlighting, and tool call visualization
 • Session Management — Create, view, fork, rename, and export chat sessions with full history
 • Project Browser — Browse and manage your Claude Code projects with metadata
-• Skills Explorer — Search and discover 1,500+ Claude Code skills with GitHub integration
+• Skills Explorer — Search and discover 3,000+ Claude Code skills with GitHub integration
 • Plugin Marketplace — Browse, install, and manage Claude Code plugins
 • MCP Server Status — Monitor Model Context Protocol server health and configuration
 • System Monitoring — Track CPU, memory, disk, and network metrics in real time
 • Team Coordination — Manage multi-agent teams with task assignment and messaging
 • Custom Themes — Choose from 12 built-in themes or create your own
-• Cloudflare Tunnel — Securely expose your local backend for remote access
+• Cloudflare Tunnel — Securely expose your local backend for remote access with quick tunnels or custom domains
 
 ARCHITECTURE
 
@@ -23,7 +23,7 @@ REQUIREMENTS
 
 • A Mac running the ILS backend server (included in the open-source repository)
 • Claude Code CLI installed and configured (optional, for full chat functionality)
-• Local network access between your device and the backend server
+• Local network or Cloudflare tunnel access between your device and the backend server
 
 OPEN SOURCE
 
