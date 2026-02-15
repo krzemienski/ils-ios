@@ -223,12 +223,13 @@ else
 
     log "Downloading: $DOWNLOAD_URL"
 
-    # Download binary — simple direct curl, no command substitution or pipes.
-    # The -o + -w + $() pattern breaks inside bash -s (piped script) contexts
-    # with "client returned E9808 on write" errors. Keep it simple: just -o.
+    # Download binary using stdout redirect instead of curl's -o flag.
+    # curl -o uses an internal write callback that fails with "client returned
+    # ERROR on write" in certain SSH exec contexts (Citadel). Redirecting stdout
+    # to a file uses bash's file descriptor handling which works reliably.
     CURL_ERR="$INSTALL_DIR/.curl-error"
     set +e
-    curl -fsSL -o "$INSTALL_DIR/ILSBackend" "$DOWNLOAD_URL" 2>"$CURL_ERR"
+    curl -fsSL "$DOWNLOAD_URL" > "$INSTALL_DIR/ILSBackend" 2>"$CURL_ERR"
     CURL_EXIT=$?
     set -e
 
