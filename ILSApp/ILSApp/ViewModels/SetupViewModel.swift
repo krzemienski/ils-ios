@@ -59,8 +59,10 @@ final class SetupViewModel: ObservableObject {
                 scriptArgs += " --no-tunnel"
             }
 
-            // Use curl to download and pipe to bash with arguments
-            let command = "curl -sSL '\(bootstrapScriptURL)' | bash -s -- \(scriptArgs)"
+            // Download script to a temp file first, then execute it.
+            // Piping (curl | bash -s) causes curl inside the script to fail with
+            // "client returned ERROR on write" because bash -s inherits the pipe's stdin.
+            let command = "curl -fsSL '\(bootstrapScriptURL)' -o /tmp/ils-bootstrap.sh && bash /tmp/ils-bootstrap.sh \(scriptArgs)"
 
             let urlHolder = TunnelURLHolder()
 
