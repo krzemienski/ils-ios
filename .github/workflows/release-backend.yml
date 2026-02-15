@@ -18,8 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build backend (release)
-        run: swift build -c release --product ILSBackend
+      - name: Build backend (release, static)
+        run: swift build -c release --product ILSBackend --static-swift-stdlib
 
       - name: Get binary path
         run: |
@@ -39,8 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build backend (release)
-        run: swift build -c release --product ILSBackend
+      - name: Build backend (release, static)
+        run: swift build -c release --product ILSBackend --static-swift-stdlib
 
       - name: Get binary path
         run: |
