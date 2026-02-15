@@ -17,40 +17,70 @@ struct SSHSetupView: View {
     @State private var backendPort = "9999"
 
     @State private var isSettingUp = false
+    @State private var isConnecting = false
     @State private var platformRejected = false
     @State private var rejectionMessage = ""
     @State private var showLogs = false
+    @FocusState private var isAnyFieldFocused: Bool
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: theme.spacingMD) {
-                credentialForm
-                if isSettingUp || !viewModel.steps.isEmpty {
-                    setupProgressView
-                    logConsoleSection
-                }
-                if platformRejected {
-                    rejectionBanner
-                }
-                if let setupError = viewModel.error {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(theme.error)
-                        Text(setupError)
-                            .font(.system(size: theme.fontBody))
-                            .foregroundStyle(theme.textPrimary)
+        ZStack {
+            ScrollView {
+                VStack(spacing: theme.spacingMD) {
+                    if !isSettingUp && !isConnecting {
+                        credentialForm
                     }
-                    .padding(theme.spacingMD)
-                    .background(theme.error.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                    if isSettingUp || !viewModel.steps.isEmpty {
+                        setupProgressView
+                        logConsoleSection
+                    }
+                    if platformRejected {
+                        rejectionBanner
+                    }
+                    if let setupError = viewModel.error {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(theme.error)
+                            Text(setupError)
+                                .font(.system(size: theme.fontBody))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+                        .padding(theme.spacingMD)
+                        .background(theme.error.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+                        // Show retry button when connection fails
+                        if viewModel.isComplete {
+                            Button {
+                                Task { await retryConnection() }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "arrow.clockwise")
+                                    Text("Retry Connection")
+                                }
+                                .font(.system(size: theme.fontBody, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, theme.spacingMD)
+                                .background(theme.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                            }
+                            .padding(.horizontal, theme.spacingMD)
+                        }
+                    }
+                    if !isSettingUp && !isConnecting && viewModel.steps.isEmpty {
+                        connectAndSetupButton
+                    }
                 }
-                if !isSettingUp {
-                    connectAndSetupButton
-                }
+                .padding(.horizontal, theme.spacingMD)
             }
-            .padding(.horizontal, theme.spacingMD)
+            .background(theme.bgPrimary)
+
+            // Full-screen connecting overlay
+            if isConnecting {
+                connectingOverlay
+            }
         }
-        .background(theme.bgPrimary)
         .navigationTitle("SSH Setup")
         #if os(iOS)
         .inlineNavigationBarTitle()
@@ -217,6 +247,41 @@ struct SSHSetupView: View {
         return .white.opacity(0.8)
     }
 
+    // MARK: - Connecting Overlay
+
+    @ViewBuilder
+    private var connectingOverlay: some View {
+        VStack(spacing: theme.spacingLG) {
+            Spacer()
+
+            VStack(spacing: theme.spacingMD) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .tint(theme.accent)
+
+                Text("Connecting to Server")
+                    .font(.system(size: theme.fontTitle2, weight: .bold))
+                    .foregroundStyle(theme.textPrimary)
+
+                if let url = viewModel.tunnelURL {
+                    Text(url)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.accent)
+                        .multilineTextAlignment(.center)
+                }
+
+                Text("Waiting for tunnel to become reachable...")
+                    .font(.system(size: theme.fontBody))
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .padding(theme.spacingLG)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme.bgPrimary)
+    }
+
     // MARK: - Rejection Banner
 
     @ViewBuilder
@@ -273,10 +338,11 @@ struct SSHSetupView: View {
         platformRejected = false
         showLogs = true
 
-        // Go straight to SetupViewModel which handles SSH connection (Step 1),
-        // platform detection (Step 2), and all remaining steps with progress UI.
-        // No need to connect via sshViewModel separately — that creates a duplicate
-        // SSH connection with no visual feedback.
+        // Dismiss keyboard
+        #if os(iOS)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        #endif
+
         let request = StartSetupRequest(
             host: host,
             port: Int(port) ?? 22,
@@ -290,21 +356,45 @@ struct SSHSetupView: View {
         isSettingUp = false
 
         if viewModel.isComplete {
-            // Connect appState to the newly-set-up remote backend
-            // Use tunnel URL if available, otherwise direct HTTP connection
-            let serverURL = viewModel.tunnelURL ?? "http://\(host):\(backendPort)"
-            appState.updateServerURL(serverURL)
+            await connectAfterSetup()
+        }
+    }
 
+    /// Connect to the remote backend after bootstrap completes.
+    /// Retries with delay since Cloudflare tunnels need a few seconds to become reachable.
+    private func connectAfterSetup() async {
+        let serverURL = viewModel.tunnelURL ?? "http://\(host):\(backendPort)"
+
+        isConnecting = true
+        viewModel.error = nil
+
+        // Retry up to 5 times with 3s delay — tunnel needs time to propagate through Cloudflare
+        let maxRetries = 5
+        let retryDelay: UInt64 = 3_000_000_000 // 3 seconds
+
+        for attempt in 1...maxRetries {
             do {
                 try await appState.connectToServer(url: serverURL)
-                // Connection successful - dismiss and navigate to dashboard
+                // Success — dismiss the setup sheet
+                isConnecting = false
                 dismiss()
+                return
             } catch {
-                // Connection failed - show error and keep setup view open
-                viewModel.error = "Failed to connect to server: \(error.localizedDescription)"
-                // User can retry connection by tapping the connect button again
+                if attempt < maxRetries {
+                    // Wait before retrying
+                    try? await Task.sleep(nanoseconds: retryDelay)
+                } else {
+                    // All retries exhausted
+                    isConnecting = false
+                    viewModel.error = "Could not reach server at \(serverURL). The tunnel may still be propagating — tap Retry."
+                }
             }
         }
+    }
+
+    /// Manual retry when auto-connect fails after setup.
+    private func retryConnection() async {
+        await connectAfterSetup()
     }
 
     @ViewBuilder
