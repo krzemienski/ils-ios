@@ -125,7 +125,7 @@ struct ChatMessageList: View {
             scrollToBottom(proxy: proxy)
         } label: {
             Image(systemName: "chevron.down.circle.fill")
-                .font(.system(size: 28))
+                .font(.system(size: 28, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
                 .background(Circle().fill(theme.bgSecondary))
                 .shadow(color: .black.opacity(0.5), radius: 4, y: 2)

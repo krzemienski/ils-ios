@@ -65,6 +65,9 @@ protocol AppTheme {
     var fontTitle2: CGFloat { get }
     var fontTitle1: CGFloat { get }
 
+    // Typography
+    var fontDesign: Font.Design { get }
+
     // Light/dark detection for glass inversion
     var isLight: Bool { get }
 }
@@ -79,13 +82,14 @@ extension AppTheme {
     var entityPlugin: Color { Color(hex: "EC4899") }
     var entitySystem: Color { Color(hex: "06B6D4") }
 
+    var fontDesign: Font.Design { .default }
     var isLight: Bool { false }
 }
 
 // MARK: - Theme Environment Key
 
 struct ThemeEnvironmentKey: EnvironmentKey {
-    static let defaultValue: any AppTheme = ObsidianTheme()
+    static let defaultValue: any AppTheme = CyberpunkTheme()
 }
 
 extension EnvironmentValues {
@@ -107,13 +111,14 @@ class ThemeManager: ObservableObject {
 
     init() {
         // Migrate legacy theme IDs from before the rename
-        var savedID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "obsidian"
+        var savedID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "cyberpunk"
         let legacyMigrations = ["ghost": "ghost-protocol", "electric": "electric-grid"]
         if let migrated = legacyMigrations[savedID] {
             savedID = migrated
             UserDefaults.standard.set(migrated, forKey: Self.themeIDKey)
         }
         let themes: [any AppTheme] = [
+            CyberpunkTheme(),
             ObsidianTheme(),
             SlateTheme(),
             MidnightTheme(),
@@ -128,7 +133,7 @@ class ThemeManager: ObservableObject {
             SnowTheme()
         ]
         self.availableThemes = themes
-        self.currentTheme = themes.first(where: { $0.id == savedID }) ?? ObsidianTheme()
+        self.currentTheme = themes.first(where: { $0.id == savedID }) ?? CyberpunkTheme()
     }
 
     func setTheme(_ id: String) {

@@ -17,10 +17,10 @@ struct AccentButton: View {
             HStack(spacing: theme.spacingSM) {
                 if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 }
                 Text(title)
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundColor(theme.textOnAccent)
             .padding(.horizontal, theme.spacingMD)

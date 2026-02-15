@@ -81,10 +81,10 @@ struct TunnelSettingsView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Quick Tunnel")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Text("Create a temporary public URL")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
 
@@ -118,7 +118,7 @@ struct TunnelSettingsView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(theme.warning)
                         Text(error)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.error)
                     }
                 }
@@ -127,7 +127,7 @@ struct TunnelSettingsView: View {
             .modifier(GlassCard())
 
             Text("Exposes your local backend through a Cloudflare tunnel so you can access it from anywhere.")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -146,11 +146,11 @@ struct TunnelSettingsView: View {
                         .fill(theme.success)
                         .frame(width: 10, height: 10)
                     Text("Running")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
                     if let mode = tunnelMode {
                         Text(mode.capitalized)
-                            .font(.system(size: theme.fontCaption, weight: .medium))
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(theme.textOnAccent)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
@@ -160,7 +160,7 @@ struct TunnelSettingsView: View {
                     Spacer()
                     if let uptime = uptime {
                         Text(formatUptime(uptime))
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
@@ -168,10 +168,10 @@ struct TunnelSettingsView: View {
                 // URL
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Public URL")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                     Text(url)
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                         .textSelection(.enabled)
                 }
@@ -193,7 +193,7 @@ struct TunnelSettingsView: View {
                     }
                 } label: {
                     Label("Copy URL", systemImage: "doc.on.doc")
-                        .font(.system(size: theme.fontBody, weight: .medium))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingSM)
@@ -243,19 +243,19 @@ struct TunnelSettingsView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(theme.warning)
                     Text("cloudflared not installed")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.warning)
                 }
 
                 Text("The cloudflared CLI tool is required to create tunnels. Install it via Homebrew or download from Cloudflare.")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
                 if let installURL = installURL, let url = URL(string: installURL) {
                     Link(destination: url) {
                         HStack {
                             Text("Install cloudflared")
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                             Spacer()
                             Image(systemName: "arrow.up.right.square")
@@ -266,10 +266,10 @@ struct TunnelSettingsView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Quick install with Homebrew:")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                     Text("brew install cloudflared")
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                         .padding(theme.spacingSM)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -293,13 +293,13 @@ struct TunnelSettingsView: View {
                 DisclosureGroup {
                     VStack(alignment: .leading, spacing: theme.spacingSM) {
                         Text("Use a Cloudflare account and API token for a stable custom domain instead of a random trycloudflare.com URL.")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
 
                         fieldGroup(label: "API Token") {
                             SecureField("Cloudflare API token", text: $cfToken)
                                 .textContentType(.password)
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                                 .padding(theme.spacingSM)
                                 .background(theme.bgSecondary)
@@ -313,7 +313,7 @@ struct TunnelSettingsView: View {
                                 .autocapitalization(.none)
                                 #endif
                                 .autocorrectionDisabled()
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                                 .padding(theme.spacingSM)
                                 .background(theme.bgSecondary)
@@ -330,7 +330,7 @@ struct TunnelSettingsView: View {
                                 #if os(iOS)
                                 .keyboardType(.URL)
                                 #endif
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                                 .padding(theme.spacingSM)
                                 .background(theme.bgSecondary)
@@ -351,7 +351,7 @@ struct TunnelSettingsView: View {
                                 }
                                 Text("Save & Start Named Tunnel")
                             }
-                            .font(.system(size: theme.fontBody, weight: .medium))
+                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(theme.textOnAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, theme.spacingSM)
@@ -367,7 +367,7 @@ struct TunnelSettingsView: View {
                         Image(systemName: "globe")
                             .foregroundStyle(theme.accent)
                         Text("Custom Domain")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                     }
                 }
@@ -377,7 +377,7 @@ struct TunnelSettingsView: View {
             .modifier(GlassCard())
 
             Text("Requires a Cloudflare account with a registered domain.")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -399,7 +399,7 @@ struct TunnelSettingsView: View {
             .modifier(GlassCard())
 
             Text("Quick tunnels use randomly generated URLs that change each time. Use a custom domain for a stable URL.")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -409,16 +409,17 @@ struct TunnelSettingsView: View {
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     @ViewBuilder
     private func fieldGroup<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
             content()
         }
@@ -427,11 +428,11 @@ struct TunnelSettingsView: View {
     private func infoRow(icon: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
                 .frame(width: 20)
             Text(text)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
     }

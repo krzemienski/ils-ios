@@ -63,12 +63,12 @@ struct FleetHostDetailView: View {
                     .fill(healthColor(host.healthStatus))
                     .frame(width: 12, height: 12)
                 Text(host.healthStatus.rawValue.capitalized)
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                 Spacer()
                 if let lastCheck = host.lastHealthCheck {
                     Text("Last: \(lastCheck, style: .relative)")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -98,9 +98,9 @@ struct FleetHostDetailView: View {
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 20))
+                    .font(.system(size: 20, design: theme.fontDesign))
                 Text(title)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             }
             .foregroundStyle(color)
             .frame(maxWidth: .infinity)
@@ -128,7 +128,7 @@ struct FleetHostDetailView: View {
                     Task { await loadLogs() }
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                 }
             }
@@ -137,13 +137,13 @@ struct FleetHostDetailView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     if logs.isEmpty {
                         Text("No logs available")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                             .padding(.vertical, theme.spacingSM)
                     } else {
                         ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
                             Text(line)
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.system(size: 11, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
@@ -161,20 +161,21 @@ struct FleetHostDetailView: View {
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     @ViewBuilder
     private func infoRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
             Spacer()
             Text(value)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
         }
     }

@@ -11,7 +11,7 @@ struct SystemMessageView: View {
         HStack {
             Spacer()
             Text(message)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .multilineTextAlignment(.center)
                 .padding(.vertical, theme.spacingXS)

@@ -25,7 +25,7 @@ struct SettingsAboutSection: View {
             VStack(spacing: 0) {
                 HStack {
                     Label("Analytics", systemImage: "chart.bar")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Spacer()
                     Toggle("", isOn: .init(
@@ -43,11 +43,11 @@ struct SettingsAboutSection: View {
                 NavigationLink(destination: LogViewerView()) {
                     HStack {
                         Label("View Logs", systemImage: "doc.text")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .padding(theme.spacingMD)
@@ -58,11 +58,11 @@ struct SettingsAboutSection: View {
                 NavigationLink(destination: NotificationPreferencesView()) {
                     HStack {
                         Label("Notifications", systemImage: "bell.badge")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .padding(theme.spacingMD)
@@ -88,11 +88,11 @@ struct SettingsAboutSection: View {
                 } else {
                     HStack {
                         Text("Claude CLI")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Text("Checking...")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
@@ -102,11 +102,11 @@ struct SettingsAboutSection: View {
                 Link(destination: URL(string: "https://github.com/krzemienski/ils-ios")!) {
                     HStack {
                         Text("GitHub Repository")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
@@ -114,11 +114,11 @@ struct SettingsAboutSection: View {
                 Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                     HStack {
                         Text("Claude Code Documentation")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
@@ -126,11 +126,11 @@ struct SettingsAboutSection: View {
                 Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/privacy")!) {
                     HStack {
                         Text("Privacy Policy")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
@@ -138,11 +138,11 @@ struct SettingsAboutSection: View {
                 Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/support")!) {
                     HStack {
                         Text("Support")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 }
@@ -157,20 +157,21 @@ struct SettingsAboutSection: View {
     @ViewBuilder
     func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     @ViewBuilder
     func settingsRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
             Spacer()
             Text(value)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
     }

@@ -24,7 +24,7 @@ struct FleetManagementView: View {
                             .font(.title2)
                             .foregroundStyle(theme.error)
                         Text(error)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                             .multilineTextAlignment(.center)
                         Button("Retry") {
@@ -91,11 +91,11 @@ struct FleetManagementView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: theme.spacingSM) {
                     Text(host.name)
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     if host.id == viewModel.activeHostId {
                         Text("Active")
-                            .font(.system(size: theme.fontCaption, weight: .semibold))
+                            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
@@ -104,11 +104,11 @@ struct FleetManagementView: View {
                     }
                 }
                 Text("\(host.host):\(host.backendPort)")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                 if let platform = host.platform {
                     Text(platform)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }

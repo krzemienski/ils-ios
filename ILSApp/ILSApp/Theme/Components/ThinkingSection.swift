@@ -64,26 +64,26 @@ struct ThinkingSection: View {
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "brain")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.entityPlugin)
                     .scaleEffect(pulseScale)
                     .frame(width: 20)
 
                 if isActive {
                     Text("Thinking...")
-                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     ProgressView()
                         .scaleEffect(0.6)
                         .tint(theme.entityPlugin)
                 } else {
                     Text("Thinking")
-                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Text("·")
                         .foregroundStyle(theme.textTertiary)
                     Text(durationText)
-                        .font(.system(size: 10, design: .monospaced).leading(.tight))
+                        .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.textTertiary)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 }
@@ -91,7 +91,7 @@ struct ThinkingSection: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10).leading(.tight))
+                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }
@@ -106,7 +106,7 @@ struct ThinkingSection: View {
     private var expandedContent: some View {
         ScrollView {
             Text(thinking)
-                .font(.system(size: theme.fontCaption).italic())
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign).italic())
                 .foregroundStyle(theme.textSecondary)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)

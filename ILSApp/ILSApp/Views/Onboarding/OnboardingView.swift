@@ -50,7 +50,7 @@ struct OnboardingView: View {
     private var brandingHeader: some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: "antenna.radiowaves.left.and.right")
-                .font(.system(size: 48))
+                .font(.system(size: 48, design: theme.fontDesign))
                 .foregroundStyle(
                     LinearGradient(
                         colors: [theme.accent, theme.accentSecondary],
@@ -60,11 +60,11 @@ struct OnboardingView: View {
                 )
 
             Text("ILS")
-                .font(.system(size: theme.fontTitle1, weight: .bold))
+                .font(.system(size: theme.fontTitle1, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Text("Intelligent Local Server")
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
         .padding(.top, theme.spacingXL)
@@ -80,23 +80,23 @@ struct OnboardingView: View {
         } label: {
             HStack(spacing: theme.spacingMD) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: 24, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                     .frame(width: 44, height: 44)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Text(subtitle)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .padding(theme.spacingMD)

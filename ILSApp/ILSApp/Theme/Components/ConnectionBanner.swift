@@ -13,14 +13,14 @@ struct ConnectionBanner: View {
                     .font(.caption)
                     .foregroundColor(theme.success)
                 Text("Connected")
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundColor(theme.success)
             } else {
                 ProgressView()
                     .scaleEffect(0.7)
                     .tint(.white)
                 Text("Reconnecting...")
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundColor(.white)
             }
             Spacer()

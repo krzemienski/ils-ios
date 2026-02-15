@@ -10,12 +10,12 @@ struct ErrorMessageView: View {
     var body: some View {
         HStack(alignment: .top, spacing: theme.spacingSM) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.error)
                 .frame(width: 24)
 
             Text(message)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.error)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -46,12 +46,12 @@ struct HomeView: View {
     private var welcomeSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
             Text("Welcome back")
-                .font(.system(size: theme.fontTitle2, weight: .bold))
+                .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             if appState.isConnected {
                 Text(appState.serverURL)
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }
@@ -69,10 +69,10 @@ struct HomeView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Not Connected")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Text("Configure your server to get started")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
 
@@ -82,7 +82,7 @@ struct HomeView: View {
                     appState.showOnboarding = true
                 } label: {
                     Text("Setup")
-                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textOnAccent)
                         .padding(.horizontal, theme.spacingSM)
                         .padding(.vertical, theme.spacingXS)
@@ -110,13 +110,13 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack {
                     Text("Recent Sessions")
-                        .font(.system(size: theme.fontTitle3, weight: .semibold))
+                        .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Spacer()
 
                     Text("\(sessionsVM.totalCount)")
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
 
@@ -137,7 +137,7 @@ struct HomeView: View {
                 ProgressView()
                     .tint(theme.accent)
                 Text("Loading sessions...")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
@@ -154,20 +154,20 @@ struct HomeView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.name ?? "Unnamed Session")
-                    .font(.system(size: theme.fontBody, weight: .medium))
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 HStack(spacing: theme.spacingXS) {
                     Text(session.model.capitalized)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.entitySession)
 
                     Text("·")
                         .foregroundStyle(theme.textTertiary)
 
                     Text("\(session.messageCount) msgs")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -175,7 +175,7 @@ struct HomeView: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingSM)
@@ -190,7 +190,7 @@ struct HomeView: View {
     private var quickActionsGrid: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Quick Actions")
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             LazyVGrid(columns: [
@@ -247,16 +247,16 @@ struct HomeView: View {
         Button(action: action) {
             VStack(spacing: theme.spacingSM) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.system(size: 24, design: theme.fontDesign))
                     .foregroundStyle(color)
 
                 Text(title)
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 if let subtitle {
                     Text(subtitle)
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -280,7 +280,7 @@ struct HomeView: View {
         if let stats = dashboardVM.stats {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 Text("Overview")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold))
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 LazyVGrid(columns: [

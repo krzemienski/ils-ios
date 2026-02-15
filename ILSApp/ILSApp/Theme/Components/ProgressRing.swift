@@ -46,7 +46,7 @@ struct ProgressRing: View {
                 // Center label
                 VStack(spacing: 2) {
                     Text("\(Int(progress * 100))%")
-                        .font(.system(size: theme.fontTitle3, weight: .bold, design: .monospaced))
+                        .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                 }
             }
@@ -54,13 +54,13 @@ struct ProgressRing: View {
 
             if !title.isEmpty {
                 Text(title)
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
             }
 
             if !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
         }

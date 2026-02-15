@@ -137,9 +137,9 @@ struct CommandRow: View {
             Label {
                 VStack(alignment: .leading) {
                     Text(command.name)
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     Text(command.description)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             } icon: {
@@ -160,10 +160,10 @@ struct SkillRow: View {
             Label {
                 VStack(alignment: .leading) {
                     Text("/\(skill.name)")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     if let desc = skill.description {
                         Text(desc)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
                     }

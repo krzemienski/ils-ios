@@ -399,7 +399,7 @@ struct ThemePreviewView: View {
 
     private func fontWithFamily(_ family: String, size: Double) -> Font {
         guard !family.isEmpty else {
-            return .system(size: size, design: .monospaced)
+            return .system(size: size, design: .default)
         }
 
         // Map family names to system fonts
@@ -409,7 +409,7 @@ struct ThemePreviewView: View {
         case "menlo", "monaco", "courier", "courier new":
             return .custom(family, size: size)
         default:
-            return .system(size: size, design: .monospaced)
+            return .system(size: size, design: .default)
         }
     }
 }

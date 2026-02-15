@@ -34,7 +34,7 @@ struct SettingsConfigSection: View {
                     HStack {
                         ProgressView().tint(theme.accent)
                         Text("Loading configuration...")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                 } else if let config = viewModel.config?.content {
@@ -76,7 +76,7 @@ struct SettingsConfigSection: View {
                         }
                     )) {
                         Text("Extended Thinking")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                     }
                     .tint(theme.accent)
@@ -92,14 +92,14 @@ struct SettingsConfigSection: View {
                         }
                     )) {
                         Text("Include Co-Author")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                     }
                     .tint(theme.accent)
                     .accessibilityLabel("Include co-authored-by attribution")
                 } else {
                     Text("No configuration loaded")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -108,7 +108,7 @@ struct SettingsConfigSection: View {
 
             if let config = viewModel.config {
                 Text("Scope: \(config.scope) • \(config.path)")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }
@@ -129,16 +129,16 @@ struct SettingsConfigSection: View {
                                 .foregroundStyle(apiKeyStatus.isConfigured ? theme.success : theme.warning)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
-                                    .font(.system(size: theme.fontBody))
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
                                 if let maskedKey = apiKeyStatus.maskedKey {
                                     Text("Key: \(maskedKey)")
-                                        .font(.system(size: theme.fontCaption))
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                         .foregroundStyle(theme.textSecondary)
                                 }
                                 if let source = apiKeyStatus.source {
                                     Text("Source: \(source)")
-                                        .font(.system(size: theme.fontCaption))
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                         .foregroundStyle(theme.textSecondary)
                                 }
                             }
@@ -148,13 +148,13 @@ struct SettingsConfigSection: View {
                             Image(systemName: "key.fill")
                                 .foregroundStyle(theme.warning)
                             Text("API Key status unknown")
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -162,7 +162,7 @@ struct SettingsConfigSection: View {
             .modifier(GlassCard())
 
             Text("API keys cannot be edited through the iOS app. Use: claude config set apiKey <your-key>")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -182,7 +182,7 @@ struct SettingsConfigSection: View {
                         DisclosureGroup {
                             ForEach(allowed, id: \.self) { item in
                                 Text(item)
-                                    .font(.system(size: theme.fontCaption))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
@@ -197,7 +197,7 @@ struct SettingsConfigSection: View {
                         DisclosureGroup {
                             ForEach(denied, id: \.self) { item in
                                 Text(item)
-                                    .font(.system(size: theme.fontCaption))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
@@ -209,7 +209,7 @@ struct SettingsConfigSection: View {
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -250,7 +250,7 @@ struct SettingsConfigSection: View {
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
 
@@ -261,11 +261,11 @@ struct SettingsConfigSection: View {
                 } label: {
                     HStack {
                         Text("Edit User Settings")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                 }
@@ -275,11 +275,11 @@ struct SettingsConfigSection: View {
                 } label: {
                     HStack {
                         Text("Edit Project Settings")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                 }
@@ -289,7 +289,7 @@ struct SettingsConfigSection: View {
             .modifier(GlassCard())
 
             Text("Edit raw JSON configuration files")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             // Experimental features
@@ -300,10 +300,10 @@ struct SettingsConfigSection: View {
                     Toggle(isOn: $enableAgentTeams) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Agent Teams")
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                             Text("Coordinate multiple AI agents working together")
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
                     }
@@ -344,20 +344,21 @@ struct SettingsConfigSection: View {
     @ViewBuilder
     func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     @ViewBuilder
     func settingsRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
             Spacer()
             Text(value)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
     }
@@ -366,7 +367,7 @@ struct SettingsConfigSection: View {
     func settingsRow(_ label: String, icon: String, iconColor: Color) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
             Spacer()
             Image(systemName: icon)

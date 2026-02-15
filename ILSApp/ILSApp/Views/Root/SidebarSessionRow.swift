@@ -18,21 +18,21 @@ struct SidebarSessionRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     // Session name
                     Text(sessionDisplayName)
-                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
 
                     // Relative time + message count
                     HStack(spacing: theme.spacingXS) {
                         Text(relativeTime)
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(.system(size: 10, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
 
                         if session.messageCount > 0 {
                             Text("·")
                                 .foregroundStyle(theme.textTertiary)
                             Text("\(session.messageCount) msgs")
-                                .font(.system(size: 10, design: .monospaced))
+                                .font(.system(size: 10, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
 
@@ -40,7 +40,7 @@ struct SidebarSessionRow: View {
                             Text("·")
                                 .foregroundStyle(theme.textTertiary)
                             Image(systemName: "arrow.down.circle")
-                                .font(.system(size: 9))
+                                .font(.system(size: 9, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
                     }

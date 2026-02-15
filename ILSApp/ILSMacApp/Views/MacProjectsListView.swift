@@ -20,11 +20,11 @@ struct MacProjectsListView: View {
             // Header
             HStack {
                 Text("PROJECTS")
-                    .font(.system(size: theme.fontCaption, weight: .semibold, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
                 Text("\(viewModel.projects.count)")
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .padding(.horizontal, theme.spacingMD)
@@ -34,18 +34,18 @@ struct MacProjectsListView: View {
             // Search bar
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 TextField("Search projects...", text: $searchText)
                     .textFieldStyle(.plain)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .buttonStyle(.plain)
@@ -112,7 +112,7 @@ struct MacProjectsListView: View {
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: "plus.circle.fill")
                     Text("New Project")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 }
                 .foregroundStyle(theme.textOnAccent)
                 .frame(maxWidth: .infinity)
@@ -162,18 +162,18 @@ struct MacProjectsListView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(project.name)
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 if let description = project.description, !description.isEmpty {
                     Text(description)
-                        .font(.system(size: theme.fontCaption - 1))
+                        .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .lineLimit(1)
                 } else {
                     Text(project.path)
-                        .font(.system(size: theme.fontCaption - 1, design: .monospaced))
+                        .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .lineLimit(1)
                 }
@@ -182,7 +182,7 @@ struct MacProjectsListView: View {
             Spacer()
 
             Text(project.defaultModel.components(separatedBy: "-").first?.capitalized ?? "")
-                .font(.system(size: theme.fontCaption - 1, design: .monospaced))
+                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(.vertical, theme.spacingXS)
@@ -196,7 +196,7 @@ struct MacProjectsListView: View {
             ProgressView()
                 .tint(theme.accent)
             Text("Loading projects...")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -206,10 +206,10 @@ struct MacProjectsListView: View {
     private var emptyView: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "folder")
-                .font(.system(size: 24))
+                .font(.system(size: 24, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Text(searchText.isEmpty ? "No projects yet" : "No matching projects")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -331,7 +331,7 @@ struct ProjectFormSheet: View {
     var body: some View {
         VStack(spacing: theme.spacingMD) {
             Text(title)
-                .font(.system(size: theme.fontTitle2, weight: .semibold))
+                .font(.system(size: theme.fontTitle2, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Form {

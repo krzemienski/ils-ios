@@ -33,12 +33,12 @@ struct ConnectionStepsView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(step.name)
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundColor(textColor(for: step.status))
 
                         if case .failure(let msg) = step.status {
                             Text(msg)
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundColor(theme.error)
                         }
                     }

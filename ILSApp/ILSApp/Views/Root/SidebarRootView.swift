@@ -176,7 +176,7 @@ struct SidebarRootView: View {
                             openSidebar()
                         } label: {
                             Image(systemName: "line.3.horizontal")
-                                .font(.system(size: theme.fontTitle3, weight: .medium))
+                                .font(.system(size: theme.fontTitle3, weight: .medium, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                         }
                         .accessibilityLabel("Open sidebar")
@@ -187,7 +187,7 @@ struct SidebarRootView: View {
                             openSidebar()
                         } label: {
                             Image(systemName: "line.3.horizontal")
-                                .font(.system(size: theme.fontTitle3, weight: .medium))
+                                .font(.system(size: theme.fontTitle3, weight: .medium, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                         }
                         .accessibilityLabel("Open sidebar")

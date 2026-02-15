@@ -47,15 +47,15 @@ struct AgentTeamsListView: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: "person.3")
-                .font(.system(size: 64))
+                .font(.system(size: 64, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Agent Teams")
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Text("Create a team to coordinate multiple AI agents working together")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, theme.spacingLG)
@@ -68,12 +68,12 @@ struct AgentTeamsListView: View {
         NavigationLink(destination: AgentTeamDetailView(teamName: team.name, apiClient: appState.apiClient)) {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 Text(team.name)
-                    .font(.system(size: theme.fontTitle3, weight: .semibold))
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 if let description = team.description, !description.isEmpty {
                     Text(description)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .lineLimit(2)
                 }
@@ -81,9 +81,9 @@ struct AgentTeamsListView: View {
                 HStack(spacing: theme.spacingMD) {
                     HStack(spacing: theme.spacingSM) {
                         Image(systemName: "person.2")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         Text("\(team.members.count)")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     }
                     .foregroundStyle(theme.textTertiary)
                 }

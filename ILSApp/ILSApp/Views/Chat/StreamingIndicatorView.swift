@@ -22,7 +22,7 @@ struct StreamingIndicatorView: View {
                 .opacity(isPulsing ? 1.0 : 0.3)
 
             Text(statusText ?? "Claude is thinking\u{2026}")
-                .font(.system(size: 12).leading(.tight))
+                .font(.system(size: 12, design: theme.fontDesign).leading(.tight))
                 .foregroundStyle(theme.textTertiary)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         }

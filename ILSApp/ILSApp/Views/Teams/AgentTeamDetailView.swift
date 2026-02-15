@@ -26,7 +26,7 @@ struct AgentTeamDetailView: View {
                         selectedTab = index
                     } label: {
                         Text(label)
-                            .font(.system(size: theme.fontCaption, weight: selectedTab == index ? .semibold : .regular))
+                            .font(.system(size: theme.fontCaption, weight: selectedTab == index ? .semibold : .regular, design: theme.fontDesign))
                             .foregroundStyle(selectedTab == index ? theme.textPrimary : theme.textSecondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, theme.spacingSM)
@@ -75,13 +75,13 @@ struct AgentTeamDetailView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             if let description = team.description, !description.isEmpty {
                 Text(description)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
 
             HStack(spacing: theme.spacingMD) {
                 Label("\(team.members.count) members", systemImage: "person.2")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }
@@ -108,7 +108,7 @@ struct AgentTeamDetailView: View {
                         Image(systemName: "person.badge.plus")
                         Text("Spawn Teammate")
                     }
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                     .frame(maxWidth: .infinity)
                     .padding(theme.spacingMD)
@@ -124,12 +124,12 @@ struct AgentTeamDetailView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(member.name)
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 if let agentType = member.agentType {
                     Text(agentType)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -144,7 +144,7 @@ struct AgentTeamDetailView: View {
                 }
             } label: {
                 Image(systemName: "power")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.error)
             }
             .buttonStyle(.plain)
@@ -157,7 +157,7 @@ struct AgentTeamDetailView: View {
         let (color, text) = statusInfo(for: status)
 
         return Text(text)
-            .font(.system(size: theme.fontCaption))
+            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             .foregroundStyle(color)
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, 4)

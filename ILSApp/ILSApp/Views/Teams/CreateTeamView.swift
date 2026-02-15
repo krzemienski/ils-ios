@@ -29,7 +29,7 @@ struct CreateTeamView: View {
                 } footer: {
                     Text("Only alphanumeric characters and hyphens allowed")
                         .foregroundStyle(theme.textTertiary)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 }
 
                 Section {

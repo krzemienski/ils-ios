@@ -30,14 +30,14 @@ struct MetricChart: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Text(title)
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
                 if !currentValue.isEmpty {
                     Text(currentValue)
-                        .font(.system(size: theme.fontBody, design: .monospaced))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(color)
                 }
             }
@@ -48,7 +48,7 @@ struct MetricChart: View {
                     .frame(height: 120)
                     .overlay {
                         Text("Waiting for data...")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))

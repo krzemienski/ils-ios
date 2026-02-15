@@ -12,7 +12,7 @@ struct ProcessListView: View {
             // Header
             HStack {
                 Text("Processes")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 Spacer()
@@ -25,7 +25,7 @@ struct ProcessListView: View {
                             Task { await viewModel.loadProcesses() }
                         } label: {
                             Text(option.rawValue)
-                                .font(.system(size: theme.fontCaption, weight: viewModel.processSortBy == option ? .semibold : .regular))
+                                .font(.system(size: theme.fontCaption, weight: viewModel.processSortBy == option ? .semibold : .regular, design: theme.fontDesign))
                                 .foregroundStyle(viewModel.processSortBy == option ? theme.textPrimary : theme.textSecondary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 6)
@@ -47,7 +47,7 @@ struct ProcessListView: View {
                     .foregroundStyle(theme.textTertiary)
                 TextField("Search processes", text: $viewModel.processSearchText)
                     .textFieldStyle(.plain)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 if !viewModel.processSearchText.isEmpty {
@@ -76,7 +76,7 @@ struct ProcessListView: View {
                 HStack {
                     Spacer()
                     Text("No processes found")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                     Spacer()
                 }
@@ -93,7 +93,7 @@ struct ProcessListView: View {
                     Text("MEM")
                         .frame(width: 55, alignment: .trailing)
                 }
-                .font(.system(size: theme.fontCaption, weight: .medium))
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .padding(.horizontal, theme.spacingXS)
 
@@ -118,23 +118,23 @@ struct ProcessListView: View {
             }
 
             Text(process.name)
-                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("\(process.pid)")
-                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .frame(width: 50, alignment: .trailing)
 
             Text(String(format: "%.1f%%", process.cpuPercent))
-                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(process.cpuPercent > 50 ? theme.warning : theme.textSecondary)
                 .frame(width: 50, alignment: .trailing)
 
             Text(String(format: "%.0fM", process.memoryMB))
-                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(process.memoryMB > 500 ? theme.warning : theme.textSecondary)
                 .frame(width: 55, alignment: .trailing)
         }

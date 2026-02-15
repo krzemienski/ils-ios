@@ -20,7 +20,7 @@ struct ConfigEditorView: View {
                 ProgressView().tint(theme.accent)
             } else {
                 TextEditor(text: $configText)
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .scrollContentBackground(.hidden)
                     .padding()
@@ -30,13 +30,13 @@ struct ConfigEditorView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(theme.success)
                         Text("Valid JSON")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.success)
                     } else {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(theme.error)
                         Text("Invalid JSON")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.error)
                     }
                     Spacer()
@@ -47,7 +47,7 @@ struct ConfigEditorView: View {
                     VStack(alignment: .leading) {
                         ForEach(validationErrors, id: \.self) { error in
                             Label(error, systemImage: "exclamationmark.triangle")
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.error)
                         }
                     }

@@ -93,7 +93,7 @@ struct SkillDetailView: View {
         .overlay(alignment: .bottom) {
             if showCopiedToast {
                 Text("Copied to clipboard")
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textOnAccent)
                     .padding(.horizontal, theme.spacingMD)
                     .padding(.vertical, theme.spacingSM)
@@ -121,7 +121,7 @@ struct SkillDetailView: View {
                         .fill(sourceColor)
                         .frame(width: 8, height: 8)
                     Text(skill.source.rawValue.capitalized)
-                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(sourceColor)
                 }
                 .padding(.horizontal, 8)
@@ -137,7 +137,7 @@ struct SkillDetailView: View {
                         .fill(skill.isActive ? theme.success : theme.textTertiary)
                         .frame(width: 6, height: 6)
                     Text(skill.isActive ? "Active" : "Inactive")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(skill.isActive ? theme.success : theme.textTertiary)
                 }
             }
@@ -145,7 +145,7 @@ struct SkillDetailView: View {
             // Description
             if let description = skill.description {
                 Text(description)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -154,20 +154,20 @@ struct SkillDetailView: View {
             if let author = skill.author, skill.source == .github {
                 HStack(spacing: 6) {
                     Image(systemName: "person.circle")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                     Text(author)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
 
                     if let stars = skill.stars {
                         Spacer()
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 10, design: theme.fontDesign))
                                 .foregroundStyle(theme.warning)
                             Text("\(stars)")
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
@@ -183,7 +183,7 @@ struct SkillDetailView: View {
     private var tagsSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("TAGS")
-                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .tracking(1)
 
@@ -191,7 +191,7 @@ struct SkillDetailView: View {
                 HStack(spacing: theme.spacingSM) {
                     ForEach(skill.tags, id: \.self) { tag in
                         Text(tag)
-                            .font(.system(size: theme.fontCaption, weight: .medium))
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -208,7 +208,7 @@ struct SkillDetailView: View {
     private var metadataSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("INFORMATION")
-                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .tracking(1)
 
@@ -231,12 +231,12 @@ struct SkillDetailView: View {
     private func metadataRow(label: String, value: String) -> some View {
         HStack(alignment: .top, spacing: theme.spacingSM) {
             Text(label)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .frame(width: 100, alignment: .leading)
 
             Text(value)
-                .font(.system(size: theme.fontBody, design: .monospaced))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
@@ -251,7 +251,7 @@ struct SkillDetailView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Text("SKILL CONTENT")
-                    .font(.system(size: theme.fontCaption, weight: .semibold))
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                     .tracking(1)
 
@@ -262,7 +262,7 @@ struct SkillDetailView: View {
                         copyContent()
                     } label: {
                         Image(systemName: "doc.on.doc")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.accent)
                     }
                     .accessibilityLabel("Copy content")
@@ -271,7 +271,7 @@ struct SkillDetailView: View {
 
             if isEditing {
                 TextEditor(text: $editedContent)
-                    .font(.system(size: theme.fontBody, design: .monospaced))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .scrollContentBackground(.hidden)
                     .background(theme.bgSecondary)

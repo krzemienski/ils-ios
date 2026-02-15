@@ -31,18 +31,18 @@ struct StatCard: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Image(systemName: entityType.icon)
-                    .font(.system(size: theme.fontTitle3))
+                    .font(.system(size: theme.fontTitle3, design: theme.fontDesign))
                     .foregroundStyle(entityColor)
 
                 Spacer()
 
                 Text("\(count)")
-                    .font(.system(size: theme.fontTitle2, weight: .bold, design: .monospaced))
+                    .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(entityColor)
             }
 
             Text(title)
-                .font(.system(size: theme.fontCaption, weight: .medium))
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
 
             SparklineChart(data: sparklineData, color: entityColor)

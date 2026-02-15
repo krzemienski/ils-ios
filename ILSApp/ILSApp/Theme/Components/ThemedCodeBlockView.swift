@@ -36,7 +36,7 @@ struct ThemedCodeBlockView: View {
     private var headerBar: some View {
         HStack {
             Text(detectedLanguage ?? language ?? "code")
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Spacer()
@@ -44,9 +44,9 @@ struct ThemedCodeBlockView: View {
             Button(action: copyCode) {
                 HStack(spacing: 4) {
                     Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10, design: theme.fontDesign))
                     Text(showCopied ? "Copied" : "Copy")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                 }
                 .foregroundStyle(showCopied ? theme.success : theme.textSecondary)
             }
@@ -78,7 +78,7 @@ struct ThemedCodeBlockView: View {
                     }
                 } label: {
                     Text("Show more (\(lineCount) lines)")
-                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingXS)
@@ -98,11 +98,11 @@ struct ThemedCodeBlockView: View {
         Group {
             if let highlighted = highlightedCode {
                 Text(highlighted)
-                    .font(.system(size: 13, design: .monospaced))
+                    .font(.system(size: 13, design: theme.fontDesign))
                     .textSelection(.enabled)
             } else {
                 Text(code)
-                    .font(.system(size: 13, design: .monospaced))
+                    .font(.system(size: 13, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .textSelection(.enabled)
             }

@@ -24,12 +24,12 @@ struct EntityBadge: View {
     var body: some View {
         HStack(spacing: theme.spacingXS) {
             Image(systemName: entityType.icon)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(entityColor)
 
             if showLabel {
                 Text(entityType.displayName)
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundColor(entityColor)
             }
         }

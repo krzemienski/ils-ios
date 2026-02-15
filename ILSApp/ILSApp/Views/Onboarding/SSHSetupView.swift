@@ -42,7 +42,7 @@ struct SSHSetupView: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(theme.error)
                             Text(setupError)
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                         }
                         .padding(theme.spacingMD)
@@ -58,7 +58,7 @@ struct SSHSetupView: View {
                                     Image(systemName: "arrow.clockwise")
                                     Text("Retry Connection")
                                 }
-                                .font(.system(size: theme.fontBody, weight: .semibold))
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, theme.spacingMD)
@@ -111,7 +111,7 @@ struct SSHSetupView: View {
                             authMethod = method
                         } label: {
                             Text(method == .password ? "Password" : "SSH Key")
-                                .font(.system(size: theme.fontCaption, weight: authMethod == method ? .semibold : .regular))
+                                .font(.system(size: theme.fontCaption, weight: authMethod == method ? .semibold : .regular, design: theme.fontDesign))
                                 .foregroundStyle(authMethod == method ? theme.textPrimary : theme.textSecondary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, theme.spacingSM)
@@ -158,10 +158,10 @@ struct SSHSetupView: View {
                         stepStatusIcon(step.status)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(step.step.rawValue.replacingOccurrences(of: "_", with: " ").capitalized)
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                             Text(step.message)
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                         Spacer()
@@ -185,18 +185,19 @@ struct SSHSetupView: View {
                     Image(systemName: "terminal")
                         .foregroundStyle(theme.textTertiary)
                     Text("Console Output")
-                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .textCase(.uppercase)
+                .kerning(1)
                     Spacer()
                     if !viewModel.logLines.isEmpty {
                         Text("\(viewModel.logLines.count) lines")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     Image(systemName: showLogs ? "chevron.up" : "chevron.down")
                         .foregroundStyle(theme.textTertiary)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 }
             }
             .buttonStyle(.plain)
@@ -207,7 +208,7 @@ struct SSHSetupView: View {
                         LazyVStack(alignment: .leading, spacing: 1) {
                             ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { _, line in
                                 Text(line)
-                                    .font(.system(size: 11, design: .monospaced))
+                                    .font(.system(size: 11, design: theme.fontDesign))
                                     .foregroundStyle(logLineColor(line))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -260,18 +261,18 @@ struct SSHSetupView: View {
                     .tint(theme.accent)
 
                 Text("Connecting to Server")
-                    .font(.system(size: theme.fontTitle2, weight: .bold))
+                    .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 if let url = viewModel.tunnelURL {
                     Text(url)
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                         .multilineTextAlignment(.center)
                 }
 
                 Text("Waiting for tunnel to become reachable...")
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
             .padding(theme.spacingLG)
@@ -290,7 +291,7 @@ struct SSHSetupView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(theme.error)
             Text(rejectionMessage)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
         }
         .padding(theme.spacingMD)
@@ -315,7 +316,7 @@ struct SSHSetupView: View {
                 }
                 Text("Connect & Set Up")
             }
-            .font(.system(size: theme.fontBody, weight: .semibold))
+            .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, theme.spacingMD)
@@ -431,9 +432,10 @@ struct SSHSetupView: View {
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     @ViewBuilder

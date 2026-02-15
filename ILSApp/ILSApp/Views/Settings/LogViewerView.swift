@@ -13,7 +13,7 @@ struct LogViewerView: View {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
                         Text(line)
-                            .font(.system(size: theme.fontCaption, design: .monospaced))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(logColor(for: line))
                             .padding(.horizontal, theme.spacingSM)
                             .padding(.vertical, 2)

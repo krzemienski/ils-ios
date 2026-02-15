@@ -45,7 +45,7 @@ struct ThemePickerView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 Text("Choose a theme for ILS. Themes change all colors across the app.")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
                 LazyVGrid(columns: columns, spacing: 12) {
@@ -132,7 +132,7 @@ struct ThemePickerView: View {
                             HStack {
                                 Spacer()
                                 Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 20))
+                                    .font(.system(size: 20, design: theme.fontDesign))
                                     .foregroundStyle(preview.accent)
                                     .background(
                                         Circle()
@@ -160,7 +160,7 @@ struct ThemePickerView: View {
 
                     // Theme name
                     Text(preview.name)
-                        .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .regular))
+                        .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .regular, design: theme.fontDesign))
                         .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
                         .lineLimit(1)
 

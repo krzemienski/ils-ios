@@ -68,7 +68,7 @@ struct MacDashboardView: View {
     private var welcomeSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
             Text("Welcome to ILS")
-                .font(.system(size: theme.fontTitle1, weight: .bold))
+                .font(.system(size: theme.fontTitle1, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             if appState.isConnected {
@@ -77,7 +77,7 @@ struct MacDashboardView: View {
                         .fill(theme.success)
                         .frame(width: 8, height: 8)
                     Text(appState.serverURL)
-                        .font(.system(size: theme.fontBody, design: .monospaced))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -92,15 +92,15 @@ struct MacDashboardView: View {
         if !appState.isConnected {
             HStack(spacing: theme.spacingMD) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 24))
+                    .font(.system(size: 24, design: theme.fontDesign))
                     .foregroundStyle(theme.warning)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Not Connected to Server")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Text("Configure your ILS backend to get started")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
 
@@ -110,7 +110,7 @@ struct MacDashboardView: View {
                     appState.showOnboarding = true
                 } label: {
                     Text("Configure Server")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textOnAccent)
                         .padding(.horizontal, theme.spacingMD)
                         .padding(.vertical, theme.spacingSM)
@@ -136,7 +136,7 @@ struct MacDashboardView: View {
         if let stats = dashboardVM.stats {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 Text("Overview")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold))
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 LazyVGrid(
@@ -182,7 +182,7 @@ struct MacDashboardView: View {
                 ProgressView()
                     .tint(theme.accent)
                 Text("Loading statistics...")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
@@ -199,14 +199,14 @@ struct MacDashboardView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Text("Recent Sessions")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold))
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
                 if !recent.isEmpty {
                     Text("\(sessionsVM.totalCount) total")
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -236,7 +236,7 @@ struct MacDashboardView: View {
                     ProgressView()
                         .tint(theme.accent)
                     Text("Loading sessions...")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .frame(maxWidth: .infinity)
@@ -256,27 +256,27 @@ struct MacDashboardView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(session.name ?? "Unnamed Session")
-                    .font(.system(size: theme.fontBody, weight: .medium))
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 HStack(spacing: theme.spacingSM) {
                     Text(session.model.capitalized)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.entitySession)
 
                     Text("·")
                         .foregroundStyle(theme.textTertiary)
 
                     Text("\(session.messageCount) msgs")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
 
                     if let projectName = session.projectName {
                         Text("·")
                             .foregroundStyle(theme.textTertiary)
                         Text(projectName)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.entityProject)
                     }
                 }
@@ -285,7 +285,7 @@ struct MacDashboardView: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)
@@ -297,18 +297,18 @@ struct MacDashboardView: View {
     private var emptySessionsCard: some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 32))
+                .font(.system(size: 32, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No sessions yet")
-                .font(.system(size: theme.fontBody, weight: .medium))
+                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Button {
                 showingNewSession = true
             } label: {
                 Text("Create Your First Session")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textOnAccent)
                     .padding(.horizontal, theme.spacingMD)
                     .padding(.vertical, theme.spacingSM)
@@ -329,7 +329,7 @@ struct MacDashboardView: View {
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Quick Actions")
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             HStack(spacing: theme.spacingMD) {
@@ -389,18 +389,18 @@ struct MacDashboardView: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack {
                     Image(systemName: icon)
-                        .font(.system(size: 28))
+                        .font(.system(size: 28, design: theme.fontDesign))
                         .foregroundStyle(color)
                     Spacer()
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Text(subtitle)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -448,13 +448,13 @@ struct NewSessionSheet: View {
     var body: some View {
         VStack(spacing: theme.spacingLG) {
             Text("New Session")
-                .font(.system(size: theme.fontTitle2, weight: .semibold))
+                .font(.system(size: theme.fontTitle2, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     Text("Session Name")
-                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
 
                     TextField("Enter session name...", text: $sessionName)
@@ -463,7 +463,7 @@ struct NewSessionSheet: View {
 
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     Text("Model")
-                        .font(.system(size: theme.fontCaption, weight: .medium))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
 
                     Picker("Model", selection: $selectedModel) {

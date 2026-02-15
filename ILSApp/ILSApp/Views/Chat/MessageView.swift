@@ -57,7 +57,7 @@ struct MessageView: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(theme.success)
                             Text("Copied")
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundColor(theme.success)
                         }
                         .padding(.horizontal, theme.spacingSM)
@@ -89,7 +89,7 @@ struct MessageView: View {
                 // Timestamp for historical messages
                 if let timestamp = message.timestamp {
                     Text(formattedTimestamp(timestamp))
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundColor(theme.textTertiary)
                 }
 
@@ -97,11 +97,11 @@ struct MessageView: View {
                 if let cost = message.cost {
                     if message.timestamp != nil {
                         Text("\u{2022}")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundColor(theme.textTertiary)
                     }
                     Text("$\(cost, specifier: "%.4f")")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundColor(theme.textTertiary)
                 }
 
@@ -132,7 +132,7 @@ struct ToolCallView: View {
                     Image(systemName: "wrench.and.screwdriver")
                         .foregroundColor(theme.accent)
                     Text(toolCall.name)
-                        .font(.system(size: theme.fontTitle3, weight: .semibold))
+                        .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(theme.textSecondary)
@@ -142,7 +142,7 @@ struct ToolCallView: View {
 
             if isExpanded, let input = toolCall.inputPreview {
                 Text(input)
-                    .font(.system(size: theme.fontBody, design: .monospaced))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundColor(theme.textSecondary)
                     .padding(theme.spacingSM)
                     .background(theme.bgTertiary)
@@ -167,7 +167,7 @@ struct ToolResultView: View {
                     Image(systemName: result.isError ? "xmark.circle" : "checkmark.circle")
                         .foregroundColor(result.isError ? theme.error : theme.success)
                     Text("Result")
-                        .font(.system(size: theme.fontTitle3, weight: .semibold))
+                        .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(theme.textSecondary)
@@ -178,7 +178,7 @@ struct ToolResultView: View {
             if isExpanded {
                 ScrollView(.horizontal, showsIndicators: false) {
                     Text(result.content)
-                        .font(.system(size: theme.fontBody, design: .monospaced))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundColor(result.isError ? theme.error : theme.textPrimary)
                 }
                 .frame(maxHeight: 200)
@@ -205,7 +205,7 @@ struct ThinkingView: View {
                     Image(systemName: "brain")
                         .foregroundColor(theme.info)
                     Text("Thinking")
-                        .font(.system(size: theme.fontTitle3, weight: .semibold))
+                        .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(theme.textSecondary)
@@ -215,7 +215,7 @@ struct ThinkingView: View {
 
             if isExpanded {
                 Text(thinking)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundColor(theme.textSecondary)
                     .padding(theme.spacingSM)
                     .background(theme.bgTertiary)
@@ -247,7 +247,7 @@ struct MessageContentView: View {
                 switch segment {
                 case .plainText(let plainText):
                     Text(plainText)
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .textSelection(.enabled)
                         .accessibilityIdentifier(isUser ? "user-message-text" : "assistant-message-text")
                         .contextMenu {
@@ -278,7 +278,7 @@ struct MessageContentView: View {
 
                 case .inlineCode(let code):
                     Text(code)
-                        .font(.system(size: theme.fontBody, design: .monospaced))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .padding(.horizontal, 4)
                         .padding(.vertical, 2)
                         .background(theme.bgTertiary)

@@ -127,7 +127,7 @@ struct MacSettingsView: View {
                 }
 
                 Text("Enable experimental multi-agent collaboration features")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
             .padding(theme.spacingMD)
@@ -170,7 +170,7 @@ struct MacSettingsView: View {
                 }
 
                 Text("Choose how the app appears")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
             .padding(theme.spacingMD)
@@ -180,7 +180,7 @@ struct MacSettingsView: View {
             // Theme Preview
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 Text("Preview")
-                    .font(.system(size: theme.fontCaption, weight: .semibold))
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
                 HStack(spacing: theme.spacingMD) {
@@ -225,7 +225,7 @@ struct MacSettingsView: View {
                             .fill(appState.isConnected ? theme.success : theme.error)
                             .frame(width: 8, height: 8)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(appState.isConnected ? theme.success : theme.error)
                     }
                 }
@@ -237,7 +237,7 @@ struct MacSettingsView: View {
             if let stats = viewModel.stats {
                 VStack(alignment: .leading, spacing: theme.spacingMD) {
                     Text("Server Statistics")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     LazyVGrid(
@@ -277,7 +277,7 @@ struct MacSettingsView: View {
                 }
 
                 Text("Enable verbose logging for troubleshooting")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
                 Divider()
@@ -291,7 +291,7 @@ struct MacSettingsView: View {
                 }
 
                 Text("Remove cached data and force refresh")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
                 Divider()
@@ -304,7 +304,7 @@ struct MacSettingsView: View {
                 }
 
                 Text("Restore all settings to their default values")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
             .padding(theme.spacingMD)
@@ -323,16 +323,16 @@ struct MacSettingsView: View {
             VStack(spacing: theme.spacingLG) {
                 // App Icon
                 Image(systemName: "cube.fill")
-                    .font(.system(size: 64))
+                    .font(.system(size: 64, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
 
                 VStack(spacing: theme.spacingSM) {
                     Text("ILS for macOS")
-                        .font(.system(size: theme.fontTitle2, weight: .bold))
+                        .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Text("Version 1.0.0 (Build 1)")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
 
@@ -341,11 +341,11 @@ struct MacSettingsView: View {
 
                 VStack(spacing: theme.spacingXS) {
                     Text("Intelligent Learning System")
-                        .font(.system(size: theme.fontBody, weight: .medium))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Text("Native macOS application for managing Claude Code sessions")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
@@ -353,22 +353,22 @@ struct MacSettingsView: View {
                 HStack(spacing: theme.spacingLG) {
                     Link(destination: URL(string: "https://github.com/krzemienski/ils-ios")!) {
                         Label("GitHub", systemImage: "link")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     }
 
                     Link(destination: URL(string: "https://github.com/anthropics/claude-code")!) {
                         Label("Claude Code Docs", systemImage: "book")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     }
 
                     Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/privacy")!) {
                         Label("Privacy", systemImage: "hand.raised")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     }
 
                     Link(destination: URL(string: "https://krzemienski.github.io/ils-ios/support")!) {
                         Label("Support", systemImage: "questionmark.circle")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     }
                 }
 
@@ -376,7 +376,7 @@ struct MacSettingsView: View {
                     .frame(width: 200)
 
                 Text("© 2026 ILS. All rights reserved.")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
@@ -391,7 +391,7 @@ struct MacSettingsView: View {
     @ViewBuilder
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
-            .font(.system(size: theme.fontTitle2, weight: .bold))
+            .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
             .foregroundStyle(theme.textPrimary)
     }
 
@@ -402,7 +402,7 @@ struct MacSettingsView: View {
     ) -> some View {
         HStack(alignment: .center, spacing: theme.spacingMD) {
             Text(label)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
                 .frame(width: 140, alignment: .trailing)
 
@@ -416,10 +416,10 @@ struct MacSettingsView: View {
     private func statItem(_ label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
             Text(label)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
             Text(value)
-                .font(.system(size: theme.fontTitle3, weight: .semibold, design: .monospaced))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
         }
         .padding(theme.spacingSM)
@@ -440,7 +440,7 @@ struct MacSettingsView: View {
                 )
 
             Text(label)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
     }

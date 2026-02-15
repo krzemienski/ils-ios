@@ -15,16 +15,16 @@ struct MCPServerDetailView: View {
                 sectionCard(title: "Command") {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(server.command)
-                            .font(.system(size: theme.fontBody, design: .monospaced))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
 
                         if !server.args.isEmpty {
                             Text("Arguments:")
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
 
                             Text(server.args.joined(separator: " "))
-                                .font(.system(size: theme.fontBody, design: .monospaced))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
@@ -38,13 +38,13 @@ struct MCPServerDetailView: View {
                             ForEach(env.keys.sorted(), id: \.self) { key in
                                 HStack {
                                     Text(key)
-                                        .font(.system(size: theme.fontBody, design: .monospaced))
+                                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                         .foregroundStyle(theme.textPrimary)
 
                                     Spacer()
 
                                     Text(env[key] ?? "")
-                                        .font(.system(size: theme.fontBody, design: .monospaced))
+                                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                         .foregroundStyle(theme.textSecondary)
                                         .lineLimit(1)
                                 }
@@ -58,11 +58,11 @@ struct MCPServerDetailView: View {
                     VStack(spacing: theme.spacingSM) {
                         HStack {
                             Text("Scope")
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                             Spacer()
                             Text(server.scope.rawValue.capitalized)
-                                .font(.system(size: theme.fontBody, weight: .medium))
+                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                         }
 
@@ -70,7 +70,7 @@ struct MCPServerDetailView: View {
 
                         HStack {
                             Text("Status")
-                                .font(.system(size: theme.fontBody))
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                             Spacer()
                             HStack(spacing: 6) {
@@ -78,7 +78,7 @@ struct MCPServerDetailView: View {
                                     .fill(statusColor)
                                     .frame(width: 8, height: 8)
                                 Text(statusText)
-                                    .font(.system(size: theme.fontBody, weight: .medium))
+                                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                                     .foregroundStyle(statusColor)
                             }
                         }
@@ -87,11 +87,11 @@ struct MCPServerDetailView: View {
                             Divider().background(theme.divider)
                             HStack {
                                 Text("Config Path")
-                                    .font(.system(size: theme.fontBody))
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                     .foregroundStyle(theme.textSecondary)
                                 Spacer()
                                 Text(configPath)
-                                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(theme.textSecondary)
                                     .lineLimit(1)
                             }
@@ -102,7 +102,7 @@ struct MCPServerDetailView: View {
                 // Full Command Section
                 sectionCard(title: "Full Command") {
                     Text(fullCommand)
-                        .font(.system(size: theme.fontBody, design: .monospaced))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -129,7 +129,7 @@ struct MCPServerDetailView: View {
         .overlay(alignment: .bottom) {
             if showCopiedToast {
                 Text("Copied to clipboard")
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textOnAccent)
                     .padding(.horizontal, theme.spacingMD)
                     .padding(.vertical, theme.spacingSM)
@@ -147,7 +147,7 @@ struct MCPServerDetailView: View {
     private func sectionCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text(title.uppercased())
-                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .tracking(1)
 

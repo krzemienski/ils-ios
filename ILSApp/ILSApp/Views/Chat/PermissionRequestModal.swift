@@ -39,15 +39,15 @@ struct PermissionRequestModal: View {
     private var header: some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: "shield.lefthalf.filled")
-                .font(.system(size: 20))
+                .font(.system(size: 20, design: theme.fontDesign))
                 .foregroundStyle(theme.warning)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Permission Required")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold))
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                 Text("Claude wants to use a tool")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
 
@@ -61,13 +61,14 @@ struct PermissionRequestModal: View {
     private var toolInfoSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("TOOL")
-                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
+                .kerning(1)
 
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: toolIcon)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                     .frame(width: 28, height: 28)
                     .background(theme.accent.opacity(0.1))
@@ -75,10 +76,10 @@ struct PermissionRequestModal: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(request.toolName)
-                        .font(.system(size: theme.fontBody, weight: .medium, design: .monospaced))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Text(toolDescription)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
             }
@@ -93,12 +94,13 @@ struct PermissionRequestModal: View {
     private var inputPreviewSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("INPUT")
-                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
+                .kerning(1)
 
             Text(formatToolInput())
-                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .lineLimit(20)
                 .padding(theme.spacingSM)
@@ -118,7 +120,7 @@ struct PermissionRequestModal: View {
                 HStack(spacing: theme.spacingXS) {
                     Image(systemName: "xmark.circle.fill")
                     Text("Deny")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 }
                 .foregroundStyle(theme.error)
                 .frame(maxWidth: .infinity)
@@ -135,7 +137,7 @@ struct PermissionRequestModal: View {
                 HStack(spacing: theme.spacingXS) {
                     Image(systemName: "checkmark.circle.fill")
                     Text("Allow")
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 }
                 .foregroundStyle(theme.textOnAccent)
                 .frame(maxWidth: .infinity)

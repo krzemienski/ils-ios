@@ -29,7 +29,7 @@ struct SpawnTeammateView: View {
                 } footer: {
                     Text("Unique identifier for this teammate")
                         .foregroundStyle(theme.textTertiary)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 }
 
                 Section {
@@ -44,7 +44,7 @@ struct SpawnTeammateView: View {
                 } footer: {
                     Text("e.g., researcher, executor, designer")
                         .foregroundStyle(theme.textTertiary)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 }
 
                 Section {
@@ -54,7 +54,7 @@ struct SpawnTeammateView: View {
                                 selectedModel = model
                             } label: {
                                 Text(model.capitalized)
-                                    .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular))
+                                    .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular, design: theme.fontDesign))
                                     .foregroundStyle(selectedModel == model ? theme.textPrimary : theme.textSecondary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, theme.spacingSM)
@@ -81,7 +81,7 @@ struct SpawnTeammateView: View {
                 } footer: {
                     Text("Instructions for the teammate's initial task")
                         .foregroundStyle(theme.textTertiary)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 }
             }
             .scrollContentBackground(.hidden)

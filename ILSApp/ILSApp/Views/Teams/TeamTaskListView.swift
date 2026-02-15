@@ -28,7 +28,7 @@ struct TeamTaskListView: View {
                 showCreateTask = true
             } label: {
                 Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 56))
+                    .font(.system(size: 56, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                     .background(
                         Circle()
@@ -59,15 +59,15 @@ struct TeamTaskListView: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: "checklist")
-                .font(.system(size: 48))
+                .font(.system(size: 48, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Tasks")
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Text("Create tasks to organize team work")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -81,7 +81,7 @@ struct TeamTaskListView: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack {
                     Text(task.subject)
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Spacer()
@@ -91,7 +91,7 @@ struct TeamTaskListView: View {
 
                 if let description = task.description, !description.isEmpty {
                     Text(description)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .lineLimit(2)
                 }
@@ -99,9 +99,9 @@ struct TeamTaskListView: View {
                 if let owner = task.owner, !owner.isEmpty {
                     HStack(spacing: theme.spacingSM) {
                         Image(systemName: "person.circle")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         Text(owner)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     }
                     .foregroundStyle(theme.textTertiary)
                 }
@@ -117,7 +117,7 @@ struct TeamTaskListView: View {
         let (color, text) = statusInfo(for: status)
 
         return Text(text)
-            .font(.system(size: theme.fontCaption))
+            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             .foregroundStyle(color)
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, 4)

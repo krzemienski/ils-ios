@@ -65,7 +65,7 @@ struct SidebarView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("ILS")
-                .font(.system(size: theme.fontTitle1, weight: .bold, design: .monospaced))
+                .font(.system(size: theme.fontTitle1, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
 
             HStack(spacing: theme.spacingXS) {
@@ -73,7 +73,7 @@ struct SidebarView: View {
                     .fill(appState.isConnected ? theme.success : theme.error)
                     .frame(width: 8, height: 8)
                 Text(appState.isConnected ? appState.serverURL : "Disconnected")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
             }
@@ -109,11 +109,11 @@ struct SidebarView: View {
             // Section header
             HStack {
                 Text("SESSIONS")
-                    .font(.system(size: theme.fontCaption, weight: .semibold, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
                 Text("\(sessionsViewModel.totalCount)")
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .padding(.horizontal, theme.spacingMD)
@@ -123,10 +123,10 @@ struct SidebarView: View {
             // Search bar
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 TextField("Search sessions...", text: $sessionsViewModel.searchText)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .accessibilityLabel("Search sessions")
                 if !sessionsViewModel.searchText.isEmpty {
@@ -134,7 +134,7 @@ struct SidebarView: View {
                         sessionsViewModel.searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .accessibilityLabel("Clear search")
@@ -213,15 +213,15 @@ struct SidebarView: View {
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "folder.fill")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.entityProject)
                 Text(name)
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
                 Spacer()
                 Text("\(sessions.count)")
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .padding(.vertical, theme.spacingXS)
@@ -236,7 +236,7 @@ struct SidebarView: View {
             ProgressView()
                 .tint(theme.accent)
             Text("Loading sessions...")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -246,10 +246,10 @@ struct SidebarView: View {
     private var emptyView: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 24))
+                .font(.system(size: 24, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Text(sessionsViewModel.searchText.isEmpty ? "No sessions yet" : "No matching sessions")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -267,7 +267,7 @@ struct SidebarView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "plus.circle.fill")
                 Text("New Session")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundStyle(theme.textOnAccent)
             .frame(maxWidth: .infinity)
@@ -291,10 +291,10 @@ struct SidebarView: View {
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: icon)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .frame(width: 24)
                 Text(label)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 Spacer()
             }
             .foregroundStyle(isActive ? theme.accent : theme.textSecondary)

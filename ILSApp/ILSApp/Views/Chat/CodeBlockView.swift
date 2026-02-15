@@ -38,7 +38,7 @@ struct CodeBlockView: View {
                 // Language badge
                 if let language = language {
                     Text(language.uppercased())
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                         .foregroundColor(theme.accent)
                         .padding(.horizontal, theme.spacingSM)
                         .padding(.vertical, theme.spacingXS)
@@ -62,7 +62,7 @@ struct CodeBlockView: View {
                         }
                     }) {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold, design: theme.fontDesign))
                             .foregroundColor(theme.textSecondary)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -89,7 +89,7 @@ struct CodeBlockView: View {
                     }
                 }) {
                     Image(systemName: showCopyConfirmation ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 15, weight: .medium, design: theme.fontDesign))
                         .foregroundColor(showCopyConfirmation ? theme.success : theme.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -103,7 +103,7 @@ struct CodeBlockView: View {
                     showShareSheet = true
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 15, weight: .medium, design: theme.fontDesign))
                         .foregroundColor(theme.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -125,7 +125,7 @@ struct CodeBlockView: View {
                     VStack(alignment: .trailing, spacing: 0) {
                         ForEach(Array(displayedLines.enumerated()), id: \.offset) { index, _ in
                             Text("\(index + 1)")
-                                .font(.system(.caption, design: .monospaced))
+                                .font(.system(.caption, design: theme.fontDesign))
                                 .foregroundColor(theme.textTertiary)
                                 .padding(.vertical, 2)
                                 .frame(minWidth: 30, alignment: .trailing)
@@ -134,7 +134,7 @@ struct CodeBlockView: View {
                         // Ellipsis indicator when collapsed
                         if shouldBeCollapsible && !isExpanded {
                             Text("\u{22EE}")
-                                .font(.system(.caption, design: .monospaced))
+                                .font(.system(.caption, design: theme.fontDesign))
                                 .foregroundColor(theme.textTertiary)
                                 .padding(.vertical, 2)
                                 .frame(minWidth: 30, alignment: .trailing)

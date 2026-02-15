@@ -92,9 +92,9 @@ struct BrowserView: View {
                             .fill(entityColor(for: seg))
                             .frame(width: 8, height: 8)
                         Text(seg.rawValue)
-                            .font(.system(size: theme.fontCaption, weight: segment == seg ? .semibold : .regular))
+                            .font(.system(size: theme.fontCaption, weight: segment == seg ? .semibold : .regular, design: theme.fontDesign))
                         Text("(\(countFor(seg)))")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .foregroundStyle(segment == seg ? theme.textPrimary : theme.textSecondary)
@@ -122,9 +122,9 @@ struct BrowserView: View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(theme.textTertiary)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             TextField("Search \(segment.rawValue.lowercased())...", text: $searchText)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
                 .autocorrectionDisabled()
                 #if os(iOS)
@@ -162,7 +162,7 @@ struct BrowserView: View {
                         mcpScope = scope
                     } label: {
                         Text(scope.capitalized)
-                            .font(.system(size: theme.fontCaption, weight: mcpScope == scope ? .semibold : .regular))
+                            .font(.system(size: theme.fontCaption, weight: mcpScope == scope ? .semibold : .regular, design: theme.fontDesign))
                             .foregroundStyle(mcpScope == scope ? theme.textPrimary : theme.textSecondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, theme.spacingSM)
@@ -262,7 +262,7 @@ struct BrowserView: View {
                                 pluginsVM.selectedCategory = category
                             } label: {
                                 Text(category)
-                                    .font(.system(size: theme.fontCaption, weight: pluginsVM.selectedCategory == category ? .semibold : .regular))
+                                    .font(.system(size: theme.fontCaption, weight: pluginsVM.selectedCategory == category ? .semibold : .regular, design: theme.fontDesign))
                                     .foregroundStyle(pluginsVM.selectedCategory == category ? theme.textPrimary : theme.textSecondary)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
@@ -300,7 +300,7 @@ struct BrowserView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Text(plugin.name)
-                                    .font(.system(size: theme.fontBody, weight: .medium))
+                                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
                                     .lineLimit(1)
 
@@ -318,20 +318,20 @@ struct BrowserView: View {
                                             .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
                                             .frame(width: 6, height: 6)
                                         Text(plugin.isEnabled ? "Enabled" : "Disabled")
-                                            .font(.system(size: theme.fontCaption))
+                                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                             .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
                                     }
                                 }
                             }
 
                             Text(plugin.description ?? "No description")
-                                .font(.system(size: theme.fontCaption))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                                 .lineLimit(1)
 
                             if let marketplace = plugin.marketplace, !marketplace.isEmpty {
                                 Text(marketplace)
-                                    .font(.system(size: 10, weight: .medium))
+                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
                                     .foregroundStyle(theme.textTertiary)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -341,7 +341,7 @@ struct BrowserView: View {
                         }
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 12))
+                            .font(.system(size: 12, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .padding(theme.spacingMD)
@@ -372,7 +372,7 @@ struct BrowserView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(name)
-                        .font(.system(size: theme.fontBody, weight: .medium))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
 
@@ -384,19 +384,19 @@ struct BrowserView: View {
                             .fill(statusColor)
                             .frame(width: 6, height: 6)
                         Text(status)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(statusColor)
                     }
                 }
 
                 Text(subtitle)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
 
                 if let badge, !badge.isEmpty {
                     Text(badge)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -406,7 +406,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12))
+                .font(.system(size: 12, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)
@@ -420,13 +420,13 @@ struct BrowserView: View {
     private func emptyState(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: icon)
-                .font(.system(size: 40))
+                .font(.system(size: 40, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Text(title)
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
             Text(subtitle)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
         .frame(maxWidth: .infinity)

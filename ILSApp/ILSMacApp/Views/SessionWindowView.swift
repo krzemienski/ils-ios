@@ -30,7 +30,7 @@ struct SessionWindowView: View {
             } else if let errorMessage {
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 48))
+                        .font(.system(size: 48, design: theme.fontDesign))
                         .foregroundColor(.orange)
 
                     Text("Error Loading Session")

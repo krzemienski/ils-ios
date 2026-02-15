@@ -46,11 +46,11 @@ struct MacSessionsListView: View {
     private var headerView: some View {
         HStack {
             Text("SESSIONS")
-                .font(.system(size: theme.fontCaption, weight: .semibold, design: .monospaced))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Spacer()
             Text("\(viewModel.totalCount)")
-                .font(.system(size: theme.fontCaption, design: .monospaced))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(.horizontal, theme.spacingMD)
@@ -63,18 +63,18 @@ struct MacSessionsListView: View {
     private var searchBarView: some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             TextField("Search sessions...", text: $searchText)
                 .textFieldStyle(.plain)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .buttonStyle(.plain)
@@ -138,15 +138,15 @@ struct MacSessionsListView: View {
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "folder.fill")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.entityProject)
                 Text(name)
-                    .font(.system(size: theme.fontCaption, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
                 Spacer()
                 Text("\(sessions.count)")
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }
@@ -209,7 +209,7 @@ struct MacSessionsListView: View {
             ProgressView()
                 .tint(theme.accent)
             Text("Loading sessions...")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -219,10 +219,10 @@ struct MacSessionsListView: View {
     private var emptyView: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 24))
+                .font(.system(size: 24, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Text(searchText.isEmpty ? "No sessions yet" : "No matching sessions")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -239,7 +239,7 @@ struct MacSessionsListView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "plus.circle.fill")
                 Text("New Session")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundStyle(theme.textOnAccent)
             .frame(maxWidth: .infinity)
@@ -288,13 +288,13 @@ struct MacSessionRowContent: View {
         HStack(spacing: theme.spacingSM) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.name ?? "Unnamed Session")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 if let firstPrompt = session.firstPrompt {
                     Text(firstPrompt)
-                        .font(.system(size: theme.fontCaption - 1))
+                        .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .lineLimit(1)
                 }
@@ -303,7 +303,7 @@ struct MacSessionRowContent: View {
             Spacer()
 
             Text(session.messageCount > 0 ? "\(session.messageCount)" : "")
-                .font(.system(size: theme.fontCaption - 1, design: .monospaced))
+                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(.vertical, theme.spacingXS)

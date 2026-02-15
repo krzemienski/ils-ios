@@ -88,7 +88,7 @@ struct AdvancedOptionsSheet: View {
         Section("System Prompt") {
             TextEditor(text: $config.systemPrompt)
                 .frame(minHeight: 80)
-                .font(.system(.body, design: .monospaced))
+                .font(.system(.body, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
                 .scrollContentBackground(.hidden)
                 .background(theme.bgSecondary)
@@ -101,7 +101,7 @@ struct AdvancedOptionsSheet: View {
 
             TextEditor(text: $config.appendSystemPrompt)
                 .frame(minHeight: 48)
-                .font(.system(.body, design: .monospaced))
+                .font(.system(.body, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
                 .scrollContentBackground(.hidden)
                 .background(theme.bgSecondary)
@@ -119,7 +119,7 @@ struct AdvancedOptionsSheet: View {
                         config.model = model
                     } label: {
                         Text(model.capitalized)
-                            .font(.system(size: theme.fontCaption, weight: config.model == model ? .semibold : .regular))
+                            .font(.system(size: theme.fontCaption, weight: config.model == model ? .semibold : .regular, design: theme.fontDesign))
                             .foregroundStyle(config.model == model ? theme.textPrimary : theme.textSecondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, theme.spacingSM)

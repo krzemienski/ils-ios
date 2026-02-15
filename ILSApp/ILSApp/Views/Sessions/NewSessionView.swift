@@ -67,7 +67,7 @@ struct NewSessionView: View {
             sectionLabel("Session Details")
 
             TextField("Session Name (optional)", text: $sessionName)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .padding(theme.spacingSM)
                 .background(theme.bgSecondary)
                 .foregroundStyle(theme.textPrimary)
@@ -101,7 +101,7 @@ struct NewSessionView: View {
                         selectedModel = model
                     } label: {
                         Text(model.capitalized)
-                            .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular))
+                            .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular, design: theme.fontDesign))
                             .foregroundStyle(selectedModel == model ? theme.textPrimary : theme.textSecondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, theme.spacingSM)
@@ -136,7 +136,7 @@ struct NewSessionView: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
             Text(permissionDescription)
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -150,14 +150,14 @@ struct NewSessionView: View {
 
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $systemPrompt)
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .scrollContentBackground(.hidden)
                     .frame(minHeight: 80)
 
                 if systemPrompt.isEmpty {
                     Text("Custom instructions for Claude (optional)")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .padding(.top, 8)
                         .padding(.leading, 4)
@@ -179,7 +179,7 @@ struct NewSessionView: View {
 
             HStack {
                 Text("Max Budget (USD)")
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                 Spacer()
                 TextField("No limit", text: $maxBudget)
@@ -187,7 +187,7 @@ struct NewSessionView: View {
                     .keyboardType(.decimalPad)
                     #endif
                     .multilineTextAlignment(.trailing)
-                    .font(.system(size: theme.fontBody, design: .monospaced))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(width: 100)
             }
@@ -197,7 +197,7 @@ struct NewSessionView: View {
 
             HStack {
                 Text("Max Turns")
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                 Spacer()
                 TextField("1", text: $maxTurns)
@@ -205,7 +205,7 @@ struct NewSessionView: View {
                     .keyboardType(.numberPad)
                     #endif
                     .multilineTextAlignment(.trailing)
-                    .font(.system(size: theme.fontBody, design: .monospaced))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(width: 100)
             }
@@ -222,11 +222,11 @@ struct NewSessionView: View {
         DisclosureGroup("Advanced Options", isExpanded: $showAdvanced) {
             VStack(spacing: theme.spacingSM) {
                 Text("Advanced options available when connected")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }
-        .font(.system(size: theme.fontBody))
+        .font(.system(size: theme.fontBody, design: theme.fontDesign))
         .foregroundStyle(theme.textSecondary)
         .tint(theme.textTertiary)
         .padding(theme.spacingSM)
@@ -250,7 +250,7 @@ struct NewSessionView: View {
                     Image(systemName: "plus.circle.fill")
                 }
                 Text(isCreating ? "Creating..." : "Create Session")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundStyle(theme.textOnAccent)
             .frame(maxWidth: .infinity)
@@ -269,9 +269,10 @@ struct NewSessionView: View {
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     private func formattedMode(_ mode: String) -> String {

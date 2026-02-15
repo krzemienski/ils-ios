@@ -75,29 +75,29 @@ struct ToolCallAccordion: View {
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: toolIcon)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(isError ? theme.error : toolColor)
                     .frame(width: 20)
 
                 Text(toolName)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .font(.system(size: 12, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 if isError {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10, design: theme.fontDesign))
                         .foregroundStyle(theme.error)
                 } else if isExpanded {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 10))
+                        .font(.system(size: 10, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }
@@ -135,10 +135,10 @@ struct ToolCallAccordion: View {
             ForEach(Array(pairs.enumerated()), id: \.offset) { _, pair in
                 HStack(alignment: .top, spacing: 4) {
                     Text(pair.key + ":")
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 11, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                     Text(pair.value)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 11, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .textSelection(.enabled)
                         .lineLimit(3)
@@ -154,7 +154,7 @@ struct ToolCallAccordion: View {
             sectionLabel("Input")
 
             Text(text)
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 11, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .textSelection(.enabled)
         }
@@ -167,7 +167,7 @@ struct ToolCallAccordion: View {
             sectionLabel("Output")
 
             Text(text)
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 11, design: theme.fontDesign))
                 .foregroundStyle(isError ? theme.error : theme.textSecondary)
                 .textSelection(.enabled)
                 .lineLimit(showFullOutput ? nil : 5)
@@ -177,7 +177,7 @@ struct ToolCallAccordion: View {
                     showFullOutput.toggle()
                 } label: {
                     Text(showFullOutput ? "Show less" : "Show more")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                 }
                 .buttonStyle(.plain)
@@ -189,9 +189,10 @@ struct ToolCallAccordion: View {
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .semibold))
+            .font(.system(size: 10, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     /// Maps tool names to SF Symbol icons for all 10 Claude tool types.

@@ -19,10 +19,10 @@ struct SettingsConnectionSection: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Server URL")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                     TextField("https://example.com or http://localhost:9999", text: $serverURL)
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .textContentType(.URL)
                         #if os(iOS)
                         .autocapitalization(.none)
@@ -39,7 +39,7 @@ struct SettingsConnectionSection: View {
 
                 HStack {
                     Text("Status")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                     Spacer()
                     HStack(spacing: 6) {
@@ -47,7 +47,7 @@ struct SettingsConnectionSection: View {
                             .fill(appState.isConnected ? theme.success : theme.error)
                             .frame(width: 8, height: 8)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                     .accessibilityElement(children: .combine)
@@ -64,7 +64,7 @@ struct SettingsConnectionSection: View {
                                 .controlSize(.small)
                         }
                         Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
-                            .font(.system(size: theme.fontBody, weight: .medium))
+                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     }
                     .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
@@ -80,7 +80,7 @@ struct SettingsConnectionSection: View {
             .modifier(GlassCard())
 
             Text("Configure the ILS backend server address")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -96,22 +96,22 @@ struct SettingsConnectionSection: View {
             } label: {
                 HStack(spacing: theme.spacingMD) {
                     Image(systemName: "network")
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.info)
                         .frame(width: 28, height: 28)
                         .background(theme.info.opacity(0.15))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Remote Access")
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Text("Cloudflare Tunnel")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .padding(theme.spacingMD)
@@ -124,8 +124,9 @@ struct SettingsConnectionSection: View {
     @ViewBuilder
     func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 }

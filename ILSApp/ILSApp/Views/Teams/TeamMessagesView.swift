@@ -34,11 +34,11 @@ struct TeamMessagesView: View {
 
             VStack(alignment: isFromLead ? .trailing : .leading, spacing: theme.spacingSM) {
                 Text(message.from)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
 
                 Text(message.content)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .padding(theme.spacingSM)
                     .background(
@@ -49,7 +49,7 @@ struct TeamMessagesView: View {
 
                 if let timestamp = message.timestamp {
                     Text(formatTimestamp(timestamp))
-                        .font(.system(size: 10))
+                        .font(.system(size: 10, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -70,7 +70,7 @@ struct TeamMessagesView: View {
                 sendMessage()
             } label: {
                 Image(systemName: "paperplane.fill")
-                    .font(.system(size: 20))
+                    .font(.system(size: 20, design: theme.fontDesign))
                     .foregroundStyle(messageText.isEmpty ? theme.textTertiary : theme.accent)
                     .frame(width: 44, height: 44)
                     .background(theme.bgSecondary)

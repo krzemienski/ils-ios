@@ -20,7 +20,7 @@ struct UserMessageCard: View {
             VStack(alignment: .trailing, spacing: 4) {
                 // Message text
                 Text(message.text)
-                    .font(.system(size: theme.fontBody).leading(.tight))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textPrimary)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -28,12 +28,12 @@ struct UserMessageCard: View {
                 // Inline metadata: "You" label + timestamp
                 HStack(spacing: 6) {
                     Text("You")
-                        .font(.system(size: 10, weight: .semibold).leading(.tight))
+                        .font(.system(size: 10, weight: .semibold, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.accent)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     if let timestamp = message.timestamp {
                         Text(formattedTimestamp(timestamp))
-                            .font(.system(size: 10, design: .monospaced).leading(.tight))
+                            .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
                             .foregroundStyle(theme.textTertiary)
                             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     }
@@ -75,7 +75,7 @@ struct UserMessageCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(theme.success)
                     Text("Copied")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
                 }
                 .padding(.horizontal, theme.spacingSM)

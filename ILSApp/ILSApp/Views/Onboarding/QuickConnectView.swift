@@ -89,9 +89,9 @@ struct QuickConnectView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: mode.icon)
-                            .font(.system(size: 11))
+                            .font(.system(size: 11, design: theme.fontDesign))
                         Text(mode.rawValue)
-                            .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular))
+                            .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular, design: theme.fontDesign))
                     }
                     .foregroundStyle(selectedMode == mode ? theme.textPrimary : theme.textSecondary)
                     .frame(maxWidth: .infinity)
@@ -126,11 +126,11 @@ struct QuickConnectView: View {
     private var localModeView: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Local Server")
-                .font(.system(size: theme.fontBody, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
 
             Text("Connect to a backend running on this device or your local network.")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
             TextField("Server URL", text: $localURL)
@@ -153,11 +153,11 @@ struct QuickConnectView: View {
     private var remoteModeView: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Remote Server")
-                .font(.system(size: theme.fontBody, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
 
             Text("Enter the hostname or IP address of your remote server.")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
             HStack(spacing: 12) {
@@ -191,11 +191,11 @@ struct QuickConnectView: View {
     private var tunnelModeView: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Cloudflare Tunnel")
-                .font(.system(size: theme.fontBody, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
 
             Text("Paste your Cloudflare tunnel URL (trycloudflare.com or custom domain).")
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
             TextField("https://your-tunnel.trycloudflare.com", text: $tunnelURL)
@@ -212,7 +212,7 @@ struct QuickConnectView: View {
 
             if !tunnelURL.isEmpty && !isValidTunnelURL(tunnelURL) {
                 Label("Enter a valid URL (trycloudflare.com or https://)", systemImage: "exclamationmark.triangle.fill")
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundColor(theme.warning)
             }
         }
@@ -238,11 +238,11 @@ struct QuickConnectView: View {
             case .success:
                 Label("Connected", systemImage: "checkmark.circle.fill")
                     .foregroundColor(theme.success)
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
             case .failure(let message):
                 Label(message, systemImage: "xmark.circle.fill")
                     .foregroundColor(theme.error)
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .multilineTextAlignment(.center)
             }
         }
@@ -257,7 +257,7 @@ struct QuickConnectView: View {
                 .foregroundColor(theme.success)
 
             Text("Connected")
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
 
             VStack(spacing: 6) {
@@ -269,7 +269,7 @@ struct QuickConnectView: View {
                         Text(info.claudeVersion)
                             .foregroundColor(theme.textPrimary)
                     }
-                    .font(.system(size: theme.fontCaption))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 }
 
                 HStack {
@@ -279,7 +279,7 @@ struct QuickConnectView: View {
                     Text(info.status)
                         .foregroundColor(theme.success)
                 }
-                .font(.system(size: theme.fontCaption))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             }
             .padding(12)
             .background(theme.bgTertiary)
@@ -303,7 +303,7 @@ struct QuickConnectView: View {
                     .frame(height: 44)
             } else {
                 Text("Connect")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
             }
@@ -320,7 +320,7 @@ struct QuickConnectView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Recent")
-                .font(.system(size: theme.fontBody, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
             ForEach(connectionHistory, id: \.self) { url in
@@ -332,7 +332,7 @@ struct QuickConnectView: View {
                             .foregroundColor(theme.textTertiary)
                             .font(.caption)
                         Text(url)
-                            .font(.system(size: theme.fontBody))
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundColor(theme.textPrimary)
                             .lineLimit(1)
                         Spacer()

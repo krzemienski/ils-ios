@@ -29,7 +29,7 @@ struct EmptyEntityState: View {
             let entityColor = entityType.themeColor(from: theme)
 
             Image(systemName: entityType.icon)
-                .font(.system(size: theme.fontTitle1))
+                .font(.system(size: theme.fontTitle1, design: theme.fontDesign))
                 .foregroundStyle(
                     LinearGradient(
                         colors: [entityColor, entityColor.opacity(0.6)],
@@ -40,12 +40,12 @@ struct EmptyEntityState: View {
                 .padding(.bottom, theme.spacingSM)
 
             Text(title)
-                .font(.system(size: theme.fontTitle3, weight: .semibold))
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textPrimary)
                 .multilineTextAlignment(.center)
 
             Text(description)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
@@ -53,7 +53,7 @@ struct EmptyEntityState: View {
             if let actionTitle = actionTitle, let action = action {
                 Button(action: action) {
                     Text(actionTitle)
-                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundColor(theme.textOnAccent)
                         .padding(.horizontal, theme.spacingLG)
                         .padding(.vertical, theme.spacingSM)

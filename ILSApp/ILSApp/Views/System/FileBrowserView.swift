@@ -37,16 +37,16 @@ struct FileBrowserView: View {
                 Spacer()
                 VStack(spacing: theme.spacingSM) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: theme.fontTitle2))
+                        .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                         .foregroundStyle(theme.error)
                     Text(error)
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .multilineTextAlignment(.center)
                     Button("Retry") {
                         Task { await loadDirectory() }
                     }
-                    .font(.system(size: theme.fontBody, weight: .medium))
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                 }
                 .padding()
@@ -54,7 +54,7 @@ struct FileBrowserView: View {
             } else if entries.isEmpty {
                 Spacer()
                 Text("Empty directory")
-                    .font(.system(size: theme.fontBody))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
             } else {
@@ -126,7 +126,7 @@ struct FileBrowserView: View {
                         Task { await loadDirectory() }
                     } label: {
                         Text(component.label)
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(
                                 index == pathComponents.count - 1
                                     ? theme.entitySystem
@@ -166,13 +166,13 @@ struct FileBrowserView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.name)
-                        .font(.system(size: theme.fontBody))
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
 
                     if !entry.isDirectory {
                         Text(formatFileSize(entry.size))
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                 }
@@ -181,7 +181,7 @@ struct FileBrowserView: View {
 
                 if entry.isDirectory {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -198,7 +198,7 @@ struct FileBrowserView: View {
         NavigationStack {
             ScrollView {
                 Text(file.content)
-                    .font(.system(size: theme.fontCaption, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(theme.spacingMD)

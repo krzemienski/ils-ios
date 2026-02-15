@@ -29,10 +29,10 @@ struct SystemMonitorView: View {
                         ForEach(Array(zip(["1m", "5m", "15m"], viewModel.loadAverage)), id: \.0) { label, value in
                             VStack(spacing: 4) {
                                 Text(String(format: "%.2f", value))
-                                    .font(.system(size: theme.fontBody, weight: .bold, design: .monospaced))
+                                    .font(.system(size: theme.fontBody, weight: .bold, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
                                 Text(label)
-                                    .font(.system(size: theme.fontCaption))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(theme.textTertiary)
                             }
                             .frame(maxWidth: .infinity)
@@ -104,7 +104,7 @@ struct SystemMonitorView: View {
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .padding(theme.spacingMD)
@@ -148,18 +148,18 @@ struct SystemMonitorView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Text("Network")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
                 HStack(spacing: theme.spacingMD) {
                     Label(formatBytes(viewModel.networkBytesIn) + "/s", systemImage: "arrow.down")
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.entitySystem)
 
                     Label(formatBytes(viewModel.networkBytesOut) + "/s", systemImage: "arrow.up")
-                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                 }
             }
@@ -173,7 +173,7 @@ struct SystemMonitorView: View {
                     .frame(height: 100)
                     .overlay {
                         Text("Waiting for data...")
-                            .font(.system(size: theme.fontCaption))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
@@ -235,7 +235,7 @@ struct SystemMonitorView: View {
                 .onAppear { livePulse = true }
 
             Text(viewModel.isConnected ? "Live" : "Offline")
-                .font(.system(size: theme.fontCaption, weight: .medium))
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(viewModel.isConnected ? theme.success : theme.error)
         }
     }

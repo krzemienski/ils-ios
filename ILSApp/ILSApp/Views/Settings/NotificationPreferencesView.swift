@@ -63,7 +63,7 @@ struct NotificationPreferencesView: View {
                             Divider().background(theme.bgTertiary)
                             HStack {
                                 Text("Start")
-                                    .font(.system(size: theme.fontBody))
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
                                 Spacer()
                                 DatePicker("", selection: quietStart, displayedComponents: .hourAndMinute)
@@ -73,7 +73,7 @@ struct NotificationPreferencesView: View {
                             }
                             HStack {
                                 Text("End")
-                                    .font(.system(size: theme.fontBody))
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
                                 Spacer()
                                 DatePicker("", selection: quietEnd, displayedComponents: .hourAndMinute)
@@ -90,7 +90,7 @@ struct NotificationPreferencesView: View {
                 // Info
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     Text("Notifications require permission. You will be prompted when enabling alerts for the first time.")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }
@@ -109,16 +109,17 @@ struct NotificationPreferencesView: View {
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: theme.fontCaption, weight: .semibold))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
+                .kerning(1)
     }
 
     @ViewBuilder
     private func toggleRow(_ title: String, isOn: Binding<Bool>, accessibilityLabel: String) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: theme.fontBody))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
             Spacer()
             Toggle("", isOn: isOn)
