@@ -283,7 +283,8 @@ struct SSHSetupView: View {
             username: username,
             authMethod: authMethod.rawValue,
             credential: credential,
-            backendPort: Int(backendPort) ?? 9999
+            backendPort: Int(backendPort) ?? 9999,
+            tunnelType: .cloudflare
         )
         await viewModel.startSetup(request: request)
         isSettingUp = false
