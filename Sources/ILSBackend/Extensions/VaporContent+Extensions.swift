@@ -157,6 +157,7 @@ extension DeletedResponse: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
+extension ProjectGroupInfo: Content {}
 extension ServerStatus: Content {}
 extension Marketplace: Content {}
 extension GitHubSearchResult: Content {}

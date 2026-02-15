@@ -71,7 +71,7 @@ struct MacContentView: View {
         }
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
-            await sessionsViewModel.loadSessions(refresh: true)
+            await sessionsViewModel.loadProjectGroups()
         }
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
@@ -208,21 +208,21 @@ struct MacContentView: View {
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 
-            // Session list
+            // Session list (project groups loaded from backend)
             List {
-                if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
+                if sessionsViewModel.isLoading && sessionsViewModel.projectGroups.isEmpty {
                     loadingView
-                } else if sessionsViewModel.filteredSessions.isEmpty {
+                } else if sessionsViewModel.filteredProjectGroups.isEmpty {
                     emptyView
                 } else {
-                    ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
-                        projectGroup(name: project, sessions: sessions)
+                    ForEach(sessionsViewModel.filteredProjectGroups) { group in
+                        projectGroup(group: group)
                     }
                 }
             }
             .listStyle(.sidebar)
             .refreshable {
-                await sessionsViewModel.loadSessions(refresh: true)
+                await sessionsViewModel.loadProjectGroups()
             }
 
             Divider()
@@ -284,45 +284,82 @@ struct MacContentView: View {
     // MARK: - Project Group
 
     @ViewBuilder
-    private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
+    private func projectGroup(group: ProjectGroupInfo) -> some View {
+        let name = group.name
+        let sessions = sessionsViewModel.projectSessions[name] ?? []
+        let isLoadingSessions = sessionsViewModel.loadingProjects.contains(name)
+
         DisclosureGroup(
             isExpanded: Binding(
                 get: { expandedProjects.contains(name) },
                 set: { isExpanded in
                     if isExpanded {
                         expandedProjects.insert(name)
+                        // Lazy-load sessions when first expanded
+                        if sessionsViewModel.projectSessions[name] == nil {
+                            Task { await sessionsViewModel.loadSessionsForProject(name) }
+                        }
                     } else {
                         expandedProjects.remove(name)
                     }
                 }
             )
         ) {
-            ForEach(sessions) { session in
-                Button {
-                    activeScreen = .chat(session)
-                } label: {
-                    MacSessionRow(session: session)
+            if isLoadingSessions && sessions.isEmpty {
+                HStack(spacing: theme.spacingSM) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(theme.accent)
+                    Text("Loading...")
+                        .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
                 }
-                .buttonStyle(.plain)
-                .contextMenu {
+                .padding(.vertical, theme.spacingXS)
+            } else {
+                ForEach(sessions) { session in
                     Button {
-                        renameText = session.name ?? ""
-                        sessionToRename = session
+                        activeScreen = .chat(session)
                     } label: {
-                        Label("Rename", systemImage: "pencil")
+                        MacSessionRow(session: session)
                     }
-                    Button {
-                        SessionExporter.share(session)
-                    } label: {
-                        Label("Export", systemImage: "square.and.arrow.up")
-                    }
-                    Button(role: .destructive) {
-                        Task {
-                            await sessionsViewModel.deleteSession(session)
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button {
+                            renameText = session.name ?? ""
+                            sessionToRename = session
+                        } label: {
+                            Label("Rename", systemImage: "pencil")
                         }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+                        Button {
+                            SessionExporter.share(session)
+                        } label: {
+                            Label("Export", systemImage: "square.and.arrow.up")
+                        }
+                        Button(role: .destructive) {
+                            Task {
+                                await sessionsViewModel.deleteSession(session)
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
+                }
+
+                // Load more button if there are more sessions
+                if sessionsViewModel.projectHasMore[name] == true {
+                    Button {
+                        Task { await sessionsViewModel.loadMoreForProject(name) }
+                    } label: {
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: "arrow.down.circle")
+                                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                            Text("Load more...")
+                                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(theme.accent)
+                        .padding(.vertical, theme.spacingXS)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         } label: {
@@ -335,7 +372,7 @@ struct MacContentView: View {
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
                 Spacer()
-                Text("\(sessions.count)")
+                Text("\(group.sessionCount)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }

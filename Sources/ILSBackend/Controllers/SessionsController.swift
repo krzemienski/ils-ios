@@ -24,6 +24,7 @@ struct SessionsController: RouteCollection {
         let sessions = routes.grouped("sessions")
 
         sessions.get(use: list)
+        sessions.get("projects", use: projectGroups)
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get(":id", use: get)
@@ -47,6 +48,7 @@ struct SessionsController: RouteCollection {
     @Sendable
     func list(req: Request) async throws -> APIResponse<PaginatedResponse<ChatSession>> {
         let projectId = req.query[UUID.self, at: "projectId"]
+        let projectName = req.query[String.self, at: "projectName"]
         let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
         let offset = (page - 1) * limit
@@ -72,6 +74,17 @@ struct SessionsController: RouteCollection {
                 return !dbClaudeIds.contains(claudeId)
             }
             merged.append(contentsOf: uniqueExternal)
+        }
+
+        // 3b. Filter by projectName if provided
+        if let projectName = projectName, !projectName.isEmpty {
+            let target = projectName == "Ungrouped" ? nil as String? : projectName
+            merged = merged.filter { session in
+                if target == nil {
+                    return session.projectName == nil || session.projectName?.isEmpty == true
+                }
+                return session.projectName == target
+            }
         }
 
         // 4. Search filter (case-insensitive across name, projectName, firstPrompt)
@@ -100,6 +113,48 @@ struct SessionsController: RouteCollection {
                 hasMore: end < total
             )
         )
+    }
+
+    /// Return all projects with their session counts, sorted by most recently active.
+    ///
+    /// This enables the sidebar to show all project groups without loading 22K+ individual sessions.
+    @Sendable
+    func projectGroups(req: Request) async throws -> APIResponse<[ProjectGroupInfo]> {
+        let refresh = req.query[String.self, at: "refresh"] == "true"
+
+        // 1. Load DB sessions
+        let dbSessions = try await SessionModel.query(on: req.db).with(\.$project).all()
+        var merged: [ChatSession] = dbSessions.map { $0.toShared(projectName: $0.project?.name) }
+
+        // 2. Load external sessions
+        let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions(bypassCache: refresh)
+        let dbClaudeIds = Set(dbSessions.compactMap(\.claudeSessionId))
+        let uniqueExternal = externalSessions.filter { ext in
+            guard let claudeId = ext.claudeSessionId else { return true }
+            return !dbClaudeIds.contains(claudeId)
+        }
+        merged.append(contentsOf: uniqueExternal)
+
+        // 3. Group by projectName
+        var groups: [String: (count: Int, latest: Date)] = [:]
+        for session in merged {
+            let name = session.projectName ?? "Ungrouped"
+            if let existing = groups[name] {
+                groups[name] = (
+                    count: existing.count + 1,
+                    latest: max(existing.latest, session.lastActiveAt)
+                )
+            } else {
+                groups[name] = (count: 1, latest: session.lastActiveAt)
+            }
+        }
+
+        // 4. Sort by latest date descending
+        let result = groups.map { name, info in
+            ProjectGroupInfo(name: name, sessionCount: info.count, latestDate: info.latest)
+        }.sorted { $0.latestDate > $1.latestDate }
+
+        return APIResponse(success: true, data: result)
     }
 
     /// Create a new session.

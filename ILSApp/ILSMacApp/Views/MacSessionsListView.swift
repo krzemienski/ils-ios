@@ -37,7 +37,7 @@ struct MacSessionsListView: View {
         .background(theme.bgPrimary)
         .task {
             viewModel.configure(client: appState.apiClient)
-            await viewModel.loadSessions(refresh: true)
+            await viewModel.loadProjectGroups()
         }
     }
 
@@ -92,25 +92,30 @@ struct MacSessionsListView: View {
 
     private var listView: some View {
         List(selection: $selectedSessionId) {
-            if viewModel.isLoading && viewModel.sessions.isEmpty {
+            if viewModel.isLoading && viewModel.projectGroups.isEmpty {
                 loadingView
-            } else if filteredSessions.isEmpty {
+            } else if filteredProjectGroups.isEmpty {
                 emptyView
             } else {
-                ForEach(groupedSessions, id: \.key) { project, sessions in
-                    projectGroup(name: project, sessions: sessions)
+                ForEach(filteredProjectGroups) { group in
+                    projectGroup(group: group)
                 }
             }
         }
         .listStyle(.sidebar)
         .refreshable {
-            await viewModel.loadSessions(refresh: true)
+            await viewModel.loadProjectGroups()
         }
         .onChange(of: selectedSessionId) { _, newId in
             // Handle keyboard selection (Return key)
-            if let sessionId = newId,
-               let session = viewModel.sessions.first(where: { $0.id == sessionId }) {
-                onSessionSelected(session)
+            if let sessionId = newId {
+                // Search across all loaded project sessions
+                for (_, sessions) in viewModel.projectSessions {
+                    if let session = sessions.first(where: { $0.id == sessionId }) {
+                        onSessionSelected(session)
+                        break
+                    }
+                }
             }
         }
     }
@@ -118,22 +123,57 @@ struct MacSessionsListView: View {
     // MARK: - Project Group
 
     @ViewBuilder
-    private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
+    private func projectGroup(group: ProjectGroupInfo) -> some View {
+        let name = group.name
+        let sessions = viewModel.projectSessions[name] ?? []
+        let isLoadingSessions = viewModel.loadingProjects.contains(name)
+
         DisclosureGroup(
             isExpanded: Binding(
                 get: { expandedProjects.contains(name) },
                 set: { isExpanded in
                     if isExpanded {
                         expandedProjects.insert(name)
+                        if viewModel.projectSessions[name] == nil {
+                            Task { await viewModel.loadSessionsForProject(name) }
+                        }
                     } else {
                         expandedProjects.remove(name)
                     }
                 }
             )
         ) {
-            ForEach(sessions) { session in
-                sessionRow(session)
-                    .tag(session.id)
+            if isLoadingSessions && sessions.isEmpty {
+                HStack(spacing: theme.spacingSM) {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(theme.accent)
+                    Text("Loading...")
+                        .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(.vertical, theme.spacingXS)
+            } else {
+                ForEach(sessions) { session in
+                    sessionRow(session)
+                        .tag(session.id)
+                }
+
+                if viewModel.projectHasMore[name] == true {
+                    Button {
+                        Task { await viewModel.loadMoreForProject(name) }
+                    } label: {
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: "arrow.down.circle")
+                                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                            Text("Load more...")
+                                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(theme.accent)
+                        .padding(.vertical, theme.spacingXS)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         } label: {
             HStack(spacing: theme.spacingSM) {
@@ -145,7 +185,7 @@ struct MacSessionsListView: View {
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
                 Spacer()
-                Text("\(sessions.count)")
+                Text("\(group.sessionCount)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
@@ -256,24 +296,11 @@ struct MacSessionsListView: View {
 
     // MARK: - Helpers
 
-    private var filteredSessions: [ChatSession] {
-        guard !searchText.isEmpty else { return viewModel.sessions }
+    private var filteredProjectGroups: [ProjectGroupInfo] {
+        guard !searchText.isEmpty else { return viewModel.projectGroups }
         let query = searchText.lowercased()
-        return viewModel.sessions.filter { session in
-            (session.name?.lowercased().contains(query) ?? false) ||
-            (session.projectName?.lowercased().contains(query) ?? false) ||
-            (session.firstPrompt?.lowercased().contains(query) ?? false)
-        }
-    }
-
-    private var groupedSessions: [(key: String, value: [ChatSession])] {
-        let grouped = Dictionary(grouping: filteredSessions) { session in
-            session.projectName ?? "Ungrouped"
-        }
-        return grouped.sorted { group1, group2 in
-            let latest1 = group1.value.map(\.lastActiveAt).max() ?? .distantPast
-            let latest2 = group2.value.map(\.lastActiveAt).max() ?? .distantPast
-            return latest1 > latest2
+        return viewModel.projectGroups.filter { group in
+            group.name.lowercased().contains(query)
         }
     }
 }
