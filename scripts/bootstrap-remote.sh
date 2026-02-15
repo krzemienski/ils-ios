@@ -223,24 +223,36 @@ else
 
     log "Downloading: $DOWNLOAD_URL"
 
-    HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$INSTALL_DIR/ILSBackend" "$DOWNLOAD_URL" 2>&1)
+    # Download binary — capture HTTP code and curl exit code separately.
+    # Must disable set -e temporarily because curl returns non-zero on HTTP errors
+    # and set -e would kill the script before we can report a useful error.
+    CURL_ERR_FILE=$(mktemp)
+    set +e
+    HTTP_CODE=$(curl -sSL -w "%{http_code}" -o "$INSTALL_DIR/ILSBackend" "$DOWNLOAD_URL" 2>"$CURL_ERR_FILE")
+    CURL_EXIT=$?
+    set -e
 
-    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "000" ]; then
-        # 000 means curl followed redirects successfully (common with GitHub releases)
-        if [ -f "$INSTALL_DIR/ILSBackend" ] && [ -s "$INSTALL_DIR/ILSBackend" ]; then
-            chmod +x "$INSTALL_DIR/ILSBackend"
-            FILE_SIZE=$(stat -c%s "$INSTALL_DIR/ILSBackend" 2>/dev/null || stat -f%z "$INSTALL_DIR/ILSBackend" 2>/dev/null || echo "unknown")
-            log "Binary downloaded: $FILE_SIZE bytes"
-            step "build_backend" "success" "Binary downloaded ($FILE_SIZE bytes)"
-        else
-            step "build_backend" "failure" "Downloaded file is empty"
-            emit_error "Downloaded binary is empty. Release may not exist yet. Try --from-source flag."
-            exit 1
-        fi
-    else
-        step "build_backend" "failure" "Download failed (HTTP $HTTP_CODE)"
+    CURL_ERR=$(cat "$CURL_ERR_FILE" 2>/dev/null || true)
+    rm -f "$CURL_ERR_FILE"
+
+    if [ "$CURL_EXIT" -ne 0 ]; then
+        step "build_backend" "failure" "Download failed (curl exit $CURL_EXIT)"
         log "URL: $DOWNLOAD_URL"
-        emit_error "Failed to download binary (HTTP $HTTP_CODE). Release may not exist for this platform. Try --from-source flag or check https://github.com/${GITHUB_REPO}/releases"
+        [ -n "$CURL_ERR" ] && log "curl error: $CURL_ERR"
+        log "Disk space: $(df -h "$INSTALL_DIR" 2>/dev/null | tail -1 || echo 'unknown')"
+        emit_error "Failed to download binary (curl exit $CURL_EXIT). Check disk space and network. URL: $DOWNLOAD_URL"
+        exit 1
+    fi
+
+    if [ -f "$INSTALL_DIR/ILSBackend" ] && [ -s "$INSTALL_DIR/ILSBackend" ]; then
+        chmod +x "$INSTALL_DIR/ILSBackend"
+        FILE_SIZE=$(stat -c%s "$INSTALL_DIR/ILSBackend" 2>/dev/null || stat -f%z "$INSTALL_DIR/ILSBackend" 2>/dev/null || echo "unknown")
+        log "Binary downloaded: $FILE_SIZE bytes"
+        step "build_backend" "success" "Binary downloaded ($FILE_SIZE bytes)"
+    else
+        step "build_backend" "failure" "Downloaded file is empty or missing (HTTP $HTTP_CODE)"
+        log "URL: $DOWNLOAD_URL"
+        emit_error "Downloaded binary is empty. Release may not exist for this platform. Try --from-source flag or check https://github.com/${GITHUB_REPO}/releases"
         exit 1
     fi
 fi
