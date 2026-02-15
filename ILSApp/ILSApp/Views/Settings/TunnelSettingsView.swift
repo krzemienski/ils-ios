@@ -17,6 +17,7 @@ struct TunnelSettingsView: View {
     @State private var isRunning = false
     @State private var tunnelURL: String?
     @State private var uptime: Int?
+    @State private var tunnelMode: String?
     @State private var isLoading = false
     @State private var isToggling = false
     @State private var errorMessage: String?
@@ -54,6 +55,7 @@ struct TunnelSettingsView: View {
         #endif
         .toast(isPresented: $showCopiedToast, message: "URL copied to clipboard")
         .task {
+            loadCustomDomainSettings()
             await fetchStatus()
         }
         .onChange(of: tunnelURL) { _, newURL in
@@ -146,6 +148,15 @@ struct TunnelSettingsView: View {
                     Text("Running")
                         .font(.system(size: theme.fontBody))
                         .foregroundStyle(theme.success)
+                    if let mode = tunnelMode {
+                        Text(mode.capitalized)
+                            .font(.system(size: theme.fontCaption, weight: .medium))
+                            .foregroundStyle(theme.textOnAccent)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(mode == "named" ? theme.success : theme.accent)
+                            .clipShape(Capsule())
+                    }
                     Spacer()
                     if let uptime = uptime {
                         Text(formatUptime(uptime))
@@ -326,6 +337,29 @@ struct TunnelSettingsView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
                                 .accessibilityLabel("Custom domain")
                         }
+                        // Save & Start button
+                        Button {
+                            Task { await startNamedTunnel() }
+                        } label: {
+                            HStack {
+                                if isToggling {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "play.fill")
+                                }
+                                Text("Save & Start Named Tunnel")
+                            }
+                            .font(.system(size: theme.fontBody, weight: .medium))
+                            .foregroundStyle(theme.textOnAccent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(isCustomDomainValid ? theme.accent : theme.bgTertiary)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                        }
+                        .disabled(!isCustomDomainValid || isToggling)
+                        .accessibilityLabel("Save and start named tunnel")
                     }
                     .padding(.top, theme.spacingSM)
                 } label: {
@@ -402,6 +436,14 @@ struct TunnelSettingsView: View {
         }
     }
 
+    // MARK: - Computed Properties
+
+    private var isCustomDomainValid: Bool {
+        !cfToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !cfTunnelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !cfDomain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     // MARK: - Actions
 
     private func fetchStatus() async {
@@ -410,6 +452,7 @@ struct TunnelSettingsView: View {
             isRunning = status.running
             tunnelURL = status.url
             uptime = status.uptime
+            tunnelMode = status.mode
             notInstalled = false
             errorMessage = nil
             if let url = status.url {
@@ -463,6 +506,47 @@ struct TunnelSettingsView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func startNamedTunnel() async {
+        isToggling = true
+        errorMessage = nil
+        defer { isToggling = false }
+
+        // Persist custom domain settings
+        let defaults = UserDefaults.standard
+        defaults.set(cfToken, forKey: "cfToken")
+        defaults.set(cfTunnelName, forKey: "cfTunnelName")
+        defaults.set(cfDomain, forKey: "cfDomain")
+
+        do {
+            let request = TunnelStartRequest(
+                token: cfToken.trimmingCharacters(in: .whitespacesAndNewlines),
+                tunnelName: cfTunnelName.trimmingCharacters(in: .whitespacesAndNewlines),
+                domain: cfDomain.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+            let response: TunnelStartResponse = try await appState.apiClient.post("/tunnel/start", body: request)
+            tunnelURL = response.url
+            isRunning = true
+            notInstalled = false
+            qrImage = Self.generateQRCode(from: response.url)
+        } catch let apiError as APIError {
+            if case .httpError(let code) = apiError, code == 404 {
+                notInstalled = true
+                installURL = "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+            } else {
+                errorMessage = apiError.localizedDescription
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func loadCustomDomainSettings() {
+        let defaults = UserDefaults.standard
+        cfToken = defaults.string(forKey: "cfToken") ?? ""
+        cfTunnelName = defaults.string(forKey: "cfTunnelName") ?? ""
+        cfDomain = defaults.string(forKey: "cfDomain") ?? ""
     }
 
     // MARK: - QR Code Generation

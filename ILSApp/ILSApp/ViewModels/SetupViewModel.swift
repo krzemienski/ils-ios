@@ -59,6 +59,17 @@ final class SetupViewModel: ObservableObject {
                 scriptArgs += " --no-tunnel"
             }
 
+            // Pass custom domain flags for named tunnel support
+            if let cfToken = request.cfToken, !cfToken.isEmpty {
+                scriptArgs += " --cf-token '\(cfToken)'"
+            }
+            if let cfTunnelName = request.cfTunnelName, !cfTunnelName.isEmpty {
+                scriptArgs += " --tunnel-name '\(cfTunnelName)'"
+            }
+            if let cfDomain = request.cfDomain, !cfDomain.isEmpty {
+                scriptArgs += " --domain '\(cfDomain)'"
+            }
+
             // Download script to a temp file first, then execute it.
             // Piping (curl | bash -s) causes curl inside the script to fail with
             // "client returned ERROR on write" because bash -s inherits the pipe's stdin.

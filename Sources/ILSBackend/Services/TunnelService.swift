@@ -1,10 +1,11 @@
 import Foundation
 import Dispatch
 
-/// Actor managing a Cloudflare quick tunnel process (`cloudflared tunnel --url`).
+/// Actor managing Cloudflare tunnel processes.
 ///
-/// Spawns `cloudflared` as a child process, parses the generated
-/// `trycloudflare.com` URL from its output, and provides start/stop/status.
+/// Supports two modes:
+/// - **Quick tunnel**: `cloudflared tunnel --url` — random trycloudflare.com URL
+/// - **Named tunnel**: `cloudflared tunnel run --token <TOKEN>` — custom domain
 actor TunnelService {
     // MARK: - State
 
@@ -12,16 +13,23 @@ actor TunnelService {
     private var tunnelURL: String?
     private var startTime: Date?
     private var outputPipe: Pipe?
+    private var tunnelMode: TunnelMode = .quick
 
     /// Whether cloudflared binary is available on this machine.
     private(set) var cloudflaredInstalled: Bool = false
 
     // MARK: - Data Structures
 
+    enum TunnelMode: Sendable {
+        case quick
+        case named(domain: String)
+    }
+
     struct TunnelStatus: Sendable {
         let running: Bool
         let url: String?
         let uptime: Int?
+        let mode: String
     }
 
     // MARK: - Lifecycle
@@ -91,6 +99,56 @@ actor TunnelService {
         return url
     }
 
+    /// Start a named Cloudflare tunnel with a pre-configured token and custom domain.
+    /// The domain is known upfront — no URL parsing needed.
+    /// Requires the tunnel to be configured in Cloudflare dashboard with ingress rules.
+    func startNamed(token: String, tunnelName: String, domain: String, port: Int = 9999) async throws -> String {
+        // Already running?
+        if let url = tunnelURL, process?.isRunning == true {
+            return url
+        }
+
+        // Stop any zombie process
+        stop()
+
+        guard cloudflaredInstalled else {
+            throw TunnelError.cloudflaredNotInstalled
+        }
+
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        proc.arguments = ["cloudflared", "tunnel", "run", "--token", token]
+
+        let pipe = Pipe()
+        proc.standardError = pipe
+        proc.standardOutput = Pipe()
+
+        self.outputPipe = pipe
+        self.process = proc
+        self.tunnelMode = .named(domain: domain)
+
+        proc.terminationHandler = { [weak self] _ in
+            Task { [weak self] in
+                await self?.handleTermination()
+            }
+        }
+
+        try proc.run()
+        self.startTime = Date()
+
+        // For named tunnels the URL is the custom domain — no output parsing needed.
+        // Wait briefly to verify cloudflared didn't crash immediately.
+        let tunnelURL = domain.hasPrefix("https://") ? domain : "https://\(domain)"
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+
+        guard process?.isRunning == true else {
+            throw TunnelError.namedTunnelFailed
+        }
+
+        self.tunnelURL = tunnelURL
+        return tunnelURL
+    }
+
     /// Stop the running tunnel process.
     func stop() {
         if let proc = process, proc.isRunning {
@@ -108,10 +166,15 @@ actor TunnelService {
         } else {
             nil
         }
+        let modeString: String = switch tunnelMode {
+        case .quick: "quick"
+        case .named: "named"
+        }
         return TunnelStatus(
             running: running,
             url: running ? tunnelURL : nil,
-            uptime: uptime
+            uptime: uptime,
+            mode: modeString
         )
     }
 
@@ -188,6 +251,7 @@ actor TunnelService {
         tunnelURL = nil
         startTime = nil
         outputPipe = nil
+        tunnelMode = .quick
     }
 
     // MARK: - Errors
@@ -197,6 +261,7 @@ actor TunnelService {
         case timeout
         case urlNotFound
         case alreadyRunning
+        case namedTunnelFailed
 
         var description: String {
             switch self {
@@ -208,6 +273,8 @@ actor TunnelService {
                 return "Could not parse tunnel URL from cloudflared output"
             case .alreadyRunning:
                 return "Tunnel is already running"
+            case .namedTunnelFailed:
+                return "Named tunnel process exited unexpectedly. Check your token and tunnel configuration."
             }
         }
     }

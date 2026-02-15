@@ -20,7 +20,9 @@ struct TunnelController: RouteCollection {
 
     // MARK: - Endpoints
 
-    /// POST /tunnel/start — start a quick Cloudflare tunnel.
+    /// POST /tunnel/start — start a Cloudflare tunnel (quick or named).
+    /// If token + tunnelName + domain are all provided, starts a named tunnel.
+    /// Otherwise starts a quick tunnel with a random trycloudflare.com URL.
     @Sendable
     func startTunnel(req: Request) async throws -> Response {
         let isInstalled = await tunnelService.cloudflaredInstalled
@@ -32,7 +34,17 @@ struct TunnelController: RouteCollection {
         let port = 9999 // Default backend port
 
         do {
-            let url = try await tunnelService.start(port: port)
+            let url: String
+            if let token = body?.token, !token.isEmpty,
+               let tunnelName = body?.tunnelName, !tunnelName.isEmpty,
+               let domain = body?.domain, !domain.isEmpty {
+                url = try await tunnelService.startNamed(
+                    token: token, tunnelName: tunnelName,
+                    domain: domain, port: port
+                )
+            } else {
+                url = try await tunnelService.start(port: port)
+            }
             let response = TunnelStartResponse(url: url)
             return try encodeResponse(response, status: .ok)
         } catch {
@@ -65,7 +77,8 @@ struct TunnelController: RouteCollection {
         let response = TunnelStatusResponse(
             running: status.running,
             url: status.url,
-            uptime: status.uptime
+            uptime: status.uptime,
+            mode: status.mode
         )
         return try encodeResponse(response, status: .ok)
     }

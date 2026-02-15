@@ -343,6 +343,12 @@ struct SSHSetupView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         #endif
 
+        // Load custom domain settings if configured
+        let defaults = UserDefaults.standard
+        let cfToken = defaults.string(forKey: "cfToken")
+        let cfTunnelName = defaults.string(forKey: "cfTunnelName")
+        let cfDomain = defaults.string(forKey: "cfDomain")
+
         let request = StartSetupRequest(
             host: host,
             port: Int(port) ?? 22,
@@ -350,7 +356,10 @@ struct SSHSetupView: View {
             authMethod: authMethod.rawValue,
             credential: credential,
             backendPort: Int(backendPort) ?? 9999,
-            tunnelType: .cloudflare
+            tunnelType: .cloudflare,
+            cfToken: cfToken,
+            cfTunnelName: cfTunnelName,
+            cfDomain: cfDomain
         )
         await viewModel.startSetup(request: request)
         isSettingUp = false

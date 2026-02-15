@@ -52,10 +52,13 @@ public struct TunnelStatusResponse: Codable, Sendable {
     public let url: String?
     /// Seconds since the tunnel was started, if running.
     public let uptime: Int?
+    /// Tunnel mode: "quick" or "named".
+    public let mode: String?
 
-    public init(running: Bool, url: String? = nil, uptime: Int? = nil) {
+    public init(running: Bool, url: String? = nil, uptime: Int? = nil, mode: String? = nil) {
         self.running = running
         self.url = url
         self.uptime = uptime
+        self.mode = mode
     }
 }

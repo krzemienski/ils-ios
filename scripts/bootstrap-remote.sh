@@ -17,6 +17,9 @@
 #   --install-dir DIR   Installation directory (default: ~/ils-backend)
 #   --from-source       Build from source instead of downloading binary (fallback)
 #   --branch BRANCH     Git branch for --from-source mode (default: master)
+#   --cf-token TOKEN    Cloudflare tunnel token for named tunnels
+#   --tunnel-name NAME  Named tunnel name (informational, token contains config)
+#   --domain DOMAIN     Custom domain for named tunnel (e.g. ils.example.com)
 #
 # Output markers (parsed by iOS app):
 #   ILS_STEP:name:status:message     Step progress
@@ -36,6 +39,9 @@ VERSION_TAG="latest"
 INSTALL_DIR="$HOME/ils-backend"
 FROM_SOURCE=false
 BRANCH="master"
+CF_TOKEN=""
+CF_TUNNEL_NAME=""
+CF_DOMAIN=""
 
 # ── Parse Arguments ──────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -55,9 +61,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         --version)     VERSION_TAG="$2"; shift 2 ;;
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
-        --from-source) FROM_SOURCE=true; shift ;;
-        --branch)      BRANCH="$2"; shift 2 ;;
-        *)             shift ;;
+        --from-source)  FROM_SOURCE=true; shift ;;
+        --branch)       BRANCH="$2"; shift 2 ;;
+        --cf-token)     CF_TOKEN="$2"; shift 2 ;;
+        --tunnel-name)  CF_TUNNEL_NAME="$2"; shift 2 ;;
+        --domain)       CF_DOMAIN="$2"; shift 2 ;;
+        *)              shift ;;
     esac
 done
 
@@ -379,35 +388,73 @@ if $SETUP_TUNNEL; then
 
     # Start cloudflared tunnel
     TUNNEL_LOG="$STATE_DIR/cloudflare-tunnel.log"
-    cloudflared tunnel --url "http://localhost:$BACKEND_PORT" --no-autoupdate > "$TUNNEL_LOG" 2>&1 &
-    TUNNEL_PID=$!
-    echo "$TUNNEL_PID" > "$STATE_DIR/cloudflare-tunnel.pid"
-    log "cloudflared started (PID: $TUNNEL_PID)"
 
-    # Wait for tunnel URL (up to 30 seconds)
-    TUNNEL_URL=""
-    for i in $(seq 1 30); do
-        if [ -f "$TUNNEL_LOG" ]; then
-            # Use || true to prevent set -euo pipefail from killing the script
-            # when grep finds no match (exit code 1) on early iterations
-            TUNNEL_URL=$(grep -oE "https://[a-zA-Z0-9-]+\.trycloudflare\.com" "$TUNNEL_LOG" 2>/dev/null | head -1 || true)
-            if [ -n "$TUNNEL_URL" ]; then
-                break
-            fi
+    if [ -n "$CF_TOKEN" ]; then
+        # ── Named Tunnel Mode ────────────────────────────────────────────────
+        log "Starting named tunnel (token provided)..."
+        cloudflared tunnel run --token "$CF_TOKEN" > "$TUNNEL_LOG" 2>&1 &
+        TUNNEL_PID=$!
+        echo "$TUNNEL_PID" > "$STATE_DIR/cloudflare-tunnel.pid"
+        echo "named" > "$STATE_DIR/tunnel-mode.txt"
+        log "cloudflared named tunnel started (PID: $TUNNEL_PID)"
+
+        # For named tunnels, the URL is the custom domain
+        if [ -n "$CF_DOMAIN" ]; then
+            TUNNEL_URL="https://$CF_DOMAIN"
+        else
+            TUNNEL_URL=""
         fi
-        sleep 1
-        log "Waiting for tunnel URL... ($i/30)"
-    done
 
-    if [ -n "$TUNNEL_URL" ]; then
-        echo "$TUNNEL_URL" > "$STATE_DIR/tunnel-url.txt"
-        step "setup_tunnel" "success" "Tunnel active: $TUNNEL_URL"
-        emit_url "$TUNNEL_URL"
+        # Verify the tunnel process is still alive after a few seconds
+        sleep 3
+        if kill -0 "$TUNNEL_PID" 2>/dev/null; then
+            if [ -n "$TUNNEL_URL" ]; then
+                echo "$TUNNEL_URL" > "$STATE_DIR/tunnel-url.txt"
+                step "setup_tunnel" "success" "Named tunnel active: $TUNNEL_URL"
+                emit_url "$TUNNEL_URL"
+            else
+                step "setup_tunnel" "success" "Named tunnel started (no domain specified)"
+                emit_backend_url "http://localhost:$BACKEND_PORT"
+            fi
+        else
+            step "setup_tunnel" "failure" "Named tunnel process exited — check token"
+            log "Last 10 lines of tunnel log:"
+            tail -10 "$TUNNEL_LOG" 2>/dev/null || true
+            emit_backend_url "http://localhost:$BACKEND_PORT"
+        fi
     else
-        step "setup_tunnel" "failure" "Timed out waiting for tunnel URL"
-        log "cloudflared may still be starting. Check logs: $TUNNEL_LOG"
-        # Don't exit with error — backend is running, just tunnel failed
-        emit_backend_url "http://localhost:$BACKEND_PORT"
+        # ── Quick Tunnel Mode (default) ──────────────────────────────────────
+        cloudflared tunnel --url "http://localhost:$BACKEND_PORT" --no-autoupdate > "$TUNNEL_LOG" 2>&1 &
+        TUNNEL_PID=$!
+        echo "$TUNNEL_PID" > "$STATE_DIR/cloudflare-tunnel.pid"
+        echo "quick" > "$STATE_DIR/tunnel-mode.txt"
+        log "cloudflared quick tunnel started (PID: $TUNNEL_PID)"
+
+        # Wait for tunnel URL (up to 30 seconds)
+        TUNNEL_URL=""
+        for i in $(seq 1 30); do
+            if [ -f "$TUNNEL_LOG" ]; then
+                # Use || true to prevent set -euo pipefail from killing the script
+                # when grep finds no match (exit code 1) on early iterations
+                TUNNEL_URL=$(grep -oE "https://[a-zA-Z0-9-]+\.trycloudflare\.com" "$TUNNEL_LOG" 2>/dev/null | head -1 || true)
+                if [ -n "$TUNNEL_URL" ]; then
+                    break
+                fi
+            fi
+            sleep 1
+            log "Waiting for tunnel URL... ($i/30)"
+        done
+
+        if [ -n "$TUNNEL_URL" ]; then
+            echo "$TUNNEL_URL" > "$STATE_DIR/tunnel-url.txt"
+            step "setup_tunnel" "success" "Tunnel active: $TUNNEL_URL"
+            emit_url "$TUNNEL_URL"
+        else
+            step "setup_tunnel" "failure" "Timed out waiting for tunnel URL"
+            log "cloudflared may still be starting. Check logs: $TUNNEL_LOG"
+            # Don't exit with error — backend is running, just tunnel failed
+            emit_backend_url "http://localhost:$BACKEND_PORT"
+        fi
     fi
 else
     step "setup_tunnel" "skipped" "Tunnel not requested"
@@ -421,7 +468,9 @@ log "============================================"
 log "  ILS Backend is running!"
 log "  Local:  http://localhost:$BACKEND_PORT"
 if [ -n "${TUNNEL_URL:-}" ]; then
-    log "  Tunnel: $TUNNEL_URL"
+    TUNNEL_MODE_LABEL="quick"
+    [ -n "$CF_TOKEN" ] && TUNNEL_MODE_LABEL="named"
+    log "  Tunnel: $TUNNEL_URL ($TUNNEL_MODE_LABEL)"
 fi
 log "  Binary: $INSTALL_DIR/ILSBackend"
 log "  Logs:   $STATE_DIR/"

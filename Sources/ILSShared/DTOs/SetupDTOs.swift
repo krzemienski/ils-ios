@@ -32,6 +32,12 @@ public struct StartSetupRequest: Codable, Sendable {
     public let backendPort: Int
     public let repositoryURL: String?
     public var tunnelType: TunnelType?
+    /// Cloudflare tunnel token for named tunnels (stable custom domain).
+    public let cfToken: String?
+    /// Named tunnel name (informational).
+    public let cfTunnelName: String?
+    /// Custom domain for named tunnel (e.g. ils.example.com).
+    public let cfDomain: String?
 
     public init(
         host: String,
@@ -41,7 +47,10 @@ public struct StartSetupRequest: Codable, Sendable {
         credential: String,
         backendPort: Int = 9090,
         repositoryURL: String? = nil,
-        tunnelType: TunnelType? = nil
+        tunnelType: TunnelType? = nil,
+        cfToken: String? = nil,
+        cfTunnelName: String? = nil,
+        cfDomain: String? = nil
     ) {
         self.host = host
         self.port = port
@@ -51,6 +60,9 @@ public struct StartSetupRequest: Codable, Sendable {
         self.backendPort = backendPort
         self.repositoryURL = repositoryURL
         self.tunnelType = tunnelType
+        self.cfToken = cfToken
+        self.cfTunnelName = cfTunnelName
+        self.cfDomain = cfDomain
     }
 }
 
