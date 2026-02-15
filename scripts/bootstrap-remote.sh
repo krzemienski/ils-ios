@@ -228,8 +228,8 @@ else
     # all the "curl exit 23 / client returned ERROR on write" failures.
     if [ -f "$INSTALL_DIR/ILSBackend" ]; then
         log "Stopping existing backend before update..."
-        if [ -f "$STATE_DIR/backend.pid" ]; then
-            kill "$(cat "$STATE_DIR/backend.pid")" 2>/dev/null || true
+        if [ -f "$INSTALL_DIR/.state/backend.pid" ]; then
+            kill "$(cat "$INSTALL_DIR/.state/backend.pid")" 2>/dev/null || true
             sleep 1
         fi
         # Also kill by name in case PID file is stale
@@ -388,7 +388,9 @@ if $SETUP_TUNNEL; then
     TUNNEL_URL=""
     for i in $(seq 1 30); do
         if [ -f "$TUNNEL_LOG" ]; then
-            TUNNEL_URL=$(grep -oE "https://[a-zA-Z0-9-]+\.trycloudflare\.com" "$TUNNEL_LOG" 2>/dev/null | head -1)
+            # Use || true to prevent set -euo pipefail from killing the script
+            # when grep finds no match (exit code 1) on early iterations
+            TUNNEL_URL=$(grep -oE "https://[a-zA-Z0-9-]+\.trycloudflare\.com" "$TUNNEL_LOG" 2>/dev/null | head -1 || true)
             if [ -n "$TUNNEL_URL" ]; then
                 break
             fi
