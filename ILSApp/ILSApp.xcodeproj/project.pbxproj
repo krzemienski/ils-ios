@@ -292,6 +292,10 @@
 		FE3FF3C3B777C6E27B42FCA1 /* CitadelSSHService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
+		1A2B3C4D5E6F70891A2B3C4D /* LaunchScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7089A1B2C3D /* LaunchScreenView.swift */; };
+		2A3B4C5D6E7F80912A3B4C5D /* LaunchScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C4D5E6F7089A1B2C3D /* LaunchScreenView.swift */; };
+		4A5B6C7D8E9FA0B14A5B6C7D /* AppIconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4B5C6D7E8F90A13A4B5C6D /* AppIconGenerator.swift */; };
+		5A6B7C8D9EAFB0C15A6B7C8D /* AppIconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4B5C6D7E8F90A13A4B5C6D /* AppIconGenerator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -469,6 +473,8 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		F1A2B3C4D5E6F7089A1B2C3D /* LaunchScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenView.swift; sourceTree = "<group>"; };
+		3A4B5C6D7E8F90A13A4B5C6D /* AppIconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconGenerator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -780,6 +786,8 @@
 		B385414DDDDE6CDD82D4141C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3A4B5C6D7E8F90A13A4B5C6D /* AppIconGenerator.swift */,
+				F1A2B3C4D5E6F7089A1B2C3D /* LaunchScreenView.swift */,
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
 				E1520F4DB797447E8DE6B28C /* Fleet */,
@@ -1116,6 +1124,7 @@
 				302B9566F08451133D4AF3A3 /* AdvancedOptionsSheet.swift in Sources */,
 				F0AE54F8A383B8B86B0E134C /* AgentTeamDetailView.swift in Sources */,
 				0AF85229F311A27F4C4D0D35 /* AgentTeamsListView.swift in Sources */,
+				4A5B6C7D8E9FA0B14A5B6C7D /* AppIconGenerator.swift in Sources */,
 				531BB01D92A383DA6DF5AA78 /* AppLogger.swift in Sources */,
 				08CA0507D6E3EFEEF56E4682 /* AppTheme.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
@@ -1160,6 +1169,7 @@
 				9F4023B2D94B8E5E33B6A235 /* ILSCodeHighlighter.swift in Sources */,
 				641164270E6BB7627B69ADC0 /* ILSTheme.swift in Sources */,
 				AB5CA0482D20AB42EDFFEEDD /* KeychainService.swift in Sources */,
+				1A2B3C4D5E6F70891A2B3C4D /* LaunchScreenView.swift in Sources */,
 				81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */,
 				78D2DCBE8119FCE195105244 /* MCPServerDetailView.swift in Sources */,
 				C45D62C8ACFEA7C4E3750E14 /* MCPViewModel.swift in Sources */,
@@ -1243,6 +1253,7 @@
 				F6BA33956604B8222959BC8E /* AgentTeamDetailView.swift in Sources */,
 				7032D6514C652C6659D7AAC1 /* AgentTeamsListView.swift in Sources */,
 				0E0A44D5B9033E5DA3B7BF84 /* AppDelegate.swift in Sources */,
+				5A6B7C8D9EAFB0C15A6B7C8D /* AppIconGenerator.swift in Sources */,
 				39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */,
 				C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,
@@ -1288,6 +1299,7 @@
 				18357DC6909A92960DCF90E6 /* ILSMacApp.swift in Sources */,
 				F0F643AE7F2B275AFC610602 /* ILSTheme.swift in Sources */,
 				89E4A2CEA791B8E3E2D9473B /* KeychainService.swift in Sources */,
+				2A3B4C5D6E7F80912A3B4C5D /* LaunchScreenView.swift in Sources */,
 				1EA9202F785FC72DF260B40F /* LogViewerView.swift in Sources */,
 				A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */,
 				BCFCBE145C3FD9264131AA00 /* MCPViewModel.swift in Sources */,
