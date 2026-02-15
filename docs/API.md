@@ -1,8 +1,8 @@
 # ILS Backend API Reference
 
-**Version:** 1.0
+**Version:** 1.1
 **Base URL:** `http://localhost:9999`
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-15
 
 ## Table of Contents
 
@@ -19,6 +19,8 @@
 - [Statistics](#statistics)
 - [System](#system)
 - [Themes](#themes)
+- [Teams](#teams)
+- [Tunnel](#tunnel)
 - [WebSocket Protocol](#websocket-protocol)
 - [Error Handling](#error-handling)
 
@@ -37,6 +39,8 @@ The ILS (Intelligent Learning System) Backend provides a RESTful API for managin
 - Configuration management across scopes (user, project, local)
 - System monitoring (CPU, memory, disk, network)
 - Theme customization
+- Agent teams coordination
+- Cloudflare tunnel management
 
 ---
 
@@ -189,6 +193,7 @@ Sessions represent individual chat conversations with Claude Code.
 
 **Query Parameters:**
 - `projectId` (optional, UUID) - Filter sessions by project
+- `projectName` (optional, string) - Filter sessions by project name (use "Ungrouped" for sessions without projects)
 - `page` (optional, int, default: 1) - Page number (1-based)
 - `limit` (optional, int, default: 50, max: 100) - Items per page
 - `search` (optional, string) - Case-insensitive search across name, projectName, firstPrompt
@@ -233,11 +238,49 @@ curl http://localhost:9999/api/v1/sessions
 # Filter by project
 curl "http://localhost:9999/api/v1/sessions?projectId=EC342AC4-974A-4846-B4E0-114DE149F4EC"
 
+# Filter by project name
+curl "http://localhost:9999/api/v1/sessions?projectName=my-project"
+
 # Search sessions
 curl "http://localhost:9999/api/v1/sessions?search=authentication"
 
 # Paginate
 curl "http://localhost:9999/api/v1/sessions?page=2&limit=25"
+```
+
+---
+
+### Get Project Groups
+
+**Endpoint:** `GET /api/v1/sessions/projects`
+**Description:** Get all projects with their session counts, sorted by most recently active. Optimized for sidebar display without loading all individual sessions.
+
+**Query Parameters:**
+- `refresh` (optional, string) - If "true", bypasses external sessions cache
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "name": "project-name",
+      "sessionCount": 15,
+      "latestDate": "2026-02-13T00:00:00Z"
+    },
+    {
+      "name": "Ungrouped",
+      "sessionCount": 5,
+      "latestDate": "2026-02-12T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/sessions/projects
 ```
 
 ---
@@ -1530,7 +1573,7 @@ curl http://localhost:9999/api/v1/stats
 ### Get Recent Sessions
 
 **Endpoint:** `GET /api/v1/stats/recent`
-**Description:** Get recent sessions for dashboard timeline.
+**Description:** Get recent sessions for dashboard timeline (DB + external merged, top 10).
 
 **Response Schema:**
 ```json
@@ -1543,7 +1586,8 @@ curl http://localhost:9999/api/v1/stats
         "name": "Session name",
         "lastActiveAt": "2026-02-13T00:00:00Z"
       }
-    ]
+    ],
+    "total": 100
   }
 }
 ```
@@ -1589,38 +1633,17 @@ curl http://localhost:9999/api/v1/settings
 
 ---
 
-## System
+### Get Server Status
 
-System monitoring endpoints for CPU, memory, disk, network, and processes.
-
-### Get System Status
-
-**Endpoint:** `GET /api/v1/system/status`
-**Description:** Get current system metrics (CPU, memory, disk, network).
+**Endpoint:** `GET /api/v1/server/status`
+**Description:** Get local server connection status.
 
 **Response Schema:**
 ```json
 {
   "success": true,
   "data": {
-    "cpu": {
-      "usage": 45.2,
-      "cores": 8
-    },
-    "memory": {
-      "used": 8589934592,
-      "total": 17179869184,
-      "usagePercent": 50.0
-    },
-    "disk": {
-      "used": 107374182400,
-      "total": 214748364800,
-      "usagePercent": 50.0
-    },
-    "network": {
-      "bytesIn": 1234567890,
-      "bytesOut": 987654321
-    }
+    "connected": true
   }
 }
 ```
@@ -1628,7 +1651,46 @@ System monitoring endpoints for CPU, memory, disk, network, and processes.
 **Example:**
 
 ```bash
-curl http://localhost:9999/api/v1/system/status
+curl http://localhost:9999/api/v1/server/status
+```
+
+---
+
+## System
+
+System monitoring endpoints for CPU, memory, disk, network, and processes.
+
+### Get System Metrics
+
+**Endpoint:** `GET /api/v1/system/metrics`
+**Description:** Get current system metrics (CPU, memory, disk, network).
+
+**Response Schema:**
+```json
+{
+  "cpu": 45.2,
+  "memory": {
+    "used": 8589934592,
+    "total": 17179869184,
+    "percentage": 50.0
+  },
+  "disk": {
+    "used": 107374182400,
+    "total": 214748364800,
+    "percentage": 50.0
+  },
+  "network": {
+    "bytesIn": 1234567890,
+    "bytesOut": 987654321
+  },
+  "loadAverage": [2.5, 2.3, 2.1]
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/system/metrics
 ```
 
 ---
@@ -1638,27 +1700,29 @@ curl http://localhost:9999/api/v1/system/status
 **Endpoint:** `GET /api/v1/system/processes`
 **Description:** List running processes with CPU and memory usage.
 
+**Query Parameters:**
+- `sort` (optional, string, default: "cpu") - Sort by "cpu" or "memory"
+
 **Response Schema:**
 ```json
-{
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "pid": 1234,
-        "name": "process-name",
-        "cpu": 12.5,
-        "memory": 104857600
-      }
-    ]
+[
+  {
+    "name": "process-name",
+    "pid": 1234,
+    "cpuPercent": 12.5,
+    "memoryMB": 100.0
   }
-}
+]
 ```
 
 **Example:**
 
 ```bash
+# Sort by CPU (default)
 curl http://localhost:9999/api/v1/system/processes
+
+# Sort by memory
+curl "http://localhost:9999/api/v1/system/processes?sort=memory"
 ```
 
 ---
@@ -1666,27 +1730,21 @@ curl http://localhost:9999/api/v1/system/processes
 ### Browse Files
 
 **Endpoint:** `GET /api/v1/system/files`
-**Description:** Browse filesystem with path parameter.
+**Description:** Browse filesystem with path parameter (restricted to home directory).
 
 **Query Parameters:**
-- `path` (optional, string, default: "~") - Directory path to browse
+- `path` (required, string) - Directory path to browse
 
 **Response Schema:**
 ```json
-{
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "name": "file.txt",
-        "path": "/Users/user/file.txt",
-        "isDirectory": false,
-        "size": 1024,
-        "modifiedAt": "2026-02-13T00:00:00Z"
-      }
-    ]
+[
+  {
+    "name": "file.txt",
+    "isDirectory": false,
+    "size": 1024,
+    "modifiedDate": "2026-02-13T00:00:00Z"
   }
-}
+]
 ```
 
 **Example:**
@@ -1697,14 +1755,70 @@ curl "http://localhost:9999/api/v1/system/files?path=/Users/user/Documents"
 
 ---
 
+### Get Metrics Source
+
+**Endpoint:** `GET /api/v1/system/metrics/source`
+**Description:** Get the source of system metrics (local or remote).
+
+**Response Schema:**
+```json
+{
+  "source": "local",
+  "hostName": null
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/system/metrics/source
+```
+
+---
+
+### Live Metrics Stream (WebSocket)
+
+**Endpoint:** `WS /api/v1/system/metrics/live`
+**Description:** Stream system metrics via WebSocket every 2 seconds.
+
+**Server Messages:**
+```json
+{
+  "cpu": 45.2,
+  "memory": {
+    "used": 8589934592,
+    "total": 17179869184,
+    "percentage": 50.0
+  },
+  "disk": {
+    "used": 107374182400,
+    "total": 214748364800,
+    "percentage": 50.0
+  },
+  "network": {
+    "bytesIn": 1234567890,
+    "bytesOut": 987654321
+  },
+  "loadAverage": [2.5, 2.3, 2.1]
+}
+```
+
+**Example (using websocat):**
+
+```bash
+websocat ws://localhost:9999/api/v1/system/metrics/live
+```
+
+---
+
 ## Themes
 
-Custom theme management for the iOS app.
+Custom theme management for the iOS app. Note: Themes controller manages **custom themes only** (stored in database). Built-in themes are handled client-side.
 
-### List Themes
+### List Custom Themes
 
 **Endpoint:** `GET /api/v1/themes`
-**Description:** List all available themes (built-in + custom).
+**Description:** List all custom themes.
 
 **Response Schema:**
 ```json
@@ -1713,14 +1827,19 @@ Custom theme management for the iOS app.
   "data": {
     "items": [
       {
-        "id": "midnight",
-        "name": "Midnight",
-        "isBuiltIn": true,
-        "isDark": true,
+        "id": "uuid",
+        "name": "My Custom Theme",
+        "description": "A custom theme",
+        "author": "username",
+        "version": "1.0.0",
         "colors": {
           "background": "#000000",
           "text": "#FFFFFF"
-        }
+        },
+        "typography": {},
+        "spacing": {},
+        "cornerRadius": {},
+        "shadows": {}
       }
     ]
   }
@@ -1735,30 +1854,77 @@ curl http://localhost:9999/api/v1/themes
 
 ---
 
-### Get Current Theme
+### Create Custom Theme
 
-**Endpoint:** `GET /api/v1/themes/current`
-**Description:** Get the currently active theme from settings.
+**Endpoint:** `POST /api/v1/themes`
+**Description:** Create a new custom theme.
+
+**Request Body:**
+```json
+{
+  "name": "My Theme",
+  "description": "A custom theme",
+  "author": "username",
+  "version": "1.0.0",
+  "colors": {
+    "background": "#000000",
+    "text": "#FFFFFF"
+  },
+  "typography": {},
+  "spacing": {},
+  "cornerRadius": {},
+  "shadows": {}
+}
+```
+
+**Response:** Returns the created theme object.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/themes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Dark Blue",
+    "colors": {"background": "#001122"}
+  }'
+```
+
+---
+
+### Get Custom Theme
+
+**Endpoint:** `GET /api/v1/themes/:id`
+**Description:** Get a single custom theme by ID.
+
+**Parameters:**
+- `id` (path, UUID) - Theme ID
 
 **Response:** Returns a single theme object.
 
 **Example:**
 
 ```bash
-curl http://localhost:9999/api/v1/themes/current
+curl http://localhost:9999/api/v1/themes/12345678-1234-1234-1234-123456789abc
 ```
 
 ---
 
-### Set Current Theme
+### Update Custom Theme
 
-**Endpoint:** `POST /api/v1/themes/current`
-**Description:** Set the active theme.
+**Endpoint:** `PUT /api/v1/themes/:id`
+**Description:** Update an existing custom theme.
+
+**Parameters:**
+- `id` (path, UUID) - Theme ID
 
 **Request Body:**
 ```json
 {
-  "themeId": "midnight"
+  "name": "Updated Theme",
+  "colors": {
+    "background": "#111111"
+  }
 }
 ```
 
@@ -1767,9 +1933,505 @@ curl http://localhost:9999/api/v1/themes/current
 **Example:**
 
 ```bash
-curl -X POST http://localhost:9999/api/v1/themes/current \
+curl -X PUT http://localhost:9999/api/v1/themes/12345678-1234-1234-1234-123456789abc \
   -H "Content-Type: application/json" \
-  -d '{"themeId":"midnight"}'
+  -d '{"name":"Updated Theme"}'
+```
+
+---
+
+### Delete Custom Theme
+
+**Endpoint:** `DELETE /api/v1/themes/:id`
+**Description:** Delete a custom theme.
+
+**Parameters:**
+- `id` (path, UUID) - Theme ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/themes/12345678-1234-1234-1234-123456789abc
+```
+
+---
+
+## Teams
+
+Agent teams coordination for multi-agent workflows.
+
+### List Teams
+
+**Endpoint:** `GET /api/v1/teams`
+**Description:** List all agent teams.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "name": "team-alpha",
+      "description": "Analysis team",
+      "members": [
+        {
+          "name": "agent-1",
+          "agentType": "analyst",
+          "model": "sonnet",
+          "status": "idle"
+        }
+      ],
+      "createdAt": "2026-02-13T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/teams
+```
+
+---
+
+### Create Team
+
+**Endpoint:** `POST /api/v1/teams`
+**Description:** Create a new agent team.
+
+**Request Body:**
+```json
+{
+  "name": "team-alpha",
+  "description": "Analysis team"
+}
+```
+
+**Response:** Returns the created team object.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/teams \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "team-alpha",
+    "description": "Analysis team"
+  }'
+```
+
+---
+
+### Get Team Details
+
+**Endpoint:** `GET /api/v1/teams/:name`
+**Description:** Get details for a specific team (includes live member status).
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Response:** Returns a single team object with updated member statuses.
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/teams/team-alpha
+```
+
+---
+
+### Delete Team
+
+**Endpoint:** `DELETE /api/v1/teams/:name`
+**Description:** Delete a team (shuts down all teammates first).
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/teams/team-alpha
+```
+
+---
+
+### Spawn Teammate
+
+**Endpoint:** `POST /api/v1/teams/:name/spawn`
+**Description:** Spawn a new teammate in the team.
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Request Body:**
+```json
+{
+  "name": "agent-1",
+  "agentType": "analyst",
+  "model": "sonnet",
+  "prompt": "Analyze the codebase"
+}
+```
+
+**Response:** Returns the created teammate object.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/teams/team-alpha/spawn \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "agent-1",
+    "agentType": "analyst",
+    "model": "sonnet",
+    "prompt": "Analyze the codebase"
+  }'
+```
+
+---
+
+### Shutdown Teammates
+
+**Endpoint:** `POST /api/v1/teams/:name/shutdown`
+**Description:** Shutdown one or all teammates.
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Request Body (optional):**
+```json
+{
+  "memberName": "agent-1"
+}
+```
+
+**Note:** If no body or no `memberName` provided, shuts down all teammates.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "acknowledged": true
+  }
+}
+```
+
+**Example:**
+
+```bash
+# Shutdown specific member
+curl -X POST http://localhost:9999/api/v1/teams/team-alpha/shutdown \
+  -H "Content-Type: application/json" \
+  -d '{"memberName":"agent-1"}'
+
+# Shutdown all members
+curl -X POST http://localhost:9999/api/v1/teams/team-alpha/shutdown
+```
+
+---
+
+### Remove Team Member
+
+**Endpoint:** `DELETE /api/v1/teams/:name/members/:memberName`
+**Description:** Remove a specific team member.
+
+**Parameters:**
+- `name` (path, string) - Team name
+- `memberName` (path, string) - Member name
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/teams/team-alpha/members/agent-1
+```
+
+---
+
+### List Team Tasks
+
+**Endpoint:** `GET /api/v1/teams/:name/tasks`
+**Description:** List all tasks for a team.
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "task-id",
+      "subject": "Analyze module X",
+      "description": "Detailed task description",
+      "status": "pending",
+      "owner": null,
+      "createdAt": "2026-02-13T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/teams/team-alpha/tasks
+```
+
+---
+
+### Create Team Task
+
+**Endpoint:** `POST /api/v1/teams/:name/tasks`
+**Description:** Create a new task for the team.
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Request Body:**
+```json
+{
+  "subject": "Analyze module X",
+  "description": "Detailed task description"
+}
+```
+
+**Response:** Returns the created task object.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/teams/team-alpha/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "Analyze module X",
+    "description": "Check for bugs"
+  }'
+```
+
+---
+
+### Update Team Task
+
+**Endpoint:** `PUT /api/v1/teams/:name/tasks/:taskId`
+**Description:** Update a task's status or owner.
+
+**Parameters:**
+- `name` (path, string) - Team name
+- `taskId` (path, string) - Task ID
+
+**Request Body:**
+```json
+{
+  "status": "in_progress",
+  "owner": "agent-1"
+}
+```
+
+**Response:** Returns the updated task object.
+
+**Example:**
+
+```bash
+curl -X PUT http://localhost:9999/api/v1/teams/team-alpha/tasks/task-123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "completed",
+    "owner": "agent-1"
+  }'
+```
+
+---
+
+### List Team Messages
+
+**Endpoint:** `GET /api/v1/teams/:name/messages`
+**Description:** List all messages in the team.
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "from": "agent-1",
+      "to": "agent-2",
+      "content": "Message content",
+      "timestamp": "2026-02-13T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/teams/team-alpha/messages
+```
+
+---
+
+### Send Team Message
+
+**Endpoint:** `POST /api/v1/teams/:name/messages`
+**Description:** Send a message within the team.
+
+**Parameters:**
+- `name` (path, string) - Team name
+
+**Request Body:**
+```json
+{
+  "from": "agent-1",
+  "to": "agent-2",
+  "content": "Message content"
+}
+```
+
+**Response:** Returns the created message object.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/teams/team-alpha/messages \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "agent-1",
+    "to": "agent-2",
+    "content": "Analysis complete"
+  }'
+```
+
+---
+
+## Tunnel
+
+Cloudflare tunnel management for remote access.
+
+### Start Tunnel
+
+**Endpoint:** `POST /api/v1/tunnel/start`
+**Description:** Start a Cloudflare tunnel (quick or named).
+
+**Request Body (optional):**
+```json
+{
+  "token": "tunnel-token",
+  "tunnelName": "my-tunnel",
+  "domain": "my-app.example.com"
+}
+```
+
+**Note:** If token, tunnelName, and domain are all provided, starts a named tunnel. Otherwise starts a quick tunnel with a random trycloudflare.com URL.
+
+**Response:**
+```json
+{
+  "url": "https://random-name.trycloudflare.com"
+}
+```
+
+**Error Response (cloudflared not installed):**
+```json
+{
+  "error": "cloudflared not installed",
+  "installUrl": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+}
+```
+
+**Example:**
+
+```bash
+# Start quick tunnel
+curl -X POST http://localhost:9999/api/v1/tunnel/start
+
+# Start named tunnel
+curl -X POST http://localhost:9999/api/v1/tunnel/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "my-token",
+    "tunnelName": "my-tunnel",
+    "domain": "my-app.example.com"
+  }'
+```
+
+---
+
+### Stop Tunnel
+
+**Endpoint:** `POST /api/v1/tunnel/stop`
+**Description:** Stop the running tunnel.
+
+**Response:**
+```json
+{
+  "stopped": true
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/tunnel/stop
+```
+
+---
+
+### Get Tunnel Status
+
+**Endpoint:** `GET /api/v1/tunnel/status`
+**Description:** Get current tunnel status.
+
+**Response Schema:**
+```json
+{
+  "running": true,
+  "url": "https://random-name.trycloudflare.com",
+  "uptime": 3600,
+  "mode": "quick"
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/tunnel/status
 ```
 
 ---
@@ -2008,6 +2670,8 @@ Valid model names for Claude Code:
 - `claude-haiku-4` - Claude Haiku 4 (full name)
 - `claude-sonnet-4-5` - Claude Sonnet 4.5
 - `claude-opus-4-5` - Claude Opus 4.5
+- `claude-3-5-sonnet` - Claude 3.5 Sonnet
+- `claude-3-5-haiku` - Claude 3.5 Haiku
 
 ---
 
@@ -2024,6 +2688,17 @@ The API does not currently implement CORS headers. For web clients, you may need
 ---
 
 ## Changelog
+
+**v1.1.0 (2026-02-15)**
+- Added Teams endpoints (list, create, delete, spawn, shutdown, tasks, messages)
+- Added Tunnel endpoints (start, stop, status)
+- Updated System endpoints (metrics instead of status, added metrics/source and metrics/live WebSocket)
+- Added sessions/projects endpoint for optimized project groups
+- Updated Themes to custom themes only (database-backed)
+- Removed non-existent themes/current endpoints
+- Added server/status endpoint
+- Clarified projectName filter for sessions (supports "Ungrouped")
+- Fixed all route paths to match actual implementation
 
 **v1.0.0 (2026-02-13)**
 - Consolidated API documentation

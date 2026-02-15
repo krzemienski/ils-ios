@@ -2,16 +2,42 @@ import Foundation
 import Combine
 import ILSShared
 
+/// View model for chat interactions with Claude Code.
+///
+/// Manages chat message history, SSE streaming connections, and real-time message updates.
+/// Coordinates with `SSEClient` for Server-Sent Events and `APIClient` for REST operations.
+///
+/// ## Topics
+/// ### Published Properties
+/// - ``messages`` - Array of chat messages in the conversation
+/// - ``isStreaming`` - Whether Claude is currently responding
+/// - ``isLoadingHistory`` - Whether message history is being loaded
+/// - ``connectionState`` - Current SSE connection state
+/// - ``pendingPermissionRequest`` - Permission request awaiting user decision
+///
+/// ### Message Operations
+/// - ``sendMessage(_:projectId:claudeSessionId:)`` - Send a message to Claude
+/// - ``loadMessageHistory()`` - Load message history for the session
+/// - ``cancelStream()`` - Cancel the active streaming response
 @MainActor
 class ChatViewModel: ObservableObject {
+    /// Array of messages in the conversation.
     @Published var messages: [ChatMessage] = []
+    /// Whether Claude is currently streaming a response.
     @Published var isStreaming = false
+    /// Whether message history is being loaded.
     @Published var isLoadingHistory = false
+    /// Current error, if any.
     @Published var error: Error?
+    /// Current SSE connection state.
     @Published var connectionState: SSEClient.ConnectionState = .disconnected
+    /// Whether connection is taking longer than expected (>3s).
     @Published var connectingTooLong = false
+    /// Number of tokens in the current stream.
     @Published var streamTokenCount: Int = 0
+    /// Elapsed time in seconds for the current stream.
     @Published var streamElapsedSeconds: Double = 0
+    /// Pending permission request from Claude.
     @Published var pendingPermissionRequest: PermissionRequest?
     private var streamStartTime: Date?
 

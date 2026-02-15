@@ -92,12 +92,15 @@ PORT=9999 swift run ILSBackend
 The backend will:
 - Create `ils.sqlite` database on first run
 - Run database migrations automatically
-- Start listening on port 9999
+- Start listening on port 9999 (Note: avoid 8080, used by ralph-mobile)
 
 **Verify it's running:**
 ```bash
 curl http://localhost:9999/health
 # Returns: OK
+
+# Check sessions endpoint
+curl http://localhost:9999/api/v1/sessions
 ```
 
 ### 3. Run the iOS App
@@ -112,8 +115,8 @@ Select the **ILSApp** scheme and press `Cmd+R` to build and run on Simulator.
 ```bash
 xcodebuild -project ILSApp/ILSApp.xcodeproj \
   -scheme ILSApp \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-  build
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max' \
+  -quiet build
 ```
 
 ### 4. Run the macOS App
@@ -139,23 +142,24 @@ ILSApp/
 ├── ILSAppApp.swift           # App entry point & global state
 ├── ContentView.swift         # Root navigation container
 ├── Views/
-│   ├── Chat/                 # Chat interface with streaming
-│   │   ├── ChatView.swift    # Main chat screen
-│   │   ├── MessageView.swift # Individual message bubbles
-│   │   └── CommandPaletteView.swift
+│   ├── Root/                 # Root container views
 │   ├── Home/                 # Home dashboard screen
-│   ├── Dashboard/            # Dashboard stats
+│   ├── Chat/                 # Chat interface with streaming
 │   ├── Sessions/             # Session list & creation
 │   ├── Projects/             # Project browser
-│   ├── Browser/              # Plugin browser & management
-│   ├── MCP/                  # MCP server status
 │   ├── Skills/               # Skills explorer
-│   ├── System/               # System monitoring
-│   ├── Fleet/                # Fleet management
+│   ├── Browser/              # Plugin browser & marketplace
+│   ├── Plugins/              # Plugin management
+│   ├── MCP/                  # MCP server status
+│   ├── System/               # System monitoring (CPU, memory, processes)
 │   ├── Teams/                # Team coordination
+│   ├── Fleet/                # Fleet management
+│   ├── Dashboard/            # Dashboard stats
 │   ├── Settings/             # App configuration
 │   ├── Themes/               # Custom theme management
-│   └── Sidebar/              # Navigation sidebar
+│   ├── Onboarding/           # First-run setup flow
+│   ├── Sidebar/              # Navigation sidebar
+│   └── Shared/               # Reusable components
 ├── ViewModels/               # Business logic per feature
 ├── Services/
 │   ├── APIClient.swift       # REST API communication
@@ -320,17 +324,32 @@ swift package resolve
 rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*
 ```
 
+## Scripts
+
+The `scripts/` directory contains automation tools:
+
+| Script | Purpose |
+|--------|---------|
+| `setup.sh` | Initial project setup and dependencies |
+| `install-backend-service.sh` | Install backend as system service |
+| `run_regression_tests.sh` | Run full regression test suite |
+| `reinstall-plugins.sh` | Reinstall all plugins |
+| `bootstrap-remote.sh` | Bootstrap remote host setup |
+| `remote-access` | Remote access configuration |
+
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
 | Backend Framework | [Vapor 4](https://vapor.codes) |
 | Database | SQLite via [Fluent](https://docs.vapor.codes/fluent/overview/) |
-| iOS UI | SwiftUI (iOS 18+) |
+| iOS UI | SwiftUI (iOS 17+) |
 | macOS UI | SwiftUI (macOS 14+) |
 | Architecture | MVVM |
 | Networking | URLSession + SSE |
 | Streaming | Server-Sent Events |
+| Code Highlighting | [Splash](https://github.com/JohnSundell/Splash) |
+| YAML Parsing | [Yams](https://github.com/jpsim/Yams) |
 
 ## Contributing
 

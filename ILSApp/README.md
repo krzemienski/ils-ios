@@ -11,38 +11,50 @@ A native iOS client for managing Claude Code configurations, sessions, and workf
 ## Quick Start
 
 1. Open `ILSApp.xcodeproj` in Xcode
-2. Start the backend server: `PORT=9090 swift run ILSBackend`
+2. Start the backend server: `PORT=9999 swift run ILSBackend`
 3. Select the ILSApp scheme
 4. Press `Cmd+R` to build and run
 
 ## Architecture
 
 - **Pattern:** MVVM with SwiftUI
-- **Backend:** Vapor server on port 9090
+- **Backend:** Vapor server on port 9999 (avoid 8080 - used by ralph-mobile)
 - **Shared Types:** ILSShared Swift Package (DTOs, models)
-- **Theme:** Dark-first design system (ILSTheme)
+- **Theme:** Cyberpunk-inspired design system with 12 built-in themes
 
 ### Directory Structure
 
 ```
 ILSApp/
-├── ILSAppApp.swift           # App entry point
-├── ContentView.swift         # Root navigation container
-├── Info.plist               # App configuration
+├── ILSAppApp.swift           # App entry point & global state
+├── Info.plist               # App configuration (Bundle ID: com.ils.app)
+├── ILSApp.entitlements      # App entitlements
+├── PrivacyInfo.xcprivacy    # Privacy manifest
 ├── Assets.xcassets/         # Images and colors
 ├── Views/                   # SwiftUI views by feature
-│   ├── Chat/               # Chat interface
-│   ├── Dashboard/          # Overview stats
-│   ├── Sessions/           # Session management
+│   ├── Root/               # Root container views
+│   ├── Home/               # Home dashboard screen
+│   ├── Chat/               # Chat interface with streaming
+│   ├── Sessions/           # Session list & management
 │   ├── Projects/           # Project browser
+│   ├── Skills/             # Skills explorer (1,500+ skills)
+│   ├── Browser/            # Plugin browser & marketplace
 │   ├── Plugins/            # Plugin management
 │   ├── MCP/                # MCP server status
-│   ├── Skills/             # Skills explorer
+│   ├── System/             # System monitoring (CPU, memory, processes)
+│   ├── Teams/              # Multi-agent team coordination
+│   ├── Fleet/              # Fleet management
+│   ├── Dashboard/          # Dashboard stats
 │   ├── Settings/           # App configuration
-│   └── Sidebar/            # Navigation sidebar
-├── ViewModels/             # Business logic
-├── Services/               # API and networking
-└── Theme/                  # Design system
+│   ├── Themes/             # Custom theme management
+│   ├── Onboarding/         # First-run setup flow
+│   ├── Sidebar/            # Navigation sidebar
+│   └── Shared/             # Reusable components
+├── ViewModels/             # Business logic per feature (15 view models)
+├── Services/               # API client, SSE streaming, tunnel
+├── Models/                 # App-specific models
+├── Theme/                  # Design system & custom themes
+└── Utils/                  # Utilities and helpers
 ```
 
 ## Key Components
@@ -174,57 +186,90 @@ struct ILSTheme {
 
 ## Features
 
-- **Sessions**: Create, manage, and chat with Claude Code sessions
-- **Projects**: Browse and manage project directories
-- **Skills**: View, search, and toggle Claude Code skills
-- **MCP Servers**: Monitor health, import/export, batch manage MCP servers
-- **Plugins**: Browse, enable/disable, and install from marketplace
-- **Settings**: Full Claude Code configuration management
-- **Dashboard**: Overview stats and recent activity
+- **Chat with Claude**: Real-time streaming responses via SSE with markdown rendering, code blocks, tool calls, and thinking sections
+- **Session Management**: Create, view, fork, rename, export, and delete chat sessions
+- **Project Browser**: Browse and manage Claude Code projects with deterministic IDs
+- **Skills Explorer**: Search and view 1,500+ available Claude Code skills
+- **Plugin Management**: Browse marketplace, install, enable/disable plugins (real git clone)
+- **MCP Server Status**: Monitor Model Context Protocol servers
+- **System Monitoring**: View CPU, memory, disk, network metrics and running processes with live charts
+- **Team Coordination**: Manage multi-agent teams with tasks and messaging
+- **Custom Themes**: Create and customize your own themes or choose from 12 built-in themes
+- **Cloudflare Tunnel**: Expose your local backend via secure tunnel (TunnelService)
+- **Connection Modes**: Local, Remote, or Tunnel connection with ServerSetupSheet onboarding
+- **Dashboard**: Overview stats, entity colors, sparkline charts, and recent activity
+- **Accessibility**: Full accessibility labels and reduce motion support
 
 ### Chat Interface
 
 The chat system supports:
-- Real-time streaming via SSE
-- Message history persistence
-- User/assistant message styling
-- Typing indicator during streaming
-- Session info and forking
-- Command palette for quick actions
+- Real-time streaming via SSE with `SSEClient`
+- Markdown rendering with code syntax highlighting (Splash)
+- Code blocks with copy functionality (`CodeBlockView`)
+- Tool call accordion display (`ToolCallAccordion`)
+- Thinking sections for extended reasoning (`ThinkingSection`)
+- Message history persistence in SQLite
+- User/assistant message styling with avatars
+- Typing indicator during streaming (●●●)
+- Stop button with 30s timeout handling
+- Session info modal and forking
+- Command palette for quick actions (Cmd+K)
+- Cost display per message
 
 ### Dashboard
 
 Shows key metrics:
-- Total projects count
+- Total projects count with StatCard
 - Active sessions count
-- Available skills count
-- MCP server health status
-- Recent activity feed
+- Available skills count (1,500+)
+- MCP server health status (20 servers)
+- Recent activity timeline with sparkline charts
+- Entity color system (6 types: session, project, skill, plugin, mcp, team)
+- Empty states with EmptyEntityState component
+- Skeleton loading with ShimmerModifier
+
+### System Monitoring
+
+Live system metrics:
+- CPU usage charts with SparklineChart
+- Memory usage visualization
+- Disk space monitoring
+- Network I/O tracking
+- Running processes list with filtering
+- File browser for directory navigation
+- WebSocket live metrics stream (`/api/v1/system/metrics/live`)
 
 ### Settings
 
 Configurable options:
-- Backend host and port
-- Connection testing
-- Default model selection
-- SSH connections and fleet management
-- Config profiles and overrides
-- Log viewer and analytics
+- Backend host and port (default: localhost:9999)
+- Connection testing with health check
+- Connection mode: Local/Remote/Tunnel
+- Cloudflare tunnel configuration (TunnelSettingsView)
+- Theme customization (12 built-in + custom themes)
+- ServerSetupSheet for first-run onboarding
+- Connection diagnostics and retry
 
 ## Deep Linking
 
-The app responds to `ils://` URLs:
+The app responds to `ils://` URLs (URL scheme registered in Info.plist):
 
 | URL | Action |
 |-----|--------|
+| `ils://home` | Navigate to Home |
 | `ils://sessions` | Navigate to Sessions |
 | `ils://projects` | Navigate to Projects |
-| `ils://plugins` | Navigate to Plugins |
-| `ils://mcp` | Navigate to MCP Servers |
 | `ils://skills` | Navigate to Skills |
+| `ils://plugins` | Navigate to Plugins (Browser) |
+| `ils://mcp` | Navigate to MCP Servers |
+| `ils://system` | Navigate to System Monitoring |
+| `ils://fleet` | Navigate to Fleet Management |
+| `ils://teams` | Navigate to Teams |
 | `ils://settings` | Navigate to Settings |
 
-Handled in `AppState.handleURL(_:)`.
+**Note:** Deep link UUIDs must be lowercase. System shows "Open in ILSApp?" dialog.
+
+Handled via SwiftUI `.onOpenURL` modifier in `ILSAppApp.swift`.
 
 ## Adding a New Feature
 
@@ -312,9 +357,15 @@ xcodebuild test \
 
 ### App shows "Disconnected"
 
-1. Verify backend is running: `curl http://localhost:9090/health`
-2. Check Settings for correct host/port
-3. For physical device, use Mac's IP address
+1. Verify backend is running: `curl http://localhost:9999/health`
+2. Check that you're running the correct backend binary:
+   ```bash
+   lsof -i :9999 -P -n
+   # Binary path MUST be in ils-ios, NOT ils/ILSBackend
+   ```
+3. Check Settings for correct host/port (default: localhost:9999)
+4. For physical device, use Mac's IP address (Settings > Connection > Remote)
+5. Use ServerSetupSheet for guided setup on first run
 
 ### Build Errors
 
@@ -336,17 +387,20 @@ xcrun simctl erase all
 
 ## Bundle ID
 
-`com.ils.app`
+`com.ils.app` (iOS) / `com.ils.mac` (macOS)
 
 ## URL Scheme
 
-`ils://` — supports deep linking to tabs:
-- `ils://sessions` - Navigate to Sessions
-- `ils://projects` - Navigate to Projects
-- `ils://skills` - Navigate to Skills
-- `ils://mcp` - Navigate to MCP Servers
-- `ils://plugins` - Navigate to Plugins
-- `ils://settings` - Navigate to Settings
+`ils://` — supports deep linking to all tabs (see Deep Linking section above)
+
+## Navigation
+
+The app uses a 5-tab TabView navigation pattern:
+- Tab bar at bottom (iOS) or top (macOS)
+- `selectedTab` in `ILSAppApp.swift` controls active tab
+- Sheet-based sidebar for additional navigation
+- Sidebar button in toolbar triggers `.sheet` presentation
+- Each tab has its own view hierarchy with NavigationStack
 
 ## Key Files
 
@@ -368,8 +422,15 @@ See [API-REFERENCE.md](../docs/API-REFERENCE.md) for complete backend API docume
 ## Dependencies
 
 The iOS app uses:
-- **ILSShared** - Shared models (local Swift Package)
+- **ILSShared** - Shared models, DTOs (local Swift Package)
+  - Includes `Splash` for syntax highlighting
 - SwiftUI (system)
 - Combine (system)
+- Foundation (system)
 
-No external dependencies required.
+The ILSShared package includes:
+- Models: Session, Message, Project, Skill, Plugin, MCPServer, CustomTheme, FleetHost, etc.
+- DTOs: Request/Response types for API communication
+- Syntax highlighting via Splash library
+
+No other external dependencies required for the iOS app.

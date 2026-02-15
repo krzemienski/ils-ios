@@ -1,12 +1,37 @@
 import SwiftUI
 
-/// Entity types in ILS with associated colors, gradients, and SF Symbols
+/// Entity types in ILS with associated colors, icons, and display names.
+///
+/// Represents the six main entity types in the ILS app. Each entity type has:
+/// - A unique color (consistent across themes)
+/// - An SF Symbol icon
+/// - A display name for UI
+///
+/// ## Topics
+/// ### Cases
+/// - ``sessions`` - Chat sessions with Claude
+/// - ``projects`` - Code projects/repositories
+/// - ``skills`` - Custom Claude workflows
+/// - ``mcp`` - Model Context Protocol servers
+/// - ``plugins`` - Claude plugin extensions
+/// - ``system`` - System monitoring and files
+///
+/// ### Properties
+/// - ``icon`` - SF Symbol name for the entity
+/// - ``displayName`` - Human-readable name
+/// - ``themeColor(from:)`` - Theme-aware color
 enum EntityType: String, CaseIterable {
+    /// Chat sessions with Claude.
     case sessions
+    /// Code projects and repositories.
     case projects
+    /// Custom Claude workflows and skills.
     case skills
+    /// Model Context Protocol servers.
     case mcp
+    /// Claude plugin extensions.
     case plugins
+    /// System monitoring and files.
     case system
 }
 

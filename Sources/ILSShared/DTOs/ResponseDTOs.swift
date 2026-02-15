@@ -82,6 +82,26 @@ public struct PluginStat: Codable, Sendable {
     }
 }
 
+// MARK: - Project Group Info
+
+/// Summary of sessions grouped by project, for sidebar display.
+public struct ProjectGroupInfo: Codable, Sendable, Identifiable {
+    /// Project name (used as identifier).
+    public var id: String { name }
+    /// Project display name.
+    public let name: String
+    /// Number of sessions in this project.
+    public let sessionCount: Int
+    /// Most recent session activity date.
+    public let latestDate: Date
+
+    public init(name: String, sessionCount: Int, latestDate: Date) {
+        self.name = name
+        self.sessionCount = sessionCount
+        self.latestDate = latestDate
+    }
+}
+
 // MARK: - Simple Responses
 
 /// Confirmation that a resource was deleted.

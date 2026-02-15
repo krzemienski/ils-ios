@@ -1,6 +1,17 @@
 import Vapor
 import ILSShared
 
+/// Controller for MCP (Model Context Protocol) server management.
+///
+/// Manages MCP server configurations across user, project, and local scopes.
+/// MCP servers extend Claude with custom tools and integrations.
+///
+/// Routes:
+/// - `GET /mcp`: List MCP servers (all scopes or filtered by scope)
+/// - `GET /mcp/:name`: Get a specific MCP server by name
+/// - `POST /mcp`: Create a new MCP server configuration
+/// - `PUT /mcp/:name`: Update an existing MCP server
+/// - `DELETE /mcp/:name`: Remove an MCP server configuration
 struct MCPController: RouteCollection {
     let fileSystem: FileSystemService
 
@@ -18,8 +29,14 @@ struct MCPController: RouteCollection {
         mcp.delete(":name", use: delete)
     }
 
-    /// GET /mcp/:name - Get a single MCP server by name
-    /// Query params: ?scope=user|project
+    /// Get a specific MCP server by name.
+    ///
+    /// Query parameters:
+    /// - `scope`: Filter by configuration scope (user, project, or local)
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with MCPServer
+    /// - Throws: Abort(.notFound) if server doesn't exist
     @Sendable
     func show(req: Request) async throws -> APIResponse<MCPServer> {
         guard let name = req.parameters.get("name") else {
@@ -43,8 +60,14 @@ struct MCPController: RouteCollection {
         )
     }
 
-    /// GET /mcp - List all MCP servers
-    /// Query params: ?scope=user|project, ?refresh=true to bypass cache
+    /// List all MCP servers from configuration files.
+    ///
+    /// Query parameters:
+    /// - `scope`: Filter by configuration scope (user, project, or local)
+    /// - `refresh`: If "true", bypasses the cache and reads from disk
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of MCPServer objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<MCPServer>> {
         var scope: MCPScope?
@@ -61,7 +84,12 @@ struct MCPController: RouteCollection {
         )
     }
 
-    /// POST /mcp - Add a new MCP server
+    /// Create a new MCP server configuration.
+    ///
+    /// Adds the server to the specified scope's configuration file.
+    ///
+    /// - Parameter req: Vapor Request with CreateMCPRequest body
+    /// - Returns: APIResponse with created MCPServer
     @Sendable
     func create(req: Request) async throws -> APIResponse<MCPServer> {
         let input = try req.content.decode(CreateMCPRequest.self)
@@ -82,7 +110,12 @@ struct MCPController: RouteCollection {
         )
     }
 
-    /// PUT /mcp/:name - Update an existing MCP server
+    /// Update an existing MCP server configuration.
+    ///
+    /// Removes the old configuration and adds the updated one.
+    ///
+    /// - Parameter req: Vapor Request with name parameter and CreateMCPRequest body
+    /// - Returns: APIResponse with updated MCPServer
     @Sendable
     func update(req: Request) async throws -> APIResponse<MCPServer> {
         guard let name = req.parameters.get("name") else {
@@ -114,7 +147,13 @@ struct MCPController: RouteCollection {
         )
     }
 
-    /// DELETE /mcp/:name - Remove an MCP server
+    /// Remove an MCP server configuration.
+    ///
+    /// Query parameters:
+    /// - `scope`: Configuration scope to remove from (default: user)
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with deletion confirmation
     @Sendable
     func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let name = req.parameters.get("name") else {

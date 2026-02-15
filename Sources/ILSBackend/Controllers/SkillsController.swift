@@ -1,6 +1,19 @@
 import Vapor
 import ILSShared
 
+/// Controller for Claude Code skill management operations.
+///
+/// Manages custom workflows and commands in Claude Code through the skills system.
+/// Skills can be local user-created files or installed from GitHub repositories.
+///
+/// Routes:
+/// - `GET /skills`: List all skills (local, plugin-provided, and built-in)
+/// - `GET /skills/search`: Search GitHub for skill repositories
+/// - `POST /skills`: Create a new local skill
+/// - `POST /skills/install`: Install a skill from a GitHub repository
+/// - `GET /skills/:name`: Get a specific skill by name
+/// - `PUT /skills/:name`: Update an existing skill's content
+/// - `DELETE /skills/:name`: Delete a local skill
 struct SkillsController: RouteCollection {
     let fileSystem: FileSystemService
 
@@ -20,8 +33,14 @@ struct SkillsController: RouteCollection {
         skills.delete(":name", use: delete)
     }
 
-    /// GET /skills - List all skills
-    /// Query params: ?refresh=true to bypass cache, ?search=term to filter by name/tags
+    /// List all available skills from `~/.claude/skills/` and plugin directories.
+    ///
+    /// Query parameters:
+    /// - `refresh`: If "true", bypasses the file system cache
+    /// - `search`: Filter by name, description, or tags (case-insensitive)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of Skill objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<Skill>> {
         let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
@@ -44,7 +63,10 @@ struct SkillsController: RouteCollection {
         )
     }
 
-    /// POST /skills - Create a new skill
+    /// Create a new skill in `~/.claude/skills/`.
+    ///
+    /// - Parameter req: Vapor Request with CreateSkillRequest body
+    /// - Returns: APIResponse with created Skill
     @Sendable
     func create(req: Request) async throws -> APIResponse<Skill> {
         let input = try req.content.decode(CreateSkillRequest.self)
@@ -69,7 +91,11 @@ struct SkillsController: RouteCollection {
         )
     }
 
-    /// GET /skills/:name - Get a single skill
+    /// Get a specific skill by name.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with Skill
+    /// - Throws: Abort(.notFound) if skill doesn't exist
     @Sendable
     func get(req: Request) async throws -> APIResponse<Skill> {
         guard let name = req.parameters.get("name") else {
@@ -86,7 +112,10 @@ struct SkillsController: RouteCollection {
         )
     }
 
-    /// PUT /skills/:name - Update a skill
+    /// Update an existing skill's content.
+    ///
+    /// - Parameter req: Vapor Request with name parameter and UpdateSkillRequest body
+    /// - Returns: APIResponse with updated Skill
     @Sendable
     func update(req: Request) async throws -> APIResponse<Skill> {
         guard let name = req.parameters.get("name") else {
@@ -103,7 +132,10 @@ struct SkillsController: RouteCollection {
         )
     }
 
-    /// DELETE /skills/:name - Delete a skill
+    /// Delete a local skill from the filesystem.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with deletion confirmation
     @Sendable
     func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let name = req.parameters.get("name") else {
@@ -118,7 +150,15 @@ struct SkillsController: RouteCollection {
         )
     }
 
-    /// GET /skills/search?q={query} - Search GitHub for skills
+    /// Search GitHub for skill repositories.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required)
+    /// - `page`: Page number (default 1)
+    /// - `per_page`: Results per page (default 20)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of GitHubSearchResult objects
     @Sendable
     func search(req: Request) async throws -> APIResponse<ListResponse<GitHubSearchResult>> {
         guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
@@ -136,7 +176,12 @@ struct SkillsController: RouteCollection {
         )
     }
 
-    /// POST /skills/install - Install a skill from GitHub
+    /// Install a skill from a GitHub repository.
+    ///
+    /// Fetches the skill content from GitHub and saves it to `~/.claude/skills/{repo}/SKILL.md`.
+    ///
+    /// - Parameter req: Vapor Request with SkillInstallRequest body
+    /// - Returns: APIResponse with installed Skill
     @Sendable
     func install(req: Request) async throws -> APIResponse<Skill> {
         let installRequest = try req.content.decode(SkillInstallRequest.self)

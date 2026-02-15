@@ -2,10 +2,21 @@ import Foundation
 
 // MARK: - API Response Wrapper
 
-/// Standard API response wrapper
+/// Standard API response envelope for all backend responses.
+///
+/// All ILS backend endpoints return this envelope structure, which includes:
+/// - Success indicator
+/// - Data payload (nil on error)
+/// - Error information (nil on success)
+///
+/// - Parameters:
+///   - T: The type of the data payload
 public struct APIResponse<T: Codable>: Codable where T: Sendable {
+    /// Whether the request succeeded.
     public let success: Bool
+    /// Response data payload (nil on error).
     public let data: T?
+    /// Error details (nil on success).
     public let error: APIError?
 
     public init(success: Bool, data: T? = nil, error: APIError? = nil) {
@@ -15,8 +26,11 @@ public struct APIResponse<T: Codable>: Codable where T: Sendable {
     }
 }
 
+/// Error information returned in APIResponse when success is false.
 public struct APIError: Codable, Sendable {
+    /// Error code (e.g., "validation_error", "not_found").
     public let code: String
+    /// Human-readable error message.
     public let message: String
 
     public init(code: String, message: String) {
@@ -25,9 +39,13 @@ public struct APIError: Codable, Sendable {
     }
 }
 
-/// List response with items and total
+/// Generic list response with items array and total count.
+///
+/// Used for paginated endpoints that return collections.
 public struct ListResponse<T: Codable>: Codable where T: Sendable {
+    /// Array of items in this page.
     public let items: [T]
+    /// Total number of items available.
     public let total: Int
 
     public init(items: [T], total: Int? = nil) {
@@ -66,13 +84,21 @@ public struct UpdateProjectRequest: Codable, Sendable {
 
 // MARK: - Session Requests
 
+/// Request to create a new Claude Code session.
 public struct CreateSessionRequest: Codable, Sendable {
+    /// Optional project to associate with this session.
     public let projectId: UUID?
+    /// Optional name for the session.
     public let name: String?
+    /// Model to use (e.g., "sonnet", "opus", "haiku"). Defaults to "sonnet".
     public let model: String?
+    /// Permission mode for tool execution.
     public let permissionMode: PermissionMode?
+    /// Custom system prompt.
     public let systemPrompt: String?
+    /// Maximum cost in USD before stopping.
     public let maxBudgetUSD: Double?
+    /// Maximum conversation turns before stopping.
     public let maxTurns: Int?
 
     public init(
@@ -120,10 +146,17 @@ public struct RecentSessionsResponse: Codable, Sendable {
 
 // MARK: - Chat Requests
 
+/// Request to stream a chat message via Server-Sent Events.
+///
+/// Sends a prompt to Claude and receives streaming responses via SSE.
 public struct ChatStreamRequest: Codable, Sendable {
+    /// User message to send to Claude.
     public let prompt: String
+    /// Session to continue (creates new session if nil).
     public let sessionId: UUID?
+    /// Project context for the session.
     public let projectId: UUID?
+    /// Additional chat options.
     public let options: ChatOptions?
 
     public init(
@@ -139,24 +172,45 @@ public struct ChatStreamRequest: Codable, Sendable {
     }
 }
 
+/// Advanced options for chat requests.
+///
+/// Maps to Claude CLI flags and configuration options.
 public struct ChatOptions: Codable, Sendable {
+    /// Model to use (overrides session default).
     public let model: String?
+    /// Permission mode for tool execution.
     public let permissionMode: PermissionMode?
+    /// Maximum conversation turns.
     public let maxTurns: Int?
+    /// Maximum cost in USD.
     public let maxBudgetUSD: Double?
+    /// Whitelist of allowed tools.
     public let allowedTools: [String]?
+    /// Blacklist of disallowed tools.
     public let disallowedTools: [String]?
+    /// Claude session ID to resume.
     public let resume: String?
+    /// Whether to fork the session before continuing.
     public let forkSession: Bool?
+    /// Custom system prompt (replaces default).
     public let systemPrompt: String?
+    /// System prompt to append to default.
     public let appendSystemPrompt: String?
+    /// Additional directories for context.
     public let addDirs: [String]?
+    /// Whether to continue previous conversation.
     public let continueConversation: Bool?
+    /// Whether to include partial messages.
     public let includePartialMessages: Bool?
+    /// Whether to disable session persistence.
     public let noSessionPersistence: Bool?
+    /// Input format (e.g., "markdown").
     public let inputFormat: String?
+    /// Agent mode to use.
     public let agent: String?
+    /// Beta features to enable.
     public let betas: [String]?
+    /// Whether to enable debug mode.
     public let debug: Bool?
 
     public init(
@@ -323,9 +377,13 @@ public enum WSServerMessage: Codable, Sendable {
 
 // MARK: - Skill Requests
 
+/// Request to create a new skill in `~/.claude/skills/`.
 public struct CreateSkillRequest: Codable, Sendable {
+    /// Skill name (used as filename).
     public let name: String
+    /// Optional description (added to frontmatter).
     public let description: String?
+    /// Markdown content of the skill.
     public let content: String
 
     public init(name: String, description: String? = nil, content: String) {
@@ -335,7 +393,9 @@ public struct CreateSkillRequest: Codable, Sendable {
     }
 }
 
+/// Request to update an existing skill's content.
 public struct UpdateSkillRequest: Codable, Sendable {
+    /// New markdown content for the skill.
     public let content: String
 
     public init(content: String) {
@@ -345,11 +405,17 @@ public struct UpdateSkillRequest: Codable, Sendable {
 
 // MARK: - MCP Requests
 
+/// Request to create or update an MCP server configuration.
 public struct CreateMCPRequest: Codable, Sendable {
+    /// Server name (unique identifier).
     public let name: String
+    /// Executable command to start the server (e.g., "npx", "python3").
     public let command: String
+    /// Command-line arguments.
     public let args: [String]?
+    /// Environment variables.
     public let env: [String: String]?
+    /// Configuration scope (user, project, or local).
     public let scope: MCPScope?
 
     public init(
@@ -369,8 +435,11 @@ public struct CreateMCPRequest: Codable, Sendable {
 
 // MARK: - Plugin Requests
 
+/// Request to install a plugin from a GitHub marketplace.
 public struct InstallPluginRequest: Codable, Sendable {
+    /// Plugin name (repository name).
     public let pluginName: String
+    /// Marketplace identifier (GitHub owner/repo format).
     public let marketplace: String
 
     public init(pluginName: String, marketplace: String) {

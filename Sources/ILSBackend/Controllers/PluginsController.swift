@@ -1,6 +1,20 @@
 import Vapor
 import ILSShared
 
+/// Controller for Claude Code plugin management operations.
+///
+/// Manages plugin installation, configuration, and lifecycle from Claude Code marketplaces.
+/// Plugins extend Claude with additional commands, agents, and integrations.
+///
+/// Routes:
+/// - `GET /plugins`: List installed plugins
+/// - `GET /plugins/search`: Search installed plugins by name/description
+/// - `GET /plugins/marketplace`: List available plugin marketplaces
+/// - `POST /plugins/marketplaces`: Register a new plugin marketplace
+/// - `POST /plugins/install`: Install a plugin via git clone
+/// - `POST /plugins/:name/enable`: Enable a plugin
+/// - `POST /plugins/:name/disable`: Disable a plugin
+/// - `DELETE /plugins/:name`: Uninstall a plugin
 struct PluginsController: RouteCollection {
     let fileSystem: FileSystemService
 
@@ -21,8 +35,13 @@ struct PluginsController: RouteCollection {
         plugins.delete(":name", use: uninstall)
     }
 
-    /// GET /plugins - List installed plugins
-    /// Reads from ~/.claude/plugins/installed_plugins.json and ~/.claude/settings.json
+    /// List all installed plugins.
+    ///
+    /// Reads from `~/.claude/plugins/installed_plugins.json` and `~/.claude/settings.json`
+    /// to build a list of installed plugins with their enabled status, commands, and agents.
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of Plugin objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<Plugin>> {
         let fm = FileManager.default
@@ -129,7 +148,13 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// GET /plugins/marketplace - List available plugins from marketplaces
+    /// List available plugin marketplaces.
+    ///
+    /// Returns official marketplaces (e.g., anthropics/claude-code) plus any custom
+    /// marketplaces registered via `extraKnownMarketplaces` in user config.
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with array of PluginMarketplace objects
     @Sendable
     func marketplace(req: Request) async throws -> APIResponse<[PluginMarketplace]> {
         // Read known marketplaces from config
@@ -163,7 +188,13 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// GET /plugins/search?q={query} - Search installed plugins by name/description
+    /// Search installed plugins by name or description.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required, case-insensitive)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with filtered list of Plugin objects
     @Sendable
     func search(req: Request) async throws -> APIResponse<ListResponse<Plugin>> {
         guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
@@ -185,7 +216,12 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// POST /plugins/marketplaces - Register a new marketplace
+    /// Register a new custom plugin marketplace.
+    ///
+    /// Adds the marketplace to `extraKnownMarketplaces` in user config.
+    ///
+    /// - Parameter req: Vapor Request with AddMarketplaceRequest body
+    /// - Returns: APIResponse with registered Marketplace
     @Sendable
     func addMarketplace(req: Request) async throws -> APIResponse<Marketplace> {
         let input = try req.content.decode(AddMarketplaceRequest.self)
@@ -216,7 +252,13 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// POST /plugins/install - Install a plugin via git clone
+    /// Install a plugin from a GitHub repository via git clone.
+    ///
+    /// Clones the repository to `~/.claude/plugins/{pluginName}` and updates
+    /// `installed_plugins.json` with installation metadata.
+    ///
+    /// - Parameter req: Vapor Request with InstallPluginRequest body
+    /// - Returns: APIResponse with installed Plugin
     @Sendable
     func install(req: Request) async throws -> APIResponse<Plugin> {
         let input = try req.content.decode(InstallPluginRequest.self)
@@ -313,7 +355,12 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// POST /plugins/:name/enable - Enable a plugin
+    /// Enable a plugin.
+    ///
+    /// Sets the plugin's enabled status to true in user config.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with EnabledResponse
     @Sendable
     func enable(req: Request) async throws -> APIResponse<EnabledResponse> {
         guard let name = req.parameters.get("name") else {
@@ -334,7 +381,12 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// POST /plugins/:name/disable - Disable a plugin
+    /// Disable a plugin.
+    ///
+    /// Sets the plugin's enabled status to false in user config.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with EnabledResponse
     @Sendable
     func disable(req: Request) async throws -> APIResponse<EnabledResponse> {
         guard let name = req.parameters.get("name") else {
@@ -355,7 +407,12 @@ struct PluginsController: RouteCollection {
         )
     }
 
-    /// DELETE /plugins/:name - Uninstall a plugin
+    /// Uninstall a plugin by removing its directory.
+    ///
+    /// Removes `~/.claude/plugins/{name}` from the filesystem.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with deletion confirmation
     @Sendable
     func uninstall(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let name = req.parameters.get("name") else {
