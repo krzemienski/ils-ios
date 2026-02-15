@@ -8,6 +8,7 @@ struct ILSAppApp: App {
     @StateObject private var themeManager = ThemeManager()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
+    @State private var showLaunchScreen = true
 
     private var computedColorScheme: ColorScheme? {
         switch colorSchemePreference {
@@ -19,15 +20,30 @@ struct ILSAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SidebarRootView()
-                .environmentObject(appState)
-                .environmentObject(themeManager)
-                .environment(\.theme, themeManager.currentTheme)
-                .preferredColorScheme(computedColorScheme)
-                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                .onOpenURL { url in
-                    appState.handleURL(url)
+            ZStack {
+                SidebarRootView()
+                    .environmentObject(appState)
+                    .environmentObject(themeManager)
+                    .environment(\.theme, themeManager.currentTheme)
+                    .preferredColorScheme(computedColorScheme)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    .onOpenURL { url in
+                        appState.handleURL(url)
+                    }
+
+                if showLaunchScreen {
+                    LaunchScreenView()
+                        .environment(\.theme, themeManager.currentTheme)
+                        .transition(.opacity)
+                        .zIndex(1)
                 }
+            }
+            .task {
+                try? await Task.sleep(for: .seconds(2.2))
+                withAnimation(.easeOut(duration: 0.5)) {
+                    showLaunchScreen = false
+                }
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
