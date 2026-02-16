@@ -1,10 +1,8 @@
 import Vapor
 
 func routes(_ app: Application) throws {
-    // Health check
-    app.get("health") { req -> String in
-        return "OK"
-    }
+    // Health check endpoints (registered at root, outside /api/v1)
+    try app.register(collection: HealthController())
 
     // API v1 routes
     let api = app.grouped("api", "v1")

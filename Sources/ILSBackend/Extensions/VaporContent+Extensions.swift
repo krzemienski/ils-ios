@@ -147,6 +147,11 @@ extension PaginatedResponse: @unchecked Sendable where T: Sendable {}
 
 // MARK: - Response Types
 extension RenameSessionRequest: Content {}
+extension BulkDeleteSessionsRequest: Content {}
+extension MessageSearchResult: Content {}
+extension ChatExport: Content {}
+extension ChatExportSession: Content {}
+extension ChatExportMessage: Content {}
 extension ConfigValidationResult: Content {}
 extension StatsResponse: Content {}
 extension CountStat: Content {}
@@ -173,6 +178,10 @@ extension Plugin: Content {}
 extension PluginMarketplace: Content {}
 extension PluginInfo: Content {}
 extension MCPServer: Content {}
+extension MCPHealthResponse: Content {}
+extension MCPLogEntry: Content {}
+extension MCPLogsResponse: Content {}
+extension MCPRestartResponse: Content {}
 extension ClaudeConfig: Content {}
 extension PermissionsConfig: Content {}
 extension HooksConfig: Content {}

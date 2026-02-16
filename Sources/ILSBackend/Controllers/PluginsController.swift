@@ -142,9 +142,13 @@ struct PluginsController: RouteCollection {
         // Sort by name for consistent ordering
         plugins.sort { $0.name.lowercased() < $1.name.lowercased() }
 
+        // Apply pagination
+        let pagination = PaginationParams(from: req)
+        let result = pagination.apply(to: plugins)
+
         return APIResponse(
             success: true,
-            data: ListResponse(items: plugins)
+            data: ListResponse(items: result.items, total: result.pagination.total)
         )
     }
 

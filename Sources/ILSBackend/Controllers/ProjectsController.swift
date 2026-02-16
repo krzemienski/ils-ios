@@ -12,7 +12,10 @@ import Crypto
 ///
 /// Routes:
 /// - `GET /projects`: List all projects from `~/.claude/projects/`
+/// - `POST /projects`: Create a new project record in the database
 /// - `GET /projects/:id`: Get a specific project by deterministic ID
+/// - `PUT /projects/:id`: Update project metadata
+/// - `DELETE /projects/:id`: Delete a project record
 /// - `GET /projects/:id/sessions`: Get sessions for a project
 struct ProjectsController: RouteCollection {
     private let fileSystem: FileSystemService
@@ -25,7 +28,10 @@ struct ProjectsController: RouteCollection {
         let projects = routes.grouped("projects")
 
         projects.get(use: index)
+        projects.post(use: create)
         projects.get(":id", use: show)
+        projects.put(":id", use: update)
+        projects.delete(":id", use: deleteProject)
         projects.get(":id", "sessions", use: getSessions)
     }
 
@@ -64,11 +70,18 @@ struct ProjectsController: RouteCollection {
     }
 
     /// List all projects discovered from `~/.claude/projects/` sessions-index files.
+    ///
+    /// Supports pagination via query parameters:
+    /// - `page`: Page number (1-based, default 1)
+    /// - `limit`: Items per page (default 50, max 200)
+    /// - `search`: Case-insensitive filter on project name
+    ///
     /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with list of Project objects
+    /// - Returns: APIResponse with paginated list of Project objects
     @Sendable
     func index(req: Request) async throws -> APIResponse<ListResponse<Project>> {
         var projects: [Project] = []
+        let searchTerm = req.query[String.self, at: "search"]
 
         let claudeProjectsDir = fileSystem.claudeProjectsPath
 
@@ -129,15 +142,24 @@ struct ProjectsController: RouteCollection {
                 projects.append(project)
             }
 
+            // Filter by search term if provided
+            if let search = searchTerm?.lowercased(), !search.isEmpty {
+                projects = projects.filter { $0.name.lowercased().contains(search) }
+            }
+
             projects.sort { $0.lastAccessedAt > $1.lastAccessedAt }
 
         } catch {
             req.logger.error("Failed to scan Claude projects: \(error)")
         }
 
+        // Apply pagination
+        let pagination = PaginationParams(from: req)
+        let result = pagination.apply(to: projects)
+
         return APIResponse(
             success: true,
-            data: ListResponse(items: projects)
+            data: ListResponse(items: result.items, total: result.pagination.total)
         )
     }
 
@@ -228,6 +250,95 @@ struct ProjectsController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: sessions)
+        )
+    }
+
+    // MARK: - CRUD Operations
+
+    /// Create a new project record in the database.
+    /// - Parameter req: Vapor Request with CreateProjectRequest body
+    /// - Returns: APIResponse with created Project
+    @Sendable
+    func create(req: Request) async throws -> APIResponse<Project> {
+        let input = try req.content.decode(CreateProjectRequest.self)
+
+        // Validate inputs
+        try PathSanitizer.validateStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateStringLength(input.path, maxLength: 1024, fieldName: "path")
+        try PathSanitizer.validateOptionalStringLength(input.description, maxLength: 2000, fieldName: "description")
+        try PathSanitizer.validateOptionalStringLength(input.defaultModel, maxLength: 64, fieldName: "defaultModel")
+
+        let project = ProjectModel(
+            name: input.name,
+            path: input.path,
+            defaultModel: input.defaultModel ?? "sonnet",
+            description: input.description
+        )
+
+        try await project.save(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: project.toShared()
+        )
+    }
+
+    /// Update project metadata (name, description, defaultModel).
+    /// - Parameter req: Vapor Request with id parameter and UpdateProjectRequest body
+    /// - Returns: APIResponse with updated Project
+    @Sendable
+    func update(req: Request) async throws -> APIResponse<Project> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid project ID")
+        }
+
+        let input = try req.content.decode(UpdateProjectRequest.self)
+
+        // Validate inputs
+        try PathSanitizer.validateOptionalStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(input.description, maxLength: 2000, fieldName: "description")
+        try PathSanitizer.validateOptionalStringLength(input.defaultModel, maxLength: 64, fieldName: "defaultModel")
+
+        guard let project = try await ProjectModel.find(id, on: req.db) else {
+            throw Abort(.notFound, reason: "Project not found")
+        }
+
+        if let name = input.name {
+            project.name = name
+        }
+        if let description = input.description {
+            project.description = description
+        }
+        if let defaultModel = input.defaultModel {
+            project.defaultModel = defaultModel
+        }
+
+        try await project.save(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: project.toShared()
+        )
+    }
+
+    /// Delete a project record from the database.
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with deletion confirmation
+    @Sendable
+    func deleteProject(req: Request) async throws -> APIResponse<DeletedResponse> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid project ID")
+        }
+
+        guard let project = try await ProjectModel.find(id, on: req.db) else {
+            throw Abort(.notFound, reason: "Project not found")
+        }
+
+        try await project.delete(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: DeletedResponse()
         )
     }
 }

@@ -90,8 +90,8 @@ struct RateLimitMiddleware: AsyncMiddleware {
     }
 
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
-        // Health endpoint is exempt from rate limiting
-        if request.url.path == "/health" || request.url.path == "/health/" {
+        // Health endpoints are exempt from rate limiting
+        if request.url.path.hasPrefix("/health") {
             return try await next.respond(to: request)
         }
 

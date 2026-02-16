@@ -26,8 +26,8 @@ struct APIKeyMiddleware: AsyncMiddleware {
             return try await next.respond(to: request)
         }
 
-        // Health endpoint is always exempt
-        if request.url.path == "/health" || request.url.path == "/health/" {
+        // Health endpoints are always exempt
+        if request.url.path.hasPrefix("/health") {
             return try await next.respond(to: request)
         }
 

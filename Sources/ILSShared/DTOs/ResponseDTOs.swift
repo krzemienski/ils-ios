@@ -149,6 +149,78 @@ public struct EmptyBody: Codable, Sendable {
     public init() {}
 }
 
+// MARK: - MCP Health & Logs
+
+/// Health check response for an MCP server.
+public struct MCPHealthResponse: Codable, Sendable {
+    /// Server name.
+    public let name: String
+    /// Current health status.
+    public let status: MCPStatus
+    /// Whether the server is in the enabled list.
+    public let isEnabled: Bool
+    /// Server command.
+    public let command: String
+    /// Timestamp of the health check.
+    public let checkedAt: String
+
+    public init(name: String, status: MCPStatus, isEnabled: Bool, command: String, checkedAt: String) {
+        self.name = name
+        self.status = status
+        self.isEnabled = isEnabled
+        self.command = command
+        self.checkedAt = checkedAt
+    }
+}
+
+/// Log entry for an MCP server.
+public struct MCPLogEntry: Codable, Sendable {
+    /// Log timestamp.
+    public let timestamp: String
+    /// Log level (info, warn, error).
+    public let level: String
+    /// Log message.
+    public let message: String
+
+    public init(timestamp: String, level: String, message: String) {
+        self.timestamp = timestamp
+        self.level = level
+        self.message = message
+    }
+}
+
+/// Response containing MCP server logs.
+public struct MCPLogsResponse: Codable, Sendable {
+    /// Server name.
+    public let name: String
+    /// Log entries.
+    public let logs: [MCPLogEntry]
+    /// Whether logs are available.
+    public let available: Bool
+
+    public init(name: String, logs: [MCPLogEntry], available: Bool = true) {
+        self.name = name
+        self.logs = logs
+        self.available = available
+    }
+}
+
+/// Response after restarting an MCP server.
+public struct MCPRestartResponse: Codable, Sendable {
+    /// Server name.
+    public let name: String
+    /// Whether the restart was initiated.
+    public let restarted: Bool
+    /// New status after restart.
+    public let status: MCPStatus
+
+    public init(name: String, restarted: Bool, status: MCPStatus) {
+        self.name = name
+        self.restarted = restarted
+        self.status = status
+    }
+}
+
 // MARK: - Config DTOs
 
 /// Configuration profiles across all scopes

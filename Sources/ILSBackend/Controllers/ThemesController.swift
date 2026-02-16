@@ -15,6 +15,10 @@ struct ThemesController: RouteCollection {
     }
 
     /// GET /themes - List all custom themes
+    ///
+    /// Query parameters:
+    /// - `page`: Page number (1-based, default 1)
+    /// - `limit`: Items per page (default 50, max 200)
     @Sendable
     func index(req: Request) async throws -> APIResponse<ListResponse<CustomTheme>> {
         let themes = try await ThemeModel.query(on: req.db)
@@ -23,9 +27,13 @@ struct ThemesController: RouteCollection {
 
         let customThemes = themes.map { $0.toShared() }
 
+        // Apply pagination
+        let pagination = PaginationParams(from: req)
+        let result = pagination.apply(to: customThemes)
+
         return APIResponse(
             success: true,
-            data: ListResponse(items: customThemes)
+            data: ListResponse(items: result.items, total: result.pagination.total)
         )
     }
 

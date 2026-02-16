@@ -8,10 +8,15 @@ import ILSShared
 /// - `GET /sessions`: List all sessions with optional project filter
 /// - `POST /sessions`: Create a new session
 /// - `GET /sessions/scan`: Scan for external Claude Code sessions
+/// - `GET /sessions/search?q=`: Search across all session messages
 /// - `GET /sessions/:id`: Get a specific session
+/// - `PUT /sessions/:id`: Rename a session
 /// - `DELETE /sessions/:id`: Delete a session
-/// - `POST /sessions/:id/fork`: Fork a session
+/// - `POST /sessions/bulk-delete`: Bulk-delete sessions by ID array
+/// - `POST /sessions/:id/fork`: Fork a session (duplicates session + all messages)
 /// - `GET /sessions/:id/messages`: Get session messages with pagination
+/// - `GET /sessions/:id/messages/search?q=`: Search within a session's messages
+/// - `GET /sessions/:id/export?format=`: Export session as JSON, Markdown, or plain text
 /// - `GET /sessions/transcript/:encodedProjectPath/:sessionId`: Read external session transcript
 struct SessionsController: RouteCollection {
     let fileSystem: FileSystemService
@@ -27,11 +32,15 @@ struct SessionsController: RouteCollection {
         sessions.get("projects", use: projectGroups)
         sessions.post(use: create)
         sessions.get("scan", use: scan)
+        sessions.get("search", use: searchAll)
         sessions.get(":id", use: get)
         sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
+        sessions.post("bulk-delete", use: bulkDelete)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "messages", use: messages)
+        sessions.get(":id", "messages", "search", use: searchSession)
+        sessions.get(":id", "export", use: exportSession)
 
         let transcriptGroup = sessions.grouped("transcript")
         transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
@@ -280,7 +289,36 @@ struct SessionsController: RouteCollection {
         )
     }
 
-    /// Fork a session, creating a new session with the same settings.
+    /// Bulk-delete sessions by an array of IDs.
+    /// - Parameter req: Vapor Request with BulkDeleteSessionsRequest body
+    /// - Returns: APIResponse with DeletedResponse
+    @Sendable
+    func bulkDelete(req: Request) async throws -> APIResponse<DeletedResponse> {
+        let input = try req.content.decode(BulkDeleteSessionsRequest.self)
+
+        guard !input.ids.isEmpty else {
+            throw Abort(.badRequest, reason: "ids array must not be empty")
+        }
+
+        guard input.ids.count <= 100 else {
+            throw Abort(.badRequest, reason: "Cannot delete more than 100 sessions at once")
+        }
+
+        try await SessionModel.query(on: req.db)
+            .filter(\.$id ~~ input.ids)
+            .delete()
+
+        return APIResponse(
+            success: true,
+            data: DeletedResponse()
+        )
+    }
+
+    /// Fork a session, duplicating session settings and all message history.
+    ///
+    /// Creates a new session named "[Original Name] (Fork)" with a copy of every message
+    /// from the original session. The new session has its own independent message history.
+    ///
     /// - Parameter req: Vapor Request with id parameter
     /// - Returns: APIResponse with forked ChatSession
     @Sendable
@@ -296,15 +334,41 @@ struct SessionsController: RouteCollection {
             throw Abort(.notFound, reason: "Session not found")
         }
 
+        // Create the forked session
         let forked = SessionModel(
             claudeSessionId: nil,
-            name: original.name.map { "\($0) (fork)" },
+            name: original.name.map { "\($0) (Fork)" } ?? "Untitled (Fork)",
             projectId: original.$project.id,
             model: original.model,
             permissionMode: PermissionMode(rawValue: original.permissionMode) ?? .default,
             forkedFrom: original.id
         )
 
+        try await forked.save(on: req.db)
+
+        guard let forkedId = forked.id else {
+            throw Abort(.internalServerError, reason: "Failed to create forked session")
+        }
+
+        // Copy all messages from original to forked session
+        let originalMessages = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == id)
+            .sort(\.$createdAt, .ascending)
+            .all()
+
+        for originalMessage in originalMessages {
+            let copiedMessage = MessageModel(
+                sessionId: forkedId,
+                role: MessageRole(rawValue: originalMessage.role) ?? .user,
+                content: originalMessage.content,
+                toolCalls: originalMessage.toolCalls,
+                toolResults: originalMessage.toolResults
+            )
+            try await copiedMessage.save(on: req.db)
+        }
+
+        // Update message count on forked session
+        forked.messageCount = originalMessages.count
         try await forked.save(on: req.db)
 
         return APIResponse(
@@ -382,5 +446,310 @@ struct SessionsController: RouteCollection {
             success: true,
             data: ListResponse(items: messages)
         )
+    }
+
+    // MARK: - Message Search
+
+    /// Search across all session messages.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required, case-insensitive LIKE match on message content)
+    /// - `limit`: Maximum results (1-100, default 50)
+    /// - `offset`: Pagination offset (default 0)
+    ///
+    /// - Parameter req: Vapor Request with search query params
+    /// - Returns: APIResponse with list of MessageSearchResult
+    @Sendable
+    func searchAll(req: Request) async throws -> APIResponse<ListResponse<MessageSearchResult>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Search query parameter 'q' is required")
+        }
+
+        try PathSanitizer.validateStringLength(query, maxLength: 500, fieldName: "q")
+
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
+        let offset = max(req.query[Int.self, at: "offset"] ?? 0, 0)
+
+        let searchPattern = "%\(query)%"
+
+        // Query messages matching search across all sessions, joined with session data
+        let matchingMessages = try await MessageModel.query(on: req.db)
+            .filter(\.$content, .custom("LIKE"), searchPattern)
+            .sort(\.$createdAt, .descending)
+            .with(\.$session) {
+                $0.with(\.$project)
+            }
+            .offset(offset)
+            .limit(limit)
+            .all()
+
+        let results = matchingMessages.map { msg in
+            MessageSearchResult(
+                id: msg.id ?? UUID(),
+                sessionId: msg.$session.id,
+                sessionName: msg.session.name,
+                sessionModel: msg.session.model,
+                role: MessageRole(rawValue: msg.role) ?? .user,
+                content: msg.content,
+                createdAt: msg.createdAt ?? Date()
+            )
+        }
+
+        // Get total count for pagination
+        let total = try await MessageModel.query(on: req.db)
+            .filter(\.$content, .custom("LIKE"), searchPattern)
+            .count()
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: results, total: total)
+        )
+    }
+
+    /// Search within a specific session's messages.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required, case-insensitive LIKE match on message content)
+    /// - `limit`: Maximum results (1-100, default 50)
+    /// - `offset`: Pagination offset (default 0)
+    ///
+    /// - Parameter req: Vapor Request with session id and search query params
+    /// - Returns: APIResponse with list of MessageSearchResult
+    @Sendable
+    func searchSession(req: Request) async throws -> APIResponse<ListResponse<MessageSearchResult>> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Search query parameter 'q' is required")
+        }
+
+        try PathSanitizer.validateStringLength(query, maxLength: 500, fieldName: "q")
+
+        // Verify session exists and load its details
+        guard let session = try await SessionModel.query(on: req.db)
+            .filter(\.$id == id)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
+        let offset = max(req.query[Int.self, at: "offset"] ?? 0, 0)
+
+        let searchPattern = "%\(query)%"
+
+        let matchingMessages = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == id)
+            .filter(\.$content, .custom("LIKE"), searchPattern)
+            .sort(\.$createdAt, .ascending)
+            .offset(offset)
+            .limit(limit)
+            .all()
+
+        let results = matchingMessages.map { msg in
+            MessageSearchResult(
+                id: msg.id ?? UUID(),
+                sessionId: msg.$session.id,
+                sessionName: session.name,
+                sessionModel: session.model,
+                role: MessageRole(rawValue: msg.role) ?? .user,
+                content: msg.content,
+                createdAt: msg.createdAt ?? Date()
+            )
+        }
+
+        let total = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == id)
+            .filter(\.$content, .custom("LIKE"), searchPattern)
+            .count()
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: results, total: total)
+        )
+    }
+
+    // MARK: - Chat Export
+
+    /// Export a session's chat history in the requested format.
+    ///
+    /// Query parameters:
+    /// - `format`: Export format — "json" (default), "markdown", or "text"
+    ///
+    /// Sets appropriate Content-Type and Content-Disposition headers for file downloads.
+    ///
+    /// - Parameter req: Vapor Request with session id and format query param
+    /// - Returns: Response with exported content
+    @Sendable
+    func exportSession(req: Request) async throws -> Response {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        let formatString = req.query[String.self, at: "format"] ?? "json"
+        guard let format = ExportFormat(rawValue: formatString) else {
+            throw Abort(.badRequest, reason: "Invalid format. Use 'json', 'markdown', or 'text'")
+        }
+
+        // Load session with project
+        guard let session = try await SessionModel.query(on: req.db)
+            .filter(\.$id == id)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        // Load all messages
+        let messageModels = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == id)
+            .sort(\.$createdAt, .ascending)
+            .all()
+
+        let sessionName = session.name ?? "Untitled"
+        let safeFilename = sessionName
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: "\\", with: "-")
+            .replacingOccurrences(of: "\"", with: "")
+            .prefix(100)
+
+        switch format {
+        case .json:
+            return try buildJSONExport(
+                session: session,
+                messages: messageModels,
+                filename: String(safeFilename),
+                on: req
+            )
+        case .markdown:
+            return buildMarkdownExport(
+                session: session,
+                messages: messageModels,
+                filename: String(safeFilename),
+                on: req
+            )
+        case .text:
+            return buildTextExport(
+                session: session,
+                messages: messageModels,
+                filename: String(safeFilename),
+                on: req
+            )
+        }
+    }
+
+    // MARK: - Export Helpers
+
+    private func buildJSONExport(
+        session: SessionModel,
+        messages: [MessageModel],
+        filename: String,
+        on req: Request
+    ) throws -> Response {
+        let exportSession = ChatExportSession(
+            id: session.id ?? UUID(),
+            name: session.name,
+            model: session.model,
+            createdAt: session.createdAt ?? Date(),
+            lastActiveAt: session.lastActiveAt ?? Date(),
+            messageCount: session.messageCount,
+            totalCostUSD: session.totalCostUSD,
+            projectName: session.project?.name
+        )
+
+        let exportMessages = messages.map { msg in
+            ChatExportMessage(
+                role: MessageRole(rawValue: msg.role) ?? .user,
+                content: msg.content,
+                createdAt: msg.createdAt ?? Date()
+            )
+        }
+
+        let export = ChatExport(
+            session: exportSession,
+            messages: exportMessages
+        )
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(export)
+
+        let response = Response(status: .ok, body: .init(data: data))
+        response.headers.contentType = .json
+        response.headers.add(name: .contentDisposition, value: "attachment; filename=\"\(filename).json\"")
+        return response
+    }
+
+    private func buildMarkdownExport(
+        session: SessionModel,
+        messages: [MessageModel],
+        filename: String,
+        on req: Request
+    ) -> Response {
+        let dateFormatter = ISO8601DateFormatter()
+
+        var md = "# \(session.name ?? "Untitled Session")\n\n"
+        md += "| Field | Value |\n|-------|-------|\n"
+        md += "| Model | \(session.model) |\n"
+        md += "| Created | \(dateFormatter.string(from: session.createdAt ?? Date())) |\n"
+        md += "| Last Active | \(dateFormatter.string(from: session.lastActiveAt ?? Date())) |\n"
+        md += "| Messages | \(session.messageCount) |\n"
+        if let cost = session.totalCostUSD {
+            md += "| Cost | $\(String(format: "%.4f", cost)) |\n"
+        }
+        if let projectName = session.project?.name {
+            md += "| Project | \(projectName) |\n"
+        }
+        md += "\n---\n\n"
+
+        for msg in messages {
+            let role = msg.role.capitalized
+            let timestamp = dateFormatter.string(from: msg.createdAt ?? Date())
+            md += "### \(role) — \(timestamp)\n\n"
+            md += msg.content
+            md += "\n\n---\n\n"
+        }
+
+        let response = Response(status: .ok, body: .init(string: md))
+        response.headers.contentType = HTTPMediaType(type: "text", subType: "markdown", parameters: ["charset": "utf-8"])
+        response.headers.add(name: .contentDisposition, value: "attachment; filename=\"\(filename).md\"")
+        return response
+    }
+
+    private func buildTextExport(
+        session: SessionModel,
+        messages: [MessageModel],
+        filename: String,
+        on req: Request
+    ) -> Response {
+        let dateFormatter = ISO8601DateFormatter()
+
+        var text = "Session: \(session.name ?? "Untitled Session")\n"
+        text += "Model: \(session.model)\n"
+        text += "Created: \(dateFormatter.string(from: session.createdAt ?? Date()))\n"
+        text += "Last Active: \(dateFormatter.string(from: session.lastActiveAt ?? Date()))\n"
+        text += "Messages: \(session.messageCount)\n"
+        if let cost = session.totalCostUSD {
+            text += "Cost: $\(String(format: "%.4f", cost))\n"
+        }
+        if let projectName = session.project?.name {
+            text += "Project: \(projectName)\n"
+        }
+        text += "\n" + String(repeating: "=", count: 60) + "\n\n"
+
+        for msg in messages {
+            let role = msg.role.uppercased()
+            let timestamp = dateFormatter.string(from: msg.createdAt ?? Date())
+            text += "[\(role)] \(timestamp)\n"
+            text += msg.content
+            text += "\n\n" + String(repeating: "-", count: 40) + "\n\n"
+        }
+
+        let response = Response(status: .ok, body: .init(string: text))
+        response.headers.contentType = .plainText
+        response.headers.add(name: .contentDisposition, value: "attachment; filename=\"\(filename).txt\"")
+        return response
     }
 }

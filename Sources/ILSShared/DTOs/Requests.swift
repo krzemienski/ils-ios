@@ -263,6 +263,124 @@ public struct RenameSessionRequest: Codable, Sendable {
     }
 }
 
+/// Request to bulk-delete sessions by ID.
+public struct BulkDeleteSessionsRequest: Codable, Sendable {
+    /// Array of session UUIDs to delete.
+    public let ids: [UUID]
+
+    public init(ids: [UUID]) {
+        self.ids = ids
+    }
+}
+
+// MARK: - Message Search
+
+/// A message search result with session context.
+public struct MessageSearchResult: Codable, Identifiable, Sendable {
+    /// Message ID.
+    public let id: UUID
+    /// Session ID the message belongs to.
+    public let sessionId: UUID
+    /// Session name for display context.
+    public let sessionName: String?
+    /// Model used in the session.
+    public let sessionModel: String?
+    /// Message role.
+    public let role: MessageRole
+    /// Message content (may be a snippet around the match).
+    public let content: String
+    /// When the message was created.
+    public let createdAt: Date
+
+    public init(
+        id: UUID,
+        sessionId: UUID,
+        sessionName: String?,
+        sessionModel: String?,
+        role: MessageRole,
+        content: String,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.sessionId = sessionId
+        self.sessionName = sessionName
+        self.sessionModel = sessionModel
+        self.role = role
+        self.content = content
+        self.createdAt = createdAt
+    }
+}
+
+// MARK: - Chat Export
+
+/// Export format for chat sessions.
+public enum ExportFormat: String, Codable, Sendable {
+    case json
+    case markdown
+    case text
+}
+
+/// Structured JSON export of a chat session.
+public struct ChatExport: Codable, Sendable {
+    /// Session metadata.
+    public let session: ChatExportSession
+    /// All messages in chronological order.
+    public let messages: [ChatExportMessage]
+    /// Export timestamp.
+    public let exportedAt: Date
+
+    public init(session: ChatExportSession, messages: [ChatExportMessage], exportedAt: Date = Date()) {
+        self.session = session
+        self.messages = messages
+        self.exportedAt = exportedAt
+    }
+}
+
+/// Session metadata for export.
+public struct ChatExportSession: Codable, Sendable {
+    public let id: UUID
+    public let name: String?
+    public let model: String
+    public let createdAt: Date
+    public let lastActiveAt: Date
+    public let messageCount: Int
+    public let totalCostUSD: Double?
+    public let projectName: String?
+
+    public init(
+        id: UUID,
+        name: String?,
+        model: String,
+        createdAt: Date,
+        lastActiveAt: Date,
+        messageCount: Int,
+        totalCostUSD: Double?,
+        projectName: String?
+    ) {
+        self.id = id
+        self.name = name
+        self.model = model
+        self.createdAt = createdAt
+        self.lastActiveAt = lastActiveAt
+        self.messageCount = messageCount
+        self.totalCostUSD = totalCostUSD
+        self.projectName = projectName
+    }
+}
+
+/// Message representation for export.
+public struct ChatExportMessage: Codable, Sendable {
+    public let role: MessageRole
+    public let content: String
+    public let createdAt: Date
+
+    public init(role: MessageRole, content: String, createdAt: Date) {
+        self.role = role
+        self.content = content
+        self.createdAt = createdAt
+    }
+}
+
 /// Permission decision from client
 public struct PermissionDecision: Codable, Sendable {
     public let decision: String // "allow" or "deny"

@@ -45,14 +45,14 @@ struct ILSErrorMiddleware: AsyncMiddleware {
     }
 
     private func errorResponse(status: HTTPResponseStatus, code: String, reason: String, on request: Request) -> Response {
-        let body = ErrorBody(error: true, code: code, reason: reason)
+        let body = ErrorBody(success: false, error: reason, code: code, reason: reason)
         let response = Response(status: status)
         do {
             response.headers.contentType = .json
             try response.content.encode(body)
         } catch {
             request.logger.error("Failed to encode error response: \(error)")
-            response.body = .init(string: "{\"error\":true,\"code\":\"INTERNAL_ERROR\",\"reason\":\"Something went wrong.\"}")
+            response.body = .init(string: "{\"success\":false,\"error\":\"Something went wrong.\",\"code\":\"INTERNAL_ERROR\",\"reason\":\"Something went wrong.\"}")
             response.headers.contentType = .json
         }
         return response
@@ -78,8 +78,12 @@ struct ILSErrorMiddleware: AsyncMiddleware {
 }
 
 /// Structured error response body.
+///
+/// Format: `{ success: false, error: "message", code: "ERROR_CODE" }`
+/// Also includes `reason` for backward compatibility.
 struct ErrorBody: Content {
-    let error: Bool
+    let success: Bool
+    let error: String
     let code: String
     let reason: String
 }

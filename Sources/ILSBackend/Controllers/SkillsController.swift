@@ -8,6 +8,10 @@ import ILSShared
 ///
 /// Routes:
 /// - `GET /skills`: List all skills (local, plugin-provided, and built-in)
+///   - Query: `?search=<query>` — filter by name, description, or tags
+///   - Query: `?category=<cat>` — filter by tag category (exact match)
+///   - Query: `?scope=<user|plugin|github|builtin>` — filter by source scope
+///   - Query: `?refresh=true` — bypass cache
 /// - `GET /skills/search`: Search GitHub for skill repositories
 /// - `POST /skills`: Create a new local skill
 /// - `POST /skills/install`: Install a skill from a GitHub repository
@@ -38,13 +42,19 @@ struct SkillsController: RouteCollection {
     /// Query parameters:
     /// - `refresh`: If "true", bypasses the file system cache
     /// - `search`: Filter by name, description, or tags (case-insensitive)
+    /// - `category`: Filter by tag category (exact match)
+    /// - `scope`: Filter by source scope (user, plugin, github, builtin)
+    /// - `page`: Page number (1-based, default 1)
+    /// - `limit`: Items per page (default 50, max 200)
     ///
     /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with list of Skill objects
+    /// - Returns: APIResponse with paginated list of Skill objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<Skill>> {
         let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
         let searchTerm = req.query[String.self, at: "search"]
+        let categoryFilter = req.query[String.self, at: "category"]
+        let scopeFilter = req.query[String.self, at: "scope"]
 
         var skills = try await fileSystem.listSkills(bypassCache: bypassCache)
 
@@ -57,9 +67,34 @@ struct SkillsController: RouteCollection {
             }
         }
 
+        // Filter by category (matches against tags)
+        if let category = categoryFilter?.lowercased(), !category.isEmpty {
+            skills = skills.filter { skill in
+                skill.tags.contains { $0.lowercased() == category }
+            }
+        }
+
+        // Filter by scope (source type: local, plugin, github, builtin)
+        if let scope = scopeFilter?.lowercased(), !scope.isEmpty {
+            let sourceFilter: SkillSource? = switch scope {
+            case "user", "local": .local
+            case "plugin": .plugin
+            case "github": .github
+            case "builtin": .builtin
+            default: nil
+            }
+            if let source = sourceFilter {
+                skills = skills.filter { $0.source == source }
+            }
+        }
+
+        // Apply pagination
+        let pagination = PaginationParams(from: req)
+        let result = pagination.apply(to: skills)
+
         return APIResponse(
             success: true,
-            data: ListResponse(items: skills)
+            data: ListResponse(items: result.items, total: result.pagination.total)
         )
     }
 

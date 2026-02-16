@@ -37,8 +37,11 @@ func configure(_ app: Application) async throws {
     let cors = CORSMiddleware(configuration: corsConfiguration)
     app.middleware.use(cors, at: .beginning)
 
-    // Error middleware
-    app.middleware.use(ErrorMiddleware.default(environment: app.environment))
+    // Request logging middleware (logs method, path, status, duration)
+    app.middleware.use(RequestLoggingMiddleware())
+
+    // Structured error middleware (replaces Vapor's default ErrorMiddleware)
+    app.middleware.use(ILSErrorMiddleware())
 
     // API key authentication middleware (opt-in via ILS_API_KEY env var)
     app.middleware.use(APIKeyMiddleware())
