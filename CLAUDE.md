@@ -90,6 +90,46 @@ curl -s http://localhost:9999/api/v1/sessions | head -100
 
 ---
 
+## Security Pre-Commit Checks
+
+Before ANY commit, scan for:
+```bash
+# Hardcoded paths (MUST return 0 results)
+grep -rn '/Users/' Sources/ ILSApp/ --include='*.swift' | grep -v '// '
+
+# Exposed secrets (MUST return 0 results)
+grep -rn 'apiKey\|api_key\|secret\|password\|token' Sources/ ILSApp/ --include='*.swift' | grep -v '//\|Mock\|test\|example\|protocol\|enum\|case\|var.*:.*String'
+
+# Git-tracked databases (MUST return 0 results)
+git ls-files '*.sqlite' '*.db'
+```
+
+A git pre-commit hook at `.git/hooks/pre-commit` enforces these automatically.
+
+---
+
+## Agent & Observer Sessions
+
+Before spawning observer/memory agent sessions:
+1. Verify authentication is active — run a minimal API call first
+2. If not authenticated, do NOT proceed — log the failure and exit
+3. Use `scripts/agent-preflight.sh` for automated pre-flight checks
+4. Prefer headless mode (`claude -p`) for monitoring tasks — fails loudly instead of silently
+
+---
+
+## Automation Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/agent-preflight.sh` | Auth pre-check before observer agents |
+| `scripts/headless-build.sh` | Non-interactive build validation |
+| `scripts/headless-screenshots.sh` | Non-interactive screenshot capture |
+| `scripts/headless-audit.sh` | Non-interactive security audit |
+| `.git/hooks/pre-commit` | Auto-check for secrets before commits |
+
+---
+
 ## Common Pitfalls (from real sessions)
 
 - **Wrong backend binary**: OLD backend at `/Users/nick/ils/ILSBackend/` returns raw data. ALWAYS use `/Users/nick/Desktop/ils-ios/`

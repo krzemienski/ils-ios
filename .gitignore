@@ -30,6 +30,8 @@ node_modules/
 
 # Databases
 *.db
+*.sqlite
+*.sqlite3
 
 # CocoaPods
 Pods/
@@ -46,6 +48,7 @@ Pods/
 .claude/plan/
 .claude/skills/
 .claude/hooks/
+.claude/settings.local.json
 .claude/ralph-loop.local.md
 
 # Ralph TUI
