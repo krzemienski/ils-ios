@@ -1,0 +1,75 @@
+# iOS Build CI
+# Badge: ![iOS Build](https://github.com/<OWNER>/<REPO>/actions/workflows/ios-build.yml/badge.svg)
+
+name: iOS Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-build:
+    name: Build iOS App
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+            ILSApp/ILSApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          key: ios-spm-${{ runner.os }}-${{ hashFiles('ILSApp/ILSApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ios-spm-${{ runner.os }}-
+
+      - name: Resolve package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -skipPackagePluginValidation
+
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
+      - name: Report build status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "::notice::iOS build succeeded"
+          else
+            echo "::error::iOS build failed"
+          fi

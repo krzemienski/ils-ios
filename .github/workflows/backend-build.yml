@@ -1,0 +1,92 @@
+# Backend Build CI
+# Badge: ![Backend Build](https://github.com/<OWNER>/<REPO>/actions/workflows/backend-build.yml/badge.svg)
+
+name: Backend Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: backend-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-build-macos:
+    name: Build Backend (macOS)
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          swift --version
+
+      - name: Cache SPM .build directory
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: backend-spm-macos-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            backend-spm-macos-${{ runner.os }}-
+
+      - name: Build backend
+        run: swift build
+
+      - name: Report build status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "::notice::Backend build (macOS) succeeded"
+          else
+            echo "::error::Backend build (macOS) failed"
+          fi
+
+  backend-build-linux:
+    name: Build Backend (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Cache SPM .build directory
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: backend-spm-linux-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            backend-spm-linux-
+
+      - name: Build backend
+        run: swift build
+
+      - name: Report build status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "Backend build (Linux) succeeded"
+          else
+            echo "Backend build (Linux) failed"
+            exit 1
+          fi

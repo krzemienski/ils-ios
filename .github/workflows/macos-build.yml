@@ -1,0 +1,75 @@
+# macOS Build CI
+# Badge: ![macOS Build](https://github.com/<OWNER>/<REPO>/actions/workflows/macos-build.yml/badge.svg)
+
+name: macOS Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: macos-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos-build:
+    name: Build macOS App
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+            ILSApp/ILSApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          key: macos-spm-${{ runner.os }}-${{ hashFiles('ILSApp/ILSApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            macos-spm-${{ runner.os }}-
+
+      - name: Resolve package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSMacApp \
+            -skipPackagePluginValidation
+
+      - name: Build macOS app
+        run: |
+          xcodebuild build \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSMacApp \
+            -destination 'platform=macOS' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+
+      - name: Report build status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "::notice::macOS build succeeded"
+          else
+            echo "::error::macOS build failed"
+          fi
