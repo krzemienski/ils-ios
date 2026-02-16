@@ -417,7 +417,7 @@ The app uses a 5-tab TabView navigation pattern:
 
 ## API Reference
 
-See [API-REFERENCE.md](../docs/API-REFERENCE.md) for complete backend API documentation.
+See [API.md](../docs/API.md) for complete backend API documentation.
 
 ## Dependencies
 

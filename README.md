@@ -34,7 +34,7 @@ ILS provides a mobile interface for interacting with Claude Code sessions, manag
 
 ## Architecture
 
-This monorepo contains both the Vapor-based REST API backend and the SwiftUI iOS application, sharing common models through the `ILSShared` library.
+This monorepo contains both the Vapor-based REST API backend and the SwiftUI iOS application, sharing common models through the `ILSShared` library. See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design, data flow diagrams, and technical decisions.
 
 ```
 ils-ios/

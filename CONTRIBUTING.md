@@ -218,7 +218,7 @@ class SessionsViewModel: ObservableObject {
 3. **Add shared models** in `Sources/ILSShared/Models/` if needed
 4. **Test the endpoint**
    ```bash
-   curl http://localhost:9090/api/v1/your-endpoint
+   curl http://localhost:9999/api/v1/your-endpoint
    ```
 
 ### Database Migrations
