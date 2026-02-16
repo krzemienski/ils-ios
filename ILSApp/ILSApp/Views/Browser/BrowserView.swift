@@ -136,7 +136,10 @@ struct BrowserView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, theme.spacingMD)

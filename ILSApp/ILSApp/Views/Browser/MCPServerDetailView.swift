@@ -6,6 +6,7 @@ import ILSShared
 struct MCPServerDetailView: View {
     let server: MCPServer
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showCopiedToast = false
 
     var body: some View {
@@ -140,7 +141,7 @@ struct MCPServerDetailView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showCopiedToast)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: showCopiedToast)
     }
 
     // MARK: - Section Card Helper

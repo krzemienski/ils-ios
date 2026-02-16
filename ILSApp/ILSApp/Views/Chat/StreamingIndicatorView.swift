@@ -41,8 +41,12 @@ struct StreamingIndicatorView: View {
                     isPulsing = true
                 }
             } else {
-                withAnimation(.default) {
+                if reduceMotion {
                     isPulsing = false
+                } else {
+                    withAnimation(.default) {
+                        isPulsing = false
+                    }
                 }
             }
         }

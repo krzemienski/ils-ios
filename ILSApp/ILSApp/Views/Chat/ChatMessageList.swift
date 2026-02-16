@@ -129,11 +129,14 @@ struct ChatMessageList: View {
                 .foregroundStyle(theme.accent)
                 .background(Circle().fill(theme.bgSecondary))
                 .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Circle())
         }
         .padding(.trailing, 16)
         .padding(.bottom, 16)
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel("Jump to bottom")
+        .accessibilityHint("Scrolls to the most recent message")
     }
 
     private func scrollToBottom(proxy: ScrollViewProxy) {

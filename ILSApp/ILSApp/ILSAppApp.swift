@@ -27,7 +27,7 @@ struct ILSAppApp: App {
                     .environment(themeManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    .dynamicTypeSize(DynamicTypeSize.xSmall ... DynamicTypeSize.accessibility3)
                     .onOpenURL { url in
                         appState.handleURL(url)
                     }

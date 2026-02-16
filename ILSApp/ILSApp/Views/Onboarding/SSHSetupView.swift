@@ -21,6 +21,7 @@ struct SSHSetupView: View {
     @State private var platformRejected = false
     @State private var rejectionMessage = ""
     @State private var showLogs = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isAnyFieldFocused: Bool
 
     var body: some View {
@@ -179,7 +180,11 @@ struct SSHSetupView: View {
     private var logConsoleSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Button {
-                withAnimation { showLogs.toggle() }
+                if reduceMotion {
+                    showLogs.toggle()
+                } else {
+                    withAnimation { showLogs.toggle() }
+                }
             } label: {
                 HStack {
                     Image(systemName: "terminal")

@@ -9,6 +9,7 @@ struct SkillDetailView: View {
 
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel = SkillsViewModel()
@@ -103,7 +104,7 @@ struct SkillDetailView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showCopiedToast)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: showCopiedToast)
         .task {
             viewModel.configure(client: appState.apiClient)
             editedContent = skill.rawContent ?? skill.content ?? ""

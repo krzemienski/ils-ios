@@ -1,0 +1,54 @@
+/*
+   Localizable.strings (Japanese)
+   ILSApp
+
+   Japanese localization for the ILS iOS app.
+*/
+
+/* Navigation */
+"home" = "ホーム";
+"settings" = "設定";
+"browse" = "ブラウズ";
+"system_monitor" = "システムモニター";
+"agent_teams" = "エージェントチーム";
+"fleet" = "フリート";
+
+/* Sessions */
+"recent_sessions" = "最近のセッション";
+"new_session" = "新しいセッション";
+"no_sessions" = "セッションなし";
+"sessions_count" = "%dセッション";
+
+/* Chat */
+"send_message" = "送信";
+"type_message" = "メッセージを入力...";
+"claude_responding" = "Claudeが応答中...";
+
+/* Dashboard */
+"welcome_back" = "おかえりなさい";
+"quick_actions" = "クイックアクション";
+"skills" = "スキル";
+"plugins" = "プラグイン";
+"mcp_servers" = "MCPサーバー";
+
+/* Settings */
+"backend_connection" = "バックエンド接続";
+"test_connection" = "接続テスト";
+"connected" = "接続済み";
+"disconnected" = "未接続";
+"api_key" = "APIキー";
+"default_model" = "デフォルトモデル";
+
+/* Errors */
+"connection_failed" = "接続に失敗しました";
+"retry" = "再試行";
+"offline_cached_data" = "オフライン — キャッシュデータを表示中";
+
+/* General */
+"cancel" = "キャンセル";
+"done" = "完了";
+"delete" = "削除";
+"edit" = "編集";
+"save" = "保存";
+"search" = "検索";
+"loading" = "読み込み中...";

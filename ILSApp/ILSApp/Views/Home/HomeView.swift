@@ -99,6 +99,8 @@ struct HomeView: View {
                         .background(theme.accent)
                         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
                 }
+                .accessibilityLabel("Setup server connection")
+                .accessibilityHint("Opens the server configuration wizard")
             }
             .padding(theme.spacingMD)
             .background(theme.warning.opacity(0.1))
@@ -189,9 +191,13 @@ struct HomeView: View {
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingSM)
+        .frame(minHeight: 44)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
+        .accessibilityHint("Opens this chat session")
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Quick Actions
@@ -276,6 +282,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
+        .accessibilityHint("Double tap to open \(title)")
     }
 
     private func statsSubtitle(_ count: Int?) -> String? {

@@ -5,6 +5,7 @@ import ILSShared
 struct SystemMonitorView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = SystemMetricsViewModel()
 
@@ -233,9 +234,9 @@ struct SystemMonitorView: View {
                 .frame(width: 8, height: 8)
                 .scaleEffect(livePulse && viewModel.isConnected ? 1.3 : 1.0)
                 .animation(
-                    viewModel.isConnected
+                    reduceMotion ? nil : (viewModel.isConnected
                         ? .easeInOut(duration: 1.0).repeatForever(autoreverses: true)
-                        : .default,
+                        : .default),
                     value: livePulse
                 )
                 .onAppear { livePulse = true }

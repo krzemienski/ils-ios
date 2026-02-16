@@ -1,0 +1,54 @@
+/*
+   Localizable.strings (Spanish)
+   ILSApp
+
+   Spanish localization for the ILS iOS app.
+*/
+
+/* Navigation */
+"home" = "Inicio";
+"settings" = "Ajustes";
+"browse" = "Explorar";
+"system_monitor" = "Monitor del sistema";
+"agent_teams" = "Equipos de agentes";
+"fleet" = "Flota";
+
+/* Sessions */
+"recent_sessions" = "Sesiones recientes";
+"new_session" = "Nueva sesion";
+"no_sessions" = "Sin sesiones";
+"sessions_count" = "%d Sesiones";
+
+/* Chat */
+"send_message" = "Enviar";
+"type_message" = "Escribe un mensaje...";
+"claude_responding" = "Claude esta respondiendo...";
+
+/* Dashboard */
+"welcome_back" = "Bienvenido de nuevo";
+"quick_actions" = "Acciones rapidas";
+"skills" = "Habilidades";
+"plugins" = "Complementos";
+"mcp_servers" = "Servidores MCP";
+
+/* Settings */
+"backend_connection" = "Conexion al backend";
+"test_connection" = "Probar conexion";
+"connected" = "Conectado";
+"disconnected" = "Desconectado";
+"api_key" = "Clave API";
+"default_model" = "Modelo predeterminado";
+
+/* Errors */
+"connection_failed" = "Conexion fallida";
+"retry" = "Reintentar";
+"offline_cached_data" = "Sin conexion — mostrando datos en cache";
+
+/* General */
+"cancel" = "Cancelar";
+"done" = "Listo";
+"delete" = "Eliminar";
+"edit" = "Editar";
+"save" = "Guardar";
+"search" = "Buscar";
+"loading" = "Cargando...";

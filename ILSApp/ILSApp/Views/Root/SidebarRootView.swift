@@ -196,6 +196,7 @@ struct SidebarRootView: View {
                                 .foregroundStyle(theme.textPrimary)
                         }
                         .accessibilityLabel("Open sidebar")
+                        .accessibilityHint("Opens navigation sidebar")
                     }
                     #else
                     ToolbarItem(placement: .automatic) {
@@ -207,6 +208,7 @@ struct SidebarRootView: View {
                                 .foregroundStyle(theme.textPrimary)
                         }
                         .accessibilityLabel("Open sidebar")
+                        .accessibilityHint("Opens navigation sidebar")
                     }
                     #endif
                 }

@@ -279,6 +279,7 @@ struct ChatView: View {
             }
             .accessibilityIdentifier("chat-menu-button")
             .accessibilityLabel("Chat options menu")
+            .accessibilityHint("Shows rename, fork, export, and other session options")
         }
     }
 

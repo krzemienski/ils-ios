@@ -54,6 +54,8 @@ struct SidebarSessionRow: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
         .accessibilityLabel("\(sessionDisplayName), \(relativeTime)")
+        .accessibilityHint("Opens this chat session")
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Helpers

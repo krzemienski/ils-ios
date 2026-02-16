@@ -1,0 +1,54 @@
+/*
+   Localizable.strings (Base — English)
+   ILSApp
+
+   Base English localization for the ILS iOS app.
+*/
+
+/* Navigation */
+"home" = "Home";
+"settings" = "Settings";
+"browse" = "Browse";
+"system_monitor" = "System Monitor";
+"agent_teams" = "Agent Teams";
+"fleet" = "Fleet";
+
+/* Sessions */
+"recent_sessions" = "Recent Sessions";
+"new_session" = "New Session";
+"no_sessions" = "No Sessions";
+"sessions_count" = "%d Sessions";
+
+/* Chat */
+"send_message" = "Send";
+"type_message" = "Type a message...";
+"claude_responding" = "Claude is responding...";
+
+/* Dashboard */
+"welcome_back" = "Welcome back";
+"quick_actions" = "Quick Actions";
+"skills" = "Skills";
+"plugins" = "Plugins";
+"mcp_servers" = "MCP Servers";
+
+/* Settings */
+"backend_connection" = "Backend Connection";
+"test_connection" = "Test Connection";
+"connected" = "Connected";
+"disconnected" = "Disconnected";
+"api_key" = "API Key";
+"default_model" = "Default Model";
+
+/* Errors */
+"connection_failed" = "Connection Failed";
+"retry" = "Retry";
+"offline_cached_data" = "Offline — showing cached data";
+
+/* General */
+"cancel" = "Cancel";
+"done" = "Done";
+"delete" = "Delete";
+"edit" = "Edit";
+"save" = "Save";
+"search" = "Search";
+"loading" = "Loading...";

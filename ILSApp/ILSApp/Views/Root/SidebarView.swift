@@ -136,6 +136,8 @@ struct SidebarView: View {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
                     }
                     .accessibilityLabel("Clear search")
                 }
@@ -278,6 +280,7 @@ struct SidebarView: View {
         .padding(.horizontal, theme.spacingMD)
         .padding(.vertical, theme.spacingMD)
         .accessibilityLabel("Create new chat session")
+        .accessibilityHint("Opens a new conversation with Claude")
     }
 
     // MARK: - Navigation Item
@@ -299,11 +302,13 @@ struct SidebarView: View {
             }
             .foregroundStyle(isActive ? theme.accent : theme.textSecondary)
             .padding(.horizontal, theme.spacingSM + 4)
-            .padding(.vertical, theme.spacingSM + 2)
+            .frame(minHeight: 44)
             .background(isActive ? theme.accent.opacity(0.1) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
         .accessibilityLabel(label)
+        .accessibilityHint("Navigate to \(label)")
     }
 
     // MARK: - Helpers

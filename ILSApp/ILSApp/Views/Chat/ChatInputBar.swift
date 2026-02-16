@@ -43,15 +43,20 @@ struct ChatInputBar: View {
         Button(action: onCommandPalette) {
             Image(systemName: "command")
                 .foregroundStyle(isDisabled ? theme.textTertiary : theme.accent)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
+        .accessibilityHint("Opens the command palette for slash commands")
     }
 
     private var optionsButton: some View {
         Button(action: onAdvancedOptions) {
             Image(systemName: hasCustomOptions ? "slider.horizontal.2.gobackward" : "slider.horizontal.3")
                 .foregroundStyle(hasCustomOptions ? theme.accent : (isDisabled ? theme.textTertiary : theme.textSecondary))
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
@@ -77,9 +82,12 @@ struct ChatInputBar: View {
         Button(action: onCancel) {
             Image(systemName: "stop.circle.fill")
                 .foregroundStyle(theme.error)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .accessibilityIdentifier("cancel-button")
         .accessibilityLabel("Stop streaming")
+        .accessibilityHint("Cancels the current response from Claude")
     }
 
     private var sendButton: some View {
@@ -104,9 +112,12 @@ struct ChatInputBar: View {
                 .foregroundStyle(text.isEmpty || isDisabled ? theme.textTertiary : theme.accent)
                 .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
                 .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .disabled(text.isEmpty || isDisabled)
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
+        .accessibilityHint("Sends the current message to Claude")
     }
 }
