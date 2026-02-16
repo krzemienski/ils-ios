@@ -35,7 +35,7 @@ class SSEClient: ObservableObject {
         // Configure custom URLSession with longer timeouts for SSE streaming
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
-        config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
+        config.timeoutIntervalForResource = 600 // 10 minutes for entire stream duration
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = false // Disable SSE in Low Data Mode
         self.session = URLSession(configuration: config)

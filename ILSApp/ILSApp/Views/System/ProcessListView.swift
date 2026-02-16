@@ -149,18 +149,23 @@ struct ProcessListView: View {
         let color: Color
     }
 
+    private static let claudeKeywords: Set<String> = ["claude"]
+    private static let ilsKeywords: Set<String> = ["ilsbackend"]
+    private static let swiftKeywords: Set<String> = ["swift", "vapor", "swiftc"]
+    private static let nodeKeywords: Set<String> = ["node", "npm", "npx"]
+
     private func classifyProcess(_ name: String) -> ProcessBadge? {
         let lowered = name.lowercased()
-        if lowered.contains("claude") {
+        if Self.claudeKeywords.contains(where: { lowered.contains($0) }) {
             return ProcessBadge(label: "Claude", color: theme.entitySession)
         }
-        if lowered.contains("ilsbackend") || lowered == "ilsbackend" {
+        if Self.ilsKeywords.contains(where: { lowered.contains($0) }) {
             return ProcessBadge(label: "ILS", color: theme.success)
         }
-        if lowered.contains("swift") || lowered.contains("vapor") || lowered.contains("swiftc") {
+        if Self.swiftKeywords.contains(where: { lowered.contains($0) }) {
             return ProcessBadge(label: "Swift", color: theme.warning)
         }
-        if lowered.contains("node") || lowered.contains("npm") || lowered.contains("npx") {
+        if Self.nodeKeywords.contains(where: { lowered.contains($0) }) {
             return ProcessBadge(label: "Node", color: theme.entitySkill)
         }
         return nil

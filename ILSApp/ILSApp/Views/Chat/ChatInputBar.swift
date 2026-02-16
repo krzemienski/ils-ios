@@ -13,6 +13,9 @@ struct ChatInputBar: View {
     @State private var sendButtonPressed = false
     @State private var resetTask: Task<Void, Never>?
 
+    @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
+    @ScaledMetric(relativeTo: .body) private var inputPaddingV: CGFloat = 8
+
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -60,6 +63,7 @@ struct ChatInputBar: View {
         }
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
+        .accessibilityHint("Opens advanced configuration for the message")
         .accessibilityIdentifier("advanced-options-button")
     }
 
@@ -68,14 +72,15 @@ struct ChatInputBar: View {
             .textFieldStyle(.plain)
             .lineLimit(1...5)
             .disabled(isDisabled)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, inputPaddingH)
+            .padding(.vertical, inputPaddingV)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
             )
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
+            .accessibilityHint("Type a message to send to Claude")
     }
 
     private var cancelButton: some View {

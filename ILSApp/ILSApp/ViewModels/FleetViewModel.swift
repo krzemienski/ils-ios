@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 import Observation
 import ILSShared
 
@@ -9,9 +9,15 @@ final class FleetViewModel {
     var activeHostId: UUID?
     var isLoading = false
     var loadError: String?
+    var scenePhase: ScenePhase = .active {
+        didSet {
+            handleScenePhaseChange()
+        }
+    }
 
     private let apiClient: APIClient
     @ObservationIgnored private var healthTimer: Timer?
+    @ObservationIgnored private var isPollingActive = false
 
     init(apiClient: APIClient = APIClient()) {
         self.apiClient = apiClient
@@ -19,6 +25,20 @@ final class FleetViewModel {
 
     deinit {
         healthTimer?.invalidate()
+    }
+
+    private func handleScenePhaseChange() {
+        switch scenePhase {
+        case .active:
+            if isPollingActive {
+                startHealthPolling(interval: 60)
+            }
+        case .inactive, .background:
+            healthTimer?.invalidate()
+            healthTimer = nil
+        @unknown default:
+            break
+        }
     }
 
     func loadHosts() async {
@@ -68,16 +88,19 @@ final class FleetViewModel {
         }
     }
 
-    func startHealthPolling(interval: TimeInterval = 30) {
+    func startHealthPolling(interval: TimeInterval = 60) {
+        healthTimer?.invalidate()
+        isPollingActive = true
         healthTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { await self?.refreshAllHealth() }
         }
-        healthTimer?.tolerance = 5
+        healthTimer?.tolerance = 10
     }
 
     func stopHealthPolling() {
         healthTimer?.invalidate()
         healthTimer = nil
+        isPollingActive = false
     }
 
     private func refreshAllHealth() async {

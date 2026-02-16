@@ -128,12 +128,12 @@ class AppState: ObservableObject {
             cm?.showOnboarding = value
         }.store(in: &cancellables)
 
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func updateServerURL(_ url: String) {
         connectionManager.updateServerURL(url)
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func connectToServer(url: String) async throws {
@@ -143,7 +143,7 @@ class AppState: ObservableObject {
     }
 
     func checkConnection() {
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func handleScenePhase(_ phase: ScenePhase) {

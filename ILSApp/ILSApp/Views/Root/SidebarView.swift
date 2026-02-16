@@ -13,6 +13,7 @@ struct SidebarView: View {
 
     @State private var expandedProjects: Set<String> = []
     @State private var sessionToRename: ChatSession?
+    @State private var showRenameAlert = false
     @State private var renameText: String = ""
 
     var body: some View {
@@ -43,10 +44,7 @@ struct SidebarView: View {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadSessions(refresh: true)
         }
-        .alert("Rename Session", isPresented: Binding(
-            get: { sessionToRename != nil },
-            set: { if !$0 { sessionToRename = nil } }
-        )) {
+        .alert("Rename Session", isPresented: $showRenameAlert) {
             TextField("Session name", text: $renameText)
             Button("Cancel", role: .cancel) { sessionToRename = nil }
             Button("Rename") {
@@ -57,6 +55,9 @@ struct SidebarView: View {
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .onChange(of: sessionToRename) { _, newValue in
+            showRenameAlert = newValue != nil
         }
     }
 

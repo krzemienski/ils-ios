@@ -1,6 +1,23 @@
 import Vapor
 import ILSShared
 
+// MARK: - Codable Types for Plugin Files
+
+/// Partial decode of settings.json (only fields we need)
+private struct SettingsFilePartial: Codable {
+    var enabledPlugins: [String: Bool]?
+}
+
+/// Structure of installed_plugins.json
+private struct InstalledPluginsFile: Codable {
+    var plugins: [String: [[String: String]]]?
+}
+
+/// Minimal plugin manifest (plugin.json)
+private struct PluginManifest: Codable {
+    var description: String?
+}
+
 /// Controller for Claude Code plugin management operations.
 ///
 /// Manages plugin installation, configuration, and lifecycle from Claude Code marketplaces.
@@ -50,20 +67,20 @@ struct PluginsController: RouteCollection {
 
         var plugins: [Plugin] = []
 
-        // Read enabled status from settings.json
+        // Read enabled status from settings.json via Codable
+        let decoder = JSONDecoder()
         var enabledPlugins: [String: Bool] = [:]
         if fm.fileExists(atPath: settingsPath),
            let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
-           let settingsJson = try? JSONSerialization.jsonObject(with: settingsData) as? [String: Any],
-           let enabled = settingsJson["enabledPlugins"] as? [String: Bool] {
-            enabledPlugins = enabled
+           let settings = try? decoder.decode(SettingsFilePartial.self, from: settingsData) {
+            enabledPlugins = settings.enabledPlugins ?? [:]
         }
 
-        // Read installed plugins from installed_plugins.json
+        // Read installed plugins from installed_plugins.json via Codable
         guard fm.fileExists(atPath: installedPluginsPath),
               let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let pluginsDict = json["plugins"] as? [String: Any] else {
+              let installedFile = try? decoder.decode(InstalledPluginsFile.self, from: data),
+              let pluginsDict = installedFile.plugins else {
             return APIResponse(
                 success: true,
                 data: ListResponse(items: plugins)
@@ -71,10 +88,8 @@ struct PluginsController: RouteCollection {
         }
 
         // Parse each plugin entry
-        for (pluginKey, value) in pluginsDict {
-            // pluginKey format: "plugin-name@marketplace"
-            guard let installsArray = value as? [[String: Any]],
-                  let latestInstall = installsArray.first else {
+        for (pluginKey, installsArray) in pluginsDict {
+            guard let latestInstall = installsArray.first else {
                 continue
             }
 
@@ -84,11 +99,8 @@ struct PluginsController: RouteCollection {
             let marketplace = parts.count > 1 ? String(parts[1]) : nil
 
             // Extract install info
-            let installPath = latestInstall["installPath"] as? String
-            let version = latestInstall["version"] as? String
-            // Note: installedAt and lastUpdated available but not currently used
-            _ = latestInstall["installedAt"] as? String
-            _ = latestInstall["lastUpdated"] as? String
+            let installPath = latestInstall["installPath"]
+            let version = latestInstall["version"]
 
             // Check enabled status (default to true if not specified)
             let isEnabled = enabledPlugins[pluginKey] ?? true
@@ -99,16 +111,16 @@ struct PluginsController: RouteCollection {
             var agents: [String] = []
 
             if let path = installPath {
-                // Try to read plugin.json or manifest
+                // Try to read plugin.json or manifest via Codable
                 let manifestPath = "\(path)/.claude-plugin/plugin.json"
                 let altManifestPath = "\(path)/plugin.json"
 
                 if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
-                   let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
-                    description = manifest["description"] as? String
+                   let manifest = try? decoder.decode(PluginManifest.self, from: manifestData) {
+                    description = manifest.description
                 } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
-                          let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
-                    description = manifest["description"] as? String
+                          let manifest = try? decoder.decode(PluginManifest.self, from: manifestData) {
+                    description = manifest.description
                 }
 
                 // Check for commands directory
@@ -315,35 +327,41 @@ struct PluginsController: RouteCollection {
             }
         }
 
-        // Update installed_plugins.json
+        // Update installed_plugins.json via Codable
         let installedPath = "\(pluginsDir)/installed_plugins.json"
-        var pluginsJson: [String: Any] = [:]
-        if let data = try? Data(contentsOf: URL(fileURLWithPath: installedPath)),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            pluginsJson = json
-        }
+        let decoder = JSONDecoder()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
-        var pluginsDict = pluginsJson["plugins"] as? [String: Any] ?? [:]
+        var installedFile: InstalledPluginsFile = {
+            guard let data = try? Data(contentsOf: URL(fileURLWithPath: installedPath)),
+                  let decoded = try? decoder.decode(InstalledPluginsFile.self, from: data) else {
+                return InstalledPluginsFile(plugins: [:])
+            }
+            return decoded
+        }()
+
         let pluginKey = "\(input.pluginName)@\(input.marketplace)"
         let now = ISO8601DateFormatter().string(from: Date())
+        var pluginsDict = installedFile.plugins ?? [:]
         pluginsDict[pluginKey] = [[
             "installPath": targetDir,
             "version": "1.0.0",
             "installedAt": now,
             "lastUpdated": now
         ]]
-        pluginsJson["plugins"] = pluginsDict
+        installedFile.plugins = pluginsDict
 
-        let jsonData = try JSONSerialization.data(withJSONObject: pluginsJson, options: [.prettyPrinted, .sortedKeys])
+        let jsonData = try encoder.encode(installedFile)
         try jsonData.write(to: URL(fileURLWithPath: installedPath))
 
-        // Read plugin manifest for description
+        // Read plugin manifest for description via Codable
         var description: String?
         for manifestName in [".claude-plugin/plugin.json", "plugin.json", "package.json"] {
             let path = "\(targetDir)/\(manifestName)"
             if let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-               let manifest = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                description = manifest["description"] as? String
+               let manifest = try? decoder.decode(PluginManifest.self, from: data) {
+                description = manifest.description
                 break
             }
         }

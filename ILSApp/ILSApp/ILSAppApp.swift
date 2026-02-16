@@ -97,12 +97,12 @@ class AppState {
         self.pollingManager = PollingManager(connectionManager: cm)
         self.networkMonitor = NetworkMonitor.shared
 
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func updateServerURL(_ url: String) {
         connectionManager.updateServerURL(url)
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func connectToServer(url: String) async throws {
@@ -112,7 +112,7 @@ class AppState {
     }
 
     func checkConnection() {
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func handleScenePhase(_ phase: ScenePhase) {

@@ -5,6 +5,7 @@ import SwiftUI
 struct ShimmerModifier: ViewModifier {
     @State private var phase: CGFloat = -1.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     func body(content: Content) -> some View {
         if reduceMotion {
@@ -35,6 +36,20 @@ struct ShimmerModifier: ViewModifier {
                         .repeatForever(autoreverses: false)
                     ) {
                         phase = 2.0
+                    }
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase != .active {
+                        withAnimation(.linear(duration: 0.1)) {
+                            phase = -1.0
+                        }
+                    } else {
+                        withAnimation(
+                            .linear(duration: 1.5)
+                            .repeatForever(autoreverses: false)
+                        ) {
+                            phase = 2.0
+                        }
                     }
                 }
         }

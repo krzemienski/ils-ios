@@ -61,7 +61,7 @@ class DashboardViewModel {
 
         // Cache the fresh recent sessions
         if !recentSessions.isEmpty {
-            Task.detached { [sessions = self.recentSessions] in
+            Task { [sessions = self.recentSessions] in
                 await CacheService.shared.cacheSessions(sessions)
             }
         }

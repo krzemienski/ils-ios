@@ -104,7 +104,11 @@ struct ChatView: View {
             TextField("Session name", text: $actions.renameText)
             Button("Rename") {
                 Task {
-                    let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
+                    do {
+                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
+                    } catch {
+                        AppLogger.shared.error("Failed to rename session: \(error)", category: "chat")
+                    }
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -114,8 +118,12 @@ struct ChatView: View {
         .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
             Button("Delete", role: .destructive) {
                 Task {
-                    let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
-                    dismiss()
+                    do {
+                        let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
+                        dismiss()
+                    } catch {
+                        AppLogger.shared.error("Failed to delete session: \(error)", category: "chat")
+                    }
                 }
             }
             Button("Cancel", role: .cancel) {}

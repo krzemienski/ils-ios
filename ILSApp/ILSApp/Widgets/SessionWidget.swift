@@ -48,14 +48,14 @@ struct SessionWidgetView: View {
             // Header
             HStack {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundColor(Color(hex: WidgetColors.accent))
                 Text("Recent Sessions")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .font(.caption.weight(.bold).monospaced())
                     .foregroundColor(.white)
                 Spacer()
                 Text("\(entry.sessions.count)")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.caption2.weight(.medium).monospaced())
                     .foregroundColor(Color(hex: WidgetColors.textSecondary))
             }
 
@@ -65,10 +65,10 @@ struct SessionWidgetView: View {
                     Spacer()
                     VStack(spacing: 4) {
                         Image(systemName: "tray")
-                            .font(.system(size: 20))
+                            .font(.title3)
                             .foregroundColor(Color(hex: WidgetColors.textTertiary))
                         Text("No sessions")
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(.caption2.monospaced())
                             .foregroundColor(Color(hex: WidgetColors.textTertiary))
                     }
                     Spacer()
@@ -105,7 +105,7 @@ private struct SessionWidgetRow: View {
 
             // Session name
             Text(session.name)
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundColor(.white)
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -114,7 +114,7 @@ private struct SessionWidgetRow: View {
 
             // Model badge
             Text(session.model.uppercased())
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .font(.caption2.weight(.bold).monospaced())
                 .foregroundColor(Color(hex: WidgetColors.accent))
                 .padding(.horizontal, 4)
                 .padding(.vertical, 1)
@@ -126,9 +126,9 @@ private struct SessionWidgetRow: View {
             // Message count
             HStack(spacing: 2) {
                 Image(systemName: "message.fill")
-                    .font(.system(size: 8))
+                    .font(.caption2)
                 Text("\(session.messageCount)")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .font(.caption2.weight(.medium).monospaced())
             }
             .foregroundColor(Color(hex: WidgetColors.textSecondary))
         }

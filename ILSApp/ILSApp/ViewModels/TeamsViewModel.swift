@@ -11,9 +11,15 @@ class TeamsViewModel {
     var messages: [TeamMessage] = []
     var isLoading = false
     var error: String?
+    var scenePhase: ScenePhase = .active {
+        didSet {
+            handleScenePhaseChange()
+        }
+    }
 
     private let apiClient: APIClient
     @ObservationIgnored private var pollingTimer: Timer?
+    @ObservationIgnored private var activeTeamName: String?
 
     init(apiClient: APIClient) {
         self.apiClient = apiClient
@@ -21,6 +27,20 @@ class TeamsViewModel {
 
     deinit {
         pollingTimer?.invalidate()
+    }
+
+    private func handleScenePhaseChange() {
+        switch scenePhase {
+        case .active:
+            if let teamName = activeTeamName {
+                startPolling(teamName: teamName)
+            }
+        case .inactive, .background:
+            pollingTimer?.invalidate()
+            pollingTimer = nil
+        @unknown default:
+            break
+        }
     }
 
     // MARK: - Teams
@@ -210,17 +230,19 @@ class TeamsViewModel {
 
     func startPolling(teamName: String) {
         stopPolling()
-        pollingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+        activeTeamName = teamName
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 await self?.loadTeamDetail(name: teamName)
             }
         }
-        pollingTimer?.tolerance = 1.0
+        pollingTimer?.tolerance = 3.0
     }
 
     func stopPolling() {
         pollingTimer?.invalidate()
         pollingTimer = nil
+        activeTeamName = nil
     }
 }
 

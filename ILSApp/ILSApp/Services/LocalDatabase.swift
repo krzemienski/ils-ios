@@ -252,7 +252,8 @@ actor LocalDatabase {
             try fileManager.createDirectory(at: dbDir, withIntermediateDirectories: true)
         }
 
-        let dbPath = dbDir.appendingPathComponent("cache.sqlite").path
+        let dbURL = dbDir.appendingPathComponent("cache.sqlite")
+        let dbPath = dbURL.path
         var config = Configuration()
         config.prepareDatabase { db in
             // Enable WAL mode for better concurrent access
@@ -260,6 +261,14 @@ actor LocalDatabase {
         }
 
         dbPool = try DatabasePool(path: dbPath, configuration: config)
+
+        // Apply file protection after database creation
+        #if !targetEnvironment(simulator)
+        try fileManager.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: dbPath
+        )
+        #endif
 
         try runMigrations()
         AppLogger.shared.info("LocalDatabase initialized at \(dbPath)", category: "cache")

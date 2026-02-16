@@ -13,6 +13,10 @@ struct ChatMessageList: View {
     let onRetryMessage: (ChatMessage) -> Void
     let sessionProjectId: String?
 
+    @ScaledMetric(relativeTo: .body) private var messageSpacing: CGFloat = 16
+    @ScaledMetric(relativeTo: .body) private var senderGap: CGFloat = 24
+    @ScaledMetric(relativeTo: .body) private var sameSenderGap: CGFloat = 8
+
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -79,8 +83,8 @@ struct ChatMessageList: View {
                         message: message,
                         onDelete: onDeleteMessage
                     )
-                    .padding(.horizontal, 16)
-                    .padding(.top, isSameSender ? 8 : 24)
+                    .padding(.horizontal, messageSpacing)
+                    .padding(.top, isSameSender ? sameSenderGap : senderGap)
                 } else {
                     AssistantCard(
                         message: message,
@@ -89,8 +93,8 @@ struct ChatMessageList: View {
                         },
                         onDelete: onDeleteMessage
                     )
-                    .padding(.horizontal, 16)
-                    .padding(.top, isSameSender ? 8 : 24)
+                    .padding(.horizontal, messageSpacing)
+                    .padding(.top, isSameSender ? sameSenderGap : senderGap)
                 }
             }
 
@@ -98,8 +102,8 @@ struct ChatMessageList: View {
                 StreamingIndicatorView(
                     statusText: statusText
                 )
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
+                .padding(.horizontal, messageSpacing)
+                .padding(.top, messageSpacing)
                 .id("typing-indicator")
             }
 
@@ -107,7 +111,7 @@ struct ChatMessageList: View {
                 .frame(height: 1)
                 .id("bottom")
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, messageSpacing)
     }
 
     private func shouldShowTypingIndicator() -> Bool {
@@ -125,15 +129,15 @@ struct ChatMessageList: View {
             scrollToBottom(proxy: proxy)
         } label: {
             Image(systemName: "chevron.down.circle.fill")
-                .font(.system(size: 28, design: theme.fontDesign))
+                .font(.system(.title2, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
                 .background(Circle().fill(theme.bgSecondary))
                 .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Circle())
         }
-        .padding(.trailing, 16)
-        .padding(.bottom, 16)
+        .padding(.trailing, messageSpacing)
+        .padding(.bottom, messageSpacing)
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel("Jump to bottom")
         .accessibilityHint("Scrolls to the most recent message")

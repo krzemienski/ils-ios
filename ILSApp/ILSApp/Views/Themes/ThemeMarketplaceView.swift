@@ -250,30 +250,40 @@ struct ThemeMarketplaceView: View {
     // MARK: - Import / Export
 
     private func handleImport(result: Result<[URL], Error>) {
-        do {
-            guard let fileURL = try result.get().first else {
-                importError = "No file selected"
-                showImportError = true
-                return
+        Task.detached(priority: .userInitiated) {
+            do {
+                guard let fileURL = try result.get().first else {
+                    await MainActor.run {
+                        importError = "No file selected"
+                        showImportError = true
+                    }
+                    return
+                }
+
+                guard fileURL.startAccessingSecurityScopedResource() else {
+                    await MainActor.run {
+                        importError = "Unable to access file"
+                        showImportError = true
+                    }
+                    return
+                }
+                defer { fileURL.stopAccessingSecurityScopedResource() }
+
+                let jsonData = try Data(contentsOf: fileURL)
+                let manifest = try JSONDecoder().decode(ThemeManifest.self, from: jsonData)
+                let imported = ImportedTheme(manifest: manifest)
+
+                await MainActor.run {
+                    themeManager.registerTheme(imported)
+                    themeManager.setTheme(imported.id)
+                }
+
+            } catch {
+                await MainActor.run {
+                    importError = "Failed to import theme: \(error.localizedDescription)"
+                    showImportError = true
+                }
             }
-
-            guard fileURL.startAccessingSecurityScopedResource() else {
-                importError = "Unable to access file"
-                showImportError = true
-                return
-            }
-            defer { fileURL.stopAccessingSecurityScopedResource() }
-
-            let jsonData = try Data(contentsOf: fileURL)
-            let manifest = try JSONDecoder().decode(ThemeManifest.self, from: jsonData)
-
-            let imported = ImportedTheme(manifest: manifest)
-            themeManager.registerTheme(imported)
-            themeManager.setTheme(imported.id)
-
-        } catch {
-            importError = "Failed to import theme: \(error.localizedDescription)"
-            showImportError = true
         }
     }
 
@@ -294,14 +304,21 @@ struct ThemeMarketplaceView: View {
             )
         )
 
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            exportData = try encoder.encode(manifest)
-            showingExporter = true
-        } catch {
-            importError = "Failed to export theme: \(error.localizedDescription)"
-            showImportError = true
+        Task.detached(priority: .userInitiated) {
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                let data = try encoder.encode(manifest)
+                await MainActor.run {
+                    exportData = data
+                    showingExporter = true
+                }
+            } catch {
+                await MainActor.run {
+                    importError = "Failed to export theme: \(error.localizedDescription)"
+                    showImportError = true
+                }
+            }
         }
     }
 }

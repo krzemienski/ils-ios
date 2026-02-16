@@ -10,8 +10,10 @@ class ConnectionManager {
     var serverURL: String = ""
     var showOnboarding: Bool = false
 
-    var apiClient: APIClient
-    var sseClient: SSEClient
+    /// Mutable because `updateServerURL(_:)` recreates clients when the server URL changes.
+    private(set) var apiClient: APIClient
+    /// Mutable because `updateServerURL(_:)` recreates clients when the server URL changes.
+    private(set) var sseClient: SSEClient
 
     private(set) var isInitialized = false
 

@@ -230,7 +230,7 @@ class SessionsViewModel {
             if currentPage == 1 {
                 sessions = newItems
                 // Update cache with fresh data in background
-                Task.detached {
+                Task {
                     await CacheService.shared.cacheSessions(newItems)
                 }
             } else {

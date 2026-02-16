@@ -41,12 +41,15 @@ struct GetSessionInfoIntent: AppIntent {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
-            if let json = try? decoder.decode(SessionDetailResponse.self, from: data),
-               let detail = json.data {
-                return .result(value: formatDetailedInfo(detail))
+            do {
+                let decoded = try decoder.decode(SessionDetailResponse.self, from: data)
+                if let detail = decoded.data {
+                    return .result(value: formatDetailedInfo(detail))
+                }
+            } catch {
+                // Decoding failed — fall back to cached entity data
             }
 
-            // Fall back to entity data
             return .result(value: formatEntityInfo())
         } catch {
             // Network error — return what we have from the entity

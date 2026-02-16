@@ -177,6 +177,7 @@ struct HomeView: View {
                         .foregroundStyle(theme.textTertiary)
                 }
             }
+            .accessibilityElement(children: .combine)
 
             Spacer()
 
@@ -287,7 +288,7 @@ struct HomeView: View {
         Button(action: action) {
             VStack(spacing: theme.spacingSM) {
                 Image(systemName: icon)
-                    .font(.system(size: 24, design: theme.fontDesign))
+                    .font(.system(.title3, design: theme.fontDesign))
                     .foregroundStyle(color)
 
                 Text(title)

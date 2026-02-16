@@ -112,12 +112,13 @@ struct ThemesListView: View {
             }
             defer { fileURL.stopAccessingSecurityScopedResource() }
 
-            let jsonData = try Data(contentsOf: fileURL)
-
-            // Decode theme
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let importedTheme = try decoder.decode(CustomTheme.self, from: jsonData)
+            // Move file I/O and decoding off the main thread
+            let importedTheme: CustomTheme = try await Task.detached(priority: .userInitiated) {
+                let jsonData = try Data(contentsOf: fileURL)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                return try decoder.decode(CustomTheme.self, from: jsonData)
+            }.value
 
             // Create theme via API
             let created = await viewModel.createTheme(

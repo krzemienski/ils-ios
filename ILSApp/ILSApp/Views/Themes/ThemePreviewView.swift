@@ -407,7 +407,7 @@ struct ThemePreviewView: View {
         case "sf mono", "sfmono", "sf mono regular":
             return .system(size: size, design: .monospaced)
         case "menlo", "monaco", "courier", "courier new":
-            return .custom(family, size: size)
+            return .custom(family, size: size, relativeTo: .body)
         default:
             return .system(size: size, design: .default)
         }

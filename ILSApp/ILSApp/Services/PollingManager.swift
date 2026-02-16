@@ -17,29 +17,27 @@ class PollingManager {
         healthPollTask?.cancel()
     }
 
-    func checkConnection() {
-        Task { [weak self] in
-            guard let self, let cm = self.connectionManager else { return }
-            do {
-                AppLogger.shared.info("Checking connection to: \(cm.serverURL)", category: "app")
-                let response = try await cm.apiClient.healthCheck()
-                AppLogger.shared.info("Connection successful! Response: \(response)", category: "app")
-                cm.isConnected = true
-                self.stopRetryPolling()
-                self.startHealthPolling()
-            } catch let error as URLError {
-                AppLogger.shared.error("Connection failed with URLError: \(error.code.rawValue) - \(error.localizedDescription)", category: "app")
-                cm.isConnected = false
-                self.stopHealthPolling()
-                self.startRetryPolling()
-                cm.showOnboardingIfNeeded()
-            } catch {
-                AppLogger.shared.error("Connection failed: \(error.localizedDescription)", category: "app")
-                cm.isConnected = false
-                self.stopHealthPolling()
-                self.startRetryPolling()
-                cm.showOnboardingIfNeeded()
-            }
+    func checkConnection() async {
+        guard let cm = connectionManager else { return }
+        do {
+            AppLogger.shared.info("Checking connection to: \(cm.serverURL)", category: "app")
+            let response = try await cm.apiClient.healthCheck()
+            AppLogger.shared.info("Connection successful! Response: \(response)", category: "app")
+            cm.isConnected = true
+            stopRetryPolling()
+            startHealthPolling()
+        } catch let error as URLError {
+            AppLogger.shared.error("Connection failed with URLError: \(error.code.rawValue) - \(error.localizedDescription)", category: "app")
+            cm.isConnected = false
+            stopHealthPolling()
+            startRetryPolling()
+            cm.showOnboardingIfNeeded()
+        } catch {
+            AppLogger.shared.error("Connection failed: \(error.localizedDescription)", category: "app")
+            cm.isConnected = false
+            stopHealthPolling()
+            startRetryPolling()
+            cm.showOnboardingIfNeeded()
         }
     }
 
@@ -103,7 +101,7 @@ class PollingManager {
     func handleScenePhase(_ phase: ScenePhase) {
         switch phase {
         case .active:
-            checkConnection()
+            Task { await checkConnection() }
         case .background:
             stopHealthPolling()
             stopRetryPolling()

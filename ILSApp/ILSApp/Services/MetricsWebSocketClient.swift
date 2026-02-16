@@ -181,7 +181,7 @@ final class MetricsWebSocketClient: ObservableObject {
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
+                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
             }
         }
     }
