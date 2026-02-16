@@ -55,14 +55,12 @@ struct ILSMacApp: App {
                     }
                 }
         }
+        .defaultSize(width: 1200, height: 800)
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
         }
         .commands {
-            // Add keyboard shortcut Cmd+N for opening session in new window
-            CommandGroup(after: .newItem) {
-                OpenNewSessionWindowCommand(windowManager: windowManager)
-            }
+            ILSCommands()
         }
         // .windowRestorationBehavior(.enabled) // Requires macOS 15+
 
@@ -86,23 +84,6 @@ struct ILSMacApp: App {
         // .windowRestorationBehavior(.enabled) // Requires macOS 15+
     }
 }
-
-/// Command for opening a session in a new window
-struct OpenNewSessionWindowCommand: View {
-    let windowManager: WindowManager
-    @FocusedValue(\.selectedSession) private var selectedSession: ChatSession?
-
-    var body: some View {
-        Button("Open in New Window") {
-            if let session = selectedSession {
-                windowManager.openSessionWindow(session)
-            }
-        }
-        .keyboardShortcut("n", modifiers: [.command])
-        .disabled(selectedSession == nil)
-    }
-}
-
 
 /// Global application state — thin coordinator delegating to focused managers.
 @MainActor

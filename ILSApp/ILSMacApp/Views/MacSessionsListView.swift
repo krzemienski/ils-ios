@@ -209,6 +209,12 @@ struct MacSessionsListView: View {
         }
         .contextMenu {
             Button {
+                onSessionSelected(session)
+            } label: {
+                Label("Open Session", systemImage: "bubble.left.and.bubble.right")
+            }
+
+            Button {
                 windowManager.openSessionWindow(session)
             } label: {
                 Label("Open in New Window", systemImage: "macwindow.badge.plus")
@@ -220,13 +226,25 @@ struct MacSessionsListView: View {
                 let currentName = session.name ?? ""
                 onRenameSession(session, currentName)
             } label: {
-                Label("Rename", systemImage: "pencil")
+                Label("Rename...", systemImage: "pencil")
             }
+
+            Button {
+                Task {
+                    if let forked = await viewModel.forkSession(session) {
+                        onSessionSelected(forked)
+                    }
+                }
+            } label: {
+                Label("Fork Session", systemImage: "arrow.branch")
+            }
+
+            Divider()
 
             Button {
                 onExportSession(session)
             } label: {
-                Label("Export", systemImage: "square.and.arrow.up")
+                Label("Export...", systemImage: "square.and.arrow.up")
             }
 
             Divider()

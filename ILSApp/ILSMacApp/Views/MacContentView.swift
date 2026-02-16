@@ -1,5 +1,8 @@
-import SwiftUI
+import AppKit
+import Combine
 import ILSShared
+import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Sidebar Section
 
@@ -72,10 +75,58 @@ struct MacContentView: View {
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadProjectGroups()
+
+            // Index sessions in Spotlight after loading
+            let allSessions = sessionsViewModel.projectSessions.values.flatMap { $0 }
+            SpotlightIndexer.shared.indexSessions(Array(allSessions))
         }
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
             handleNavigationIntent(intent)
+        }
+        // Observe menu bar command notifications
+        .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
+            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            activeScreen = .chat(newSession)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ilsNavigateTo)) { notification in
+            guard let target = notification.object as? String else { return }
+            switch target {
+            case "home": handleNavigationIntent(.home)
+            case "sessions": handleNavigationIntent(.home)
+            case "browser": handleNavigationIntent(.browser)
+            case "system": handleNavigationIntent(.system)
+            case "settings": handleNavigationIntent(.settings)
+            default: break
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ilsRenameSession)) { _ in
+            if case .chat(let session) = activeScreen {
+                renameText = session.name ?? ""
+                sessionToRename = session
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ilsForkSession)) { _ in
+            if case .chat(let session) = activeScreen {
+                Task {
+                    if let forked = await sessionsViewModel.forkSession(session) {
+                        activeScreen = .chat(forked)
+                    }
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ilsExportSession)) { _ in
+            if case .chat(let session) = activeScreen {
+                exportSessionAsJSON(session)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .ilsDeleteSession)) { _ in
+            if case .chat(let session) = activeScreen {
+                Task {
+                    await sessionsViewModel.deleteSession(session)
+                    activeScreen = .home
+                }
+            }
         }
         .onKeyPress(.init("/")) {
             isSearchFocused = true
@@ -325,16 +376,52 @@ struct MacContentView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button {
+                            activeScreen = .chat(session)
+                        } label: {
+                            Label("Open Session", systemImage: "bubble.left.and.bubble.right")
+                        }
+
+                        Button {
+                            WindowManager.shared.openSessionWindow(session)
+                        } label: {
+                            Label("Open in New Window", systemImage: "macwindow.badge.plus")
+                        }
+
+                        Divider()
+
+                        Button {
                             renameText = session.name ?? ""
                             sessionToRename = session
                         } label: {
-                            Label("Rename", systemImage: "pencil")
+                            Label("Rename...", systemImage: "pencil")
                         }
+
                         Button {
-                            SessionExporter.share(session)
+                            Task {
+                                if let forked = await sessionsViewModel.forkSession(session) {
+                                    activeScreen = .chat(forked)
+                                }
+                            }
                         } label: {
-                            Label("Export", systemImage: "square.and.arrow.up")
+                            Label("Fork Session", systemImage: "arrow.branch")
                         }
+
+                        Divider()
+
+                        Button {
+                            exportSessionAsJSON(session)
+                        } label: {
+                            Label("Export as JSON...", systemImage: "curlybraces")
+                        }
+
+                        Button {
+                            exportSessionAsMarkdown(session)
+                        } label: {
+                            Label("Export as Markdown...", systemImage: "doc.text")
+                        }
+
+                        Divider()
+
                         Button(role: .destructive) {
                             Task {
                                 await sessionsViewModel.deleteSession(session)
@@ -417,6 +504,52 @@ struct MacContentView: View {
         }
     }
 
+
+    private func exportSessionAsJSON(_ session: ChatSession) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "\(session.name ?? "session").json"
+        panel.canCreateDirectories = true
+        panel.title = "Export Session as JSON"
+
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                encoder.dateEncodingStrategy = .iso8601
+                if let data = try? encoder.encode(session) {
+                    try? data.write(to: url)
+                }
+            }
+        }
+    }
+
+    private func exportSessionAsMarkdown(_ session: ChatSession) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.plainText]
+        panel.nameFieldStringValue = "\(session.name ?? "session").md"
+        panel.canCreateDirectories = true
+        panel.title = "Export Session as Markdown"
+
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                var md = "# Session: \(session.name ?? "Unnamed")\n\n"
+                md += "- **Model:** \(session.model)\n"
+                md += "- **Status:** \(session.status.rawValue)\n"
+                md += "- **Created:** \(session.createdAt.formatted())\n"
+                md += "- **Last Active:** \(session.lastActiveAt.formatted())\n"
+                md += "- **Messages:** \(session.messageCount)\n"
+                if let cost = session.totalCostUSD {
+                    md += "- **Cost:** $\(String(format: "%.4f", cost))\n"
+                }
+                if let projectName = session.projectName {
+                    md += "- **Project:** \(projectName)\n"
+                }
+                md += "\n---\n"
+                try? md.write(to: url, atomically: true, encoding: .utf8)
+            }
+        }
+    }
 
     private func handleNavigationIntent(_ intent: ActiveScreen) {
         // Sync sidebar selection for non-chat screens

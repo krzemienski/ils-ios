@@ -1,5 +1,6 @@
-import SwiftUI
+import AppKit
 import ILSShared
+import SwiftUI
 
 // MARK: - Mac Projects List View
 
@@ -74,10 +75,27 @@ struct MacProjectsListView: View {
                         .buttonStyle(.plain)
                         .contextMenu {
                             Button {
+                                let projectURL = URL(fileURLWithPath: project.path)
+                                NSWorkspace.shared.open(projectURL)
+                            } label: {
+                                Label("Open in Finder", systemImage: "folder")
+                            }
+
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(project.path, forType: .string)
+                            } label: {
+                                Label("Copy Path", systemImage: "doc.on.doc")
+                            }
+
+                            Divider()
+
+                            Button {
                                 projectToEdit = project
                             } label: {
-                                Label("Edit", systemImage: "pencil")
+                                Label("Edit...", systemImage: "pencil")
                             }
+
                             Button {
                                 Task {
                                     _ = await viewModel.duplicateProject(project)
@@ -85,7 +103,9 @@ struct MacProjectsListView: View {
                             } label: {
                                 Label("Duplicate", systemImage: "plus.square.on.square")
                             }
+
                             Divider()
+
                             Button(role: .destructive) {
                                 projectToDelete = project
                                 showingDeleteConfirmation = true

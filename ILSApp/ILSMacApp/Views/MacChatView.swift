@@ -103,13 +103,28 @@ struct MacChatView: View {
                     }
                 }
             }
-            .onKeyPress(.init("k")) {
+            .onKeyPress(.init("k"), modifiers: .command) {
                 showCommandPalette = true
                 return .handled
             }
-            .onKeyPress(.return) {
+            .onKeyPress(.return, modifiers: .command) {
                 if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming {
                     sendMessage()
+                    return .handled
+                }
+                return .ignored
+            }
+            .onKeyPress(.escape) {
+                if showCommandPalette {
+                    showCommandPalette = false
+                    return .handled
+                }
+                if showSessionInfo {
+                    showSessionInfo = false
+                    return .handled
+                }
+                if showAdvancedOptions {
+                    showAdvancedOptions = false
                     return .handled
                 }
                 return .ignored
