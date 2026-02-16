@@ -5,7 +5,7 @@ import ILSShared
 /// Starts at ~/ and allows navigating into directories.
 struct FileBrowserView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
 
     @State private var currentPath: String = "~"
     @State private var entries: [FileEntryResponse] = []

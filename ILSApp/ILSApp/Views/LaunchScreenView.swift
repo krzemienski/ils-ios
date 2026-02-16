@@ -95,6 +95,7 @@ struct LaunchScreenView: View {
                         }
                     }
                 }
+                .drawingGroup() // Offload shadow compositing to Metal
                 .scaleEffect(isAnimating ? 1.0 : 0.9)
 
                 // App name with cyberpunk styling

@@ -1,16 +1,18 @@
 import SwiftUI
+import Observation
 import ILSShared
 
 @MainActor
-class SettingsViewModel: ObservableObject {
-    @Published var stats: StatsResponse?
-    @Published var config: ConfigInfo?
-    @Published var claudeVersion: String?
-    @Published var isLoading = false
-    @Published var isLoadingConfig = false
-    @Published var isSaving = false
-    @Published var isTestingConnection = false
-    @Published var error: Error?
+@Observable
+class SettingsViewModel {
+    var stats: StatsResponse?
+    var config: ConfigInfo?
+    var claudeVersion: String?
+    var isLoading = false
+    var isLoadingConfig = false
+    var isSaving = false
+    var isTestingConnection = false
+    var error: Error?
 
     private var client: APIClient?
 

@@ -97,6 +97,7 @@ struct AppIconGenerator: View {
             }
         }
         .frame(width: size, height: size)
+        .drawingGroup() // Offload shadow compositing to Metal
     }
 }
 

@@ -3,7 +3,7 @@ import ILSShared
 
 struct ThemeEditorView: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var viewModel: ThemesViewModel
+    @Environment(ThemesViewModel.self) var viewModel
 
     let theme: CustomTheme?
     let isNewTheme: Bool
@@ -1212,5 +1212,5 @@ struct ThemeEditorView: View {
 
 #Preview {
     ThemeEditorView()
-        .environmentObject(ThemesViewModel())
+        .environment(ThemesViewModel())
 }

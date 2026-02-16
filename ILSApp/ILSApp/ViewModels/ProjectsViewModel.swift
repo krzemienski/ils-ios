@@ -1,12 +1,14 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-class ProjectsViewModel: ObservableObject {
-    @Published var projects: [Project] = []
-    @Published var isLoading = false
-    @Published var error: Error?
-    @Published var hasMore = true
+@Observable
+class ProjectsViewModel {
+    var projects: [Project] = []
+    var isLoading = false
+    var error: Error?
+    var hasMore = true
     private var currentOffset = 0
     private let pageSize = 50
 

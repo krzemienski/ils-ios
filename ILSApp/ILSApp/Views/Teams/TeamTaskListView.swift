@@ -3,7 +3,7 @@ import ILSShared
 
 struct TeamTaskListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @ObservedObject var viewModel: TeamsViewModel
+    var viewModel: TeamsViewModel
     let teamName: String
     @State private var showCreateTask = false
     @State private var newTaskSubject = ""

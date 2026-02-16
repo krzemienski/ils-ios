@@ -1,11 +1,10 @@
 import SwiftUI
 import ILSShared
-import Combine
 
 struct ChatView: View {
     let session: ChatSession
-    @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel = ChatViewModel()
+    @Environment(AppState.self) var appState
+    @State private var viewModel = ChatViewModel()
 
     // MARK: - Grouped State
 
@@ -64,7 +63,7 @@ struct ChatView: View {
         }
         .sheet(isPresented: $sheets.showSessionInfo) {
             SessionInfoView(session: session)
-                .environmentObject(appState)
+                .environment(appState)
                 .presentationBackground(theme.bgPrimary)
         }
         .task {
@@ -140,6 +139,12 @@ struct ChatView: View {
         }
         .navigationDestination(item: $actions.navigateToForked) { session in
             ChatView(session: session)
+        }
+        .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
+            if newValue != nil {
+                actions.errorId = UUID()
+                sheets.showErrorAlert = true
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -279,30 +284,14 @@ struct ChatView: View {
 
     // MARK: - Setup
 
-    /// Configure the view model and start background tasks (error monitor + history load).
+    /// Configure the view model and load message history.
     private func setupChatView() async {
         viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
         viewModel.sessionId = session.id
         viewModel.encodedProjectPath = session.encodedProjectPath
         viewModel.claudeSessionId = session.claudeSessionId
 
-        // Run error monitor and history loading as child tasks
-        // so both are cancelled when the view disappears
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { @MainActor in
-                for await _ in viewModel.$error.values {
-                    guard !Task.isCancelled else { return }
-                    if viewModel.error != nil {
-                        actions.errorId = UUID()
-                        sheets.showErrorAlert = true
-                    }
-                }
-            }
-
-            group.addTask { @MainActor in
-                await viewModel.loadMessageHistory()
-            }
-        }
+        await viewModel.loadMessageHistory()
     }
 
     // MARK: - Actions

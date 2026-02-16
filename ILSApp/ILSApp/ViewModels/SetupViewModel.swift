@@ -1,14 +1,16 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-final class SetupViewModel: ObservableObject {
-    @Published var steps: [SetupProgress] = []
-    @Published var isRunning = false
-    @Published var isComplete = false
-    @Published var error: String?
-    @Published var tunnelURL: String?
-    @Published var logLines: [String] = []
+@Observable
+final class SetupViewModel {
+    var steps: [SetupProgress] = []
+    var isRunning = false
+    var isComplete = false
+    var error: String?
+    var tunnelURL: String?
+    var logLines: [String] = []
 
     private let sshService = CitadelSSHService()
 

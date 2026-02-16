@@ -4,7 +4,7 @@ import ILSShared
 struct CommandPaletteView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @State private var searchText = ""
     @State private var skills: [Skill] = []
     @State private var isLoading = true

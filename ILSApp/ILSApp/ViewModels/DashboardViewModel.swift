@@ -1,13 +1,15 @@
 import Foundation
+import Observation
 import ILSShared
 
+@Observable
 @MainActor
-class DashboardViewModel: ObservableObject {
-    @Published var stats: StatsResponse?
-    @Published var recentSessions: [ChatSession] = []
-    @Published var isLoading = false
-    @Published var error: Error?
-    @Published var totalCost: Double = 0.0
+class DashboardViewModel {
+    var stats: StatsResponse?
+    var recentSessions: [ChatSession] = []
+    var isLoading = false
+    var error: Error?
+    var totalCost: Double = 0.0
 
     private var client: APIClient?
 

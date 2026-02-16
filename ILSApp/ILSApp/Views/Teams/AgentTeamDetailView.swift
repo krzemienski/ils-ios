@@ -3,15 +3,15 @@ import ILSShared
 
 struct AgentTeamDetailView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel: TeamsViewModel
+    @Environment(AppState.self) var appState
+    @State private var viewModel: TeamsViewModel
     let teamName: String
     @State private var selectedTab = 0
     @State private var showSpawnSheet = false
 
     init(teamName: String, apiClient: APIClient) {
         self.teamName = teamName
-        _viewModel = StateObject(wrappedValue: TeamsViewModel(apiClient: apiClient))
+        _viewModel = State(wrappedValue: TeamsViewModel(apiClient: apiClient))
     }
 
     var body: some View {

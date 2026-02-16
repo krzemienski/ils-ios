@@ -7,11 +7,11 @@ import ILSShared
 struct SkillDetailView: View {
     let skill: Skill
 
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var viewModel = SkillsViewModel()
+    @State private var viewModel = SkillsViewModel()
     @State private var isEditing = false
     @State private var editedContent = ""
     @State private var showDeleteAlert = false

@@ -2,7 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct OnboardingView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var selectedPath: OnboardingPath?

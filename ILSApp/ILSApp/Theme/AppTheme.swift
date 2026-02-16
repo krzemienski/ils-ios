@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 
 // MARK: - AppTheme Protocol
 
@@ -158,9 +159,10 @@ extension EnvironmentValues {
 /// - ``setTheme(_:)`` - Switch to a different theme by ID
 /// - ``registerTheme(_:)`` - Register a custom theme
 @MainActor
-class ThemeManager: ObservableObject {
+@Observable
+class ThemeManager {
     /// Currently active theme.
-    @Published var currentTheme: any AppTheme
+    var currentTheme: any AppTheme
 
     /// Concrete snapshot of the current theme for SwiftUI environment injection.
     /// Eliminates existential container overhead in view bodies.

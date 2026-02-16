@@ -3,12 +3,12 @@ import ILSShared
 
 struct AgentTeamsListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel: TeamsViewModel
+    @Environment(AppState.self) var appState
+    @State private var viewModel: TeamsViewModel
     @State private var showCreateSheet = false
 
     init(apiClient: APIClient) {
-        _viewModel = StateObject(wrappedValue: TeamsViewModel(apiClient: apiClient))
+        _viewModel = State(wrappedValue: TeamsViewModel(apiClient: apiClient))
     }
 
     var body: some View {

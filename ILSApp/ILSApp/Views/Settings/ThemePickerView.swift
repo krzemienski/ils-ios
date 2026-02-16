@@ -32,7 +32,7 @@ private struct ThemePreview: Identifiable {
 // MARK: - Theme Picker View
 
 struct ThemePickerView: View {
-    @EnvironmentObject var themeManager: ThemeManager
+    @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -192,7 +192,7 @@ struct ThemePickerView: View {
 #Preview {
     NavigationStack {
         ThemePickerView()
-            .environmentObject(ThemeManager())
+            .environment(ThemeManager())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

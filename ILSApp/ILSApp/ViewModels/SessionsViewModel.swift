@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import ILSShared
 
 /// View model for session list and management.
@@ -7,7 +8,7 @@ import ILSShared
 /// (discovered from `~/.claude/projects/`). Supports pagination, search, and project grouping.
 ///
 /// ## Topics
-/// ### Published Properties
+/// ### Properties
 /// - ``sessions`` - Array of all loaded sessions
 /// - ``projectGroups`` - Project groups for sidebar navigation
 /// - ``isLoading`` - Whether data is currently loading
@@ -20,31 +21,32 @@ import ILSShared
 /// - ``deleteSession(_:)`` - Delete a session
 /// - ``forkSession(_:)`` - Fork an existing session
 /// - ``renameSession(_:newName:)`` - Rename a session
+@Observable
 @MainActor
-class SessionsViewModel: ObservableObject {
+class SessionsViewModel {
     /// Array of all loaded chat sessions.
-    @Published var sessions: [ChatSession] = []
+    var sessions: [ChatSession] = []
     /// Total number of sessions available.
-    @Published var totalCount: Int = 0
+    var totalCount: Int = 0
     /// Whether sessions are currently loading.
-    @Published var isLoading = false
+    var isLoading = false
     /// Current error, if any.
-    @Published var error: Error?
+    var error: Error?
     /// Whether more sessions are available for pagination.
-    @Published var hasMore = true
+    var hasMore = true
     /// Server-side search query.
-    @Published var searchQuery: String?
+    var searchQuery: String?
     /// Client-side search text for filtering.
-    @Published var searchText: String = ""
+    var searchText: String = ""
 
     /// Project groups for sidebar navigation.
-    @Published var projectGroups: [ProjectGroupInfo] = []
+    var projectGroups: [ProjectGroupInfo] = []
     /// Sessions grouped by project name.
-    @Published var projectSessions: [String: [ChatSession]] = [:]
+    var projectSessions: [String: [ChatSession]] = [:]
     /// Projects currently being loaded.
-    @Published var loadingProjects: Set<String> = []
+    var loadingProjects: Set<String> = []
     /// Whether each project has more sessions to load.
-    @Published var projectHasMore: [String: Bool] = [:]
+    var projectHasMore: [String: Bool] = [:]
 
     private var currentPage = 1
     private let pageSize = 50

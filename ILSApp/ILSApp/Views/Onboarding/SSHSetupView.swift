@@ -2,12 +2,12 @@ import SwiftUI
 import ILSShared
 
 struct SSHSetupView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var viewModel = SetupViewModel()
-    @StateObject private var sshViewModel = SSHViewModel()
+    @State private var viewModel = SetupViewModel()
+    @State private var sshViewModel = SSHViewModel()
 
     @State private var host = ""
     @State private var port = "22"

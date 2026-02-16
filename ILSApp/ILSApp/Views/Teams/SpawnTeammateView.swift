@@ -4,7 +4,7 @@ import ILSShared
 struct SpawnTeammateView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @ObservedObject var viewModel: TeamsViewModel
+    var viewModel: TeamsViewModel
     let teamName: String
     @State private var name = ""
     @State private var agentType = ""

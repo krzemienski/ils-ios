@@ -1,13 +1,15 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-final class SSHViewModel: ObservableObject {
-    @Published var isConnected = false
-    @Published var isConnecting = false
-    @Published var platform: String?
-    @Published var connectionError: String?
-    @Published var connectedAt: Date?
+@Observable
+final class SSHViewModel {
+    var isConnected = false
+    var isConnecting = false
+    var platform: String?
+    var connectionError: String?
+    var connectedAt: Date?
 
     private let sshService = CitadelSSHService()
 

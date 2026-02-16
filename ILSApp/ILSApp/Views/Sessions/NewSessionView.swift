@@ -2,11 +2,11 @@ import SwiftUI
 import ILSShared
 
 struct NewSessionView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    @StateObject private var projectsViewModel = ProjectsViewModel()
+    @State private var projectsViewModel = ProjectsViewModel()
     @State private var sessionName = ""
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"

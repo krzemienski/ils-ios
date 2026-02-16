@@ -1,13 +1,16 @@
 import SwiftUI
 import ILSShared
+import TipKit
 
 // MARK: - Connection Section
 
 struct SettingsConnectionSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
-    @ObservedObject var viewModel: SettingsViewModel
+    @Environment(AppState.self) var appState
+    var viewModel: SettingsViewModel
     @Binding var serverURL: String
+
+    private let serverSetupTip = ServerSetupTip()
 
     let onTestConnection: () -> Void
     let onSaveServerSettings: () -> Void
@@ -15,6 +18,11 @@ struct SettingsConnectionSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Backend Connection")
+
+            if !appState.isConnected {
+                TipView(serverSetupTip)
+                    .tipBackground(theme.bgSecondary)
+            }
 
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 VStack(alignment: .leading, spacing: 4) {

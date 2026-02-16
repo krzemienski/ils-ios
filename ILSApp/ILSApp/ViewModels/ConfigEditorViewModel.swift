@@ -1,11 +1,13 @@
 import SwiftUI
+import Observation
 import ILSShared
 
 @MainActor
-class ConfigEditorViewModel: ObservableObject {
-    @Published var configJson = ""
-    @Published var isLoading = false
-    @Published var error: Error?
+@Observable
+class ConfigEditorViewModel {
+    var configJson = ""
+    var isLoading = false
+    var error: Error?
 
     private var client: APIClient?
 

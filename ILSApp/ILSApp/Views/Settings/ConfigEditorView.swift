@@ -3,9 +3,9 @@ import ILSShared
 
 struct ConfigEditorView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject private var appState: AppState
+    @Environment(AppState.self) private var appState
     let scope: String
-    @StateObject private var viewModel = ConfigEditorViewModel()
+    @State private var viewModel = ConfigEditorViewModel()
     @State private var configText = ""
     @State private var originalConfigText = ""
     @State private var isSaving = false

@@ -2,9 +2,9 @@ import SwiftUI
 import ILSShared
 
 struct FleetManagementView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var viewModel = FleetViewModel()
+    @State private var viewModel = FleetViewModel()
 
     var body: some View {
         ScrollView {

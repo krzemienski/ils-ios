@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Observation
 import ILSShared
 
 /// View model for chat interactions with Claude Code.
@@ -8,7 +9,7 @@ import ILSShared
 /// Coordinates with `SSEClient` for Server-Sent Events and `APIClient` for REST operations.
 ///
 /// ## Topics
-/// ### Published Properties
+/// ### Properties
 /// - ``messages`` - Array of chat messages in the conversation
 /// - ``isStreaming`` - Whether Claude is currently responding
 /// - ``isLoadingHistory`` - Whether message history is being loaded
@@ -19,26 +20,27 @@ import ILSShared
 /// - ``sendMessage(_:projectId:claudeSessionId:)`` - Send a message to Claude
 /// - ``loadMessageHistory()`` - Load message history for the session
 /// - ``cancelStream()`` - Cancel the active streaming response
+@Observable
 @MainActor
-class ChatViewModel: ObservableObject {
+class ChatViewModel {
     /// Array of messages in the conversation.
-    @Published var messages: [ChatMessage] = []
+    var messages: [ChatMessage] = []
     /// Whether Claude is currently streaming a response.
-    @Published var isStreaming = false
+    var isStreaming = false
     /// Whether message history is being loaded.
-    @Published var isLoadingHistory = false
+    var isLoadingHistory = false
     /// Current error, if any.
-    @Published var error: Error?
+    var error: Error?
     /// Current SSE connection state.
-    @Published var connectionState: SSEClient.ConnectionState = .disconnected
+    var connectionState: SSEClient.ConnectionState = .disconnected
     /// Whether connection is taking longer than expected (>3s).
-    @Published var connectingTooLong = false
+    var connectingTooLong = false
     /// Number of tokens in the current stream.
-    @Published var streamTokenCount: Int = 0
+    var streamTokenCount: Int = 0
     /// Elapsed time in seconds for the current stream.
-    @Published var streamElapsedSeconds: Double = 0
+    var streamElapsedSeconds: Double = 0
     /// Pending permission request from Claude.
-    @Published var pendingPermissionRequest: PermissionRequest?
+    var pendingPermissionRequest: PermissionRequest?
     private var streamStartTime: Date?
 
     /// Computed property for current assistant message being streamed
@@ -74,8 +76,8 @@ class ChatViewModel: ObservableObject {
 
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
-    private var cancellables = Set<AnyCancellable>()
-    private var connectingTimer: Task<Void, Never>?
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var connectingTimer: Task<Void, Never>?
 
     // MARK: - Shared Decoder
     // nonisolated: JSONDecoder is thread-safe for decoding. Isolated to instance lifetime.
@@ -83,7 +85,7 @@ class ChatViewModel: ObservableObject {
 
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
-    private var batchTask: Task<Void, Never>?
+    @ObservationIgnored private var batchTask: Task<Void, Never>?
     private let batchInterval: TimeInterval = 0.075
     private var lastProcessedMessageIndex = 0
 
@@ -125,7 +127,10 @@ class ChatViewModel: ObservableObject {
             .store(in: &cancellables)
 
         sseClient.$error
-            .assign(to: &$error)
+            .sink { [weak self] err in
+                self?.error = err
+            }
+            .store(in: &cancellables)
 
         sseClient.$connectionState
             .sink { [weak self] state in

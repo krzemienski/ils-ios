@@ -3,8 +3,8 @@ import ILSShared
 import UniformTypeIdentifiers
 
 struct ThemesListView: View {
-    @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel = ThemesViewModel()
+    @Environment(AppState.self) var appState
+    @State private var viewModel = ThemesViewModel()
     @State private var showingNewTheme = false
     @State private var selectedTheme: CustomTheme?
     @State private var showingImporter = false

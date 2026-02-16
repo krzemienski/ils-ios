@@ -2,9 +2,9 @@ import SwiftUI
 import ILSShared
 
 struct SidebarView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var sessionsViewModel = SessionsViewModel()
+    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @Binding var activeScreen: ActiveScreen

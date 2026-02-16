@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import ILSShared
 
 /// Data point for time-series charts.
@@ -11,12 +12,13 @@ struct MetricDataPoint: Identifiable {
 /// ViewModel for the System Monitor tab.
 /// Owns the MetricsWebSocketClient and exposes chart data.
 @MainActor
-final class SystemMetricsViewModel: ObservableObject {
-    @Published var metricsClient: MetricsWebSocketClient
-    @Published var processes: [ProcessInfoResponse] = []
-    @Published var processSortBy: ProcessSortOption = .cpu
-    @Published var processSearchText: String = ""
-    @Published var isLoadingProcesses: Bool = false
+@Observable
+final class SystemMetricsViewModel {
+    var metricsClient: MetricsWebSocketClient
+    var processes: [ProcessInfoResponse] = []
+    var processSortBy: ProcessSortOption = .cpu
+    var processSearchText: String = ""
+    var isLoadingProcesses: Bool = false
 
     private let baseURL: String
     private let session: URLSession

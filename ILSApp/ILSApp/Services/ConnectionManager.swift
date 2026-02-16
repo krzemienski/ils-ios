@@ -1,12 +1,14 @@
 import SwiftUI
+import Observation
 import ILSShared
 
 /// Manages server connection state, URL persistence, and client lifecycle.
 @MainActor
-class ConnectionManager: ObservableObject {
-    @Published var isConnected: Bool = false
-    @Published var serverURL: String = ""
-    @Published var showOnboarding: Bool = false
+@Observable
+class ConnectionManager {
+    var isConnected: Bool = false
+    var serverURL: String = ""
+    var showOnboarding: Bool = false
 
     var apiClient: APIClient
     var sseClient: SSEClient

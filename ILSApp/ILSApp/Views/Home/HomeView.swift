@@ -1,12 +1,15 @@
 import SwiftUI
 import ILSShared
+import TipKit
 
 struct HomeView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    @StateObject private var dashboardVM = DashboardViewModel()
-    @StateObject private var sessionsVM = SessionsViewModel()
+    @State private var dashboardVM = DashboardViewModel()
+    @State private var sessionsVM = SessionsViewModel()
+
+    private let createSessionTip = CreateSessionTip()
 
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
@@ -16,6 +19,10 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: theme.spacingLG) {
                 welcomeSection
                 connectionBanner
+
+                TipView(createSessionTip)
+                    .tipBackground(theme.bgSecondary)
+
                 recentSessionsSection
                 quickActionsGrid
                 statsSection
@@ -37,6 +44,9 @@ struct HomeView: View {
         .refreshable {
             await dashboardVM.loadAll()
             await sessionsVM.loadSessions(refresh: true)
+        }
+        .onChange(of: appState.isConnected) { _, connected in
+            CreateSessionTip.isConnected = connected
         }
     }
 
@@ -323,7 +333,7 @@ struct HomeView: View {
 #Preview {
     NavigationStack {
         HomeView()
-            .environmentObject(AppState())
+            .environment(AppState())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

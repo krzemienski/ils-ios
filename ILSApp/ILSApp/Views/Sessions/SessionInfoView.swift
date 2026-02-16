@@ -5,7 +5,7 @@ struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
 
     @State private var loadedSession: ChatSession?
     @State private var isLoading = true

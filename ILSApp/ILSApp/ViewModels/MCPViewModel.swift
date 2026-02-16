@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import ILSShared
 
 // MARK: - Hashable conformance for MCPServer (needed for NavigationLink)
@@ -13,21 +14,22 @@ extension MCPServer: @retroactive Hashable {
 }
 
 @MainActor
-class MCPViewModel: ObservableObject {
-    @Published var servers: [MCPServer] = []
-    @Published var isLoading = false
-    @Published var error: Error?
-    @Published var searchText = ""
-    @Published var selectedScope: String = "user"
+@Observable
+class MCPViewModel {
+    var servers: [MCPServer] = []
+    var isLoading = false
+    var error: Error?
+    var searchText = ""
+    var selectedScope: String = "user"
 
     // Spec 012: Health monitoring
-    @Published var lastHealthCheck: Date?
-    @Published var isHealthChecking = false
+    var lastHealthCheck: Date?
+    var isHealthChecking = false
     private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
-    @Published var isSelecting = false
-    @Published var selectedServerIDs: Set<UUID> = []
+    var isSelecting = false
+    var selectedServerIDs: Set<UUID> = []
 
     var selectedCount: Int { selectedServerIDs.count }
 

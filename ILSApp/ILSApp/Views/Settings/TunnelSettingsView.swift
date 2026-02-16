@@ -12,7 +12,7 @@ typealias PlatformImage = NSImage
 
 /// Settings screen for managing Cloudflare tunnel remote access.
 struct TunnelSettingsView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var isRunning = false
     @State private var tunnelURL: String?
@@ -607,7 +607,7 @@ struct TunnelSettingsView: View {
 #Preview {
     NavigationStack {
         TunnelSettingsView()
-            .environmentObject(AppState())
+            .environment(AppState())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

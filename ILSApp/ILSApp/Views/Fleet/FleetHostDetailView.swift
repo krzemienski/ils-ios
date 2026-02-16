@@ -2,7 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct FleetHostDetailView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     let host: FleetHost
 

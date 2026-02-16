@@ -1,15 +1,17 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-class SkillsViewModel: ObservableObject {
-    @Published var skills: [Skill] = []
-    @Published var isLoading = false
-    @Published var error: Error?
-    @Published var searchText = ""
-    @Published var gitHubResults: [GitHubSearchResult] = []
-    @Published var isSearchingGitHub = false
-    @Published var gitHubSearchText = ""
+@Observable
+class SkillsViewModel {
+    var skills: [Skill] = []
+    var isLoading = false
+    var error: Error?
+    var searchText = ""
+    var gitHubResults: [GitHubSearchResult] = []
+    var isSearchingGitHub = false
+    var gitHubSearchText = ""
 
     /// Update GitHub search text and trigger debounced search.
     /// Call this instead of assigning `gitHubSearchText` directly.

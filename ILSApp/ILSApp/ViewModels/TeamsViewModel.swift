@@ -1,17 +1,19 @@
 import SwiftUI
+import Observation
 import ILSShared
 
 @MainActor
-class TeamsViewModel: ObservableObject {
-    @Published var teams: [AgentTeam] = []
-    @Published var selectedTeam: AgentTeam?
-    @Published var tasks: [TeamTask] = []
-    @Published var messages: [TeamMessage] = []
-    @Published var isLoading = false
-    @Published var error: String?
+@Observable
+class TeamsViewModel {
+    var teams: [AgentTeam] = []
+    var selectedTeam: AgentTeam?
+    var tasks: [TeamTask] = []
+    var messages: [TeamMessage] = []
+    var isLoading = false
+    var error: String?
 
     private let apiClient: APIClient
-    private var pollingTimer: Timer?
+    @ObservationIgnored private var pollingTimer: Timer?
 
     init(apiClient: APIClient) {
         self.apiClient = apiClient

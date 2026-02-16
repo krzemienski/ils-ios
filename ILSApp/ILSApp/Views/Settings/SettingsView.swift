@@ -2,9 +2,9 @@ import SwiftUI
 import ILSShared
 
 struct SettingsView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var viewModel = SettingsViewModel()
+    @State private var viewModel = SettingsViewModel()
     @State private var serverHost: String = "localhost"
     @State private var serverPort: String = "8080"
     @State private var backendAPIKey: String = ""
@@ -536,6 +536,6 @@ struct SettingsView: View {
 #Preview {
     NavigationStack {
         SettingsView()
-            .environmentObject(AppState())
+            .environment(AppState())
     }
 }

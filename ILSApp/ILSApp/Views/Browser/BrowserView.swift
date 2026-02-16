@@ -12,13 +12,13 @@ enum BrowserSegment: String, CaseIterable {
 // MARK: - Browser View
 
 struct BrowserView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @StateObject private var mcpVM = MCPViewModel()
-    @StateObject private var skillsVM = SkillsViewModel()
-    @StateObject private var pluginsVM = PluginsViewModel()
+    @State private var mcpVM = MCPViewModel()
+    @State private var skillsVM = SkillsViewModel()
+    @State private var pluginsVM = PluginsViewModel()
 
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""

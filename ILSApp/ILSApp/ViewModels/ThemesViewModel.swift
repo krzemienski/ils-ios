@@ -1,11 +1,13 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-class ThemesViewModel: ObservableObject {
-    @Published var themes: [CustomTheme] = []
-    @Published var isLoading = false
-    @Published var error: Error?
+@Observable
+class ThemesViewModel {
+    var themes: [CustomTheme] = []
+    var isLoading = false
+    var error: Error?
 
     private var client: APIClient?
 

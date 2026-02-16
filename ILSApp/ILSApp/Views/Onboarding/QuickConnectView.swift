@@ -5,7 +5,7 @@ import ILSShared
 /// Extracted from the original ServerSetupSheet with connection mode picker,
 /// URL entry, connection steps, health check, and recent connections.
 struct QuickConnectView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
 

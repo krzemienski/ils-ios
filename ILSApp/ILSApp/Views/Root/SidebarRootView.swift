@@ -45,7 +45,7 @@ enum ActiveScreen: Hashable {
 // MARK: - Sidebar Root View
 
 struct SidebarRootView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -98,9 +98,9 @@ struct SidebarRootView: View {
                 activeScreen = restored
             }
         }
-        .sheet(isPresented: $appState.showOnboarding) {
+        .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
-                .environmentObject(appState)
+                .environment(appState)
                 .environment(\.theme, theme)
         }
         // DEBUG: Auto-navigate for screenshot capture (revert after)
@@ -337,7 +337,7 @@ struct SidebarRootView: View {
 
 #Preview {
     SidebarRootView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

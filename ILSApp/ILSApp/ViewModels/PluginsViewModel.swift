@@ -1,17 +1,19 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-class PluginsViewModel: ObservableObject {
-    @Published var plugins: [Plugin] = []
-    @Published var isLoading = false
-    @Published var error: Error?
-    @Published var searchText = ""
-    @Published var marketplaceSearchText = ""
-    @Published var selectedCategory: String = "All"
-    @Published var isSearchingMarketplace = false
-    @Published var searchResults: [PluginInfo] = []
-    @Published var installingPlugins: Set<String> = []
+@Observable
+class PluginsViewModel {
+    var plugins: [Plugin] = []
+    var isLoading = false
+    var error: Error?
+    var searchText = ""
+    var marketplaceSearchText = ""
+    var selectedCategory: String = "All"
+    var isSearchingMarketplace = false
+    var searchResults: [PluginInfo] = []
+    var installingPlugins: Set<String> = []
 
     private var client: APIClient?
 

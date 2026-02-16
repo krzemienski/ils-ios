@@ -1,11 +1,12 @@
 import SwiftUI
+import Observation
 import ILSShared
-import Combine
+import TipKit
 
 @main
 struct ILSAppApp: App {
-    @StateObject private var appState = AppState()
-    @StateObject private var themeManager = ThemeManager()
+    @State private var appState = AppState()
+    @State private var themeManager = ThemeManager()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
@@ -22,8 +23,8 @@ struct ILSAppApp: App {
         WindowGroup {
             ZStack {
                 SidebarRootView()
-                    .environmentObject(appState)
-                    .environmentObject(themeManager)
+                    .environment(appState)
+                    .environment(themeManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -39,6 +40,12 @@ struct ILSAppApp: App {
                 }
             }
             .task {
+                // Configure TipKit onboarding system
+                try? Tips.configure([
+                    .displayFrequency(.daily),
+                    .datastoreLocation(.applicationDefault)
+                ])
+
                 try? await Task.sleep(for: .seconds(2.2))
                 withAnimation(.easeOut(duration: 0.5)) {
                     showLaunchScreen = false
@@ -53,46 +60,34 @@ struct ILSAppApp: App {
 
 /// Global application state — thin coordinator delegating to focused managers.
 @MainActor
-class AppState: ObservableObject {
-    @Published var selectedProject: Project?
-    @Published var selectedTab: String = "dashboard"
-    @Published var navigationIntent: ActiveScreen?
-    @Published var lastSessionId: UUID?
-    @Published var isOffline: Bool = false
-    @Published var showOnboarding: Bool = false
+@Observable
+class AppState {
+    var selectedProject: Project?
+    var selectedTab: String = "dashboard"
+    var navigationIntent: ActiveScreen?
+    var lastSessionId: UUID?
+    var isOffline: Bool = false
 
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
 
-    private var cancellables = Set<AnyCancellable>()
-
     // MARK: - Forwarding Properties
+    // With @Observable, SwiftUI automatically tracks through property chains,
+    // so no Combine forwarding is needed.
 
     var isConnected: Bool { connectionManager.isConnected }
     var serverURL: String { connectionManager.serverURL }
     var apiClient: APIClient { connectionManager.apiClient }
     var sseClient: SSEClient { connectionManager.sseClient }
+    var showOnboarding: Bool {
+        get { connectionManager.showOnboarding }
+        set { connectionManager.showOnboarding = newValue }
+    }
 
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
-
-        // Forward ConnectionManager changes so SwiftUI views observing AppState update
-        cm.objectWillChange.sink { [weak self] (_: Void) in
-            self?.objectWillChange.send()
-        }.store(in: &cancellables)
-
-        // Sync showOnboarding bidirectionally with removeDuplicates to prevent
-        // infinite recursion (@Published emits on willSet before storage updates,
-        // so property-read guards are unreliable — use stream dedup instead)
-        cm.$showOnboarding.removeDuplicates().sink { [weak self] (value: Bool) in
-            self?.showOnboarding = value
-        }.store(in: &cancellables)
-
-        $showOnboarding.dropFirst().removeDuplicates().sink { [weak cm] (value: Bool) in
-            cm?.showOnboarding = value
-        }.store(in: &cancellables)
 
         pollingManager.checkConnection()
     }

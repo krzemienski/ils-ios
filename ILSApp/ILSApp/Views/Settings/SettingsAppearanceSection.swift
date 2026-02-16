@@ -5,7 +5,7 @@ import ILSShared
 
 struct SettingsAppearanceSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var themeManager: ThemeManager
+    @Environment(ThemeManager.self) var themeManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {

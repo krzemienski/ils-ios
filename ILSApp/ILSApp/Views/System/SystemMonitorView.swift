@@ -3,14 +3,10 @@ import Charts
 import ILSShared
 
 struct SystemMonitorView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var viewModel: SystemMetricsViewModel
-
-    init() {
-        _viewModel = StateObject(wrappedValue: SystemMetricsViewModel())
-    }
+    @State private var viewModel = SystemMetricsViewModel()
 
     var body: some View {
         ScrollView {
@@ -267,7 +263,7 @@ struct SystemMonitorView: View {
 #Preview {
     NavigationStack {
         SystemMonitorView()
-            .environmentObject(AppState())
+            .environment(AppState())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

@@ -1,15 +1,17 @@
 import Foundation
+import Observation
 import ILSShared
 
 @MainActor
-final class FleetViewModel: ObservableObject {
-    @Published var hosts: [FleetHost] = []
-    @Published var activeHostId: UUID?
-    @Published var isLoading = false
-    @Published var loadError: String?
+@Observable
+final class FleetViewModel {
+    var hosts: [FleetHost] = []
+    var activeHostId: UUID?
+    var isLoading = false
+    var loadError: String?
 
     private let apiClient: APIClient
-    private var healthTimer: Timer?
+    @ObservationIgnored private var healthTimer: Timer?
 
     init(apiClient: APIClient = APIClient()) {
         self.apiClient = apiClient

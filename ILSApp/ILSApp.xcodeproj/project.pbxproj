@@ -41,6 +41,7 @@
 		1683DA948E66E712FCA602B2 /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9A4655E180715DDFB024576 /* EntityType.swift */; };
 		1704369786635A49766D5DC1 /* checkpoint-2026-02-13T02-32-52-924Z.json in Resources */ = {isa = PBXBuildFile; fileRef = 862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */; };
 		18357DC6909A92960DCF90E6 /* ILSMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB16994516471A2241BCCC2 /* ILSMacApp.swift */; };
+		1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A5E088C4FDB1B4F32EED35 /* AppTips.swift */; };
 		1AD445E68A4CE66079ED20C3 /* GhostProtocolTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADD83017F56B561B81A06BB /* GhostProtocolTheme.swift */; };
 		1B0EE5702C6F028E1DB60D34 /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EA7FD28E495E5F00323DDA45 /* HighlightSwift */; };
 		1BCB08B73B6F63A689A2B056 /* FleetManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B411D7FFA42D81A999047A /* FleetManagementView.swift */; };
@@ -216,6 +217,7 @@
 		BA28D0297F9A74C6D935C543 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */; };
 		BA4690875BCC009661B3AFAF /* MarkdownParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */; };
 		BA49ABF453422C572715383B /* ThemesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */; };
+		BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A5E088C4FDB1B4F32EED35 /* AppTips.swift */; };
 		BB7FC3BF5ADA8EFA06BFB61C /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E8702D461A0CF80E44F404 /* ConnectionSteps.swift */; };
 		BB8F5CDE74990B193B24E4EC /* AdvancedOptionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F82ABB45EB40D8130FBC5 /* AdvancedOptionsSheet.swift */; };
 		BCFCBE145C3FD9264131AA00 /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 974AE71DCAD6F3D4705F56B8 /* MCPViewModel.swift */; };
@@ -400,6 +402,7 @@
 		7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputBar.swift; sourceTree = "<group>"; };
 		821CFEE940D55731D5E8D672 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeonNoirTheme.swift; sourceTree = "<group>"; };
+		85A5E088C4FDB1B4F32EED35 /* AppTips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTips.swift; sourceTree = "<group>"; };
 		862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "checkpoint-2026-02-13T02-32-52-924Z.json"; sourceTree = "<group>"; };
 		869B654B4F7CD919CFF60F91 /* MacChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacChatView.swift; sourceTree = "<group>"; };
 		87BBB3407D22A2279F4D8250 /* Scenario10_DashboardAndAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario10_DashboardAndAnalytics.swift; sourceTree = "<group>"; };
@@ -777,6 +780,14 @@
 			path = TestHelpers;
 			sourceTree = "<group>";
 		};
+		B054CBE53D1498EAF28925EC /* Tips */ = {
+			isa = PBXGroup;
+			children = (
+				85A5E088C4FDB1B4F32EED35 /* AppTips.swift */,
+			);
+			path = Tips;
+			sourceTree = "<group>";
+		};
 		B36A0BE0D970CD5B43C06A27 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -808,6 +819,7 @@
 				22DD4F3C737B296969C8725E /* System */,
 				964C9FCA1325915B55D0A42C /* Teams */,
 				EC4E8B1351AF67B0ECBCCFA5 /* Themes */,
+				B054CBE53D1498EAF28925EC /* Tips */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1135,6 +1147,7 @@
 				785167CB10426EA706CF5506 /* AppIconGenerator.swift in Sources */,
 				531BB01D92A383DA6DF5AA78 /* AppLogger.swift in Sources */,
 				08CA0507D6E3EFEEF56E4682 /* AppTheme.swift in Sources */,
+				1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
 				9C30563A1ED1E15628E54487 /* BrowserView.swift in Sources */,
 				6010F25359C148A4CF2D04E3 /* CarbonTheme.swift in Sources */,
@@ -1266,6 +1279,7 @@
 				E6D80A18228021B5032890EB /* AppIconGenerator.swift in Sources */,
 				39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */,
 				C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */,
+				BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,
 				5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */,
 				DCE1AFC3B6111D22EA4B7526 /* CarbonTheme.swift in Sources */,
