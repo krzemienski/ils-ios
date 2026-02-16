@@ -41,7 +41,9 @@ class ChatViewModel {
     var streamElapsedSeconds: Double = 0
     /// Pending permission request from Claude.
     var pendingPermissionRequest: PermissionRequest?
-    private var streamStartTime: Date?
+    /// Start time of the current stream, used for elapsed time calculations.
+    /// Internal access for Live Activity extension.
+    var streamStartTime: Date?
 
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
