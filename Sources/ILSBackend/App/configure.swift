@@ -3,9 +3,30 @@ import Fluent
 import FluentSQLiteDriver
 
 func configure(_ app: Application) async throws {
-    // CORS middleware for iOS app
+    // CORS middleware — restrict to configured origins (default: localhost only)
+    // Set ILS_CORS_ORIGINS env var to comma-separated list for production
+    let allowedOrigin: CORSMiddleware.AllowOriginSetting
+    if let originsEnv = Environment.get("ILS_CORS_ORIGINS"), !originsEnv.isEmpty {
+        let origins = originsEnv.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        if origins.count == 1 {
+            allowedOrigin = .custom(origins[0])
+        } else {
+            allowedOrigin = .any(origins)
+        }
+    } else {
+        // Default: localhost development origins only
+        allowedOrigin = .any([
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://localhost:9999",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:8080",
+            "http://127.0.0.1:9999"
+        ])
+    }
+
     let corsConfiguration = CORSMiddleware.Configuration(
-        allowedOrigin: .all,
+        allowedOrigin: allowedOrigin,
         allowedMethods: [.GET, .POST, .PUT, .DELETE, .PATCH, .OPTIONS],
         allowedHeaders: [
             .accept, .authorization, .contentType, .origin, .xRequestedWith,
@@ -18,6 +39,16 @@ func configure(_ app: Application) async throws {
 
     // Error middleware
     app.middleware.use(ErrorMiddleware.default(environment: app.environment))
+
+    // API key authentication middleware (opt-in via ILS_API_KEY env var)
+    app.middleware.use(APIKeyMiddleware())
+
+    // Rate limiting middleware
+    let rateLimitStorage = RateLimitStorage()
+    app.middleware.use(RateLimitMiddleware(storage: rateLimitStorage))
+
+    // Request size limits
+    app.routes.defaultMaxBodySize = "10mb"
 
     // Database configuration
     let dbPath = app.directory.workingDirectory + "ils.sqlite"

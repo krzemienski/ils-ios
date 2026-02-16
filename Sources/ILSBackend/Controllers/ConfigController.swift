@@ -34,6 +34,12 @@ struct ConfigController: RouteCollection {
     func update(req: Request) async throws -> APIResponse<ConfigInfo> {
         let input = try req.content.decode(UpdateConfigRequest.self)
 
+        // Validate scope
+        let validScopes = ["user", "project", "local"]
+        guard validScopes.contains(input.scope) else {
+            throw Abort(.badRequest, reason: "Invalid scope. Must be one of: \(validScopes.joined(separator: ", "))")
+        }
+
         let config = try fileSystem.writeConfig(scope: input.scope, content: input.content)
 
         return APIResponse(

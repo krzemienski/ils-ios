@@ -9,6 +9,13 @@ actor APIClient {
     private var cache: [String: CacheEntry] = [:]
     private let defaultCacheTTL: TimeInterval = 30 // 30 seconds
 
+    /// Optional API key for authenticated requests.
+    /// When set, all /api/v1 requests include `Authorization: Bearer <key>`.
+    private var apiKey: String?
+
+    /// Keychain key for persisting the API key (migrated from UserDefaults).
+    private static let apiKeyKeychainKey = "ils_api_key"
+
     private struct CacheEntry {
         let data: Data
         let timestamp: Date
@@ -20,7 +27,18 @@ actor APIClient {
 
     init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
-        
+        // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
+        if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
+            self.apiKey = keychainKey
+        } else if let legacyKey = UserDefaults.standard.string(forKey: APIClient.apiKeyKeychainKey), !legacyKey.isEmpty {
+            // One-time migration from UserDefaults to Keychain
+            KeychainService.saveSync(key: APIClient.apiKeyKeychainKey, value: legacyKey)
+            UserDefaults.standard.removeObject(forKey: APIClient.apiKeyKeychainKey)
+            self.apiKey = legacyKey
+        } else {
+            self.apiKey = nil
+        }
+
         // Configure session with reasonable timeouts
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10 // 10 seconds per request
@@ -35,6 +53,43 @@ actor APIClient {
 
         self.encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
+    }
+
+    // MARK: - API Key Management
+
+    /// Update the stored API key. Pass `nil` to clear.
+    func setAPIKey(_ key: String?) {
+        let trimmed = key?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalKey = (trimmed?.isEmpty == true) ? nil : trimmed
+        self.apiKey = finalKey
+        if let finalKey = finalKey {
+            KeychainService.saveSync(key: APIClient.apiKeyKeychainKey, value: finalKey)
+        } else {
+            KeychainService.deleteSync(key: APIClient.apiKeyKeychainKey)
+        }
+    }
+
+    /// Returns the current API key (masked for display).
+    func maskedAPIKey() -> String? {
+        guard let key = apiKey, !key.isEmpty else { return nil }
+        if key.count <= 8 {
+            return String(repeating: "*", count: key.count)
+        }
+        let prefix = String(key.prefix(4))
+        let suffix = String(key.suffix(4))
+        return "\(prefix)****\(suffix)"
+    }
+
+    /// Whether an API key is currently configured.
+    func hasAPIKey() -> Bool {
+        return apiKey != nil && !(apiKey?.isEmpty ?? true)
+    }
+
+    /// Apply authorization header to a request if an API key is configured.
+    private func applyAuth(to request: inout URLRequest) {
+        if let key = apiKey, !key.isEmpty {
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        }
     }
 
     // MARK: - Health Check
@@ -68,6 +123,7 @@ actor APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
+        applyAuth(to: &request)
 
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response, data: data)
@@ -85,6 +141,7 @@ actor APIClient {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = try encoder.encode(body)
+        applyAuth(to: &request)
 
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response, data: data)
@@ -102,6 +159,7 @@ actor APIClient {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.httpBody = try encoder.encode(body)
+        applyAuth(to: &request)
 
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response, data: data)
@@ -117,6 +175,7 @@ actor APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
+        applyAuth(to: &request)
 
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response, data: data)
@@ -194,6 +253,10 @@ actor APIClient {
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
+            // Surface 401 as a specific unauthorized error for UI handling
+            if httpResponse.statusCode == 401 {
+                throw APIError.unauthorized
+            }
             // Try to decode structured error from backend
             if let data = data,
                let errorBody = try? decoder.decode(ServerErrorBody.self, from: data),
@@ -250,11 +313,14 @@ enum APIError: Error, LocalizedError {
     case decodingError(Error)
     case networkError(Error)
     case serverError(code: String, reason: String)
+    case unauthorized
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
             return "Invalid response from server"
+        case .unauthorized:
+            return "Invalid or missing API key. Check your API key in Settings."
         case .httpError(let statusCode):
             let statusText = HTTPURLResponse.localizedString(forStatusCode: statusCode)
             switch statusCode {
@@ -299,7 +365,7 @@ enum APIError: Error, LocalizedError {
         case .networkError:
             // Network errors are generally retriable
             return true
-        case .invalidResponse, .decodingError:
+        case .invalidResponse, .decodingError, .unauthorized:
             // These indicate a fundamental problem, not retriable
             return false
         case .serverError(let code, _):
@@ -313,6 +379,19 @@ enum APIError: Error, LocalizedError {
             return statusCode == 404
         case .serverError(let code, _):
             return code == "NOT_FOUND"
+        default:
+            return false
+        }
+    }
+
+    var isUnauthorized: Bool {
+        switch self {
+        case .unauthorized:
+            return true
+        case .httpError(let statusCode):
+            return statusCode == 401
+        case .serverError(let code, _):
+            return code == "UNAUTHORIZED"
         default:
             return false
         }

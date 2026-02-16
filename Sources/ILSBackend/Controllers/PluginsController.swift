@@ -264,6 +264,11 @@ struct PluginsController: RouteCollection {
         let input = try req.content.decode(InstallPluginRequest.self)
         let fm = FileManager.default
 
+        // Validate plugin name to prevent path traversal
+        try PathSanitizer.validateComponent(input.pluginName)
+        try PathSanitizer.validateStringLength(input.pluginName, maxLength: 255, fieldName: "pluginName")
+        try PathSanitizer.validateStringLength(input.marketplace, maxLength: 500, fieldName: "marketplace")
+
         let pluginsDir = "\(fileSystem.claudeDirectory)/plugins"
         let targetDir = "\(pluginsDir)/\(input.pluginName)"
 
@@ -418,6 +423,9 @@ struct PluginsController: RouteCollection {
         guard let name = req.parameters.get("name") else {
             throw Abort(.badRequest, reason: "Invalid plugin name")
         }
+
+        // Validate name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
 
         let pluginPath = "\(fileSystem.claudeDirectory)/plugins/\(name)"
         let fm = FileManager.default

@@ -7,6 +7,8 @@ struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var serverHost: String = "localhost"
     @State private var serverPort: String = "8080"
+    @State private var backendAPIKey: String = ""
+    @State private var showAPIKeySaved = false
 
     // Editing state
     @State private var isEditing = false
@@ -76,6 +78,34 @@ struct SettingsView: View {
                 Text("Backend Connection")
             } footer: {
                 Text("Configure the ILS backend server address")
+            }
+
+            // MARK: - Backend Authentication
+            Section {
+                SecureField("API Key", text: $backendAPIKey)
+                    .textContentType(.password)
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled()
+
+                Button {
+                    saveBackendAPIKey()
+                } label: {
+                    HStack {
+                        Image(systemName: "key.fill")
+                        Text(backendAPIKey.isEmpty ? "Clear API Key" : "Save API Key")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            } header: {
+                Text("Backend Authentication")
+            } footer: {
+                Text("Optional. Required when the backend has ILS_API_KEY configured. Leave empty for local development.")
+            }
+            .alert("API Key Saved", isPresented: $showAPIKeySaved) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(backendAPIKey.isEmpty ? "API key cleared." : "API key saved. All future requests will include authentication.")
             }
 
             // MARK: - General Settings Section
@@ -350,12 +380,14 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(theme.bgPrimary)
         .navigationTitle("Settings")
+        .screenshotProtected()
         .refreshable {
             await viewModel.loadAll()
         }
         .task {
             viewModel.configure(client: appState.apiClient)
             loadServerSettings()
+            loadBackendAPIKey()
             await viewModel.loadAll()
             resetEditedValues()
         }
@@ -433,6 +465,23 @@ struct SettingsView: View {
                 showSaveSuccess = true
                 await viewModel.loadConfig()
             }
+        }
+    }
+
+    // MARK: - Backend API Key
+
+    private func loadBackendAPIKey() {
+        Task {
+            if let masked = await appState.apiClient.maskedAPIKey() {
+                backendAPIKey = masked
+            }
+        }
+    }
+
+    private func saveBackendAPIKey() {
+        Task {
+            await appState.apiClient.setAPIKey(backendAPIKey.isEmpty ? nil : backendAPIKey)
+            showAPIKeySaved = true
         }
     }
 

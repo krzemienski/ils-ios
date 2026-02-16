@@ -94,6 +94,10 @@ struct MCPController: RouteCollection {
     func create(req: Request) async throws -> APIResponse<MCPServer> {
         let input = try req.content.decode(CreateMCPRequest.self)
 
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateStringLength(input.command, maxLength: 1000, fieldName: "command")
+
         let server = MCPServer(
             name: input.name,
             command: input.command,

@@ -4,6 +4,8 @@ import LocalAuthentication
 
 /// Secure storage service using iOS Keychain with biometric protection
 actor KeychainService {
+    static let shared = KeychainService()
+
     private let serviceName: String
 
     init(serviceName: String = "com.ils.app") {
@@ -128,6 +130,60 @@ actor KeychainService {
         return items.compactMap { item in
             item[kSecAttrAccount as String] as? String
         }
+    }
+
+    // MARK: - Synchronous Convenience (for use in non-async init contexts)
+
+    /// Synchronous Keychain read — safe to call from non-async code (e.g. actor init).
+    /// Uses the default `com.ils.app` service name.
+    nonisolated static func loadSync(key: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.ils.app",
+            kSecAttrAccount as String: key,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let value = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return value
+    }
+
+    /// Synchronous Keychain write — safe to call from non-async code.
+    @discardableResult
+    nonisolated static func saveSync(key: String, value: String) -> Bool {
+        guard let data = value.data(using: .utf8) else { return false }
+        // Delete existing item first
+        let deleteQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.ils.app",
+            kSecAttrAccount as String: key
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+
+        let addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.ils.app",
+            kSecAttrAccount as String: key,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        ]
+        return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
+    }
+
+    /// Synchronous Keychain delete — safe to call from non-async code.
+    nonisolated static func deleteSync(key: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.ils.app",
+            kSecAttrAccount as String: key
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 
     // MARK: - Biometric Availability

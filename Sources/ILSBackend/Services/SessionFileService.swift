@@ -208,7 +208,14 @@ struct SessionFileService {
     ///   - offset: Number of messages to skip (default: 0)
     /// - Returns: Array of Message objects
     func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
+        // Sanitize path components to prevent directory traversal
+        try PathSanitizer.validateComponent(encodedProjectPath)
+        try PathSanitizer.validateComponent(sessionId)
+
         let transcriptPath = "\(claudeProjectsPath)/\(encodedProjectPath)/\(sessionId).jsonl"
+
+        // Verify resolved path stays within claude projects directory
+        _ = try PathSanitizer.validateWithinBase(transcriptPath, baseDirectory: claudeProjectsPath)
 
         guard fileManager.fileExists(atPath: transcriptPath) else {
             throw Vapor.Abort(.notFound, reason: "Transcript not found")

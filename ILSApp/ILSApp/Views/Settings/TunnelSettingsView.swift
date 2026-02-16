@@ -65,6 +65,7 @@ struct TunnelSettingsView: View {
                 qrImage = nil
             }
         }
+        .screenshotProtected()
         .onDisappear {
             toastTask?.cancel()
         }
@@ -514,9 +515,9 @@ struct TunnelSettingsView: View {
         errorMessage = nil
         defer { isToggling = false }
 
-        // Persist custom domain settings
+        // Persist custom domain settings — token goes to Keychain, others to UserDefaults
         let defaults = UserDefaults.standard
-        defaults.set(cfToken, forKey: "cfToken")
+        try? await KeychainService.shared.saveCredential(key: "cfToken", value: cfToken)
         defaults.set(cfTunnelName, forKey: "cfTunnelName")
         defaults.set(cfDomain, forKey: "cfDomain")
 
@@ -545,7 +546,17 @@ struct TunnelSettingsView: View {
 
     private func loadCustomDomainSettings() {
         let defaults = UserDefaults.standard
-        cfToken = defaults.string(forKey: "cfToken") ?? ""
+        // Load token from Keychain (migrate from UserDefaults if present)
+        Task {
+            if let token = try? await KeychainService.shared.getCredential(key: "cfToken") {
+                await MainActor.run { cfToken = token }
+            } else if let legacyToken = defaults.string(forKey: "cfToken"), !legacyToken.isEmpty {
+                // Migrate legacy token from UserDefaults to Keychain
+                try? await KeychainService.shared.saveCredential(key: "cfToken", value: legacyToken)
+                defaults.removeObject(forKey: "cfToken")
+                await MainActor.run { cfToken = legacyToken }
+            }
+        }
         cfTunnelName = defaults.string(forKey: "cfTunnelName") ?? ""
         cfDomain = defaults.string(forKey: "cfDomain") ?? ""
     }

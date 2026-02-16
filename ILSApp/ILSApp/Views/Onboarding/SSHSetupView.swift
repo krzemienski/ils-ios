@@ -346,7 +346,7 @@ struct SSHSetupView: View {
 
         // Load custom domain settings if configured
         let defaults = UserDefaults.standard
-        let cfToken = defaults.string(forKey: "cfToken")
+        let cfToken = try? await KeychainService.shared.getCredential(key: "cfToken")
         let cfTunnelName = defaults.string(forKey: "cfTunnelName")
         let cfDomain = defaults.string(forKey: "cfDomain")
 

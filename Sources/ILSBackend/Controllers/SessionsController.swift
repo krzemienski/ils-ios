@@ -164,6 +164,11 @@ struct SessionsController: RouteCollection {
     func create(req: Request) async throws -> APIResponse<ChatSession> {
         let input = try req.content.decode(CreateSessionRequest.self)
 
+        // Validate input lengths
+        try PathSanitizer.validateOptionalStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(input.model, maxLength: 64, fieldName: "model")
+        try PathSanitizer.validateOptionalStringLength(input.systemPrompt, maxLength: 100_000, fieldName: "systemPrompt")
+
         var projectName: String?
         if let projectId = input.projectId {
             if let project = try await ProjectModel.find(projectId, on: req.db) {
@@ -196,6 +201,9 @@ struct SessionsController: RouteCollection {
         }
 
         let input = try req.content.decode(RenameSessionRequest.self)
+
+        // Validate input
+        try PathSanitizer.validateStringLength(input.name, maxLength: 255, fieldName: "name")
 
         guard let session = try await SessionModel.query(on: req.db)
             .filter(\.$id == id)
@@ -356,8 +364,12 @@ struct SessionsController: RouteCollection {
             throw Abort(.badRequest, reason: "Missing project path or session ID")
         }
 
-        let limit = req.query[Int.self, at: "limit"] ?? 200
-        let offset = req.query[Int.self, at: "offset"] ?? 0
+        // Validate path components to prevent directory traversal
+        try PathSanitizer.validateComponent(encodedProjectPath)
+        try PathSanitizer.validateComponent(sessionId)
+
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 200, 1), 1000)
+        let offset = max(req.query[Int.self, at: "offset"] ?? 0, 0)
 
         let messages = try fileSystem.readTranscriptMessages(
             encodedProjectPath: encodedProjectPath,

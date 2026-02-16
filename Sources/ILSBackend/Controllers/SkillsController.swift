@@ -71,6 +71,12 @@ struct SkillsController: RouteCollection {
     func create(req: Request) async throws -> APIResponse<Skill> {
         let input = try req.content.decode(CreateSkillRequest.self)
 
+        // Validate input
+        try PathSanitizer.validateStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateComponent(input.name)
+        try PathSanitizer.validateOptionalStringLength(input.description, maxLength: 1000, fieldName: "description")
+        try PathSanitizer.validateStringLength(input.content, maxLength: 1_000_000, fieldName: "content")
+
         // Build content with frontmatter if description provided
         var content = input.content
         if let description = input.description, !content.hasPrefix("---") {
@@ -102,6 +108,9 @@ struct SkillsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid skill name")
         }
 
+        // Validate name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
+
         guard let skill = try fileSystem.getSkill(name: name) else {
             throw Abort(.notFound, reason: "Skill not found")
         }
@@ -122,7 +131,10 @@ struct SkillsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid skill name")
         }
 
+        // Validate inputs
+        try PathSanitizer.validateComponent(name)
         let input = try req.content.decode(UpdateSkillRequest.self)
+        try PathSanitizer.validateStringLength(input.content, maxLength: 1_000_000, fieldName: "content")
 
         let skill = try fileSystem.updateSkill(name: name, content: input.content)
 
@@ -141,6 +153,9 @@ struct SkillsController: RouteCollection {
         guard let name = req.parameters.get("name") else {
             throw Abort(.badRequest, reason: "Invalid skill name")
         }
+
+        // Validate name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
 
         try fileSystem.deleteSkill(name: name)
 

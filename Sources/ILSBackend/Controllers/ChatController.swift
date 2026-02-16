@@ -36,6 +36,13 @@ struct ChatController: RouteCollection {
             throw Abort(.unprocessableEntity, reason: "Prompt cannot be empty")
         }
 
+        // Validate input lengths (1MB max for prompt)
+        try PathSanitizer.validateStringLength(input.prompt, maxLength: 1_000_000, fieldName: "prompt")
+        try PathSanitizer.validateOptionalStringLength(input.options?.systemPrompt, maxLength: 100_000, fieldName: "systemPrompt")
+        try PathSanitizer.validateOptionalStringLength(input.options?.appendSystemPrompt, maxLength: 100_000, fieldName: "appendSystemPrompt")
+        try PathSanitizer.validateOptionalStringLength(input.options?.model, maxLength: 64, fieldName: "model")
+        try PathSanitizer.validateOptionalStringLength(input.options?.resume, maxLength: 255, fieldName: "resume")
+
         req.logger.debug("[STREAM] Received stream request, prompt: \(input.prompt.prefix(50))")
 
         // Check if Claude CLI is available

@@ -234,6 +234,9 @@ struct SkillsFileService {
     /// - Parameter name: Skill name
     /// - Returns: Skill if found, nil otherwise
     func getSkill(name: String) throws -> Skill? {
+        // Validate skill name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
+
         // Try directory-based skill first (name/SKILL.md)
         let skillPath = "\(skillsDirectory)/\(name)"
         let skillMdPath = "\(skillPath)/SKILL.md"
@@ -259,6 +262,9 @@ struct SkillsFileService {
     ///   - content: Markdown content with optional YAML frontmatter
     /// - Returns: Created Skill object
     func createSkill(name: String, content: String) throws -> Skill {
+        // Validate skill name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
+
         let skillPath = "\(skillsDirectory)/\(name)"
         let skillMdPath = "\(skillPath)/SKILL.md"
 
@@ -277,6 +283,9 @@ struct SkillsFileService {
     ///   - content: New markdown content
     /// - Returns: Updated Skill object
     func updateSkill(name: String, content: String) throws -> Skill {
+        // Validate skill name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
+
         let skillMdPath = "\(skillsDirectory)/\(name)/SKILL.md"
 
         guard fileManager.fileExists(atPath: skillMdPath) else {
@@ -291,6 +300,9 @@ struct SkillsFileService {
     /// Delete a skill (removes entire directory).
     /// - Parameter name: Skill name to delete
     func deleteSkill(name: String) throws {
+        // Validate skill name to prevent path traversal
+        try PathSanitizer.validateComponent(name)
+
         let skillPath = "\(skillsDirectory)/\(name)"
 
         guard fileManager.fileExists(atPath: skillPath) else {

@@ -37,6 +37,11 @@ struct TeamsController: RouteCollection {
     @Sendable
     func create(req: Request) async throws -> APIResponse<AgentTeam> {
         let request = try req.content.decode(CreateTeamRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(request.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(request.description, maxLength: 1000, fieldName: "description")
+
         let team = try await fileService.createTeam(name: request.name, description: request.description)
         return APIResponse(success: true, data: team)
     }
@@ -148,6 +153,11 @@ struct TeamsController: RouteCollection {
         }
 
         let request = try req.content.decode(CreateTeamTaskRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(request.subject, maxLength: 500, fieldName: "subject")
+        try PathSanitizer.validateOptionalStringLength(request.description, maxLength: 10_000, fieldName: "description")
+
         let task = try await fileService.createTask(
             team: teamName,
             subject: request.subject,
@@ -197,6 +207,12 @@ struct TeamsController: RouteCollection {
         }
 
         let request = try req.content.decode(SendTeamMessageRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(request.content, maxLength: 100_000, fieldName: "content")
+        try PathSanitizer.validateOptionalStringLength(request.from, maxLength: 255, fieldName: "from")
+        try PathSanitizer.validateOptionalStringLength(request.to, maxLength: 255, fieldName: "to")
+
         let message = TeamMessage(
             from: request.from ?? "unknown",
             to: request.to,

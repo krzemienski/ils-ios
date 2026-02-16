@@ -34,6 +34,12 @@ struct ThemesController: RouteCollection {
     func create(req: Request) async throws -> APIResponse<CustomTheme> {
         let input = try req.content.decode(CreateCustomThemeRequest.self)
 
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(input.description, maxLength: 1000, fieldName: "description")
+        try PathSanitizer.validateOptionalStringLength(input.author, maxLength: 255, fieldName: "author")
+        try PathSanitizer.validateOptionalStringLength(input.version, maxLength: 64, fieldName: "version")
+
         let theme = ThemeModel(
             name: input.name,
             description: input.description,
@@ -83,6 +89,12 @@ struct ThemesController: RouteCollection {
         }
 
         let input = try req.content.decode(UpdateCustomThemeRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateOptionalStringLength(input.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(input.description, maxLength: 1000, fieldName: "description")
+        try PathSanitizer.validateOptionalStringLength(input.author, maxLength: 255, fieldName: "author")
+        try PathSanitizer.validateOptionalStringLength(input.version, maxLength: 64, fieldName: "version")
 
         // Update only provided fields
         if let name = input.name {
