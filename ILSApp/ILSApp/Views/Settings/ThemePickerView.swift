@@ -33,7 +33,7 @@ private struct ThemePreview: Identifiable {
 
 struct ThemePickerView: View {
     @EnvironmentObject var themeManager: ThemeManager
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let columns = [
@@ -193,6 +193,6 @@ struct ThemePickerView: View {
     NavigationStack {
         ThemePickerView()
             .environmentObject(ThemeManager())
-            .environment(\.theme, ObsidianTheme())
+            .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

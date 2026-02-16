@@ -43,7 +43,8 @@ final class FleetViewModel: ObservableObject {
     }
 
     func activate(_ id: UUID) {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             let updated: FleetHost? = try? await apiClient.post("/fleet/\(id)/activate", body: EmptyBody())
             if updated != nil {
                 activeHostId = id
@@ -53,7 +54,8 @@ final class FleetViewModel: ObservableObject {
     }
 
     func remove(_ id: UUID) {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             let _: DeletedResponse? = try? await apiClient.delete("/fleet/\(id)")
             hosts.removeAll { $0.id == id }
             if activeHostId == id { activeHostId = nil }
@@ -64,6 +66,7 @@ final class FleetViewModel: ObservableObject {
         healthTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { await self?.refreshAllHealth() }
         }
+        healthTimer?.tolerance = 5
     }
 
     func stopHealthPolling() {

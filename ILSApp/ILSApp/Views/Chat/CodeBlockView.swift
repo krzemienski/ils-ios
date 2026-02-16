@@ -7,7 +7,7 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Maximum number of lines to show when collapsed

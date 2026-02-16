@@ -14,7 +14,7 @@ struct ToolCallAccordion: View {
     @State private var isExpanded = false
     @State private var showFullOutput = false
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(toolName: String, input: String? = nil, inputPairs: [(key: String, value: String)] = [], output: String? = nil, isError: Bool = false, expandAll: Binding<Bool?>? = nil) {

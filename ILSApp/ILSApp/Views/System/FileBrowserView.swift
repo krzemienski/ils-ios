@@ -4,7 +4,7 @@ import ILSShared
 /// File browser with breadcrumb navigation.
 /// Starts at ~/ and allows navigating into directories.
 struct FileBrowserView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject var appState: AppState
 
     @State private var currentPath: String = "~"

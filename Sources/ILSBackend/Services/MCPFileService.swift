@@ -80,6 +80,7 @@ struct MCPFileService {
         }
 
         // Get enabled status from settings.local.json
+        // Dynamic JSON — Claude settings files have evolving schema with arbitrary keys
         var enabledServers: [String]?
         if fileManager.fileExists(atPath: "\(claudeDirectory)/settings.local.json"),
            let data = try? Data(contentsOf: URL(fileURLWithPath: "\(claudeDirectory)/settings.local.json")),
@@ -107,6 +108,12 @@ struct MCPFileService {
     }
 
     /// Read MCP servers from a specific configuration file.
+    ///
+    /// Uses JSONSerialization intentionally: MCP config files (`~/.mcp.json`, `~/.claude.json`)
+    /// have a dynamic schema where server entries contain arbitrary keys (command, args, env,
+    /// url, type, plus user-defined extensions). A Codable struct would be too rigid for this
+    /// user-authored configuration format.
+    ///
     /// - Parameters:
     ///   - path: Configuration file path
     ///   - scope: Scope to tag servers with (user or project)
@@ -117,6 +124,7 @@ struct MCPFileService {
         }
 
         let data = try Data(contentsOf: URL(fileURLWithPath: path))
+        // Dynamic JSON — MCP configs have user-defined server entries with arbitrary keys
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let mcpServers = json["mcpServers"] as? [String: Any] else {
             return []
@@ -166,10 +174,15 @@ struct MCPFileService {
     }
 
     /// Add a new MCP server to `~/.mcp.json`.
+    ///
+    /// Uses JSONSerialization to preserve existing user-authored JSON structure and
+    /// arbitrary keys in the MCP config file.
+    ///
     /// - Parameter server: MCPServer object to add
     func addMCPServer(_ server: MCPServer) throws {
         let path = userMCPConfigPath
 
+        // Dynamic JSON — must preserve user-authored config structure
         var json: [String: Any] = [:]
         if fileManager.fileExists(atPath: path),
            let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
@@ -196,12 +209,16 @@ struct MCPFileService {
     }
 
     /// Remove an MCP server from `~/.mcp.json`.
+    ///
+    /// Uses JSONSerialization to preserve existing user-authored JSON structure.
+    ///
     /// - Parameters:
     ///   - name: Server name to remove
     ///   - scope: Configuration scope (currently only user scope supported)
     func removeMCPServer(name: String, scope: MCPScope) throws {
         let path = userMCPConfigPath
 
+        // Dynamic JSON — must preserve user-authored config structure
         guard fileManager.fileExists(atPath: path),
               let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
               var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {

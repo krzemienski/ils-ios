@@ -5,7 +5,7 @@ import ILSShared
 
 struct MacProjectsListView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @StateObject private var viewModel = ProjectsViewModel()
 
     @State private var searchText: String = ""
@@ -284,7 +284,7 @@ struct MacProjectsListView: View {
 // MARK: - Project Form Sheet
 
 struct ProjectFormSheet: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     let title: String
     var initialName: String = ""
@@ -382,5 +382,5 @@ struct ProjectFormSheet: View {
 #Preview {
     MacProjectsListView()
         .environmentObject(AppState())
-        .environment(\.theme, ObsidianTheme())
+        .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

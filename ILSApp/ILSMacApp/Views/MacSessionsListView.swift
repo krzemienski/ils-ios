@@ -6,7 +6,7 @@ struct MacSessionsListView: View {
     @StateObject private var viewModel = SessionsViewModel()
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var windowManager: WindowManager
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     // Callbacks
     let onSessionSelected: (ChatSession) -> Void
@@ -309,7 +309,7 @@ struct MacSessionsListView: View {
 
 struct MacSessionRowContent: View {
     let session: ChatSession
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         HStack(spacing: theme.spacingSM) {
@@ -347,6 +347,6 @@ struct MacSessionRowContent: View {
     )
     .environmentObject(AppState())
     .environmentObject(WindowManager.shared)
-    .environment(\.theme, ObsidianTheme())
+    .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     .frame(width: 320, height: 600)
 }

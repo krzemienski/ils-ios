@@ -6,7 +6,7 @@ struct UserMessageCard: View {
     let message: ChatMessage
     var onDelete: ((ChatMessage) -> Void)?
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var showCopyConfirmation = false
 
     var body: some View {

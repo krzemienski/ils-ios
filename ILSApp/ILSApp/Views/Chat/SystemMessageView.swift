@@ -5,7 +5,7 @@ import SwiftUI
 struct SystemMessageView: View {
     let message: String
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         HStack {

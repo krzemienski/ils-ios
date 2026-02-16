@@ -46,11 +46,12 @@ enum ActiveScreen: Hashable {
 
 struct SidebarRootView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @SceneStorage("activeScreenKey") private var activeScreenKey: String = "home"
+    @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
     @State private var navigationPath = NavigationPath()
@@ -74,15 +75,23 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
             activeScreen = screen
-            navigationPath = NavigationPath()
+            if navigationPath.count > 0 {
+                navigationPath.removeLast(navigationPath.count)
+            }
             appState.navigationIntent = nil
             if !isRegularWidth {
                 closeSidebar()
             }
         }
         .onChange(of: activeScreen) { _, newScreen in
-            navigationPath = NavigationPath()
+            if navigationPath.count > 0 {
+                navigationPath.removeLast(navigationPath.count)
+            }
             activeScreenKey = newScreen.storageKey
+            // Persist the chat session ID for state restoration
+            if case .chat(let session) = newScreen {
+                lastChatSessionId = session.id.uuidString
+            }
         }
         .onAppear {
             if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
@@ -330,5 +339,5 @@ struct SidebarRootView: View {
     SidebarRootView()
         .environmentObject(AppState())
         .environmentObject(ThemeManager())
-        .environment(\.theme, ObsidianTheme())
+        .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

@@ -33,6 +33,7 @@ extension View {
 struct PulsingGlow: ViewModifier {
     let color: Color
     @State private var isAnimating = false
+    @Environment(\.scenePhase) private var scenePhase
 
     func body(content: Content) -> some View {
         content
@@ -43,6 +44,17 @@ struct PulsingGlow: ViewModifier {
             .onAppear {
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     isAnimating = true
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                        isAnimating = true
+                    }
+                } else {
+                    withAnimation(.linear(duration: 0.1)) {
+                        isAnimating = false
+                    }
                 }
             }
     }
@@ -59,6 +71,7 @@ extension View {
 struct PulsingModifier: ViewModifier {
     let active: Bool
     @State private var isAnimating = false
+    @Environment(\.scenePhase) private var scenePhase
 
     func body(content: Content) -> some View {
         content
@@ -76,6 +89,18 @@ struct PulsingModifier: ViewModifier {
                     }
                 } else {
                     isAnimating = false
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                guard active else { return }
+                if newPhase == .active {
+                    withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                        isAnimating = true
+                    }
+                } else {
+                    withAnimation(.linear(duration: 0.1)) {
+                        isAnimating = false
+                    }
                 }
             }
     }

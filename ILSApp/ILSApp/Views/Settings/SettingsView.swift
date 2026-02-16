@@ -3,7 +3,7 @@ import ILSShared
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @StateObject private var viewModel = SettingsViewModel()
     @State private var serverHost: String = "localhost"
     @State private var serverPort: String = "8080"

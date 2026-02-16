@@ -22,7 +22,7 @@ struct ConnectionStep: Identifiable {
 /// Each step shows a checkmark (success), spinner (in-progress), X (failure), or circle (pending).
 struct ConnectionStepsView: View {
     let steps: [ConnectionStep]
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

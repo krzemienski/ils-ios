@@ -7,7 +7,7 @@ import MarkdownUI
 struct MarkdownTextView: View {
     let text: String
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         Markdown(text)

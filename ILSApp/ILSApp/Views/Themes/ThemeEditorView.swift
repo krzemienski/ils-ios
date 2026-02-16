@@ -475,7 +475,12 @@ struct ThemeEditorView: View {
             } message: {
                 Text(saveErrorMessage)
             }
-            .sheet(isPresented: $showShareSheet) {
+            .sheet(isPresented: $showShareSheet, onDismiss: {
+                if let url = exportURL {
+                    try? FileManager.default.removeItem(at: url)
+                    exportURL = nil
+                }
+            }) {
                 if let url = exportURL {
                     ShareSheet(items: [url])
                 }

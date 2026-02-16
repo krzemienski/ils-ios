@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Spec 013: Push Notifications for MCP Status
 
 struct NotificationPreferencesView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
@@ -133,6 +133,6 @@ struct NotificationPreferencesView: View {
 #Preview {
     NavigationStack {
         NotificationPreferencesView()
-            .environment(\.theme, ObsidianTheme())
+            .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

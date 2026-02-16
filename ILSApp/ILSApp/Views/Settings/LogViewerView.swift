@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LogViewerView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var logs: [String] = []
 
     var body: some View {

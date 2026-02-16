@@ -4,7 +4,7 @@ import SwiftUI
 /// Shows "Reconnecting..." when disconnected, "Connected" when reconnected (auto-dismisses after 2s).
 struct ConnectionBanner: View {
     let isConnected: Bool
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         HStack(spacing: 8) {

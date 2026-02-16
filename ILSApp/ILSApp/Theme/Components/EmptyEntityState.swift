@@ -8,7 +8,7 @@ struct EmptyEntityState: View {
     let description: String
     let actionTitle: String?
     let action: (() -> Void)?
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     init(
         entityType: EntityType,

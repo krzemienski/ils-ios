@@ -3,7 +3,7 @@ import ILSShared
 
 struct FleetHostDetailView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     let host: FleetHost
 
     @State private var logs: [String] = []

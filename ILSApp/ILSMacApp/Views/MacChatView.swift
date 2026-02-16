@@ -26,7 +26,7 @@ struct MacChatView: View {
     @State private var chatOptionsConfig = ChatOptionsConfig()
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Body

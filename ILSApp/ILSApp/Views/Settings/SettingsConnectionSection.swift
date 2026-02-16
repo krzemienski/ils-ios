@@ -4,7 +4,7 @@ import ILSShared
 // MARK: - Connection Section
 
 struct SettingsConnectionSection: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject var appState: AppState
     @ObservedObject var viewModel: SettingsViewModel
     @Binding var serverURL: String

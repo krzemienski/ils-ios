@@ -206,14 +206,22 @@ struct StreamingService {
                         case .text(let textBlock):
                             accumulatedContent += textBlock.text
                         case .toolUse(let toolUseBlock):
-                            if let jsonData = try? Self.jsonEncoder.encode(toolUseBlock),
-                               let jsonString = String(data: jsonData, encoding: .utf8) {
-                                toolCalls.append(jsonString)
+                            do {
+                                let jsonData = try Self.jsonEncoder.encode(toolUseBlock)
+                                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                                    toolCalls.append(jsonString)
+                                }
+                            } catch {
+                                request.logger.error("Failed to encode tool use block: \(error)")
                             }
                         case .toolResult(let toolResultBlock):
-                            if let jsonData = try? Self.jsonEncoder.encode(toolResultBlock),
-                               let jsonString = String(data: jsonData, encoding: .utf8) {
-                                toolResults.append(jsonString)
+                            do {
+                                let jsonData = try Self.jsonEncoder.encode(toolResultBlock)
+                                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                                    toolResults.append(jsonString)
+                                }
+                            } catch {
+                                request.logger.error("Failed to encode tool result block: \(error)")
                             }
                         case .thinking:
                             break

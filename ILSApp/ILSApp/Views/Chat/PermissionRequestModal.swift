@@ -7,7 +7,7 @@ struct PermissionRequestModal: View {
     let request: PermissionRequest
     let onDecision: (String) -> Void
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

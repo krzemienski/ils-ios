@@ -6,29 +6,42 @@ struct ChatView: View {
     let session: ChatSession
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ChatViewModel()
+
+    // MARK: - Grouped State
+
+    /// Sheet and alert presentation state — all booleans that control modal visibility.
+    struct SheetState {
+        var showCommandPalette = false
+        var showSessionInfo = false
+        var showErrorAlert = false
+        var showForkAlert = false
+        var showDeleteConfirmation = false
+        var showExportSheet = false
+        var showDeleteSessionConfirmation = false
+        var showAdvancedOptions = false
+        var isRenaming = false
+    }
+
+    /// Transient action state — data associated with in-flight user actions.
+    struct ActionState {
+        var errorId: UUID?
+        var forkedSession: ChatSession?
+        var navigateToForked: ChatSession?
+        var messageToDelete: ChatMessage?
+        var renameText = ""
+        var exportMarkdown = ""
+        var isExporting = false
+    }
+
+    @State private var sheets = SheetState()
+    @State private var actions = ActionState()
     @State private var inputText = ""
-    @State private var showCommandPalette = false
-    @State private var showSessionInfo = false
-    @State private var showErrorAlert = false
-    @State private var errorId: UUID?
-    @State private var showForkAlert = false
-    @State private var forkedSession: ChatSession?
-    @State private var navigateToForked: ChatSession?
-    @State private var showDeleteConfirmation = false
-    @State private var messageToDelete: ChatMessage?
     @State private var isUserScrolledUp = false
     @State private var showJumpToBottom = false
-    @State private var isRenaming = false
-    @State private var renameText = ""
-    @State private var showExportSheet = false
-    @State private var exportMarkdown = ""
-    @State private var isExporting = false
-    @State private var showDeleteSessionConfirmation = false
-    @State private var showAdvancedOptions = false
     @State private var chatOptionsConfig = ChatOptionsConfig()
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Body
@@ -41,44 +54,23 @@ struct ChatView: View {
             .inlineNavigationBarTitle()
             #endif
             .toolbar { toolbarContent }
-        .sheet(isPresented: $showCommandPalette) {
+        .sheet(isPresented: $sheets.showCommandPalette) {
             CommandPaletteView { command in
                 inputText = command
-                showCommandPalette = false
+                sheets.showCommandPalette = false
                 isInputFocused = true
             }
             .presentationBackground(theme.bgPrimary)
         }
-        .sheet(isPresented: $showSessionInfo) {
+        .sheet(isPresented: $sheets.showSessionInfo) {
             SessionInfoView(session: session)
                 .environmentObject(appState)
                 .presentationBackground(theme.bgPrimary)
         }
         .task {
-            viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
-            viewModel.sessionId = session.id
-            viewModel.encodedProjectPath = session.encodedProjectPath
-            viewModel.claudeSessionId = session.claudeSessionId
-
-            // Run error monitor and history loading as child tasks
-            // so both are cancelled when the view disappears
-            await withTaskGroup(of: Void.self) { group in
-                group.addTask { @MainActor in
-                    for await _ in viewModel.$error.values {
-                        guard !Task.isCancelled else { return }
-                        if viewModel.error != nil {
-                            errorId = UUID()
-                            showErrorAlert = true
-                        }
-                    }
-                }
-
-                group.addTask { @MainActor in
-                    await viewModel.loadMessageHistory()
-                }
-            }
+            await setupChatView()
         }
-        .alert("Connection Error", isPresented: $showErrorAlert) {
+        .alert("Connection Error", isPresented: $sheets.showErrorAlert) {
             Button("OK", role: .cancel) {}
             Button("Retry") {
                 retryLastMessage()
@@ -86,41 +78,41 @@ struct ChatView: View {
         } message: {
             Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
         }
-        .alert("Session Forked", isPresented: $showForkAlert) {
+        .alert("Session Forked", isPresented: $sheets.showForkAlert) {
             Button("Open Fork") {
-                navigateToForked = forkedSession
+                actions.navigateToForked = actions.forkedSession
             }
             Button("Stay Here", role: .cancel) {}
         } message: {
-            if let forked = forkedSession {
+            if let forked = actions.forkedSession {
                 Text("Created new session: \(forked.name ?? "Unnamed")")
             }
         }
-        .alert("Delete Message", isPresented: $showDeleteConfirmation) {
+        .alert("Delete Message", isPresented: $sheets.showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
-                if let msg = messageToDelete {
+                if let msg = actions.messageToDelete {
                     viewModel.deleteMessage(msg)
-                    messageToDelete = nil
+                    actions.messageToDelete = nil
                 }
             }
             Button("Cancel", role: .cancel) {
-                messageToDelete = nil
+                actions.messageToDelete = nil
             }
         } message: {
             Text("Are you sure you want to delete this message?")
         }
-        .alert("Rename Session", isPresented: $isRenaming) {
-            TextField("Session name", text: $renameText)
+        .alert("Rename Session", isPresented: $sheets.isRenaming) {
+            TextField("Session name", text: $actions.renameText)
             Button("Rename") {
                 Task {
-                    let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                    let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Enter a new name for this session")
         }
-        .alert("Delete Session", isPresented: $showDeleteSessionConfirmation) {
+        .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
             Button("Delete", role: .destructive) {
                 Task {
                     let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
@@ -131,10 +123,10 @@ struct ChatView: View {
         } message: {
             Text("This will permanently delete this session and all its messages.")
         }
-        .sheet(isPresented: $showExportSheet) {
-            ShareSheet(text: exportMarkdown, fileName: "\(session.name ?? "session").md")
+        .sheet(isPresented: $sheets.showExportSheet) {
+            ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
         }
-        .sheet(isPresented: $showAdvancedOptions) {
+        .sheet(isPresented: $sheets.showAdvancedOptions) {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
@@ -146,7 +138,7 @@ struct ChatView: View {
             .presentationDetents([.medium])
             .presentationBackground(theme.bgPrimary)
         }
-        .navigationDestination(item: $navigateToForked) { session in
+        .navigationDestination(item: $actions.navigateToForked) { session in
             ChatView(session: session)
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -195,8 +187,8 @@ struct ChatView: View {
             isUserScrolledUp: $isUserScrolledUp,
             showJumpToBottom: $showJumpToBottom,
             onDeleteMessage: { msg in
-                messageToDelete = msg
-                showDeleteConfirmation = true
+                actions.messageToDelete = msg
+                sheets.showDeleteConfirmation = true
             },
             onRetryMessage: { msg in
                 viewModel.retryMessage(msg, projectId: session.projectId)
@@ -218,8 +210,8 @@ struct ChatView: View {
             hasCustomOptions: chatOptionsConfig.hasCustomOptions,
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
-            onCommandPalette: { showCommandPalette = true },
-            onAdvancedOptions: { showAdvancedOptions = true }
+            onCommandPalette: { sheets.showCommandPalette = true },
+            onAdvancedOptions: { sheets.showAdvancedOptions = true }
         )
         .focused($isInputFocused)
     }
@@ -229,8 +221,8 @@ struct ChatView: View {
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button {
-                    renameText = session.name ?? ""
-                    isRenaming = true
+                    actions.renameText = session.name ?? ""
+                    sheets.isRenaming = true
                 } label: {
                     Label("Rename", systemImage: "pencil")
                 }
@@ -238,8 +230,8 @@ struct ChatView: View {
                 Button {
                     Task {
                         if let forked = await viewModel.forkSession() {
-                            forkedSession = forked
-                            showForkAlert = true
+                            actions.forkedSession = forked
+                            sheets.showForkAlert = true
                         }
                     }
                 } label: {
@@ -253,7 +245,7 @@ struct ChatView: View {
                     Label("Export", systemImage: "square.and.arrow.up")
                 }
 
-                Button(action: { showSessionInfo = true }) {
+                Button(action: { sheets.showSessionInfo = true }) {
                     Label("Session Info", systemImage: "info.circle")
                 }
                 .accessibilityIdentifier("session-info-button")
@@ -273,7 +265,7 @@ struct ChatView: View {
 
                 Divider()
                 Button(role: .destructive) {
-                    showDeleteSessionConfirmation = true
+                    sheets.showDeleteSessionConfirmation = true
                 } label: {
                     Label("Delete Session", systemImage: "trash")
                 }
@@ -282,6 +274,34 @@ struct ChatView: View {
             }
             .accessibilityIdentifier("chat-menu-button")
             .accessibilityLabel("Chat options menu")
+        }
+    }
+
+    // MARK: - Setup
+
+    /// Configure the view model and start background tasks (error monitor + history load).
+    private func setupChatView() async {
+        viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
+        viewModel.sessionId = session.id
+        viewModel.encodedProjectPath = session.encodedProjectPath
+        viewModel.claudeSessionId = session.claudeSessionId
+
+        // Run error monitor and history loading as child tasks
+        // so both are cancelled when the view disappears
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { @MainActor in
+                for await _ in viewModel.$error.values {
+                    guard !Task.isCancelled else { return }
+                    if viewModel.error != nil {
+                        actions.errorId = UUID()
+                        sheets.showErrorAlert = true
+                    }
+                }
+            }
+
+            group.addTask { @MainActor in
+                await viewModel.loadMessageHistory()
+            }
         }
     }
 
@@ -304,7 +324,7 @@ struct ChatView: View {
     }
 
     private func exportSession() async {
-        isExporting = true
+        actions.isExporting = true
         var md = "# Session: \(session.name ?? "Unnamed")\n\n"
         md += "Model: \(session.model.capitalized)\n"
         md += "Status: \(session.status.rawValue.capitalized)\n"
@@ -320,9 +340,9 @@ struct ChatView: View {
             md += "## \(role)\n\n\(message.text)\n\n"
         }
 
-        exportMarkdown = md
-        isExporting = false
-        showExportSheet = true
+        actions.exportMarkdown = md
+        actions.isExporting = false
+        sheets.showExportSheet = true
     }
 }
 
@@ -334,7 +354,7 @@ struct StreamingStatusBanner: View {
     var tokenCount: Int = 0
     var elapsedSeconds: Double = 0
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         HStack(spacing: theme.spacingSM) {

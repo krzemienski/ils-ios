@@ -132,11 +132,11 @@ extension AppTheme {
 // MARK: - Theme Environment Key
 
 struct ThemeEnvironmentKey: EnvironmentKey {
-    static let defaultValue: any AppTheme = CyberpunkTheme()
+    static let defaultValue: ThemeSnapshot = ThemeSnapshot(CyberpunkTheme())
 }
 
 extension EnvironmentValues {
-    var theme: any AppTheme {
+    var theme: ThemeSnapshot {
         get { self[ThemeEnvironmentKey.self] }
         set { self[ThemeEnvironmentKey.self] = newValue }
     }
@@ -161,6 +161,12 @@ extension EnvironmentValues {
 class ThemeManager: ObservableObject {
     /// Currently active theme.
     @Published var currentTheme: any AppTheme
+
+    /// Concrete snapshot of the current theme for SwiftUI environment injection.
+    /// Eliminates existential container overhead in view bodies.
+    var currentSnapshot: ThemeSnapshot {
+        ThemeSnapshot(currentTheme)
+    }
 
     private static let themeIDKey = "selectedThemeID"
 

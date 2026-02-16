@@ -4,7 +4,7 @@ import ILSShared
 struct NewSessionView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     @StateObject private var projectsViewModel = ProjectsViewModel()
     @State private var sessionName = ""
@@ -352,5 +352,5 @@ struct NewSessionView: View {
 
 #Preview {
     NewSessionView { _ in }
-        .environment(\.theme, ObsidianTheme())
+        .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

@@ -11,7 +11,7 @@ struct ThinkingSection: View {
     @State private var isExpanded = false
     @State private var pulseScale: CGFloat = 1.0
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(thinking: String, isActive: Bool = false) {

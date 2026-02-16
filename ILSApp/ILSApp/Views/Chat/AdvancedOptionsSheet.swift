@@ -54,7 +54,7 @@ struct ChatOptionsConfig {
 }
 
 struct AdvancedOptionsSheet: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
     @Binding var config: ChatOptionsConfig
 

@@ -40,7 +40,7 @@ struct ILSMacApp: App {
                 .environmentObject(themeManager)
                 .environmentObject(windowManager)
                 .environmentObject(notificationManager)
-                .environment(\.theme, themeManager.currentTheme)
+                .environment(\.theme, themeManager.currentSnapshot)
                 .preferredColorScheme(computedColorScheme)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .onOpenURL { url in
@@ -74,7 +74,7 @@ struct ILSMacApp: App {
                     .environmentObject(themeManager)
                     .environmentObject(windowManager)
                     .environmentObject(notificationManager)
-                    .environment(\.theme, themeManager.currentTheme)
+                    .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             } else {

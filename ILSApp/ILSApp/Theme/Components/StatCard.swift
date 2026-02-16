@@ -8,7 +8,7 @@ struct StatCard: View {
     let entityType: EntityType
     let sparklineData: [Double]
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var isPressed = false
 
     init(

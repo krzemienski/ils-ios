@@ -28,7 +28,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 struct MacSettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var themeManager: ThemeManager
-    @Environment(\.theme) var theme: any AppTheme
+    @Environment(\.theme) var theme: ThemeSnapshot
     @StateObject var viewModel = SettingsViewModel()
 
     @State private var selectedTab: SettingsTab = .general
@@ -488,5 +488,5 @@ struct MacSettingsView: View {
     MacSettingsView()
         .environmentObject(AppState())
         .environmentObject(ThemeManager())
-        .environment(\.theme, ObsidianTheme())
+        .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

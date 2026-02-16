@@ -242,13 +242,23 @@ class SSEClient: ObservableObject {
         }
     }
 
+    /// Codable struct for SSE messageId event data.
+    private struct MessageIdEvent: Decodable {
+        let userMessageId: String?
+        let assistantMessageId: String?
+    }
+
     private func parseMessageIdEvent(data: String) {
-        guard let jsonData = data.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String] else {
+        guard let jsonData = data.data(using: .utf8) else {
             return
         }
-        userMessageId = json["userMessageId"]
-        assistantMessageId = json["assistantMessageId"]
+        do {
+            let event = try jsonDecoder.decode(MessageIdEvent.self, from: jsonData)
+            userMessageId = event.userMessageId
+            assistantMessageId = event.assistantMessageId
+        } catch {
+            AppLogger.shared.error("Failed to decode messageId event: \(error)", category: "sse")
+        }
     }
 
     /// Cancel the current stream

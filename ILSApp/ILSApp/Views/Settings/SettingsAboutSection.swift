@@ -4,7 +4,7 @@ import ILSShared
 // MARK: - About Section
 
 struct SettingsAboutSection: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @ObservedObject var viewModel: SettingsViewModel
     let serverURL: String
 

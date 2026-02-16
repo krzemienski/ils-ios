@@ -7,7 +7,7 @@ import ILSShared
 /// to enable drill-down into QuickConnect or SSHSetup paths.
 struct ServerSetupSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         NavigationStack {

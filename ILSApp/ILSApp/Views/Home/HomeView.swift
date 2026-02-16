@@ -3,7 +3,7 @@ import ILSShared
 
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     @StateObject private var dashboardVM = DashboardViewModel()
     @StateObject private var sessionsVM = SessionsViewModel()
@@ -324,6 +324,6 @@ struct HomeView: View {
     NavigationStack {
         HomeView()
             .environmentObject(AppState())
-            .environment(\.theme, ObsidianTheme())
+            .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

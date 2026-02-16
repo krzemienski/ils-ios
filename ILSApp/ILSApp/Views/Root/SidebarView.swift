@@ -3,7 +3,7 @@ import ILSShared
 
 struct SidebarView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @StateObject private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 

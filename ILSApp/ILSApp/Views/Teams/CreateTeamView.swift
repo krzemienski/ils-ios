@@ -3,7 +3,7 @@ import ILSShared
 
 struct CreateTeamView: View {
     @Environment(\.dismiss) var dismiss
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @ObservedObject var viewModel: TeamsViewModel
     @State private var name = ""
     @State private var description = ""

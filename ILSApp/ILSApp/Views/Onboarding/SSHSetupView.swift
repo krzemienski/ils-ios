@@ -3,7 +3,7 @@ import ILSShared
 
 struct SSHSetupView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var viewModel = SetupViewModel()

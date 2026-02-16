@@ -13,7 +13,7 @@ enum BrowserSegment: String, CaseIterable {
 
 struct BrowserView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @StateObject private var mcpVM = MCPViewModel()

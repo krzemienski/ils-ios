@@ -2,7 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct ConfigEditorView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject private var appState: AppState
     let scope: String
     @StateObject private var viewModel = ConfigEditorViewModel()
@@ -111,6 +111,9 @@ struct ConfigEditorView: View {
         }
     }
 
+    /// Uses JSONSerialization intentionally: this validates arbitrary user-authored JSON
+    /// (Claude config files) where the schema is not known at compile time. Codable would
+    /// require a concrete type, but we just need to verify the JSON is syntactically valid.
     private func isValidJSON(_ text: String) -> Bool {
         guard let data = text.data(using: .utf8) else { return false }
         return (try? JSONSerialization.jsonObject(with: data)) != nil

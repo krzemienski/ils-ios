@@ -3,7 +3,7 @@ import SwiftUI
 /// A circular progress ring with gradient stroke.
 /// Used for memory and disk usage visualization.
 struct ProgressRing: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     let progress: Double // 0.0 - 1.0
     let gradient: LinearGradient

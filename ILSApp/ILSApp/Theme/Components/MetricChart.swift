@@ -4,7 +4,7 @@ import Charts
 /// A reusable area + line chart for system metrics.
 /// Renders an AreaMark with gradient fill and a LineMark overlay.
 struct MetricChart: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     let title: String
     let data: [MetricDataPoint]

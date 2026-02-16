@@ -48,8 +48,11 @@ struct GitHubService: Sendable {
         if let cachedJSON = try await indexingService.getCachedResults(query: cacheKey) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            if let cached = try? decoder.decode([GitHubSearchResult].self, from: Data(cachedJSON.utf8)) {
+            do {
+                let cached = try decoder.decode([GitHubSearchResult].self, from: Data(cachedJSON.utf8))
                 return cached
+            } catch {
+                Self.logger.warning("Failed to decode cached GitHub search results: \(error)")
             }
         }
 
@@ -95,8 +98,13 @@ struct GitHubService: Sendable {
         // Cache the results
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        if let jsonData = try? encoder.encode(results), let jsonString = String(data: jsonData, encoding: .utf8) {
-            try? await indexingService.cacheSearchResults(query: cacheKey, results: jsonString)
+        do {
+            let jsonData = try encoder.encode(results)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                try await indexingService.cacheSearchResults(query: cacheKey, results: jsonString)
+            }
+        } catch {
+            Self.logger.warning("Failed to cache GitHub search results: \(error)")
         }
 
         return results

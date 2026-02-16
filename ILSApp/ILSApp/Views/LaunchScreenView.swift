@@ -3,6 +3,7 @@ import SwiftUI
 /// Launch screen following Liquid Glass design principles with cyberpunk theming
 struct LaunchScreenView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isAnimating = false
     @State private var glowIntensity: Double = 0.3
 
@@ -85,7 +86,7 @@ struct LaunchScreenView: View {
                                     .frame(width: 6, height: 2)
                                     .opacity(isAnimating ? 1.0 : 0.3)
                                     .animation(
-                                        .easeInOut(duration: 0.8)
+                                        reduceMotion ? nil : .easeInOut(duration: 0.8)
                                         .repeatForever()
                                         .delay(Double(index) * 0.2),
                                         value: isAnimating
@@ -132,7 +133,7 @@ struct LaunchScreenView: View {
                             .frame(width: 40, height: 3)
                             .opacity(isAnimating ? 1.0 : 0.0)
                             .animation(
-                                .easeInOut(duration: 0.6)
+                                reduceMotion ? nil : .easeInOut(duration: 0.6)
                                 .delay(Double(index) * 0.1),
                                 value: isAnimating
                             )
@@ -142,16 +143,21 @@ struct LaunchScreenView: View {
             }
         }
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.2)) {
+            if reduceMotion {
                 isAnimating = true
-            }
-
-            // Pulsing glow effect
-            withAnimation(
-                .easeInOut(duration: 2.0)
-                .repeatForever(autoreverses: true)
-            ) {
                 glowIntensity = 0.8
+            } else {
+                withAnimation(.easeInOut(duration: 1.2)) {
+                    isAnimating = true
+                }
+
+                // Pulsing glow effect
+                withAnimation(
+                    .easeInOut(duration: 2.0)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    glowIntensity = 0.8
+                }
             }
         }
     }

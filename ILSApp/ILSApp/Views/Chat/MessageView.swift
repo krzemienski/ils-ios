@@ -4,7 +4,7 @@ import ILSShared
 struct MessageView: View {
     let message: ChatMessage
     @State private var showCopyConfirmation = false
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     /// Formatter for displaying message timestamps
     private static let timeFormatter: DateFormatter = {
@@ -123,7 +123,7 @@ struct MessageView: View {
 struct ToolCallView: View {
     let toolCall: ToolCallDisplay
     @State private var isExpanded = false
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
@@ -158,7 +158,7 @@ struct ToolCallView: View {
 struct ToolResultView: View {
     let result: ToolResultDisplay
     @State private var isExpanded = false
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
@@ -196,7 +196,7 @@ struct ToolResultView: View {
 struct ThinkingView: View {
     let thinking: String
     @State private var isExpanded = false
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
@@ -234,7 +234,7 @@ struct MessageContentView: View {
     let text: String
     let isUser: Bool
     @Binding var showCopyConfirmation: Bool
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     /// Parse message text into segments
     private var segments: [MarkdownParser.TextSegment] {

@@ -15,6 +15,18 @@ enum MarkdownParser {
         let code: String
     }
 
+    // MARK: - Cached Regex Patterns
+
+    /// Regex for fenced code blocks: ```language\ncode\n```
+    private static let codeBlockRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```"#, options: [])
+    }()
+
+    /// Regex for inline code: `code`
+    private static let inlineCodeRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"`([^`]+)`"#, options: [])
+    }()
+
     /// Parse markdown text into segments of plain text and code blocks
     /// - Parameter text: The markdown text to parse
     /// - Returns: Array of text segments (plain text, code blocks, inline code)
@@ -22,11 +34,8 @@ enum MarkdownParser {
         var segments: [TextSegment] = []
         var currentPosition = text.startIndex
 
-        // Regular expression for code blocks: ```language\ncode\n```
-        let codeBlockPattern = #"```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```"#
-
-        guard let regex = try? NSRegularExpression(pattern: codeBlockPattern, options: []) else {
-            // If regex fails, return entire text as plain text
+        guard let regex = codeBlockRegex else {
+            // If regex unavailable, return entire text as plain text
             return [.plainText(text)]
         }
 
@@ -82,11 +91,8 @@ enum MarkdownParser {
         var segments: [TextSegment] = []
         var currentPosition = text.startIndex
 
-        // Regular expression for inline code: `code`
-        let inlineCodePattern = #"`([^`]+)`"#
-
-        guard let regex = try? NSRegularExpression(pattern: inlineCodePattern, options: []) else {
-            // If regex fails, return entire text as plain text
+        guard let regex = inlineCodeRegex else {
+            // If regex unavailable, return entire text as plain text
             return text.isEmpty ? [] : [.plainText(text)]
         }
 

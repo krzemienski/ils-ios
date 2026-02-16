@@ -5,7 +5,7 @@ import ILSShared
 
 struct MCPServerDetailView: View {
     let server: MCPServer
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var showCopiedToast = false
 
     var body: some View {
@@ -33,9 +33,10 @@ struct MCPServerDetailView: View {
 
                 // Environment Variables Section
                 if let env = server.env, !env.isEmpty {
+                    let sortedKeys = env.keys.sorted()
                     sectionCard(title: "Environment Variables") {
                         VStack(spacing: theme.spacingSM) {
-                            ForEach(env.keys.sorted(), id: \.self) { key in
+                            ForEach(sortedKeys, id: \.self) { key in
                                 HStack {
                                     Text(key)
                                         .font(.system(size: theme.fontBody, design: theme.fontDesign))

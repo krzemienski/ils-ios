@@ -11,7 +11,7 @@ final class AppLogger {
 
     private init() {
         logger = Logger(subsystem: "com.ils.app", category: "general")
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         logFileURL = docs.appendingPathComponent("ils-app.log")
     }
 

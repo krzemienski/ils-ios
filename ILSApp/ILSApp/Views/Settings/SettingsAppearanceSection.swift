@@ -4,7 +4,7 @@ import ILSShared
 // MARK: - Appearance Section
 
 struct SettingsAppearanceSection: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject var themeManager: ThemeManager
 
     var body: some View {

@@ -7,7 +7,7 @@ struct AssistantCard: View {
     var onRetry: ((ChatMessage) -> Void)?
     var onDelete: ((ChatMessage) -> Void)?
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showCopyConfirmation = false
     @State private var expandAllToolCalls: Bool?

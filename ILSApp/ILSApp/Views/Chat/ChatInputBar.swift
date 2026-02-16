@@ -13,7 +13,7 @@ struct ChatInputBar: View {
     @State private var sendButtonPressed = false
     @State private var resetTask: Task<Void, Never>?
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {

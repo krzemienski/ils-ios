@@ -23,9 +23,13 @@ class ConfigEditorViewModel: ObservableObject {
             if let config = response.data {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                if let data = try? encoder.encode(config.content),
-                   let json = String(data: data, encoding: .utf8) {
-                    configJson = json
+                do {
+                    let data = try encoder.encode(config.content)
+                    if let json = String(data: data, encoding: .utf8) {
+                        configJson = json
+                    }
+                } catch {
+                    AppLogger.shared.error("Failed to encode config content: \(error)", category: "config")
                 }
             }
         } catch {
@@ -36,9 +40,15 @@ class ConfigEditorViewModel: ObservableObject {
 
     func saveConfig(scope: String, json: String) async -> [String] {
         guard let client else { return ["Client not configured"] }
-        guard let data = json.data(using: .utf8),
-              let content = try? JSONDecoder().decode(ClaudeConfig.self, from: data) else {
+        guard let data = json.data(using: .utf8) else {
             return ["Invalid JSON format"]
+        }
+        let content: ClaudeConfig
+        do {
+            content = try JSONDecoder().decode(ClaudeConfig.self, from: data)
+        } catch {
+            AppLogger.shared.error("Failed to decode config JSON: \(error)", category: "config")
+            return ["Invalid JSON format: \(error.localizedDescription)"]
         }
         do {
             let request = UpdateConfigRequest(scope: scope, content: content)

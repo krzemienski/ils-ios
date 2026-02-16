@@ -6,7 +6,7 @@ struct StreamingIndicatorView: View {
     var statusText: String?
 
     @State private var isPulsing = false
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {

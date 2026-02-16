@@ -43,7 +43,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 
 struct MacContentView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @StateObject private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
@@ -439,7 +439,7 @@ struct MacContentView: View {
 
 struct MacSessionRow: View {
     let session: ChatSession
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         HStack(spacing: theme.spacingSM) {
@@ -471,5 +471,5 @@ struct MacSessionRow: View {
     MacContentView()
         .environmentObject(AppState())
         .environmentObject(ThemeManager())
-        .environment(\.theme, ObsidianTheme())
+        .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

@@ -5,7 +5,7 @@ struct SidebarSessionRow: View {
     let session: ChatSession
     let onTap: () -> Void
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         Button(action: onTap) {

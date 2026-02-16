@@ -4,7 +4,7 @@ import ILSShared
 /// Process list with search and sort controls.
 /// Embedded in SystemMonitorView below the charts.
 struct ProcessListView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @ObservedObject var viewModel: SystemMetricsViewModel
 
     var body: some View {

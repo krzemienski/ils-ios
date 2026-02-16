@@ -102,8 +102,13 @@ struct SessionFileService {
                 continue
             }
 
-            guard let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)),
-                  let index = try? JSONDecoder().decode(SessionsIndex.self, from: data) else {
+            let data: Data
+            let index: SessionsIndex
+            do {
+                data = try Data(contentsOf: URL(fileURLWithPath: indexPath))
+                index = try JSONDecoder().decode(SessionsIndex.self, from: data)
+            } catch {
+                // Log and skip malformed session index files
                 continue
             }
 
@@ -216,56 +221,68 @@ struct SessionFileService {
         // Use a deterministic UUID based on session so IDs are stable
         let sessionUUID = UUID(uuidString: sessionId) ?? UUID()
 
+        let jsonDecoder = JSONDecoder()
+
         for line in lines {
-            guard let lineData = line.data(using: .utf8),
-                  let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any] else {
+            guard let lineData = line.data(using: .utf8) else {
                 continue
             }
 
-            guard let type = json["type"] as? String,
-                  type == "user" || type == "assistant" else {
+            let entry: TranscriptEntry
+            do {
+                entry = try jsonDecoder.decode(TranscriptEntry.self, from: lineData)
+            } catch {
+                // Skip malformed JSONL lines — common in partial writes
                 continue
             }
 
-            guard let messageObj = json["message"] as? [String: Any],
-                  let roleStr = messageObj["role"] as? String else {
+            guard entry.type == "user" || entry.type == "assistant" else {
                 continue
             }
 
-            let role: MessageRole = roleStr == "user" ? .user : .assistant
+            guard let messageObj = entry.message else {
+                continue
+            }
+
+            let role: MessageRole = messageObj.role == "user" ? .user : .assistant
             var textContent = ""
             var toolCallsJSON: String?
 
-            let rawContent = messageObj["content"]
-
-            if let stringContent = rawContent as? String {
-                // User messages can be plain strings
+            switch messageObj.content {
+            case .string(let stringContent):
                 textContent = stringContent
-            } else if let blocks = rawContent as? [[String: Any]] {
-                // Array of content blocks (text, tool_use, etc.)
+            case .blocks(let blocks):
                 var textParts: [String] = []
-                var toolCalls: [[String: Any]] = []
+                var toolCalls: [TranscriptToolCall] = []
 
                 for block in blocks {
-                    guard let blockType = block["type"] as? String else { continue }
-                    if blockType == "text", let text = block["text"] as? String {
-                        textParts.append(text)
-                    } else if blockType == "tool_use" {
-                        let toolCall: [String: Any] = [
-                            "id": block["id"] as? String ?? "",
-                            "name": block["name"] as? String ?? "",
-                            "type": "tool_use"
-                        ]
-                        toolCalls.append(toolCall)
+                    switch block.type {
+                    case "text":
+                        if let text = block.text {
+                            textParts.append(text)
+                        }
+                    case "tool_use":
+                        toolCalls.append(TranscriptToolCall(
+                            id: block.id ?? "",
+                            name: block.name ?? "",
+                            type: "tool_use"
+                        ))
+                    default:
+                        break
                     }
                 }
 
                 textContent = textParts.joined(separator: "\n")
-                if !toolCalls.isEmpty,
-                   let tcData = try? JSONSerialization.data(withJSONObject: toolCalls),
-                   let tcString = String(data: tcData, encoding: .utf8) {
-                    toolCallsJSON = tcString
+                if !toolCalls.isEmpty {
+                    do {
+                        let tcData = try JSONEncoder().encode(toolCalls)
+                        toolCallsJSON = String(data: tcData, encoding: .utf8)
+                    } catch {
+                        // Tool call serialization is non-critical; skip
+                    }
                 }
+            case .none:
+                continue
             }
 
             // Skip empty messages and internal command messages
@@ -273,14 +290,8 @@ struct SessionFileService {
             if trimmed.isEmpty { continue }
 
             // Parse timestamp if available
-            let timestamp: Date?
-            if let ts = json["timestamp"] as? String {
-                timestamp = parseISO8601Date(ts)
-            } else {
-                timestamp = nil
-            }
-
-            let messageId = UUID(uuidString: (json["uuid"] as? String) ?? "") ?? UUID()
+            let timestamp: Date? = entry.timestamp.flatMap { parseISO8601Date($0) }
+            let messageId = UUID(uuidString: entry.uuid ?? "") ?? UUID()
 
             let message = Message(
                 id: messageId,
@@ -301,4 +312,52 @@ struct SessionFileService {
         let end = min(start + limit, total)
         return Array(messages[start..<end])
     }
+}
+
+// MARK: - Transcript JSONL Codable Types
+
+/// Top-level entry in a Claude session JSONL transcript file.
+private struct TranscriptEntry: Decodable {
+    let type: String
+    let message: TranscriptMessage?
+    let timestamp: String?
+    let uuid: String?
+}
+
+/// Message object within a transcript entry.
+private struct TranscriptMessage: Decodable {
+    let role: String
+    let content: TranscriptContent?
+}
+
+/// Content can be either a plain string (user messages) or an array of content blocks (assistant messages).
+private enum TranscriptContent: Decodable {
+    case string(String)
+    case blocks([TranscriptContentBlock])
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .string(str)
+        } else if let blocks = try? container.decode([TranscriptContentBlock].self) {
+            self = .blocks(blocks)
+        } else {
+            self = .blocks([])
+        }
+    }
+}
+
+/// A single content block within an assistant message (text, tool_use, etc.).
+private struct TranscriptContentBlock: Decodable {
+    let type: String
+    let text: String?
+    let id: String?
+    let name: String?
+}
+
+/// Codable tool call for JSON serialization in transcript parsing.
+private struct TranscriptToolCall: Codable {
+    let id: String
+    let name: String
+    let type: String
 }

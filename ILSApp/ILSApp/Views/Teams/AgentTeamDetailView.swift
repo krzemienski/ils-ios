@@ -2,7 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct AgentTeamDetailView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: TeamsViewModel
     let teamName: String

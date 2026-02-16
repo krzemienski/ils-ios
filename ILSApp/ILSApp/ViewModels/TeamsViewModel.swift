@@ -209,6 +209,7 @@ class TeamsViewModel: ObservableObject {
                 await self?.loadTeamDetail(name: teamName)
             }
         }
+        pollingTimer?.tolerance = 0.5
     }
 
     func stopPolling() {

@@ -3,7 +3,7 @@ import ILSShared
 
 struct OnboardingView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var selectedPath: OnboardingPath?
 

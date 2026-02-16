@@ -73,7 +73,8 @@ final class SetupViewModel: ObservableObject {
             // Download script to a temp file first, then execute it.
             // Piping (curl | bash -s) causes curl inside the script to fail with
             // "client returned ERROR on write" because bash -s inherits the pipe's stdin.
-            let command = "curl -fsSL '\(bootstrapScriptURL)' -o /tmp/ils-bootstrap.sh && bash /tmp/ils-bootstrap.sh \(scriptArgs)"
+            let uniqueTmpPath = "/tmp/ils-bootstrap-\(UUID().uuidString).sh"
+            let command = "curl -fsSL '\(bootstrapScriptURL)' -o \(uniqueTmpPath) && bash \(uniqueTmpPath) && rm -f \(uniqueTmpPath)"
 
             let urlHolder = TunnelURLHolder()
 

@@ -4,7 +4,7 @@ import ILSShared
 // MARK: - Config Section
 
 struct SettingsConfigSection: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @ObservedObject var viewModel: SettingsViewModel
     @Binding var colorSchemePreference: String
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false

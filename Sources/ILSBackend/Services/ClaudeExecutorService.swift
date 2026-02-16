@@ -169,8 +169,8 @@ actor ClaudeExecutorService {
             stdinPipe.fileHandleForWriting.closeFile()
 
             let sessionId = options.sessionId ?? UUID().uuidString
-            Task {
-                await self.storeProcess(sessionId, process: process)
+            Task { [weak self] in
+                await self?.storeProcess(sessionId, process: process)
             }
 
             do {
@@ -263,9 +263,9 @@ actor ClaudeExecutorService {
 
             let sessionId = options.sessionId ?? UUID().uuidString
             let stdinHandle = stdinPipe.fileHandleForWriting
-            Task {
-                await self.storeProcess(sessionId, process: process)
-                await self.storeStdinHandle(sessionId, handle: stdinHandle)
+            Task { [weak self] in
+                await self?.storeProcess(sessionId, process: process)
+                await self?.storeStdinHandle(sessionId, handle: stdinHandle)
             }
 
             do {
@@ -443,15 +443,18 @@ actor ClaudeExecutorService {
             return false
         }
 
-        let response: [String: String] = [
-            "type": "permission_response",
-            "id": requestId,
-            "decision": decision
-        ]
+        let response = PermissionResponsePayload(type: "permission_response", id: requestId, decision: decision)
 
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: response),
-              var jsonString = String(data: jsonData, encoding: .utf8) else {
-            Self.logger.debug("Failed to serialize permission response")
+        let jsonData: Data
+        do {
+            jsonData = try JSONEncoder().encode(response)
+        } catch {
+            Self.logger.error("Failed to encode permission response: \(error)")
+            return false
+        }
+
+        guard var jsonString = String(data: jsonData, encoding: .utf8) else {
+            Self.logger.error("Failed to convert permission response data to UTF-8 string")
             return false
         }
 
@@ -494,42 +497,37 @@ actor ClaudeExecutorService {
         options: ExecutionOptions,
         workingDirectory: String?
     ) -> String {
-        var sdkOptions: [String: Any] = [:]
+        let sdkOptions = SDKOptions(
+            model: options.model,
+            maxTurns: options.maxTurns,
+            allowedTools: options.allowedTools,
+            disallowedTools: options.disallowedTools,
+            permissionMode: options.permissionMode?.rawValue,
+            systemPrompt: (options.systemPrompt?.isEmpty == false) ? options.systemPrompt : nil,
+            appendSystemPrompt: (options.appendSystemPrompt?.isEmpty == false) ? options.appendSystemPrompt : nil,
+            resume: options.resume,
+            continueConversation: options.continueConversation == true ? true : nil,
+            forkSession: options.forkSession == true ? true : nil,
+            sessionId: options.sessionId,
+            cwd: workingDirectory,
+            includePartialMessages: options.includePartialMessages == true ? true : nil
+        )
 
-        if let model = options.model { sdkOptions["model"] = model }
-        if let maxTurns = options.maxTurns { sdkOptions["maxTurns"] = maxTurns }
-        if let allowedTools = options.allowedTools { sdkOptions["allowedTools"] = allowedTools }
-        if let disallowedTools = options.disallowedTools { sdkOptions["disallowedTools"] = disallowedTools }
+        let config = SDKConfig(prompt: prompt, options: sdkOptions)
 
-        if let mode = options.permissionMode {
-            sdkOptions["permissionMode"] = mode.rawValue
+        do {
+            let jsonData = try JSONEncoder().encode(config)
+            return String(data: jsonData, encoding: .utf8) ?? "{}"
+        } catch {
+            logger.error("Failed to encode SDK config: \(error)")
+            // Fallback: encode just the prompt safely
+            let fallback = SDKConfig(prompt: String(prompt.prefix(100)), options: SDKOptions())
+            if let safeData = try? JSONEncoder().encode(fallback),
+               let safeString = String(data: safeData, encoding: .utf8) {
+                return safeString
+            }
+            return "{}"
         }
-
-        if let systemPrompt = options.systemPrompt, !systemPrompt.isEmpty {
-            sdkOptions["systemPrompt"] = systemPrompt
-        }
-        if let appendSystemPrompt = options.appendSystemPrompt, !appendSystemPrompt.isEmpty {
-            sdkOptions["appendSystemPrompt"] = appendSystemPrompt
-        }
-
-        if let resume = options.resume { sdkOptions["resume"] = resume }
-        if options.continueConversation == true { sdkOptions["continueConversation"] = true }
-        if options.forkSession == true { sdkOptions["forkSession"] = true }
-        if let sessionId = options.sessionId { sdkOptions["sessionId"] = sessionId }
-        if let dir = workingDirectory { sdkOptions["cwd"] = dir }
-        if options.includePartialMessages == true { sdkOptions["includePartialMessages"] = true }
-
-        let config: [String: Any] = [
-            "prompt": prompt,
-            "options": sdkOptions
-        ]
-
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: config),
-              let jsonString = String(data: jsonData, encoding: .utf8) else {
-            return "{\"prompt\":\"\(prompt.prefix(100))\"}"
-        }
-
-        return jsonString
     }
 
     // MARK: - CLI Command Building
@@ -779,6 +777,69 @@ actor ClaudeExecutorService {
             }
         } catch {
             logger.debug("Failed to decode CLI message: \(error.localizedDescription) — line: \(line.prefix(200))")
+        }
+    }
+
+    // MARK: - Codable Payloads
+
+    /// Codable struct for permission response JSON sent to Claude CLI stdin.
+    private struct PermissionResponsePayload: Codable {
+        let type: String
+        let id: String
+        let decision: String
+    }
+
+    /// Codable struct for Agent SDK wrapper configuration.
+    private struct SDKConfig: Codable {
+        let prompt: String
+        let options: SDKOptions
+    }
+
+    /// Codable struct for SDK execution options passed to sdk-wrapper.mjs.
+    /// All fields are optional; nil values are omitted from JSON output.
+    private struct SDKOptions: Codable {
+        var model: String?
+        var maxTurns: Int?
+        var allowedTools: [String]?
+        var disallowedTools: [String]?
+        var permissionMode: String?
+        var systemPrompt: String?
+        var appendSystemPrompt: String?
+        var resume: String?
+        var continueConversation: Bool?
+        var forkSession: Bool?
+        var sessionId: String?
+        var cwd: String?
+        var includePartialMessages: Bool?
+
+        init(
+            model: String? = nil,
+            maxTurns: Int? = nil,
+            allowedTools: [String]? = nil,
+            disallowedTools: [String]? = nil,
+            permissionMode: String? = nil,
+            systemPrompt: String? = nil,
+            appendSystemPrompt: String? = nil,
+            resume: String? = nil,
+            continueConversation: Bool? = nil,
+            forkSession: Bool? = nil,
+            sessionId: String? = nil,
+            cwd: String? = nil,
+            includePartialMessages: Bool? = nil
+        ) {
+            self.model = model
+            self.maxTurns = maxTurns
+            self.allowedTools = allowedTools
+            self.disallowedTools = disallowedTools
+            self.permissionMode = permissionMode
+            self.systemPrompt = systemPrompt
+            self.appendSystemPrompt = appendSystemPrompt
+            self.resume = resume
+            self.continueConversation = continueConversation
+            self.forkSession = forkSession
+            self.sessionId = sessionId
+            self.cwd = cwd
+            self.includePartialMessages = includePartialMessages
         }
     }
 }

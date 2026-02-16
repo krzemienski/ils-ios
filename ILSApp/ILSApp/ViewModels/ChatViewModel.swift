@@ -149,6 +149,7 @@ class ChatViewModel: ObservableObject {
                 let newMessages = Array(streamMessages.dropFirst(self.lastProcessedMessageIndex))
                 if !newMessages.isEmpty {
                     // Accumulate only new messages in pending buffer
+                    self.pendingStreamMessages.reserveCapacity(self.pendingStreamMessages.count + newMessages.count)
                     self.pendingStreamMessages.append(contentsOf: newMessages)
                     self.lastProcessedMessageIndex = streamMessages.count
 

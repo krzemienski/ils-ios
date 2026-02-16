@@ -24,7 +24,7 @@ struct ILSAppApp: App {
                 SidebarRootView()
                     .environmentObject(appState)
                     .environmentObject(themeManager)
-                    .environment(\.theme, themeManager.currentTheme)
+                    .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .onOpenURL { url in
@@ -33,7 +33,7 @@ struct ILSAppApp: App {
 
                 if showLaunchScreen {
                     LaunchScreenView()
-                        .environment(\.theme, themeManager.currentTheme)
+                        .environment(\.theme, themeManager.currentSnapshot)
                         .transition(.opacity)
                         .zIndex(1)
                 }

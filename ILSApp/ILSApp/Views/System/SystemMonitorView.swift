@@ -4,7 +4,7 @@ import ILSShared
 
 struct SystemMonitorView: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @StateObject private var viewModel: SystemMetricsViewModel
 
     init() {
@@ -258,6 +258,6 @@ struct SystemMonitorView: View {
     NavigationStack {
         SystemMonitorView()
             .environmentObject(AppState())
-            .environment(\.theme, ObsidianTheme())
+            .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

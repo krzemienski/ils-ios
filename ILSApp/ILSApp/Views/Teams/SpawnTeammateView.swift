@@ -3,7 +3,7 @@ import ILSShared
 
 struct SpawnTeammateView: View {
     @Environment(\.dismiss) var dismiss
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @ObservedObject var viewModel: TeamsViewModel
     let teamName: String
     @State private var name = ""

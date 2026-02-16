@@ -60,8 +60,8 @@ extension EntityType {
         }
     }
 
-    /// Theme-aware entity color from AppTheme tokens
-    func themeColor(from theme: any AppTheme) -> Color {
+    /// Theme-aware entity color from theme snapshot
+    func themeColor(from theme: ThemeSnapshot) -> Color {
         switch self {
         case .sessions: return theme.entitySession
         case .projects: return theme.entityProject

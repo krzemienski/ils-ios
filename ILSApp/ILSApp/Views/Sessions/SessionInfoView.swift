@@ -4,7 +4,7 @@ import ILSShared
 struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject var appState: AppState
 
     @State private var loadedSession: ChatSession?

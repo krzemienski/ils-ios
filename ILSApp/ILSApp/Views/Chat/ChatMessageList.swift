@@ -13,7 +13,7 @@ struct ChatMessageList: View {
     let onRetryMessage: (ChatMessage) -> Void
     let sessionProjectId: String?
 
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {

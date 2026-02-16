@@ -2,7 +2,7 @@ import SwiftUI
 import ILSShared
 
 struct TeamTaskListView: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @ObservedObject var viewModel: TeamsViewModel
     let teamName: String
     @State private var showCreateTask = false

@@ -3,7 +3,7 @@ import ILSShared
 
 struct CommandPaletteView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @EnvironmentObject var appState: AppState
     @State private var searchText = ""
     @State private var skills: [Skill] = []
@@ -128,7 +128,7 @@ struct CommandItem: Identifiable {
 struct CommandRow: View {
     let command: CommandItem
     let onSelect: (String) -> Void
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         Button {
@@ -153,7 +153,7 @@ struct CommandRow: View {
 struct SkillRow: View {
     let skill: Skill
     let onSelect: () -> Void
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         Button(action: onSelect) {

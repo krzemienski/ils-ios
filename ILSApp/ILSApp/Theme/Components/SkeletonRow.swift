@@ -3,7 +3,7 @@ import SwiftUI
 /// Placeholder skeleton row with rounded rectangles for loading states.
 /// Shows shimmering animation while data loads.
 struct SkeletonRow: View {
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

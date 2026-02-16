@@ -7,7 +7,7 @@ import ILSShared
 struct QuickConnectView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.theme) private var theme: any AppTheme
+    @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var selectedMode: ConnectionMode = .local
     @State private var localURL = "http://localhost:9999"
