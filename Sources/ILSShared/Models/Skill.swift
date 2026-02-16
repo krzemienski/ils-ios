@@ -41,6 +41,21 @@ public struct Skill: Codable, Identifiable, Hashable, Sendable {
     /// Last update timestamp.
     public var lastUpdated: String?
 
+    /// Creates a new skill entry.
+    /// - Parameters:
+    ///   - id: Unique identifier (auto-generated if omitted).
+    ///   - name: Skill name (used as command). Must not be empty.
+    ///   - description: Optional description.
+    ///   - version: Optional version string.
+    ///   - tags: Tags for categorization.
+    ///   - isActive: Whether the skill is active.
+    ///   - path: Filesystem path to the skill file. Must not be empty.
+    ///   - source: Source of the skill.
+    ///   - content: Processed skill content.
+    ///   - rawContent: Raw markdown content.
+    ///   - stars: GitHub star count.
+    ///   - author: Skill author.
+    ///   - lastUpdated: Last update timestamp string.
     public init(
         id: UUID = UUID(),
         name: String,
@@ -56,6 +71,8 @@ public struct Skill: Codable, Identifiable, Hashable, Sendable {
         author: String? = nil,
         lastUpdated: String? = nil
     ) {
+        precondition(!name.isEmpty, "Skill name must not be empty")
+        precondition(!path.isEmpty, "Skill path must not be empty")
         self.id = id
         self.name = name
         self.description = description

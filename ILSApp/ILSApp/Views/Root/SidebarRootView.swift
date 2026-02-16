@@ -298,11 +298,13 @@ struct SidebarRootView: View {
     }
 
     private func openSidebar() {
+        HapticManager.impact(.light)
         isSidebarOpen = true
         sidebarDragOffset = 0
     }
 
     private func closeSidebar() {
+        HapticManager.impact(.light)
         isSidebarOpen = false
         sidebarDragOffset = 0
     }

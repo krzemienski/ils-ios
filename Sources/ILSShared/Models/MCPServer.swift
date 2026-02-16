@@ -21,7 +21,7 @@ public enum MCPStatus: String, Codable, Sendable {
 }
 
 /// Represents an MCP (Model Context Protocol) server configuration.
-public struct MCPServer: Codable, Identifiable, Sendable {
+public struct MCPServer: Codable, Identifiable, Hashable, Sendable {
     /// Unique identifier for this server instance
     public var id: UUID
     /// Human-readable server name (e.g., "filesystem", "postgres")
@@ -39,6 +39,16 @@ public struct MCPServer: Codable, Identifiable, Sendable {
     /// File path where this server was configured
     public var configPath: String?
 
+    /// Creates a new MCP server configuration.
+    /// - Parameters:
+    ///   - id: Unique identifier (auto-generated if omitted).
+    ///   - name: Server display name. Must not be empty.
+    ///   - command: Executable command. Must not be empty.
+    ///   - args: Command-line arguments.
+    ///   - env: Environment variables.
+    ///   - scope: Configuration scope.
+    ///   - status: Health check status.
+    ///   - configPath: Path to config file.
     public init(
         id: UUID = UUID(),
         name: String,
@@ -49,6 +59,8 @@ public struct MCPServer: Codable, Identifiable, Sendable {
         status: MCPStatus = .unknown,
         configPath: String? = nil
     ) {
+        precondition(!name.isEmpty, "MCPServer name must not be empty")
+        precondition(!command.isEmpty, "MCPServer command must not be empty")
         self.id = id
         self.name = name
         self.command = command

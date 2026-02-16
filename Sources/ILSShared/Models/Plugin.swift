@@ -2,41 +2,56 @@ import Foundation
 
 /// Source type for plugins.
 public enum PluginSource: String, Codable, Sendable {
-    /// Official Claude Code plugin.
+    /// Official Claude Code plugin from Anthropic.
     case official
     /// Community-contributed plugin.
     case community
 }
 
-/// Represents a Claude Code plugin.
-public struct Plugin: Codable, Identifiable, Sendable {
-    /// Unique identifier.
+/// Represents a Claude Code plugin that extends functionality.
+public struct Plugin: Codable, Identifiable, Hashable, Sendable {
+    /// Unique identifier for this plugin.
     public let id: UUID
-    /// Plugin name.
+    /// Plugin name (used as display name and command prefix).
     public var name: String
-    /// Plugin description.
+    /// Human-readable description of the plugin's functionality.
     public var description: String?
-    /// Marketplace identifier.
+    /// Marketplace where the plugin was discovered.
     public var marketplace: String?
-    /// Whether the plugin is installed.
+    /// Whether the plugin is installed locally.
     public var isInstalled: Bool
-    /// Whether the plugin is enabled.
+    /// Whether the plugin is enabled and active.
     public var isEnabled: Bool
-    /// Plugin version.
+    /// Semantic version string (e.g., "1.2.3").
     public var version: String?
-    /// Commands provided by the plugin.
+    /// Slash commands provided by this plugin.
     public var commands: [String]?
-    /// Agents provided by the plugin.
+    /// Agent definitions provided by this plugin.
     public var agents: [String]?
-    /// Installation path.
+    /// Filesystem path to the plugin installation.
     public var path: String?
-    /// GitHub stars.
+    /// Number of GitHub stars (for marketplace plugins).
     public var stars: Int?
-    /// Plugin source.
+    /// Source of the plugin (official or community).
     public var source: PluginSource?
-    /// Plugin category.
+    /// Category for organizing plugins (e.g., "productivity", "testing").
     public var category: String?
 
+    /// Creates a new plugin entry.
+    /// - Parameters:
+    ///   - id: Unique identifier (auto-generated if omitted).
+    ///   - name: Plugin name. Must not be empty.
+    ///   - description: Optional description of functionality.
+    ///   - marketplace: Optional marketplace identifier.
+    ///   - isInstalled: Whether the plugin is installed (default: true).
+    ///   - isEnabled: Whether the plugin is enabled (default: true).
+    ///   - version: Optional semantic version string.
+    ///   - commands: Optional list of slash commands.
+    ///   - agents: Optional list of agent definitions.
+    ///   - path: Optional filesystem installation path.
+    ///   - stars: Optional GitHub star count.
+    ///   - source: Optional plugin source.
+    ///   - category: Optional category for organization.
     public init(
         id: UUID = UUID(),
         name: String,
@@ -52,6 +67,7 @@ public struct Plugin: Codable, Identifiable, Sendable {
         source: PluginSource? = nil,
         category: String? = nil
     ) {
+        precondition(!name.isEmpty, "Plugin name must not be empty")
         self.id = id
         self.name = name
         self.description = description
@@ -68,15 +84,20 @@ public struct Plugin: Codable, Identifiable, Sendable {
     }
 }
 
-/// Plugin marketplace information.
-public struct PluginMarketplace: Codable, Sendable {
-    /// Marketplace name.
+/// Plugin marketplace information for plugin discovery.
+public struct PluginMarketplace: Codable, Hashable, Sendable {
+    /// Marketplace display name.
     public let name: String
     /// Marketplace source URL or identifier.
     public let source: String
     /// Available plugins in this marketplace.
     public var plugins: [PluginInfo]
 
+    /// Creates a marketplace entry.
+    /// - Parameters:
+    ///   - name: Marketplace display name.
+    ///   - source: Source URL or identifier.
+    ///   - plugins: Available plugins.
     public init(name: String, source: String, plugins: [PluginInfo] = []) {
         self.name = name
         self.source = source
@@ -84,13 +105,17 @@ public struct PluginMarketplace: Codable, Sendable {
     }
 }
 
-/// Basic plugin info from marketplace listing.
-public struct PluginInfo: Codable, Sendable {
+/// Basic plugin info from a marketplace listing.
+public struct PluginInfo: Codable, Hashable, Sendable {
     /// Plugin name.
     public let name: String
-    /// Brief description.
+    /// Brief description of the plugin.
     public let description: String?
 
+    /// Creates a plugin info entry.
+    /// - Parameters:
+    ///   - name: Plugin name.
+    ///   - description: Optional brief description.
     public init(name: String, description: String? = nil) {
         self.name = name
         self.description = description

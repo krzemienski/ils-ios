@@ -1,7 +1,7 @@
 import Foundation
 
-/// Custom theme with user-defined design tokens
-public struct CustomTheme: Codable, Sendable, Identifiable {
+/// Custom theme with user-defined design tokens for UI customization.
+public struct CustomTheme: Codable, Sendable, Identifiable, Hashable {
     public let id: UUID
     public var name: String
     public var description: String?
@@ -18,6 +18,20 @@ public struct CustomTheme: Codable, Sendable, Identifiable {
     public var cornerRadius: CornerRadiusTokens?
     public var shadows: ShadowTokens?
 
+    /// Creates a new custom theme.
+    /// - Parameters:
+    ///   - id: Unique identifier (auto-generated if omitted).
+    ///   - name: Theme display name. Must not be empty.
+    ///   - description: Optional theme description.
+    ///   - author: Optional theme author name.
+    ///   - version: Optional version string.
+    ///   - createdAt: Creation timestamp.
+    ///   - updatedAt: Last update timestamp.
+    ///   - colors: Optional color design tokens.
+    ///   - typography: Optional typography design tokens.
+    ///   - spacing: Optional spacing design tokens.
+    ///   - cornerRadius: Optional corner radius design tokens.
+    ///   - shadows: Optional shadow design tokens.
     public init(
         id: UUID = UUID(),
         name: String,
@@ -32,6 +46,7 @@ public struct CustomTheme: Codable, Sendable, Identifiable {
         cornerRadius: CornerRadiusTokens? = nil,
         shadows: ShadowTokens? = nil
     ) {
+        precondition(!name.isEmpty, "CustomTheme name must not be empty")
         self.id = id
         self.name = name
         self.description = description
@@ -49,8 +64,8 @@ public struct CustomTheme: Codable, Sendable, Identifiable {
 
 // MARK: - Color Tokens
 
-/// Color design tokens for theme customization
-public struct ColorTokens: Codable, Sendable {
+/// Color design tokens for theme customization.
+public struct ColorTokens: Codable, Sendable, Hashable {
     // Primary colors
     public var accent: String?
     public var background: String?
@@ -119,8 +134,8 @@ public struct ColorTokens: Codable, Sendable {
 
 // MARK: - Typography Tokens
 
-/// Typography design tokens for theme customization
-public struct TypographyTokens: Codable, Sendable {
+/// Typography design tokens for theme customization.
+public struct TypographyTokens: Codable, Sendable, Hashable {
     // Font families
     public var primaryFontFamily: String?
     public var monospacedFontFamily: String?
@@ -175,8 +190,8 @@ public struct TypographyTokens: Codable, Sendable {
 
 // MARK: - Spacing Tokens
 
-/// Spacing design tokens for theme customization
-public struct SpacingTokens: Codable, Sendable {
+/// Spacing design tokens for theme customization.
+public struct SpacingTokens: Codable, Sendable, Hashable {
     public var spacingXS: Double?
     public var spacingS: Double?
     public var spacingM: Double?
@@ -217,8 +232,8 @@ public struct SpacingTokens: Codable, Sendable {
 
 // MARK: - Corner Radius Tokens
 
-/// Corner radius design tokens for theme customization
-public struct CornerRadiusTokens: Codable, Sendable {
+/// Corner radius design tokens for theme customization.
+public struct CornerRadiusTokens: Codable, Sendable, Hashable {
     public var cornerRadiusS: Double?
     public var cornerRadiusM: Double?
     public var cornerRadiusL: Double?
@@ -253,8 +268,8 @@ public struct CornerRadiusTokens: Codable, Sendable {
 
 // MARK: - Shadow Tokens
 
-/// Shadow design tokens for theme customization
-public struct ShadowTokens: Codable, Sendable {
+/// Shadow design tokens for theme customization.
+public struct ShadowTokens: Codable, Sendable, Hashable {
     public var shadowLightColor: String?
     public var shadowLightOpacity: Double?
     public var shadowLightRadius: Double?

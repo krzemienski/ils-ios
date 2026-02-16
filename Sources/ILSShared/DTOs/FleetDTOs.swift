@@ -15,7 +15,7 @@ public struct RegisterFleetHostRequest: Codable, Sendable {
         name: String,
         host: String,
         port: Int = 22,
-        backendPort: Int = 9090,
+        backendPort: Int = 9999,
         username: String? = nil,
         authMethod: String? = nil,
         credential: String? = nil

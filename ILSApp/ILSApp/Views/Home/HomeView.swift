@@ -145,15 +145,9 @@ struct HomeView: View {
             // Empty state handled by connection banner
             EmptyView()
         } else if sessionsVM.isLoading {
-            VStack(spacing: theme.spacingSM) {
-                ProgressView()
-                    .tint(theme.accent)
-                Text("Loading sessions...")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
+            ForEach(0..<3, id: \.self) { _ in
+                skeletonSessionRow
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingLG)
         }
     }
 
@@ -198,6 +192,36 @@ struct HomeView: View {
         .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
+    }
+
+    @ViewBuilder
+    private var skeletonSessionRow: some View {
+        HStack(spacing: theme.spacingSM) {
+            Circle()
+                .fill(theme.bgTertiary)
+                .frame(width: 8, height: 8)
+
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(theme.bgTertiary)
+                    .frame(width: 140, height: 14)
+                HStack(spacing: theme.spacingXS) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(theme.bgTertiary)
+                        .frame(width: 50, height: 10)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(theme.bgTertiary)
+                        .frame(width: 40, height: 10)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(theme.spacingSM)
+        .frame(minHeight: 44)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .shimmer()
     }
 
     // MARK: - Quick Actions

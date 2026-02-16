@@ -1,5 +1,59 @@
 import Foundation
 
+// MARK: - Claude Model
+
+/// Claude model identifier for session and project configuration.
+///
+/// Known model families are represented as enum cases. Unknown or future
+/// model identifiers are preserved via the ``unknown(_:)`` case so that
+/// Codable round-tripping never fails on new model strings from the CLI.
+public enum ClaudeModel: Codable, Hashable, Sendable, CustomStringConvertible {
+    /// Claude Haiku -- fast, lightweight model.
+    case haiku
+    /// Claude Sonnet -- balanced performance model.
+    case sonnet
+    /// Claude Opus -- most capable model.
+    case opus
+
+    /// An unrecognized model string from the API or CLI.
+    case unknown(String)
+
+    /// The raw string value used for serialization and display.
+    public var rawValue: String {
+        switch self {
+        case .haiku: return "haiku"
+        case .sonnet: return "sonnet"
+        case .opus: return "opus"
+        case .unknown(let value): return value
+        }
+    }
+
+    public var description: String { rawValue }
+
+    /// Creates a ``ClaudeModel`` from a raw string value.
+    public init(rawValue: String) {
+        switch rawValue {
+        case "haiku": self = .haiku
+        case "sonnet": self = .sonnet
+        case "opus": self = .opus
+        default: self = .unknown(rawValue)
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        self.init(rawValue: value)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+// MARK: - Session Enums
+
 /// Represents the execution status of a Claude Code session.
 public enum SessionStatus: String, Codable, Sendable {
     /// Session is actively running and can accept messages.
@@ -71,6 +125,24 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
     /// First user prompt in the session.
     public var firstPrompt: String?
 
+    /// Creates a new chat session.
+    /// - Parameters:
+    ///   - id: Unique identifier (auto-generated if omitted).
+    ///   - claudeSessionId: Claude Code's internal session ID.
+    ///   - name: Optional user-provided session name.
+    ///   - projectId: Optional associated project ID.
+    ///   - projectName: Optional project display name.
+    ///   - model: Claude model to use (default: "sonnet").
+    ///   - permissionMode: Permission mode for tool execution.
+    ///   - status: Initial session status.
+    ///   - messageCount: Number of messages exchanged.
+    ///   - totalCostUSD: Total cost in USD.
+    ///   - source: Session source (ILS or external).
+    ///   - forkedFrom: ID of the session this was forked from.
+    ///   - createdAt: Creation timestamp.
+    ///   - lastActiveAt: Last activity timestamp.
+    ///   - encodedProjectPath: URL-encoded project path.
+    ///   - firstPrompt: First user prompt.
     public init(
         id: UUID = UUID(),
         claudeSessionId: String? = nil,
@@ -89,6 +161,8 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         encodedProjectPath: String? = nil,
         firstPrompt: String? = nil
     ) {
+        precondition(!model.isEmpty, "ChatSession model must not be empty")
+        precondition(messageCount >= 0, "ChatSession messageCount must be non-negative")
         self.id = id
         self.claudeSessionId = claudeSessionId
         self.name = name
@@ -109,34 +183,48 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
 }
 
 /// External session discovered from Claude Code storage.
-public struct ExternalSession: Codable, Identifiable, Sendable {
+public struct ExternalSession: Codable, Identifiable, Hashable, Sendable {
     /// Unique identifier (maps to claudeSessionId).
     public var id: String { claudeSessionId }
     /// Claude Code's internal session ID.
     public let claudeSessionId: String
     /// User-provided name for the session.
     public var name: String?
-    /// Filesystem path to the project.
+    /// Filesystem path to the project directory.
     public let projectPath: String?
-    /// URL-encoded project path.
+    /// URL-encoded project path for API calls.
     public let encodedProjectPath: String?
-    /// Name of the project.
+    /// Display name of the associated project.
     public let projectName: String?
-    /// Source of the session.
+    /// Source of the session (always `.external` for discovered sessions).
     public let source: SessionSource
     /// Last time the session was active.
     public let lastActiveAt: Date?
-    /// When the session was created.
+    /// When the session was originally created.
     public let createdAt: Date?
-    /// Number of messages in the session.
+    /// Number of messages exchanged in the session.
     public let messageCount: Int?
-    /// First user prompt.
+    /// First user prompt in the session (for display/search).
     public let firstPrompt: String?
-    /// AI-generated summary of the session.
+    /// AI-generated summary of the session conversation.
     public let summary: String?
-    /// Git branch associated with the session.
+    /// Git branch that was active during the session.
     public let gitBranch: String?
 
+    /// Creates an external session entry.
+    /// - Parameters:
+    ///   - claudeSessionId: Claude Code's internal session ID.
+    ///   - name: Optional user-provided name.
+    ///   - projectPath: Filesystem path to the project.
+    ///   - encodedProjectPath: URL-encoded project path.
+    ///   - projectName: Display name of the project.
+    ///   - source: Session source (default: `.external`).
+    ///   - lastActiveAt: Last activity timestamp.
+    ///   - createdAt: Creation timestamp.
+    ///   - messageCount: Number of messages.
+    ///   - firstPrompt: First user prompt.
+    ///   - summary: AI-generated summary.
+    ///   - gitBranch: Associated git branch.
     public init(
         claudeSessionId: String,
         name: String? = nil,
@@ -151,6 +239,7 @@ public struct ExternalSession: Codable, Identifiable, Sendable {
         summary: String? = nil,
         gitBranch: String? = nil
     ) {
+        precondition(!claudeSessionId.isEmpty, "ExternalSession claudeSessionId must not be empty")
         self.claudeSessionId = claudeSessionId
         self.name = name
         self.projectPath = projectPath

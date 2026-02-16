@@ -1,7 +1,7 @@
 import Foundation
 
-/// Claude Code settings configuration
-public struct ClaudeConfig: Codable, Sendable {
+/// Claude Code settings configuration.
+public struct ClaudeConfig: Codable, Hashable, Sendable {
     /// Default model to use for Claude CLI (e.g., "claude-sonnet-4")
     public var model: String?
     /// Permission configuration for tool execution
@@ -58,8 +58,8 @@ public struct ClaudeConfig: Codable, Sendable {
     }
 }
 
-/// Theme configuration for UI preferences
-public struct ThemeConfig: Codable, Sendable {
+/// Theme configuration for UI preferences.
+public struct ThemeConfig: Codable, Hashable, Sendable {
     /// Color scheme preference: "light", "dark", or "system"
     public var colorScheme: String?
     /// Accent color override (hex string)
@@ -71,8 +71,8 @@ public struct ThemeConfig: Codable, Sendable {
     }
 }
 
-/// API key status for secure display (never exposes actual key)
-public struct APIKeyStatus: Codable, Sendable {
+/// API key status for secure display (never exposes actual key).
+public struct APIKeyStatus: Codable, Hashable, Sendable {
     /// Whether an API key is configured
     public let isConfigured: Bool
     /// Masked key showing only last 4 characters (e.g., "...ABCD")
@@ -87,8 +87,8 @@ public struct APIKeyStatus: Codable, Sendable {
     }
 }
 
-/// Permission configuration for Claude Code
-public struct PermissionsConfig: Codable, Sendable {
+/// Permission configuration for Claude Code tool execution.
+public struct PermissionsConfig: Codable, Hashable, Sendable {
     /// Tools or patterns explicitly allowed
     public var allow: [String]?
     /// Tools or patterns explicitly denied
@@ -103,8 +103,8 @@ public struct PermissionsConfig: Codable, Sendable {
     }
 }
 
-/// Status line configuration
-public struct StatusLineConfig: Codable, Sendable {
+/// Status line configuration for terminal display.
+public struct StatusLineConfig: Codable, Hashable, Sendable {
     /// Status line type: "command", "git", etc.
     public var type: String?
     /// Shell command to execute for status content
@@ -116,8 +116,8 @@ public struct StatusLineConfig: Codable, Sendable {
     }
 }
 
-/// Hooks configuration for Claude Code
-public struct HooksConfig: Codable, Sendable {
+/// Hooks configuration for Claude Code lifecycle events.
+public struct HooksConfig: Codable, Hashable, Sendable {
     /// Hooks triggered at session start
     public var sessionStart: [HookGroup]?
     /// Hooks triggered when subagent starts
@@ -152,8 +152,8 @@ public struct HooksConfig: Codable, Sendable {
     }
 }
 
-/// Group of hooks with optional matcher
-public struct HookGroup: Codable, Sendable {
+/// Group of hooks with optional matcher pattern.
+public struct HookGroup: Codable, Hashable, Sendable {
     /// Regular expression to match against context (optional)
     public var matcher: String?
     /// List of hooks to execute when matcher succeeds
@@ -165,8 +165,8 @@ public struct HookGroup: Codable, Sendable {
     }
 }
 
-/// Individual hook definition
-public struct HookDefinition: Codable, Sendable {
+/// Individual hook definition with type and command.
+public struct HookDefinition: Codable, Hashable, Sendable {
     /// Hook type: "command", "script", etc.
     public var type: String?
     /// Shell command or script to execute
@@ -178,8 +178,8 @@ public struct HookDefinition: Codable, Sendable {
     }
 }
 
-/// Config scope information
-public struct ConfigInfo: Codable, Sendable {
+/// Config scope information including source file and validation state.
+public struct ConfigInfo: Codable, Hashable, Sendable {
     /// Configuration scope: "user", "project", or "local"
     public let scope: String
     /// File path where config was loaded from

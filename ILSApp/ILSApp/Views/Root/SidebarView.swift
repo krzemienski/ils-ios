@@ -235,14 +235,27 @@ struct SidebarView: View {
 
     private var loadingView: some View {
         VStack(spacing: theme.spacingSM) {
-            ProgressView()
-                .tint(theme.accent)
-            Text("Loading sessions...")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
+            ForEach(0..<4, id: \.self) { _ in
+                HStack(spacing: theme.spacingSM) {
+                    Circle()
+                        .fill(theme.bgTertiary)
+                        .frame(width: 8, height: 8)
+                    VStack(alignment: .leading, spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(theme.bgTertiary)
+                            .frame(width: 100, height: 12)
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(theme.bgTertiary)
+                            .frame(width: 60, height: 9)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, theme.spacingXS)
+                .padding(.horizontal, theme.spacingSM)
+            }
+            .shimmer()
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, theme.spacingLG)
+        .padding(.vertical, theme.spacingSM)
     }
 
     private var emptyView: some View {
@@ -262,6 +275,7 @@ struct SidebarView: View {
 
     private var bottomActions: some View {
         Button {
+            HapticManager.impact(.medium)
             let newSession = ChatSession(name: "New Session", model: "sonnet")
             onSessionSelected(newSession)
             isSidebarOpen = false
@@ -289,6 +303,7 @@ struct SidebarView: View {
         let isActive = isScreenActive(screen)
 
         return Button {
+            HapticManager.selection()
             activeScreen = screen
             isSidebarOpen = false
         } label: {

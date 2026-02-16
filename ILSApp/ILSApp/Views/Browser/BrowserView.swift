@@ -439,24 +439,7 @@ struct BrowserView: View {
     // MARK: - Loading
 
     private var loadingRows: some View {
-        ForEach(0..<5, id: \.self) { _ in
-            HStack(spacing: theme.spacingMD) {
-                Circle()
-                    .fill(theme.bgTertiary)
-                    .frame(width: 10, height: 10)
-                VStack(alignment: .leading, spacing: 6) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(theme.bgTertiary)
-                        .frame(width: 120, height: 14)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(theme.bgTertiary)
-                        .frame(height: 10)
-                }
-                Spacer()
-            }
-            .padding(theme.spacingMD)
-            .modifier(GlassCard())
-        }
+        SkeletonListView()
     }
 
     // MARK: - Helpers
