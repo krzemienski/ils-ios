@@ -1,0 +1,17 @@
+.git
+.github
+.build
+.swiftpm
+DerivedData
+ILSApp
+fastlane
+docs
+specs
+*.xcodeproj
+*.xcworkspace
+*.png
+*.md
+!README.md
+.omc
+.claude
+node_modules

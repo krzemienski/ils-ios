@@ -1,0 +1,55 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build ILS for iOS Simulator"
+  lane :build do
+    xcodebuild(
+      project: "ILSApp/ILSApp.xcodeproj",
+      scheme: "ILSApp",
+      destination: "generic/platform=iOS Simulator",
+      configuration: "Debug",
+      xcargs: "CODE_SIGNING_ALLOWED=NO"
+    )
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    increment_build_number(
+      xcodeproj: "ILSApp/ILSApp.xcodeproj"
+    )
+    build_app(
+      project: "ILSApp/ILSApp.xcodeproj",
+      scheme: "ILSApp",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "ILSApp.ipa"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Generate App Store screenshots"
+  lane :screenshots do
+    capture_screenshots(
+      project: "ILSApp/ILSApp.xcodeproj",
+      scheme: "ILSApp",
+      devices: [
+        "iPhone 16 Pro Max",
+        "iPhone 16",
+        "iPad Pro (12.9-inch)"
+      ],
+      output_directory: "./fastlane/screenshots"
+    )
+  end
+
+  desc "Build macOS app"
+  lane :build_macos do
+    xcodebuild(
+      project: "ILSApp/ILSApp.xcodeproj",
+      scheme: "ILSMacApp",
+      destination: "platform=macOS",
+      configuration: "Debug"
+    )
+  end
+end
