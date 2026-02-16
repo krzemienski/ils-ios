@@ -39,6 +39,13 @@ final class MetricsWebSocketClient: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
     }
 
+    deinit {
+        reconnectTask?.cancel()
+        pollingTask?.cancel()
+        receiveTask?.cancel()
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
+    }
+
     // MARK: - Public API
 
     func connect() {
@@ -174,7 +181,7 @@ final class MetricsWebSocketClient: ObservableObject {
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
             }
         }
     }

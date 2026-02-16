@@ -333,6 +333,12 @@ actor ClaudeExecutorService {
         executor: ClaudeExecutorService,
         cleanupStdin: FileHandle?
     ) {
+        // Ensure pipe fileHandles are closed when we exit, preventing descriptor leaks
+        defer {
+            pipe.fileHandleForReading.closeFile()
+            errorPipe.fileHandleForReading.closeFile()
+        }
+
         let handle = pipe.fileHandleForReading
         var buffer = Data()
 

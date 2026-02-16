@@ -17,6 +17,10 @@ class TeamsViewModel: ObservableObject {
         self.apiClient = apiClient
     }
 
+    deinit {
+        pollingTimer?.invalidate()
+    }
+
     // MARK: - Teams
 
     func loadTeams() async {
@@ -209,7 +213,7 @@ class TeamsViewModel: ObservableObject {
                 await self?.loadTeamDetail(name: teamName)
             }
         }
-        pollingTimer?.tolerance = 0.5
+        pollingTimer?.tolerance = 1.0
     }
 
     func stopPolling() {

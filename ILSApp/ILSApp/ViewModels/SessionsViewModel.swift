@@ -52,6 +52,15 @@ class SessionsViewModel: ObservableObject {
 
     private var client: APIClient?
 
+    /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
+    private var searchCache: [(session: ChatSession, searchText: String)] = []
+    /// Cached grouped sessions, rebuilt when filteredSessions changes
+    private var cachedGroupedSessions: [(key: String, value: [ChatSession])] = []
+    /// The search text used to build the cached grouped sessions
+    private var cachedGroupedSearchText: String = ""
+    /// The session count used to invalidate grouped cache
+    private var cachedGroupedSessionCount: Int = -1
+
     init() {}
 
     /// Configure the view model with an API client.
@@ -60,27 +69,48 @@ class SessionsViewModel: ObservableObject {
         self.client = client
     }
 
-    /// Sessions filtered by the local search text
+    /// Sessions filtered by the local search text using precomputed lowercase cache
     var filteredSessions: [ChatSession] {
         guard !searchText.isEmpty else { return sessions }
         let query = searchText.lowercased()
-        return sessions.filter { session in
-            (session.name?.lowercased().contains(query) ?? false) ||
-            (session.projectName?.lowercased().contains(query) ?? false) ||
-            (session.firstPrompt?.lowercased().contains(query) ?? false)
-        }
+        return searchCache
+            .filter { $0.searchText.contains(query) }
+            .map(\.session)
     }
 
-    /// Filtered sessions grouped by project, sorted by most recently active
+    /// Rebuild the lowercase search cache when sessions array changes
+    private func rebuildSearchCache() {
+        searchCache = sessions.map { session in
+            let text = [
+                session.name?.lowercased() ?? "",
+                session.projectName?.lowercased() ?? "",
+                session.firstPrompt?.lowercased() ?? ""
+            ].joined(separator: " ")
+            return (session, text)
+        }
+        // Invalidate grouped cache
+        cachedGroupedSessionCount = -1
+    }
+
+    /// Filtered sessions grouped by project, sorted by most recently active.
+    /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessions: [(key: String, value: [ChatSession])] {
-        let grouped = Dictionary(grouping: filteredSessions) { session in
+        if cachedGroupedSearchText == searchText && cachedGroupedSessionCount == sessions.count {
+            return cachedGroupedSessions
+        }
+        let filtered = filteredSessions
+        let grouped = Dictionary(grouping: filtered) { session in
             session.projectName ?? "Ungrouped"
         }
-        return grouped.sorted { group1, group2 in
+        let sorted = grouped.sorted { group1, group2 in
             let latest1 = group1.value.map(\.lastActiveAt).max() ?? .distantPast
             let latest2 = group2.value.map(\.lastActiveAt).max() ?? .distantPast
             return latest1 > latest2
         }
+        cachedGroupedSessions = sorted
+        cachedGroupedSearchText = searchText
+        cachedGroupedSessionCount = sessions.count
+        return sorted
     }
 
     /// Filtered project groups based on search text
@@ -189,6 +219,7 @@ class SessionsViewModel: ObservableObject {
             } else {
                 sessions.append(contentsOf: newItems)
             }
+            rebuildSearchCache()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load sessions: \(error.localizedDescription)", category: "sessions")
@@ -222,6 +253,7 @@ class SessionsViewModel: ObservableObject {
             let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
             if let session = response.data {
                 sessions.insert(session, at: 0)
+                rebuildSearchCache()
                 return session
             }
         } catch {
@@ -248,12 +280,14 @@ class SessionsViewModel: ObservableObject {
         // External sessions can't be deleted from ILS DB
         if session.source == .external {
             sessions.removeAll { $0.id == session.id }
+            rebuildSearchCache()
             return
         }
 
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
             sessions.removeAll { $0.id == session.id }
+            rebuildSearchCache()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to delete session: \(error.localizedDescription)", category: "sessions")
@@ -266,6 +300,7 @@ class SessionsViewModel: ObservableObject {
             let response: APIResponse<ChatSession> = try await client.post("/sessions/\(session.id)/fork", body: EmptyBody())
             if let forked = response.data {
                 sessions.insert(forked, at: 0)
+                rebuildSearchCache()
                 return forked
             }
         } catch {

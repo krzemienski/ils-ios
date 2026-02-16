@@ -5,6 +5,7 @@ import ILSShared
 struct SystemMonitorView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel: SystemMetricsViewModel
 
     init() {
@@ -139,6 +140,15 @@ struct SystemMonitorView: View {
         }
         .onDisappear {
             viewModel.disconnect()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                if viewModel.isConnected {
+                    livePulse = true
+                }
+            } else {
+                livePulse = false
+            }
         }
     }
 

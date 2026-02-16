@@ -17,7 +17,8 @@ struct ToastModifier: ViewModifier {
                     .padding(.bottom, 32)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(2))
                             if reduceMotion {
                                 isPresented = false
                             } else {

@@ -33,21 +33,34 @@ class MCPViewModel: ObservableObject {
 
     private var client: APIClient?
 
+    /// Precomputed lowercase search strings keyed by server, rebuilt when servers change
+    private var searchCache: [(server: MCPServer, searchText: String)] = []
+
     init() {}
 
     func configure(client: APIClient) {
         self.client = client
     }
 
-    /// Filtered servers based on search text (client-side filtering for responsiveness)
+    /// Filtered servers based on search text using precomputed lowercase cache
     var filteredServers: [MCPServer] {
         guard !searchText.isEmpty else { return servers }
         let query = searchText.lowercased()
-        return servers.filter { server in
-            server.name.lowercased().contains(query) ||
-            server.command.lowercased().contains(query) ||
-            server.scope.rawValue.lowercased().contains(query) ||
-            server.args.contains { $0.lowercased().contains(query) }
+        return searchCache
+            .filter { $0.searchText.contains(query) }
+            .map(\.server)
+    }
+
+    /// Rebuild the lowercase search cache when servers array changes
+    private func rebuildSearchCache() {
+        searchCache = servers.map { server in
+            let text = [
+                server.name.lowercased(),
+                server.command.lowercased(),
+                server.scope.rawValue.lowercased(),
+                server.args.map { $0.lowercased() }.joined(separator: " ")
+            ].joined(separator: " ")
+            return (server, text)
         }
     }
 
@@ -74,6 +87,7 @@ class MCPViewModel: ObservableObject {
             let response: APIResponse<ListResponse<MCPServer>> = try await client.get(path)
             if let data = response.data {
                 servers = data.items
+                rebuildSearchCache()
             }
         } catch {
             self.error = error
@@ -104,6 +118,7 @@ class MCPViewModel: ObservableObject {
             let response: APIResponse<MCPServer> = try await client.post("/mcp", body: request)
             if let server = response.data {
                 servers.append(server)
+                rebuildSearchCache()
                 return server
             }
         } catch {
@@ -118,6 +133,7 @@ class MCPViewModel: ObservableObject {
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/mcp/\(server.name)?scope=\(server.scope.rawValue)")
             servers.removeAll { $0.id == server.id }
+            rebuildSearchCache()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to delete MCP server '\(server.name)': \(error.localizedDescription)", category: "mcp")
@@ -134,6 +150,7 @@ class MCPViewModel: ObservableObject {
             let response: APIResponse<ListResponse<MCPServer>> = try await client.get("/mcp?scope=\(scope)")
             if let data = response.data {
                 servers = data.items
+                rebuildSearchCache()
             }
         } catch {
             self.error = error
@@ -202,6 +219,7 @@ class MCPViewModel: ObservableObject {
             if let server = response.data {
                 if let index = servers.firstIndex(where: { $0.name == name }) {
                     servers[index] = server
+                    rebuildSearchCache()
                 }
                 return server
             }

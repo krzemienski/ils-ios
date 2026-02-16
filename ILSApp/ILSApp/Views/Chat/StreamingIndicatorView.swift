@@ -8,6 +8,7 @@ struct StreamingIndicatorView: View {
     @State private var isPulsing = false
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         HStack(spacing: 8) {
@@ -31,6 +32,18 @@ struct StreamingIndicatorView: View {
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
                 isPulsing = true
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    isPulsing = true
+                }
+            } else {
+                withAnimation(.default) {
+                    isPulsing = false
+                }
             }
         }
         .accessibilityLabel("AI is responding")

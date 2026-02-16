@@ -13,6 +13,7 @@ struct ThinkingSection: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     init(thinking: String, isActive: Bool = false) {
         self.thinking = thinking
@@ -46,6 +47,17 @@ struct ThinkingSection: View {
                 startPulsing()
             } else {
                 pulseScale = 1.0
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                if isActive && !reduceMotion {
+                    startPulsing()
+                }
+            } else {
+                withAnimation(.default) {
+                    pulseScale = 1.0
+                }
             }
         }
     }

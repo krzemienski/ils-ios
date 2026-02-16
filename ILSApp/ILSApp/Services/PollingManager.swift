@@ -12,6 +12,11 @@ class PollingManager {
         self.connectionManager = connectionManager
     }
 
+    deinit {
+        retryTask?.cancel()
+        healthPollTask?.cancel()
+    }
+
     func checkConnection() {
         Task { [weak self] in
             guard let self, let cm = self.connectionManager else { return }
@@ -40,10 +45,12 @@ class PollingManager {
 
     func startRetryPolling() {
         guard retryTask == nil else { return }
-        AppLogger.shared.info("Starting retry polling (every 5 seconds)", category: "app")
+        AppLogger.shared.info("Starting retry polling (exponential backoff: 5s-60s)", category: "app")
         retryTask = Task { [weak self] in
+            var delay: UInt64 = 5_000_000_000 // Start at 5 seconds
+            let maxDelay: UInt64 = 60_000_000_000 // Cap at 60 seconds
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                try? await Task.sleep(nanoseconds: delay)
                 guard !Task.isCancelled else { break }
                 guard let self, let cm = self.connectionManager else { break }
                 do {
@@ -55,7 +62,10 @@ class PollingManager {
                     self.startHealthPolling()
                     break
                 } catch {
-                    AppLogger.shared.warning("Still disconnected, retrying in 5s...", category: "app")
+                    let delaySec = delay / 1_000_000_000
+                    delay = min(delay * 2, maxDelay)
+                    let nextDelaySec = delay / 1_000_000_000
+                    AppLogger.shared.warning("Still disconnected after \(delaySec)s, retrying in \(nextDelaySec)s...", category: "app")
                 }
             }
         }

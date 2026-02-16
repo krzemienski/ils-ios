@@ -26,6 +26,8 @@ actor APIClient {
         config.timeoutIntervalForRequest = 10 // 10 seconds per request
         config.timeoutIntervalForResource = 30 // 30 seconds total
         config.waitsForConnectivity = false
+        config.allowsExpensiveNetworkAccess = true
+        config.allowsConstrainedNetworkAccess = true
         self.session = URLSession(configuration: config)
 
         self.decoder = JSONDecoder()

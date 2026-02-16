@@ -6,21 +6,7 @@ struct MessageView: View {
     @State private var showCopyConfirmation = false
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// Formatter for displaying message timestamps
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter
-    }()
-
-    /// Formatter for displaying dates (for messages from previous days)
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }()
-
+    // Date formatters centralized in DateFormatters.swift
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: theme.spacingXS) {
             HStack {
@@ -113,9 +99,9 @@ struct MessageView: View {
     /// Format timestamp based on whether it's from today or an earlier date
     private func formattedTimestamp(_ date: Date) -> String {
         if Calendar.current.isDateInToday(date) {
-            return Self.timeFormatter.string(from: date)
+            return DateFormatters.time.string(from: date)
         } else {
-            return Self.dateFormatter.string(from: date)
+            return DateFormatters.dateTime.string(from: date)
         }
     }
 }
@@ -262,7 +248,8 @@ struct MessageContentView: View {
                                 #endif
                                 showCopyConfirmation = true
                                 // Hide confirmation after 2 seconds
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                Task { @MainActor in
+                                    try? await Task.sleep(for: .seconds(2))
                                     showCopyConfirmation = false
                                 }
                             }) {

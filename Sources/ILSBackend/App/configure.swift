@@ -28,6 +28,9 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateSessions())
     app.migrations.add(CreateMessages())
     app.migrations.add(CreateThemes())
+    app.migrations.add(CreateCachedResults())
+    app.migrations.add(CreateFleetHosts())
+    app.migrations.add(AddDatabaseIndexes())
 
     // Run migrations
     try await app.autoMigrate()
@@ -39,6 +42,9 @@ func configure(_ app: Application) async throws {
     let port = Int(Environment.get("PORT") ?? "9999") ?? 9999
     app.http.server.configuration.hostname = "0.0.0.0"
     app.http.server.configuration.port = port
+
+    // Enable gzip response compression for JSON/text responses
+    app.http.server.configuration.responseCompression = .enabled
 
     app.logger.info("ILS Backend starting on http://0.0.0.0:\(port)")
 }

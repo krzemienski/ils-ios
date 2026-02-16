@@ -15,6 +15,10 @@ final class FleetViewModel: ObservableObject {
         self.apiClient = apiClient
     }
 
+    deinit {
+        healthTimer?.invalidate()
+    }
+
     func loadHosts() async {
         isLoading = true
         loadError = nil

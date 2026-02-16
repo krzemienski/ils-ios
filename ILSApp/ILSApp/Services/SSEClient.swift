@@ -36,7 +36,14 @@ class SSEClient: ObservableObject {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
         config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
+        config.allowsExpensiveNetworkAccess = true
+        config.allowsConstrainedNetworkAccess = false // Disable SSE in Low Data Mode
         self.session = URLSession(configuration: config)
+    }
+
+    deinit {
+        streamTask?.cancel()
+        session.invalidateAndCancel()
     }
 
     /// Start streaming a chat request
