@@ -172,6 +172,13 @@ struct SidebarRootView: View {
                     themesScreen
                 }
             }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                OfflineIndicator(isOffline: appState.isOffline)
+                    .animation(
+                        reduceMotion ? .none : .easeInOut(duration: 0.3),
+                        value: appState.isOffline
+                    )
+            }
             #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(theme.bgPrimary, for: .navigationBar)

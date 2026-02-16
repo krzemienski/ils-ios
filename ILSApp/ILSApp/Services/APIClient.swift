@@ -186,6 +186,25 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
+    // MARK: - Raw Request (for SyncCoordinator replay)
+
+    /// Execute a raw HTTP request without decoding the response.
+    /// Used by SyncCoordinator to replay queued operations.
+    func rawRequest(method: String, endpoint: String, body: Data?) async throws {
+        let url = URL(string: "\(baseURL)/api/v1\(endpoint)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = body
+        applyAuth(to: &request)
+
+        let (_, response) = try await performWithRetry(request: request)
+        try validateResponse(response)
+
+        invalidateCacheForMutation(path: endpoint)
+    }
+
     // MARK: - Session Helpers
 
     private struct RenameBody: Encodable {

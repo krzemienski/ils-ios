@@ -44,9 +44,27 @@ class DashboardViewModel {
         isLoading = true
         error = nil
 
+        // Cache-first: show cached sessions as recent activity while loading
+        if recentSessions.isEmpty {
+            let cached = await CacheService.shared.getCachedSessions()
+            if !cached.isEmpty {
+                // Use the most recent cached sessions as placeholder
+                recentSessions = Array(cached.prefix(10))
+                computeTotalCost()
+                AppLogger.shared.info("Loaded \(cached.count) cached sessions for dashboard", category: "dashboard")
+            }
+        }
+
         await loadStats()
         await loadRecentActivity()
         computeTotalCost()
+
+        // Cache the fresh recent sessions
+        if !recentSessions.isEmpty {
+            Task.detached { [sessions = self.recentSessions] in
+                await CacheService.shared.cacheSessions(sessions)
+            }
+        }
 
         isLoading = false
     }

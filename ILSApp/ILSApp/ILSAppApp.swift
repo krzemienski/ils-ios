@@ -46,6 +46,9 @@ struct ILSAppApp: App {
                     .datastoreLocation(.applicationDefault)
                 ])
 
+                // Initialize local cache database
+                await CacheService.shared.initialize()
+
                 try? await Task.sleep(for: .seconds(2.2))
                 withAnimation(.easeOut(duration: 0.5)) {
                     showLaunchScreen = false
@@ -66,10 +69,14 @@ class AppState {
     var selectedTab: String = "dashboard"
     var navigationIntent: ActiveScreen?
     var lastSessionId: UUID?
-    var isOffline: Bool = false
+    var lastSyncDate: Date?
+
+    /// Driven by NetworkMonitor — true when device has no network path.
+    var isOffline: Bool { !networkMonitor.isConnected }
 
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
+    let networkMonitor: NetworkMonitor
 
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
@@ -88,6 +95,7 @@ class AppState {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
+        self.networkMonitor = NetworkMonitor.shared
 
         pollingManager.checkConnection()
     }

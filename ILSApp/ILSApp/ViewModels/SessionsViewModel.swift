@@ -203,6 +203,17 @@ class SessionsViewModel {
             hasMore = true
         }
 
+        // Cache-first: show cached data immediately on first page load
+        if currentPage == 1 && sessions.isEmpty {
+            let cached = await CacheService.shared.getCachedSessions()
+            if !cached.isEmpty {
+                sessions = cached
+                totalCount = cached.count
+                rebuildSearchCache()
+                AppLogger.shared.info("Loaded \(cached.count) sessions from cache", category: "sessions")
+            }
+        }
+
         do {
             var path = "/sessions?page=\(currentPage)&limit=\(pageSize)"
             if refresh { path += "&refresh=true" }
@@ -218,6 +229,10 @@ class SessionsViewModel {
 
             if currentPage == 1 {
                 sessions = newItems
+                // Update cache with fresh data in background
+                Task.detached {
+                    await CacheService.shared.cacheSessions(newItems)
+                }
             } else {
                 sessions.append(contentsOf: newItems)
             }
