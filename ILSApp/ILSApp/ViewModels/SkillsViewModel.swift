@@ -80,17 +80,30 @@ class SkillsViewModel {
     }
 
     /// Load skills from backend
-    /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
-    func loadSkills(refresh: Bool = false) async {
+    /// - Parameters:
+    ///   - refresh: If true, bypasses server cache to rescan ~/.claude directory
+    ///   - scope: Filter by source scope (local, plugin, github, builtin). Nil or "all" returns all.
+    func loadSkills(refresh: Bool = false, scope: String? = nil) async {
         guard let client else { return }
         isLoading = true
         error = nil
 
         do {
-            let path = refresh ? "/skills?refresh=true" : "/skills"
+            var path = "/skills"
+            var params: [String] = []
+            if refresh { params.append("refresh=true") }
+            if let scope, !scope.isEmpty, scope != "all" {
+                params.append("scope=\(scope)")
+            }
+            if !params.isEmpty { path += "?" + params.joined(separator: "&") }
+
             let response: APIResponse<ListResponse<Skill>> = try await client.get(path)
             if let data = response.data {
-                skills = data.items
+                // Sort: active first, then alphabetical by name
+                skills = data.items.sorted { lhs, rhs in
+                    if lhs.isActive != rhs.isActive { return lhs.isActive }
+                    return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+                }
                 rebuildSearchCache()
             }
         } catch {

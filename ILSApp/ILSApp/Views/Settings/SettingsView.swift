@@ -53,10 +53,10 @@ struct SettingsView: View {
                     Spacer()
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(appState.isConnected ? Color.green : Color.red)
+                            .fill(appState.isConnected ? theme.success : theme.error)
                             .frame(width: 8, height: 8)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
 
@@ -115,7 +115,7 @@ struct SettingsView: View {
                         ProgressView()
                             .padding(.trailing, 8)
                         Text("Loading configuration...")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 } else if let config = viewModel.config?.content {
                     // Default Model - Editable
@@ -128,8 +128,19 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Default Model") {
-                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
-                                .foregroundColor(ILSTheme.secondaryText)
+                            HStack(spacing: 4) {
+                                Text(formatModelName(config.model ?? "claude-opus-4-20250514"))
+                                    .foregroundStyle(theme.textSecondary)
+                                if config.model == nil {
+                                    Text("Host Default")
+                                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                        .foregroundStyle(theme.accent)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(theme.accent.opacity(0.15))
+                                        .clipShape(Capsule())
+                                }
+                            }
                         }
                     }
 
@@ -144,7 +155,7 @@ struct SettingsView: View {
                     } else {
                         LabeledContent("Color Scheme") {
                             Text((config.theme?.colorScheme ?? "system").capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
 
@@ -152,20 +163,30 @@ struct SettingsView: View {
                     if let channel = config.autoUpdatesChannel {
                         LabeledContent("Updates Channel") {
                             Text(channel.capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
 
                     // Always Thinking (read-only)
-                    LabeledContent("Extended Thinking") {
+                    LabeledContent {
                         Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                            .foregroundColor(config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Extended Thinking")
+                            InfoTooltipButton(text: "Allows Claude to use internal reasoning before responding. Uses additional tokens but improves response quality.")
+                        }
                     }
 
                     // Co-authored by (read-only)
-                    LabeledContent("Include Co-Author") {
+                    LabeledContent {
                         Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                            .foregroundColor(config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Include Co-Author")
+                            InfoTooltipButton(text: "Adds 'Co-authored-by: Claude' attribution to git commits made during sessions.")
+                        }
                     }
 
                     // Save button when editing
@@ -184,7 +205,7 @@ struct SettingsView: View {
                     }
                 } else {
                     Text("No configuration loaded")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
             } header: {
                 HStack {
@@ -198,7 +219,7 @@ struct SettingsView: View {
                             }
                             isEditing.toggle()
                         }
-                        .font(ILSTheme.captionFont)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .textCase(nil)
                     }
                 }
@@ -214,33 +235,33 @@ struct SettingsView: View {
                     if let apiKeyStatus = config.apiKeyStatus {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
-                                .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                                .foregroundColor(apiKeyStatus.isConfigured ? theme.success : theme.warning)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
-                                    .font(ILSTheme.bodyFont)
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 if let maskedKey = apiKeyStatus.maskedKey {
                                     Text("Key: \(maskedKey)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textSecondary)
                                 }
                                 if let source = apiKeyStatus.source {
                                     Text("Source: \(source)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textSecondary)
                                 }
                             }
                         }
                     } else {
                         HStack {
                             Image(systemName: "key.fill")
-                                .foregroundColor(.orange)
+                                .foregroundColor(theme.warning)
                             Text("API Key status unknown")
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
             } header: {
                 Text("API Key")
@@ -254,7 +275,7 @@ struct SettingsView: View {
                     // Default Permission Mode
                     LabeledContent("Default Mode") {
                         Text(permissions.defaultMode?.capitalized ?? "Prompt")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
                     }
 
                     // Allowed Commands
@@ -262,8 +283,8 @@ struct SettingsView: View {
                         DisclosureGroup {
                             ForEach(allowed, id: \.self) { item in
                                 Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
                             LabeledContent("Allowed", value: "\(allowed.count) rules")
@@ -277,8 +298,8 @@ struct SettingsView: View {
                         DisclosureGroup {
                             ForEach(denied, id: \.self) { item in
                                 Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
                             LabeledContent("Denied", value: "\(denied.count) rules")
@@ -288,7 +309,7 @@ struct SettingsView: View {
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
             } header: {
                 Text("Permissions")
@@ -317,7 +338,7 @@ struct SettingsView: View {
                     if let statusLine = config.statusLine {
                         LabeledContent("Status Line") {
                             Text(statusLine.type ?? "disabled")
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
 
@@ -327,11 +348,15 @@ struct SettingsView: View {
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
 
                 // Theme Management
-                NavigationLink("Manage Themes") {
+                NavigationLink("Browse Themes") {
+                    ThemeMarketplaceView()
+                }
+
+                NavigationLink("Custom Themes") {
                     ThemesListView()
                 }
 
@@ -372,13 +397,15 @@ struct SettingsView: View {
                         Text("Claude Code Documentation")
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
             }
         }
         .scrollContentBackground(.hidden)
         .background(theme.bgPrimary)
+        .foregroundStyle(theme.textPrimary)
+        .environment(\.colorScheme, .dark)
         .navigationTitle("Settings")
         .screenshotProtected()
         .refreshable {
@@ -523,7 +550,7 @@ struct SettingsView: View {
     private func resetEditedValues() {
         // Reset edited values to current config values
         if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-sonnet-4-20250514"
+            editedModel = config.model ?? "claude-opus-4-20250514"
             editedColorScheme = config.theme?.colorScheme ?? "system"
         }
     }

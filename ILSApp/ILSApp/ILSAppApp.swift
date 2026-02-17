@@ -49,6 +49,9 @@ struct ILSAppApp: App {
                 // Initialize local cache database
                 await CacheService.shared.initialize()
 
+                // Start observing network changes for retry queue
+                await SyncCoordinator.shared.startObserving()
+
                 try? await Task.sleep(for: .seconds(2.2))
                 withAnimation(.easeOut(duration: 0.5)) {
                     showLaunchScreen = false

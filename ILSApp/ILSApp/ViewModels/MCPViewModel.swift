@@ -2,21 +2,13 @@ import Foundation
 import Observation
 import ILSShared
 
-// MARK: - Hashable conformance for MCPServer (needed for NavigationLink)
-extension MCPServer: @retroactive Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-
-    public static func == (lhs: MCPServer, rhs: MCPServer) -> Bool {
-        lhs.id == rhs.id
-    }
-}
+// MCPServer Hashable conformance is declared at the source in ILSShared
 
 @MainActor
 @Observable
 class MCPViewModel {
     var servers: [MCPServer] = []
+    var totalCount: Int = 0
     var isLoading = false
     var error: Error?
     var searchText = ""

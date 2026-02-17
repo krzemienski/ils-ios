@@ -24,7 +24,7 @@ struct MCPServerDetailView: View {
                                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
 
-                            Text(server.args.joined(separator: " "))
+                            Text(server.args.map { maskSensitiveValue($0) }.joined(separator: " "))
                                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
@@ -45,7 +45,7 @@ struct MCPServerDetailView: View {
 
                                     Spacer()
 
-                                    Text(env[key] ?? "")
+                                    Text(maskEnvValue(key: key, value: env[key] ?? ""))
                                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                         .foregroundStyle(theme.textSecondary)
                                         .lineLimit(1)
@@ -161,11 +161,42 @@ struct MCPServerDetailView: View {
 
     // MARK: - Helpers
 
+    /// Patterns that indicate a value is sensitive and should be masked.
+    private static let sensitivePatterns: [String] = [
+        "key", "token", "secret", "password", "credential", "auth",
+        "api_key", "apikey", "api-key", "bearer", "ghp_", "sk-", "ghu_"
+    ]
+
+    /// Mask a value if it looks like a secret (long alphanumeric string or matches sensitive patterns).
+    private func maskSensitiveValue(_ value: String) -> String {
+        let lower = value.lowercased()
+        let looksLikeToken = value.count > 20 && value.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" }
+        let matchesPattern = Self.sensitivePatterns.contains { lower.contains($0) }
+
+        if looksLikeToken || matchesPattern {
+            let prefix = String(value.prefix(4))
+            return "\(prefix)****"
+        }
+        return value
+    }
+
+    /// Mask environment variable value if the key or value suggests it's sensitive.
+    private func maskEnvValue(key: String, value: String) -> String {
+        let lowerKey = key.lowercased()
+        let isSensitiveKey = Self.sensitivePatterns.contains { lowerKey.contains($0) }
+        if isSensitiveKey {
+            let prefix = String(value.prefix(4))
+            return value.count > 4 ? "\(prefix)****" : "****"
+        }
+        return maskSensitiveValue(value)
+    }
+
     private var fullCommand: String {
         if server.args.isEmpty {
             return server.command
         }
-        return "\(server.command) \(server.args.joined(separator: " "))"
+        let maskedArgs = server.args.map { maskSensitiveValue($0) }
+        return "\(server.command) \(maskedArgs.joined(separator: " "))"
     }
 
     private var statusColor: Color {

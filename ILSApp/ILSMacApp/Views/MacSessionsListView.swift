@@ -3,8 +3,8 @@ import ILSShared
 
 /// macOS-optimized sessions list view with search, grouping, and keyboard navigation
 struct MacSessionsListView: View {
-    @StateObject private var viewModel = SessionsViewModel()
-    @EnvironmentObject var appState: AppState
+    @State private var viewModel = SessionsViewModel()
+    @Environment(AppState.self) var appState
     @EnvironmentObject var windowManager: WindowManager
     @Environment(\.theme) private var theme: ThemeSnapshot
 
@@ -363,7 +363,7 @@ struct MacSessionRowContent: View {
         onRenameSession: { _, _ in },
         onExportSession: { _ in }
     )
-    .environmentObject(AppState())
+    .environment(AppState())
     .environmentObject(WindowManager.shared)
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     .frame(width: 320, height: 600)

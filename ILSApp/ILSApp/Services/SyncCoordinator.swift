@@ -55,12 +55,25 @@ actor SyncCoordinator {
 
     private var queue: [QueuedOperation] = []
     private var isDraining = false
-    // Safe: only written once during init, read once during deinit. Actor is a singleton.
-    nonisolated(unsafe) private var networkObserver: (any NSObjectProtocol)?
+    private var networkObserver: (any NSObjectProtocol)?
 
     private init() {
         queue = Self.loadQueue()
-        observeNetworkChanges()
+    }
+
+    /// Call once after creation to begin observing network availability.
+    func startObserving() {
+        guard networkObserver == nil else { return }
+        let observer = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task {
+                await SyncCoordinator.shared.drainQueue()
+            }
+        }
+        networkObserver = observer
     }
 
     deinit {
@@ -73,6 +86,10 @@ actor SyncCoordinator {
 
     /// Enqueue a failed operation for later retry.
     func enqueue(method: String, endpoint: String, body: Data?) {
+        // Reserve capacity upfront to reduce allocations during high-traffic enqueue bursts
+        if queue.isEmpty {
+            queue.reserveCapacity(16)
+        }
         // Enforce max queue size to prevent unbounded growth
         guard queue.count < Self.maxQueueSize else {
             AppLogger.shared.warning(
@@ -192,27 +209,12 @@ actor SyncCoordinator {
         }
     }
 
-    // MARK: - Network Observation
-
-    private nonisolated func observeNetworkChanges() {
-        let observer = NotificationCenter.default.addObserver(
-            forName: .networkDidBecomeAvailable,
-            object: nil,
-            queue: .main
-        ) { _ in
-            Task {
-                await SyncCoordinator.shared.drainQueue()
-            }
-        }
-        networkObserver = observer
-    }
-
     // MARK: - Persistence
 
     private func persistQueue() {
         do {
             let data = try JSONEncoder().encode(queue)
-            try data.write(to: Self.queueFileURL, options: .atomic)
+            try data.write(to: Self.queueFileURL, options: [.atomic, .completeFileProtection])
         } catch {
             AppLogger.shared.error(
                 "Failed to persist sync queue: \(error.localizedDescription)",

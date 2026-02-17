@@ -23,17 +23,17 @@ struct HomeView: View {
                 TipView(createSessionTip)
                     .tipBackground(theme.bgSecondary)
 
-                recentSessionsSection
                 quickActionsGrid
+                recentSessionsSection
                 statsSection
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingMD)
         }
         .background(theme.bgPrimary)
+        .navigationTitle("Home")
         #if os(iOS)
-        .inlineNavigationBarTitle()
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
         #endif
         .task {
             dashboardVM.configure(client: appState.apiClient)

@@ -18,7 +18,7 @@ class TeamsViewModel {
     }
 
     private let apiClient: APIClient
-    @ObservationIgnored private var pollingTimer: Timer?
+    @ObservationIgnored private var pollingTask: Task<Void, Never>?
     @ObservationIgnored private var activeTeamName: String?
 
     init(apiClient: APIClient) {
@@ -26,7 +26,7 @@ class TeamsViewModel {
     }
 
     deinit {
-        pollingTimer?.invalidate()
+        pollingTask?.cancel()
     }
 
     private func handleScenePhaseChange() {
@@ -36,8 +36,8 @@ class TeamsViewModel {
                 startPolling(teamName: teamName)
             }
         case .inactive, .background:
-            pollingTimer?.invalidate()
-            pollingTimer = nil
+            pollingTask?.cancel()
+            pollingTask = nil
         @unknown default:
             break
         }
@@ -231,17 +231,18 @@ class TeamsViewModel {
     func startPolling(teamName: String) {
         stopPolling()
         activeTeamName = teamName
-        pollingTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        pollingTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
+                guard !Task.isCancelled else { break }
                 await self?.loadTeamDetail(name: teamName)
             }
         }
-        pollingTimer?.tolerance = 3.0
     }
 
     func stopPolling() {
-        pollingTimer?.invalidate()
-        pollingTimer = nil
+        pollingTask?.cancel()
+        pollingTask = nil
         activeTeamName = nil
     }
 }

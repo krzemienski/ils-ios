@@ -5,7 +5,7 @@ struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
-    @AppStorage("enableAgentTeams") private var enableAgentTeams = false
+    @AppStorage("enableAgentTeams") private var enableAgentTeams = true
 
     @Binding var activeScreen: ActiveScreen
     @Binding var isSidebarOpen: Bool
@@ -94,9 +94,7 @@ struct SidebarView: View {
             if enableAgentTeams {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
-            #if DEBUG
-            sidebarNavItem(icon: "server.rack", label: "Fleet", screen: .fleet)
-            #endif
+            sidebarNavItem(icon: "server.rack", label: "Hosts", screen: .fleet)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)

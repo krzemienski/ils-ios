@@ -45,9 +45,9 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // MARK: - Mac Content View
 
 struct MacContentView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var sessionsViewModel = SessionsViewModel()
+    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -59,6 +59,7 @@ struct MacContentView: View {
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
+        @Bindable var appState = appState
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar (left column)
             sidebarContent
@@ -83,6 +84,14 @@ struct MacContentView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
             handleNavigationIntent(intent)
+        }
+        .onChange(of: activeScreen) { _, newScreen in
+            switch newScreen {
+            case .home, .chat:
+                columnVisibility = .all
+            default:
+                columnVisibility = .doubleColumn
+            }
         }
         // Observe menu bar command notifications
         .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
@@ -134,7 +143,7 @@ struct MacContentView: View {
         }
         .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
-                .environmentObject(appState)
+                .environment(appState)
                 .environment(\.theme, theme)
         }
         .alert("Rename Session", isPresented: Binding(
@@ -307,7 +316,7 @@ struct MacContentView: View {
     private var detailContent: some View {
         switch activeScreen {
         case .home:
-            HomeView(
+            MacDashboardView(
                 onSessionSelected: { session in
                     activeScreen = .chat(session)
                 },
@@ -316,11 +325,11 @@ struct MacContentView: View {
                 }
             )
         case .chat(let session):
-            ChatView(session: session)
+            MacChatView(session: session)
         case .system:
             SystemMonitorView()
         case .settings:
-            SettingsView()
+            MacSettingsView()
         case .browser:
             BrowserView()
         case .teams:
@@ -602,7 +611,7 @@ struct MacSessionRow: View {
 
 #Preview {
     MacContentView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

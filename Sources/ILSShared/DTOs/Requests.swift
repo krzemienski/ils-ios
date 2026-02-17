@@ -11,7 +11,7 @@ import Foundation
 ///
 /// - Parameters:
 ///   - T: The type of the data payload
-public struct APIResponse<T: Codable>: Codable where T: Sendable {
+public struct APIResponse<T: Codable>: Codable, Sendable where T: Sendable {
     /// Whether the request succeeded.
     public let success: Bool
     /// Response data payload (nil on error).
@@ -42,7 +42,7 @@ public struct APIError: Codable, Sendable {
 /// Generic list response with items array and total count.
 ///
 /// Used for paginated endpoints that return collections.
-public struct ListResponse<T: Codable>: Codable where T: Sendable {
+public struct ListResponse<T: Codable>: Codable, Sendable where T: Sendable {
     /// Array of items in this page.
     public let items: [T]
     /// Total number of items available.

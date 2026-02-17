@@ -54,7 +54,7 @@ struct FleetManagementView: View {
             .padding(.top, theme.spacingSM)
         }
         .background(theme.bgPrimary)
-        .navigationTitle("Fleet")
+        .navigationTitle("Hosts")
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {

@@ -33,7 +33,7 @@ struct PremiumView: View {
             }
             .background(theme.bgPrimary.ignoresSafeArea())
             .navigationTitle("ILS Premium")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }

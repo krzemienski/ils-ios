@@ -23,6 +23,9 @@ struct BrowserView: View {
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""
     @State private var mcpScope: String = "all"
+    @State private var skillsScope: String = "all"
+    @State private var showGitHubSearch = false
+    @State private var showMarketplaceSearch = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -206,7 +209,7 @@ struct BrowserView: View {
                     } label: {
                         browserRow(
                             name: server.name,
-                            subtitle: "\(server.command) \(server.args.joined(separator: " "))",
+                            subtitle: server.command,
                             status: server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown"),
                             statusColor: server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning),
                             entityColor: theme.entityMCP,
@@ -223,30 +226,86 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var skillsContent: some View {
-        let items = skillsVM.filteredSkills
-        if skillsVM.isLoading && items.isEmpty {
-            loadingRows
-        } else if items.isEmpty {
-            emptyState(
-                icon: "sparkles",
-                title: searchText.isEmpty ? "No Skills" : "No Results",
-                subtitle: searchText.isEmpty ? "No skills found" : "Try a different search"
-            )
-        } else {
-            ForEach(items) { skill in
-                NavigationLink {
-                    SkillDetailView(skill: skill)
-                } label: {
-                    browserRow(
-                        name: skill.name,
-                        subtitle: skill.description ?? "No description",
-                        status: skill.isActive ? "Active" : "Inactive",
-                        statusColor: skill.isActive ? theme.success : theme.textTertiary,
-                        entityColor: theme.entitySkill,
-                        badge: skill.tags.first
-                    )
+        VStack(spacing: theme.spacingSM) {
+            // Scope filter
+            HStack(spacing: 0) {
+                ForEach(["all", "local", "plugin"], id: \.self) { scope in
+                    Button {
+                        skillsScope = scope
+                    } label: {
+                        Text(scope.capitalized)
+                            .font(.system(size: theme.fontCaption, weight: skillsScope == scope ? .semibold : .regular, design: theme.fontDesign))
+                            .foregroundStyle(skillsScope == scope ? theme.textPrimary : theme.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(skillsScope == scope ? theme.entitySkill.opacity(0.15) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(scope.capitalized) scope filter")
                 }
-                .buttonStyle(.plain)
+            }
+            .padding(4)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            .onChange(of: skillsScope) { _, newScope in
+                Task {
+                    await skillsVM.loadSkills(scope: newScope == "all" ? nil : newScope)
+                }
+            }
+
+            // GitHub search toggle
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showGitHubSearch.toggle()
+                }
+            } label: {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "globe")
+                        .foregroundStyle(theme.entitySkill)
+                    Text("Search GitHub")
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Image(systemName: showGitHubSearch ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+            .buttonStyle(.plain)
+
+            if showGitHubSearch {
+                gitHubSearchSection
+            }
+
+            // Skills list
+            let items = skillsVM.filteredSkills
+            if skillsVM.isLoading && items.isEmpty {
+                loadingRows
+            } else if items.isEmpty {
+                emptyState(
+                    icon: "sparkles",
+                    title: searchText.isEmpty ? "No Skills" : "No Results",
+                    subtitle: searchText.isEmpty ? "No skills found" : "Try a different search"
+                )
+            } else {
+                ForEach(items) { skill in
+                    NavigationLink {
+                        SkillDetailView(skill: skill)
+                    } label: {
+                        browserRow(
+                            name: skill.name,
+                            subtitle: skill.description ?? "No description",
+                            status: skill.isActive ? "Active" : "Inactive",
+                            statusColor: skill.isActive ? theme.success : theme.textTertiary,
+                            entityColor: theme.entitySkill,
+                            badge: skill.source != .local ? skill.source.rawValue.capitalized : skill.tags.first
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
@@ -281,6 +340,34 @@ struct BrowserView: View {
                     }
                     .padding(.horizontal, theme.spacingMD)
                 }
+            }
+
+            // Marketplace search toggle
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showMarketplaceSearch.toggle()
+                }
+            } label: {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "globe")
+                        .foregroundStyle(theme.entityPlugin)
+                    Text("Search Marketplace")
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Image(systemName: showMarketplaceSearch ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, theme.spacingMD)
+
+            if showMarketplaceSearch {
+                marketplaceSearchSection
+                    .padding(.horizontal, theme.spacingMD)
             }
 
             let items = pluginsVM.filteredPluginsByCategory
@@ -352,6 +439,203 @@ struct BrowserView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
                 }
+            }
+        }
+    }
+
+    // MARK: - GitHub Search Section
+
+    @ViewBuilder
+    private var gitHubSearchSection: some View {
+        VStack(spacing: theme.spacingSM) {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                TextField("Search GitHub for skills...", text: Binding(
+                    get: { skillsVM.gitHubSearchText },
+                    set: { skillsVM.updateGitHubSearchText($0) }
+                ))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+                if !skillsVM.gitHubSearchText.isEmpty {
+                    Button {
+                        skillsVM.updateGitHubSearchText("")
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(theme.textTertiary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                }
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            if skillsVM.isSearchingGitHub {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingMD)
+            }
+
+            ForEach(skillsVM.gitHubResults) { result in
+                HStack(spacing: theme.spacingMD) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(result.name)
+                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                            .lineLimit(1)
+                        if let desc = result.description {
+                            Text(desc)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(2)
+                        }
+                        HStack(spacing: theme.spacingSM) {
+                            if result.stars > 0 {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.yellow)
+                                    Text("\(result.stars)")
+                                        .font(.system(size: 10, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textTertiary)
+                                }
+                            }
+                            Text(result.repository)
+                                .font(.system(size: 10, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer()
+
+                    Button {
+                        Task { _ = await skillsVM.installFromGitHub(result: result) }
+                    } label: {
+                        Text("Install")
+                            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(theme.entitySkill)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+        }
+    }
+
+    // MARK: - Marketplace Search Section
+
+    @ViewBuilder
+    private var marketplaceSearchSection: some View {
+        VStack(spacing: theme.spacingSM) {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                TextField("Search marketplace...", text: Binding(
+                    get: { pluginsVM.marketplaceSearchText },
+                    set: { newValue in
+                        pluginsVM.marketplaceSearchText = newValue
+                        Task { await pluginsVM.searchMarketplace(query: newValue) }
+                    }
+                ))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+                if !pluginsVM.marketplaceSearchText.isEmpty {
+                    Button {
+                        pluginsVM.marketplaceSearchText = ""
+                        pluginsVM.searchResults = []
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(theme.textTertiary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                }
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            if pluginsVM.isSearchingMarketplace {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingMD)
+            }
+
+            ForEach(pluginsVM.searchResults, id: \.name) { result in
+                let isInstalled = pluginsVM.plugins.contains { $0.name == result.name }
+                HStack(spacing: theme.spacingMD) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(result.name)
+                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+                            Spacer()
+                            if isInstalled {
+                                Text("Installed")
+                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                    .foregroundStyle(theme.success)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(theme.success.opacity(0.15))
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                            }
+                        }
+                        if let desc = result.description {
+                            Text(desc)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(2)
+                        }
+                    }
+
+                    if !isInstalled {
+                        Button {
+                            Task {
+                                await pluginsVM.installPlugin(name: result.name, marketplace: "github")
+                            }
+                        } label: {
+                            if pluginsVM.installingPlugins.contains(result.name) {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .scaleEffect(0.8)
+                            } else {
+                                Text("Install")
+                                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(theme.entityPlugin)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
             }
         }
     }

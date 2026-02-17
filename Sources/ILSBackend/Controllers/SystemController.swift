@@ -30,10 +30,28 @@ struct SystemController: RouteCollection {
 
     // MARK: - REST Endpoints
 
-    /// GET /system/metrics — returns current system metrics.
+    /// GET /system/metrics — returns current system metrics with timeout protection.
     @Sendable
     func metrics(req: Request) async throws -> Response {
-        let stats = await metricsService.getMetrics()
+        // Wrap in timeout to prevent hanging from blocked system calls
+        let stats: SystemMetricsService.SystemMetrics
+        do {
+            stats = try await withThrowingTaskGroup(of: SystemMetricsService.SystemMetrics.self) { group in
+                let service = metricsService
+                group.addTask {
+                    await service.getMetrics()
+                }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 5_000_000_000) // 5 second timeout
+                    throw Abort(.gatewayTimeout, reason: "System metrics collection timed out")
+                }
+                let result = try await group.next()!
+                group.cancelAll()
+                return result
+            }
+        } catch {
+            throw Abort(.gatewayTimeout, reason: "System metrics collection timed out")
+        }
 
         let response = SystemMetricsResponse(
             cpu: stats.cpu,

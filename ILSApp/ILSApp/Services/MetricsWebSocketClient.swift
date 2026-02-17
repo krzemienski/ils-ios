@@ -1,19 +1,21 @@
 import Foundation
+import Observation
 import ILSShared
 
 /// WebSocket client for live system metrics streaming.
 /// Falls back to REST polling if WebSocket fails 3 times.
 @MainActor
-final class MetricsWebSocketClient: ObservableObject {
-    @Published var latestMetrics: SystemMetricsResponse?
-    @Published var isConnected: Bool = false
+@Observable
+final class MetricsWebSocketClient {
+    var latestMetrics: SystemMetricsResponse?
+    var isConnected: Bool = false
 
     /// Sliding window of recent data points for charts (max 60).
-    @Published var cpuHistory: [MetricDataPoint] = []
-    @Published var memoryHistory: [MetricDataPoint] = []
-    @Published var diskHistory: [MetricDataPoint] = []
-    @Published var networkInHistory: [MetricDataPoint] = []
-    @Published var networkOutHistory: [MetricDataPoint] = []
+    var cpuHistory: [MetricDataPoint] = []
+    var memoryHistory: [MetricDataPoint] = []
+    var diskHistory: [MetricDataPoint] = []
+    var networkInHistory: [MetricDataPoint] = []
+    var networkOutHistory: [MetricDataPoint] = []
 
     let baseURL: String
     private var webSocketTask: URLSessionWebSocketTask?
@@ -37,13 +39,6 @@ final class MetricsWebSocketClient: ObservableObject {
         self.session = URLSession(configuration: .default)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-    }
-
-    deinit {
-        reconnectTask?.cancel()
-        pollingTask?.cancel()
-        receiveTask?.cancel()
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
     }
 
     // MARK: - Public API
@@ -92,7 +87,7 @@ final class MetricsWebSocketClient: ObservableObject {
         webSocketTask = session.webSocketTask(with: url)
         webSocketTask?.resume()
 
-        isConnected = true
+        // Don't set isConnected here — wait for first successful data receive
         reconnectAttempts = 0
 
         receiveTask = Task { [weak self] in
@@ -130,6 +125,7 @@ final class MetricsWebSocketClient: ObservableObject {
         let now = Date()
 
         latestMetrics = metrics
+        if !isConnected { isConnected = true }
 
         appendDataPoint(to: &cpuHistory, value: metrics.cpu, at: now)
         appendDataPoint(to: &memoryHistory, value: metrics.memory.percentage, at: now)

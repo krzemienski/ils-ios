@@ -70,17 +70,37 @@ struct PluginsController: RouteCollection {
         // Read enabled status from settings.json via Codable
         let decoder = JSONDecoder()
         var enabledPlugins: [String: Bool] = [:]
-        if fm.fileExists(atPath: settingsPath),
-           let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
-           let settings = try? decoder.decode(SettingsFilePartial.self, from: settingsData) {
-            enabledPlugins = settings.enabledPlugins ?? [:]
+        if fm.fileExists(atPath: settingsPath) {
+            do {
+                let settingsData = try Data(contentsOf: URL(fileURLWithPath: settingsPath))
+                let settings = try decoder.decode(SettingsFilePartial.self, from: settingsData)
+                enabledPlugins = settings.enabledPlugins ?? [:]
+            } catch {
+                req.logger.warning("Failed to decode settings.json: \(error.localizedDescription)")
+            }
         }
 
         // Read installed plugins from installed_plugins.json via Codable
-        guard fm.fileExists(atPath: installedPluginsPath),
-              let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
-              let installedFile = try? decoder.decode(InstalledPluginsFile.self, from: data),
-              let pluginsDict = installedFile.plugins else {
+        guard fm.fileExists(atPath: installedPluginsPath) else {
+            return APIResponse(
+                success: true,
+                data: ListResponse(items: plugins)
+            )
+        }
+
+        let installedFile: InstalledPluginsFile
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: installedPluginsPath))
+            installedFile = try decoder.decode(InstalledPluginsFile.self, from: data)
+        } catch {
+            req.logger.warning("Failed to decode installed_plugins.json: \(error.localizedDescription)")
+            return APIResponse(
+                success: true,
+                data: ListResponse(items: plugins)
+            )
+        }
+
+        guard let pluginsDict = installedFile.plugins else {
             return APIResponse(
                 success: true,
                 data: ListResponse(items: plugins)
@@ -115,12 +135,16 @@ struct PluginsController: RouteCollection {
                 let manifestPath = "\(path)/.claude-plugin/plugin.json"
                 let altManifestPath = "\(path)/plugin.json"
 
-                if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
-                   let manifest = try? decoder.decode(PluginManifest.self, from: manifestData) {
-                    description = manifest.description
-                } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
-                          let manifest = try? decoder.decode(PluginManifest.self, from: manifestData) {
-                    description = manifest.description
+                for candidatePath in [manifestPath, altManifestPath] {
+                    guard fm.fileExists(atPath: candidatePath) else { continue }
+                    do {
+                        let manifestData = try Data(contentsOf: URL(fileURLWithPath: candidatePath))
+                        let manifest = try decoder.decode(PluginManifest.self, from: manifestData)
+                        description = manifest.description
+                        break
+                    } catch {
+                        req.logger.debug("Failed to decode plugin manifest at \(candidatePath): \(error.localizedDescription)")
+                    }
                 }
 
                 // Check for commands directory
@@ -334,11 +358,17 @@ struct PluginsController: RouteCollection {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
         var installedFile: InstalledPluginsFile = {
-            guard let data = try? Data(contentsOf: URL(fileURLWithPath: installedPath)),
-                  let decoded = try? decoder.decode(InstalledPluginsFile.self, from: data) else {
+            guard FileManager.default.fileExists(atPath: installedPath) else {
                 return InstalledPluginsFile(plugins: [:])
             }
-            return decoded
+            do {
+                let data = try Data(contentsOf: URL(fileURLWithPath: installedPath))
+                return try decoder.decode(InstalledPluginsFile.self, from: data)
+            } catch {
+                // Log at runtime via stderr since closures can't access req.logger
+                fputs("Warning: Failed to decode installed_plugins.json: \(error.localizedDescription)\n", stderr)
+                return InstalledPluginsFile(plugins: [:])
+            }
         }()
 
         let pluginKey = "\(input.pluginName)@\(input.marketplace)"
@@ -356,13 +386,18 @@ struct PluginsController: RouteCollection {
         try jsonData.write(to: URL(fileURLWithPath: installedPath))
 
         // Read plugin manifest for description via Codable
+        let fm2 = FileManager.default
         var description: String?
         for manifestName in [".claude-plugin/plugin.json", "plugin.json", "package.json"] {
             let path = "\(targetDir)/\(manifestName)"
-            if let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
-               let manifest = try? decoder.decode(PluginManifest.self, from: data) {
+            guard fm2.fileExists(atPath: path) else { continue }
+            do {
+                let data = try Data(contentsOf: URL(fileURLWithPath: path))
+                let manifest = try decoder.decode(PluginManifest.self, from: data)
                 description = manifest.description
                 break
+            } catch {
+                req.logger.debug("Failed to decode manifest at \(path): \(error.localizedDescription)")
             }
         }
 
