@@ -9,6 +9,8 @@ final class FleetViewModel {
     var activeHostId: UUID?
     var isLoading = false
     var loadError: String?
+    /// Error message when auto-registering localhost fails.
+    var autoRegisterError: String?
     var scenePhase: ScenePhase = .active {
         didSet {
             handleScenePhaseChange()
@@ -62,6 +64,7 @@ final class FleetViewModel {
     }
 
     private func autoRegisterLocalhost() async {
+        autoRegisterError = nil
         let request = RegisterFleetHostRequest(
             name: "Local Backend",
             host: "localhost",
@@ -79,7 +82,7 @@ final class FleetViewModel {
                 activeHostId = newHost.id
             }
         } catch {
-            // Silent fail - user can manually add if needed
+            autoRegisterError = "Could not auto-register localhost: \(error.localizedDescription)"
         }
     }
 
@@ -101,7 +104,11 @@ final class FleetViewModel {
             let updated: FleetHost? = try? await apiClient.post("/fleet/\(id)/activate", body: EmptyBody())
             if updated != nil {
                 activeHostId = id
-                for i in hosts.indices { hosts[i].isActive = hosts[i].id == id }
+                hosts = hosts.map { host in
+                    var copy = host
+                    copy.isActive = host.id == id
+                    return copy
+                }
             }
         }
     }
@@ -131,11 +138,15 @@ final class FleetViewModel {
     }
 
     private func refreshAllHealth() async {
-        for i in hosts.indices {
-            if let health: FleetHealthResponse = try? await apiClient.get("/fleet/\(hosts[i].id)/health") {
-                hosts[i].healthStatus = health.status
-                hosts[i].lastHealthCheck = health.lastChecked
+        var updatedHosts = hosts
+        for index in updatedHosts.indices {
+            if let health: FleetHealthResponse = try? await apiClient.get("/fleet/\(updatedHosts[index].id)/health") {
+                var copy = updatedHosts[index]
+                copy.healthStatus = health.status
+                copy.lastHealthCheck = health.lastChecked
+                updatedHosts[index] = copy
             }
         }
+        hosts = updatedHosts
     }
 }

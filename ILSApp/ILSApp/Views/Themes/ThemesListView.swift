@@ -55,10 +55,12 @@ struct ThemesListView: View {
             }
         }
         .sheet(isPresented: $showingNewTheme) {
-            Text("New Theme Editor - Coming Soon")
+            ThemeEditorView()
+                .environment(viewModel)
         }
         .sheet(item: $selectedTheme) { theme in
-            Text("Theme Editor for \(theme.name) - Coming Soon")
+            ThemeEditorView(theme: theme)
+                .environment(viewModel)
         }
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {

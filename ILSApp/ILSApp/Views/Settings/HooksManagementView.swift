@@ -178,6 +178,8 @@ struct HooksManagementView: View {
 
     // MARK: - Empty State
 
+    @State private var showCopiedConfirmation = false
+
     private var emptyState: some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: "gearshape.2")
@@ -186,11 +188,83 @@ struct HooksManagementView: View {
             Text("No Hooks Configured")
                 .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
-            Text("Hooks let you run custom commands at key points in Claude Code's lifecycle. Configure them in your settings.json file.")
+            Text("Hooks let you run custom commands at key points in Claude Code's lifecycle, such as before/after tool use or when a session ends.")
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, theme.spacingLG)
+
+            // Actionable guidance card
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Text("To add hooks, edit your settings file:")
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+
+                Text("~/.claude/settings.json")
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
+                    .foregroundStyle(theme.accent)
+                    .padding(theme.spacingSM)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(theme.bgTertiary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+                HStack(spacing: theme.spacingSM) {
+                    NavigationLink {
+                        ConfigEditorView(scope: "user")
+                    } label: {
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: "doc.text")
+                            Text("Edit Config")
+                                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                        .background(theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+
+                    Button {
+                        #if os(iOS)
+                        UIPasteboard.general.string = "~/.claude/settings.json"
+                        #elseif os(macOS)
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString("~/.claude/settings.json", forType: .string)
+                        #endif
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showCopiedConfirmation = true
+                        }
+                    } label: {
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                            Text(showCopiedConfirmation ? "Copied" : "Copy Path")
+                                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(showCopiedConfirmation ? theme.success : theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                        .background((showCopiedConfirmation ? theme.success : theme.accent).opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                    .onChange(of: showCopiedConfirmation) { _, copied in
+                        if copied {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                withAnimation(.easeOut(duration: 0.3)) {
+                                    showCopiedConfirmation = false
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Text("Supported event types: PreToolUse, PostToolUse, Stop")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+            .padding(.horizontal, theme.spacingMD)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, theme.spacingXL)

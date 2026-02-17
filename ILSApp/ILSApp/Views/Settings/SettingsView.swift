@@ -132,13 +132,7 @@ struct SettingsView: View {
                                 Text(formatModelName(config.model ?? "claude-opus-4-6"))
                                     .foregroundStyle(theme.textSecondary)
                                 if config.model == nil {
-                                    Text("Host Default")
-                                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
-                                        .foregroundStyle(theme.accent)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(theme.accent.opacity(0.15))
-                                        .clipShape(Capsule())
+                                    hostDefaultBadge
                                 }
                             }
                         }
@@ -154,8 +148,13 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Color Scheme") {
-                            Text((config.theme?.colorScheme ?? "system").capitalized)
-                                .foregroundStyle(theme.textSecondary)
+                            HStack(spacing: 4) {
+                                Text((config.theme?.colorScheme ?? "system").capitalized)
+                                    .foregroundStyle(theme.textSecondary)
+                                if config.theme?.colorScheme == nil {
+                                    hostDefaultBadge
+                                }
+                            }
                         }
                     }
 
@@ -169,8 +168,13 @@ struct SettingsView: View {
 
                     // Always Thinking (read-only)
                     LabeledContent {
-                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+                        HStack(spacing: 4) {
+                            Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+                            if config.alwaysThinkingEnabled == nil {
+                                hostDefaultBadge
+                            }
+                        }
                     } label: {
                         HStack(spacing: 4) {
                             Text("Extended Thinking")
@@ -180,12 +184,29 @@ struct SettingsView: View {
 
                     // Co-authored by (read-only)
                     LabeledContent {
-                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+                        HStack(spacing: 4) {
+                            Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+                            if config.includeCoAuthoredBy == nil {
+                                hostDefaultBadge
+                            }
+                        }
                     } label: {
                         HStack(spacing: 4) {
                             Text("Include Co-Author")
                             InfoTooltipButton(text: "Adds 'Co-authored-by: Claude' attribution to git commits made during sessions.")
+                        }
+                    }
+
+                    // System Prompt (informational — per-session config)
+                    LabeledContent {
+                        Text("Per-session")
+                            .foregroundStyle(theme.textTertiary)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("System Prompt")
+                            InfoTooltipButton(text: "System prompts are configured per session in the New Session or Advanced Options views. There is no global default.")
                         }
                     }
 
@@ -273,9 +294,14 @@ struct SettingsView: View {
             Section {
                 if let config = viewModel.config?.content, let permissions = config.permissions {
                     // Default Permission Mode
-                    LabeledContent("Default Mode") {
+                    LabeledContent {
                         Text(permissions.defaultMode?.capitalized ?? "Prompt")
                             .foregroundStyle(theme.textSecondary)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Default Mode")
+                            InfoTooltipButton(text: "Controls how Claude handles tool permissions. 'Allow' auto-approves, 'Deny' blocks, 'Prompt' asks each time.")
+                        }
                     }
 
                     // Allowed Commands
@@ -287,10 +313,21 @@ struct SettingsView: View {
                                     .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
-                            LabeledContent("Allowed", value: "\(allowed.count) rules")
+                            HStack(spacing: 4) {
+                                LabeledContent("Allowed", value: "\(allowed.count) rules")
+                                InfoTooltipButton(text: "Tools and patterns explicitly allowed without prompting. Supports glob patterns like 'Bash(npm:*)' or 'Read'.")
+                            }
                         }
                     } else {
-                        LabeledContent("Allowed", value: "None")
+                        LabeledContent {
+                            Text("None")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Allowed")
+                                InfoTooltipButton(text: "Tools and patterns explicitly allowed without prompting. Supports glob patterns like 'Bash(npm:*)' or 'Read'.")
+                            }
+                        }
                     }
 
                     // Denied Commands
@@ -302,10 +339,21 @@ struct SettingsView: View {
                                     .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
-                            LabeledContent("Denied", value: "\(denied.count) rules")
+                            HStack(spacing: 4) {
+                                LabeledContent("Denied", value: "\(denied.count) rules")
+                                InfoTooltipButton(text: "Tools and patterns explicitly blocked. Claude will not attempt to use denied tools.")
+                            }
                         }
                     } else {
-                        LabeledContent("Denied", value: "None")
+                        LabeledContent {
+                            Text("None")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Denied")
+                                InfoTooltipButton(text: "Tools and patterns explicitly blocked. Claude will not attempt to use denied tools.")
+                            }
+                        }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
@@ -323,31 +371,57 @@ struct SettingsView: View {
                         HooksManagementView()
                     } label: {
                         let hookCount = config.hooks.map { countHooks($0) } ?? 0
-                        LabeledContent("Hooks") {
+                        LabeledContent {
                             Text("\(hookCount) configured")
                                 .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Hooks")
+                                InfoTooltipButton(text: "Shell commands that run at lifecycle events (session start, prompt submit, tool use). Useful for automation and custom workflows.")
+                            }
                         }
                     }
 
                     // Enabled Plugins Count
                     if let plugins = config.enabledPlugins {
                         let enabledCount = plugins.filter { $0.value }.count
-                        LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                        LabeledContent {
+                            Text("\(enabledCount)")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Enabled Plugins")
+                                InfoTooltipButton(text: "MCP server plugins that extend Claude's capabilities. Enable or disable via terminal: claude config set plugins.<name> true/false.")
+                            }
+                        }
                     } else {
                         LabeledContent("Enabled Plugins", value: "0")
                     }
 
                     // Status Line
                     if let statusLine = config.statusLine {
-                        LabeledContent("Status Line") {
+                        LabeledContent {
                             Text(statusLine.type ?? "disabled")
                                 .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Status Line")
+                                InfoTooltipButton(text: "Custom status display in the terminal. Runs a shell command to generate dynamic content shown during sessions.")
+                            }
                         }
                     }
 
                     // Environment Variables
                     if let env = config.env, !env.isEmpty {
-                        LabeledContent("Environment Vars", value: "\(env.count)")
+                        LabeledContent {
+                            Text("\(env.count)")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Environment Vars")
+                                InfoTooltipButton(text: "Custom environment variables passed to Claude CLI sessions. Used for API keys, feature flags, and tool configuration.")
+                            }
+                        }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
@@ -513,6 +587,18 @@ struct SettingsView: View {
             await appState.apiClient.setAPIKey(backendAPIKey.isEmpty ? nil : backendAPIKey)
             showAPIKeySaved = true
         }
+    }
+
+    // MARK: - Reusable Components
+
+    private var hostDefaultBadge: some View {
+        Text("Host Default")
+            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+            .foregroundStyle(theme.accent)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(theme.accent.opacity(0.15))
+            .clipShape(Capsule())
     }
 
     // MARK: - Helper Methods

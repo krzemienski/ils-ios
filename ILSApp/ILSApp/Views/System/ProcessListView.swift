@@ -7,6 +7,8 @@ struct ProcessListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Bindable var viewModel: SystemMetricsViewModel
 
+    @State private var displayLimit = 50
+
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             // Header
@@ -83,6 +85,17 @@ struct ProcessListView: View {
                 .padding(.vertical, theme.spacingMD)
             } else {
                 // Column headers
+                let visibleProcesses = Array(viewModel.filteredProcesses.prefix(displayLimit))
+                let totalCount = viewModel.filteredProcesses.count
+
+                HStack {
+                    Text("Showing \(visibleProcesses.count) of \(totalCount) processes")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                    Spacer()
+                }
+                .padding(.horizontal, theme.spacingXS)
+
                 HStack {
                     Text("Name")
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -98,9 +111,26 @@ struct ProcessListView: View {
                 .padding(.horizontal, theme.spacingXS)
 
                 LazyVStack(spacing: 0) {
-                    ForEach(viewModel.filteredProcesses.prefix(50), id: \.pid) { process in
+                    ForEach(visibleProcesses, id: \.pid) { process in
                         processRow(process)
                     }
+                }
+
+                // Show More button when there are more processes to display
+                if displayLimit < totalCount {
+                    Button {
+                        displayLimit += 50
+                    } label: {
+                        Text("Show More (\(totalCount - displayLimit) remaining)")
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.accent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, theme.spacingSM)
+                            .background(theme.accent.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, theme.spacingSM)
                 }
             }
         }

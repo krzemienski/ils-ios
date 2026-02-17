@@ -4,6 +4,7 @@ import ILSShared
 struct FleetManagementView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = FleetViewModel()
 
     var body: some View {
@@ -34,6 +35,18 @@ struct FleetManagementView: View {
                         .tint(theme.accent)
                     }
                     .padding(theme.spacingLG)
+                }
+
+                if let autoError = viewModel.autoRegisterError {
+                    HStack(spacing: theme.spacingSM) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(theme.warning)
+                        Text(autoError)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
                 }
 
                 if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
@@ -79,6 +92,9 @@ struct FleetManagementView: View {
         .task { await viewModel.loadHosts() }
         .onAppear { viewModel.startHealthPolling() }
         .onDisappear { viewModel.stopHealthPolling() }
+        .onChange(of: scenePhase) { _, newPhase in
+            viewModel.scenePhase = newPhase
+        }
     }
 
     // MARK: - Host Row

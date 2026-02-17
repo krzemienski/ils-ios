@@ -20,7 +20,12 @@ final class SystemMetricsViewModel {
     var processSearchText: String = ""
     var isLoadingProcesses: Bool = false
 
-    private let baseURL: String
+    /// Whether the metrics client has fallen back to REST polling.
+    var isPollingFallback: Bool {
+        metricsClient.useFallbackPolling
+    }
+
+    private(set) var baseURL: String
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
@@ -37,6 +42,14 @@ final class SystemMetricsViewModel {
         self.session = URLSession(configuration: configuration)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
+    }
+
+    /// Updates the base URL, recreating the metrics client only if the URL actually changed.
+    func updateBaseURL(_ newURL: String) {
+        guard newURL != baseURL else { return }
+        disconnect()
+        baseURL = newURL
+        metricsClient = MetricsWebSocketClient(baseURL: newURL)
     }
 
     // MARK: - Computed Properties

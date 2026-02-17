@@ -480,6 +480,17 @@ struct BrowserView: View {
                 marketplaceSearchSection
             }
 
+            // Description header
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: 12, design: theme.fontDesign))
+                Text("Plugins extend Claude Code with custom tools and agents. Skills are pre-built capabilities.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingSM)
+
             let items = pluginsVM.filteredPluginsByCategory
             if pluginsVM.isLoading && items.isEmpty {
                 loadingRows
@@ -491,7 +502,16 @@ struct BrowserView: View {
                 )
             } else {
                 ForEach(items) { plugin in
-                    pluginRow(plugin)
+                    NavigationLink {
+                        PluginConfigView(
+                            plugin: plugin,
+                            onToggleEnabled: { p in await pluginsVM.togglePlugin(p) },
+                            onUninstall: { p in await pluginsVM.uninstallPlugin(p) }
+                        )
+                    } label: {
+                        pluginRow(plugin)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -573,6 +593,10 @@ struct BrowserView: View {
                     }
                 }
             }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)
         .modifier(GlassCard())

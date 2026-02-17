@@ -122,7 +122,7 @@ struct ThemeMarketplaceView: View {
         }
     }
 
-    private func themeCard(for builtinTheme: any AppTheme) -> some View {
+    private func themeCard(for builtinTheme: ThemeSnapshot) -> some View {
         let isActive = builtinTheme.id == themeManager.currentTheme.id
         return ThemePreviewCard(
             themeName: builtinTheme.name,
@@ -227,14 +227,14 @@ struct ThemeMarketplaceView: View {
 
     // MARK: - Filtered Themes
 
-    private var filteredThemes: [any AppTheme] {
-        let themes = themeManager.availableThemes
+    private var filteredThemes: [ThemeSnapshot] {
+        let snapshots = themeManager.availableThemes.map { ThemeSnapshot($0) }
 
-        let categoryFiltered: [any AppTheme]
+        let categoryFiltered: [ThemeSnapshot]
         if selectedCategory == .all {
-            categoryFiltered = themes
+            categoryFiltered = snapshots
         } else {
-            categoryFiltered = themes.filter { t in
+            categoryFiltered = snapshots.filter { t in
                 ThemeCategory.category(for: t.id) == selectedCategory
             }
         }

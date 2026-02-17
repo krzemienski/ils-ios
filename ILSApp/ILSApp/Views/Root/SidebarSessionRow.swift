@@ -3,6 +3,7 @@ import ILSShared
 
 struct SidebarSessionRow: View {
     let session: ChatSession
+    var isActive: Bool = false
     let onTap: () -> Void
 
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -18,8 +19,8 @@ struct SidebarSessionRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     // Session name
                     Text(sessionDisplayName)
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
+                        .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .medium, design: theme.fontDesign))
+                        .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
                         .lineLimit(1)
 
                     // Relative time + message count
@@ -50,10 +51,10 @@ struct SidebarSessionRow: View {
             }
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS + 2)
-            .background(Color.clear)
+            .background(isActive ? theme.accent.opacity(0.15) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
-        .accessibilityLabel("\(sessionDisplayName), \(relativeTime)")
+        .accessibilityLabel("\(sessionDisplayName), \(relativeTime)\(isActive ? ", active" : "")")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }

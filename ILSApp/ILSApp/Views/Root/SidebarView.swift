@@ -48,8 +48,9 @@ struct SidebarView: View {
             TextField("Session name", text: $renameText)
             Button("Cancel", role: .cancel) { sessionToRename = nil }
             Button("Rename") {
-                if let session = sessionToRename {
-                    Task { await sessionsViewModel.renameSession(session, to: renameText) }
+                let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let session = sessionToRename, !trimmed.isEmpty {
+                    Task { await sessionsViewModel.renameSession(session, to: trimmed) }
                 }
                 sessionToRename = nil
             }
@@ -186,7 +187,7 @@ struct SidebarView: View {
             )
         ) {
             ForEach(sessions) { session in
-                SidebarSessionRow(session: session) {
+                SidebarSessionRow(session: session, isActive: isSessionActive(session)) {
                     onSessionSelected(session)
                     isSidebarOpen = false
                 }
@@ -326,6 +327,13 @@ struct SidebarView: View {
     }
 
     // MARK: - Helpers
+
+    private func isSessionActive(_ session: ChatSession) -> Bool {
+        if case .chat(let activeSession) = activeScreen {
+            return activeSession.id == session.id
+        }
+        return false
+    }
 
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {

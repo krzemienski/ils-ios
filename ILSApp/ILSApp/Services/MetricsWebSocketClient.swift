@@ -30,7 +30,8 @@ final class MetricsWebSocketClient {
     private var reconnectTask: Task<Void, Never>?
     private var pollingTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
-    private var useFallbackPolling: Bool = false
+    /// Whether the client has fallen back to REST polling after WebSocket failures.
+    private(set) var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
 
