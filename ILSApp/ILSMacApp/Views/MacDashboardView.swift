@@ -255,7 +255,7 @@ struct MacDashboardView: View {
                 .frame(width: 10, height: 10)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(session.name ?? "Unnamed Session")
+                Text(Self.cleanSessionTitle(session.name) ?? "Unnamed Session")
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -427,6 +427,22 @@ struct MacDashboardView: View {
     private func refreshAll() async {
         await dashboardVM.loadAll()
         await sessionsVM.loadSessions(refresh: true)
+    }
+
+    /// Strip markdown heading prefixes and truncate long prompt-based names.
+    private static func cleanSessionTitle(_ raw: String?) -> String? {
+        guard let raw = raw, !raw.isEmpty else { return nil }
+        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.hasPrefix("#") || cleaned.hasPrefix("## ") {
+            let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
+            let firstLine = stripped.prefix(while: { $0 != "\n" })
+            let truncated = firstLine.prefix(50)
+            return truncated.count < firstLine.count ? String(truncated) + "..." : String(truncated)
+        }
+        if cleaned.count > 60 {
+            return String(cleaned.prefix(57)) + "..."
+        }
+        return cleaned.isEmpty ? nil : cleaned
     }
 }
 

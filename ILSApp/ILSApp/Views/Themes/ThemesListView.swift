@@ -57,10 +57,12 @@ struct ThemesListView: View {
         .sheet(isPresented: $showingNewTheme) {
             ThemeEditorView()
                 .environment(viewModel)
+                .environment(\.colorScheme, .dark)
         }
         .sheet(item: $selectedTheme) { theme in
             ThemeEditorView(theme: theme)
                 .environment(viewModel)
+                .environment(\.colorScheme, .dark)
         }
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {

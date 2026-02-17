@@ -209,7 +209,10 @@ class ChatViewModel {
 
     /// Load message history for the current session from the backend
     func loadMessageHistory() async {
-        guard let apiClient else { return }
+        guard let apiClient else {
+            AppLogger.shared.error("loadMessageHistory: apiClient is nil", category: "chat")
+            return
+        }
 
         isLoadingHistory = true
         error = nil
@@ -456,14 +459,20 @@ class ChatViewModel {
     }
 
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
-        // Find or create current assistant message
-        var currentMessage: ChatMessage
-        if let lastMessage = messages.last, !lastMessage.isUser, !lastMessage.isFromHistory {
-            currentMessage = lastMessage
-            messages.removeLast()
+        // Index-based mutation: single array write instead of removeLast+append.
+        // This halves the @Observable mutations per batch flush (1 vs 2),
+        // reducing SwiftUI diff work during high-frequency streaming updates.
+        let messageIndex: Int
+        if let lastIndex = messages.indices.last,
+           !messages[lastIndex].isUser,
+           !messages[lastIndex].isFromHistory {
+            messageIndex = lastIndex
         } else {
-            currentMessage = ChatMessage(isUser: false, text: "")
+            messages.append(ChatMessage(isUser: false, text: ""))
+            messageIndex = messages.count - 1
         }
+
+        var currentMessage = messages[messageIndex]
 
         for streamMessage in streamMessages {
             switch streamMessage {
@@ -497,7 +506,8 @@ class ChatViewModel {
         // Approximate token count from text length (rough: ~4 chars per token)
         streamTokenCount = max(streamTokenCount, currentMessage.text.count / 4)
 
-        messages.append(currentMessage)
+        // Single mutation: update message in place instead of removeLast+append
+        messages[messageIndex] = currentMessage
     }
 
     // MARK: - Stream Message Handlers

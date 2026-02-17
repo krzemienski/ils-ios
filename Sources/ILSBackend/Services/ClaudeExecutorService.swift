@@ -8,10 +8,10 @@ import Logging
 /// ## Architecture
 ///
 /// Supports two execution backends:
-/// 1. **Agent SDK** (default): Spawns `node scripts/sdk-wrapper.mjs` which calls the
-///    `@anthropic-ai/claude-agent-sdk` npm package. The SDK calls the Anthropic API directly
-///    — no `claude` subprocess — which avoids the hang that occurs when spawning `claude -p`
-///    inside an active Claude Code session.
+/// 1. **Agent SDK** (default): Spawns `python3 scripts/sdk-wrapper.py` which calls the
+///    `claude-agent-sdk` Python package. The SDK wraps the Claude CLI, inheriting OAuth
+///    auth from the host environment. Claude Code nesting-detection env vars are stripped
+///    before spawning to prevent the "nested session" error.
 /// 2. **CLI fallback**: Spawns `claude -p --output-format stream-json` directly. Use this
 ///    when running the backend outside a Claude Code session (standalone).
 ///
@@ -116,20 +116,34 @@ actor ClaudeExecutorService {
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        if Self.useAgentSDK {
+        if Self.useAgentSDK && Self.sdkWrapperExists(workingDirectory: workingDirectory) {
             return executeWithSDK(prompt: prompt, workingDirectory: workingDirectory, options: options)
         } else {
             return executeWithCLI(prompt: prompt, workingDirectory: workingDirectory, options: options)
         }
     }
 
+    /// Check if the Python SDK wrapper script exists at the expected path.
+    ///
+    /// When the wrapper is missing (fresh checkout, etc.),
+    /// we fall back to CLI mode instead of failing with a 30s timeout.
+    private nonisolated static func sdkWrapperExists(workingDirectory: String?) -> Bool {
+        let projectRoot = workingDirectory ?? FileManager.default.currentDirectoryPath
+        let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.py"
+        let exists = FileManager.default.fileExists(atPath: wrapperPath)
+        if !exists {
+            logger.info("SDK wrapper not found at \(wrapperPath), falling back to CLI mode")
+        }
+        return exists
+    }
+
     // MARK: - Agent SDK Execution
 
-    /// Execute via Agent SDK (Node.js wrapper).
+    /// Execute via Python Agent SDK wrapper.
     ///
-    /// Spawns `node scripts/sdk-wrapper.mjs '<json-config>'` where the prompt and all
-    /// options are passed as a JSON argument. The SDK calls the Anthropic API directly,
-    /// avoiding subprocess conflicts with the parent Claude Code session.
+    /// Spawns `python3 scripts/sdk-wrapper.py '<json-config>'` where the prompt and all
+    /// options are passed as a JSON argument. The SDK wraps the Claude CLI, inheriting
+    /// OAuth auth from the host environment. No ANTHROPIC_API_KEY needed.
     private nonisolated func executeWithSDK(
         prompt: String,
         workingDirectory: String?,
@@ -140,12 +154,12 @@ actor ClaudeExecutorService {
             let sdkConfig = Self.buildSDKConfig(prompt: prompt, options: options, workingDirectory: workingDirectory)
             Self.logger.debug("SDK config: \(sdkConfig.prefix(200))")
 
-            // Find the sdk-wrapper.mjs script relative to the backend working directory
+            // Find the sdk-wrapper.py script relative to the backend working directory
             let projectRoot = workingDirectory ?? FileManager.default.currentDirectoryPath
-            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.mjs"
+            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.py"
 
-            // Build the node command
-            let command = "node \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
+            // Build the python3 command
+            let command = "python3 \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
 
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
@@ -155,8 +169,14 @@ actor ClaudeExecutorService {
                 process.currentDirectoryURL = URL(fileURLWithPath: dir)
             }
 
-            // Inherit environment — the Agent SDK uses Claude Code's auth (not ANTHROPIC_API_KEY)
-            process.environment = ProcessInfo.processInfo.environment
+            // Inherit environment but strip Claude Code nesting-detection variables.
+            // The Agent SDK spawns `claude` CLI which refuses to run if it detects
+            // it's inside another Claude Code session (CLAUDECODE=1, CLAUDE_CODE_ENTRYPOINT).
+            var env = ProcessInfo.processInfo.environment
+            for key in env.keys where key.hasPrefix("CLAUDECODE") || key.hasPrefix("CLAUDE_CODE_") {
+                env.removeValue(forKey: key)
+            }
+            process.environment = env
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
@@ -801,7 +821,7 @@ actor ClaudeExecutorService {
         let options: SDKOptions
     }
 
-    /// Codable struct for SDK execution options passed to sdk-wrapper.mjs.
+    /// Codable struct for SDK execution options passed to sdk-wrapper.py.
     /// All fields are optional; nil values are omitted from JSON output.
     private struct SDKOptions: Codable {
         var model: String?

@@ -48,7 +48,7 @@ struct ChatView: View {
     var body: some View {
         mainContent
             .background(theme.bgPrimary)
-            .navigationTitle(session.name ?? "Chat")
+            .navigationTitle(Self.cleanTitle(session.name) ?? "Chat")
             #if os(iOS)
             .inlineNavigationBarTitle()
             #endif
@@ -66,7 +66,7 @@ struct ChatView: View {
                 .environment(appState)
                 .presentationBackground(theme.bgPrimary)
         }
-        .task {
+        .task(id: session) {
             await setupChatView()
         }
         .alert("Connection Error", isPresented: $sheets.showErrorAlert) {
@@ -289,6 +289,23 @@ struct ChatView: View {
             .accessibilityLabel("Chat options menu")
             .accessibilityHint("Shows rename, fork, export, and other session options")
         }
+    }
+
+    // MARK: - Helpers
+
+    /// Strip markdown heading prefixes from session names.
+    /// Session names from Claude Code often contain `## YOUR ROLE` or `# Task Summary`.
+    private static func cleanTitle(_ name: String?) -> String? {
+        guard let name = name, !name.isEmpty else { return nil }
+        let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Strip leading # characters and whitespace
+        let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
+        let firstLine = stripped.prefix(while: { $0 != "\n" })
+        let truncated = firstLine.prefix(50)
+        let result = truncated.count < firstLine.count
+            ? String(truncated) + "..."
+            : String(truncated)
+        return result.isEmpty ? nil : result
     }
 
     // MARK: - Setup

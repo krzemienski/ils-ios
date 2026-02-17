@@ -152,7 +152,7 @@ struct MacChatView: View {
     private var styledContent: some View {
         mainContent
             .background(theme.bgPrimary)
-            .navigationTitle(session.name ?? "Chat")
+            .navigationTitle(Self.cleanTitle(session.name) ?? "Chat")
             .navigationSubtitle(sessionSubtitle)
             .toolbar { toolbarContent }
             #if os(macOS)
@@ -193,7 +193,7 @@ struct MacChatView: View {
                 .frame(minWidth: 500, minHeight: 300)
                 .presentationBackground(theme.bgPrimary)
             }
-            .task {
+            .task(id: session) {
                 viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
                 viewModel.sessionId = session.id
                 viewModel.encodedProjectPath = session.encodedProjectPath
@@ -351,6 +351,22 @@ struct MacChatView: View {
             .accessibilityIdentifier("chat-menu-button")
             .accessibilityLabel("Chat options menu")
         }
+    }
+
+    // MARK: - Helpers
+
+    /// Strip markdown heading prefixes from session names.
+    /// Session names from Claude Code often contain `## YOUR ROLE` or `# Task Summary`.
+    private static func cleanTitle(_ name: String?) -> String? {
+        guard let name = name, !name.isEmpty else { return nil }
+        let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
+        let firstLine = stripped.prefix(while: { $0 != "\n" })
+        let truncated = firstLine.prefix(50)
+        let result = truncated.count < firstLine.count
+            ? String(truncated) + "..."
+            : String(truncated)
+        return result.isEmpty ? nil : result
     }
 
     // MARK: - Actions

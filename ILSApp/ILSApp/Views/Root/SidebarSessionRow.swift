@@ -63,12 +63,27 @@ struct SidebarSessionRow: View {
 
     private var sessionDisplayName: String {
         if let name = session.name, !name.isEmpty {
-            return name
+            return Self.cleanTitle(name)
         }
         if let prompt = session.firstPrompt, !prompt.isEmpty {
             return String(prompt.prefix(40))
         }
         return "Unnamed Session"
+    }
+
+    /// Strip markdown heading prefixes and truncate long prompt-based names.
+    private static func cleanTitle(_ raw: String) -> String {
+        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.hasPrefix("#") || cleaned.hasPrefix("## ") {
+            let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
+            let firstLine = stripped.prefix(while: { $0 != "\n" })
+            let truncated = firstLine.prefix(40)
+            return truncated.count < firstLine.count ? String(truncated) + "..." : String(truncated)
+        }
+        if cleaned.count > 45 {
+            return String(cleaned.prefix(42)) + "..."
+        }
+        return cleaned
     }
 
     private var relativeTime: String {
