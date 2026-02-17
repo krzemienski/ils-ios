@@ -1,6 +1,7 @@
 import SwiftUI
 import ILSShared
 import Observation
+import os
 
 /// Focused value key for the currently selected session
 struct FocusedSessionKey: FocusedValueKey {
@@ -19,7 +20,7 @@ struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
-    @StateObject private var windowManager = WindowManager.shared
+    @State private var windowManager = WindowManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
@@ -38,7 +39,7 @@ struct ILSMacApp: App {
             MacContentView()
                 .environment(appState)
                 .environment(themeManager)
-                .environmentObject(windowManager)
+                .environment(windowManager)
                 .environmentObject(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)
                 .preferredColorScheme(computedColorScheme)
@@ -51,7 +52,8 @@ struct ILSMacApp: App {
                     do {
                         try await notificationManager.requestAuthorization()
                     } catch {
-                        print("Failed to request notification permissions: \(error)")
+                        Logger(subsystem: "com.ils.app", category: "ILSMacApp")
+                            .error("Failed to request notification permissions: \(error.localizedDescription)")
                     }
                 }
         }
@@ -70,7 +72,7 @@ struct ILSMacApp: App {
                 SessionWindowView(sessionId: sessionId)
                     .environment(appState)
                     .environment(themeManager)
-                    .environmentObject(windowManager)
+                    .environment(windowManager)
                     .environmentObject(notificationManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)

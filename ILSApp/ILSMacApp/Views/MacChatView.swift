@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import ILSShared
 
@@ -79,7 +80,12 @@ struct MacChatView: View {
                 TextField("Session name", text: $renameText)
                 Button("Rename") {
                     Task {
-                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                        do {
+                            let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                        } catch {
+                            viewModel.error = error
+                            showErrorAlert = true
+                        }
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -89,8 +95,13 @@ struct MacChatView: View {
             .alert("Delete Session", isPresented: $showDeleteSessionConfirmation) {
                 Button("Delete", role: .destructive) {
                     Task {
-                        let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
-                        dismiss()
+                        do {
+                            let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
+                            dismiss()
+                        } catch {
+                            viewModel.error = error
+                            showErrorAlert = true
+                        }
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -345,9 +356,8 @@ struct MacChatView: View {
     // MARK: - Actions
 
     private func createNewSession() {
-        // Post notification for creating a new session
-        // This is handled by the main content view or app delegate
-        NotificationCenter.default.post(name: Notification.Name("NewSession"), object: nil)
+        // Use typed notification name that MacContentView listens for via .ilsCreateNewSession
+        NotificationCenter.default.post(name: .ilsCreateNewSession, object: nil)
     }
 
     private func retryLastMessage() {
@@ -397,7 +407,8 @@ struct MacChatView: View {
             do {
                 try md.write(to: url, atomically: true, encoding: .utf8)
             } catch {
-                print("Error saving file: \(error)")
+                viewModel.error = error
+                showErrorAlert = true
             }
         }
 
@@ -419,4 +430,9 @@ struct MacChatView: View {
             lastActiveAt: Date()
         ))
     }
+    .environment(AppState())
+    .environment(ThemeManager())
+    .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
+    .environment(WindowManager.shared)
+    .environmentObject(NotificationManager.shared)
 }

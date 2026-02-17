@@ -249,10 +249,10 @@ struct MacSettingsView: View {
                         ],
                         spacing: theme.spacingMD
                     ) {
-                        statItem("Sessions", value: "\(stats.sessions)")
-                        statItem("Projects", value: "\(stats.projects)")
-                        statItem("Skills", value: "\(stats.skills)")
-                        statItem("MCP Servers", value: "\(stats.mcpServers)")
+                        statItem("Sessions", value: "\(stats.sessions.total)")
+                        statItem("Projects", value: "\(stats.projects.total)")
+                        statItem("Skills", value: "\(stats.skills.total)")
+                        statItem("MCP Servers", value: "\(stats.mcpServers.total)")
                     }
                 }
                 .padding(theme.spacingMD)
@@ -284,9 +284,7 @@ struct MacSettingsView: View {
 
                 settingRow(label: "Cache") {
                     Button("Clear Cache") {
-                        Task {
-                            // Clear cache implementation
-                        }
+                        URLCache.shared.removeAllCachedResponses()
                     }
                 }
 
@@ -331,7 +329,7 @@ struct MacSettingsView: View {
                         .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
-                    Text("Version 1.0.0 (Build 1)")
+                    Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
@@ -340,7 +338,7 @@ struct MacSettingsView: View {
                     .frame(width: 200)
 
                 VStack(spacing: theme.spacingXS) {
-                    Text("Intelligent Learning System")
+                    Text("Intelligent Local Server")
                         .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 

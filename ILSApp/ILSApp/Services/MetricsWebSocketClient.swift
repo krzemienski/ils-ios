@@ -45,6 +45,7 @@ final class MetricsWebSocketClient {
     // MARK: - Public API
 
     func connect() {
+        guard !baseURL.isEmpty else { return }
         guard webSocketTask == nil, pollingTask == nil else { return }
 
         // Reset fallback after recovery window (10 minutes) to retry WebSocket
@@ -72,6 +73,12 @@ final class MetricsWebSocketClient {
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
+
+        // Reset failure tracking so next connect() starts fresh
+        wsFailureCount = 0
+        useFallbackPolling = false
+        lastWSResetTime = nil
+        reconnectAttempts = 0
     }
 
     // MARK: - WebSocket

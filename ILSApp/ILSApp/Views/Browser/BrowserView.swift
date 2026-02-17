@@ -25,6 +25,7 @@ struct BrowserView: View {
     @State private var mcpScope: String = "all"
     @State private var skillsScope: String = "all"
     @State private var showGitHubSearch = false
+    @State private var showPluginsGitHubSearch = false
     @State private var showMarketplaceSearch = false
 
     var body: some View {
@@ -454,6 +455,32 @@ struct BrowserView: View {
                 }
             }
 
+            // GitHub search toggle
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showPluginsGitHubSearch.toggle()
+                }
+            } label: {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "globe")
+                        .foregroundStyle(theme.entityPlugin)
+                    Text("Search GitHub")
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Image(systemName: showPluginsGitHubSearch ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+            .buttonStyle(.plain)
+
+            if showPluginsGitHubSearch {
+                pluginsGitHubSearchSection
+            }
+
             // Marketplace search toggle
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -724,6 +751,119 @@ struct BrowserView: View {
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+        }
+    }
+
+    // MARK: - Plugins GitHub Search Section
+
+    @ViewBuilder
+    private var pluginsGitHubSearchSection: some View {
+        VStack(spacing: theme.spacingSM) {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                TextField("Search GitHub for plugins...", text: Binding(
+                    get: { pluginsVM.gitHubSearchText },
+                    set: { pluginsVM.updateGitHubSearchText($0) }
+                ))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+                if !pluginsVM.gitHubSearchText.isEmpty {
+                    Button {
+                        pluginsVM.updateGitHubSearchText("")
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(theme.textTertiary)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                }
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.bgTertiary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            if pluginsVM.isSearchingGitHub {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingMD)
+            }
+
+            ForEach(pluginsVM.gitHubResults) { result in
+                let isInstalled = pluginsVM.plugins.contains { $0.name == result.name }
+                HStack(spacing: theme.spacingMD) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(result.name)
+                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+                            Spacer()
+                            if isInstalled {
+                                Text("Installed")
+                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                    .foregroundStyle(theme.success)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(theme.success.opacity(0.15))
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                            }
+                        }
+                        if let desc = result.description {
+                            Text(desc)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(2)
+                        }
+                        HStack(spacing: theme.spacingSM) {
+                            if result.stars > 0 {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.yellow)
+                                    Text("\(result.stars)")
+                                        .font(.system(size: 10, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textTertiary)
+                                }
+                            }
+                            Text(result.repository)
+                                .font(.system(size: 10, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    if !isInstalled {
+                        Button {
+                            Task { _ = await pluginsVM.installFromGitHub(result: result) }
+                        } label: {
+                            if pluginsVM.installingPlugins.contains(result.name) {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .scaleEffect(0.8)
+                            } else {
+                                Text("Install")
+                                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(theme.entityPlugin)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .padding(theme.spacingMD)
                 .modifier(GlassCard())

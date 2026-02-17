@@ -5,6 +5,10 @@ import AppKit
 
 /// Provides Touch Bar support for the chat view on macOS devices with Touch Bar hardware.
 /// Touch Bar displays common actions: Send message, Command palette, Session info, and New session.
+///
+/// - Note: Apple removed Touch Bar from all Mac models as of 2023. This targets deprecated hardware
+///   and is a candidate for removal in a future release. Keyboard shortcuts here duplicate those
+///   already defined in `ILSCommands`. TODO: Remove during iOS-parity cleanup.
 struct ChatTouchBarProvider: View {
     // MARK: - Bindings & State
 

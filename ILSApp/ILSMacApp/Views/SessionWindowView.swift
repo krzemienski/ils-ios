@@ -9,7 +9,7 @@ struct SessionWindowView: View {
 
     @Environment(AppState.self) private var appState
     @Environment(ThemeManager.self) private var themeManager
-    @EnvironmentObject private var windowManager: WindowManager
+    @Environment(WindowManager.self) private var windowManager
     @Environment(\.theme) private var theme
 
     @State private var viewModel: ChatViewModel
@@ -68,8 +68,9 @@ struct SessionWindowView: View {
     private func loadSession() {
         Task {
             do {
-                let response: APIResponse<ListResponse<ChatSession>> = try await appState.apiClient.get("/sessions")
-                if let foundSession = response.data?.items.first(where: { $0.id == sessionId }) {
+                // Use single-session endpoint instead of fetching all 22K+ sessions (O(n) → O(1))
+                let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString.lowercased())")
+                if let foundSession = response.data {
                     await MainActor.run {
                         self.session = foundSession
                         self.isLoading = false
@@ -119,5 +120,6 @@ struct WindowAccessor: NSViewRepresentable {
     SessionWindowView(sessionId: UUID())
         .environment(AppState())
         .environment(ThemeManager())
-        .environmentObject(WindowManager.shared)
+        .environment(WindowManager.shared)
+        .environmentObject(NotificationManager.shared)
 }

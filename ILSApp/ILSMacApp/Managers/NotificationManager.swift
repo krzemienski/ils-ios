@@ -2,10 +2,12 @@ import SwiftUI
 import AppKit
 import UserNotifications
 import ILSShared
+import os
 
 /// Manages native macOS notifications for message updates
 @MainActor
 class NotificationManager: NSObject, ObservableObject {
+    private let logger = Logger(subsystem: "com.ils.app", category: "NotificationManager")
     /// Whether notification permissions have been granted
     @Published private(set) var isAuthorized: Bool = false
 
@@ -80,7 +82,7 @@ class NotificationManager: NSObject, ObservableObject {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to post notification: \(error)")
+            logger.error("Failed to post notification: \(error.localizedDescription)")
         }
     }
 
@@ -119,7 +121,7 @@ class NotificationManager: NSObject, ObservableObject {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to post streaming complete notification: \(error)")
+            logger.error("Failed to post streaming complete notification: \(error.localizedDescription)")
         }
     }
 

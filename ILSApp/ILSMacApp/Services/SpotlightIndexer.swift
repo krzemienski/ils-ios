@@ -1,7 +1,8 @@
-import CoreSpotlight
+@preconcurrency import CoreSpotlight
 import Foundation
 import ILSShared
 import UniformTypeIdentifiers
+import os
 
 /// Indexes ILS sessions into macOS Spotlight for system-wide search.
 ///
@@ -12,6 +13,7 @@ final class SpotlightIndexer {
     static let shared = SpotlightIndexer()
 
     private let domainIdentifier = "com.ils.app.sessions"
+    private let logger = Logger(subsystem: "com.ils.app", category: "SpotlightIndexer")
 
     private init() {}
 
@@ -38,9 +40,9 @@ final class SpotlightIndexer {
             )
         }
 
-        CSSearchableIndex.default().indexSearchableItems(items) { error in
+        CSSearchableIndex.default().indexSearchableItems(items) { [weak self] error in
             if let error {
-                print("[SpotlightIndexer] Failed to index \(items.count) sessions: \(error.localizedDescription)")
+                self?.logger.error("Failed to index \(items.count) sessions: \(error.localizedDescription)")
             }
         }
     }
@@ -55,18 +57,18 @@ final class SpotlightIndexer {
     /// Remove a single session from the Spotlight index.
     func deindexSession(_ session: ChatSession) {
         let identifier = "session-\(session.id.uuidString.lowercased())"
-        CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [identifier]) { error in
+        CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [identifier]) { [weak self] error in
             if let error {
-                print("[SpotlightIndexer] Failed to deindex session: \(error.localizedDescription)")
+                self?.logger.error("Failed to deindex session \(identifier): \(error.localizedDescription)")
             }
         }
     }
 
     /// Remove all ILS sessions from the Spotlight index.
     func deindexAll() {
-        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domainIdentifier]) { error in
+        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domainIdentifier]) { [weak self] error in
             if let error {
-                print("[SpotlightIndexer] Failed to deindex all: \(error.localizedDescription)")
+                self?.logger.error("Failed to deindex all sessions: \(error.localizedDescription)")
             }
         }
     }

@@ -137,6 +137,21 @@ struct MacContentView: View {
                 }
             }
         }
+        // A4: Handle notification tap from NotificationManager — navigate to the session
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenSessionFromNotification"))) { notification in
+            guard let sessionId = notification.object as? UUID else { return }
+            Task {
+                do {
+                    let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString)")
+                    if let session = response.data {
+                        activeScreen = .chat(session)
+                        selectedSection = .home
+                    }
+                } catch {
+                    // Session not found or network error — ignore and let app stay on current screen
+                }
+            }
+        }
         .onKeyPress(.init("/")) {
             isSearchFocused = true
             return .handled
@@ -317,6 +332,7 @@ struct MacContentView: View {
         switch activeScreen {
         case .home:
             MacDashboardView(
+                sessionsVM: sessionsViewModel,
                 onSessionSelected: { session in
                     activeScreen = .chat(session)
                 },
@@ -526,8 +542,15 @@ struct MacContentView: View {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 encoder.dateEncodingStrategy = .iso8601
-                if let data = try? encoder.encode(session) {
-                    try? data.write(to: url)
+                do {
+                    let data = try encoder.encode(session)
+                    try data.write(to: url)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save JSON: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
                 }
             }
         }
@@ -555,7 +578,15 @@ struct MacContentView: View {
                     md += "- **Project:** \(projectName)\n"
                 }
                 md += "\n---\n"
-                try? md.write(to: url, atomically: true, encoding: .utf8)
+                do {
+                    try md.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save Markdown: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
+                }
             }
         }
     }
@@ -614,4 +645,6 @@ struct MacSessionRow: View {
         .environment(AppState())
         .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
+        .environment(WindowManager.shared)
+        .environmentObject(NotificationManager.shared)
 }

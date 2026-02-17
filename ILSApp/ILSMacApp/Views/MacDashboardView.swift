@@ -8,7 +8,8 @@ struct MacDashboardView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var dashboardVM = DashboardViewModel()
-    @State private var sessionsVM = SessionsViewModel()
+    /// Shared sessions view model passed in from MacContentView to avoid duplicate network fetches
+    var sessionsVM: SessionsViewModel
 
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
@@ -43,7 +44,6 @@ struct MacDashboardView: View {
         }
         .task {
             dashboardVM.configure(client: appState.apiClient)
-            sessionsVM.configure(client: appState.apiClient)
             await loadAll()
         }
         .refreshable {
@@ -348,7 +348,7 @@ struct MacDashboardView: View {
                     title: "Browse Skills",
                     subtitle: "\(dashboardVM.stats?.skills.total ?? 0) available",
                     color: theme.entitySkill,
-                    shortcut: "2"
+                    shortcut: "3"
                 ) {
                     onNavigate?(.browser)
                 }
@@ -368,7 +368,7 @@ struct MacDashboardView: View {
                     title: "System Monitor",
                     subtitle: "View metrics",
                     color: theme.accent,
-                    shortcut: "4"
+                    shortcut: "5"
                 ) {
                     onNavigate?(.system)
                 }
@@ -418,7 +418,10 @@ struct MacDashboardView: View {
 
     private func loadAll() async {
         await dashboardVM.loadAll()
-        await sessionsVM.loadSessions(refresh: true)
+        // sessionsVM is shared with MacContentView — already loaded there
+        if sessionsVM.sessions.isEmpty {
+            await sessionsVM.loadSessions(refresh: true)
+        }
     }
 
     private func refreshAll() async {
@@ -498,7 +501,7 @@ struct NewSessionSheet: View {
 }
 
 #Preview {
-    MacDashboardView()
+    MacDashboardView(sessionsVM: SessionsViewModel())
         .environment(AppState())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }
