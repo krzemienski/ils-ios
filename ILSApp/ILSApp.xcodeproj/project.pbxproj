@@ -204,6 +204,8 @@
 		91A5D38E3832D8230E17CC34 /* ScreenshotProtectionModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB7C4FC628243D87DB95FBE /* ScreenshotProtectionModifier.swift */; };
 		95865DF75FE8F66BBF3DDCB9 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64417034D7BE8F3619B3BC06 /* HapticManager.swift */; };
 		958F187AF69FE638B1F46F6A /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */; };
+		A1B2C3D4E5F60001A0000001 /* HooksViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001F0000001 /* HooksViewModel.swift */; };
+		A1B2C3D4E5F60001A0000002 /* HooksManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001F0000002 /* HooksManagementView.swift */; };
 		96A01212B905EA97DB11D3D2 /* hud-state.json in Resources */ = {isa = PBXBuildFile; fileRef = 6157A63376D8A574079B8194 /* hud-state.json */; };
 		979673D0041CADA6053FE6E6 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086281B052347B8C9884124C /* MetricsWebSocketClient.swift */; };
 		99E148F9DFA37DFE3B2FA1E8 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */; };
@@ -280,6 +282,8 @@
 		C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 402B977AA6C4850AA23BDB0E /* AppTheme.swift */; };
 		C78ED7CE1DAF44CBF5DE3C88 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77704C10DDEE770B8E05B890 /* ShimmerModifier.swift */; };
 		C846CD1BD5DBBFE74F0E364D /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */; };
+		A1B2C3D4E5F60001B0000001 /* HooksViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001F0000001 /* HooksViewModel.swift */; };
+		A1B2C3D4E5F60001B0000002 /* HooksManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60001F0000002 /* HooksManagementView.swift */; };
 		C913EE769244089EE3D6BA36 /* SessionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB16073F4EF7ED850213059 /* SessionEntity.swift */; };
 		C91D0C6AEB24E92082E31794 /* FeatureGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */; };
 		C98C8C3293EE329AA9EA1D07 /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B579302585432A18086CAF11 /* ServerSetupSheet.swift */; };
@@ -424,6 +428,8 @@
 		474B7FAC477CE04C4939DDEB /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		482028C3E3B35A6E9FF0920C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60001F0000001 /* HooksViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksViewModel.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60001F0000002 /* HooksManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksManagementView.swift; sourceTree = "<group>"; };
 		4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
 		5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDashboardView.swift; sourceTree = "<group>"; };
 		50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
@@ -740,6 +746,7 @@
 			isa = PBXGroup;
 			children = (
 				E45286C1C9773FE7BBB9D215 /* ConfigEditorView.swift */,
+				A1B2C3D4E5F60001F0000002 /* HooksManagementView.swift */,
 				5264936CB2EEF18D3167704B /* LogViewerView.swift */,
 				64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */,
 				958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */,
@@ -1019,6 +1026,7 @@
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
 				24D353CDD851FB15B68338DA /* FleetViewModel.swift */,
+				A1B2C3D4E5F60001F0000001 /* HooksViewModel.swift */,
 				974AE71DCAD6F3D4705F56B8 /* MCPViewModel.swift */,
 				49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */,
 				8E4E9B9B4ADFE072002F72ED /* ProjectsViewModel.swift */,
@@ -1419,6 +1427,8 @@
 				81EA0BAEEB2CEF1F8F48A784 /* PlatformCompat.swift in Sources */,
 				FC5AD2FB2B34DC4F6245DB85 /* PluginConfigView.swift in Sources */,
 				958F187AF69FE638B1F46F6A /* PluginsViewModel.swift in Sources */,
+				A1B2C3D4E5F60001A0000001 /* HooksViewModel.swift in Sources */,
+				A1B2C3D4E5F60001A0000002 /* HooksManagementView.swift in Sources */,
 				9AFCE4893AEA34EB0E666E51 /* PollingManager.swift in Sources */,
 				A500F3C208F7333117667685 /* PremiumView.swift in Sources */,
 				E3232091BD3461B7459F07F9 /* ProcessListView.swift in Sources */,
@@ -1585,6 +1595,8 @@
 				38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */,
 				8D1A3E67499C2C7112280CD6 /* PluginConfigView.swift in Sources */,
 				C846CD1BD5DBBFE74F0E364D /* PluginsViewModel.swift in Sources */,
+				A1B2C3D4E5F60001B0000001 /* HooksViewModel.swift in Sources */,
+				A1B2C3D4E5F60001B0000002 /* HooksManagementView.swift in Sources */,
 				0EFDA4E7DCAE34C2C86A459A /* PollingManager.swift in Sources */,
 				37AB7475EC00B946B497B905 /* PremiumView.swift in Sources */,
 				AD9610B7C1DA26BBA4952DE0 /* ProcessListView.swift in Sources */,

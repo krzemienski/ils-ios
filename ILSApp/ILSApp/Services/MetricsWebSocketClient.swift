@@ -191,7 +191,12 @@ final class MetricsWebSocketClient {
                 isConnected = false
                 return
             }
-            try handleMetricsData(data)
+            // REST endpoint returns APIResponse envelope; unwrap before handling
+            let apiResponse = try decoder.decode(APIResponse<SystemMetricsResponse>.self, from: data)
+            if let metricsData = apiResponse.data {
+                let metricsJSON = try JSONEncoder().encode(metricsData)
+                try handleMetricsData(metricsJSON)
+            }
             isConnected = true
         } catch {
             isConnected = false

@@ -122,7 +122,8 @@ final class SystemMetricsViewModel {
         do {
             let (data, response) = try await session.data(from: url)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
-            processes = try decoder.decode([ProcessInfoResponse].self, from: data)
+            let apiResponse = try decoder.decode(APIResponse<[ProcessInfoResponse]>.self, from: data)
+            processes = apiResponse.data ?? []
         } catch {
             // Silently fail - UI shows empty state
         }

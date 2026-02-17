@@ -32,7 +32,7 @@ struct SystemController: RouteCollection {
 
     /// GET /system/metrics — returns current system metrics with timeout protection.
     @Sendable
-    func metrics(req: Request) async throws -> Response {
+    func metrics(req: Request) async throws -> APIResponse<SystemMetricsResponse> {
         // Wrap in timeout to prevent hanging from blocked system calls
         let stats: SystemMetricsService.SystemMetrics
         do {
@@ -53,7 +53,7 @@ struct SystemController: RouteCollection {
             throw Abort(.gatewayTimeout, reason: "System metrics collection timed out")
         }
 
-        let response = SystemMetricsResponse(
+        let metricsResponse = SystemMetricsResponse(
             cpu: stats.cpu,
             memory: SystemMetricsResponse.MemoryInfo(
                 used: stats.memory.used,
@@ -72,20 +72,12 @@ struct SystemController: RouteCollection {
             loadAverage: stats.loadAverage
         )
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(response)
-
-        return Response(
-            status: .ok,
-            headers: ["Content-Type": "application/json"],
-            body: .init(data: data)
-        )
+        return APIResponse(success: true, data: metricsResponse)
     }
 
     /// GET /system/processes — returns running processes, optionally sorted.
     @Sendable
-    func processes(req: Request) async throws -> Response {
+    func processes(req: Request) async throws -> APIResponse<[ProcessInfoResponse]> {
         let sortBy = req.query[String.self, at: "sort"] ?? "cpu"
         var procs = await metricsService.getProcesses()
 
@@ -105,19 +97,12 @@ struct SystemController: RouteCollection {
             )
         }
 
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(items)
-
-        return Response(
-            status: .ok,
-            headers: ["Content-Type": "application/json"],
-            body: .init(data: data)
-        )
+        return APIResponse(success: true, data: items)
     }
 
     /// GET /system/files?path= — returns directory listing, restricted to home.
     @Sendable
-    func files(req: Request) async throws -> Response {
+    func files(req: Request) async throws -> APIResponse<[FileEntryResponse]> {
         guard let path = req.query[String.self, at: "path"] else {
             throw Abort(.badRequest, reason: "Missing 'path' query parameter")
         }
@@ -135,15 +120,7 @@ struct SystemController: RouteCollection {
             )
         }
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(items)
-
-        return Response(
-            status: .ok,
-            headers: ["Content-Type": "application/json"],
-            body: .init(data: data)
-        )
+        return APIResponse(success: true, data: items)
     }
 
     // MARK: - WebSocket
@@ -203,14 +180,12 @@ struct SystemController: RouteCollection {
     }
 
     @Sendable
-    func metricsSource(req: Request) async throws -> Response {
+    func metricsSource(req: Request) async throws -> APIResponse<MetricsSourceResponse> {
         let response = MetricsSourceResponse(
             source: .local,
             hostName: nil
         )
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(response)
-        return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
+        return APIResponse(success: true, data: response)
     }
 }
 
@@ -247,3 +222,4 @@ private struct LiveMetricsMessage: Codable, Sendable {
 extension SystemMetricsResponse: Content {}
 extension ProcessInfoResponse: Content {}
 extension FileEntryResponse: Content {}
+extension MetricsSourceResponse: Content {}

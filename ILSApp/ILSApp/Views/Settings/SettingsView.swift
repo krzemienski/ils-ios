@@ -6,7 +6,7 @@ struct SettingsView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var viewModel = SettingsViewModel()
     @State private var serverHost: String = "localhost"
-    @State private var serverPort: String = "8080"
+    @State private var serverPort: String = "9999"
     @State private var backendAPIKey: String = ""
     @State private var showAPIKeySaved = false
 
@@ -23,9 +23,9 @@ struct SettingsView: View {
 
     // Available options
     private let availableModels = [
-        "claude-sonnet-4-20250514",
-        "claude-opus-4-20250514",
-        "claude-haiku-3-5-20241022"
+        "claude-sonnet-4-5",
+        "claude-opus-4-6",
+        "claude-haiku-4-5"
     ]
 
     private let availableColorSchemes = ["system", "light", "dark"]
@@ -44,7 +44,7 @@ struct SettingsView: View {
 
                 HStack {
                     Text("Port")
-                    TextField("8080", text: $serverPort)
+                    TextField("9999", text: $serverPort)
                         .keyboardType(.numberPad)
                 }
 
@@ -129,7 +129,7 @@ struct SettingsView: View {
                     } else {
                         LabeledContent("Default Model") {
                             HStack(spacing: 4) {
-                                Text(formatModelName(config.model ?? "claude-opus-4-20250514"))
+                                Text(formatModelName(config.model ?? "claude-opus-4-6"))
                                     .foregroundStyle(theme.textSecondary)
                                 if config.model == nil {
                                     Text("Host Default")
@@ -318,12 +318,15 @@ struct SettingsView: View {
             // MARK: - Advanced Section
             Section {
                 if let config = viewModel.config?.content {
-                    // Hooks Summary
-                    if let hooks = config.hooks {
-                        let hookCount = countHooks(hooks)
-                        LabeledContent("Hooks Configured", value: "\(hookCount)")
-                    } else {
-                        LabeledContent("Hooks Configured", value: "0")
+                    // Hooks Management
+                    NavigationLink {
+                        HooksManagementView()
+                    } label: {
+                        let hookCount = config.hooks.map { countHooks($0) } ?? 0
+                        LabeledContent("Hooks") {
+                            Text("\(hookCount) configured")
+                                .foregroundStyle(theme.textSecondary)
+                        }
                     }
 
                     // Enabled Plugins Count
@@ -550,7 +553,7 @@ struct SettingsView: View {
     private func resetEditedValues() {
         // Reset edited values to current config values
         if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-opus-4-20250514"
+            editedModel = config.model ?? "claude-opus-4-6"
             editedColorScheme = config.theme?.colorScheme ?? "system"
         }
     }

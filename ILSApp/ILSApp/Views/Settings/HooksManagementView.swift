@@ -1,0 +1,218 @@
+import SwiftUI
+import ILSShared
+
+struct HooksManagementView: View {
+    @Environment(AppState.self) var appState
+    @Environment(\.theme) private var theme: ThemeSnapshot
+
+    @State private var viewModel = HooksViewModel()
+
+    var body: some View {
+        Group {
+            if viewModel.isLoading && viewModel.hooks.isEmpty {
+                loadingState
+            } else if viewModel.hooks.isEmpty {
+                emptyState
+            } else {
+                hooksList
+            }
+        }
+        .background(theme.bgPrimary)
+        .navigationTitle("Hooks")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .refreshable {
+            await viewModel.refreshHooks()
+        }
+        .task {
+            viewModel.configure(client: appState.apiClient)
+            await viewModel.loadHooks()
+        }
+    }
+
+    // MARK: - Hooks List
+
+    private var hooksList: some View {
+        ScrollView {
+            LazyVStack(spacing: theme.spacingMD) {
+                // Summary header
+                summaryHeader
+
+                // Hooks grouped by event type
+                ForEach(viewModel.eventTypes, id: \.self) { eventType in
+                    hookEventSection(eventType)
+                }
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.bottom, theme.spacingLG)
+        }
+    }
+
+    // MARK: - Summary Header
+
+    private var summaryHeader: some View {
+        HStack(spacing: theme.spacingMD) {
+            VStack(spacing: 2) {
+                Text("\(viewModel.totalHookCount)")
+                    .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
+                    .foregroundStyle(theme.accent)
+                Text("Total Hooks")
+                    .font(.system(size: 10, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.accent.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            VStack(spacing: 2) {
+                Text("\(viewModel.eventTypes.count)")
+                    .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
+                    .foregroundStyle(theme.info)
+                Text("Event Types")
+                    .font(.system(size: 10, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.info.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+    }
+
+    // MARK: - Hook Event Section
+
+    private func hookEventSection(_ eventType: String) -> some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            // Section header
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: viewModel.iconForEventType(eventType))
+                    .foregroundStyle(theme.accent)
+                    .font(.system(size: 16, design: theme.fontDesign))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(viewModel.labelForEventType(eventType))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Text(viewModel.descriptionForEventType(eventType))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+
+                Spacer()
+
+                Text("\(viewModel.countForEventType(eventType))")
+                    .font(.system(size: theme.fontCaption, weight: .bold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(theme.bgTertiary)
+                    .clipShape(Capsule())
+            }
+            .padding(.top, theme.spacingSM)
+
+            // Hook items for this event type
+            let items = viewModel.hooksByEventType[eventType] ?? []
+            ForEach(items) { item in
+                hookRow(item)
+            }
+        }
+    }
+
+    // MARK: - Hook Row
+
+    private func hookRow(_ item: HookDisplayItem) -> some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            // Command line
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "terminal")
+                    .foregroundStyle(theme.accent)
+                    .font(.system(size: 12, design: theme.fontDesign))
+
+                Text(item.command ?? "No command")
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(2)
+
+                Spacer()
+            }
+
+            // Metadata row
+            HStack(spacing: theme.spacingSM) {
+                // Hook type badge
+                if let hookType = item.hookType {
+                    Text(hookType)
+                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(theme.accent.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+
+                // Matcher badge
+                if let matcher = item.matcher, !matcher.isEmpty {
+                    HStack(spacing: 2) {
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .font(.system(size: 8))
+                        Text(matcher)
+                            .lineLimit(1)
+                    }
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(theme.warning)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(theme.warning.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+
+                Spacer()
+            }
+        }
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(item.eventType) hook, \(item.command ?? "no command")")
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: theme.spacingMD) {
+            Image(systemName: "gearshape.2")
+                .font(.system(size: 40, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+            Text("No Hooks Configured")
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+            Text("Hooks let you run custom commands at key points in Claude Code's lifecycle. Configure them in your settings.json file.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, theme.spacingLG)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, theme.spacingXL)
+    }
+
+    // MARK: - Loading State
+
+    private var loadingState: some View {
+        VStack(spacing: theme.spacingMD) {
+            ProgressView()
+                .progressViewStyle(.circular)
+            Text("Loading hooks...")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        HooksManagementView()
+            .environment(AppState())
+    }
+}

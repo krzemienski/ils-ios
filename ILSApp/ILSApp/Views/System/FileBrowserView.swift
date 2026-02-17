@@ -237,8 +237,8 @@ struct FileBrowserView: View {
         let encodedPath = currentPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? currentPath
 
         do {
-            let result: [FileEntryResponse] = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
-            entries = result
+            let result: APIResponse<[FileEntryResponse]> = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
+            entries = result.data ?? []
         } catch {
             errorMessage = "Failed to load directory: \(error.localizedDescription)"
         }

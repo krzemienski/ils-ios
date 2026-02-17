@@ -74,6 +74,10 @@ struct ChatMessageList: View {
 
     private var messagesContent: some View {
         LazyVStack(spacing: 0) {
+            if messages.isEmpty && !isLoadingHistory && !isStreaming {
+                emptyChatState
+            }
+
             ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
                 let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
                 let isSameSender = prevMessage?.isUser == message.isUser
@@ -112,6 +116,28 @@ struct ChatMessageList: View {
                 .id("bottom")
         }
         .padding(.vertical, messageSpacing)
+    }
+
+    private var emptyChatState: some View {
+        VStack(spacing: theme.spacingMD) {
+            Image(systemName: "bubble.left.and.text.bubble.right")
+                .font(.system(size: 48, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+
+            Text("Start a Conversation")
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+
+            Text("Send a message to begin chatting with Claude")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, theme.spacingLG)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 100)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Empty chat. Send a message to begin.")
     }
 
     private func shouldShowTypingIndicator() -> Bool {

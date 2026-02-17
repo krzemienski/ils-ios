@@ -51,8 +51,35 @@ final class FleetViewModel {
             guard let fleet = response.data else { return }
             hosts = fleet.hosts
             activeHostId = fleet.activeHostId
+
+            // Auto-populate localhost:9999 on first load if no hosts exist
+            if hosts.isEmpty {
+                await autoRegisterLocalhost()
+            }
         } catch {
             loadError = "Failed to load fleet hosts: \(error.localizedDescription)"
+        }
+    }
+
+    private func autoRegisterLocalhost() async {
+        let request = RegisterFleetHostRequest(
+            name: "Local Backend",
+            host: "localhost",
+            port: 22,
+            backendPort: 9999,
+            username: nil,
+            authMethod: nil,
+            credential: nil
+        )
+
+        do {
+            let response: APIResponse<FleetHost> = try await apiClient.post("/fleet/register", body: request)
+            if let newHost = response.data {
+                hosts.append(newHost)
+                activeHostId = newHost.id
+            }
+        } catch {
+            // Silent fail - user can manually add if needed
         }
     }
 

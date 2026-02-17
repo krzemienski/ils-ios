@@ -6,6 +6,8 @@ import ILSShared
 
 struct SkillDetailView: View {
     let skill: Skill
+    /// Optional parent view model for coordinated state updates (e.g., toggle active)
+    var parentViewModel: SkillsViewModel?
 
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -19,6 +21,12 @@ struct SkillDetailView: View {
     @State private var showCopiedToast = false
     @State private var isSaving = false
     @State private var isDeleting = false
+    @State private var isTogglingActive = false
+
+    /// Only local (user-created) skills can be edited or deleted
+    private var isEditable: Bool {
+        skill.source == .local
+    }
 
     var body: some View {
         ScrollView {
@@ -47,39 +55,59 @@ struct SkillDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: theme.spacingSM) {
+                    // Enable/Disable toggle (available for all skills)
                     Button {
-                        if isEditing {
-                            saveEdit()
-                        } else {
-                            startEditing()
-                        }
+                        toggleActive()
                     } label: {
-                        if isSaving {
+                        if isTogglingActive {
                             ProgressView()
                                 .progressViewStyle(.circular)
-                                .tint(theme.accent)
+                                .scaleEffect(0.8)
                         } else {
-                            Image(systemName: isEditing ? "checkmark" : "pencil")
-                                .foregroundStyle(theme.accent)
+                            Image(systemName: skill.isActive ? "pause.circle" : "play.circle")
+                                .foregroundStyle(skill.isActive ? theme.warning : theme.success)
                         }
                     }
-                    .disabled(isSaving || isDeleting)
-                    .accessibilityLabel(isEditing ? "Save" : "Edit")
+                    .disabled(isTogglingActive || isSaving || isDeleting)
+                    .accessibilityLabel(skill.isActive ? "Disable skill" : "Enable skill")
 
-                    Button {
-                        showDeleteAlert = true
-                    } label: {
-                        if isDeleting {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(theme.error)
-                        } else {
-                            Image(systemName: "trash")
-                                .foregroundStyle(theme.error)
+                    // Edit (local skills only)
+                    if isEditable {
+                        Button {
+                            if isEditing {
+                                saveEdit()
+                            } else {
+                                startEditing()
+                            }
+                        } label: {
+                            if isSaving {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(theme.accent)
+                            } else {
+                                Image(systemName: isEditing ? "checkmark" : "pencil")
+                                    .foregroundStyle(theme.accent)
+                            }
                         }
+                        .disabled(isSaving || isDeleting)
+                        .accessibilityLabel(isEditing ? "Save" : "Edit")
+
+                        // Delete (local skills only)
+                        Button {
+                            showDeleteAlert = true
+                        } label: {
+                            if isDeleting {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(theme.error)
+                            } else {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(theme.error)
+                            }
+                        }
+                        .disabled(isSaving || isDeleting)
+                        .accessibilityLabel("Delete")
                     }
-                    .disabled(isSaving || isDeleting)
-                    .accessibilityLabel("Delete")
                 }
             }
         }
@@ -407,6 +435,17 @@ struct SkillDetailView: View {
             await MainActor.run {
                 isDeleting = false
                 dismiss()
+            }
+        }
+    }
+
+    private func toggleActive() {
+        isTogglingActive = true
+        Task {
+            let vm = parentViewModel ?? viewModel
+            await vm.toggleSkillActive(skill)
+            await MainActor.run {
+                isTogglingActive = false
             }
         }
     }

@@ -56,7 +56,7 @@ struct SidebarRootView: View {
     @State private var activeScreen: ActiveScreen = .home
     @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -94,8 +94,19 @@ struct SidebarRootView: View {
             }
         }
         .onAppear {
+            // Restore the active screen from storage
             if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
                 activeScreen = restored
+            } else if activeScreenKey == "chat", !lastChatSessionId.isEmpty {
+                // Restore chat session if we have a valid session ID
+                if let sessionUUID = UUID(uuidString: lastChatSessionId) {
+                    let restoredSession = ChatSession(
+                        id: sessionUUID,
+                        name: nil,
+                        model: "sonnet"
+                    )
+                    activeScreen = .chat(restoredSession)
+                }
             }
         }
         .sheet(isPresented: Bindable(appState).showOnboarding) {

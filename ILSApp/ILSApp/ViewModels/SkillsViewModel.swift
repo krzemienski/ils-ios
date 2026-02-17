@@ -9,9 +9,12 @@ class SkillsViewModel {
     var isLoading = false
     var error: Error?
     var searchText = ""
+    var selectedScope: String = "all"
     var gitHubResults: [GitHubSearchResult] = []
     var isSearchingGitHub = false
     var gitHubSearchText = ""
+    /// Track skills currently being toggled (enable/disable)
+    var togglingSkills: Set<UUID> = []
 
     /// Update GitHub search text and trigger debounced search.
     /// Call this instead of assigning `gitHubSearchText` directly.
@@ -54,6 +57,16 @@ class SkillsViewModel {
         return searchCache
             .filter { $0.searchText.contains(query) }
             .map(\.skill)
+    }
+
+    /// Count of active skills in current dataset
+    var activeCount: Int {
+        skills.filter(\.isActive).count
+    }
+
+    /// Count of inactive skills in current dataset
+    var inactiveCount: Int {
+        skills.filter { !$0.isActive }.count
     }
 
     /// Rebuild the lowercase search cache when skills array changes
@@ -177,15 +190,18 @@ class SkillsViewModel {
 
     func toggleSkillActive(_ skill: Skill) async {
         guard let client else { return }
+        togglingSkills.insert(skill.id)
         do {
             let endpoint = skill.isActive ? "/skills/\(skill.name)/disable" : "/skills/\(skill.name)/enable"
             let _: APIResponse<Skill> = try await client.post(endpoint, body: EmptyBody())
-            // Reload to get updated state
-            await loadSkills(refresh: true)
+            // Reload to get updated state with current scope
+            let scope = selectedScope == "all" ? nil : selectedScope
+            await loadSkills(refresh: true, scope: scope)
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to toggle skill '\(skill.name)': \(error.localizedDescription)", category: "skills")
         }
+        togglingSkills.remove(skill.id)
     }
 
     func searchGitHub(query: String) async {

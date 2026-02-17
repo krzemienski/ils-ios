@@ -6,7 +6,9 @@ import ILSShared
 @Observable
 class PluginsViewModel {
     var plugins: [Plugin] = []
+    var marketplacePlugins: [PluginMarketplace] = []
     var isLoading = false
+    var isLoadingMarketplace = false
     var error: Error?
     var searchText = ""
     var marketplaceSearchText = ""
@@ -14,6 +16,7 @@ class PluginsViewModel {
     var isSearchingMarketplace = false
     var searchResults: [PluginInfo] = []
     var installingPlugins: Set<String> = []
+    var togglingPlugins: Set<String> = []
 
     private var client: APIClient?
 
@@ -63,6 +66,16 @@ class PluginsViewModel {
         }
     }
 
+    /// Count of enabled plugins
+    var enabledCount: Int {
+        plugins.filter(\.isEnabled).count
+    }
+
+    /// Count of disabled plugins
+    var disabledCount: Int {
+        plugins.filter { !$0.isEnabled }.count
+    }
+
     func loadPlugins() async {
         guard let client else { return }
         isLoading = true
@@ -79,6 +92,22 @@ class PluginsViewModel {
         }
 
         isLoading = false
+    }
+
+    func loadMarketplace() async {
+        guard let client else { return }
+        isLoadingMarketplace = true
+
+        do {
+            let response: APIResponse<[PluginMarketplace]> = try await client.get("/plugins/marketplace")
+            if let data = response.data {
+                marketplacePlugins = data
+            }
+        } catch {
+            AppLogger.shared.error("Failed to load marketplace: \(error.localizedDescription)", category: "plugins")
+        }
+
+        isLoadingMarketplace = false
     }
 
     func retryLoadPlugins() async {
@@ -110,6 +139,16 @@ class PluginsViewModel {
             self.error = error
             AppLogger.shared.error("Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)", category: "plugins")
         }
+    }
+
+    func togglePlugin(_ plugin: Plugin) async {
+        togglingPlugins.insert(plugin.name)
+        if plugin.isEnabled {
+            await disablePlugin(plugin)
+        } else {
+            await enablePlugin(plugin)
+        }
+        togglingPlugins.remove(plugin.name)
     }
 
     func enablePlugin(_ plugin: Plugin) async {
