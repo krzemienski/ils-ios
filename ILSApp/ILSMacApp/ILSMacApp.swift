@@ -148,7 +148,7 @@ class AppState {
     func updateLastSessionId(_ id: UUID?) {
         lastSessionId = id
         if let id {
-            UserDefaults.standard.set(id.uuidString, forKey: "ils_last_session_id")
+            UserDefaults.standard.set(id.uuidString, forKey: AppConstants.lastSessionIDKey)
         }
     }
 

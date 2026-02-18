@@ -526,10 +526,10 @@ struct SettingsView: View {
 
     private func loadServerSettings() {
         // Load from UserDefaults
-        if let savedHost = UserDefaults.standard.string(forKey: "ils_server_host") {
+        if let savedHost = UserDefaults.standard.string(forKey: AppConstants.settingsServerHostKey) {
             serverHost = savedHost
         }
-        if let savedPort = UserDefaults.standard.string(forKey: "ils_server_port") {
+        if let savedPort = UserDefaults.standard.string(forKey: AppConstants.settingsServerPortKey) {
             serverPort = savedPort
         }
         // Also parse from appState if available
@@ -547,8 +547,8 @@ struct SettingsView: View {
 
     private func saveServerSettings() {
         // Save to UserDefaults
-        UserDefaults.standard.set(serverHost, forKey: "ils_server_host")
-        UserDefaults.standard.set(serverPort, forKey: "ils_server_port")
+        UserDefaults.standard.set(serverHost, forKey: AppConstants.settingsServerHostKey)
+        UserDefaults.standard.set(serverPort, forKey: AppConstants.settingsServerPortKey)
 
         // Update appState serverURL
         let url = "http://\(serverHost):\(serverPort)"

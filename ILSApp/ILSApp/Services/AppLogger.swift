@@ -122,7 +122,7 @@ final class AppLogger {
     }
 
     var analyticsOptedIn: Bool {
-        get { UserDefaults.standard.bool(forKey: "analytics_opted_in") }
-        set { UserDefaults.standard.set(newValue, forKey: "analytics_opted_in") }
+        get { UserDefaults.standard.bool(forKey: AppConstants.analyticsOptedInKey) }
+        set { UserDefaults.standard.set(newValue, forKey: AppConstants.analyticsOptedInKey) }
     }
 }

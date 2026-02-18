@@ -492,17 +492,17 @@ struct QuickConnectView: View {
     // MARK: - History Persistence
 
     private func loadHistory() {
-        connectionHistory = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
+        connectionHistory = UserDefaults.standard.stringArray(forKey: AppConstants.connectionHistoryKey) ?? []
     }
 
     private func saveToHistory(_ url: String) {
-        var history = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
+        var history = UserDefaults.standard.stringArray(forKey: AppConstants.connectionHistoryKey) ?? []
         history.removeAll { $0 == url }
         history.insert(url, at: 0)
         if history.count > 5 {
             history = Array(history.prefix(5))
         }
-        UserDefaults.standard.set(history, forKey: "connectionHistory")
+        UserDefaults.standard.set(history, forKey: AppConstants.connectionHistoryKey)
         connectionHistory = history
     }
 }

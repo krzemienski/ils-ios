@@ -207,7 +207,7 @@ struct MacSettingsView: View {
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 settingRow(label: "Server URL") {
                     HStack(spacing: theme.spacingSM) {
-                        TextField("http://localhost:9999", text: $serverURL)
+                        TextField(AppConstants.defaultServerURL, text: $serverURL)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 280)
 
@@ -477,7 +477,7 @@ struct MacSettingsView: View {
         defaultModel = "claude-sonnet-4-20250514"
         enableAgentTeams = false
         enableDebugMode = false
-        serverURL = "http://localhost:9999"
+        serverURL = AppConstants.defaultServerURL
         themeManager.setTheme("obsidian")
     }
 
