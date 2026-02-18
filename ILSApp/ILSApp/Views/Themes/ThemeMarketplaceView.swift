@@ -250,21 +250,17 @@ struct ThemeMarketplaceView: View {
     // MARK: - Import / Export
 
     private func handleImport(result: Result<[URL], Error>) {
-        Task.detached(priority: .userInitiated) {
+        Task {
             do {
                 guard let fileURL = try result.get().first else {
-                    await MainActor.run {
-                        importError = "No file selected"
-                        showImportError = true
-                    }
+                    importError = "No file selected"
+                    showImportError = true
                     return
                 }
 
                 guard fileURL.startAccessingSecurityScopedResource() else {
-                    await MainActor.run {
-                        importError = "Unable to access file"
-                        showImportError = true
-                    }
+                    importError = "Unable to access file"
+                    showImportError = true
                     return
                 }
                 defer { fileURL.stopAccessingSecurityScopedResource() }
@@ -273,16 +269,12 @@ struct ThemeMarketplaceView: View {
                 let manifest = try JSONDecoder().decode(ThemeManifest.self, from: jsonData)
                 let imported = ImportedTheme(manifest: manifest)
 
-                await MainActor.run {
-                    themeManager.registerTheme(imported)
-                    themeManager.setTheme(imported.id)
-                }
+                themeManager.registerTheme(imported)
+                themeManager.setTheme(imported.id)
 
             } catch {
-                await MainActor.run {
-                    importError = "Failed to import theme: \(error.localizedDescription)"
-                    showImportError = true
-                }
+                importError = "Failed to import theme: \(error.localizedDescription)"
+                showImportError = true
             }
         }
     }

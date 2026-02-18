@@ -87,6 +87,10 @@ struct ConnectionBannerModifier: ViewModifier {
                     dismissTask?.cancel()
                 }
             }
+            .onDisappear {
+                dismissTask?.cancel()
+                dismissTask = nil
+            }
     }
 }
 

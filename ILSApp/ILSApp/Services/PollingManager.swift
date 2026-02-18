@@ -102,11 +102,9 @@ class PollingManager {
         switch phase {
         case .active:
             Task { await checkConnection() }
-        case .background:
+        case .background, .inactive:
             stopHealthPolling()
             stopRetryPolling()
-        case .inactive:
-            break
         @unknown default:
             break
         }

@@ -11,7 +11,7 @@ struct SkillsFileService {
     private let fileManager = FileManager.default
 
     /// Cache TTL in seconds (default: 30s)
-    var cacheTTL: TimeInterval = 30
+    private(set) var cacheTTL: TimeInterval = 30
 
     /// Home directory path
     var homeDirectory: String {

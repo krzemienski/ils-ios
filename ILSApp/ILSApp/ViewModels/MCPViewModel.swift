@@ -160,7 +160,7 @@ class MCPViewModel {
 
     // MARK: - Spec 012: Health Monitoring
 
-    func startHealthPolling(interval: TimeInterval = 30) {
+    func startHealthPolling(interval: TimeInterval = 120) {
         stopHealthPolling()
         healthTimer = Task { [weak self] in
             while !Task.isCancelled {

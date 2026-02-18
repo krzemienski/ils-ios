@@ -61,12 +61,12 @@ final class AppLogger {
 
     /// Enqueue a log entry into the buffer, flush when threshold is reached
     private func enqueueWrite(_ level: String, category: String, message: String) {
-        let timestamp = Self.iso8601Formatter.string(from: Date())
-        let entry = "[\(timestamp)] [\(level)] [\(category)] \(message)\n"
-        guard let data = entry.data(using: .utf8) else { return }
-
+        let now = Date()
         writeQueue.async { [weak self] in
             guard let self else { return }
+            let timestamp = Self.iso8601Formatter.string(from: now)
+            let entry = "[\(timestamp)] [\(level)] [\(category)] \(message)\n"
+            guard let data = entry.data(using: .utf8) else { return }
             self.buffer.append(data)
             if self.buffer.count >= self.bufferThreshold {
                 self.flushBuffer()

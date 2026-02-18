@@ -24,10 +24,11 @@ This is the core decision tree. Each issue type requires different thinking:
 
 | Issue Type | Strategy | Watch Out For | Example Fix |
 |------------|----------|---------------|-------------|
+| **Memory** (Task leaks, missing deinit) | Add `deinit` to cancel stored `Task` properties; use `nonisolated(unsafe)` for Task properties in `@Observable @MainActor` classes | Compiler suggests `nonisolated` but that breaks `@ObservationTracked` macro — must use `nonisolated(unsafe)` | `nonisolated(unsafe) private var task: Task<Void, Never>?` + `deinit { task?.cancel() }` |
 | **Performance** (Set lookups, detached I/O) | Replace `Array.contains` with `Set` lookup; move file I/O to `Task.detached(priority:)` | Check ALL callers of changed API; `Task.detached` loses actor context | `static let keywords: Set<String> = ["a", "b"]` |
 | **Accessibility** (fonts, labels, hints) | Replace `.system(size: X)` with semantic font (`.caption`, `.body`); add `accessibilityHint`; use `@ScaledMetric` for spacing | Test at BOTH default AND extra-extra-large Dynamic Type; `.custom()` fonts need `relativeTo:` | `.font(.caption2)` instead of `.font(.system(size: 10))` |
 | **Concurrency** (Task.detached, actor) | Replace `Task.detached` with plain `Task` (inherits actor context); add `@MainActor` where needed | `Task.detached` is almost NEVER what you want — it loses Sendable context; plain `Task` inherits correctly | `Task { await vm.load() }` not `Task.detached { await vm.load() }` |
-| **Energy** (timers, polling, animation) | Add `Timer.tolerance`, store timer reference for cleanup, add `scenePhase` pause/resume | MUST invalidate timers in `deinit` or `.onDisappear`; forgetting creates immortal timers | `timer.tolerance = interval * 0.1` |
+| **Energy** (timers, polling, animation) | Add `Timer.tolerance`, store timer reference for cleanup, add `scenePhase` pause/resume; add `.onDisappear` to reset `.repeatForever` animation state | MUST invalidate timers in `deinit` or `.onDisappear`; `.repeatForever` animations continue GPU compositing after view leaves hierarchy — always add `.onDisappear { isAnimating = false }` | `timer.tolerance = interval * 0.1` / `.onDisappear { phase = -1.0 }` |
 | **Codable** (JSONSerialization) | Create private `Codable` struct, replace `JSONSerialization` with `JSONDecoder`/`JSONEncoder` | Ensure `CodingKeys` match actual JSON field names; test with real API response | `struct Response: Codable { let items: [Item] }` |
 | **Architecture** (try?, encapsulation) | Replace `try?` with `do/catch` + `AppLogger.shared.error()`; add `private(set)` to published vars | `try?` silently swallows errors — the catch block MUST log something useful | `do { try ... } catch { AppLogger.shared.error("\(error)", category: "net") }` |
 | **Storage** (file locations, backup) | Move temp files to Caches, user data to Application Support; add `isExcludedFromBackup` | Never store temp/cache data in Documents (bloats iCloud backup); file protection `.complete` breaks on simulator | `url.resourceValues.isExcludedFromBackup = true` |
@@ -79,6 +80,7 @@ git commit -m "fix: audit batch — N issues (type: performance/accessibility/et
 - **NEVER batch more than 5 fixes before building** — Swift cascade errors make root cause diagnosis impossible beyond 5 changes
 - **NEVER trust the audit report blindly** — SyntaxHighlighter was flagged for "Array.contains" but already used `Set<String>` for all 17 grammar classes; always READ the file before fixing
 - **NEVER fix a @State/@Binding issue by changing the default value** — changing `activeScreen` default crashes the app because @EnvironmentObject isn't ready during @State init
+- **NEVER follow the compiler's suggestion to use `nonisolated` on Task properties in `@Observable @MainActor` classes** — the `@ObservationTracked` macro generates mutable backing properties that conflict with `nonisolated`; use `nonisolated(unsafe)` instead and accept the misleading warning
 
 ## Constraints
 

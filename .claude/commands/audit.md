@@ -37,6 +37,26 @@ bash scripts/headless-audit.sh
 | `sk-ant-` or `AKIA` prefixed strings | YES | Real API keys — revoke immediately, clean git history with BFG |
 | Backend binary in `.build/` path | DEPENDS | Expected for local dev; FAIL if binary is from `/Users/nick/ils/ILSBackend/` (old project) |
 
+### Phase 1b: Privacy Manifest Check
+
+```bash
+# Both iOS and macOS targets MUST have PrivacyInfo.xcprivacy
+for target in ILSApp/ILSApp ILSApp/ILSMacApp; do
+  if [ -f "$target/PrivacyInfo.xcprivacy" ]; then
+    echo "PASS: $target/PrivacyInfo.xcprivacy exists"
+  else
+    echo "FAIL: $target/PrivacyInfo.xcprivacy MISSING — App Store rejection risk"
+  fi
+done
+```
+
+**Required API declarations** (minimum for ILS):
+- `NSPrivacyAccessedAPICategoryUserDefaults` (reason: `CA92.1`)
+- `NSPrivacyAccessedAPICategoryFileTimestamp` (reason: `DDA9.1`)
+- `NSPrivacyAccessedAPICategorySystemBootTime` (reason: `35F9.1`)
+
+If a manifest is missing, create one matching the existing iOS/macOS template. Missing manifests cause App Store rejection (iOS 17+).
+
 ### Phase 2: Build Health
 
 ```bash

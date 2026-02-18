@@ -11,6 +11,12 @@ import ILSShared
 /// - `DELETE /fleet/:id` — remove a host
 /// - `GET /fleet/:id/health` — check host health
 struct FleetController: RouteCollection {
+    private static let jsonEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+
     func boot(routes: RoutesBuilder) throws {
         let fleet = routes.grouped("fleet")
 
@@ -36,9 +42,7 @@ struct FleetController: RouteCollection {
             error: nil
         )
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(response)
+        let data = try Self.jsonEncoder.encode(response)
         return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
     }
 
@@ -68,9 +72,7 @@ struct FleetController: RouteCollection {
 
         let host = model.toShared()
         let response = APIResponse(success: true, data: host, error: nil)
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(response)
+        let data = try Self.jsonEncoder.encode(response)
         return Response(status: .created, headers: ["Content-Type": "application/json"], body: .init(data: data))
     }
 
@@ -100,9 +102,7 @@ struct FleetController: RouteCollection {
 
         let host = model.toShared()
         let response = APIResponse(success: true, data: host, error: nil)
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(response)
+        let data = try Self.jsonEncoder.encode(response)
         return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
     }
 
@@ -122,8 +122,7 @@ struct FleetController: RouteCollection {
         try await model.delete(on: req.db)
 
         let response = APIResponse(success: true, data: DeletedResponse(deleted: true), error: nil)
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(response)
+        let data = try Self.jsonEncoder.encode(response)
         return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
     }
 
@@ -154,9 +153,7 @@ struct FleetController: RouteCollection {
             error: nil
         )
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(response)
+        let data = try Self.jsonEncoder.encode(response)
         return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
     }
 }

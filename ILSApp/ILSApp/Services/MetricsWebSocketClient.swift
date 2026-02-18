@@ -37,7 +37,10 @@ final class MetricsWebSocketClient {
 
     init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
-        self.session = URLSession(configuration: .default)
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.allowsConstrainedNetworkAccess = false
+        self.session = URLSession(configuration: config)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
     }
@@ -137,6 +140,12 @@ final class MetricsWebSocketClient {
 
     private func handleMetricsData(_ data: Data) throws {
         let metrics = try decoder.decode(SystemMetricsResponse.self, from: data)
+        processMetrics(metrics)
+    }
+
+    /// Shared metrics processing — accepts the already-decoded struct to avoid
+    /// unnecessary encode/decode roundtrips from the REST polling path.
+    private func processMetrics(_ metrics: SystemMetricsResponse) {
         let now = Date()
 
         latestMetrics = metrics
@@ -209,8 +218,7 @@ final class MetricsWebSocketClient {
             // REST endpoint returns APIResponse envelope; unwrap before handling
             let apiResponse = try decoder.decode(APIResponse<SystemMetricsResponse>.self, from: data)
             if let metricsData = apiResponse.data {
-                let metricsJSON = try JSONEncoder().encode(metricsData)
-                try handleMetricsData(metricsJSON)
+                processMetrics(metricsData)
             }
             isConnected = true
         } catch {

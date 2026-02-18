@@ -107,7 +107,7 @@ struct SessionFileService {
             let index: SessionsIndex
             do {
                 data = try Data(contentsOf: URL(fileURLWithPath: indexPath))
-                index = try JSONDecoder().decode(SessionsIndex.self, from: data)
+                index = try Self.jsonDecoder.decode(SessionsIndex.self, from: data)
             } catch {
                 // Log and skip malformed session index files
                 continue
