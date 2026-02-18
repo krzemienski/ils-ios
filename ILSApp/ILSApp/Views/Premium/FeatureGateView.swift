@@ -25,6 +25,7 @@ struct FeatureGateView<Content: View>: View {
             premiumRequiredOverlay
                 .sheet(isPresented: $showPremiumSheet) {
                     PremiumView()
+                        .presentationDetents([.large])
                 }
         }
     }

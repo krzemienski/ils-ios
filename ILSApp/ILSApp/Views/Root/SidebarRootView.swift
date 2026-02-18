@@ -113,6 +113,8 @@ struct SidebarRootView: View {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)
+                .presentationDetents([.large])
+                .interactiveDismissDisabled()
         }
         // DEBUG: Auto-navigate for screenshot capture (revert after)
         // .task { ... } — REVERTED after validation

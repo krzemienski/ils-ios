@@ -183,6 +183,7 @@ struct CodeBlockView: View {
         .accessibilityIdentifier("code-block-container")
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [code])
+                .presentationDetents([.medium, .large])
         }
     }
 

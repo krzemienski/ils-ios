@@ -61,6 +61,7 @@ struct AgentTeamDetailView: View {
         #endif
         .sheet(isPresented: $showSpawnSheet) {
             SpawnTeammateView(viewModel: viewModel, teamName: teamName)
+                .presentationDetents([.medium, .large])
         }
         .task {
             await viewModel.loadTeamDetail(name: teamName)

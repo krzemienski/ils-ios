@@ -59,11 +59,13 @@ struct ThemesListView: View {
             ThemeEditorView()
                 .environment(viewModel)
                 .environment(\.colorScheme, .dark) // Intentional: theme editor previews best in dark mode
+                .presentationDetents([.large])
         }
         .sheet(item: $selectedTheme) { theme in
             ThemeEditorView(theme: theme)
                 .environment(viewModel)
                 .environment(\.colorScheme, .dark) // Intentional: theme editor previews best in dark mode
+                .presentationDetents([.large])
         }
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {

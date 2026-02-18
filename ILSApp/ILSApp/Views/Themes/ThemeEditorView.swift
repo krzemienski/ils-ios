@@ -483,6 +483,7 @@ struct ThemeEditorView: View {
             }) {
                 if let url = exportURL {
                     ShareSheet(items: [url])
+                        .presentationDetents([.medium, .large])
                 }
             }
         }

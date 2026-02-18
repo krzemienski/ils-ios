@@ -39,6 +39,7 @@ struct AgentTeamsListView: View {
         }
         .sheet(isPresented: $showCreateSheet) {
             CreateTeamView(viewModel: viewModel)
+                .presentationDetents([.medium])
         }
         .task {
             await viewModel.loadTeams()

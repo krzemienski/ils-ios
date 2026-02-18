@@ -79,6 +79,7 @@ struct FileBrowserView: View {
         }
         .sheet(item: $previewFile) { file in
             filePreviewSheet(file)
+                .presentationDetents([.medium, .large])
                 .presentationBackground(theme.bgPrimary)
         }
     }

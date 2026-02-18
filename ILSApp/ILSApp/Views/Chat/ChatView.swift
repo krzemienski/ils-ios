@@ -59,11 +59,13 @@ struct ChatView: View {
                 sheets.showCommandPalette = false
                 isInputFocused = true
             }
+            .presentationDetents([.medium, .large])
             .presentationBackground(theme.bgPrimary)
         }
         .sheet(isPresented: $sheets.showSessionInfo) {
             SessionInfoView(session: session)
                 .environment(appState)
+                .presentationDetents([.medium, .large])
                 .presentationBackground(theme.bgPrimary)
         }
         .task(id: session) {
@@ -132,6 +134,7 @@ struct ChatView: View {
         }
         .sheet(isPresented: $sheets.showExportSheet) {
             ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
+                .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $sheets.showAdvancedOptions) {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
