@@ -32,7 +32,7 @@ class SkillsViewModel {
             return
         }
         searchTask = Task {
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            try? await Task.sleep(for: .milliseconds(300))
             if !Task.isCancelled {
                 await searchGitHub(query: gitHubSearchText)
             }

@@ -22,7 +22,7 @@ class SSEClient: ObservableObject {
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
-    private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
+    private let reconnectDelay: TimeInterval = 2.0
     private let session: URLSession
     private var lastEventId: String?
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
@@ -99,7 +99,7 @@ class SSEClient: ObservableObject {
 
                 // Timeout task
                 group.addTask {
-                    try await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+                    try await Task.sleep(for: .seconds(60))
                     throw URLError(.timedOut)
                 }
 
@@ -123,7 +123,7 @@ class SSEClient: ObservableObject {
             // Watchdog: detect stale connections (no data/heartbeat in 45s)
             let heartbeatWatchdog = Task.detached { [weak self] in
                 while !Task.isCancelled {
-                    try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
+                    try await Task.sleep(for: .seconds(15))
                     if await lastActivity.secondsSinceLastActivity() > 45 {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in 45s", category: "sse")
                         throw URLError(.timedOut)
@@ -191,8 +191,8 @@ class SSEClient: ObservableObject {
         AppLogger.shared.warning("Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)", category: "sse")
 
         // Exponential backoff capped at 30 seconds
-        let delay = min(reconnectDelay * UInt64(1 << (reconnectAttempts - 1)), 30_000_000_000)
-        try? await Task.sleep(nanoseconds: delay)
+        let delay = min(reconnectDelay * Double(1 << (reconnectAttempts - 1)), 30.0)
+        try? await Task.sleep(for: .seconds(delay))
 
         // Check if cancelled during sleep
         if Task.isCancelled {

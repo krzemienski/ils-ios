@@ -390,7 +390,7 @@ struct SSHSetupView: View {
 
         // Retry up to 5 times with 3s delay — tunnel needs time to propagate through Cloudflare
         let maxRetries = 5
-        let retryDelay: UInt64 = 3_000_000_000 // 3 seconds
+        let retryDelay: Duration = .seconds(3)
 
         for attempt in 1...maxRetries {
             do {
@@ -402,7 +402,7 @@ struct SSHSetupView: View {
             } catch {
                 if attempt < maxRetries {
                     // Wait before retrying
-                    try? await Task.sleep(nanoseconds: retryDelay)
+                    try? await Task.sleep(for: retryDelay)
                 } else {
                     // All retries exhausted
                     isConnecting = false

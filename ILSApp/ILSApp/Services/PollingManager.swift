@@ -45,10 +45,10 @@ class PollingManager {
         guard retryTask == nil else { return }
         AppLogger.shared.info("Starting retry polling (exponential backoff: 5s-60s)", category: "app")
         retryTask = Task { [weak self] in
-            var delay: UInt64 = 5_000_000_000 // Start at 5 seconds
-            let maxDelay: UInt64 = 60_000_000_000 // Cap at 60 seconds
+            var delaySec: Double = 5.0
+            let maxDelaySec: Double = 60.0
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: delay)
+                try? await Task.sleep(for: .seconds(delaySec))
                 guard !Task.isCancelled else { break }
                 guard let self, let cm = self.connectionManager else { break }
                 do {
@@ -60,10 +60,9 @@ class PollingManager {
                     self.startHealthPolling()
                     break
                 } catch {
-                    let delaySec = delay / 1_000_000_000
-                    delay = min(delay * 2, maxDelay)
-                    let nextDelaySec = delay / 1_000_000_000
-                    AppLogger.shared.warning("Still disconnected after \(delaySec)s, retrying in \(nextDelaySec)s...", category: "app")
+                    let currentDelay = Int(delaySec)
+                    delaySec = min(delaySec * 2, maxDelaySec)
+                    AppLogger.shared.warning("Still disconnected after \(currentDelay)s, retrying in \(Int(delaySec))s...", category: "app")
                 }
             }
         }
@@ -78,7 +77,7 @@ class PollingManager {
         guard healthPollTask == nil else { return }
         healthPollTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                try? await Task.sleep(for: .seconds(30))
                 guard !Task.isCancelled else { break }
                 guard let self, let cm = self.connectionManager else { break }
                 do {

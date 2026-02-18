@@ -190,7 +190,7 @@ private struct StreamingDotsView: View {
             .frame(width: 20, alignment: .leading)
             .task {
                 while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    try? await Task.sleep(for: .milliseconds(500))
                     animationPhase += 1
                 }
             }

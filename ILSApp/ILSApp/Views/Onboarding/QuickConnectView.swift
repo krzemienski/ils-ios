@@ -433,7 +433,7 @@ struct QuickConnectView: View {
             let url = resolvedURL
 
             connectionSteps[0].status = .inProgress
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            try? await Task.sleep(for: .milliseconds(300))
 
             guard let urlObj = URL(string: url), urlObj.host != nil else {
                 connectionSteps[0].status = .failure("Invalid URL")
@@ -443,7 +443,7 @@ struct QuickConnectView: View {
             connectionSteps[0].status = .success
 
             connectionSteps[1].status = .inProgress
-            try? await Task.sleep(nanoseconds: 200_000_000)
+            try? await Task.sleep(for: .milliseconds(200))
 
             let client = APIClient(baseURL: url)
             do {
@@ -457,7 +457,7 @@ struct QuickConnectView: View {
             }
 
             connectionSteps[2].status = .inProgress
-            try? await Task.sleep(nanoseconds: 200_000_000)
+            try? await Task.sleep(for: .milliseconds(200))
 
             do {
                 let health = try await client.getHealth()
@@ -478,7 +478,7 @@ struct QuickConnectView: View {
                 showSteps = false
                 showConnectedState = true
 
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                try? await Task.sleep(for: .seconds(1.5))
                 dismiss()
 
             } catch {

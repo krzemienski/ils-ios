@@ -84,7 +84,7 @@ actor TunnelService {
             }
 
             group.addTask {
-                try await Task.sleep(nanoseconds: 15_000_000_000)
+                try await Task.sleep(for: .seconds(15))
                 throw TunnelError.timeout
             }
 
@@ -139,7 +139,7 @@ actor TunnelService {
         // For named tunnels the URL is the custom domain — no output parsing needed.
         // Wait briefly to verify cloudflared didn't crash immediately.
         let tunnelURL = domain.hasPrefix("https://") ? domain : "https://\(domain)"
-        try await Task.sleep(nanoseconds: 3_000_000_000)
+        try await Task.sleep(for: .seconds(3))
 
         guard process?.isRunning == true else {
             throw TunnelError.namedTunnelFailed

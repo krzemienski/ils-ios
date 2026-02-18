@@ -172,9 +172,9 @@ class ChatViewModel {
         guard batchTask == nil else { return }
 
         batchTask = Task { [weak self] in
-            let intervalNanos = UInt64((self?.batchInterval ?? 0.075) * 1_000_000_000)
+            let interval = self?.batchInterval ?? 0.075
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: intervalNanos)
+                try? await Task.sleep(for: .seconds(interval))
                 guard !Task.isCancelled else { break }
                 self?.flushPendingMessages()
             }
@@ -191,7 +191,7 @@ class ChatViewModel {
         connectingTimer?.cancel()
         connectingTooLong = false
         connectingTimer = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            try? await Task.sleep(for: .seconds(5))
             guard !Task.isCancelled else { return }
             self?.connectingTooLong = true
         }

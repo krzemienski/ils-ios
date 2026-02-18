@@ -42,7 +42,7 @@ struct SystemController: RouteCollection {
                     await service.getMetrics()
                 }
                 group.addTask {
-                    try await Task.sleep(nanoseconds: 5_000_000_000) // 5 second timeout
+                    try await Task.sleep(for: .seconds(5))
                     throw Abort(.gatewayTimeout, reason: "System metrics collection timed out")
                 }
                 let result = try await group.next()!
@@ -169,7 +169,7 @@ struct SystemController: RouteCollection {
                     break
                 }
 
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                try? await Task.sleep(for: .seconds(2))
             }
         }
 

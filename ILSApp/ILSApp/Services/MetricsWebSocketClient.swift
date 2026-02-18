@@ -187,7 +187,7 @@ final class MetricsWebSocketClient {
         let delay = min(Double(1 << reconnectAttempts), 30.0) // 1s, 2s, 4s, ... max 30s
 
         reconnectTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
             self?.connectWebSocket()
         }
@@ -201,7 +201,7 @@ final class MetricsWebSocketClient {
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                try? await Task.sleep(for: .seconds(30))
             }
         }
     }

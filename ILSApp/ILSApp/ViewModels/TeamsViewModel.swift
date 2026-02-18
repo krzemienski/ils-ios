@@ -233,7 +233,7 @@ class TeamsViewModel {
         activeTeamName = teamName
         pollingTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+                try? await Task.sleep(for: .seconds(60))
                 guard !Task.isCancelled else { break }
                 await self?.loadTeamDetail(name: teamName)
             }
