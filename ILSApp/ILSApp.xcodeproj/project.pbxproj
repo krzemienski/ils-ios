@@ -116,7 +116,6 @@
 		4A1532CA971F2EF89C94DD7D /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82F89BCFDD21A13377F020D /* NewSessionView.swift */; };
 		4A25CC33FA5ED049DB704652 /* LaunchScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */; };
 		4AE7404C5F07C1DD574FD563 /* ThemeMarketplaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40AE3C8E1ADD87D38B3BE116 /* ThemeMarketplaceView.swift */; };
-		4B3853AD5AD9BC3BF06BC9B2 /* ChatTouchBarProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9FAA8F733B5F80C36DCC108 /* ChatTouchBarProvider.swift */; };
 		4C4BC1FF39CC229F1037E360 /* SystemMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DA7EA27E512C2573284699 /* SystemMessageView.swift */; };
 		4CACA441915FCE306D8E4C0A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 482028C3E3B35A6E9FF0920C /* PrivacyInfo.xcprivacy */; };
 		4F5736F79DB3678F90F5A525 /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126022DAC2872BEEF6363538 /* MetricChart.swift */; };
@@ -517,7 +516,6 @@
 		B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		B921611379A5927C0729DD0A /* MCPServerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerDetailView.swift; sourceTree = "<group>"; };
 		B9D0872E6BBB1AD89F5F5A33 /* CISmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CISmokeTests.swift; sourceTree = "<group>"; };
-		B9FAA8F733B5F80C36DCC108 /* ChatTouchBarProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTouchBarProvider.swift; sourceTree = "<group>"; };
 		BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHViewModel.swift; sourceTree = "<group>"; };
 		BC384AB33DB1E02540779FB4 /* Scenario02_MultiSectionNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario02_MultiSectionNavigation.swift; sourceTree = "<group>"; };
 		BC3E667C92D5B2A3F254C5A5 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
@@ -715,7 +713,6 @@
 				8FBB1D9A4D837F7C7CDBCED0 /* Commands */,
 				65E3054B0AEC0126D127D094 /* Managers */,
 				644B298820C1CC14136B8D23 /* Services */,
-				8EEAC71B68A42786E0EF5057 /* TouchBar */,
 				B36A0BE0D970CD5B43C06A27 /* Views */,
 			);
 			path = ILSMacApp;
@@ -804,14 +801,6 @@
 				862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */,
 			);
 			path = checkpoints;
-			sourceTree = "<group>";
-		};
-		8EEAC71B68A42786E0EF5057 /* TouchBar */ = {
-			isa = PBXGroup;
-			children = (
-				B9FAA8F733B5F80C36DCC108 /* ChatTouchBarProvider.swift */,
-			);
-			path = TouchBar;
 			sourceTree = "<group>";
 		};
 		8FBB1D9A4D837F7C7CDBCED0 /* Commands */ = {
@@ -1514,7 +1503,6 @@
 				3ECD0B190A2B788BC969453C /* ChatInputBar.swift in Sources */,
 				16676D91D0619FADFC06C480 /* ChatMessage.swift in Sources */,
 				8D4E73909DF2B5040331F415 /* ChatMessageList.swift in Sources */,
-				4B3853AD5AD9BC3BF06BC9B2 /* ChatTouchBarProvider.swift in Sources */,
 				3B2913D9EF855E31851D8B2A /* ChatView.swift in Sources */,
 				A5205BCDF454A189210B7FBB /* ChatViewModel.swift in Sources */,
 				FE3FF3C3B777C6E27B42FCA1 /* CitadelSSHService.swift in Sources */,

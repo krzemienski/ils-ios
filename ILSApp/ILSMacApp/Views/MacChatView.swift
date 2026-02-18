@@ -165,17 +165,6 @@ struct MacChatView: View {
             .navigationTitle(session.name.cleanedSessionTitle() ?? "Chat")
             .navigationSubtitle(sessionSubtitle)
             .toolbar { toolbarContent }
-            #if os(macOS)
-            .chatTouchBar(
-                inputText: inputText,
-                isStreaming: viewModel.isStreaming,
-                isDisabled: viewModel.isLoadingHistory,
-                onSend: sendMessage,
-                onCommandPalette: { sheets.showCommandPalette = true },
-                onSessionInfo: { sheets.showSessionInfo = true },
-                onNewSession: createNewSession
-            )
-            #endif
             .sheet(isPresented: $sheets.showCommandPalette) {
                 CommandPaletteView { command in
                     inputText = command
