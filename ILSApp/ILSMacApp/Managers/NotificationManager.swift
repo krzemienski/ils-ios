@@ -168,18 +168,17 @@ extension NotificationManager: @preconcurrency UNUserNotificationCenterDelegate 
     ) {
         let userInfo = response.notification.request.content.userInfo
 
-        // Extract session ID and open the session
-        if let sessionIdString = userInfo["sessionId"] as? String,
-           let sessionId = UUID(uuidString: sessionIdString) {
-            // Post notification to open session
-            // This will be handled by MacContentView or SessionsViewModel
-            NotificationCenter.default.post(
-                name: NSNotification.Name("OpenSessionFromNotification"),
-                object: sessionId
-            )
-
-            // Bring app to front
-            NSApplication.shared.activate(ignoringOtherApps: true)
+        // UNUserNotificationCenterDelegate callbacks may arrive on a background thread.
+        // Wrap AppKit/UI calls in DispatchQueue.main.async to guarantee main thread execution.
+        DispatchQueue.main.async {
+            if let sessionIdString = userInfo["sessionId"] as? String,
+               let sessionId = UUID(uuidString: sessionIdString) {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("OpenSessionFromNotification"),
+                    object: sessionId
+                )
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
         }
 
         completionHandler()

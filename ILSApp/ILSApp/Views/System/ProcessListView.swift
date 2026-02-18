@@ -85,8 +85,9 @@ struct ProcessListView: View {
                 .padding(.vertical, theme.spacingMD)
             } else {
                 // Column headers
-                let visibleProcesses = Array(viewModel.filteredProcesses.prefix(displayLimit))
-                let totalCount = viewModel.filteredProcesses.count
+                let allFiltered = viewModel.filteredProcesses
+                let visibleProcesses = Array(allFiltered.prefix(displayLimit))
+                let totalCount = allFiltered.count
 
                 HStack {
                     Text("Showing \(visibleProcesses.count) of \(totalCount) processes")
