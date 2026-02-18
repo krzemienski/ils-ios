@@ -60,9 +60,9 @@ struct FleetHostDetailView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Health")
             HStack {
-                Circle()
-                    .fill(healthColor(host.healthStatus))
-                    .frame(width: 12, height: 12)
+                Image(systemName: healthIcon(host.healthStatus))
+                    .font(.system(size: 14))
+                    .foregroundStyle(healthColor(host.healthStatus))
                 Text(host.healthStatus.rawValue.capitalized)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
@@ -178,6 +178,15 @@ struct FleetHostDetailView: View {
             Text(value)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
+        }
+    }
+
+    private func healthIcon(_ status: FleetHost.HealthStatus) -> String {
+        switch status {
+        case .healthy: return "checkmark.circle.fill"
+        case .degraded: return "exclamationmark.triangle.fill"
+        case .unreachable: return "xmark.circle.fill"
+        case .unknown: return "questionmark.circle.fill"
         }
     }
 

@@ -153,9 +153,18 @@ struct FleetManagementView: View {
 
     @ViewBuilder
     private func healthBadge(_ status: FleetHost.HealthStatus) -> some View {
-        Circle()
-            .fill(healthColor(status))
-            .frame(width: 12, height: 12)
+        Image(systemName: healthIcon(status))
+            .font(.system(size: 12))
+            .foregroundStyle(healthColor(status))
+    }
+
+    private func healthIcon(_ status: FleetHost.HealthStatus) -> String {
+        switch status {
+        case .healthy: return "checkmark.circle.fill"
+        case .degraded: return "exclamationmark.triangle.fill"
+        case .unreachable: return "xmark.circle.fill"
+        case .unknown: return "questionmark.circle.fill"
+        }
     }
 
     private func healthColor(_ status: FleetHost.HealthStatus) -> Color {
