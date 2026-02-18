@@ -135,7 +135,7 @@ struct FleetHostDetailView: View {
             }
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 2) {
+                LazyVStack(alignment: .leading, spacing: 2) {
                     if logs.isEmpty {
                         Text("No logs available")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
