@@ -35,7 +35,7 @@ final class MetricsWebSocketClient {
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
 
-    init(baseURL: String = "http://localhost:9999") {
+    init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
         let config = URLSessionConfiguration.default
         config.waitsForConnectivity = true

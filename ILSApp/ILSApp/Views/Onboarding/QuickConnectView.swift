@@ -10,7 +10,7 @@ struct QuickConnectView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var selectedMode: ConnectionMode = .local
-    @State private var localURL = "http://localhost:9999"
+    @State private var localURL = AppConstants.defaultServerURL
     @State private var remoteHost = ""
     @State private var remotePort = "9999"
     @State private var tunnelURL = ""

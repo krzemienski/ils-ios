@@ -20,7 +20,7 @@ class ConnectionManager {
     init() {
         // Try to load full URL first (supports https:// Cloudflare URLs)
         let url: String
-        if let savedURL = UserDefaults.standard.string(forKey: "serverURL"), !savedURL.isEmpty {
+        if let savedURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey), !savedURL.isEmpty {
             url = savedURL
         } else {
             let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
@@ -38,7 +38,7 @@ class ConnectionManager {
     /// Update the server URL, persist to UserDefaults, recreate clients.
     func updateServerURL(_ url: String) {
         serverURL = url
-        UserDefaults.standard.set(url, forKey: "serverURL")
+        UserDefaults.standard.set(url, forKey: AppConstants.serverURLKey)
         apiClient = APIClient(baseURL: url)
         sseClient = SSEClient(baseURL: url)
     }

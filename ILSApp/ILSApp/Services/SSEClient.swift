@@ -29,7 +29,7 @@ class SSEClient: ObservableObject {
     nonisolated private let jsonEncoder = JSONEncoder()
     nonisolated private let jsonDecoder = JSONDecoder()
 
-    init(baseURL: String = "http://localhost:9999") {
+    init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
 
         // Configure custom URLSession with longer timeouts for SSE streaming

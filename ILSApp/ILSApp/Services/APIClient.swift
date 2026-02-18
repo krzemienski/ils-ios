@@ -25,7 +25,7 @@ actor APIClient {
         }
     }
 
-    init(baseURL: String = "http://localhost:9999") {
+    init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
         // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
         if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {

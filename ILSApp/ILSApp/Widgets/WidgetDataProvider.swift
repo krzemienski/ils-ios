@@ -122,7 +122,7 @@ struct WidgetDataProvider {
 
     /// The base URL for the ILS backend, read from shared UserDefaults.
     var serverURL: String {
-        defaults?.string(forKey: Keys.serverURL) ?? "http://localhost:9999"
+        defaults?.string(forKey: Keys.serverURL) ?? AppConstants.defaultServerURL
     }
 
     // MARK: - Session Data
