@@ -77,6 +77,10 @@ class DashboardViewModel {
             if let data = response.data {
                 stats = data
             }
+        } catch is CancellationError {
+            // Normal — .task modifier cancels on view disappear
+        } catch where (error as? URLError)?.code == .cancelled || error.localizedDescription.contains("cancelled") {
+            // URLSession cancellation wrapped in APIClientError — normal during navigation
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load stats: \(error.localizedDescription)", category: "dashboard")
@@ -91,6 +95,10 @@ class DashboardViewModel {
             if let data = response.data {
                 recentSessions = data.items
             }
+        } catch is CancellationError {
+            // Normal — .task modifier cancels on view disappear
+        } catch where (error as? URLError)?.code == .cancelled || error.localizedDescription.contains("cancelled") {
+            // URLSession cancellation wrapped in APIClientError — normal during navigation
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load recent activity: \(error.localizedDescription)", category: "dashboard")

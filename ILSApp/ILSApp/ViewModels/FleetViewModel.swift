@@ -154,11 +154,13 @@ final class FleetViewModel {
         var updatedHosts = hosts
         for index in updatedHosts.indices {
             do {
-                let health: FleetHealthResponse = try await apiClient.get("/fleet/\(updatedHosts[index].id)/health")
-                var copy = updatedHosts[index]
-                copy.healthStatus = health.status
-                copy.lastHealthCheck = health.lastChecked
-                updatedHosts[index] = copy
+                let response: APIResponse<FleetHealthResponse> = try await apiClient.get("/fleet/\(updatedHosts[index].id)/health")
+                if let health = response.data {
+                    var copy = updatedHosts[index]
+                    copy.healthStatus = health.status
+                    copy.lastHealthCheck = health.lastChecked
+                    updatedHosts[index] = copy
+                }
             } catch {
                 AppLogger.shared.warning("Health check failed for \(updatedHosts[index].name): \(error)", category: "fleet")
                 var copy = updatedHosts[index]
