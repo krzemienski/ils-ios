@@ -617,7 +617,7 @@ struct MacSessionRow: View {
     var body: some View {
         HStack(spacing: theme.spacingSM) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(Self.cleanTitle(session.name) ?? "Unnamed Session")
+                Text(session.name.cleanedSessionTitle() ?? "Unnamed Session")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -639,21 +639,6 @@ struct MacSessionRow: View {
         .padding(.vertical, theme.spacingXS)
     }
 
-    /// Strip markdown heading prefixes and truncate long prompt-based names.
-    private static func cleanTitle(_ raw: String?) -> String? {
-        guard let raw = raw, !raw.isEmpty else { return nil }
-        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if cleaned.hasPrefix("#") || cleaned.hasPrefix("## ") {
-            let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
-            let firstLine = stripped.prefix(while: { $0 != "\n" })
-            let truncated = firstLine.prefix(50)
-            return truncated.count < firstLine.count ? String(truncated) + "..." : String(truncated)
-        }
-        if cleaned.count > 60 {
-            return String(cleaned.prefix(57)) + "..."
-        }
-        return cleaned.isEmpty ? nil : cleaned
-    }
 }
 
 #Preview {

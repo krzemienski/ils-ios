@@ -30,6 +30,19 @@ public enum ClaudeModel: Codable, Hashable, Sendable, CustomStringConvertible {
 
     public var description: String { rawValue }
 
+    /// Human-readable display name for UI pickers and labels.
+    public var displayName: String {
+        switch self {
+        case .sonnet: return "Claude Sonnet"
+        case .opus: return "Claude Opus"
+        case .haiku: return "Claude Haiku"
+        case .unknown(let value): return value.capitalized
+        }
+    }
+
+    /// The three known model variants, suitable for picker iteration.
+    public static let allKnown: [ClaudeModel] = [.sonnet, .opus, .haiku]
+
     /// Creates a ``ClaudeModel`` from a raw string value.
     public init(rawValue: String) {
         switch rawValue {

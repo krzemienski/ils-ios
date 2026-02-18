@@ -78,7 +78,11 @@ final class SetupViewModel {
             // Use Application Support so we don't write to /tmp (sandbox-friendly).
             let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             let bootstrapDir = appSupport.appendingPathComponent("ILS/SetupScripts", isDirectory: true)
-            try? FileManager.default.createDirectory(at: bootstrapDir, withIntermediateDirectories: true)
+            do {
+                try FileManager.default.createDirectory(at: bootstrapDir, withIntermediateDirectories: true)
+            } catch {
+                AppLogger.shared.error("Failed to create bootstrap directory: \(error)", category: "setup")
+            }
             let uniqueTmpPath = bootstrapDir.appendingPathComponent("ils-bootstrap-\(UUID().uuidString).sh").path
             let command = "curl -fsSL '\(bootstrapScriptURL)' -o \(uniqueTmpPath) && bash \(uniqueTmpPath) && rm -f \(uniqueTmpPath)"
 

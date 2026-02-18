@@ -169,16 +169,24 @@ struct WidgetDataProvider {
     }
 
     private func cacheSessions(_ sessions: [WidgetSessionInfo]) {
-        guard let data = try? JSONEncoder().encode(sessions) else { return }
-        defaults?.set(data, forKey: Keys.cachedSessions)
+        do {
+            let data = try JSONEncoder().encode(sessions)
+            defaults?.set(data, forKey: Keys.cachedSessions)
+        } catch {
+            AppLogger.shared.warning("Failed to encode widget sessions: \(error)", category: "widget")
+        }
     }
 
     private func loadCachedSessions() -> [WidgetSessionInfo] {
-        guard let data = defaults?.data(forKey: Keys.cachedSessions),
-              let sessions = try? JSONDecoder().decode([WidgetSessionInfo].self, from: data) else {
+        guard let data = defaults?.data(forKey: Keys.cachedSessions) else {
             return []
         }
-        return sessions
+        do {
+            return try JSONDecoder().decode([WidgetSessionInfo].self, from: data)
+        } catch {
+            AppLogger.shared.warning("Failed to decode cached widget sessions: \(error)", category: "widget")
+            return []
+        }
     }
 
     // MARK: - Server Status

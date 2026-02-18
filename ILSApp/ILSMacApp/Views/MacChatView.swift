@@ -7,22 +7,32 @@ struct MacChatView: View {
     @Environment(AppState.self) var appState
     @State private var viewModel = ChatViewModel()
     @State private var inputText = ""
-    @State private var showCommandPalette = false
-    @State private var showSessionInfo = false
+    // MARK: - Grouped State
+
+    struct SheetState {
+        var showCommandPalette = false
+        var showSessionInfo = false
+        var showDeleteConfirmation = false
+        var showDeleteSessionConfirmation = false
+        var showAdvancedOptions = false
+        var isExporting = false
+    }
+
+    struct ActionState {
+        var isRenaming = false
+        var renameText = ""
+        var messageToDelete: ChatMessage?
+        var forkedSession: ChatSession?
+        var navigateToForked: ChatSession?
+    }
+
+    @State private var sheets = SheetState()
+    @State private var actions = ActionState()
     @State private var showErrorAlert = false
     @State private var errorId: UUID?
     @State private var showForkAlert = false
-    @State private var forkedSession: ChatSession?
-    @State private var navigateToForked: ChatSession?
-    @State private var showDeleteConfirmation = false
-    @State private var messageToDelete: ChatMessage?
     @State private var isUserScrolledUp = false
     @State private var showJumpToBottom = false
-    @State private var isRenaming = false
-    @State private var renameText = ""
-    @State private var isExporting = false
-    @State private var showDeleteSessionConfirmation = false
-    @State private var showAdvancedOptions = false
     @State private var chatOptionsConfig = ChatOptionsConfig()
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
@@ -50,23 +60,23 @@ struct MacChatView: View {
             }
             .alert("Session Forked", isPresented: $showForkAlert) {
                 Button("Open Fork") {
-                    navigateToForked = forkedSession
+                    actions.navigateToForked = actions.forkedSession
                 }
                 Button("Stay Here", role: .cancel) {}
             } message: {
-                if let forked = forkedSession {
+                if let forked = actions.forkedSession {
                     Text("Created new session: \(forked.name ?? "Unnamed")")
                 }
             }
-            .alert("Delete Message", isPresented: $showDeleteConfirmation) {
+            .alert("Delete Message", isPresented: $sheets.showDeleteConfirmation) {
                 Button("Delete", role: .destructive) {
-                    if let msg = messageToDelete {
+                    if let msg = actions.messageToDelete {
                         viewModel.deleteMessage(msg)
-                        messageToDelete = nil
+                        actions.messageToDelete = nil
                     }
                 }
                 Button("Cancel", role: .cancel) {
-                    messageToDelete = nil
+                    actions.messageToDelete = nil
                 }
             } message: {
                 Text("Are you sure you want to delete this message?")
@@ -76,12 +86,12 @@ struct MacChatView: View {
     @ViewBuilder
     private var chatWithSessionAlerts: some View {
         Group { chatWithAlerts }
-            .alert("Rename Session", isPresented: $isRenaming) {
-                TextField("Session name", text: $renameText)
+            .alert("Rename Session", isPresented: $actions.isRenaming) {
+                TextField("Session name", text: $actions.renameText)
                 Button("Rename") {
                     Task {
                         do {
-                            let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                            let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
                         } catch {
                             viewModel.error = error
                             showErrorAlert = true
@@ -92,7 +102,7 @@ struct MacChatView: View {
             } message: {
                 Text("Enter a new name for this session")
             }
-            .alert("Delete Session", isPresented: $showDeleteSessionConfirmation) {
+            .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
                 Button("Delete", role: .destructive) {
                     Task {
                         do {
@@ -108,7 +118,7 @@ struct MacChatView: View {
             } message: {
                 Text("This will permanently delete this session and all its messages.")
             }
-            .navigationDestination(item: $navigateToForked) { session in
+            .navigationDestination(item: $actions.navigateToForked) { session in
                 MacChatView(session: session)
             }
             .onChange(of: scenePhase) { _, newPhase in
@@ -120,7 +130,7 @@ struct MacChatView: View {
             }
             .onKeyPress("k", phases: .down) { press in
                 guard press.modifiers.contains(.command) else { return .ignored }
-                showCommandPalette = true
+                sheets.showCommandPalette = true
                 return .handled
             }
             .onKeyPress(.return, phases: .down) { press in
@@ -132,16 +142,16 @@ struct MacChatView: View {
                 return .ignored
             }
             .onKeyPress(.escape) {
-                if showCommandPalette {
-                    showCommandPalette = false
+                if sheets.showCommandPalette {
+                    sheets.showCommandPalette = false
                     return .handled
                 }
-                if showSessionInfo {
-                    showSessionInfo = false
+                if sheets.showSessionInfo {
+                    sheets.showSessionInfo = false
                     return .handled
                 }
-                if showAdvancedOptions {
-                    showAdvancedOptions = false
+                if sheets.showAdvancedOptions {
+                    sheets.showAdvancedOptions = false
                     return .handled
                 }
                 return .ignored
@@ -152,7 +162,7 @@ struct MacChatView: View {
     private var styledContent: some View {
         mainContent
             .background(theme.bgPrimary)
-            .navigationTitle(Self.cleanTitle(session.name) ?? "Chat")
+            .navigationTitle(session.name.cleanedSessionTitle() ?? "Chat")
             .navigationSubtitle(sessionSubtitle)
             .toolbar { toolbarContent }
             #if os(macOS)
@@ -161,27 +171,27 @@ struct MacChatView: View {
                 isStreaming: viewModel.isStreaming,
                 isDisabled: viewModel.isLoadingHistory,
                 onSend: sendMessage,
-                onCommandPalette: { showCommandPalette = true },
-                onSessionInfo: { showSessionInfo = true },
+                onCommandPalette: { sheets.showCommandPalette = true },
+                onSessionInfo: { sheets.showSessionInfo = true },
                 onNewSession: createNewSession
             )
             #endif
-            .sheet(isPresented: $showCommandPalette) {
+            .sheet(isPresented: $sheets.showCommandPalette) {
                 CommandPaletteView { command in
                     inputText = command
-                    showCommandPalette = false
+                    sheets.showCommandPalette = false
                     isInputFocused = true
                 }
                 .frame(minWidth: 600, minHeight: 400)
                 .presentationBackground(theme.bgPrimary)
             }
-            .sheet(isPresented: $showSessionInfo) {
+            .sheet(isPresented: $sheets.showSessionInfo) {
                 SessionInfoView(session: session)
                     .environment(appState)
                     .frame(minWidth: 500, minHeight: 400)
                     .presentationBackground(theme.bgPrimary)
             }
-            .sheet(isPresented: $showAdvancedOptions) {
+            .sheet(isPresented: $sheets.showAdvancedOptions) {
                 AdvancedOptionsSheet(config: $chatOptionsConfig)
                     .frame(minWidth: 500, minHeight: 600)
                     .presentationBackground(theme.bgPrimary)
@@ -257,8 +267,8 @@ struct MacChatView: View {
             isUserScrolledUp: $isUserScrolledUp,
             showJumpToBottom: $showJumpToBottom,
             onDeleteMessage: { msg in
-                messageToDelete = msg
-                showDeleteConfirmation = true
+                actions.messageToDelete = msg
+                sheets.showDeleteConfirmation = true
             },
             onRetryMessage: { msg in
                 viewModel.retryMessage(msg, projectId: session.projectId)
@@ -280,8 +290,8 @@ struct MacChatView: View {
             hasCustomOptions: chatOptionsConfig.hasCustomOptions,
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
-            onCommandPalette: { showCommandPalette = true },
-            onAdvancedOptions: { showAdvancedOptions = true }
+            onCommandPalette: { sheets.showCommandPalette = true },
+            onAdvancedOptions: { sheets.showAdvancedOptions = true }
         )
         .focused($isInputFocused)
     }
@@ -300,7 +310,7 @@ struct MacChatView: View {
 
             // Session info button
             Button {
-                showSessionInfo = true
+                sheets.showSessionInfo = true
             } label: {
                 Label("Info", systemImage: "info.circle")
             }
@@ -311,8 +321,8 @@ struct MacChatView: View {
             // Menu with additional actions
             Menu {
                 Button {
-                    renameText = session.name ?? ""
-                    isRenaming = true
+                    actions.renameText = session.name ?? ""
+                    actions.isRenaming = true
                 } label: {
                     Label("Rename", systemImage: "pencil")
                 }
@@ -321,7 +331,7 @@ struct MacChatView: View {
                 Button {
                     Task {
                         if let forked = await viewModel.forkSession() {
-                            forkedSession = forked
+                            actions.forkedSession = forked
                             showForkAlert = true
                         }
                     }
@@ -340,7 +350,7 @@ struct MacChatView: View {
                 Divider()
 
                 Button(role: .destructive) {
-                    showDeleteSessionConfirmation = true
+                    sheets.showDeleteSessionConfirmation = true
                 } label: {
                     Label("Delete Session", systemImage: "trash")
                 }
@@ -351,22 +361,6 @@ struct MacChatView: View {
             .accessibilityIdentifier("chat-menu-button")
             .accessibilityLabel("Chat options menu")
         }
-    }
-
-    // MARK: - Helpers
-
-    /// Strip markdown heading prefixes from session names.
-    /// Session names from Claude Code often contain `## YOUR ROLE` or `# Task Summary`.
-    private static func cleanTitle(_ name: String?) -> String? {
-        guard let name = name, !name.isEmpty else { return nil }
-        let cleaned = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
-        let firstLine = stripped.prefix(while: { $0 != "\n" })
-        let truncated = firstLine.prefix(50)
-        let result = truncated.count < firstLine.count
-            ? String(truncated) + "..."
-            : String(truncated)
-        return result.isEmpty ? nil : result
     }
 
     // MARK: - Actions
@@ -393,7 +387,7 @@ struct MacChatView: View {
     }
 
     private func exportSession() async {
-        isExporting = true
+        sheets.isExporting = true
         var md = "# Session: \(session.name ?? "Unnamed")\n\n"
         md += "Model: \(session.model.capitalized)\n"
         md += "Status: \(session.status.rawValue.capitalized)\n"
@@ -428,7 +422,7 @@ struct MacChatView: View {
             }
         }
 
-        isExporting = false
+        sheets.isExporting = false
     }
 }
 

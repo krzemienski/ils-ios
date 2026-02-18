@@ -32,6 +32,7 @@ struct MacSettingsView: View {
     @State var viewModel = SettingsViewModel()
 
     @State private var selectedTab: SettingsTab = .general
+    @State private var cacheCleared = false
     @State var serverURL: String = ""
     @AppStorage("colorScheme") var colorSchemePreference: String = "dark"
     @AppStorage("defaultModel") var defaultModel: String = "claude-sonnet-4-20250514"
@@ -283,9 +284,15 @@ struct MacSettingsView: View {
                 Divider()
 
                 settingRow(label: "Cache") {
-                    Button("Clear Cache") {
+                    Button(cacheCleared ? "Cleared!" : "Clear Cache") {
                         URLCache.shared.removeAllCachedResponses()
+                        cacheCleared = true
+                        Task {
+                            try? await Task.sleep(for: .seconds(2))
+                            await MainActor.run { cacheCleared = false }
+                        }
                     }
+                    .disabled(cacheCleared)
                 }
 
                 Text("Remove cached data and force refresh")

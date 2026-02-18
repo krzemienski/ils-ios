@@ -24,8 +24,12 @@ actor KeychainService {
             throw KeychainError.invalidData
         }
 
-        // Delete existing item if present
-        try? await deleteCredential(key: key)
+        // Delete existing item if present — continue even if deletion fails
+        do {
+            try await deleteCredential(key: key)
+        } catch {
+            AppLogger.shared.warning("Keychain pre-delete failed for \(key): \(error)", category: "keychain")
+        }
 
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

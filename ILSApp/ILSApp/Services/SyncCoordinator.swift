@@ -45,11 +45,19 @@ actor SyncCoordinator {
     private static let queueFileURL: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let dir = appSupport.appendingPathComponent("ILS/SyncQueue", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            AppLogger.shared.error("Failed to create sync queue directory: \(error)", category: "sync")
+        }
         var mutableDir = dir
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
-        try? mutableDir.setResourceValues(values)
+        do {
+            try mutableDir.setResourceValues(values)
+        } catch {
+            AppLogger.shared.warning("Failed to exclude sync queue from backup: \(error)", category: "sync")
+        }
         return dir.appendingPathComponent("queue.json")
     }()
 

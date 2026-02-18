@@ -186,7 +186,7 @@ struct HomeView: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(displayName(for: session))
+                Text((session.name ?? "Unnamed Session").cleanedSessionTitle())
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -233,28 +233,9 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityLabel("\(displayName(for: session)), \(session.model), \(session.messageCount) messages")
+        .accessibilityLabel("\((session.name ?? "Unnamed Session").cleanedSessionTitle()), \(session.model), \(session.messageCount) messages")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
-    }
-
-    /// Produce a clean display name for a session.
-    /// Many external sessions have names derived from long prompts -- truncate those.
-    private func displayName(for session: ChatSession) -> String {
-        let raw = session.name ?? "Unnamed Session"
-        // If the name looks like a prompt (starts with # or ## or is very long), trim it
-        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if cleaned.hasPrefix("#") || cleaned.hasPrefix("You are") || cleaned.hasPrefix("## ") {
-            // Extract a meaningful short title from the prompt-based name
-            let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
-            let firstLine = stripped.prefix(while: { $0 != "\n" })
-            let truncated = firstLine.prefix(50)
-            return truncated.count < firstLine.count ? String(truncated) + "..." : String(truncated)
-        }
-        if cleaned.count > 60 {
-            return String(cleaned.prefix(57)) + "..."
-        }
-        return cleaned
     }
 
     /// Relative time string (e.g. "2h ago", "3d ago").

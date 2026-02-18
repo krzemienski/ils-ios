@@ -11,6 +11,8 @@ final class FleetViewModel {
     var loadError: String?
     /// Error message when auto-registering localhost fails.
     var autoRegisterError: String?
+    /// Error message for mutation operations (register, activate, remove).
+    var mutationError: String?
     var scenePhase: ScenePhase = .active {
         didSet {
             handleScenePhaseChange()
@@ -91,24 +93,30 @@ final class FleetViewModel {
             name: name, host: host, port: port, backendPort: backendPort,
             username: username, authMethod: authMethod, credential: credential
         )
-        let newHost: FleetHost? = try? await apiClient.post("/fleet/register", body: request)
-        if let newHost {
+        do {
+            let newHost: FleetHost = try await apiClient.post("/fleet/register", body: request)
             hosts.append(newHost)
             if hosts.count == 1 { activeHostId = newHost.id }
+        } catch {
+            AppLogger.shared.error("Fleet registration failed: \(error)", category: "fleet")
+            mutationError = "Failed to register host: \(error.localizedDescription)"
         }
     }
 
     func activate(_ id: UUID) {
         Task { [weak self] in
             guard let self else { return }
-            let updated: FleetHost? = try? await apiClient.post("/fleet/\(id)/activate", body: EmptyBody())
-            if updated != nil {
+            do {
+                let _: FleetHost = try await apiClient.post("/fleet/\(id)/activate", body: EmptyBody())
                 activeHostId = id
                 hosts = hosts.map { host in
                     var copy = host
                     copy.isActive = host.id == id
                     return copy
                 }
+            } catch {
+                AppLogger.shared.error("Fleet activation failed for \(id): \(error)", category: "fleet")
+                mutationError = "Failed to activate host: \(error.localizedDescription)"
             }
         }
     }
@@ -116,9 +124,14 @@ final class FleetViewModel {
     func remove(_ id: UUID) {
         Task { [weak self] in
             guard let self else { return }
-            let _: DeletedResponse? = try? await apiClient.delete("/fleet/\(id)")
-            hosts.removeAll { $0.id == id }
-            if activeHostId == id { activeHostId = nil }
+            do {
+                let _: DeletedResponse = try await apiClient.delete("/fleet/\(id)")
+                hosts.removeAll { $0.id == id }
+                if activeHostId == id { activeHostId = nil }
+            } catch {
+                AppLogger.shared.error("Fleet removal failed for \(id): \(error)", category: "fleet")
+                mutationError = "Failed to remove host: \(error.localizedDescription)"
+            }
         }
     }
 
@@ -140,10 +153,16 @@ final class FleetViewModel {
     private func refreshAllHealth() async {
         var updatedHosts = hosts
         for index in updatedHosts.indices {
-            if let health: FleetHealthResponse = try? await apiClient.get("/fleet/\(updatedHosts[index].id)/health") {
+            do {
+                let health: FleetHealthResponse = try await apiClient.get("/fleet/\(updatedHosts[index].id)/health")
                 var copy = updatedHosts[index]
                 copy.healthStatus = health.status
                 copy.lastHealthCheck = health.lastChecked
+                updatedHosts[index] = copy
+            } catch {
+                AppLogger.shared.warning("Health check failed for \(updatedHosts[index].name): \(error)", category: "fleet")
+                var copy = updatedHosts[index]
+                copy.healthStatus = .unknown
                 updatedHosts[index] = copy
             }
         }

@@ -25,7 +25,11 @@ struct ShareSheet: UIViewControllerRepresentable {
         dirValues.isExcludedFromBackup = true
         try? mutableExportDir.setResourceValues(dirValues)
         let fileURL = exportDir.appendingPathComponent(fileName)
-        try? data.write(to: fileURL)
+        do {
+            try data.write(to: fileURL)
+        } catch {
+            AppLogger.shared.error("Failed to write export file '\(fileName)': \(error)", category: "export")
+        }
         self.activityItems = [fileURL]
         self.tempURLs = [fileURL]
     }

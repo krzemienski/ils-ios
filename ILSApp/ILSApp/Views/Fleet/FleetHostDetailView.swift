@@ -8,6 +8,7 @@ struct FleetHostDetailView: View {
 
     @State private var logs: [String] = []
     @State private var isLoadingLogs = false
+    @State private var actionError: String?
 
     var body: some View {
         ScrollView {
@@ -191,14 +192,24 @@ struct FleetHostDetailView: View {
 
     private func performLifecycle(_ action: LifecycleRequest.LifecycleAction) async {
         let request = LifecycleRequest(action: action, hostId: host.id)
-        let _: LifecycleResponse? = try? await appState.apiClient.post("/fleet/\(host.id)/lifecycle", body: request)
+        do {
+            let _: LifecycleResponse = try await appState.apiClient.post("/fleet/\(host.id)/lifecycle", body: request)
+            actionError = nil
+        } catch {
+            AppLogger.shared.error("Lifecycle \(action) failed for \(host.name): \(error)", category: "fleet")
+            actionError = "Lifecycle action failed: \(error.localizedDescription)"
+        }
     }
 
     private func loadLogs() async {
         isLoadingLogs = true
         defer { isLoadingLogs = false }
-        if let response: RemoteLogsResponse = try? await appState.apiClient.get("/fleet/\(host.id)/logs") {
+        do {
+            let response: RemoteLogsResponse = try await appState.apiClient.get("/fleet/\(host.id)/logs")
             logs = response.lines
+        } catch {
+            AppLogger.shared.error("Failed to load logs for \(host.name): \(error)", category: "fleet")
+            actionError = "Failed to load logs: \(error.localizedDescription)"
         }
     }
 }

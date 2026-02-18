@@ -44,7 +44,7 @@ struct MacDashboardView: View {
         }
         .task {
             dashboardVM.configure(client: appState.apiClient)
-            await loadAll()
+            await refreshAll()
         }
         .refreshable {
             await refreshAll()
@@ -255,7 +255,7 @@ struct MacDashboardView: View {
                 .frame(width: 10, height: 10)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(Self.cleanSessionTitle(session.name) ?? "Unnamed Session")
+                Text(session.name.cleanedSessionTitle() ?? "Unnamed Session")
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -358,7 +358,7 @@ struct MacDashboardView: View {
                     title: "MCP Servers",
                     subtitle: "\(dashboardVM.stats?.mcpServers.total ?? 0) configured",
                     color: theme.entityMCP,
-                    shortcut: "3"
+                    shortcut: "4"
                 ) {
                     onNavigate?(.browser)
                 }
@@ -416,34 +416,11 @@ struct MacDashboardView: View {
 
     // MARK: - Helpers
 
-    private func loadAll() async {
-        await dashboardVM.loadAll()
-        // sessionsVM is shared with MacContentView — already loaded there
-        if sessionsVM.sessions.isEmpty {
-            await sessionsVM.loadSessions(refresh: true)
-        }
-    }
-
     private func refreshAll() async {
         await dashboardVM.loadAll()
         await sessionsVM.loadSessions(refresh: true)
     }
 
-    /// Strip markdown heading prefixes and truncate long prompt-based names.
-    private static func cleanSessionTitle(_ raw: String?) -> String? {
-        guard let raw = raw, !raw.isEmpty else { return nil }
-        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if cleaned.hasPrefix("#") || cleaned.hasPrefix("## ") {
-            let stripped = cleaned.drop(while: { $0 == "#" || $0 == " " })
-            let firstLine = stripped.prefix(while: { $0 != "\n" })
-            let truncated = firstLine.prefix(50)
-            return truncated.count < firstLine.count ? String(truncated) + "..." : String(truncated)
-        }
-        if cleaned.count > 60 {
-            return String(cleaned.prefix(57)) + "..."
-        }
-        return cleaned.isEmpty ? nil : cleaned
-    }
 }
 
 // MARK: - New Session Sheet
@@ -456,13 +433,7 @@ struct NewSessionSheet: View {
     let onCancel: () -> Void
 
     @State private var sessionName: String = ""
-    @State private var selectedModel: String = "sonnet"
-
-    let availableModels = [
-        "sonnet": "Claude Sonnet",
-        "opus": "Claude Opus",
-        "haiku": "Claude Haiku"
-    ]
+    @State private var selectedModel = ClaudeModel.sonnet
 
     var body: some View {
         VStack(spacing: theme.spacingLG) {
@@ -486,8 +457,8 @@ struct NewSessionSheet: View {
                         .foregroundStyle(theme.textSecondary)
 
                     Picker("Model", selection: $selectedModel) {
-                        ForEach(Array(availableModels.keys.sorted()), id: \.self) { key in
-                            Text(availableModels[key] ?? key).tag(key)
+                        ForEach(ClaudeModel.allKnown, id: \.rawValue) { model in
+                            Text(model.displayName).tag(model)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -503,7 +474,7 @@ struct NewSessionSheet: View {
                 Button("Create Session") {
                     let session = ChatSession(
                         name: sessionName.isEmpty ? "New Session" : sessionName,
-                        model: selectedModel
+                        model: selectedModel.rawValue
                     )
                     onSessionCreated(session)
                 }
