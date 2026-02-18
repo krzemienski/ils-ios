@@ -569,6 +569,7 @@ actor ClaudeExecutorService {
     /// - Returns: Shell command string (prompt sent via stdin separately)
     private static func buildCommand(options: ExecutionOptions) -> String {
         var args: [String] = ["claude", "-p", "--verbose"]
+        args.reserveCapacity(30)
 
         // Output format: always stream-json for structured streaming
         args.append("--output-format")
