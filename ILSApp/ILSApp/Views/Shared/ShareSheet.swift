@@ -19,11 +19,19 @@ struct ShareSheet: UIViewControllerRepresentable {
         let data = Data(text.utf8)
         let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         let exportDir = cachesDir.appendingPathComponent("TextExports", isDirectory: true)
-        try? FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
+        } catch {
+            AppLogger.shared.error("Failed to create export directory: \(error)", category: "export")
+        }
         var mutableExportDir = exportDir
         var dirValues = URLResourceValues()
         dirValues.isExcludedFromBackup = true
-        try? mutableExportDir.setResourceValues(dirValues)
+        do {
+            try mutableExportDir.setResourceValues(dirValues)
+        } catch {
+            AppLogger.shared.error("Failed to exclude export dir from backup: \(error)", category: "export")
+        }
         let fileURL = exportDir.appendingPathComponent(fileName)
         do {
             try data.write(to: fileURL)

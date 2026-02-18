@@ -1,7 +1,25 @@
 import Foundation
+@preconcurrency import Dispatch
 import Vapor
 import ILSShared
 import Logging
+
+/// Thread-safe boolean flag for cross-queue timeout signaling.
+///
+/// Replaces bare `var Bool` which was a data race when written from
+/// `DispatchQueue.global()` timeout handlers and read from the readQueue.
+private final class AtomicFlag: @unchecked Sendable {
+    private var _value: Bool = false
+    private let lock = NSLock()
+
+    var value: Bool {
+        get { lock.withLock { _value } }
+    }
+
+    func set() {
+        lock.withLock { _value = true }
+    }
+}
 
 /// Actor managing Claude subprocess execution with streaming JSON output.
 ///
@@ -210,10 +228,10 @@ actor ClaudeExecutorService {
             }
 
             // --- Timeout mechanism ---
-            var didTimeout = false
+            let didTimeout = AtomicFlag()
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout = true
+                didTimeout.set()
                 Self.logger.debug("TIMEOUT: No SDK data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -222,7 +240,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout = true
+                    didTimeout.set()
                     Self.logger.debug("TOTAL TIMEOUT: SDK process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -236,7 +254,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: &didTimeout,
+                    didTimeout: didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -304,10 +322,10 @@ actor ClaudeExecutorService {
                 return
             }
 
-            var didTimeout = false
+            let didTimeout = AtomicFlag()
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout = true
+                didTimeout.set()
                 Self.logger.debug("TIMEOUT: No CLI data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -316,7 +334,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout = true
+                    didTimeout.set()
                     Self.logger.debug("TOTAL TIMEOUT: CLI process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -330,7 +348,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: &didTimeout,
+                    didTimeout: didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -349,7 +367,7 @@ actor ClaudeExecutorService {
         errorPipe: Pipe,
         process: Process,
         sessionId: String,
-        didTimeout: inout Bool,
+        didTimeout: AtomicFlag,
         timeoutWork: DispatchWorkItem,
         totalTimeoutWork: DispatchWorkItem,
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
@@ -401,7 +419,7 @@ actor ClaudeExecutorService {
 
         let exitCode = process.terminationStatus
         if exitCode != 0 {
-            if didTimeout {
+            if didTimeout.value {
                 logger.debug("Process killed by timeout (exit \(exitCode))")
                 continuation.yield(.error(StreamError(
                     code: "TIMEOUT",
