@@ -4,6 +4,10 @@ import SwiftUI
 
 /// Wrapper around Splash library for syntax highlighting code
 enum SyntaxHighlighter {
+    /// Cached highlighter instances per language — avoids re-allocating Grammar + Highlighter per call.
+    private static var highlighterCache: [String: Splash.SyntaxHighlighter<AttributedStringOutputFormat>] = [:]
+    private static let outputFormat = AttributedStringOutputFormat()
+
     /// Highlight code with syntax colors using Splash
     /// - Parameters:
     ///   - code: The code string to highlight
@@ -15,11 +19,18 @@ enum SyntaxHighlighter {
             return plainMonospace(code)
         }
 
-        // Select appropriate grammar for the language
-        let grammar = grammarForLanguage(language)
-        let highlighter = Splash.SyntaxHighlighter(format: AttributedStringOutputFormat(), grammar: grammar)
-        let attributedString = highlighter.highlight(code)
-        return attributedString
+        // Reuse cached highlighter for this language
+        let highlighter: Splash.SyntaxHighlighter<AttributedStringOutputFormat>
+        if let cached = highlighterCache[language] {
+            highlighter = cached
+        } else {
+            let grammar = grammarForLanguage(language)
+            let newHighlighter = Splash.SyntaxHighlighter(format: outputFormat, grammar: grammar)
+            highlighterCache[language] = newHighlighter
+            highlighter = newHighlighter
+        }
+
+        return highlighter.highlight(code)
     }
 
     /// Map language identifier to appropriate grammar

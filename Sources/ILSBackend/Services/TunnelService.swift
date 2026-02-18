@@ -226,11 +226,14 @@ actor TunnelService {
         }
     }
 
+    /// Cached regex for tunnel URL extraction — avoids re-compiling on every call.
+    private static let tunnelURLRegex: NSRegularExpression? = {
+        try? NSRegularExpression(pattern: #"(https://[a-zA-Z0-9\-]+\.trycloudflare\.com)"#)
+    }()
+
     /// Extract a trycloudflare.com URL from cloudflared output text.
     static func extractTunnelURL(from text: String) -> String? {
-        // Match https://something.trycloudflare.com
-        let pattern = #"(https://[a-zA-Z0-9\-]+\.trycloudflare\.com)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
+        guard let regex = tunnelURLRegex,
               let match = regex.firstMatch(
                   in: text,
                   range: NSRange(text.startIndex..., in: text)

@@ -9,6 +9,7 @@ struct StatCard: View {
     let sparklineData: [Double]
 
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPressed = false
 
     init(
@@ -56,7 +57,7 @@ struct StatCard: View {
         )
         .shadow(color: entityColor.opacity(0.10), radius: 8, x: 0, y: 4)
         .scaleEffect(isPressed ? 0.96 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }

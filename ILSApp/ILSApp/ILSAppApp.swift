@@ -10,6 +10,7 @@ struct ILSAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var computedColorScheme: ColorScheme? {
         switch colorSchemePreference {
@@ -53,8 +54,12 @@ struct ILSAppApp: App {
                 await SyncCoordinator.shared.startObserving()
 
                 try? await Task.sleep(for: .seconds(2.2))
-                withAnimation(.easeOut(duration: 0.5)) {
+                if reduceMotion {
                     showLaunchScreen = false
+                } else {
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        showLaunchScreen = false
+                    }
                 }
             }
         }

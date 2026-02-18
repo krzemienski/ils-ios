@@ -46,6 +46,9 @@ actor ClaudeExecutorService {
         return d
     }()
 
+    /// Shared JSON encoder — avoids per-call heap allocation
+    private static let jsonEncoder = JSONEncoder()
+
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
 
@@ -473,7 +476,7 @@ actor ClaudeExecutorService {
 
         let jsonData: Data
         do {
-            jsonData = try JSONEncoder().encode(response)
+            jsonData = try Self.jsonEncoder.encode(response)
         } catch {
             Self.logger.error("Failed to encode permission response: \(error)")
             return false
@@ -542,13 +545,13 @@ actor ClaudeExecutorService {
         let config = SDKConfig(prompt: prompt, options: sdkOptions)
 
         do {
-            let jsonData = try JSONEncoder().encode(config)
+            let jsonData = try Self.jsonEncoder.encode(config)
             return String(data: jsonData, encoding: .utf8) ?? "{}"
         } catch {
             logger.error("Failed to encode SDK config: \(error)")
             // Fallback: encode just the prompt safely
             let fallback = SDKConfig(prompt: String(prompt.prefix(100)), options: SDKOptions())
-            if let safeData = try? JSONEncoder().encode(fallback),
+            if let safeData = try? Self.jsonEncoder.encode(fallback),
                let safeString = String(data: safeData, encoding: .utf8) {
                 return safeString
             }

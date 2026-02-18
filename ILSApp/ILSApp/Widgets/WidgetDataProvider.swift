@@ -100,6 +100,16 @@ struct ServerStatusEntry: TimelineEntry {
 struct WidgetDataProvider {
     private let defaults = UserDefaults(suiteName: widgetAppGroupSuite)
 
+    /// Configured URLSession for widget network requests — lower timeouts, background-friendly.
+    private static let urlSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 10
+        config.timeoutIntervalForResource = 15
+        config.waitsForConnectivity = true
+        config.allowsConstrainedNetworkAccess = false
+        return URLSession(configuration: config)
+    }()
+
     // MARK: - UserDefaults Keys
 
     private enum Keys {
@@ -140,7 +150,7 @@ struct WidgetDataProvider {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 10
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await Self.urlSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -213,7 +223,7 @@ struct WidgetDataProvider {
         request.httpMethod = "GET"
         request.timeoutInterval = 5
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await Self.urlSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -245,7 +255,7 @@ struct WidgetDataProvider {
         request.timeoutInterval = 5
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await Self.urlSession.data(for: request)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let apiResponse = try decoder.decode(WidgetAPIResponse<WidgetListResponse>.self, from: data)

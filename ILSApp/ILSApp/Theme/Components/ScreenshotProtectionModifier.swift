@@ -5,6 +5,7 @@ import SwiftUI
 struct ScreenshotProtectionModifier: ViewModifier {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -24,7 +25,7 @@ struct ScreenshotProtectionModifier: ViewModifier {
                     .transition(.opacity)
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: scenePhase)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: scenePhase)
     }
 }
 

@@ -7,6 +7,7 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
+    @State private var highlightedCode: AttributedString?
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -154,18 +155,21 @@ struct CodeBlockView: View {
                         .frame(width: 1)
                         .accessibilityHidden(true)
 
-                    // Code text with syntax highlighting
+                    // Code text with syntax highlighting (cached via @State)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(SyntaxHighlighter.highlight(
-                            code: displayedLines.joined(separator: "\n"),
-                            language: language
-                        ))
+                        Text(highlightedCode ?? AttributedString(displayedLines.joined(separator: "\n")))
                         .textSelection(.enabled)
                         .padding(.leading, theme.spacingSM)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .accessibilityIdentifier("code-block-content")
                     .accessibilityLabel(accessibilityCodeLabel)
+                    .task(id: "\(code.hashValue)-\(language ?? "")-\(isExpanded)") {
+                        highlightedCode = SyntaxHighlighter.highlight(
+                            code: displayedLines.joined(separator: "\n"),
+                            language: language
+                        )
+                    }
                 }
                 .padding(.vertical, theme.spacingSM)
             }
