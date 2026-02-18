@@ -2,6 +2,19 @@ import Foundation
 import GRDB
 import ILSShared
 
+// MARK: - Errors
+
+/// Errors that can occur during database operations.
+enum DatabaseError: LocalizedError {
+    case initializationFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .initializationFailed(let reason): return "Database initialization failed: \(reason)"
+        }
+    }
+}
+
 // MARK: - Cached Record Types
 
 /// Cached session record for GRDB persistence.
@@ -245,7 +258,9 @@ actor LocalDatabase {
     /// Initialize the database, creating tables if needed.
     func initialize() throws {
         let fileManager = FileManager.default
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw DatabaseError.initializationFailed("Application Support directory not found")
+        }
         let dbDir = appSupport.appendingPathComponent("ILS", isDirectory: true)
 
         if !fileManager.fileExists(atPath: dbDir.path) {

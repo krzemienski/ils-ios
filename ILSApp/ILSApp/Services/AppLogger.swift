@@ -19,14 +19,19 @@ final class AppLogger {
 
     private init() {
         logger = Logger(subsystem: "com.ils.app", category: "general")
-        let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
         let logURL = docs.appendingPathComponent("ils-app.log")
         logFileURL = logURL
         // Mark log file as excluded from backup
         var mutableURL = logURL
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
-        try? mutableURL.setResourceValues(values)
+        do {
+            try mutableURL.setResourceValues(values)
+        } catch {
+            logger.error("Failed to exclude log file from backup: \(error.localizedDescription)")
+        }
 
         // Flush buffer every 30 seconds if entries are pending
         let timer = DispatchSource.makeTimerSource(queue: writeQueue)
