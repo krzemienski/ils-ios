@@ -9,7 +9,7 @@ struct FleetManagementView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: theme.spacingMD) {
+            LazyVStack(spacing: theme.spacingMD) {
                 ForEach(viewModel.hosts) { host in
                     NavigationLink {
                         FleetHostDetailView(host: host)

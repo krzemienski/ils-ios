@@ -87,11 +87,14 @@ class SSEClient: ObservableObject {
         }
 
         do {
+            // Capture session locally to avoid retaining self in task group closures
+            let session = self.session
+
             // Race connection against 60s timeout
             let (asyncBytes, response) = try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
                 // Connection task
                 group.addTask {
-                    try await self.session.bytes(for: urlRequest)
+                    try await session.bytes(for: urlRequest)
                 }
 
                 // Timeout task
