@@ -45,7 +45,9 @@ struct SystemController: RouteCollection {
                     try await Task.sleep(for: .seconds(5))
                     throw Abort(.gatewayTimeout, reason: "System metrics collection timed out")
                 }
-                let result = try await group.next()!
+                guard let result = try await group.next() else {
+                    throw Abort(.gatewayTimeout, reason: "System metrics collection timed out")
+                }
                 group.cancelAll()
                 return result
             }

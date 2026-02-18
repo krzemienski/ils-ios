@@ -67,7 +67,11 @@ class SSEClient: ObservableObject {
     }
 
     private func performStream(request: ChatStreamRequest) async {
-        let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
+        guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
+            self.error = APIError.invalidURL("\(baseURL)/api/v1/chat/stream")
+            self.isStreaming = false
+            return
+        }
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -104,7 +108,9 @@ class SSEClient: ObservableObject {
                 }
 
                 // Return first to complete, cancel the other
-                let result = try await group.next()!
+                guard let result = try await group.next() else {
+                    throw URLError(.timedOut)
+                }
                 group.cancelAll()
                 return result
             }

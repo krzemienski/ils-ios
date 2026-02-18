@@ -176,7 +176,7 @@ struct PermissionRequestModal: View {
     private var toolIcon: String {
         let name = request.toolName.lowercased()
         for keyword in Self.toolKeywords {
-            if name.contains(keyword) { return Self.toolIconMap[keyword]! }
+            if name.contains(keyword), let icon = Self.toolIconMap[keyword] { return icon }
         }
         return "wrench"
     }
@@ -184,7 +184,7 @@ struct PermissionRequestModal: View {
     private var toolDescription: String {
         let name = request.toolName.lowercased()
         for keyword in Self.toolKeywords {
-            if name.contains(keyword) { return Self.toolDescriptionMap[keyword]! }
+            if name.contains(keyword), let desc = Self.toolDescriptionMap[keyword] { return desc }
         }
         return "Use a tool"
     }
