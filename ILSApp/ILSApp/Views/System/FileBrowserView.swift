@@ -260,7 +260,7 @@ struct FileBrowserView: View {
             let truncated = lines.prefix(500).joined(separator: "\n")
             previewFile = PreviewFile(name: name, content: truncated)
         } catch {
-            // Silently fail for preview
+            AppLogger.shared.error("Failed to load file preview: \(error)", category: "filebrowser")
         }
     }
 

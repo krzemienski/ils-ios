@@ -138,7 +138,7 @@ final class SystemMetricsViewModel {
             let apiResponse = try decoder.decode(APIResponse<[ProcessInfoResponse]>.self, from: data)
             processes = apiResponse.data ?? []
         } catch {
-            // Silently fail - UI shows empty state
+            AppLogger.shared.error("Failed to load processes: \(error)", category: "system")
         }
     }
 }
