@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var viewModel = SettingsViewModel()
     @State private var serverHost: String = "localhost"
     @State private var serverPort: String = "9999"
+    @State private var saveDebounceTask: Task<Void, Never>?
     @State private var backendAPIKey: String = ""
     @State private var showAPIKeySaved = false
 
@@ -513,11 +514,11 @@ struct SettingsView: View {
         } message: {
             Text("Your configuration has been updated successfully.")
         }
-        .onChange(of: serverHost) { _, newValue in
-            saveServerSettings()
+        .onChange(of: serverHost) { _, _ in
+            debounceSaveServerSettings()
         }
-        .onChange(of: serverPort) { _, newValue in
-            saveServerSettings()
+        .onChange(of: serverPort) { _, _ in
+            debounceSaveServerSettings()
         }
     }
 
@@ -533,6 +534,15 @@ struct SettingsView: View {
         }
         // Also parse from appState if available
         parseServerURL()
+    }
+
+    private func debounceSaveServerSettings() {
+        saveDebounceTask?.cancel()
+        saveDebounceTask = Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            saveServerSettings()
+        }
     }
 
     private func saveServerSettings() {
