@@ -60,6 +60,9 @@ struct ThinkingSection: View {
                 }
             }
         }
+        .onDisappear {
+            pulseScale = 1.0
+        }
     }
 
     // MARK: - Header

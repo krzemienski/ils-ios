@@ -50,6 +50,9 @@ struct StreamingIndicatorView: View {
                 }
             }
         }
+        .onDisappear {
+            isPulsing = false
+        }
         .accessibilityLabel("AI is responding")
     }
 }

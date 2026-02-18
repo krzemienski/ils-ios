@@ -57,6 +57,9 @@ struct PulsingGlow: ViewModifier {
                     }
                 }
             }
+            .onDisappear {
+                isAnimating = false
+            }
     }
 }
 
@@ -102,6 +105,9 @@ struct PulsingModifier: ViewModifier {
                         isAnimating = false
                     }
                 }
+            }
+            .onDisappear {
+                isAnimating = false
             }
     }
 }

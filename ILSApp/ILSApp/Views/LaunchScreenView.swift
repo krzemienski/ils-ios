@@ -181,6 +181,10 @@ struct LaunchScreenView: View {
                 }
             }
         }
+        .onDisappear {
+            isAnimating = false
+            glowIntensity = 0.3
+        }
     }
 }
 

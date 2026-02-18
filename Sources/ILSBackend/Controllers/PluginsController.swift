@@ -383,7 +383,7 @@ struct PluginsController: RouteCollection {
         installedFile.plugins = pluginsDict
 
         let jsonData = try encoder.encode(installedFile)
-        try jsonData.write(to: URL(fileURLWithPath: installedPath))
+        try jsonData.write(to: URL(fileURLWithPath: installedPath), options: .atomic)
 
         // Read plugin manifest for description via Codable
         let fm2 = FileManager.default

@@ -28,9 +28,9 @@ final class AppLogger {
         values.isExcludedFromBackup = true
         try? mutableURL.setResourceValues(values)
 
-        // Flush buffer every 5 seconds if entries are pending
+        // Flush buffer every 30 seconds if entries are pending
         let timer = DispatchSource.makeTimerSource(queue: writeQueue)
-        timer.schedule(deadline: .now() + 5, repeating: 5, leeway: .seconds(1))
+        timer.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(5))
         timer.setEventHandler { [weak self] in
             self?.flushBuffer()
         }

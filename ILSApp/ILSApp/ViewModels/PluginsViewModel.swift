@@ -24,9 +24,13 @@ class PluginsViewModel {
     var isSearchingGitHub = false
 
     private var client: APIClient?
-    private var gitHubSearchTask: Task<Void, Never>?
+    nonisolated(unsafe) private var gitHubSearchTask: Task<Void, Never>?
 
     init() {}
+
+    deinit {
+        gitHubSearchTask?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client

@@ -18,7 +18,7 @@ final class MetricsWebSocketClient {
     var networkOutHistory: [MetricDataPoint] = []
 
     let baseURL: String
-    private var webSocketTask: URLSessionWebSocketTask?
+    nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private let decoder: JSONDecoder
 
@@ -27,9 +27,9 @@ final class MetricsWebSocketClient {
     private let maxWSFailures: Int = 3
     private let maxHistorySize: Int = 60
 
-    private var reconnectTask: Task<Void, Never>?
-    private var pollingTask: Task<Void, Never>?
-    private var receiveTask: Task<Void, Never>?
+    nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
+    nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
+    nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
     /// Whether the client has fallen back to REST polling after WebSocket failures.
     private(set) var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
@@ -40,6 +40,13 @@ final class MetricsWebSocketClient {
         self.session = URLSession(configuration: .default)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
+    }
+
+    deinit {
+        reconnectTask?.cancel()
+        receiveTask?.cancel()
+        pollingTask?.cancel()
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
     }
 
     // MARK: - Public API
@@ -145,7 +152,7 @@ final class MetricsWebSocketClient {
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
         history.append(MetricDataPoint(timestamp: date, value: value))
         if history.count > maxHistorySize {
-            history.removeFirst(history.count - maxHistorySize)
+            history = Array(history.suffix(maxHistorySize))
         }
     }
 

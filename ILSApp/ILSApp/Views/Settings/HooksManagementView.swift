@@ -249,7 +249,8 @@ struct HooksManagementView: View {
                     .buttonStyle(.plain)
                     .onChange(of: showCopiedConfirmation) { _, copied in
                         if copied {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            Task { @MainActor in
+                                try? await Task.sleep(for: .seconds(2))
                                 withAnimation(.easeOut(duration: 0.3)) {
                                     showCopiedConfirmation = false
                                 }
