@@ -52,22 +52,50 @@ struct SkillsFileService {
         "\(claudeDirectory)/plugins/cache"
     }
 
+    /// Path components that indicate non-skill directories (translations, tooling artifacts).
+    private static let excludedPathComponents: Set<String> = [
+        "ja-JP", "zh-CN", "zh-TW", "ko-KR", "fr-FR", "de-DE", "es-ES", "pt-BR",  // translations
+        ".cursor", ".git", "node_modules", ".npm", ".yarn",                          // tooling artifacts
+        "__pycache__", ".venv", "venv", "dist", "build",                              // build artifacts
+    ]
+
+    /// Check if a path contains any excluded components.
+    private static func isExcludedPath(_ path: String) -> Bool {
+        let components = path.split(separator: "/")
+        return components.contains { excludedPathComponents.contains(String($0)) }
+    }
+
     /// Scan all skills from disk without using cache.
     /// Scans both `~/.claude/skills/` (local) and `~/.claude/plugins/cache/*/skills/` (plugin).
-    /// - Returns: Array of Skill objects
+    /// Deduplicates by skill name — local skills take priority over plugin skills.
+    /// - Returns: Array of unique Skill objects
     func scanSkills() throws -> [Skill] {
         var skills: [Skill] = []
+        var seenNames: Set<String> = []
 
-        // 1. Scan local skills from ~/.claude/skills/
+        // 1. Scan local skills from ~/.claude/skills/ (these take priority)
         if fileManager.fileExists(atPath: skillsDirectory) {
             let localSkills = try scanSkillsRecursively(at: skillsDirectory, basePath: skillsDirectory)
-            skills.append(contentsOf: localSkills)
+            for skill in localSkills {
+                let key = skill.name.lowercased()
+                if !seenNames.contains(key) {
+                    seenNames.insert(key)
+                    skills.append(skill)
+                }
+            }
         }
 
         // 2. Scan plugin-provided skills from ~/.claude/plugins/cache/
+        //    Deduplicate: skip skills whose name was already seen from local or earlier plugin
         if fileManager.fileExists(atPath: pluginCacheDirectory) {
             let pluginSkills = try scanPluginCacheSkills()
-            skills.append(contentsOf: pluginSkills)
+            for skill in pluginSkills {
+                let key = skill.name.lowercased()
+                if !seenNames.contains(key) {
+                    seenNames.insert(key)
+                    skills.append(skill)
+                }
+            }
         }
 
         return skills
@@ -95,6 +123,12 @@ struct SkillsFileService {
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
                   isDirectory.boolValue else {
+                continue
+            }
+
+            // Skip paths containing excluded components (translations, tooling artifacts)
+            guard !Self.isExcludedPath(url.path) else {
+                enumerator?.skipDescendants()
                 continue
             }
 
@@ -140,6 +174,11 @@ struct SkillsFileService {
         let contents = try fileManager.contentsOfDirectory(atPath: path)
 
         for item in contents {
+            // Skip hidden directories and excluded path components
+            if item.hasPrefix(".") || Self.excludedPathComponents.contains(item) {
+                continue
+            }
+
             let itemPath = "\(path)/\(item)"
             var isDirectory: ObjCBool = false
 
