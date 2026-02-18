@@ -50,7 +50,9 @@ struct SidebarSessionRow: View {
                 Spacer()
             }
             .padding(.horizontal, theme.spacingSM)
-            .padding(.vertical, theme.spacingXS + 2)
+            .padding(.vertical, theme.spacingSM)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
             .background(isActive ? theme.accent.opacity(0.15) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }

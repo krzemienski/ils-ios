@@ -133,7 +133,6 @@ struct SidebarRootView: View {
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
         } detail: {
             mainContent(showHamburger: false)
-                .environment(\.colorScheme, .dark)
         }
         .navigationSplitViewStyle(.balanced)
     }

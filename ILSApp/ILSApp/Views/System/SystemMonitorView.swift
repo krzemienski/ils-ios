@@ -128,9 +128,9 @@ struct SystemMonitorView: View {
         .onAppear {
             viewModel.updateBaseURL(appState.serverURL)
             viewModel.connect()
-            Task {
-                await viewModel.loadProcesses()
-            }
+        }
+        .task {
+            await viewModel.loadProcesses()
         }
         .onDisappear {
             viewModel.disconnect()

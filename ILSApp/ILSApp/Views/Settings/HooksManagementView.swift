@@ -155,11 +155,10 @@ struct HooksManagementView: View {
                 if let matcher = item.matcher, !matcher.isEmpty {
                     HStack(spacing: 2) {
                         Image(systemName: "line.3.horizontal.decrease")
-                            .font(.system(size: 8))
                         Text(matcher)
                             .lineLimit(1)
                     }
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
                     .foregroundStyle(theme.warning)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)

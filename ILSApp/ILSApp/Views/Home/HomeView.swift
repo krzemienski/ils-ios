@@ -238,18 +238,9 @@ struct HomeView: View {
         .accessibilityAddTraits(.isButton)
     }
 
-    /// Relative time string (e.g. "2h ago", "3d ago").
+    /// Localized relative time string using system formatter.
     private func relativeTime(_ date: Date) -> String {
-        let interval = Date().timeIntervalSince(date)
-        let minutes = Int(interval / 60)
-        if minutes < 1 { return "now" }
-        if minutes < 60 { return "\(minutes)m ago" }
-        let hours = minutes / 60
-        if hours < 24 { return "\(hours)h ago" }
-        let days = hours / 24
-        if days < 30 { return "\(days)d ago" }
-        let months = days / 30
-        return "\(months)mo ago"
+        DateFormatters.relativeDateTime.localizedString(for: date, relativeTo: Date())
     }
 
     @ViewBuilder

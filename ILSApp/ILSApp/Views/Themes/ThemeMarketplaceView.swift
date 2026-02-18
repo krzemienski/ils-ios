@@ -48,6 +48,7 @@ struct ThemeMarketplaceView: View {
     @State private var importError: String?
     @State private var showImportError = false
     @State private var exportData: Data?
+    @State private var filteredThemesCache: [ThemeSnapshot] = []
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -100,6 +101,9 @@ struct ThemeMarketplaceView: View {
                 Text(errorMsg)
             }
         }
+        .onAppear { updateFilteredThemes() }
+        .onChange(of: searchText) { _, _ in updateFilteredThemes() }
+        .onChange(of: selectedCategory) { _, _ in updateFilteredThemes() }
     }
 
     // MARK: - Export Filename
@@ -113,7 +117,7 @@ struct ThemeMarketplaceView: View {
     private var themeGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: theme.spacingSM) {
-                ForEach(filteredThemes, id: \.id) { builtinTheme in
+                ForEach(filteredThemesCache, id: \.id) { builtinTheme in
                     themeCard(for: builtinTheme)
                 }
             }
@@ -227,7 +231,7 @@ struct ThemeMarketplaceView: View {
 
     // MARK: - Filtered Themes
 
-    private var filteredThemes: [ThemeSnapshot] {
+    private func updateFilteredThemes() {
         let snapshots = themeManager.availableThemes.map { ThemeSnapshot($0) }
 
         let categoryFiltered: [ThemeSnapshot]
@@ -240,10 +244,11 @@ struct ThemeMarketplaceView: View {
         }
 
         if searchText.isEmpty {
-            return categoryFiltered
-        }
-        return categoryFiltered.filter { t in
-            t.name.localizedCaseInsensitiveContains(searchText)
+            filteredThemesCache = categoryFiltered
+        } else {
+            filteredThemesCache = categoryFiltered.filter { t in
+                t.name.localizedCaseInsensitiveContains(searchText)
+            }
         }
     }
 

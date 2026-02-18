@@ -222,10 +222,8 @@ struct MessageContentView: View {
     @Binding var showCopyConfirmation: Bool
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// Parse message text into segments
-    private var segments: [MarkdownParser.TextSegment] {
-        MarkdownParser.parse(text)
-    }
+    /// Cached parsed segments — avoids re-parsing on every body evaluation
+    @State private var segments: [MarkdownParser.TextSegment] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -273,6 +271,9 @@ struct MessageContentView: View {
                         .textSelection(.enabled)
                 }
             }
+        }
+        .task(id: text) {
+            segments = MarkdownParser.parse(text)
         }
     }
 }

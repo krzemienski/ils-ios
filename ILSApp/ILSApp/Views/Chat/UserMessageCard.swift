@@ -11,11 +11,9 @@ struct UserMessageCard: View {
 
     var body: some View {
         HStack {
-            #if os(iOS)
-            Spacer(minLength: UIScreen.main.bounds.width * 0.2)
-            #else
-            Spacer(minLength: NSScreen.main?.frame.width ?? 800 * 0.2)
-            #endif
+            // Fixed minimum ensures ~20% leading space on all devices
+            // without using deprecated UIScreen.main (breaks iPad Split View)
+            Spacer(minLength: 60)
 
             VStack(alignment: .trailing, spacing: 4) {
                 // Message text
