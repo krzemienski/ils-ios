@@ -327,6 +327,9 @@ struct SidebarRootView: View {
     private var edgeSwipeGesture: some Gesture {
         DragGesture(minimumDistance: 20)
             .onChanged { value in
+                // Yield to NavigationStack back swipe when a view is pushed
+                guard navigationPath.count == 0 else { return }
+
                 let startX = value.startLocation.x
 
                 if isSidebarOpen {
@@ -340,6 +343,8 @@ struct SidebarRootView: View {
                 }
             }
             .onEnded { value in
+                guard navigationPath.count == 0 else { return }
+
                 let threshold: CGFloat = sidebarWidth * 0.3
 
                 if isSidebarOpen {
