@@ -75,7 +75,7 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
             activeScreen = screen
-            if navigationPath.count > 0 {
+            if !navigationPath.isEmpty {
                 navigationPath.removeLast(navigationPath.count)
             }
             appState.navigationIntent = nil
@@ -84,7 +84,7 @@ struct SidebarRootView: View {
             }
         }
         .onChange(of: activeScreen) { _, newScreen in
-            if navigationPath.count > 0 {
+            if !navigationPath.isEmpty {
                 navigationPath.removeLast(navigationPath.count)
             }
             activeScreenKey = newScreen.storageKey
@@ -328,7 +328,7 @@ struct SidebarRootView: View {
         DragGesture(minimumDistance: 20)
             .onChanged { value in
                 // Yield to NavigationStack back swipe when a view is pushed
-                guard navigationPath.count == 0 else { return }
+                guard navigationPath.isEmpty else { return }
 
                 let startX = value.startLocation.x
 
@@ -343,7 +343,7 @@ struct SidebarRootView: View {
                 }
             }
             .onEnded { value in
-                guard navigationPath.count == 0 else { return }
+                guard navigationPath.isEmpty else { return }
 
                 let threshold: CGFloat = sidebarWidth * 0.3
 

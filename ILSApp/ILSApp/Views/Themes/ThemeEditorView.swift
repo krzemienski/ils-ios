@@ -1205,9 +1205,9 @@ struct ThemeEditorView: View {
             return "#808080"
         }
 
-        let r = components.count > 0 ? components[0] : 0
-        let g = components.count > 1 ? components[1] : 0
-        let b = components.count > 2 ? components[2] : 0
+        let r = components.indices.contains(0) ? components[0] : 0
+        let g = components.indices.contains(1) ? components[1] : 0
+        let b = components.indices.contains(2) ? components[2] : 0
 
         return String(format: "#%02X%02X%02X",
                       Int(r * 255),
