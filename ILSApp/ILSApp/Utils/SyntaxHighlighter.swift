@@ -103,6 +103,7 @@ private struct AttributedStringOutputFormat: OutputFormat {
         private var components: [(text: String, token: Splash.TokenType?)] = []
 
         init() {
+            // Pre-allocate for typical code block size (20-200 tokens); 64 avoids most reallocations
             components.reserveCapacity(64)
         }
 

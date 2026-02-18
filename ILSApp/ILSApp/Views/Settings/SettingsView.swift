@@ -483,6 +483,7 @@ struct SettingsView: View {
         .background(theme.bgPrimary)
         .foregroundStyle(theme.textPrimary)
         .navigationTitle("Settings")
+        .inlineNavigationBarTitle()
         .screenshotProtected()
         .refreshable {
             await viewModel.loadAll()

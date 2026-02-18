@@ -68,6 +68,7 @@ struct FleetManagementView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Hosts")
+        .inlineNavigationBarTitle()
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {

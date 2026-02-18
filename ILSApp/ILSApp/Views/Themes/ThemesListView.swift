@@ -38,6 +38,7 @@ struct ThemesListView: View {
             }
         }
         .navigationTitle("Custom Themes")
+        .inlineNavigationBarTitle()
         .refreshable {
             await viewModel.loadThemes()
         }
@@ -57,12 +58,12 @@ struct ThemesListView: View {
         .sheet(isPresented: $showingNewTheme) {
             ThemeEditorView()
                 .environment(viewModel)
-                .environment(\.colorScheme, .dark)
+                .environment(\.colorScheme, .dark) // Intentional: theme editor previews best in dark mode
         }
         .sheet(item: $selectedTheme) { theme in
             ThemeEditorView(theme: theme)
                 .environment(viewModel)
-                .environment(\.colorScheme, .dark)
+                .environment(\.colorScheme, .dark) // Intentional: theme editor previews best in dark mode
         }
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {

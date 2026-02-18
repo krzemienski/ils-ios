@@ -114,6 +114,7 @@ struct SystemMonitorView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("System")
+        .inlineNavigationBarTitle()
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {

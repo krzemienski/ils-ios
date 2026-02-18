@@ -24,6 +24,7 @@ struct LogViewerView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Logs")
+        .inlineNavigationBarTitle()
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) {
