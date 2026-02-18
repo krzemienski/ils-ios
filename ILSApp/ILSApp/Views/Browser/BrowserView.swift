@@ -379,7 +379,7 @@ struct BrowserView: View {
                 // Source badge + first tag
                 HStack(spacing: theme.spacingSM) {
                     Text(skill.source.rawValue.capitalized)
-                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(skillSourceColor(skill.source))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -388,7 +388,7 @@ struct BrowserView: View {
 
                     if let firstTag = skill.tags.first, !firstTag.isEmpty {
                         Text(firstTag)
-                            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -600,7 +600,7 @@ struct BrowserView: View {
                 HStack(spacing: theme.spacingSM) {
                     if let marketplace = plugin.marketplace, !marketplace.isEmpty {
                         Text(marketplace)
-                            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -610,13 +610,13 @@ struct BrowserView: View {
 
                     if let version = plugin.version {
                         Text("v\(version)")
-                            .font(.system(size: 10, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
 
                     if let commands = plugin.commands, !commands.isEmpty {
                         Text("\(commands.count) cmd\(commands.count == 1 ? "" : "s")")
-                            .font(.system(size: 10, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.entityPlugin.opacity(0.8))
                     }
                 }
@@ -656,7 +656,7 @@ struct BrowserView: View {
                 .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 10, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -724,15 +724,15 @@ struct BrowserView: View {
                             if result.stars > 0 {
                                 HStack(spacing: 2) {
                                     Image(systemName: "star.fill")
-                                        .font(.system(size: 10))
+                                        .font(.system(size: theme.fontCaption))
                                         .foregroundStyle(.yellow)
                                     Text("\(result.stars)")
-                                        .font(.system(size: 10, design: theme.fontDesign))
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                         .foregroundStyle(theme.textTertiary)
                                 }
                             }
                             Text(result.repository)
-                                .font(.system(size: 10, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                                 .lineLimit(1)
                         }
@@ -813,7 +813,7 @@ struct BrowserView: View {
                             Spacer()
                             if isInstalled {
                                 Text("Installed")
-                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                                     .foregroundStyle(theme.success)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -831,15 +831,15 @@ struct BrowserView: View {
                             if result.stars > 0 {
                                 HStack(spacing: 2) {
                                     Image(systemName: "star.fill")
-                                        .font(.system(size: 10))
+                                        .font(.system(size: theme.fontCaption))
                                         .foregroundStyle(.yellow)
                                     Text("\(result.stars)")
-                                        .font(.system(size: 10, design: theme.fontDesign))
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                         .foregroundStyle(theme.textTertiary)
                                 }
                             }
                             Text(result.repository)
-                                .font(.system(size: 10, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                                 .lineLimit(1)
                         }
@@ -930,7 +930,7 @@ struct BrowserView: View {
                             Spacer()
                             if isInstalled {
                                 Text("Installed")
-                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                                     .foregroundStyle(theme.success)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -1018,7 +1018,7 @@ struct BrowserView: View {
 
                 if let badge, !badge.isEmpty {
                     Text(badge)
-                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)

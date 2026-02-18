@@ -108,7 +108,7 @@ struct LaunchScreenView: View {
                         .shadow(color: theme.accent.opacity(0.5), radius: 10)
 
                     Text("INTELLIGENT LOCAL SERVER")
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundColor(theme.textSecondary)
                         .kerning(3)
                 }

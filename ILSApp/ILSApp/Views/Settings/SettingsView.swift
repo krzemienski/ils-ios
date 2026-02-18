@@ -593,7 +593,7 @@ struct SettingsView: View {
 
     private var hostDefaultBadge: some View {
         Text("Host Default")
-            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
             .foregroundStyle(theme.accent)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)

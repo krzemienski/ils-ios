@@ -220,7 +220,7 @@ struct HomeView: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(relativeTime(session.lastActiveAt))
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
 
                 Image(systemName: "chevron.right")
@@ -445,10 +445,10 @@ struct HomeView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
-                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                 Text(value)
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }

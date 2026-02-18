@@ -26,12 +26,12 @@ struct UserMessageCard: View {
                 // Inline metadata: "You" label + timestamp
                 HStack(spacing: 6) {
                     Text("You")
-                        .font(.system(size: 10, weight: .semibold, design: theme.fontDesign).leading(.tight))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.accent)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     if let timestamp = message.timestamp {
                         Text(formattedTimestamp(timestamp))
-                            .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
                             .foregroundStyle(theme.textTertiary)
                             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     }
