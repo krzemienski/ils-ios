@@ -161,7 +161,7 @@ final class MetricsWebSocketClient {
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
         history.append(MetricDataPoint(timestamp: date, value: value))
         if history.count > maxHistorySize {
-            history = Array(history.suffix(maxHistorySize))
+            history.removeFirst(history.count - maxHistorySize)
         }
     }
 

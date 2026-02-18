@@ -482,7 +482,6 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(theme.bgPrimary)
         .foregroundStyle(theme.textPrimary)
-        .environment(\.colorScheme, .dark)
         .navigationTitle("Settings")
         .screenshotProtected()
         .refreshable {

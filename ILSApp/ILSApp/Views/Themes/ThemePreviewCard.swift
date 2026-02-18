@@ -79,7 +79,7 @@ struct ThemePreviewCard: View {
                         .stroke(theme.border, lineWidth: 0.5)
                 )
             Text(label)
-                .font(.system(size: 8, weight: .medium, design: theme.fontDesign))
+                .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }

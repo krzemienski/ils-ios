@@ -234,8 +234,7 @@ class ThemeManager {
 extension Color {
     init(hex: String) {
         let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: cleaned).scanHexInt64(&int)
+        let int = UInt64(cleaned, radix: 16) ?? 0
         let a, r, g, b: UInt64
         switch cleaned.count {
         case 6:

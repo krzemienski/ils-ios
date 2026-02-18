@@ -102,6 +102,10 @@ private struct AttributedStringOutputFormat: OutputFormat {
     struct Builder: OutputBuilder {
         private var components: [(text: String, token: Splash.TokenType?)] = []
 
+        init() {
+            components.reserveCapacity(64)
+        }
+
         mutating func addToken(_ token: String, ofType type: Splash.TokenType) {
             components.append((token, type))
         }

@@ -152,8 +152,8 @@ class ChatViewModel {
             .sink { [weak self] streamMessages in
                 guard let self = self else { return }
 
-                // Only process NEW messages since last index
-                let newMessages = Array(streamMessages.dropFirst(self.lastProcessedMessageIndex))
+                // Only process NEW messages since last index — use slice to avoid Array copy
+                let newMessages = streamMessages[self.lastProcessedMessageIndex...]
                 if !newMessages.isEmpty {
                     // Accumulate only new messages in pending buffer
                     self.pendingStreamMessages.reserveCapacity(self.pendingStreamMessages.count + newMessages.count)

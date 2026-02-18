@@ -194,7 +194,6 @@ struct SidebarRootView: View {
             #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(theme.bgPrimary, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
             .toolbar {
                 if showHamburger {

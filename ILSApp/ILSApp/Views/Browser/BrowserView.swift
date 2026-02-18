@@ -113,6 +113,7 @@ struct BrowserView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(seg.rawValue), \(countFor(seg)) items")
+                .accessibilityAddTraits(segment == seg ? .isSelected : [])
             }
         }
         .padding(4)

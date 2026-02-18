@@ -355,7 +355,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
-        .accessibilityHint("Double tap to open \(title)")
+        .accessibilityHint("Opens \(title)")
     }
 
     private func statsSubtitle(_ count: Int?) -> String? {

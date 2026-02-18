@@ -58,7 +58,7 @@ struct HooksManagementView: View {
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                 Text("Total Hooks")
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
@@ -71,7 +71,7 @@ struct HooksManagementView: View {
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.info)
                 Text("Event Types")
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
@@ -143,7 +143,7 @@ struct HooksManagementView: View {
                 // Hook type badge
                 if let hookType = item.hookType {
                     Text(hookType)
-                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
