@@ -195,6 +195,17 @@ struct BrowserView: View {
                 }
             }
 
+            // Description header
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: 12, design: theme.fontDesign))
+                Text("MCP servers provide Claude with access to external data sources, APIs, and tools via the Model Context Protocol.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingSM)
+
             let items = mcpVM.filteredServers
             if mcpVM.isLoading && items.isEmpty {
                 loadingRows
@@ -286,6 +297,17 @@ struct BrowserView: View {
                 }
                 .padding(.horizontal, 4)
             }
+
+            // Description header
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: 12, design: theme.fontDesign))
+                Text("Skills are prompt templates and workflows that guide Claude's behavior for specific tasks like code review, debugging, or documentation.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingSM)
 
             // GitHub search toggle
             Button {
@@ -513,7 +535,7 @@ struct BrowserView: View {
                 Image(systemName: "info.circle")
                     .foregroundStyle(theme.textTertiary)
                     .font(.system(size: 12, design: theme.fontDesign))
-                Text("Plugins extend Claude Code with custom tools and agents. Skills are pre-built capabilities.")
+                Text("Plugins are code extensions that add new tools, agents, and capabilities to Claude Code. Install from GitHub or the marketplace.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
