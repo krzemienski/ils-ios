@@ -90,6 +90,7 @@ struct HooksManagementView: View {
                 Image(systemName: viewModel.iconForEventType(eventType))
                     .foregroundStyle(theme.accent)
                     .font(.system(size: 16, design: theme.fontDesign))
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(viewModel.labelForEventType(eventType))
@@ -129,6 +130,7 @@ struct HooksManagementView: View {
                 Image(systemName: "terminal")
                     .foregroundStyle(theme.accent)
                     .font(.system(size: 12, design: theme.fontDesign))
+                    .accessibilityHidden(true)
 
                 Text(item.command ?? "No command")
                     .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
@@ -155,6 +157,7 @@ struct HooksManagementView: View {
                 if let matcher = item.matcher, !matcher.isEmpty {
                     HStack(spacing: 2) {
                         Image(systemName: "line.3.horizontal.decrease")
+                            .accessibilityHidden(true)
                         Text(matcher)
                             .lineLimit(1)
                     }
@@ -184,6 +187,7 @@ struct HooksManagementView: View {
             Image(systemName: "gearshape.2")
                 .font(.system(size: 40, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
+                .accessibilityHidden(true)
             Text("No Hooks Configured")
                 .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
@@ -213,6 +217,7 @@ struct HooksManagementView: View {
                     } label: {
                         HStack(spacing: theme.spacingSM) {
                             Image(systemName: "doc.text")
+                                .accessibilityHidden(true)
                             Text("Edit Config")
                                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         }
@@ -236,6 +241,7 @@ struct HooksManagementView: View {
                     } label: {
                         HStack(spacing: theme.spacingSM) {
                             Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                                .accessibilityHidden(true)
                             Text(showCopiedConfirmation ? "Copied" : "Copy Path")
                                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         }
@@ -258,7 +264,7 @@ struct HooksManagementView: View {
                     }
                 }
 
-                Text("Supported event types: PreToolUse, PostToolUse, Stop")
+                Text("Supported event types: PreToolUse, PostToolUse, UserPromptSubmit, SessionStart, SubagentStart")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }

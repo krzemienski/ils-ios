@@ -34,6 +34,7 @@ struct StatCard: View {
                 Image(systemName: entityType.icon)
                     .font(.system(size: theme.fontTitle3, design: theme.fontDesign))
                     .foregroundStyle(entityColor)
+                    .accessibilityHidden(true)
 
                 Spacer()
 

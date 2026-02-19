@@ -221,7 +221,13 @@ class SkillsViewModel {
                 gitHubResults = data.items
             }
         } catch {
-            self.error = error
+            if case .unauthorized = error as? APIError {
+                self.error = NSError(domain: "ILSApp", code: 401, userInfo: [
+                    NSLocalizedDescriptionKey: "GitHub token not configured on backend. Set GITHUB_TOKEN environment variable to enable search."
+                ])
+            } else {
+                self.error = error
+            }
             AppLogger.shared.error("GitHub search failed: \(error.localizedDescription)", category: "skills")
         }
         isSearchingGitHub = false

@@ -93,6 +93,7 @@ struct SettingsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "key.fill")
+                            .accessibilityHidden(true)
                         Text(backendAPIKey.isEmpty ? "Clear API Key" : "Save API Key")
                     }
                     .frame(maxWidth: .infinity)
@@ -172,6 +173,7 @@ struct SettingsView: View {
                         HStack(spacing: 4) {
                             Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+                                .accessibilityLabel(config.alwaysThinkingEnabled == true ? "Enabled" : "Disabled")
                             if config.alwaysThinkingEnabled == nil {
                                 hostDefaultBadge
                             }
@@ -188,6 +190,7 @@ struct SettingsView: View {
                         HStack(spacing: 4) {
                             Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+                                .accessibilityLabel(config.includeCoAuthoredBy == true ? "Enabled" : "Disabled")
                             if config.includeCoAuthoredBy == nil {
                                 hostDefaultBadge
                             }
@@ -218,6 +221,7 @@ struct SettingsView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "square.and.arrow.down")
+                                    .accessibilityHidden(true)
                                 Text("Save Changes")
                             }
                             .frame(maxWidth: .infinity)
@@ -258,6 +262,7 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
                                 .foregroundColor(apiKeyStatus.isConfigured ? theme.success : theme.warning)
+                                .accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
                                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -277,6 +282,7 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: "key.fill")
                                 .foregroundColor(theme.warning)
+                                .accessibilityHidden(true)
                             Text("API Key status unknown")
                                 .foregroundStyle(theme.textSecondary)
                         }
@@ -476,8 +482,11 @@ struct SettingsView: View {
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
                             .foregroundStyle(theme.textSecondary)
+                            .accessibilityHidden(true)
                     }
                 }
+                .accessibilityLabel("Claude Code Documentation")
+                .accessibilityHint("Opens in browser")
             }
         }
         .scrollContentBackground(.hidden)

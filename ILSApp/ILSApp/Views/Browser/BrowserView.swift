@@ -27,6 +27,7 @@ struct BrowserView: View {
     @State private var showGitHubSearch = false
     @State private var showPluginsGitHubSearch = false
     @State private var showMarketplaceSearch = false
+    @State private var showingAddMCPServer = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -64,6 +65,22 @@ struct BrowserView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
+        .toolbar {
+            if segment == .mcp {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAddMCPServer = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundStyle(theme.accent)
+                    }
+                    .accessibilityLabel("Add MCP Server")
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddMCPServer) {
+            AddMCPServerView(mcpVM: mcpVM)
+        }
         .task {
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
@@ -73,6 +90,17 @@ struct BrowserView: View {
         .onChange(of: appState.isConnected) { _, connected in
             if connected {
                 Task { await loadAll() }
+            }
+        }
+        .onChange(of: appState.browserSegmentIntent) { _, intent in
+            guard let intent else { return }
+            segment = intent
+            appState.browserSegmentIntent = nil
+        }
+        .onAppear {
+            if let intent = appState.browserSegmentIntent {
+                segment = intent
+                appState.browserSegmentIntent = nil
             }
         }
     }

@@ -76,6 +76,7 @@ class AppState {
     var selectedProject: Project?
     var selectedTab: String = "dashboard"
     var navigationIntent: ActiveScreen?
+    var browserSegmentIntent: BrowserSegment?
     var lastSessionId: UUID?
     var lastSyncDate: Date?
 
@@ -153,7 +154,16 @@ class AppState {
             } else {
                 navigationIntent = .home
             }
-        case "browser", "projects", "plugins", "mcp", "skills":
+        case "browser", "projects":
+            navigationIntent = .browser
+        case "skills":
+            browserSegmentIntent = .skills
+            navigationIntent = .browser
+        case "mcp":
+            browserSegmentIntent = .mcp
+            navigationIntent = .browser
+        case "plugins":
+            browserSegmentIntent = .plugins
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings

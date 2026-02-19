@@ -75,6 +75,7 @@ struct HomeView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(theme.warning)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Not Connected")
@@ -108,6 +109,8 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .stroke(theme.warning.opacity(0.3), lineWidth: 0.5)
             )
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Not connected. Configure your server to get started.")
         }
     }
 
@@ -155,6 +158,7 @@ struct HomeView: View {
                     Image(systemName: "bubble.left.and.bubble.right")
                         .font(.system(size: 28, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
+                        .accessibilityHidden(true)
                     Text("No sessions yet")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
@@ -226,6 +230,7 @@ struct HomeView: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
+                    .accessibilityHidden(true)
             }
         }
         .padding(theme.spacingSM)
@@ -442,6 +447,7 @@ struct HomeView: View {
             Image(systemName: icon)
                 .font(.system(size: 12, design: theme.fontDesign))
                 .foregroundStyle(color)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
@@ -470,6 +476,7 @@ struct HomeView: View {
                 Image(systemName: "exclamationmark.circle")
                     .font(.system(size: 28, design: theme.fontDesign))
                     .foregroundStyle(theme.error)
+                    .accessibilityHidden(true)
 
                 Text("Failed to load dashboard")
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
@@ -503,6 +510,8 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .stroke(theme.error.opacity(0.2), lineWidth: 0.5)
             )
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Dashboard error: \(error.localizedDescription)")
         }
     }
 }
