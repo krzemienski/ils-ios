@@ -10,7 +10,7 @@ enum ActiveScreen: Hashable {
     case settings
     case browser
     case teams
-    case fleet
+    case hosts
     case themes
 
     /// String key for @SceneStorage persistence (excludes associated values).
@@ -22,7 +22,7 @@ enum ActiveScreen: Hashable {
         case .settings: return "settings"
         case .browser: return "browser"
         case .teams: return "teams"
-        case .fleet: return "fleet"
+        case .hosts: return "hosts"
         case .themes: return "themes"
         }
     }
@@ -35,7 +35,7 @@ enum ActiveScreen: Hashable {
         case "settings": return .settings
         case "browser": return .browser
         case "teams": return .teams
-        case "fleet": return .fleet
+        case "fleet", "hosts": return .hosts
         case "themes": return .themes
         default: return nil  // "chat" requires session — handled separately
         }
@@ -180,8 +180,8 @@ struct SidebarRootView: View {
                     browserScreen
                 case .teams:
                     teamsScreen
-                case .fleet:
-                    fleetScreen
+                case .hosts:
+                    hostsScreen
                 case .themes:
                     themesScreen
                 }
@@ -291,7 +291,7 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var fleetScreen: some View {
+    private var hostsScreen: some View {
         FleetManagementView()
     }
 

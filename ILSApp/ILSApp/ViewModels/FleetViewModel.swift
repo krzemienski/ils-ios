@@ -100,7 +100,7 @@ final class FleetViewModel {
                 if hosts.count == 1 { activeHostId = newHost.id }
             }
         } catch {
-            AppLogger.shared.error("Fleet registration failed: \(error)", category: "fleet")
+            AppLogger.shared.error("Fleet registration failed: \(error)", category: "hosts")
             mutationError = "Failed to register host: \(error.localizedDescription)"
         }
     }
@@ -117,7 +117,7 @@ final class FleetViewModel {
                     return copy
                 }
             } catch {
-                AppLogger.shared.error("Fleet activation failed for \(id): \(error)", category: "fleet")
+                AppLogger.shared.error("Fleet activation failed for \(id): \(error)", category: "hosts")
                 mutationError = "Failed to activate host: \(error.localizedDescription)"
             }
         }
@@ -131,7 +131,7 @@ final class FleetViewModel {
                 hosts.removeAll { $0.id == id }
                 if activeHostId == id { activeHostId = nil }
             } catch {
-                AppLogger.shared.error("Fleet removal failed for \(id): \(error)", category: "fleet")
+                AppLogger.shared.error("Fleet removal failed for \(id): \(error)", category: "hosts")
                 mutationError = "Failed to remove host: \(error.localizedDescription)"
             }
         }
@@ -164,7 +164,7 @@ final class FleetViewModel {
                     updatedHosts[index] = copy
                 }
             } catch {
-                AppLogger.shared.warning("Health check failed for \(updatedHosts[index].name): \(error)", category: "fleet")
+                AppLogger.shared.warning("Health check failed for \(updatedHosts[index].name): \(error)", category: "hosts")
                 var copy = updatedHosts[index]
                 copy.healthStatus = .unknown
                 updatedHosts[index] = copy

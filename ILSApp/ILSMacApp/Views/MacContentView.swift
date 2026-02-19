@@ -11,7 +11,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
-    case fleet = "Fleet"
+    case hosts = "Hosts"
     case themes = "Themes"
     case settings = "Settings"
 
@@ -23,7 +23,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
-        case .fleet: return "server.rack"
+        case .hosts: return "server.rack"
         case .themes: return "paintpalette.fill"
         case .settings: return "gearshape.fill"
         }
@@ -35,7 +35,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
-        case .fleet: return .fleet
+        case .hosts: return .hosts
         case .themes: return .themes
         case .settings: return .settings
         }
@@ -350,7 +350,7 @@ struct MacContentView: View {
             BrowserView()
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
-        case .fleet:
+        case .hosts:
             FleetManagementView()
         case .themes:
             ThemesListView()
@@ -599,7 +599,7 @@ struct MacContentView: View {
         case .settings: selectedSection = .settings
         case .browser: selectedSection = .browser
         case .teams: selectedSection = .teams
-        case .fleet: selectedSection = .fleet
+        case .hosts: selectedSection = .hosts
         case .themes: selectedSection = .themes
         case .chat: selectedSection = .home
         }

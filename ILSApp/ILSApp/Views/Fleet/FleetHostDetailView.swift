@@ -205,7 +205,7 @@ struct FleetHostDetailView: View {
             let _: LifecycleResponse = try await appState.apiClient.post("/fleet/\(host.id)/lifecycle", body: request)
             actionError = nil
         } catch {
-            AppLogger.shared.error("Lifecycle \(action) failed for \(host.name): \(error)", category: "fleet")
+            AppLogger.shared.error("Lifecycle \(action) failed for \(host.name): \(error)", category: "hosts")
             actionError = "Lifecycle action failed: \(error.localizedDescription)"
         }
     }
@@ -217,7 +217,7 @@ struct FleetHostDetailView: View {
             let response: RemoteLogsResponse = try await appState.apiClient.get("/fleet/\(host.id)/logs")
             logs = response.lines
         } catch {
-            AppLogger.shared.error("Failed to load logs for \(host.name): \(error)", category: "fleet")
+            AppLogger.shared.error("Failed to load logs for \(host.name): \(error)", category: "hosts")
             actionError = "Failed to load logs: \(error.localizedDescription)"
         }
     }

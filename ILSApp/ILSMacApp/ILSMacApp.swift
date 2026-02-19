@@ -177,8 +177,8 @@ class AppState {
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
-        case "fleet":
-            navigationIntent = .fleet
+        case "fleet", "hosts":
+            navigationIntent = .hosts
         default:
             break
         }
