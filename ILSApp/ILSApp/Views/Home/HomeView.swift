@@ -291,7 +291,7 @@ struct HomeView: View {
                     title: "New Session",
                     color: theme.entitySession
                 ) {
-                    let newSession = ChatSession(name: "New Session", model: "sonnet")
+                    let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
                     onSessionSelected?(newSession)
                 }
 

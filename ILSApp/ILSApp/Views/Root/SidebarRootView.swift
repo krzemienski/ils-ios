@@ -103,7 +103,7 @@ struct SidebarRootView: View {
                     let restoredSession = ChatSession(
                         id: sessionUUID,
                         name: nil,
-                        model: "sonnet"
+                        model: AppConstants.defaultModel
                     )
                     activeScreen = .chat(restoredSession)
                 }

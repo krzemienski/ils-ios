@@ -128,7 +128,7 @@ struct FleetController: RouteCollection {
 
     // MARK: - Health
 
-    /// GET /fleet/:id/health — check health of a fleet host.
+    /// GET /fleet/:id/health — check health of a fleet host by probing its backend.
     @Sendable
     func health(req: Request) async throws -> Response {
         guard let hostID = req.parameters.get("hostID", as: UUID.self) else {
@@ -139,7 +139,10 @@ struct FleetController: RouteCollection {
             throw Abort(.notFound, reason: "Fleet host not found")
         }
 
-        // Update health check timestamp
+        // Actually probe the host's backend to determine health
+        let probeStatus = await probeHostHealth(host: model.host, backendPort: model.backendPort)
+
+        model.healthStatus = probeStatus.rawValue
         model.lastHealthCheck = Date()
         try await model.save(on: req.db)
 
@@ -147,7 +150,7 @@ struct FleetController: RouteCollection {
             success: true,
             data: FleetHealthResponse(
                 hostId: hostID,
-                status: FleetHost.HealthStatus(rawValue: model.healthStatus) ?? .unknown,
+                status: probeStatus,
                 lastChecked: Date()
             ),
             error: nil
@@ -155,5 +158,25 @@ struct FleetController: RouteCollection {
 
         let data = try Self.jsonEncoder.encode(response)
         return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
+    }
+
+    /// Probe a host's backend by hitting its /health endpoint.
+    private func probeHostHealth(host: String, backendPort: Int) async -> FleetHost.HealthStatus {
+        let resolvedHost = (host == "localhost" || host == "127.0.0.1") ? "127.0.0.1" : host
+        let urlString = "http://\(resolvedHost):\(backendPort)/health"
+        guard let url = URL(string: urlString) else { return .unreachable }
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 5
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                return .healthy
+            }
+            return .degraded
+        } catch {
+            return .unreachable
+        }
     }
 }

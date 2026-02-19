@@ -190,9 +190,12 @@ struct SkillsFileService {
                         if let skill = try? parseSkillFile(at: skillMdPath, name: item) {
                             skills.append(skill)
                         }
+                        // This directory IS a skill — don't recurse into its subdirectories
+                        // (examples/, reference/, etc. are part of this skill, not separate skills)
+                        continue
                     }
 
-                    // Recursively scan subdirectory for more skills
+                    // No SKILL.md found — recursively scan subdirectory for nested skills
                     let subSkills = try scanSkillsRecursively(at: itemPath, basePath: basePath)
                     skills.append(contentsOf: subSkills)
                 } else if item.hasSuffix(".md") && item != "SKILL.md" {

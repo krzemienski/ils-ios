@@ -94,9 +94,11 @@ final class FleetViewModel {
             username: username, authMethod: authMethod, credential: credential
         )
         do {
-            let newHost: FleetHost = try await apiClient.post("/fleet/register", body: request)
-            hosts.append(newHost)
-            if hosts.count == 1 { activeHostId = newHost.id }
+            let response: APIResponse<FleetHost> = try await apiClient.post("/fleet/register", body: request)
+            if let newHost = response.data {
+                hosts.append(newHost)
+                if hosts.count == 1 { activeHostId = newHost.id }
+            }
         } catch {
             AppLogger.shared.error("Fleet registration failed: \(error)", category: "fleet")
             mutationError = "Failed to register host: \(error.localizedDescription)"

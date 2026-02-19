@@ -96,6 +96,7 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
             sidebarNavItem(icon: "server.rack", label: "Hosts", screen: .fleet)
+            sidebarNavItem(icon: "paintbrush.fill", label: "Themes", screen: .themes)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)
@@ -276,7 +277,7 @@ struct SidebarView: View {
     private var bottomActions: some View {
         Button {
             HapticManager.impact(.medium)
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
             onSessionSelected(newSession)
             isSidebarOpen = false
         } label: {
@@ -337,7 +338,7 @@ struct SidebarView: View {
 
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {
-        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.fleet, .fleet):
+        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.fleet, .fleet), (.themes, .themes):
             return true
         case (.chat, .chat):
             return true

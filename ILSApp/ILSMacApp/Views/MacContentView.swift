@@ -95,7 +95,7 @@ struct MacContentView: View {
         }
         // Observe menu bar command notifications
         .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
             activeScreen = .chat(newSession)
         }
         .onReceive(NotificationCenter.default.publisher(for: .ilsNavigateTo)) { notification in
@@ -304,7 +304,7 @@ struct MacContentView: View {
 
             // New Session button
             Button {
-                let newSession = ChatSession(name: "New Session", model: "sonnet")
+                let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
                 activeScreen = .chat(newSession)
             } label: {
                 HStack(spacing: theme.spacingSM) {

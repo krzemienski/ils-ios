@@ -33,4 +33,13 @@ enum AppConstants {
 
     /// UserDefaults key for the last-opened session ID (macOS).
     static let lastSessionIDKey = "ils_last_session_id"
+
+    /// UserDefaults key for the user's preferred default model.
+    static let defaultModelKey = "defaultModel"
+
+    /// The user's preferred default model, reading from UserDefaults.
+    /// Falls back to "sonnet" if no preference is set.
+    static var defaultModel: String {
+        UserDefaults.standard.string(forKey: defaultModelKey) ?? "sonnet"
+    }
 }
