@@ -115,7 +115,7 @@ private struct IntentSessionData: Decodable {
         // id can be UUID string
         self.id = try container.decode(String.self, forKey: .id)
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
-        self.model = (try? container.decode(String.self, forKey: .model)) ?? "sonnet"
+        self.model = (try? container.decode(String.self, forKey: .model)) ?? AppConstants.defaultModel
         self.messageCount = (try? container.decode(Int.self, forKey: .messageCount)) ?? 0
         self.projectName = try container.decodeIfPresent(String.self, forKey: .projectName)
     }

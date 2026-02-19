@@ -39,7 +39,7 @@ struct SettingsConfigSection: View {
                     }
                 } else if let config = viewModel.config?.content {
                     Picker("Default Model", selection: Binding(
-                        get: { config.model ?? "claude-sonnet-4-5" },
+                        get: { config.model ?? AppConstants.defaultModel },
                         set: { newModel in
                             Task {
                                 _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
