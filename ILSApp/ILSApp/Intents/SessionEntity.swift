@@ -43,7 +43,7 @@ struct SessionEntityQuery: EntityQuery {
     // MARK: - Private
 
     private func fetchSessions() async throws -> [SessionEntity] {
-        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
         guard let url = URL(string: "\(baseURL)/api/v1/sessions?page=1&limit=20") else {
             return []
         }
@@ -115,7 +115,7 @@ private struct IntentSessionData: Decodable {
         // id can be UUID string
         self.id = try container.decode(String.self, forKey: .id)
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
-        self.model = (try? container.decode(String.self, forKey: .model)) ?? "sonnet"
+        self.model = (try? container.decode(String.self, forKey: .model)) ?? AppConstants.defaultModel
         self.messageCount = (try? container.decode(Int.self, forKey: .messageCount)) ?? 0
         self.projectName = try container.decodeIfPresent(String.self, forKey: .projectName)
     }

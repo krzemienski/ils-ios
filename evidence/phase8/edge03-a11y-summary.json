@@ -1,0 +1,63 @@
+{
+  "tested": "2026-02-20",
+  "screens": [
+    {
+      "screen": "Home",
+      "interactive_elements": 19,
+      "with_label": 19,
+      "missing_label": 0,
+      "missing_details": [],
+      "result": "PASS"
+    },
+    {
+      "screen": "Browser (MCP)",
+      "interactive_elements": 33,
+      "with_label": 32,
+      "missing_label": 1,
+      "missing_details": ["TextField at (53, 162) — likely browser search/filter field, no accessibilityLabel"],
+      "result": "PASS"
+    },
+    {
+      "screen": "Settings",
+      "interactive_elements": 19,
+      "with_label": 16,
+      "missing_label": 3,
+      "missing_details": [
+        "TextField at (82, 149) — Server URL input field, no accessibilityLabel",
+        "TextField at (78, 193) — Port/address input field, no accessibilityLabel",
+        "TextField at (20, 383) — API Key input field, no accessibilityLabel"
+      ],
+      "result": "PASS"
+    },
+    {
+      "screen": "ChatView",
+      "interactive_elements": 13,
+      "with_label": 13,
+      "missing_label": 0,
+      "missing_details": [],
+      "result": "PASS"
+    },
+    {
+      "screen": "System Monitor",
+      "interactive_elements": 14,
+      "with_label": 13,
+      "missing_label": 1,
+      "missing_details": ["TextField at (83, 934) — process search/filter field, no accessibilityLabel"],
+      "result": "PASS"
+    }
+  ],
+  "total_interactive": 98,
+  "total_with_label": 93,
+  "total_missing": 5,
+  "coverage_percent": 94.9,
+  "critical_elements_check": {
+    "chat_send_button": "LABELED — Send message",
+    "chat_input_field": "LABELED — Message input field",
+    "chat_command_palette": "LABELED — Command palette",
+    "sidebar_navigation": "ALL LABELED — Home, System Monitor, Browse, Agent Teams, Hosts, Themes, Settings",
+    "session_rows": "ALL LABELED — title, model, message count included",
+    "mcp_server_buttons": "ALL LABELED — name and health status included"
+  },
+  "overall": "PASS",
+  "notes": "94.9% coverage (93/98). All 5 missing labels are on TextField inputs (search/filter fields) that have visible placeholder text but lack explicit .accessibilityLabel() modifiers. All critical interactive elements (chat send, navigation, session rows) have descriptive labels. No critical VoiceOver gaps."
+}

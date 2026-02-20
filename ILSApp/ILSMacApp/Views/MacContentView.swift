@@ -11,7 +11,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
-    case fleet = "Fleet"
+    case hosts = "Hosts"
     case themes = "Themes"
     case settings = "Settings"
 
@@ -23,7 +23,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
-        case .fleet: return "server.rack"
+        case .hosts: return "server.rack"
         case .themes: return "paintpalette.fill"
         case .settings: return "gearshape.fill"
         }
@@ -35,7 +35,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
-        case .fleet: return .fleet
+        case .hosts: return .hosts
         case .themes: return .themes
         case .settings: return .settings
         }
@@ -45,9 +45,9 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // MARK: - Mac Content View
 
 struct MacContentView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var sessionsViewModel = SessionsViewModel()
+    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -59,6 +59,7 @@ struct MacContentView: View {
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
+        @Bindable var appState = appState
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar (left column)
             sidebarContent
@@ -84,9 +85,17 @@ struct MacContentView: View {
             guard let intent else { return }
             handleNavigationIntent(intent)
         }
+        .onChange(of: activeScreen) { _, newScreen in
+            switch newScreen {
+            case .home, .chat:
+                columnVisibility = .all
+            default:
+                columnVisibility = .doubleColumn
+            }
+        }
         // Observe menu bar command notifications
         .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
             activeScreen = .chat(newSession)
         }
         .onReceive(NotificationCenter.default.publisher(for: .ilsNavigateTo)) { notification in
@@ -128,13 +137,28 @@ struct MacContentView: View {
                 }
             }
         }
+        // A4: Handle notification tap from NotificationManager — navigate to the session
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenSessionFromNotification"))) { notification in
+            guard let sessionId = notification.object as? UUID else { return }
+            Task {
+                do {
+                    let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString)")
+                    if let session = response.data {
+                        activeScreen = .chat(session)
+                        selectedSection = .home
+                    }
+                } catch {
+                    // Session not found or network error — ignore and let app stay on current screen
+                }
+            }
+        }
         .onKeyPress(.init("/")) {
             isSearchFocused = true
             return .handled
         }
         .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
-                .environmentObject(appState)
+                .environment(appState)
                 .environment(\.theme, theme)
         }
         .alert("Rename Session", isPresented: Binding(
@@ -280,7 +304,7 @@ struct MacContentView: View {
 
             // New Session button
             Button {
-                let newSession = ChatSession(name: "New Session", model: "sonnet")
+                let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
                 activeScreen = .chat(newSession)
             } label: {
                 HStack(spacing: theme.spacingSM) {
@@ -307,7 +331,8 @@ struct MacContentView: View {
     private var detailContent: some View {
         switch activeScreen {
         case .home:
-            HomeView(
+            MacDashboardView(
+                sessionsVM: sessionsViewModel,
                 onSessionSelected: { session in
                     activeScreen = .chat(session)
                 },
@@ -316,16 +341,16 @@ struct MacContentView: View {
                 }
             )
         case .chat(let session):
-            ChatView(session: session)
+            MacChatView(session: session)
         case .system:
             SystemMonitorView()
         case .settings:
-            SettingsView()
+            MacSettingsView()
         case .browser:
             BrowserView()
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
-        case .fleet:
+        case .hosts:
             FleetManagementView()
         case .themes:
             ThemesListView()
@@ -517,8 +542,15 @@ struct MacContentView: View {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 encoder.dateEncodingStrategy = .iso8601
-                if let data = try? encoder.encode(session) {
-                    try? data.write(to: url)
+                do {
+                    let data = try encoder.encode(session)
+                    try data.write(to: url)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save JSON: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
                 }
             }
         }
@@ -546,7 +578,15 @@ struct MacContentView: View {
                     md += "- **Project:** \(projectName)\n"
                 }
                 md += "\n---\n"
-                try? md.write(to: url, atomically: true, encoding: .utf8)
+                do {
+                    try md.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save Markdown: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
+                }
             }
         }
     }
@@ -559,7 +599,7 @@ struct MacContentView: View {
         case .settings: selectedSection = .settings
         case .browser: selectedSection = .browser
         case .teams: selectedSection = .teams
-        case .fleet: selectedSection = .fleet
+        case .hosts: selectedSection = .hosts
         case .themes: selectedSection = .themes
         case .chat: selectedSection = .home
         }
@@ -577,7 +617,7 @@ struct MacSessionRow: View {
     var body: some View {
         HStack(spacing: theme.spacingSM) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.name ?? "Unnamed Session")
+                Text(session.name.cleanedSessionTitle() ?? "Unnamed Session")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -598,11 +638,14 @@ struct MacSessionRow: View {
         }
         .padding(.vertical, theme.spacingXS)
     }
+
 }
 
 #Preview {
     MacContentView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
+        .environment(WindowManager.shared)
+        .environmentObject(NotificationManager.shared)
 }

@@ -59,6 +59,7 @@ struct ToolCallAccordion: View {
 
     private var headerButton: some View {
         Button {
+            HapticManager.selection()
             if reduceMotion {
                 isExpanded.toggle()
                 if let expandAll = expandAll {
@@ -80,24 +81,24 @@ struct ToolCallAccordion: View {
                     .frame(width: 20)
 
                 Text(toolName)
-                    .font(.system(size: 12, weight: .medium, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 if isError {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 10, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.error)
                 } else if isExpanded {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 10, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }
@@ -135,10 +136,10 @@ struct ToolCallAccordion: View {
             ForEach(Array(pairs.enumerated()), id: \.offset) { _, pair in
                 HStack(alignment: .top, spacing: 4) {
                     Text(pair.key + ":")
-                        .font(.system(size: 11, weight: .semibold, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                     Text(pair.value)
-                        .font(.system(size: 11, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .textSelection(.enabled)
                         .lineLimit(3)
@@ -154,7 +155,7 @@ struct ToolCallAccordion: View {
             sectionLabel("Input")
 
             Text(text)
-                .font(.system(size: 11, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .textSelection(.enabled)
         }
@@ -167,7 +168,7 @@ struct ToolCallAccordion: View {
             sectionLabel("Output")
 
             Text(text)
-                .font(.system(size: 11, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(isError ? theme.error : theme.textSecondary)
                 .textSelection(.enabled)
                 .lineLimit(showFullOutput ? nil : 5)
@@ -177,7 +178,7 @@ struct ToolCallAccordion: View {
                     showFullOutput.toggle()
                 } label: {
                     Text(showFullOutput ? "Show less" : "Show more")
-                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                 }
                 .buttonStyle(.plain)
@@ -189,48 +190,66 @@ struct ToolCallAccordion: View {
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .semibold, design: theme.fontDesign))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
                 .kerning(1)
     }
 
+    // MARK: - Tool Classification (Set-based O(1) lookups)
+
+    private static let iconKeywordMap: [(keywords: Set<String>, icon: String)] = [
+        (["read"], "doc.text"),
+        (["write"], "doc.badge.plus"),
+        (["edit"], "pencil.line"),
+        (["bash"], "terminal"),
+        (["grep"], "magnifyingglass"),
+        (["glob"], "folder.badge.questionmark"),
+        (["websearch", "web_search"], "globe"),
+        (["webfetch", "web_fetch"], "arrow.down.doc"),
+        (["task"], "person.2"),
+        (["skill"], "sparkles"),
+        (["list"], "list.bullet")
+    ]
+
+    private static let fileToolKeywords: Set<String> = ["read", "write", "edit"]
+    private static let bashKeywords: Set<String> = ["bash"]
+    private static let searchToolKeywords: Set<String> = ["grep", "glob"]
+    private static let webKeywords: Set<String> = ["web"]
+    private static let taskKeywords: Set<String> = ["task"]
+    private static let skillKeywords: Set<String> = ["skill"]
+
     /// Maps tool names to SF Symbol icons for all 10 Claude tool types.
     private var toolIcon: String {
         let name = toolName.lowercased()
-        if name.contains("read") { return "doc.text" }
-        if name.contains("write") { return "doc.badge.plus" }
-        if name.contains("edit") { return "pencil.line" }
-        if name.contains("bash") { return "terminal" }
-        if name.contains("grep") { return "magnifyingglass" }
-        if name.contains("glob") { return "folder.badge.questionmark" }
-        if name.contains("websearch") || name == "web_search" { return "globe" }
-        if name.contains("webfetch") || name == "web_fetch" { return "arrow.down.doc" }
-        if name.contains("task") { return "person.2" }
-        if name.contains("skill") { return "sparkles" }
-        if name.contains("list") { return "list.bullet" }
+        for entry in Self.iconKeywordMap {
+            if entry.keywords.contains(name) { return entry.icon }
+            for keyword in entry.keywords {
+                if name.contains(keyword) { return entry.icon }
+            }
+        }
         return "wrench.and.screwdriver"
     }
 
     /// Maps tool names to entity-derived colors for visual distinction.
     private var toolColor: Color {
         let name = toolName.lowercased()
-        if name.contains("read") || name.contains("write") || name.contains("edit") {
+        if Self.fileToolKeywords.contains(where: { name.contains($0) }) {
             return theme.entitySkill
         }
-        if name.contains("bash") {
+        if Self.bashKeywords.contains(where: { name.contains($0) }) {
             return theme.entitySystem
         }
-        if name.contains("grep") || name.contains("glob") {
+        if Self.searchToolKeywords.contains(where: { name.contains($0) }) {
             return theme.entityMCP
         }
-        if name.contains("web") {
+        if Self.webKeywords.contains(where: { name.contains($0) }) {
             return theme.info
         }
-        if name.contains("task") {
+        if Self.taskKeywords.contains(where: { name.contains($0) }) {
             return theme.entitySession
         }
-        if name.contains("skill") {
+        if Self.skillKeywords.contains(where: { name.contains($0) }) {
             return theme.entityPlugin
         }
         return theme.accent

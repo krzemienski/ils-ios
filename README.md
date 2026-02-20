@@ -63,6 +63,18 @@ ils-ios/
 └── ils.sqlite                 # SQLite database (auto-created)
 ```
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow diagrams, and technical decisions |
+| [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md) | Multiple ways to run the backend (launchd, Docker, Homebrew) |
+| [docs/API.md](docs/API.md) | Full REST API reference with request/response schemas |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Development roadmap and planned features |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines and development workflow |
+| [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
+| [PRIVACY.md](PRIVACY.md) | Privacy policy and data handling |
+
 ## Prerequisites
 
 - **macOS** 15.0+ (Sequoia or later)
@@ -71,6 +83,29 @@ ils-ios/
 - **Claude Code CLI** installed and configured (optional, for full functionality)
 
 ## Quick Start
+
+### Option A: One-Command Setup (Recommended)
+
+For new developers, the setup script handles everything automatically:
+
+```bash
+git clone https://github.com/krzemienski/ils-ios.git
+cd ils-ios
+bash scripts/setup.sh
+```
+
+The setup script:
+- ✅ Checks Swift, Xcode, Node.js, and Claude CLI installations
+- ✅ Builds the backend (`swift build`)
+- ✅ Runs database migrations (starts backend briefly, waits for health check)
+- ✅ Creates `ils.sqlite` database
+- ✅ Prints next steps when complete
+
+After setup finishes, follow the printed next steps to start the backend and open Xcode.
+
+---
+
+### Option B: Manual Setup
 
 ### 1. Clone the Repository
 

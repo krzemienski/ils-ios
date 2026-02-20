@@ -34,6 +34,7 @@ struct PulsingGlow: ViewModifier {
     let color: Color
     @State private var isAnimating = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -42,11 +43,13 @@ struct PulsingGlow: ViewModifier {
                 radius: isAnimating ? 15 : 5
             )
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
+                guard !reduceMotion else { return }
                 if newPhase == .active {
                     withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                         isAnimating = true
@@ -56,6 +59,9 @@ struct PulsingGlow: ViewModifier {
                         isAnimating = false
                     }
                 }
+            }
+            .onDisappear {
+                isAnimating = false
             }
     }
 }
@@ -72,17 +78,19 @@ struct PulsingModifier: ViewModifier {
     let active: Bool
     @State private var isAnimating = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .opacity(active && isAnimating ? 0.5 : 1.0)
             .onAppear {
-                guard active else { return }
+                guard active, !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
             .onChange(of: active) { oldValue, newValue in
+                guard !reduceMotion else { return }
                 if newValue {
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                         isAnimating = true
@@ -92,7 +100,7 @@ struct PulsingModifier: ViewModifier {
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
-                guard active else { return }
+                guard active, !reduceMotion else { return }
                 if newPhase == .active {
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                         isAnimating = true
@@ -102,6 +110,9 @@ struct PulsingModifier: ViewModifier {
                         isAnimating = false
                     }
                 }
+            }
+            .onDisappear {
+                isAnimating = false
             }
     }
 }

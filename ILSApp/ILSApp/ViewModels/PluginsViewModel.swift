@@ -6,7 +6,9 @@ import ILSShared
 @Observable
 class PluginsViewModel {
     var plugins: [Plugin] = []
+    var marketplacePlugins: [PluginMarketplace] = []
     var isLoading = false
+    var isLoadingMarketplace = false
     var error: Error?
     var searchText = ""
     var marketplaceSearchText = ""
@@ -14,10 +16,21 @@ class PluginsViewModel {
     var isSearchingMarketplace = false
     var searchResults: [PluginInfo] = []
     var installingPlugins: Set<String> = []
+    var togglingPlugins: Set<String> = []
+
+    // GitHub search state (mirrors SkillsViewModel pattern)
+    var gitHubSearchText = ""
+    var gitHubResults: [GitHubSearchResult] = []
+    var isSearchingGitHub = false
 
     private var client: APIClient?
+    nonisolated(unsafe) private var gitHubSearchTask: Task<Void, Never>?
 
     init() {}
+
+    deinit {
+        gitHubSearchTask?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client
@@ -63,6 +76,16 @@ class PluginsViewModel {
         }
     }
 
+    /// Count of enabled plugins
+    var enabledCount: Int {
+        plugins.filter(\.isEnabled).count
+    }
+
+    /// Count of disabled plugins
+    var disabledCount: Int {
+        plugins.filter { !$0.isEnabled }.count
+    }
+
     func loadPlugins() async {
         guard let client else { return }
         isLoading = true
@@ -79,6 +102,22 @@ class PluginsViewModel {
         }
 
         isLoading = false
+    }
+
+    func loadMarketplace() async {
+        guard let client else { return }
+        isLoadingMarketplace = true
+
+        do {
+            let response: APIResponse<[PluginMarketplace]> = try await client.get("/plugins/marketplace")
+            if let data = response.data {
+                marketplacePlugins = data
+            }
+        } catch {
+            AppLogger.shared.error("Failed to load marketplace: \(error.localizedDescription)", category: "plugins")
+        }
+
+        isLoadingMarketplace = false
     }
 
     func retryLoadPlugins() async {
@@ -110,6 +149,16 @@ class PluginsViewModel {
             self.error = error
             AppLogger.shared.error("Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)", category: "plugins")
         }
+    }
+
+    func togglePlugin(_ plugin: Plugin) async {
+        togglingPlugins.insert(plugin.name)
+        if plugin.isEnabled {
+            await disablePlugin(plugin)
+        } else {
+            await enablePlugin(plugin)
+        }
+        togglingPlugins.remove(plugin.name)
     }
 
     func enablePlugin(_ plugin: Plugin) async {
@@ -169,6 +218,77 @@ class PluginsViewModel {
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to add marketplace: \(error.localizedDescription)", category: "plugins")
+            return false
+        }
+    }
+
+    // MARK: - GitHub Search
+
+    /// Update GitHub search text and trigger debounced search.
+    /// Call this instead of assigning `gitHubSearchText` directly.
+    func updateGitHubSearchText(_ text: String) {
+        gitHubSearchText = text
+        debouncedGitHubSearch()
+    }
+
+    /// Trigger a debounced GitHub search based on current `gitHubSearchText`.
+    private func debouncedGitHubSearch() {
+        gitHubSearchTask?.cancel()
+        guard !gitHubSearchText.isEmpty else {
+            gitHubResults = []
+            return
+        }
+        gitHubSearchTask = Task {
+            try? await Task.sleep(for: .milliseconds(300))
+            if !Task.isCancelled {
+                await searchGitHub(query: gitHubSearchText)
+            }
+        }
+    }
+
+    /// Search GitHub for plugins matching the query.
+    func searchGitHub(query: String) async {
+        guard let client, !query.isEmpty else {
+            gitHubResults = []
+            return
+        }
+        isSearchingGitHub = true
+        error = nil
+        do {
+            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+            let response: APIResponse<ListResponse<GitHubSearchResult>> = try await client.get("/plugins/search?q=\(encoded)")
+            if let data = response.data {
+                gitHubResults = data.items
+            }
+        } catch {
+            if case .unauthorized = error as? APIError {
+                self.error = NSError(domain: "ILSApp", code: 401, userInfo: [
+                    NSLocalizedDescriptionKey: "GitHub token not configured on backend. Set GITHUB_TOKEN environment variable to enable search."
+                ])
+            } else {
+                self.error = error
+            }
+            AppLogger.shared.error("GitHub plugin search failed: \(error.localizedDescription)", category: "plugins")
+        }
+        isSearchingGitHub = false
+    }
+
+    /// Install a plugin from a GitHub search result.
+    func installFromGitHub(result: GitHubSearchResult) async -> Bool {
+        guard let client else { return false }
+        installingPlugins.insert(result.name)
+        do {
+            let request = InstallPluginRequest(pluginName: result.name, marketplace: result.repository)
+            let response: APIResponse<Plugin> = try await client.post("/plugins/install", body: request)
+            if let plugin = response.data {
+                plugins.append(plugin)
+            }
+            installingPlugins.remove(result.name)
+            return true
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to install plugin from GitHub: \(error.localizedDescription)", category: "plugins")
+            installingPlugins.remove(result.name)
             return false
         }
     }

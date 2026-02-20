@@ -24,12 +24,13 @@ struct AssistantCard: View {
                 // Role indicator + metadata
                 HStack(spacing: theme.spacingXS) {
                     Text("Claude")
-                        .font(.system(size: 10, weight: .semibold, design: theme.fontDesign).leading(.tight))
+                        .font(.system(.caption2, design: theme.fontDesign, weight: .semibold).leading(.tight))
                         .foregroundStyle(theme.accent)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     Spacer()
                     metadataRow
                 }
+                .accessibilityElement(children: .combine)
 
                 // Thinking section
                 if let thinking = message.thinking {
@@ -109,6 +110,18 @@ struct AssistantCard: View {
             }
         }
         .accessibilityLabel("Assistant said: \(message.text.prefix(100))")
+        #if os(macOS)
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ILSToggleExpandAllToolCalls"))) { _ in
+            let newValue = (expandAllToolCalls == true) ? false : true
+            if reduceMotion {
+                expandAllToolCalls = newValue
+            } else {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    expandAllToolCalls = newValue
+                }
+            }
+        }
+        #endif
     }
 
     // MARK: - Metadata Row
@@ -117,7 +130,7 @@ struct AssistantCard: View {
         HStack(spacing: theme.spacingXS) {
             if let timestamp = message.timestamp {
                 Text(formattedTimestamp(timestamp))
-                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                    .font(.system(.caption2, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
@@ -126,7 +139,7 @@ struct AssistantCard: View {
                 Text("\u{00B7}")
                     .foregroundStyle(theme.textTertiary)
                 Text("$\(cost, specifier: "%.4f")")
-                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                    .font(.system(.caption2, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
@@ -135,7 +148,7 @@ struct AssistantCard: View {
                 Text("\u{00B7}")
                     .foregroundStyle(theme.textTertiary)
                 Text("\(message.tokenCount)t")
-                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                    .font(.system(.caption2, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
@@ -159,7 +172,7 @@ struct AssistantCard: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: expandAllToolCalls == true ? "rectangle.compress.vertical" : "rectangle.expand.vertical")
-                            .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                            .font(.system(.caption2, design: theme.fontDesign).leading(.tight))
                         Text(expandAllToolCalls == true ? "Collapse All" : "Expand All")
                             .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign).leading(.tight))
                     }

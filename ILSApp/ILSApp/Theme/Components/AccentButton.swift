@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AccentButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled
     let title: String
     let icon: String?
     let action: () -> Void
@@ -25,9 +26,12 @@ struct AccentButton: View {
             .foregroundColor(theme.textOnAccent)
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingSM + 2)
-            .background(theme.accent)
+            .background(theme.accent.opacity(isEnabled ? 1.0 : 0.4))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
+        .opacity(isEnabled ? 1.0 : 0.6)
         .accessibilityLabel(title)
+        .opacity(isEnabled ? 1.0 : 0.5)
+        .saturation(isEnabled ? 1.0 : 0.3)
     }
 }

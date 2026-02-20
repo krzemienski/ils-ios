@@ -21,19 +21,18 @@ struct SendMessageIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
         guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
             return .result(value: "Error: Invalid server URL")
         }
 
-        // Build the chat stream request body
-        let body: [String: Any] = [
-            "prompt": message,
-            "sessionId": session.id
-        ]
-
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
-            return .result(value: "Error: Failed to encode request")
+        // Build the chat stream request body using Codable
+        let requestBody = SendMessageRequest(prompt: message, sessionId: session.id)
+        let jsonData: Data
+        do {
+            jsonData = try JSONEncoder().encode(requestBody)
+        } catch {
+            return .result(value: "Error: Failed to encode request — \(error.localizedDescription)")
         }
 
         var request = URLRequest(url: url)
@@ -62,6 +61,13 @@ struct SendMessageIntent: AppIntent {
         } catch {
             return .result(value: "Error: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - Codable Request
+
+    private struct SendMessageRequest: Codable {
+        let prompt: String
+        let sessionId: String
     }
 
     private func loadAPIKey() -> String? {

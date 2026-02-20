@@ -3,7 +3,6 @@ import ILSShared
 
 struct MessageView: View {
     let message: ChatMessage
-    @State private var showCopyConfirmation = false
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     // Date formatters centralized in DateFormatters.swift
@@ -17,8 +16,7 @@ struct MessageView: View {
                     if !message.text.isEmpty {
                         MessageContentView(
                             text: message.text,
-                            isUser: message.isUser,
-                            showCopyConfirmation: $showCopyConfirmation
+                            isUser: message.isUser
                         )
                     }
 
@@ -37,21 +35,6 @@ struct MessageView: View {
                         ThinkingView(thinking: thinking)
                     }
 
-                    // Copy confirmation overlay
-                    if showCopyConfirmation {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(theme.success)
-                            Text("Copied")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundColor(theme.success)
-                        }
-                        .padding(.horizontal, theme.spacingSM)
-                        .padding(.vertical, theme.spacingXS)
-                        .background(theme.success.opacity(0.1))
-                        .cornerRadius(theme.cornerRadiusSmall)
-                        .transition(.scale.combined(with: .opacity))
-                    }
                 }
                 .padding()
                 .background(message.isUser ? theme.accent.opacity(0.15) : theme.bgSecondary)
@@ -189,27 +172,43 @@ struct ThinkingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
-            Button(action: { isExpanded.toggle() }) {
+            Button(action: {
+                if reduceMotion {
+                    isExpanded.toggle()
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isExpanded.toggle()
+                    }
+                }
+            }) {
                 HStack {
                     Image(systemName: "brain")
-                        .foregroundColor(theme.entityPlugin)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.entityPlugin)
                         .scaleEffect(pulseScale)
+                        .frame(width: 20)
                     Text("Thinking")
                         .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
                     Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(theme.textSecondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                        .foregroundStyle(theme.textTertiary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
             }
             .buttonStyle(.plain)
 
             if isExpanded {
                 Text(thinking)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundColor(theme.textSecondary)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign).italic())
+                    .foregroundStyle(theme.textSecondary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(theme.spacingSM)
                     .background(theme.bgTertiary)
                     .cornerRadius(theme.cornerRadiusSmall)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(theme.spacingSM)
@@ -220,7 +219,11 @@ struct ThinkingView: View {
                 endPoint: .trailing
             )
         )
-        .cornerRadius(theme.cornerRadius)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: theme.cornerRadius)
+                .strokeBorder(theme.entityPlugin.opacity(0.3), lineWidth: 0.5)
+        )
         .onAppear {
             if !reduceMotion {
                 startPulsing()
@@ -251,13 +254,11 @@ struct ThinkingView: View {
 struct MessageContentView: View {
     let text: String
     let isUser: Bool
-    @Binding var showCopyConfirmation: Bool
+    @State private var showCopyConfirmation = false
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// Parse message text into segments
-    private var segments: [MarkdownParser.TextSegment] {
-        MarkdownParser.parse(text)
-    }
+    /// Cached parsed segments — avoids re-parsing on every body evaluation
+    @State private var segments: [MarkdownParser.TextSegment] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -279,14 +280,11 @@ struct MessageContentView: View {
                                 NSPasteboard.general.setString(plainText, forType: .string)
                                 #endif
                                 showCopyConfirmation = true
-                                // Hide confirmation after 2 seconds
-                                Task { @MainActor in
-                                    try? await Task.sleep(for: .seconds(2))
-                                    showCopyConfirmation = false
-                                }
                             }) {
                                 Label("Copy Text", systemImage: "doc.on.doc")
+                                    .accessibilityHint("Copies this text segment to clipboard")
                             }
+                            .accessibilityHint("Copies this text segment to clipboard")
                         }
 
                 case .codeBlock(let codeBlock):
@@ -306,6 +304,10 @@ struct MessageContentView: View {
                 }
             }
         }
+        .task(id: text) {
+            segments = MarkdownParser.parse(text)
+        }
+        .toast(isPresented: $showCopyConfirmation, message: "Copied")
     }
 }
 

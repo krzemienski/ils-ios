@@ -23,7 +23,7 @@ struct StreamingIndicatorView: View {
                 .opacity(isPulsing ? 1.0 : 0.3)
 
             Text(statusText ?? "Claude is thinking\u{2026}")
-                .font(.system(size: 12, design: theme.fontDesign).leading(.tight))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
                 .foregroundStyle(theme.textTertiary)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         }
@@ -35,20 +35,16 @@ struct StreamingIndicatorView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                guard !reduceMotion else { return }
+            if phase == .active, !isPulsing, !reduceMotion {
                 withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
                     isPulsing = true
                 }
-            } else {
-                if reduceMotion {
-                    isPulsing = false
-                } else {
-                    withAnimation(.default) {
-                        isPulsing = false
-                    }
-                }
+            } else if phase != .active {
+                isPulsing = false
             }
+        }
+        .onDisappear {
+            isPulsing = false
         }
         .accessibilityLabel("AI is responding")
     }

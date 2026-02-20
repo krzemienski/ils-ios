@@ -33,7 +33,7 @@ struct PremiumView: View {
             }
             .background(theme.bgPrimary.ignoresSafeArea())
             .navigationTitle("ILS Premium")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
@@ -128,7 +128,7 @@ struct PremiumView: View {
 
     private func checkmark(active: Bool) -> some View {
         Image(systemName: active ? "checkmark.circle.fill" : "xmark.circle")
-            .font(.system(size: 16))
+            .font(.system(size: theme.fontBody))
             .foregroundStyle(active ? theme.success : theme.textTertiary.opacity(0.5))
     }
 
@@ -175,7 +175,7 @@ struct PremiumView: View {
                 Spacer()
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.system(size: theme.fontTitle3))
                     .foregroundStyle(isSelected ? theme.accent : theme.textTertiary)
             }
             .padding(theme.spacingMD)

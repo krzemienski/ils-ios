@@ -7,7 +7,9 @@ struct HomeView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var dashboardVM = DashboardViewModel()
-    @State private var sessionsVM = SessionsViewModel()
+    @State private var isRefreshing = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let createSessionTip = CreateSessionTip()
 
@@ -16,34 +18,36 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: theme.spacingLG) {
+            LazyVStack(alignment: .leading, spacing: theme.spacingLG) {
                 welcomeSection
+                refreshingBanner
                 connectionBanner
 
-                TipView(createSessionTip)
-                    .tipBackground(theme.bgSecondary)
+                if appState.isConnected {
+                    TipView(createSessionTip)
+                        .tipBackground(theme.bgSecondary)
+                }
 
-                recentSessionsSection
                 quickActionsGrid
+                recentSessionsSection
                 statsSection
+                errorBanner
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingMD)
+            .animation(.easeInOut(duration: 0.3), value: isRefreshing)
         }
         .background(theme.bgPrimary)
-        #if os(iOS)
+        .navigationTitle("Home")
         .inlineNavigationBarTitle()
-        .toolbar(.hidden, for: .navigationBar)
-        #endif
         .task {
             dashboardVM.configure(client: appState.apiClient)
-            sessionsVM.configure(client: appState.apiClient)
             await dashboardVM.loadAll()
-            await sessionsVM.loadSessions(refresh: true)
         }
         .refreshable {
+            isRefreshing = true
             await dashboardVM.loadAll()
-            await sessionsVM.loadSessions(refresh: true)
+            isRefreshing = false
         }
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
@@ -68,6 +72,38 @@ struct HomeView: View {
         .padding(.top, theme.spacingSM)
     }
 
+    // MARK: - Refreshing Banner
+
+    @ViewBuilder
+    private var refreshingBanner: some View {
+        if isRefreshing {
+            HStack(spacing: theme.spacingSM) {
+                if !reduceMotion {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.8)
+                        .tint(theme.textSecondary)
+                }
+
+                Text("Refreshing…")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingXS)
+            .background(theme.bgSecondary.opacity(0.8))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .transition(
+                .asymmetric(
+                    insertion: .move(edge: .top).combined(with: .opacity),
+                    removal: .move(edge: .top).combined(with: .opacity)
+                )
+            )
+            .accessibilityLabel("Refreshing content")
+            .accessibilityAddTraits(.updatesFrequently)
+        }
+    }
+
     // MARK: - Connection Banner
 
     @ViewBuilder
@@ -76,6 +112,7 @@ struct HomeView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(theme.warning)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Not Connected")
@@ -109,6 +146,8 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .stroke(theme.warning.opacity(0.3), lineWidth: 0.5)
             )
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Not connected. Configure your server to get started.")
         }
     }
 
@@ -116,7 +155,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private var recentSessionsSection: some View {
-        let recent = Array(sessionsVM.sessions.prefix(5))
+        let recent = Array(dashboardVM.recentSessions.prefix(5))
 
         if !recent.isEmpty {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -127,9 +166,11 @@ struct HomeView: View {
 
                     Spacer()
 
-                    Text("\(sessionsVM.totalCount)")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                    if let stats = dashboardVM.stats {
+                        Text("\(stats.sessions.total) total")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
                 }
 
                 ForEach(recent, id: \.id) { session in
@@ -144,9 +185,36 @@ struct HomeView: View {
         } else if !appState.isConnected {
             // Empty state handled by connection banner
             EmptyView()
-        } else if sessionsVM.isLoading {
-            ForEach(0..<3, id: \.self) { _ in
-                skeletonSessionRow
+        } else if !dashboardVM.isLoading {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Text("Recent Sessions")
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+
+                VStack(spacing: theme.spacingSM) {
+                    Image(systemName: "bubble.left.and.bubble.right")
+                        .font(.system(size: 28, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .accessibilityHidden(true)
+                    Text("No sessions yet")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                    Text("Create a new session to get started")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+            }
+        } else if dashboardVM.isLoading {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Text("Recent Sessions")
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+
+                ForEach(0..<3, id: \.self) { _ in
+                    skeletonSessionRow
+                }
             }
         }
     }
@@ -159,7 +227,7 @@ struct HomeView: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.name ?? "Unnamed Session")
+                Text((session.name ?? "Unnamed Session").cleanedSessionTitle())
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -175,23 +243,46 @@ struct HomeView: View {
                     Text("\(session.messageCount) msgs")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
+
+                    if let projectName = session.projectName {
+                        Text("·")
+                            .foregroundStyle(theme.textTertiary)
+
+                        Text(projectName)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.accent.opacity(0.8))
+                            .lineLimit(1)
+                    }
                 }
             }
+            .accessibilityElement(children: .combine)
 
             Spacer()
 
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(relativeTime(session.lastActiveAt))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(theme.spacingSM)
         .frame(minHeight: 44)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
+        .accessibilityLabel("\((session.name ?? "Unnamed Session").cleanedSessionTitle()), \(session.model), \(session.messageCount) messages")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// Localized relative time string using system formatter.
+    private func relativeTime(_ date: Date) -> String {
+        DateFormatters.relativeDateTime.localizedString(for: date, relativeTo: Date())
     }
 
     @ViewBuilder
@@ -242,7 +333,7 @@ struct HomeView: View {
                     title: "New Session",
                     color: theme.entitySession
                 ) {
-                    let newSession = ChatSession(name: "New Session", model: "sonnet")
+                    let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
                     onSessionSelected?(newSession)
                 }
 
@@ -273,6 +364,7 @@ struct HomeView: View {
                     onNavigate?(.browser)
                 }
             }
+            .shimmerIfActive(isRefreshing)
         }
     }
 
@@ -287,7 +379,7 @@ struct HomeView: View {
         Button(action: action) {
             VStack(spacing: theme.spacingSM) {
                 Image(systemName: icon)
-                    .font(.system(size: 24, design: theme.fontDesign))
+                    .font(.system(.title3, design: theme.fontDesign))
                     .foregroundStyle(color)
 
                 Text(title)
@@ -306,7 +398,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
-        .accessibilityHint("Double tap to open \(title)")
+        .accessibilityHint("Opens \(title)")
     }
 
     private func statsSubtitle(_ count: Int?) -> String? {
@@ -320,9 +412,19 @@ struct HomeView: View {
     private var statsSection: some View {
         if let stats = dashboardVM.stats {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
-                Text("Overview")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
+                HStack {
+                    Text("Overview")
+                        .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+
+                    Spacer()
+
+                    if dashboardVM.totalCost > 0 {
+                        Text(dashboardVM.formattedTotalCost)
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.accent)
+                    }
+                }
 
                 LazyVGrid(columns: [
                     GridItem(.flexible(), spacing: theme.spacingSM),
@@ -356,7 +458,112 @@ struct HomeView: View {
                         sparklineData: dashboardVM.mcpSparkline
                     )
                 }
+                .shimmerIfActive(isRefreshing)
+
+                // Secondary stats row: plugins + active counts
+                HStack(spacing: theme.spacingSM) {
+                    secondaryStat(
+                        icon: "puzzlepiece.extension.fill",
+                        label: "Plugins",
+                        value: "\(stats.plugins.enabled)/\(stats.plugins.total) enabled",
+                        color: theme.entityPlugin
+                    )
+
+                    secondaryStat(
+                        icon: "heart.fill",
+                        label: "MCP Health",
+                        value: "\(stats.mcpServers.healthy)/\(stats.mcpServers.total) healthy",
+                        color: stats.mcpServers.healthy == stats.mcpServers.total ? theme.success : theme.warning
+                    )
+                }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func secondaryStat(icon: String, label: String, value: String, color: Color) -> some View {
+        HStack(spacing: theme.spacingXS) {
+            Image(systemName: icon)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(color)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                Text(value)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingXS)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label), \(value)")
+    }
+
+    // MARK: - Error Banner
+
+    @ViewBuilder
+    private var errorBanner: some View {
+        if let error = dashboardVM.error, dashboardVM.stats == nil {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: "exclamationmark.circle")
+                    .font(.system(size: 28, design: theme.fontDesign))
+                    .foregroundStyle(theme.error)
+                    .accessibilityHidden(true)
+
+                Text("Failed to load dashboard")
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+
+                Text(error.localizedDescription)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    Task {
+                        await dashboardVM.retryLoad()
+                    }
+                } label: {
+                    Text("Retry")
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textOnAccent)
+                        .padding(.horizontal, theme.spacingMD)
+                        .padding(.vertical, theme.spacingXS)
+                        .background(theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+                .accessibilityLabel("Retry loading dashboard")
+            }
+            .frame(maxWidth: .infinity)
+            .padding(theme.spacingLG)
+            .background(theme.error.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
+                    .stroke(theme.error.opacity(0.2), lineWidth: 0.5)
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Dashboard error: \(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - Conditional Shimmer Helper
+
+private extension View {
+    @ViewBuilder
+    func shimmerIfActive(_ active: Bool) -> some View {
+        if active {
+            shimmer()
+        } else {
+            self
         }
     }
 }

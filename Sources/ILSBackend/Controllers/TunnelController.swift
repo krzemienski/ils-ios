@@ -27,7 +27,7 @@ struct TunnelController: RouteCollection {
     func startTunnel(req: Request) async throws -> Response {
         let isInstalled = await tunnelService.cloudflaredInstalled
         guard isInstalled else {
-            return notInstalledResponse()
+            return try notInstalledResponse()
         }
 
         let body = try? req.content.decode(TunnelStartRequest.self)
@@ -57,7 +57,7 @@ struct TunnelController: RouteCollection {
     func stopTunnel(req: Request) async throws -> Response {
         let isInstalled = await tunnelService.cloudflaredInstalled
         guard isInstalled else {
-            return notInstalledResponse()
+            return try notInstalledResponse()
         }
 
         await tunnelService.stop()
@@ -70,7 +70,7 @@ struct TunnelController: RouteCollection {
     func getStatus(req: Request) async throws -> Response {
         let isInstalled = await tunnelService.cloudflaredInstalled
         guard isInstalled else {
-            return notInstalledResponse()
+            return try notInstalledResponse()
         }
 
         let status = await tunnelService.status()
@@ -85,12 +85,18 @@ struct TunnelController: RouteCollection {
 
     // MARK: - Helpers
 
-    private func notInstalledResponse() -> Response {
+    private static let sharedEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+
+    private func notInstalledResponse() throws -> Response {
         let body: [String: String] = [
             "error": "cloudflared not installed",
             "installUrl": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
         ]
-        let data = try! JSONEncoder().encode(body)
+        let data = try Self.sharedEncoder.encode(body)
         return Response(
             status: .notFound,
             headers: ["Content-Type": "application/json"],
@@ -99,9 +105,7 @@ struct TunnelController: RouteCollection {
     }
 
     private func encodeResponse<T: Encodable>(_ value: T, status: HTTPResponseStatus) throws -> Response {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(value)
+        let data = try Self.sharedEncoder.encode(value)
         return Response(
             status: status,
             headers: ["Content-Type": "application/json"],

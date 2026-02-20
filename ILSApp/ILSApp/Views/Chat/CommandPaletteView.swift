@@ -1,14 +1,48 @@
 import SwiftUI
 import ILSShared
 
+/// Searchable modal presenting three command sections: built-in slash commands, loaded skills, and model switching.
+///
+/// Built-in commands are a static list of 16 `CommandItem` entries. Skills are fetched
+/// asynchronously from the `/skills` API endpoint on appearance. The "Switch Model" section
+/// is always static. All three sections are filtered by a single ``searchText`` binding
+/// via `.searchable`. Toolbar and navigation-bar styling differs between iOS and macOS via
+/// `#if os(iOS)` guards.
+///
+/// Selecting any entry calls ``onSelect`` with the formatted command string and dismisses the sheet.
+///
+/// ## Topics
+/// ### State
+/// - ``searchText`` - Live search query that filters all three list sections
+/// - ``skills`` - Skills fetched from the `/skills` endpoint
+/// - ``isLoading`` - True while the skills API call is in flight
+///
+/// ### Callbacks
+/// - ``onSelect`` - Receives the formatted command string (e.g. `/compact`, `--model opus`)
+///
+/// ### Computed Properties
+/// - ``builtInCommands`` - ``allBuiltInCommands`` filtered by ``searchText``
+/// - ``filteredSkills`` - ``skills`` filtered by ``searchText``
+///
+/// ### Async Loading
+/// - ``loadSkills()`` - Fetches skills from the API and populates ``skills``
+/// - ``selectCommand(_:)`` - Forwards the chosen command to ``onSelect`` and dismisses
+///
+/// ### Sub-Views
+/// - ``CommandRow`` - Styled list row for a built-in `CommandItem`
+/// - ``SkillRow`` - Styled list row for an API-loaded `Skill`
 struct CommandPaletteView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
+    /// Live search text used to filter all three command sections.
     @State private var searchText = ""
+    /// Skills loaded from the `/skills` API endpoint.
     @State private var skills: [Skill] = []
+    /// True while the initial skills API call is in flight.
     @State private var isLoading = true
 
+    /// Called with the formatted command string when the user selects an entry.
     let onSelect: (String) -> Void
 
     var body: some View {
@@ -62,15 +96,14 @@ struct CommandPaletteView: View {
             #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(theme.bgPrimary, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
             .task {
                 await loadSkills()
             }
         }
-        .preferredColorScheme(.dark)
     }
 
+    /// The complete set of 16 supported slash commands, shown unfiltered when search is empty.
     private static let allBuiltInCommands: [CommandItem] = [
         CommandItem(name: "/compact", description: "Compact conversation history to reduce context usage", icon: "arrow.down.right.and.arrow.up.left"),
         CommandItem(name: "/clear", description: "Clear conversation history and start fresh", icon: "trash"),
@@ -90,19 +123,26 @@ struct CommandPaletteView: View {
         CommandItem(name: "/terminal-setup", description: "Install shell integration for enhanced terminal support", icon: "terminal")
     ]
 
+    /// Built-in commands filtered by ``searchText`` (name and description, case-insensitive).
     private var builtInCommands: [CommandItem] {
         Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
     }
 
+    /// API-loaded skills filtered by ``searchText`` (name, case-insensitive).
     private var filteredSkills: [Skill] {
         skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
     }
 
+    /// Forwards the selected command string to ``onSelect`` and dismisses the sheet.
     private func selectCommand(_ command: String) {
         onSelect(command)
         dismiss()
     }
 
+    /// Fetches available skills from the `/skills` endpoint and populates ``skills``.
+    ///
+    /// Errors are logged via `AppLogger` and result in an empty skills section rather
+    /// than surfacing an error to the user.
     private func loadSkills() async {
         isLoading = true
         do {
@@ -118,15 +158,22 @@ struct CommandPaletteView: View {
     }
 }
 
+/// Value type representing a single built-in slash command entry in the command palette.
 struct CommandItem: Identifiable {
     let id = UUID()
+    /// The slash command string, e.g. `/compact`.
     let name: String
+    /// Short human-readable description shown below the command name.
     let description: String
+    /// SF Symbol name used as the row icon.
     let icon: String
 }
 
+/// Styled list row displaying a `CommandItem` with its icon, name, and description.
 struct CommandRow: View {
+    /// The command to display.
     let command: CommandItem
+    /// Called with `command.name` when the row is tapped.
     let onSelect: (String) -> Void
     @Environment(\.theme) private var theme: ThemeSnapshot
 
@@ -150,8 +197,11 @@ struct CommandRow: View {
     }
 }
 
+/// Styled list row displaying an API-loaded `Skill` with its name and optional description.
 struct SkillRow: View {
+    /// The skill to display.
     let skill: Skill
+    /// Called when the row is tapped.
     let onSelect: () -> Void
     @Environment(\.theme) private var theme: ThemeSnapshot
 

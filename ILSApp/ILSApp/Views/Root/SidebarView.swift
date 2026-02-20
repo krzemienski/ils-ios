@@ -1,18 +1,45 @@
 import SwiftUI
 import ILSShared
 
+/// Navigation sidebar for the iOS app providing access to screens and chat sessions.
+///
+/// Displays the app header with connection status, a list of primary navigation destinations,
+/// a searchable session list grouped by recency, and a button to create new sessions.
+/// Sessions are loaded via `SessionsViewModel` and can be renamed or deleted via context menus.
+///
+/// ## Topics
+/// ### Bindings
+/// - ``activeScreen`` - Currently active navigation destination
+/// - ``isSidebarOpen`` - Whether the sidebar is currently visible
+/// - ``onSessionSelected`` - Callback invoked when a session is tapped
+///
+/// ### View Sections
+/// - ``headerSection`` - App logo and backend connection status indicator
+/// - ``navigationItems`` - Primary navigation links (Home, System Monitor, Browse, Settings)
+/// - ``sessionsSection`` - Searchable, time-grouped session list with pull-to-refresh
+/// - ``bottomActions`` - "New Session" button that creates and opens a fresh session
+///
+/// ### Session Management
+/// - ``timeGroup(label:sessions:)`` - Section header and rows for sessions in a time period
+/// - ``loadingView`` - Skeleton placeholder shown while sessions are loading
+/// - ``emptyView`` - Empty state shown when no sessions match the current search
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
-    @AppStorage("enableAgentTeams") private var enableAgentTeams = false
+    @AppStorage("enableAgentTeams") private var enableAgentTeams = true
 
+    /// The currently active navigation destination.
     @Binding var activeScreen: ActiveScreen
+    /// Whether the sidebar overlay is currently open.
     @Binding var isSidebarOpen: Bool
+    /// Called when the user selects a session from the list.
     var onSessionSelected: (ChatSession) -> Void
 
-    @State private var expandedProjects: Set<String> = []
+    /// The session currently being renamed, if any.
     @State private var sessionToRename: ChatSession?
+    @State private var showRenameAlert = false
+    /// Editable text used in the rename alert.
     @State private var renameText: String = ""
 
     var body: some View {
@@ -43,20 +70,21 @@ struct SidebarView: View {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadSessions(refresh: true)
         }
-        .alert("Rename Session", isPresented: Binding(
-            get: { sessionToRename != nil },
-            set: { if !$0 { sessionToRename = nil } }
-        )) {
+        .alert("Rename Session", isPresented: $showRenameAlert) {
             TextField("Session name", text: $renameText)
             Button("Cancel", role: .cancel) { sessionToRename = nil }
             Button("Rename") {
-                if let session = sessionToRename {
-                    Task { await sessionsViewModel.renameSession(session, to: renameText) }
+                let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let session = sessionToRename, !trimmed.isEmpty {
+                    Task { await sessionsViewModel.renameSession(session, to: trimmed) }
                 }
                 sessionToRename = nil
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .onChange(of: sessionToRename) { _, newValue in
+            showRenameAlert = newValue != nil
         }
     }
 
@@ -93,9 +121,8 @@ struct SidebarView: View {
             if enableAgentTeams {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
-            #if DEBUG
-            sidebarNavItem(icon: "server.rack", label: "Fleet", screen: .fleet)
-            #endif
+            sidebarNavItem(icon: "server.rack", label: "Hosts", screen: .hosts)
+            sidebarNavItem(icon: "paintbrush.fill", label: "Themes", screen: .themes)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)
@@ -157,8 +184,8 @@ struct SidebarView: View {
                     } else if sessionsViewModel.filteredSessions.isEmpty {
                         emptyView
                     } else {
-                        ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
-                            projectGroup(name: project, sessions: sessions)
+                        ForEach(sessionsViewModel.groupedByTime, id: \.key) { group, sessions in
+                            timeGroup(label: group.displayName, sessions: sessions)
                         }
                     }
                 }
@@ -170,65 +197,44 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: - Project Group
+    // MARK: - Time Group
 
     @ViewBuilder
-    private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
-        DisclosureGroup(
-            isExpanded: Binding(
-                get: { expandedProjects.contains(name) },
-                set: { isExpanded in
-                    if isExpanded {
-                        expandedProjects.insert(name)
-                    } else {
-                        expandedProjects.remove(name)
-                    }
+    private func timeGroup(label: String, sessions: [ChatSession]) -> some View {
+        Text(label.uppercased())
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+            .foregroundStyle(theme.textTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.top, theme.spacingSM)
+            .padding(.bottom, 2)
+
+        ForEach(sessions) { session in
+            SidebarSessionRow(session: session, isActive: isSessionActive(session)) {
+                onSessionSelected(session)
+                isSidebarOpen = false
+            }
+            .contextMenu {
+                Button {
+                    renameText = session.name ?? ""
+                    sessionToRename = session
+                } label: {
+                    Label("Rename", systemImage: "pencil")
                 }
-            )
-        ) {
-            ForEach(sessions) { session in
-                SidebarSessionRow(session: session) {
-                    onSessionSelected(session)
-                    isSidebarOpen = false
+                Button {
+                    SessionExporter.share(session)
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
                 }
-                .contextMenu {
-                    Button {
-                        renameText = session.name ?? ""
-                        sessionToRename = session
-                    } label: {
-                        Label("Rename", systemImage: "pencil")
+                Button(role: .destructive) {
+                    Task {
+                        await sessionsViewModel.deleteSession(session)
                     }
-                    Button {
-                        SessionExporter.share(session)
-                    } label: {
-                        Label("Export", systemImage: "square.and.arrow.up")
-                    }
-                    Button(role: .destructive) {
-                        Task {
-                            await sessionsViewModel.deleteSession(session)
-                        }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
+                } label: {
+                    Label("Delete", systemImage: "trash")
                 }
             }
-        } label: {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "folder.fill")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.entityProject)
-                Text(name)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-                Spacer()
-                Text("\(sessions.count)")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(.vertical, theme.spacingXS)
         }
-        .tint(theme.textSecondary)
     }
 
     // MARK: - Loading & Empty States
@@ -276,7 +282,7 @@ struct SidebarView: View {
     private var bottomActions: some View {
         Button {
             HapticManager.impact(.medium)
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
             onSessionSelected(newSession)
             isSidebarOpen = false
         } label: {
@@ -328,9 +334,16 @@ struct SidebarView: View {
 
     // MARK: - Helpers
 
+    private func isSessionActive(_ session: ChatSession) -> Bool {
+        if case .chat(let activeSession) = activeScreen {
+            return activeSession.id == session.id
+        }
+        return false
+    }
+
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {
-        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.fleet, .fleet):
+        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.hosts, .hosts), (.themes, .themes):
             return true
         case (.chat, .chat):
             return true

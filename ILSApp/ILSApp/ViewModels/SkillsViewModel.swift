@@ -9,9 +9,12 @@ class SkillsViewModel {
     var isLoading = false
     var error: Error?
     var searchText = ""
+    var selectedScope: String = "all"
     var gitHubResults: [GitHubSearchResult] = []
     var isSearchingGitHub = false
     var gitHubSearchText = ""
+    /// Track skills currently being toggled (enable/disable)
+    var togglingSkills: Set<UUID> = []
 
     /// Update GitHub search text and trigger debounced search.
     /// Call this instead of assigning `gitHubSearchText` directly.
@@ -29,7 +32,7 @@ class SkillsViewModel {
             return
         }
         searchTask = Task {
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            try? await Task.sleep(for: .milliseconds(300))
             if !Task.isCancelled {
                 await searchGitHub(query: gitHubSearchText)
             }
@@ -37,11 +40,15 @@ class SkillsViewModel {
     }
 
     private var client: APIClient?
-    private var searchTask: Task<Void, Never>?
+    nonisolated(unsafe) private var searchTask: Task<Void, Never>?
     /// Precomputed lowercase search strings keyed by skill index, rebuilt when skills change
     private var searchCache: [(skill: Skill, searchText: String)] = []
 
     init() {}
+
+    deinit {
+        searchTask?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client
@@ -54,6 +61,16 @@ class SkillsViewModel {
         return searchCache
             .filter { $0.searchText.contains(query) }
             .map(\.skill)
+    }
+
+    /// Count of active skills in current dataset
+    var activeCount: Int {
+        skills.filter(\.isActive).count
+    }
+
+    /// Count of inactive skills in current dataset
+    var inactiveCount: Int {
+        skills.filter { !$0.isActive }.count
     }
 
     /// Rebuild the lowercase search cache when skills array changes
@@ -80,17 +97,30 @@ class SkillsViewModel {
     }
 
     /// Load skills from backend
-    /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
-    func loadSkills(refresh: Bool = false) async {
+    /// - Parameters:
+    ///   - refresh: If true, bypasses server cache to rescan ~/.claude directory
+    ///   - scope: Filter by source scope (local, plugin, github, builtin). Nil or "all" returns all.
+    func loadSkills(refresh: Bool = false, scope: String? = nil) async {
         guard let client else { return }
         isLoading = true
         error = nil
 
         do {
-            let path = refresh ? "/skills?refresh=true" : "/skills"
+            var path = "/skills"
+            var params: [String] = []
+            if refresh { params.append("refresh=true") }
+            if let scope, !scope.isEmpty, scope != "all" {
+                params.append("scope=\(scope)")
+            }
+            if !params.isEmpty { path += "?" + params.joined(separator: "&") }
+
             let response: APIResponse<ListResponse<Skill>> = try await client.get(path)
             if let data = response.data {
-                skills = data.items
+                // Sort: active first, then alphabetical by name
+                skills = data.items.sorted { lhs, rhs in
+                    if lhs.isActive != rhs.isActive { return lhs.isActive }
+                    return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+                }
                 rebuildSearchCache()
             }
         } catch {
@@ -164,15 +194,18 @@ class SkillsViewModel {
 
     func toggleSkillActive(_ skill: Skill) async {
         guard let client else { return }
+        togglingSkills.insert(skill.id)
         do {
             let endpoint = skill.isActive ? "/skills/\(skill.name)/disable" : "/skills/\(skill.name)/enable"
             let _: APIResponse<Skill> = try await client.post(endpoint, body: EmptyBody())
-            // Reload to get updated state
-            await loadSkills(refresh: true)
+            // Reload to get updated state with current scope
+            let scope = selectedScope == "all" ? nil : selectedScope
+            await loadSkills(refresh: true, scope: scope)
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to toggle skill '\(skill.name)': \(error.localizedDescription)", category: "skills")
         }
+        togglingSkills.remove(skill.id)
     }
 
     func searchGitHub(query: String) async {
@@ -188,7 +221,13 @@ class SkillsViewModel {
                 gitHubResults = data.items
             }
         } catch {
-            self.error = error
+            if case .unauthorized = error as? APIError {
+                self.error = NSError(domain: "ILSApp", code: 401, userInfo: [
+                    NSLocalizedDescriptionKey: "GitHub token not configured on backend. Set GITHUB_TOKEN environment variable to enable search."
+                ])
+            } else {
+                self.error = error
+            }
             AppLogger.shared.error("GitHub search failed: \(error.localizedDescription)", category: "skills")
         }
         isSearchingGitHub = false

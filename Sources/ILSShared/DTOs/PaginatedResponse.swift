@@ -1,7 +1,7 @@
 import Foundation
 
 /// Paginated response wrapper for list endpoints.
-public struct PaginatedResponse<T: Codable>: Codable where T: Sendable {
+public struct PaginatedResponse<T: Codable>: Codable, Sendable where T: Sendable {
     public let items: [T]
     public let total: Int
     public let hasMore: Bool

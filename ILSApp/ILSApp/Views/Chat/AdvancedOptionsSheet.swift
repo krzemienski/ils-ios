@@ -5,7 +5,7 @@ import ILSShared
 struct ChatOptionsConfig {
     var systemPrompt: String = ""
     var appendSystemPrompt: String = ""
-    var model: String = "sonnet"
+    var model: String = AppConstants.defaultModel
     var permissionMode: PermissionMode = .default
     var maxTurns: Int = 1
     var maxBudgetUSD: Double? = nil
@@ -22,7 +22,7 @@ struct ChatOptionsConfig {
     /// Whether any non-default options have been set
     var hasCustomOptions: Bool {
         !systemPrompt.isEmpty || !appendSystemPrompt.isEmpty ||
-        model != "sonnet" || permissionMode != .default ||
+        model != AppConstants.defaultModel || permissionMode != .default ||
         maxTurns != 1 || maxBudgetUSD != nil ||
         !allowedTools.isEmpty || !disallowedTools.isEmpty ||
         continueConversation || noSessionPersistence ||
@@ -34,7 +34,7 @@ struct ChatOptionsConfig {
     func toChatOptions() -> ChatOptions? {
         guard hasCustomOptions else { return nil }
         return ChatOptions(
-            model: model != "sonnet" ? model : nil,
+            model: model != AppConstants.defaultModel ? model : nil,
             permissionMode: permissionMode != .default ? permissionMode : nil,
             maxTurns: maxTurns != 1 ? maxTurns : nil,
             maxBudgetUSD: maxBudgetUSD,
@@ -163,51 +163,109 @@ struct AdvancedOptionsSheet: View {
     }
 
     private var toolControlSection: some View {
-        Section("Tool Control") {
-            TextField("Allowed Tools", text: $config.allowedTools)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Allowed tools text field")
-                .accessibilityHint("e.g. Read,Write,Bash")
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Allowed Tools")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundColor(theme.textSecondary)
+                    InfoTooltipButton(text: "Comma-separated list of tools Claude can use. Supports glob patterns like 'Bash(npm:*)' or 'Read'. Leave empty for default behavior.")
+                }
+                TextField("e.g. Read,Write,Bash", text: $config.allowedTools)
+                    .foregroundColor(theme.textPrimary)
+                    .accessibilityLabel("Allowed tools text field")
+            }
 
-            TextField("Disallowed Tools", text: $config.disallowedTools)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Disallowed tools text field")
-                .accessibilityHint("e.g. Edit,Write")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Disallowed Tools")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundColor(theme.textSecondary)
+                    InfoTooltipButton(text: "Comma-separated list of tools Claude cannot use. Overrides allowed tools. Leave empty for default behavior.")
+                }
+                TextField("e.g. Edit,Write", text: $config.disallowedTools)
+                    .foregroundColor(theme.textPrimary)
+                    .accessibilityLabel("Disallowed tools text field")
+            }
+        } header: {
+            Text("Tool Control")
         }
         .listRowBackground(theme.bgSecondary)
     }
 
     private var advancedSection: some View {
         Section("Advanced") {
-            Toggle("Continue Previous Session", isOn: $config.continueConversation)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Continue previous session toggle")
+            Toggle(isOn: $config.continueConversation) {
+                HStack {
+                    Text("Continue Previous Session")
+                    InfoTooltipButton(text: "Resume the most recent session instead of starting fresh. Preserves conversation context and tool state from the previous interaction.")
+                }
+            }
+            .foregroundColor(theme.textPrimary)
+            .accessibilityLabel("Continue previous session toggle")
 
-            Toggle("Disable Session Persistence", isOn: $config.noSessionPersistence)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Disable session persistence toggle")
+            Toggle(isOn: $config.noSessionPersistence) {
+                HStack {
+                    Text("Disable Session Persistence")
+                    InfoTooltipButton(text: "Session data won't be saved to disk. Useful for ephemeral tasks or sensitive conversations that shouldn't persist.")
+                }
+            }
+            .foregroundColor(theme.textPrimary)
+            .accessibilityLabel("Disable session persistence toggle")
 
-            Toggle("Stream Partial Messages", isOn: $config.includePartialMessages)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Stream partial messages toggle")
+            Toggle(isOn: $config.includePartialMessages) {
+                HStack {
+                    Text("Stream Partial Messages")
+                    InfoTooltipButton(text: "Receive incremental message updates as Claude generates them. Disable for complete messages only (reduces network traffic).")
+                }
+            }
+            .foregroundColor(theme.textPrimary)
+            .accessibilityLabel("Stream partial messages toggle")
 
-            Toggle("Debug Mode", isOn: $config.debug)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Debug mode toggle")
+            Toggle(isOn: $config.debug) {
+                HStack {
+                    Text("Debug Mode")
+                    InfoTooltipButton(text: "Enables verbose logging of API calls, tool executions, and internal state. Useful for troubleshooting but produces significant output.")
+                }
+            }
+            .foregroundColor(theme.textPrimary)
+            .accessibilityLabel("Debug mode toggle")
 
-            TextField("Agent", text: $config.agent)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Agent identifier text field")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Agent")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundColor(theme.textSecondary)
+                    InfoTooltipButton(text: "Specify a custom agent identifier to route the session to a specialized agent configuration. Leave empty for the default Claude agent.")
+                }
+                TextField("Agent identifier", text: $config.agent)
+                    .foregroundColor(theme.textPrimary)
+                    .accessibilityLabel("Agent identifier text field")
+            }
 
-            TextField("Beta Flags", text: $config.betas)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Beta flags text field")
-                .accessibilityHint("Comma-separated")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Beta Flags")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundColor(theme.textSecondary)
+                    InfoTooltipButton(text: "Comma-separated list of experimental feature flags to enable. These control access to beta capabilities that may change without notice.")
+                }
+                TextField("e.g. interleaved-thinking", text: $config.betas)
+                    .foregroundColor(theme.textPrimary)
+                    .accessibilityLabel("Beta flags text field")
+            }
 
-            TextField("Input Format", text: $config.inputFormat)
-                .foregroundColor(theme.textPrimary)
-                .accessibilityLabel("Input format text field")
-                .accessibilityHint("e.g. stream-json")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Input Format")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundColor(theme.textSecondary)
+                    InfoTooltipButton(text: "Controls the format of input passed to Claude. Options include 'stream-json' for structured streaming or leave empty for default text input.")
+                }
+                TextField("e.g. stream-json", text: $config.inputFormat)
+                    .foregroundColor(theme.textPrimary)
+                    .accessibilityLabel("Input format text field")
+            }
         }
         .listRowBackground(theme.bgSecondary)
     }

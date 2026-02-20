@@ -2,21 +2,13 @@ import Foundation
 import Observation
 import ILSShared
 
-// MARK: - Hashable conformance for MCPServer (needed for NavigationLink)
-extension MCPServer: @retroactive Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-
-    public static func == (lhs: MCPServer, rhs: MCPServer) -> Bool {
-        lhs.id == rhs.id
-    }
-}
+// MCPServer Hashable conformance is declared at the source in ILSShared
 
 @MainActor
 @Observable
 class MCPViewModel {
     var servers: [MCPServer] = []
+    var totalCount: Int = 0
     var isLoading = false
     var error: Error?
     var searchText = ""
@@ -25,7 +17,7 @@ class MCPViewModel {
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
-    private var healthTimer: Task<Void, Never>?
+    nonisolated(unsafe) private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
     var isSelecting = false
@@ -39,6 +31,10 @@ class MCPViewModel {
     private var searchCache: [(server: MCPServer, searchText: String)] = []
 
     init() {}
+
+    deinit {
+        healthTimer?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client
@@ -164,12 +160,12 @@ class MCPViewModel {
 
     // MARK: - Spec 012: Health Monitoring
 
-    func startHealthPolling(interval: TimeInterval = 30) {
+    func startHealthPolling(interval: TimeInterval = 120) {
         stopHealthPolling()
         healthTimer = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.checkHealth()
-                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                try? await Task.sleep(for: .seconds(interval))
             }
         }
     }

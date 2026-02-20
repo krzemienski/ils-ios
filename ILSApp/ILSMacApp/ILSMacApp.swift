@@ -1,6 +1,7 @@
 import SwiftUI
 import ILSShared
-import Combine
+import Observation
+import os
 
 /// Focused value key for the currently selected session
 struct FocusedSessionKey: FocusedValueKey {
@@ -17,9 +18,9 @@ extension FocusedValues {
 @main
 struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var appState = AppState()
-    @StateObject private var themeManager = ThemeManager()
-    @StateObject private var windowManager = WindowManager.shared
+    @State private var appState = AppState()
+    @State private var themeManager = ThemeManager()
+    @State private var windowManager = WindowManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
@@ -36,9 +37,9 @@ struct ILSMacApp: App {
         // Main application window
         WindowGroup {
             MacContentView()
-                .environmentObject(appState)
-                .environmentObject(themeManager)
-                .environmentObject(windowManager)
+                .environment(appState)
+                .environment(themeManager)
+                .environment(windowManager)
                 .environmentObject(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)
                 .preferredColorScheme(computedColorScheme)
@@ -51,7 +52,8 @@ struct ILSMacApp: App {
                     do {
                         try await notificationManager.requestAuthorization()
                     } catch {
-                        print("Failed to request notification permissions: \(error)")
+                        Logger(subsystem: "com.ils.app", category: "ILSMacApp")
+                            .error("Failed to request notification permissions: \(error.localizedDescription)")
                     }
                 }
         }
@@ -68,9 +70,9 @@ struct ILSMacApp: App {
         WindowGroup("Session", for: UUID.self) { $sessionId in
             if let sessionId {
                 SessionWindowView(sessionId: sessionId)
-                    .environmentObject(appState)
-                    .environmentObject(themeManager)
-                    .environmentObject(windowManager)
+                    .environment(appState)
+                    .environment(themeManager)
+                    .environment(windowManager)
                     .environmentObject(notificationManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
@@ -87,53 +89,47 @@ struct ILSMacApp: App {
 
 /// Global application state — thin coordinator delegating to focused managers.
 @MainActor
-class AppState: ObservableObject {
-    @Published var selectedProject: Project?
-    @Published var selectedTab: String = "dashboard"
-    @Published var navigationIntent: ActiveScreen?
-    @Published var lastSessionId: UUID?
-    @Published var isOffline: Bool = false
-    @Published var showOnboarding: Bool = false
+@Observable
+class AppState {
+    var selectedProject: Project?
+    var selectedTab: String = "dashboard"
+    var navigationIntent: ActiveScreen?
+    var browserSegmentIntent: BrowserSegment?
+    var lastSessionId: UUID?
+    var lastSyncDate: Date?
+
+    /// Driven by NetworkMonitor — true when device has no network path.
+    var isOffline: Bool { !networkMonitor.isConnected }
 
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
-
-    private var cancellables = Set<AnyCancellable>()
+    let networkMonitor: NetworkMonitor
 
     // MARK: - Forwarding Properties
+    // With @Observable, SwiftUI automatically tracks through property chains,
+    // so no Combine forwarding is needed.
 
     var isConnected: Bool { connectionManager.isConnected }
     var serverURL: String { connectionManager.serverURL }
     var apiClient: APIClient { connectionManager.apiClient }
     var sseClient: SSEClient { connectionManager.sseClient }
+    var showOnboarding: Bool {
+        get { connectionManager.showOnboarding }
+        set { connectionManager.showOnboarding = newValue }
+    }
 
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
+        self.networkMonitor = NetworkMonitor.shared
 
-        // Forward ConnectionManager changes so SwiftUI views observing AppState update
-        cm.objectWillChange.sink { [weak self] (_: Void) in
-            self?.objectWillChange.send()
-        }.store(in: &cancellables)
-
-        // Sync showOnboarding bidirectionally with removeDuplicates to prevent
-        // infinite recursion (@Published emits on willSet before storage updates,
-        // so property-read guards are unreliable — use stream dedup instead)
-        cm.$showOnboarding.removeDuplicates().sink { [weak self] (value: Bool) in
-            self?.showOnboarding = value
-        }.store(in: &cancellables)
-
-        $showOnboarding.dropFirst().removeDuplicates().sink { [weak cm] (value: Bool) in
-            cm?.showOnboarding = value
-        }.store(in: &cancellables)
-
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func updateServerURL(_ url: String) {
         connectionManager.updateServerURL(url)
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func connectToServer(url: String) async throws {
@@ -143,7 +139,7 @@ class AppState: ObservableObject {
     }
 
     func checkConnection() {
-        pollingManager.checkConnection()
+        Task { await pollingManager.checkConnection() }
     }
 
     func handleScenePhase(_ phase: ScenePhase) {
@@ -153,7 +149,7 @@ class AppState: ObservableObject {
     func updateLastSessionId(_ id: UUID?) {
         lastSessionId = id
         if let id {
-            UserDefaults.standard.set(id.uuidString, forKey: "ils_last_session_id")
+            UserDefaults.standard.set(id.uuidString, forKey: AppConstants.lastSessionIDKey)
         }
     }
 
@@ -176,14 +172,23 @@ class AppState: ObservableObject {
             } else {
                 navigationIntent = .home
             }
-        case "projects", "plugins", "mcp", "skills":
+        case "browser", "projects":
+            navigationIntent = .browser
+        case "skills":
+            browserSegmentIntent = .skills
+            navigationIntent = .browser
+        case "mcp":
+            browserSegmentIntent = .mcp
+            navigationIntent = .browser
+        case "plugins":
+            browserSegmentIntent = .plugins
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
-        case "fleet":
-            navigationIntent = .fleet
+        case "fleet", "hosts":
+            navigationIntent = .hosts
         default:
             break
         }

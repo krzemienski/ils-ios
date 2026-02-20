@@ -14,13 +14,32 @@ struct ShareSheet: UIViewControllerRepresentable {
         }
     }
 
-    /// Share text content as a temporary file.
+    /// Share text content as a file in Caches/TextExports.
     init(text: String, fileName: String) {
         let data = Data(text.utf8)
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        try? data.write(to: tempURL)
-        self.activityItems = [tempURL]
-        self.tempURLs = [tempURL]
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let exportDir = cachesDir.appendingPathComponent("TextExports", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
+        } catch {
+            AppLogger.shared.error("Failed to create export directory: \(error)", category: "export")
+        }
+        var mutableExportDir = exportDir
+        var dirValues = URLResourceValues()
+        dirValues.isExcludedFromBackup = true
+        do {
+            try mutableExportDir.setResourceValues(dirValues)
+        } catch {
+            AppLogger.shared.error("Failed to exclude export dir from backup: \(error)", category: "export")
+        }
+        let fileURL = exportDir.appendingPathComponent(fileName)
+        do {
+            try data.write(to: fileURL)
+        } catch {
+            AppLogger.shared.error("Failed to write export file '\(fileName)': \(error)", category: "export")
+        }
+        self.activityItems = [fileURL]
+        self.tempURLs = [fileURL]
     }
 
     func makeUIViewController(context: Context) -> UIActivityViewController {

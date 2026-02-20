@@ -39,20 +39,73 @@ actor SyncCoordinator {
 
     private static let maxRetries = 3
     private static let maxBackoffSeconds: Double = 30
-    private static let storageKey = "ils_sync_queue"
+    private static let maxQueueSize = 100
+
+    /// File URL for queue persistence (Application Support/ILS/SyncQueue/queue.json)
+    private static let queueFileURL: URL = {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let dir = appSupport.appendingPathComponent("ILS/SyncQueue", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        } catch {
+            AppLogger.shared.error("Failed to create sync queue directory: \(error)", category: "sync")
+        }
+        var mutableDir = dir
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        do {
+            try mutableDir.setResourceValues(values)
+        } catch {
+            AppLogger.shared.warning("Failed to exclude sync queue from backup: \(error)", category: "sync")
+        }
+        return dir.appendingPathComponent("queue.json")
+    }()
 
     private var queue: [QueuedOperation] = []
     private var isDraining = false
+    private var networkObserver: (any NSObjectProtocol)?
 
     private init() {
         queue = Self.loadQueue()
-        observeNetworkChanges()
+    }
+
+    /// Call once after creation to begin observing network availability.
+    func startObserving() {
+        guard networkObserver == nil else { return }
+        let observer = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task {
+                await SyncCoordinator.shared.drainQueue()
+            }
+        }
+        networkObserver = observer
+    }
+
+    deinit {
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Public API
 
     /// Enqueue a failed operation for later retry.
     func enqueue(method: String, endpoint: String, body: Data?) {
+        // Reserve capacity upfront to reduce allocations during high-traffic enqueue bursts
+        if queue.isEmpty {
+            queue.reserveCapacity(16)
+        }
+        // Enforce max queue size to prevent unbounded growth
+        guard queue.count < Self.maxQueueSize else {
+            AppLogger.shared.warning(
+                "Sync queue full (\(Self.maxQueueSize) items), dropping \(method) \(endpoint)",
+                category: "sync"
+            )
+            return
+        }
         let operation = QueuedOperation(
             method: method,
             endpoint: endpoint,
@@ -151,7 +204,7 @@ actor SyncCoordinator {
         do {
             // Build the request directly to avoid MainActor dependency on ConnectionManager.
             // Read the server URL from UserDefaults (same source ConnectionManager uses).
-            let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+            let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
             let apiClient = APIClient(baseURL: baseURL)
             try await apiClient.rawRequest(
                 method: operation.method,
@@ -164,26 +217,12 @@ actor SyncCoordinator {
         }
     }
 
-    // MARK: - Network Observation
-
-    private nonisolated func observeNetworkChanges() {
-        NotificationCenter.default.addObserver(
-            forName: .networkDidBecomeAvailable,
-            object: nil,
-            queue: .main
-        ) { _ in
-            Task {
-                await SyncCoordinator.shared.drainQueue()
-            }
-        }
-    }
-
     // MARK: - Persistence
 
     private func persistQueue() {
         do {
             let data = try JSONEncoder().encode(queue)
-            UserDefaults.standard.set(data, forKey: Self.storageKey)
+            try data.write(to: Self.queueFileURL, options: [.atomic, .completeFileProtection])
         } catch {
             AppLogger.shared.error(
                 "Failed to persist sync queue: \(error.localizedDescription)",
@@ -193,10 +232,11 @@ actor SyncCoordinator {
     }
 
     private static func loadQueue() -> [QueuedOperation] {
-        guard let data = UserDefaults.standard.data(forKey: storageKey) else {
+        guard FileManager.default.fileExists(atPath: queueFileURL.path) else {
             return []
         }
         do {
+            let data = try Data(contentsOf: queueFileURL)
             return try JSONDecoder().decode([QueuedOperation].self, from: data)
         } catch {
             AppLogger.shared.error(

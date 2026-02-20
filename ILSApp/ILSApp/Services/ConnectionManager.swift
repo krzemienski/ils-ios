@@ -10,19 +10,21 @@ class ConnectionManager {
     var serverURL: String = ""
     var showOnboarding: Bool = false
 
-    var apiClient: APIClient
-    var sseClient: SSEClient
+    /// Mutable because `updateServerURL(_:)` recreates clients when the server URL changes.
+    private(set) var apiClient: APIClient
+    /// Mutable because `updateServerURL(_:)` recreates clients when the server URL changes.
+    private(set) var sseClient: SSEClient
 
     private(set) var isInitialized = false
 
     init() {
         // Try to load full URL first (supports https:// Cloudflare URLs)
         let url: String
-        if let savedURL = UserDefaults.standard.string(forKey: "serverURL"), !savedURL.isEmpty {
+        if let savedURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey), !savedURL.isEmpty {
             url = savedURL
         } else {
-            let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
-            let port = UserDefaults.standard.integer(forKey: "serverPort")
+            let host = UserDefaults.standard.string(forKey: AppConstants.serverHostKey) ?? "localhost"
+            let port = UserDefaults.standard.integer(forKey: AppConstants.serverPortKey)
             let actualPort = port > 0 ? port : 9999
             url = "http://\(host):\(actualPort)"
         }
@@ -36,7 +38,7 @@ class ConnectionManager {
     /// Update the server URL, persist to UserDefaults, recreate clients.
     func updateServerURL(_ url: String) {
         serverURL = url
-        UserDefaults.standard.set(url, forKey: "serverURL")
+        UserDefaults.standard.set(url, forKey: AppConstants.serverURLKey)
         apiClient = APIClient(baseURL: url)
         sseClient = SSEClient(baseURL: url)
     }
@@ -49,13 +51,13 @@ class ConnectionManager {
 
         updateServerURL(cleanURL)
         isConnected = true
-        UserDefaults.standard.set(true, forKey: "hasConnectedBefore")
+        UserDefaults.standard.set(true, forKey: AppConstants.hasConnectedBeforeKey)
         showOnboarding = false
     }
 
     /// Show onboarding sheet if user has never successfully connected
     func showOnboardingIfNeeded() {
-        let hasConnectedBefore = UserDefaults.standard.bool(forKey: "hasConnectedBefore")
+        let hasConnectedBefore = UserDefaults.standard.bool(forKey: AppConstants.hasConnectedBeforeKey)
         if !hasConnectedBefore && !showOnboarding {
             showOnboarding = true
         }

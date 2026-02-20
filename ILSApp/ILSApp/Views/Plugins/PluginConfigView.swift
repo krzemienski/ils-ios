@@ -271,7 +271,7 @@ struct PluginConfigView: View {
 
     private func badgeLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -285,7 +285,7 @@ struct PluginConfigView: View {
                 .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
                 .frame(width: 6, height: 6)
             Text(plugin.isEnabled ? "Active" : "Disabled")
-                .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
         }
     }

@@ -9,7 +9,7 @@ struct NewSessionView: View {
     @State private var projectsViewModel = ProjectsViewModel()
     @State private var sessionName = ""
     @State private var selectedProject: Project?
-    @State private var selectedModel = "sonnet"
+    @State private var selectedModel = AppConstants.defaultModel
     @State private var permissionMode = "default"
     @State private var isCreating = false
     @State private var systemPrompt = ""
@@ -167,6 +167,13 @@ struct NewSessionView: View {
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            HStack {
+                Spacer()
+                Text("\(systemPrompt.count) characters")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
         }
     }
 

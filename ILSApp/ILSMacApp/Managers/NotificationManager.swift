@@ -2,10 +2,12 @@ import SwiftUI
 import AppKit
 import UserNotifications
 import ILSShared
+import os
 
 /// Manages native macOS notifications for message updates
 @MainActor
 class NotificationManager: NSObject, ObservableObject {
+    private let logger = Logger(subsystem: "com.ils.app", category: "NotificationManager")
     /// Whether notification permissions have been granted
     @Published private(set) var isAuthorized: Bool = false
 
@@ -17,6 +19,9 @@ class NotificationManager: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+        // Intentional: UNUserNotificationCenter.delegate is weak, and NotificationManager
+        // is a singleton (static let shared) — so the delegate reference is always valid
+        // for the lifetime of the app. No retain cycle risk.
         center.delegate = self
         checkAuthorizationStatus()
     }
@@ -80,7 +85,7 @@ class NotificationManager: NSObject, ObservableObject {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to post notification: \(error)")
+            logger.error("Failed to post notification: \(error.localizedDescription)")
         }
     }
 
@@ -119,7 +124,7 @@ class NotificationManager: NSObject, ObservableObject {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to post streaming complete notification: \(error)")
+            logger.error("Failed to post streaming complete notification: \(error.localizedDescription)")
         }
     }
 
@@ -166,18 +171,17 @@ extension NotificationManager: @preconcurrency UNUserNotificationCenterDelegate 
     ) {
         let userInfo = response.notification.request.content.userInfo
 
-        // Extract session ID and open the session
-        if let sessionIdString = userInfo["sessionId"] as? String,
-           let sessionId = UUID(uuidString: sessionIdString) {
-            // Post notification to open session
-            // This will be handled by MacContentView or SessionsViewModel
-            NotificationCenter.default.post(
-                name: NSNotification.Name("OpenSessionFromNotification"),
-                object: sessionId
-            )
-
-            // Bring app to front
-            NSApplication.shared.activate(ignoringOtherApps: true)
+        // UNUserNotificationCenterDelegate callbacks may arrive on a background thread.
+        // Wrap AppKit/UI calls in DispatchQueue.main.async to guarantee main thread execution.
+        DispatchQueue.main.async {
+            if let sessionIdString = userInfo["sessionId"] as? String,
+               let sessionId = UUID(uuidString: sessionIdString) {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("OpenSessionFromNotification"),
+                    object: sessionId
+                )
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
         }
 
         completionHandler()

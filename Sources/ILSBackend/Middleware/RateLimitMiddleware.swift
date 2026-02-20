@@ -30,7 +30,7 @@ actor RateLimitStorage {
         var record = records[key] ?? RequestRecord(timestamps: [])
 
         // Remove timestamps outside the window
-        record.timestamps = record.timestamps.filter { $0 > windowStart }
+        record.timestamps.removeAll(where: { $0 <= windowStart })
 
         let currentCount = record.timestamps.count
 
@@ -52,12 +52,10 @@ actor RateLimitStorage {
 
     private func cleanupExpiredEntries(before cutoff: Date) {
         var keysToRemove: [String] = []
-        for (key, record) in records {
-            let validTimestamps = record.timestamps.filter { $0 > cutoff }
-            if validTimestamps.isEmpty {
+        for (key, _) in records {
+            records[key]?.timestamps.removeAll(where: { $0 <= cutoff })
+            if records[key]?.timestamps.isEmpty == true {
                 keysToRemove.append(key)
-            } else {
-                records[key] = RequestRecord(timestamps: validTimestamps)
             }
         }
         for key in keysToRemove {

@@ -11,11 +11,9 @@ struct UserMessageCard: View {
 
     var body: some View {
         HStack {
-            #if os(iOS)
-            Spacer(minLength: UIScreen.main.bounds.width * 0.2)
-            #else
-            Spacer(minLength: NSScreen.main?.frame.width ?? 800 * 0.2)
-            #endif
+            // Fixed minimum ensures ~20% leading space on all devices
+            // without using deprecated UIScreen.main (breaks iPad Split View)
+            Spacer(minLength: 60)
 
             VStack(alignment: .trailing, spacing: 4) {
                 // Message text
@@ -28,12 +26,12 @@ struct UserMessageCard: View {
                 // Inline metadata: "You" label + timestamp
                 HStack(spacing: 6) {
                     Text("You")
-                        .font(.system(size: 10, weight: .semibold, design: theme.fontDesign).leading(.tight))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.accent)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     if let timestamp = message.timestamp {
                         Text(formattedTimestamp(timestamp))
-                            .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
                             .foregroundStyle(theme.textTertiary)
                             .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     }

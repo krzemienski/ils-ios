@@ -1,22 +1,24 @@
 import Foundation
+import Observation
 import ILSShared
 
 /// WebSocket client for live system metrics streaming.
 /// Falls back to REST polling if WebSocket fails 3 times.
 @MainActor
-final class MetricsWebSocketClient: ObservableObject {
-    @Published var latestMetrics: SystemMetricsResponse?
-    @Published var isConnected: Bool = false
+@Observable
+final class MetricsWebSocketClient {
+    var latestMetrics: SystemMetricsResponse?
+    var isConnected: Bool = false
 
     /// Sliding window of recent data points for charts (max 60).
-    @Published var cpuHistory: [MetricDataPoint] = []
-    @Published var memoryHistory: [MetricDataPoint] = []
-    @Published var diskHistory: [MetricDataPoint] = []
-    @Published var networkInHistory: [MetricDataPoint] = []
-    @Published var networkOutHistory: [MetricDataPoint] = []
+    var cpuHistory: [MetricDataPoint] = []
+    var memoryHistory: [MetricDataPoint] = []
+    var diskHistory: [MetricDataPoint] = []
+    var networkInHistory: [MetricDataPoint] = []
+    var networkOutHistory: [MetricDataPoint] = []
 
     let baseURL: String
-    private var webSocketTask: URLSessionWebSocketTask?
+    nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private let decoder: JSONDecoder
 
@@ -25,30 +27,35 @@ final class MetricsWebSocketClient: ObservableObject {
     private let maxWSFailures: Int = 3
     private let maxHistorySize: Int = 60
 
-    private var reconnectTask: Task<Void, Never>?
-    private var pollingTask: Task<Void, Never>?
-    private var receiveTask: Task<Void, Never>?
-    private var useFallbackPolling: Bool = false
+    nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
+    nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
+    nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
+    /// Whether the client has fallen back to REST polling after WebSocket failures.
+    private(set) var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
 
-    init(baseURL: String = "http://localhost:9999") {
+    init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
-        self.session = URLSession(configuration: .default)
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.allowsConstrainedNetworkAccess = false
+        self.session = URLSession(configuration: config)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
     }
 
     deinit {
         reconnectTask?.cancel()
-        pollingTask?.cancel()
         receiveTask?.cancel()
+        pollingTask?.cancel()
         webSocketTask?.cancel(with: .goingAway, reason: nil)
     }
 
     // MARK: - Public API
 
     func connect() {
+        guard !baseURL.isEmpty else { return }
         guard webSocketTask == nil, pollingTask == nil else { return }
 
         // Reset fallback after recovery window (10 minutes) to retry WebSocket
@@ -76,6 +83,12 @@ final class MetricsWebSocketClient: ObservableObject {
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
+
+        // Reset failure tracking so next connect() starts fresh
+        wsFailureCount = 0
+        useFallbackPolling = false
+        lastWSResetTime = nil
+        reconnectAttempts = 0
     }
 
     // MARK: - WebSocket
@@ -92,7 +105,7 @@ final class MetricsWebSocketClient: ObservableObject {
         webSocketTask = session.webSocketTask(with: url)
         webSocketTask?.resume()
 
-        isConnected = true
+        // Don't set isConnected here — wait for first successful data receive
         reconnectAttempts = 0
 
         receiveTask = Task { [weak self] in
@@ -127,9 +140,16 @@ final class MetricsWebSocketClient: ObservableObject {
 
     private func handleMetricsData(_ data: Data) throws {
         let metrics = try decoder.decode(SystemMetricsResponse.self, from: data)
+        processMetrics(metrics)
+    }
+
+    /// Shared metrics processing — accepts the already-decoded struct to avoid
+    /// unnecessary encode/decode roundtrips from the REST polling path.
+    private func processMetrics(_ metrics: SystemMetricsResponse) {
         let now = Date()
 
         latestMetrics = metrics
+        if !isConnected { isConnected = true }
 
         appendDataPoint(to: &cpuHistory, value: metrics.cpu, at: now)
         appendDataPoint(to: &memoryHistory, value: metrics.memory.percentage, at: now)
@@ -167,7 +187,7 @@ final class MetricsWebSocketClient: ObservableObject {
         let delay = min(Double(1 << reconnectAttempts), 30.0) // 1s, 2s, 4s, ... max 30s
 
         reconnectTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
             self?.connectWebSocket()
         }
@@ -181,7 +201,7 @@ final class MetricsWebSocketClient: ObservableObject {
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
+                try? await Task.sleep(for: .seconds(30))
             }
         }
     }
@@ -195,7 +215,11 @@ final class MetricsWebSocketClient: ObservableObject {
                 isConnected = false
                 return
             }
-            try handleMetricsData(data)
+            // REST endpoint returns APIResponse envelope; unwrap before handling
+            let apiResponse = try decoder.decode(APIResponse<SystemMetricsResponse>.self, from: data)
+            if let metricsData = apiResponse.data {
+                processMetrics(metricsData)
+            }
             isConnected = true
         } catch {
             isConnected = false

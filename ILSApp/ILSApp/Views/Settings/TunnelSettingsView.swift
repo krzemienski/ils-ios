@@ -517,7 +517,11 @@ struct TunnelSettingsView: View {
 
         // Persist custom domain settings — token goes to Keychain, others to UserDefaults
         let defaults = UserDefaults.standard
-        try? await KeychainService.shared.saveCredential(key: "cfToken", value: cfToken)
+        do {
+            try await KeychainService.shared.saveCredential(key: "cfToken", value: cfToken)
+        } catch {
+            AppLogger.shared.error("Failed to save tunnel token to Keychain: \(error)", category: "tunnel")
+        }
         defaults.set(cfTunnelName, forKey: "cfTunnelName")
         defaults.set(cfDomain, forKey: "cfDomain")
 
@@ -552,8 +556,12 @@ struct TunnelSettingsView: View {
                 await MainActor.run { cfToken = token }
             } else if let legacyToken = defaults.string(forKey: "cfToken"), !legacyToken.isEmpty {
                 // Migrate legacy token from UserDefaults to Keychain
-                try? await KeychainService.shared.saveCredential(key: "cfToken", value: legacyToken)
-                defaults.removeObject(forKey: "cfToken")
+                do {
+                    try await KeychainService.shared.saveCredential(key: "cfToken", value: legacyToken)
+                    defaults.removeObject(forKey: "cfToken")
+                } catch {
+                    AppLogger.shared.warning("Failed to migrate tunnel token to Keychain: \(error)", category: "tunnel")
+                }
                 await MainActor.run { cfToken = legacyToken }
             }
         }

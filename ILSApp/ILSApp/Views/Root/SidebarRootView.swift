@@ -10,7 +10,10 @@ enum ActiveScreen: Hashable {
     case settings
     case browser
     case teams
-    case fleet
+    case teamWorkflow(String)
+    case teamDashboard(String)
+    case teamMetrics(String)
+    case hosts
     case themes
 
     /// String key for @SceneStorage persistence (excludes associated values).
@@ -22,7 +25,10 @@ enum ActiveScreen: Hashable {
         case .settings: return "settings"
         case .browser: return "browser"
         case .teams: return "teams"
-        case .fleet: return "fleet"
+        case .teamWorkflow: return "teamWorkflow"
+        case .teamDashboard: return "teamDashboard"
+        case .teamMetrics: return "teamMetrics"
+        case .hosts: return "hosts"
         case .themes: return "themes"
         }
     }
@@ -35,7 +41,7 @@ enum ActiveScreen: Hashable {
         case "settings": return .settings
         case "browser": return .browser
         case "teams": return .teams
-        case "fleet": return .fleet
+        case "fleet", "hosts": return .hosts
         case "themes": return .themes
         default: return nil  // "chat" requires session — handled separately
         }
@@ -50,16 +56,23 @@ struct SidebarRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    @SceneStorage("activeScreenKey") private var activeScreenKey: String = "home"
+    // AUDIT: temporarily "browser" for screenshot capture (revert after audit)
+    @SceneStorage("activeScreenKey") private var activeScreenKey: String = "browser"
     @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
     @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
 
     private var isRegularWidth: Bool {
-        horizontalSizeClass == .regular
+        #if os(iOS)
+        // iPhone Pro Max reports .regular in landscape — force iPhone layout for phones
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return false
+        }
+        #endif
+        return horizontalSizeClass == .regular
     }
 
     private var sidebarWidth: CGFloat { 280 }
@@ -75,7 +88,7 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
             activeScreen = screen
-            if navigationPath.count > 0 {
+            if !navigationPath.isEmpty {
                 navigationPath.removeLast(navigationPath.count)
             }
             appState.navigationIntent = nil
@@ -84,7 +97,7 @@ struct SidebarRootView: View {
             }
         }
         .onChange(of: activeScreen) { _, newScreen in
-            if navigationPath.count > 0 {
+            if !navigationPath.isEmpty {
                 navigationPath.removeLast(navigationPath.count)
             }
             activeScreenKey = newScreen.storageKey
@@ -94,14 +107,27 @@ struct SidebarRootView: View {
             }
         }
         .onAppear {
+            // Restore the active screen from storage
             if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
                 activeScreen = restored
+            } else if activeScreenKey == "chat", !lastChatSessionId.isEmpty {
+                // Restore chat session if we have a valid session ID
+                if let sessionUUID = UUID(uuidString: lastChatSessionId) {
+                    let restoredSession = ChatSession(
+                        id: sessionUUID,
+                        name: nil,
+                        model: AppConstants.defaultModel
+                    )
+                    activeScreen = .chat(restoredSession)
+                }
             }
         }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)
+                .presentationDetents([.large])
+                .interactiveDismissDisabled()
         }
         // DEBUG: Auto-navigate for screenshot capture (revert after)
         // .task { ... } — REVERTED after validation
@@ -123,6 +149,7 @@ struct SidebarRootView: View {
         } detail: {
             mainContent(showHamburger: false)
         }
+        .navigationSplitViewStyle(.balanced)
     }
 
     // MARK: - iPhone Layout (Overlay Sidebar)
@@ -166,8 +193,14 @@ struct SidebarRootView: View {
                     browserScreen
                 case .teams:
                     teamsScreen
-                case .fleet:
-                    fleetScreen
+                case .teamWorkflow(let teamName):
+                    WorkflowBuilderView(teamName: teamName, apiClient: appState.apiClient)
+                case .teamDashboard(let teamName):
+                    TeamDashboardView(teamName: teamName, apiClient: appState.apiClient)
+                case .teamMetrics(let teamName):
+                    TeamMetricsView(teamName: teamName, apiClient: appState.apiClient)
+                case .hosts:
+                    hostsScreen
                 case .themes:
                     themesScreen
                 }
@@ -182,7 +215,6 @@ struct SidebarRootView: View {
             #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(theme.bgPrimary, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
             .toolbar {
                 if showHamburger {
@@ -278,7 +310,7 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var fleetScreen: some View {
+    private var hostsScreen: some View {
         FleetManagementView()
     }
 
@@ -314,6 +346,9 @@ struct SidebarRootView: View {
     private var edgeSwipeGesture: some Gesture {
         DragGesture(minimumDistance: 20)
             .onChanged { value in
+                // Yield to NavigationStack back swipe when a view is pushed
+                guard navigationPath.isEmpty else { return }
+
                 let startX = value.startLocation.x
 
                 if isSidebarOpen {
@@ -327,6 +362,8 @@ struct SidebarRootView: View {
                 }
             }
             .onEnded { value in
+                guard navigationPath.isEmpty else { return }
+
                 let threshold: CGFloat = sidebarWidth * 0.3
 
                 if isSidebarOpen {

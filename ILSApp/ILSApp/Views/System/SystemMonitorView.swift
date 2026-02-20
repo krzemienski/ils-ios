@@ -114,6 +114,7 @@ struct SystemMonitorView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("System")
+        .inlineNavigationBarTitle()
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -126,14 +127,11 @@ struct SystemMonitorView: View {
             #endif
         }
         .onAppear {
-            if viewModel.metricsClient.baseURL != appState.serverURL {
-                viewModel.disconnect()
-                viewModel.metricsClient = MetricsWebSocketClient(baseURL: appState.serverURL)
-            }
+            viewModel.updateBaseURL(appState.serverURL)
             viewModel.connect()
-            Task {
-                await viewModel.loadProcesses()
-            }
+        }
+        .task {
+            await viewModel.loadProcesses()
         }
         .onDisappear {
             viewModel.disconnect()
@@ -187,23 +185,41 @@ struct SystemMonitorView: View {
             } else {
                 Chart {
                     ForEach(inData) { point in
-                        LineMark(
-                            x: .value("Time", point.timestamp),
-                            y: .value("In", point.value),
-                            series: .value("Direction", "In")
-                        )
-                        .foregroundStyle(theme.entitySystem)
-                        .lineStyle(StrokeStyle(lineWidth: 2))
+                        if inData.count < 2 {
+                            PointMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("In", point.value)
+                            )
+                            .foregroundStyle(theme.entitySystem)
+                            .symbolSize(30)
+                        } else {
+                            LineMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("In", point.value),
+                                series: .value("Direction", "In")
+                            )
+                            .foregroundStyle(theme.entitySystem)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
+                        }
                     }
 
                     ForEach(outData) { point in
-                        LineMark(
-                            x: .value("Time", point.timestamp),
-                            y: .value("Out", point.value),
-                            series: .value("Direction", "Out")
-                        )
-                        .foregroundStyle(theme.accent)
-                        .lineStyle(StrokeStyle(lineWidth: 2))
+                        if outData.count < 2 {
+                            PointMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("Out", point.value)
+                            )
+                            .foregroundStyle(theme.accent)
+                            .symbolSize(30)
+                        } else {
+                            LineMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("Out", point.value),
+                                series: .value("Direction", "Out")
+                            )
+                            .foregroundStyle(theme.accent)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
+                        }
                     }
                 }
                 .chartXAxis(.hidden)
@@ -241,9 +257,15 @@ struct SystemMonitorView: View {
                 )
                 .onAppear { livePulse = true }
 
-            Text(viewModel.isConnected ? "Live" : "Offline")
-                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                .foregroundStyle(viewModel.isConnected ? theme.success : theme.error)
+            if viewModel.isPollingFallback && viewModel.isConnected {
+                Text("Polling")
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.warning)
+            } else {
+                Text(viewModel.isConnected ? "Live" : "Offline")
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(viewModel.isConnected ? theme.success : theme.error)
+            }
         }
     }
 

@@ -152,40 +152,41 @@ struct PermissionRequestModal: View {
 
     // MARK: - Helpers
 
+    private static let toolIconMap: [String: String] = [
+        "bash": "terminal",
+        "write": "doc.text",
+        "edit": "pencil",
+        "read": "eye",
+        "glob": "magnifyingglass",
+        "grep": "magnifyingglass"
+    ]
+
+    private static let toolDescriptionMap: [String: String] = [
+        "bash": "Execute a shell command",
+        "write": "Write to a file",
+        "edit": "Edit a file",
+        "read": "Read a file",
+        "glob": "Search for files",
+        "grep": "Search file contents"
+    ]
+
+    /// All keywords sorted longest-first so "write" doesn't shadow "overwrite" etc.
+    private static let toolKeywords: [String] = toolIconMap.keys.sorted { $0.count > $1.count }
+
     private var toolIcon: String {
-        switch request.toolName.lowercased() {
-        case let name where name.contains("bash"):
-            return "terminal"
-        case let name where name.contains("write"):
-            return "doc.text"
-        case let name where name.contains("edit"):
-            return "pencil"
-        case let name where name.contains("read"):
-            return "eye"
-        case let name where name.contains("glob"), let name where name.contains("grep"):
-            return "magnifyingglass"
-        default:
-            return "wrench"
+        let name = request.toolName.lowercased()
+        for keyword in Self.toolKeywords {
+            if name.contains(keyword), let icon = Self.toolIconMap[keyword] { return icon }
         }
+        return "wrench"
     }
 
     private var toolDescription: String {
-        switch request.toolName.lowercased() {
-        case let name where name.contains("bash"):
-            return "Execute a shell command"
-        case let name where name.contains("write"):
-            return "Write to a file"
-        case let name where name.contains("edit"):
-            return "Edit a file"
-        case let name where name.contains("read"):
-            return "Read a file"
-        case let name where name.contains("glob"):
-            return "Search for files"
-        case let name where name.contains("grep"):
-            return "Search file contents"
-        default:
-            return "Use a tool"
+        let name = request.toolName.lowercased()
+        for keyword in Self.toolKeywords {
+            if name.contains(keyword), let desc = Self.toolDescriptionMap[keyword] { return desc }
         }
+        return "Use a tool"
     }
 
     private func formatToolInput() -> String {

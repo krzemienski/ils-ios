@@ -6,7 +6,8 @@ struct SettingsView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var viewModel = SettingsViewModel()
     @State private var serverHost: String = "localhost"
-    @State private var serverPort: String = "8080"
+    @State private var serverPort: String = "9999"
+    @State private var saveDebounceTask: Task<Void, Never>?
     @State private var backendAPIKey: String = ""
     @State private var showAPIKeySaved = false
 
@@ -23,9 +24,9 @@ struct SettingsView: View {
 
     // Available options
     private let availableModels = [
-        "claude-sonnet-4-20250514",
-        "claude-opus-4-20250514",
-        "claude-haiku-3-5-20241022"
+        "claude-sonnet-4-5",
+        "claude-opus-4-6",
+        "claude-haiku-4-5"
     ]
 
     private let availableColorSchemes = ["system", "light", "dark"]
@@ -44,7 +45,7 @@ struct SettingsView: View {
 
                 HStack {
                     Text("Port")
-                    TextField("8080", text: $serverPort)
+                    TextField("9999", text: $serverPort)
                         .keyboardType(.numberPad)
                 }
 
@@ -53,10 +54,10 @@ struct SettingsView: View {
                     Spacer()
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(appState.isConnected ? Color.green : Color.red)
+                            .fill(appState.isConnected ? theme.success : theme.error)
                             .frame(width: 8, height: 8)
                         Text(appState.isConnected ? "Connected" : "Disconnected")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
 
@@ -92,6 +93,7 @@ struct SettingsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "key.fill")
+                            .accessibilityHidden(true)
                         Text(backendAPIKey.isEmpty ? "Clear API Key" : "Save API Key")
                     }
                     .frame(maxWidth: .infinity)
@@ -115,7 +117,7 @@ struct SettingsView: View {
                         ProgressView()
                             .padding(.trailing, 8)
                         Text("Loading configuration...")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 } else if let config = viewModel.config?.content {
                     // Default Model - Editable
@@ -128,8 +130,13 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Default Model") {
-                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
-                                .foregroundColor(ILSTheme.secondaryText)
+                            HStack(spacing: 4) {
+                                Text(formatModelName(config.model ?? "claude-opus-4-6"))
+                                    .foregroundStyle(theme.textSecondary)
+                                if config.model == nil {
+                                    hostDefaultBadge
+                                }
+                            }
                         }
                     }
 
@@ -143,8 +150,13 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Color Scheme") {
-                            Text((config.theme?.colorScheme ?? "system").capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
+                            HStack(spacing: 4) {
+                                Text((config.theme?.colorScheme ?? "system").capitalized)
+                                    .foregroundStyle(theme.textSecondary)
+                                if config.theme?.colorScheme == nil {
+                                    hostDefaultBadge
+                                }
+                            }
                         }
                     }
 
@@ -152,20 +164,54 @@ struct SettingsView: View {
                     if let channel = config.autoUpdatesChannel {
                         LabeledContent("Updates Channel") {
                             Text(channel.capitalized)
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
 
                     // Always Thinking (read-only)
-                    LabeledContent("Extended Thinking") {
-                        Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.alwaysThinkingEnabled == true ? .green : ILSTheme.secondaryText)
+                    LabeledContent {
+                        HStack(spacing: 4) {
+                            Image(systemName: config.alwaysThinkingEnabled == true ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.alwaysThinkingEnabled == true ? theme.success : theme.textSecondary)
+                                .accessibilityLabel(config.alwaysThinkingEnabled == true ? "Enabled" : "Disabled")
+                            if config.alwaysThinkingEnabled == nil {
+                                hostDefaultBadge
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Extended Thinking")
+                            InfoTooltipButton(text: "Allows Claude to use internal reasoning before responding. Uses additional tokens but improves response quality.")
+                        }
                     }
 
                     // Co-authored by (read-only)
-                    LabeledContent("Include Co-Author") {
-                        Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(config.includeCoAuthoredBy == true ? .green : ILSTheme.secondaryText)
+                    LabeledContent {
+                        HStack(spacing: 4) {
+                            Image(systemName: config.includeCoAuthoredBy == true ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.includeCoAuthoredBy == true ? theme.success : theme.textSecondary)
+                                .accessibilityLabel(config.includeCoAuthoredBy == true ? "Enabled" : "Disabled")
+                            if config.includeCoAuthoredBy == nil {
+                                hostDefaultBadge
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Include Co-Author")
+                            InfoTooltipButton(text: "Adds 'Co-authored-by: Claude' attribution to git commits made during sessions.")
+                        }
+                    }
+
+                    // System Prompt (informational — per-session config)
+                    LabeledContent {
+                        Text("Per-session")
+                            .foregroundStyle(theme.textTertiary)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("System Prompt")
+                            InfoTooltipButton(text: "System prompts are configured per session in the New Session or Advanced Options views. There is no global default.")
+                        }
                     }
 
                     // Save button when editing
@@ -175,6 +221,7 @@ struct SettingsView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "square.and.arrow.down")
+                                    .accessibilityHidden(true)
                                 Text("Save Changes")
                             }
                             .frame(maxWidth: .infinity)
@@ -184,7 +231,7 @@ struct SettingsView: View {
                     }
                 } else {
                     Text("No configuration loaded")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
             } header: {
                 HStack {
@@ -198,7 +245,7 @@ struct SettingsView: View {
                             }
                             isEditing.toggle()
                         }
-                        .font(ILSTheme.captionFont)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .textCase(nil)
                     }
                 }
@@ -214,33 +261,35 @@ struct SettingsView: View {
                     if let apiKeyStatus = config.apiKeyStatus {
                         HStack {
                             Image(systemName: apiKeyStatus.isConfigured ? "checkmark.shield.fill" : "shield.slash")
-                                .foregroundColor(apiKeyStatus.isConfigured ? .green : .orange)
+                                .foregroundColor(apiKeyStatus.isConfigured ? theme.success : theme.warning)
+                                .accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(apiKeyStatus.isConfigured ? "API Key Configured" : "No API Key")
-                                    .font(ILSTheme.bodyFont)
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                 if let maskedKey = apiKeyStatus.maskedKey {
                                     Text("Key: \(maskedKey)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textSecondary)
                                 }
                                 if let source = apiKeyStatus.source {
                                     Text("Source: \(source)")
-                                        .font(ILSTheme.captionFont)
-                                        .foregroundColor(ILSTheme.secondaryText)
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textSecondary)
                                 }
                             }
                         }
                     } else {
                         HStack {
                             Image(systemName: "key.fill")
-                                .foregroundColor(.orange)
+                                .foregroundColor(theme.warning)
+                                .accessibilityHidden(true)
                             Text("API Key status unknown")
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
                         }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
             } header: {
                 Text("API Key")
@@ -252,9 +301,14 @@ struct SettingsView: View {
             Section {
                 if let config = viewModel.config?.content, let permissions = config.permissions {
                     // Default Permission Mode
-                    LabeledContent("Default Mode") {
+                    LabeledContent {
                         Text(permissions.defaultMode?.capitalized ?? "Prompt")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Default Mode")
+                            InfoTooltipButton(text: "Controls how Claude handles tool permissions. 'Allow' auto-approves, 'Deny' blocks, 'Prompt' asks each time.")
+                        }
                     }
 
                     // Allowed Commands
@@ -262,14 +316,25 @@ struct SettingsView: View {
                         DisclosureGroup {
                             ForEach(allowed, id: \.self) { item in
                                 Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
-                            LabeledContent("Allowed", value: "\(allowed.count) rules")
+                            HStack(spacing: 4) {
+                                LabeledContent("Allowed", value: "\(allowed.count) rules")
+                                InfoTooltipButton(text: "Tools and patterns explicitly allowed without prompting. Supports glob patterns like 'Bash(npm:*)' or 'Read'.")
+                            }
                         }
                     } else {
-                        LabeledContent("Allowed", value: "None")
+                        LabeledContent {
+                            Text("None")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Allowed")
+                                InfoTooltipButton(text: "Tools and patterns explicitly allowed without prompting. Supports glob patterns like 'Bash(npm:*)' or 'Read'.")
+                            }
+                        }
                     }
 
                     // Denied Commands
@@ -277,18 +342,29 @@ struct SettingsView: View {
                         DisclosureGroup {
                             ForEach(denied, id: \.self) { item in
                                 Text(item)
-                                    .font(ILSTheme.captionFont)
-                                    .foregroundColor(ILSTheme.secondaryText)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
                             }
                         } label: {
-                            LabeledContent("Denied", value: "\(denied.count) rules")
+                            HStack(spacing: 4) {
+                                LabeledContent("Denied", value: "\(denied.count) rules")
+                                InfoTooltipButton(text: "Tools and patterns explicitly blocked. Claude will not attempt to use denied tools.")
+                            }
                         }
                     } else {
-                        LabeledContent("Denied", value: "None")
+                        LabeledContent {
+                            Text("None")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Denied")
+                                InfoTooltipButton(text: "Tools and patterns explicitly blocked. Claude will not attempt to use denied tools.")
+                            }
+                        }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
             } header: {
                 Text("Permissions")
@@ -297,41 +373,74 @@ struct SettingsView: View {
             // MARK: - Advanced Section
             Section {
                 if let config = viewModel.config?.content {
-                    // Hooks Summary
-                    if let hooks = config.hooks {
-                        let hookCount = countHooks(hooks)
-                        LabeledContent("Hooks Configured", value: "\(hookCount)")
-                    } else {
-                        LabeledContent("Hooks Configured", value: "0")
+                    // Hooks Management
+                    NavigationLink {
+                        HooksManagementView()
+                    } label: {
+                        let hookCount = config.hooks.map { countHooks($0) } ?? 0
+                        LabeledContent {
+                            Text("\(hookCount) configured")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Hooks")
+                                InfoTooltipButton(text: "Shell commands that run at lifecycle events (session start, prompt submit, tool use). Useful for automation and custom workflows.")
+                            }
+                        }
                     }
 
                     // Enabled Plugins Count
                     if let plugins = config.enabledPlugins {
                         let enabledCount = plugins.filter { $0.value }.count
-                        LabeledContent("Enabled Plugins", value: "\(enabledCount)")
+                        LabeledContent {
+                            Text("\(enabledCount)")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Enabled Plugins")
+                                InfoTooltipButton(text: "MCP server plugins that extend Claude's capabilities. Enable or disable via terminal: claude config set plugins.<name> true/false.")
+                            }
+                        }
                     } else {
                         LabeledContent("Enabled Plugins", value: "0")
                     }
 
                     // Status Line
                     if let statusLine = config.statusLine {
-                        LabeledContent("Status Line") {
+                        LabeledContent {
                             Text(statusLine.type ?? "disabled")
-                                .foregroundColor(ILSTheme.secondaryText)
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Status Line")
+                                InfoTooltipButton(text: "Custom status display in the terminal. Runs a shell command to generate dynamic content shown during sessions.")
+                            }
                         }
                     }
 
                     // Environment Variables
                     if let env = config.env, !env.isEmpty {
-                        LabeledContent("Environment Vars", value: "\(env.count)")
+                        LabeledContent {
+                            Text("\(env.count)")
+                                .foregroundStyle(theme.textSecondary)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Environment Vars")
+                                InfoTooltipButton(text: "Custom environment variables passed to Claude CLI sessions. Used for API keys, feature flags, and tool configuration.")
+                            }
+                        }
                     }
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .foregroundStyle(theme.textSecondary)
                 }
 
                 // Theme Management
-                NavigationLink("Manage Themes") {
+                NavigationLink("Browse Themes") {
+                    ThemeMarketplaceView()
+                }
+
+                NavigationLink("Custom Themes") {
                     ThemesListView()
                 }
 
@@ -372,14 +481,19 @@ struct SettingsView: View {
                         Text("Claude Code Documentation")
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .foregroundColor(ILSTheme.secondaryText)
+                            .foregroundStyle(theme.textSecondary)
+                            .accessibilityHidden(true)
                     }
                 }
+                .accessibilityLabel("Claude Code Documentation")
+                .accessibilityHint("Opens in browser")
             }
         }
         .scrollContentBackground(.hidden)
         .background(theme.bgPrimary)
+        .foregroundStyle(theme.textPrimary)
         .navigationTitle("Settings")
+        .inlineNavigationBarTitle()
         .screenshotProtected()
         .refreshable {
             await viewModel.loadAll()
@@ -409,11 +523,11 @@ struct SettingsView: View {
         } message: {
             Text("Your configuration has been updated successfully.")
         }
-        .onChange(of: serverHost) { _, newValue in
-            saveServerSettings()
+        .onChange(of: serverHost) { _, _ in
+            debounceSaveServerSettings()
         }
-        .onChange(of: serverPort) { _, newValue in
-            saveServerSettings()
+        .onChange(of: serverPort) { _, _ in
+            debounceSaveServerSettings()
         }
     }
 
@@ -421,20 +535,29 @@ struct SettingsView: View {
 
     private func loadServerSettings() {
         // Load from UserDefaults
-        if let savedHost = UserDefaults.standard.string(forKey: "ils_server_host") {
+        if let savedHost = UserDefaults.standard.string(forKey: AppConstants.settingsServerHostKey) {
             serverHost = savedHost
         }
-        if let savedPort = UserDefaults.standard.string(forKey: "ils_server_port") {
+        if let savedPort = UserDefaults.standard.string(forKey: AppConstants.settingsServerPortKey) {
             serverPort = savedPort
         }
         // Also parse from appState if available
         parseServerURL()
     }
 
+    private func debounceSaveServerSettings() {
+        saveDebounceTask?.cancel()
+        saveDebounceTask = Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            saveServerSettings()
+        }
+    }
+
     private func saveServerSettings() {
         // Save to UserDefaults
-        UserDefaults.standard.set(serverHost, forKey: "ils_server_host")
-        UserDefaults.standard.set(serverPort, forKey: "ils_server_port")
+        UserDefaults.standard.set(serverHost, forKey: AppConstants.settingsServerHostKey)
+        UserDefaults.standard.set(serverPort, forKey: AppConstants.settingsServerPortKey)
 
         // Update appState serverURL
         let url = "http://\(serverHost):\(serverPort)"
@@ -485,6 +608,18 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Reusable Components
+
+    private var hostDefaultBadge: some View {
+        Text("Host Default")
+            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+            .foregroundStyle(theme.accent)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(theme.accent.opacity(0.15))
+            .clipShape(Capsule())
+    }
+
     // MARK: - Helper Methods
 
     private func parseServerURL() {
@@ -523,7 +658,7 @@ struct SettingsView: View {
     private func resetEditedValues() {
         // Reset edited values to current config values
         if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-sonnet-4-20250514"
+            editedModel = config.model ?? "claude-opus-4-6"
             editedColorScheme = config.theme?.colorScheme ?? "system"
         }
     }

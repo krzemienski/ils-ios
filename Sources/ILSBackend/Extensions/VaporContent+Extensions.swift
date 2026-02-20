@@ -43,7 +43,7 @@ extension APIResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension APIResponse: Content where T: Content {}
-extension APIResponse: @unchecked Sendable where T: Sendable {}
+// Sendable conformance is now declared at the source in ILSShared
 
 // ListResponse conformances
 extension ListResponse: AsyncResponseEncodable where T: Content {
@@ -84,7 +84,7 @@ extension ListResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension ListResponse: Content where T: Content {}
-extension ListResponse: @unchecked Sendable where T: Sendable {}
+// Sendable conformance is now declared at the source in ILSShared
 
 // MARK: - Request Types
 extension CreateProjectRequest: Content {}
@@ -143,11 +143,12 @@ extension PaginatedResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension PaginatedResponse: Content where T: Content {}
-extension PaginatedResponse: @unchecked Sendable where T: Sendable {}
+// Sendable conformance is now declared at the source in ILSShared
 
 // MARK: - Response Types
 extension RenameSessionRequest: Content {}
 extension BulkDeleteSessionsRequest: Content {}
+extension BulkDeleteProjectsRequest: Content {}
 extension MessageSearchResult: Content {}
 extension ChatExport: Content {}
 extension ChatExportSession: Content {}
@@ -160,6 +161,12 @@ extension MCPStat: Content {}
 extension PluginStat: Content {}
 extension DeletedResponse: Content {}
 extension AcknowledgedResponse: Content {}
+
+// MARK: - Fleet Types
+extension FleetHost: Content {}
+extension FleetListResponse: Content {}
+extension FleetHealthResponse: Content {}
+extension RegisterFleetHostRequest: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
 extension ProjectGroupInfo: Content {}

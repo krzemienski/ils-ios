@@ -7,19 +7,19 @@ import AppKit
 struct SessionWindowView: View {
     let sessionId: UUID
 
-    @EnvironmentObject private var appState: AppState
-    @EnvironmentObject private var themeManager: ThemeManager
-    @EnvironmentObject private var windowManager: WindowManager
+    @Environment(AppState.self) private var appState
+    @Environment(ThemeManager.self) private var themeManager
+    @Environment(WindowManager.self) private var windowManager
     @Environment(\.theme) private var theme
 
-    @StateObject private var viewModel: ChatViewModel
+    @State private var viewModel: ChatViewModel
     @State private var session: ChatSession?
     @State private var isLoading = true
     @State private var errorMessage: String?
 
     init(sessionId: UUID) {
         self.sessionId = sessionId
-        _viewModel = StateObject(wrappedValue: ChatViewModel())
+        _viewModel = State(wrappedValue: ChatViewModel())
     }
 
     var body: some View {
@@ -55,8 +55,8 @@ struct SessionWindowView: View {
         .frame(minWidth: 600, minHeight: 400)
         .focusedSceneValue(\.selectedSession, session)
         .background(WindowAccessor(sessionId: sessionId, windowManager: windowManager))
-        .onAppear {
-            loadSession()
+        .task {
+            await loadSessionAsync()
         }
         .onDisappear {
             windowManager.unregisterWindow(for: sessionId)
@@ -65,27 +65,20 @@ struct SessionWindowView: View {
 
     // MARK: - Helper Methods
 
-    private func loadSession() {
-        Task {
-            do {
-                let response: APIResponse<ListResponse<ChatSession>> = try await appState.apiClient.get("/sessions")
-                if let foundSession = response.data?.items.first(where: { $0.id == sessionId }) {
-                    await MainActor.run {
-                        self.session = foundSession
-                        self.isLoading = false
-                    }
-                } else {
-                    await MainActor.run {
-                        self.errorMessage = "Session not found"
-                        self.isLoading = false
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
-                }
+    private func loadSessionAsync() async {
+        do {
+            // Use single-session endpoint instead of fetching all 22K+ sessions (O(n) -> O(1))
+            let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString.lowercased())")
+            if let foundSession = response.data {
+                self.session = foundSession
+                self.isLoading = false
+            } else {
+                self.errorMessage = "Session not found"
+                self.isLoading = false
             }
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isLoading = false
         }
     }
 
@@ -117,7 +110,8 @@ struct WindowAccessor: NSViewRepresentable {
 
 #Preview {
     SessionWindowView(sessionId: UUID())
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
-        .environmentObject(WindowManager.shared)
+        .environment(AppState())
+        .environment(ThemeManager())
+        .environment(WindowManager.shared)
+        .environmentObject(NotificationManager.shared)
 }

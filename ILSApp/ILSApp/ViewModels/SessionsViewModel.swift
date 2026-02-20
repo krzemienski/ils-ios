@@ -2,6 +2,24 @@ import Foundation
 import Observation
 import ILSShared
 
+/// Time-based grouping categories for session list display.
+enum SessionTimeGroup: String, CaseIterable {
+    case today
+    case yesterday
+    case thisWeek
+    case earlier
+
+    /// Human-readable display name for use as section headers.
+    var displayName: String {
+        switch self {
+        case .today: return "Today"
+        case .yesterday: return "Yesterday"
+        case .thisWeek: return "This Week"
+        case .earlier: return "Earlier"
+        }
+    }
+}
+
 /// View model for session list and management.
 ///
 /// Manages both ILS-managed sessions (from database) and external Claude Code sessions
@@ -63,6 +81,13 @@ class SessionsViewModel {
     /// The session count used to invalidate grouped cache
     private var cachedGroupedSessionCount: Int = -1
 
+    /// Cached time-grouped sessions, rebuilt when filteredSessions changes
+    private var cachedGroupedByTime: [(key: SessionTimeGroup, value: [ChatSession])] = []
+    /// The search text used to build the cached time-grouped sessions
+    private var cachedGroupedByTimeSearchText: String = ""
+    /// The session count used to invalidate time-grouped cache
+    private var cachedGroupedByTimeSessionCount: Int = -1
+
     init() {}
 
     /// Configure the view model with an API client.
@@ -90,8 +115,9 @@ class SessionsViewModel {
             ].joined(separator: " ")
             return (session, text)
         }
-        // Invalidate grouped cache
+        // Invalidate grouped caches
         cachedGroupedSessionCount = -1
+        cachedGroupedByTimeSessionCount = -1
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
@@ -112,6 +138,40 @@ class SessionsViewModel {
         cachedGroupedSessions = sorted
         cachedGroupedSearchText = searchText
         cachedGroupedSessionCount = sessions.count
+        return sorted
+    }
+
+    /// Filtered sessions grouped by time period, sorted by recency.
+    /// Groups are ordered: today, yesterday, thisWeek, earlier.
+    /// Sessions within each group are sorted by lastActiveAt descending.
+    /// Result is cached and only rebuilt when sessions or searchText change.
+    var groupedByTime: [(key: SessionTimeGroup, value: [ChatSession])] {
+        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeSessionCount == sessions.count {
+            return cachedGroupedByTime
+        }
+        let calendar = Calendar.current
+        let filtered = filteredSessions
+        let grouped = Dictionary(grouping: filtered) { session -> SessionTimeGroup in
+            let date = session.lastActiveAt
+            if calendar.isDateInToday(date) {
+                return .today
+            } else if calendar.isDateInYesterday(date) {
+                return .yesterday
+            } else if calendar.isDate(date, equalTo: .now, toGranularity: .weekOfYear) {
+                return .thisWeek
+            } else {
+                return .earlier
+            }
+        }
+        let orderedCases: [SessionTimeGroup] = [.today, .yesterday, .thisWeek, .earlier]
+        let sorted: [(key: SessionTimeGroup, value: [ChatSession])] = orderedCases.compactMap { group in
+            guard let sessions = grouped[group], !sessions.isEmpty else { return nil }
+            let sortedSessions = sessions.sorted { $0.lastActiveAt > $1.lastActiveAt }
+            return (key: group, value: sortedSessions)
+        }
+        cachedGroupedByTime = sorted
+        cachedGroupedByTimeSearchText = searchText
+        cachedGroupedByTimeSessionCount = sessions.count
         return sorted
     }
 
@@ -230,7 +290,7 @@ class SessionsViewModel {
             if currentPage == 1 {
                 sessions = newItems
                 // Update cache with fresh data in background
-                Task.detached {
+                Task {
                     await CacheService.shared.cacheSessions(newItems)
                 }
             } else {

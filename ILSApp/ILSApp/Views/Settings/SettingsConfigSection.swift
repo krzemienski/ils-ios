@@ -7,7 +7,7 @@ struct SettingsConfigSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     var viewModel: SettingsViewModel
     @Binding var colorSchemePreference: String
-    @AppStorage("enableAgentTeams") private var enableAgentTeams = false
+    @AppStorage("enableAgentTeams") private var enableAgentTeams = true
 
     let availableModels: [String]
     let availableColorSchemes: [String]
@@ -39,7 +39,7 @@ struct SettingsConfigSection: View {
                     }
                 } else if let config = viewModel.config?.content {
                     Picker("Default Model", selection: Binding(
-                        get: { config.model ?? "claude-sonnet-4-20250514" },
+                        get: { config.model ?? AppConstants.defaultModel },
                         set: { newModel in
                             Task {
                                 _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")

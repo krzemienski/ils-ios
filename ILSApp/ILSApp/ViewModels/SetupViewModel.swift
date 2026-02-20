@@ -75,7 +75,15 @@ final class SetupViewModel {
             // Download script to a temp file first, then execute it.
             // Piping (curl | bash -s) causes curl inside the script to fail with
             // "client returned ERROR on write" because bash -s inherits the pipe's stdin.
-            let uniqueTmpPath = "/tmp/ils-bootstrap-\(UUID().uuidString).sh"
+            // Use Application Support so we don't write to /tmp (sandbox-friendly).
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            let bootstrapDir = appSupport.appendingPathComponent("ILS/SetupScripts", isDirectory: true)
+            do {
+                try FileManager.default.createDirectory(at: bootstrapDir, withIntermediateDirectories: true)
+            } catch {
+                AppLogger.shared.error("Failed to create bootstrap directory: \(error)", category: "setup")
+            }
+            let uniqueTmpPath = bootstrapDir.appendingPathComponent("ils-bootstrap-\(UUID().uuidString).sh").path
             let command = "curl -fsSL '\(bootstrapScriptURL)' -o \(uniqueTmpPath) && bash \(uniqueTmpPath) && rm -f \(uniqueTmpPath)"
 
             let urlHolder = TunnelURLHolder()

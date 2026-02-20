@@ -211,9 +211,10 @@ struct SSHSetupView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 1) {
+                            // Log lines are append-only; offset is stable as an identifier
                             ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { _, line in
                                 Text(line)
-                                    .font(.system(size: 11, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(logLineColor(line))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -225,7 +226,7 @@ struct SSHSetupView: View {
                         .padding(theme.spacingSM)
                     }
                     .defaultScrollAnchor(.bottom)
-                    .frame(height: 300)
+                    .frame(minHeight: 150, maxHeight: 400)
                     .background(Color.black.opacity(0.85))
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     .onChange(of: viewModel.logLines.count) {
@@ -238,19 +239,19 @@ struct SSHSetupView: View {
 
     private func logLineColor(_ line: String) -> Color {
         if line.hasPrefix("ILS_STEP:") && line.contains(":success:") {
-            return .green
+            return theme.success
         } else if line.hasPrefix("ILS_STEP:") && line.contains(":failure:") {
-            return .red
+            return theme.error
         } else if line.hasPrefix("ILS_STEP:") && line.contains(":in_progress:") {
-            return .cyan
+            return theme.info
         } else if line.hasPrefix("ILS_ERROR:") {
-            return .red
+            return theme.error
         } else if line.hasPrefix("ILS_TUNNEL_URL:") || line.hasPrefix("ILS_COMPLETE") {
-            return .green
+            return theme.success
         } else if line.hasPrefix("[ILS]") {
-            return .yellow
+            return theme.warning
         }
-        return .white.opacity(0.8)
+        return theme.textSecondary
     }
 
     // MARK: - Connecting Overlay
@@ -351,7 +352,12 @@ struct SSHSetupView: View {
 
         // Load custom domain settings if configured
         let defaults = UserDefaults.standard
-        let cfToken = try? await KeychainService.shared.getCredential(key: "cfToken")
+        var cfToken: String?
+        do {
+            cfToken = try await KeychainService.shared.getCredential(key: "cfToken")
+        } catch {
+            AppLogger.shared.warning("Could not retrieve CF token from keychain: \(error)", category: "setup")
+        }
         let cfTunnelName = defaults.string(forKey: "cfTunnelName")
         let cfDomain = defaults.string(forKey: "cfDomain")
 
@@ -385,7 +391,7 @@ struct SSHSetupView: View {
 
         // Retry up to 5 times with 3s delay — tunnel needs time to propagate through Cloudflare
         let maxRetries = 5
-        let retryDelay: UInt64 = 3_000_000_000 // 3 seconds
+        let retryDelay: Duration = .seconds(3)
 
         for attempt in 1...maxRetries {
             do {
@@ -397,7 +403,7 @@ struct SSHSetupView: View {
             } catch {
                 if attempt < maxRetries {
                     // Wait before retrying
-                    try? await Task.sleep(nanoseconds: retryDelay)
+                    try? await Task.sleep(for: retryDelay)
                 } else {
                     // All retries exhausted
                     isConnecting = false

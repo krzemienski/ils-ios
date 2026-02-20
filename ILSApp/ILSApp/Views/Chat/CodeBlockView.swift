@@ -7,6 +7,7 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
+    @State private var highlightedCode: AttributedString = AttributedString()
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -38,7 +39,7 @@ struct CodeBlockView: View {
                 // Language badge
                 if let language = language {
                     Text(language.uppercased())
-                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                        .font(.system(.caption2, design: theme.fontDesign, weight: .medium))
                         .foregroundColor(theme.accent)
                         .padding(.horizontal, theme.spacingSM)
                         .padding(.vertical, theme.spacingXS)
@@ -62,7 +63,7 @@ struct CodeBlockView: View {
                         }
                     }) {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 13, weight: .semibold, design: theme.fontDesign))
+                            .font(.system(.caption, design: theme.fontDesign, weight: .semibold))
                             .foregroundColor(theme.textSecondary)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -70,6 +71,7 @@ struct CodeBlockView: View {
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("code-block-expand-button")
                     .accessibilityLabel(isExpanded ? "Collapse code" : "Expand code")
+                    .accessibilityHint(isExpanded ? "Hides code lines beyond the first \(collapsedLineLimit)" : "Shows all \(codeLines.count) lines of code")
                 }
 
                 // Copy button
@@ -90,7 +92,7 @@ struct CodeBlockView: View {
                     }
                 }) {
                     Image(systemName: showCopyConfirmation ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 15, weight: .medium, design: theme.fontDesign))
+                        .font(.system(.subheadline, design: theme.fontDesign, weight: .medium))
                         .foregroundColor(showCopyConfirmation ? theme.success : theme.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -98,13 +100,14 @@ struct CodeBlockView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("code-block-copy-button")
                 .accessibilityLabel("Copy code")
+                .accessibilityHint("Copies the code block content to the clipboard")
 
                 // Share button
                 Button(action: {
                     showShareSheet = true
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 15, weight: .medium, design: theme.fontDesign))
+                        .font(.system(.subheadline, design: theme.fontDesign, weight: .medium))
                         .foregroundColor(theme.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -112,6 +115,7 @@ struct CodeBlockView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("code-block-share-button")
                 .accessibilityLabel("Share code")
+                .accessibilityHint("Opens the share sheet to share the code block")
             }
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS)
@@ -151,15 +155,13 @@ struct CodeBlockView: View {
                         .frame(width: 1)
                         .accessibilityHidden(true)
 
-                    // Code text with syntax highlighting
+                    // Code text with syntax highlighting (cached via @State)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(SyntaxHighlighter.highlight(
-                            code: displayedLines.joined(separator: "\n"),
-                            language: language
-                        ))
-                        .textSelection(.enabled)
-                        .padding(.leading, theme.spacingSM)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(highlightedCode)
+                            .lineLimit(shouldBeCollapsible && !isExpanded ? collapsedLineLimit : nil)
+                            .textSelection(.enabled)
+                            .padding(.leading, theme.spacingSM)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .accessibilityIdentifier("code-block-content")
                     .accessibilityLabel(accessibilityCodeLabel)
@@ -174,8 +176,12 @@ struct CodeBlockView: View {
                 .strokeBorder(theme.textTertiary.opacity(0.2), lineWidth: 1)
         )
         .accessibilityIdentifier("code-block-container")
+        .task(id: "\(code)|\(language ?? "")") {
+            highlightedCode = SyntaxHighlighter.highlight(code: code, language: language)
+        }
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [code])
+                .presentationDetents([.medium, .large])
         }
     }
 

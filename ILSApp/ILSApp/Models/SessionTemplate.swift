@@ -16,7 +16,7 @@ struct SessionTemplate: Codable, Identifiable {
         id: UUID = UUID(),
         name: String,
         description: String = "",
-        model: String = "sonnet",
+        model: String = AppConstants.defaultModel,
         permissionMode: String = "default",
         systemPrompt: String = "",
         maxBudget: String = "",
