@@ -6,6 +6,7 @@ struct AssistantCard: View {
     let message: ChatMessage
     var onRetry: ((ChatMessage) -> Void)?
     var onDelete: ((ChatMessage) -> Void)?
+    var expandAll: Binding<Bool?>?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
