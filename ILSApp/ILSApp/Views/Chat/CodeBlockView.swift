@@ -1,5 +1,13 @@
 import SwiftUI
 
+// Preference key for measuring HStack content width inside the horizontal ScrollView
+private struct HorizontalContentWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 /// View that displays a code block with syntax highlighting, line numbers, and actions
 struct CodeBlockView: View {
     let code: String
@@ -7,6 +15,8 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
+    @State private var codeContentWidth: CGFloat = 0
+    @State private var scrollContainerWidth: CGFloat = 0
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -29,6 +39,11 @@ struct CodeBlockView: View {
             return Array(codeLines.prefix(collapsedLineLimit))
         }
         return codeLines
+    }
+
+    /// Whether the code content exceeds the visible scroll container width
+    private var hasHorizontalOverflow: Bool {
+        codeContentWidth > scrollContainerWidth + 1 && scrollContainerWidth > 0
     }
 
     var body: some View {
@@ -120,7 +135,7 @@ struct CodeBlockView: View {
             Divider()
 
             // Code content with line numbers
-            ScrollView(.horizontal, showsIndicators: true) {
+            ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 0) {
                     // Line numbers
                     VStack(alignment: .trailing, spacing: 0) {
@@ -165,8 +180,34 @@ struct CodeBlockView: View {
                     .accessibilityLabel(accessibilityCodeLabel)
                 }
                 .padding(.vertical, theme.spacingSM)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: HorizontalContentWidthKey.self,
+                            value: geo.size.width
+                        )
+                    }
+                )
             }
+            .onPreferenceChange(HorizontalContentWidthKey.self) { codeContentWidth = $0 }
             .background(theme.bgTertiary)
+            .overlay(
+                GeometryReader { geo in
+                    Color.clear.onAppear { scrollContainerWidth = geo.size.width }
+                }
+            )
+            .overlay(alignment: .trailing) {
+                if hasHorizontalOverflow {
+                    LinearGradient(
+                        colors: [theme.bgTertiary.opacity(0), theme.bgTertiary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: 40)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                }
+            }
         }
         .cornerRadius(theme.cornerRadius)
         .overlay(
