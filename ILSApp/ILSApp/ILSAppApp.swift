@@ -2,7 +2,6 @@ import SwiftUI
 import Observation
 import ILSShared
 import TipKit
-import UserNotifications
 
 @main
 struct ILSAppApp: App {
@@ -11,7 +10,6 @@ struct ILSAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var computedColorScheme: ColorScheme? {
         switch colorSchemePreference {
@@ -51,18 +49,9 @@ struct ILSAppApp: App {
                 // Initialize local cache database
                 await CacheService.shared.initialize()
 
-                // Start observing network changes for retry queue
-                await SyncCoordinator.shared.startObserving()
-                // Setup notification handling
-                await appState.setupNotifications()
-
                 try? await Task.sleep(for: .seconds(2.2))
-                if reduceMotion {
+                withAnimation(.easeOut(duration: 0.5)) {
                     showLaunchScreen = false
-                } else {
-                    withAnimation(.easeOut(duration: 0.5)) {
-                        showLaunchScreen = false
-                    }
                 }
             }
         }
@@ -79,7 +68,6 @@ class AppState {
     var selectedProject: Project?
     var selectedTab: String = "dashboard"
     var navigationIntent: ActiveScreen?
-    var browserSegmentIntent: BrowserSegment?
     var lastSessionId: UUID?
     var lastSyncDate: Date?
 
@@ -109,34 +97,12 @@ class AppState {
         self.pollingManager = PollingManager(connectionManager: cm)
         self.networkMonitor = NetworkMonitor.shared
 
-        Task { await pollingManager.checkConnection() }
-    }
-
-    // MARK: - Notification Handling
-
-    func setupNotifications() async {
-        let center = UNUserNotificationCenter.current()
-        center.delegate = NotificationDelegate.shared
-
-        // Request authorization
-        await requestNotificationPermissions()
-    }
-
-    func requestNotificationPermissions() async {
-        let center = UNUserNotificationCenter.current()
-        do {
-            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-            if granted {
-                // Permissions granted
-            }
-        } catch {
-            // Handle error silently - user may have denied permissions
-        }
+        pollingManager.checkConnection()
     }
 
     func updateServerURL(_ url: String) {
         connectionManager.updateServerURL(url)
-        Task { await pollingManager.checkConnection() }
+        pollingManager.checkConnection()
     }
 
     func connectToServer(url: String) async throws {
@@ -146,7 +112,7 @@ class AppState {
     }
 
     func checkConnection() {
-        Task { await pollingManager.checkConnection() }
+        pollingManager.checkConnection()
     }
 
     func handleScenePhase(_ phase: ScenePhase) {
@@ -179,43 +145,14 @@ class AppState {
             } else {
                 navigationIntent = .home
             }
-        case "browser", "projects":
-            navigationIntent = .browser
-        case "skills":
-            browserSegmentIntent = .skills
-            navigationIntent = .browser
-        case "mcp":
-            browserSegmentIntent = .mcp
-            navigationIntent = .browser
-        case "plugins":
-            browserSegmentIntent = .plugins
+        case "browser", "projects", "plugins", "mcp", "skills":
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
-        case "teams":
-            // Parse path: ils://teams/test-team/workflow or ils://teams/test-team/dashboard or ils://teams/test-team/metrics
-            let pathComponents = url.path.split(separator: "/").map(String.init)
-            if pathComponents.count >= 2 {
-                let teamName = pathComponents[0]
-                let action = pathComponents[1]
-                if action == "workflow" {
-                    navigationIntent = .teamWorkflow(teamName)
-                } else if action == "dashboard" {
-                    navigationIntent = .teamDashboard(teamName)
-                } else if action == "metrics" {
-                    navigationIntent = .teamMetrics(teamName)
-                } else {
-                    navigationIntent = .teams
-                }
-            } else {
-                navigationIntent = .teams
-            }
-        case "fleet", "hosts":
-            navigationIntent = .hosts
-        case "themes":
-            navigationIntent = .themes
+        case "fleet":
+            navigationIntent = .fleet
         default:
             break
         }
@@ -238,46 +175,5 @@ class AppState {
                 navigationIntent = .chat(session)
             }
         }
-    }
-}
-
-// MARK: - Notification Delegate
-
-class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    static let shared = NotificationDelegate()
-
-    private override init() {
-        super.init()
-    }
-
-    // Handle notification when app is in foreground
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        // Show banner and play sound even when app is in foreground
-        completionHandler([.banner, .sound, .badge])
-    }
-
-    // Handle notification tap
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        let userInfo = response.notification.request.content.userInfo
-
-        // Extract deep link URL from notification
-        if let urlString = userInfo["url"] as? String,
-           let url = URL(string: urlString) {
-            // Post notification to open URL via deep link handler
-            DispatchQueue.main.async {
-                // Trigger deep link handling
-                UIApplication.shared.open(url)
-            }
-        }
-
-        completionHandler()
     }
 }

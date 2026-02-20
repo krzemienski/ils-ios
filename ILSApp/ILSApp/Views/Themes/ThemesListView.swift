@@ -38,7 +38,6 @@ struct ThemesListView: View {
             }
         }
         .navigationTitle("Custom Themes")
-        .inlineNavigationBarTitle()
         .refreshable {
             await viewModel.loadThemes()
         }
@@ -56,16 +55,10 @@ struct ThemesListView: View {
             }
         }
         .sheet(isPresented: $showingNewTheme) {
-            ThemeEditorView()
-                .environment(viewModel)
-                .environment(\.colorScheme, .dark) // Intentional: theme editor previews best in dark mode
-                .presentationDetents([.large])
+            Text("New Theme Editor - Coming Soon")
         }
         .sheet(item: $selectedTheme) { theme in
-            ThemeEditorView(theme: theme)
-                .environment(viewModel)
-                .environment(\.colorScheme, .dark) // Intentional: theme editor previews best in dark mode
-                .presentationDetents([.large])
+            Text("Theme Editor for \(theme.name) - Coming Soon")
         }
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {
@@ -119,13 +112,12 @@ struct ThemesListView: View {
             }
             defer { fileURL.stopAccessingSecurityScopedResource() }
 
-            // Move file I/O and decoding off the main thread
-            let importedTheme: CustomTheme = try await Task.detached(priority: .userInitiated) {
-                let jsonData = try Data(contentsOf: fileURL)
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                return try decoder.decode(CustomTheme.self, from: jsonData)
-            }.value
+            let jsonData = try Data(contentsOf: fileURL)
+
+            // Decode theme
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let importedTheme = try decoder.decode(CustomTheme.self, from: jsonData)
 
             // Create theme via API
             let created = await viewModel.createTheme(

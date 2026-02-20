@@ -23,11 +23,6 @@ struct BrowserView: View {
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""
     @State private var mcpScope: String = "all"
-    @State private var skillsScope: String = "all"
-    @State private var showGitHubSearch = false
-    @State private var showPluginsGitHubSearch = false
-    @State private var showMarketplaceSearch = false
-    @State private var showingAddMCPServer = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,23 +60,6 @@ struct BrowserView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
-        .toolbar {
-            if segment == .mcp {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddMCPServer = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundStyle(theme.accent)
-                    }
-                    .accessibilityLabel("Add MCP Server")
-                }
-            }
-        }
-        .sheet(isPresented: $showingAddMCPServer) {
-            AddMCPServerView(mcpVM: mcpVM)
-                .presentationDetents([.large])
-        }
         .task {
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
@@ -91,17 +69,6 @@ struct BrowserView: View {
         .onChange(of: appState.isConnected) { _, connected in
             if connected {
                 Task { await loadAll() }
-            }
-        }
-        .onChange(of: appState.browserSegmentIntent) { _, intent in
-            guard let intent else { return }
-            segment = intent
-            appState.browserSegmentIntent = nil
-        }
-        .onAppear {
-            if let intent = appState.browserSegmentIntent {
-                segment = intent
-                appState.browserSegmentIntent = nil
             }
         }
     }
@@ -142,7 +109,6 @@ struct BrowserView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(seg.rawValue), \(countFor(seg)) items")
-                .accessibilityAddTraits(segment == seg ? .isSelected : [])
             }
         }
         .padding(4)
@@ -224,17 +190,6 @@ struct BrowserView: View {
                 }
             }
 
-            // Description header
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                Text("MCP servers provide Claude with access to external data sources, APIs, and tools via the Model Context Protocol.")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(theme.spacingSM)
-
             let items = mcpVM.filteredServers
             if mcpVM.isLoading && items.isEmpty {
                 loadingRows
@@ -251,7 +206,7 @@ struct BrowserView: View {
                     } label: {
                         browserRow(
                             name: server.name,
-                            subtitle: server.command,
+                            subtitle: "\(server.command) \(server.args.joined(separator: " "))",
                             status: server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown"),
                             statusColor: server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning),
                             entityColor: theme.entityMCP,
@@ -268,208 +223,31 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var skillsContent: some View {
-        VStack(spacing: theme.spacingSM) {
-            // Scope filter — all 4 backend scopes
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: theme.spacingSM) {
-                    ForEach(["all", "local", "plugin", "github", "builtin"], id: \.self) { scope in
-                        Button {
-                            skillsScope = scope
-                        } label: {
-                            Text(scope == "all" ? "All" : scope.capitalized)
-                                .font(.system(size: theme.fontCaption, weight: skillsScope == scope ? .semibold : .regular, design: theme.fontDesign))
-                                .foregroundStyle(skillsScope == scope ? theme.textPrimary : theme.textSecondary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(
-                                    skillsScope == scope
-                                        ? theme.entitySkill.opacity(0.2)
-                                        : theme.bgSecondary
-                                )
-                                .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("\(scope.capitalized) scope filter")
-                    }
+        let items = skillsVM.filteredSkills
+        if skillsVM.isLoading && items.isEmpty {
+            loadingRows
+        } else if items.isEmpty {
+            emptyState(
+                icon: "sparkles",
+                title: searchText.isEmpty ? "No Skills" : "No Results",
+                subtitle: searchText.isEmpty ? "No skills found" : "Try a different search"
+            )
+        } else {
+            ForEach(items) { skill in
+                NavigationLink {
+                    SkillDetailView(skill: skill)
+                } label: {
+                    browserRow(
+                        name: skill.name,
+                        subtitle: skill.description ?? "No description",
+                        status: skill.isActive ? "Active" : "Inactive",
+                        statusColor: skill.isActive ? theme.success : theme.textTertiary,
+                        entityColor: theme.entitySkill,
+                        badge: skill.tags.first
+                    )
                 }
+                .buttonStyle(.plain)
             }
-            .onChange(of: skillsScope) { _, newScope in
-                skillsVM.selectedScope = newScope
-                Task {
-                    await skillsVM.loadSkills(scope: newScope == "all" ? nil : newScope)
-                }
-            }
-
-            // Active/Inactive summary bar
-            if !skillsVM.skills.isEmpty {
-                HStack(spacing: theme.spacingMD) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(theme.success)
-                            .frame(width: 6, height: 6)
-                        Text("\(skillsVM.activeCount) active")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                    }
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(theme.textTertiary)
-                            .frame(width: 6, height: 6)
-                        Text("\(skillsVM.inactiveCount) inactive")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
-                    }
-                    Spacer()
-                    Text("\(skillsVM.skills.count) total")
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textSecondary)
-                }
-                .padding(.horizontal, 4)
-            }
-
-            // Description header
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                Text("Skills are prompt templates and workflows that guide Claude's behavior for specific tasks like code review, debugging, or documentation.")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(theme.spacingSM)
-
-            // GitHub search toggle
-            Button {
-                if reduceMotion {
-                    showGitHubSearch.toggle()
-                } else {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showGitHubSearch.toggle()
-                    }
-                }
-            } label: {
-                HStack(spacing: theme.spacingSM) {
-                    Image(systemName: "globe")
-                        .foregroundStyle(theme.entitySkill)
-                    Text("Search GitHub")
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                    Spacer()
-                    Image(systemName: showGitHubSearch ? "chevron.up" : "chevron.down")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-                .padding(theme.spacingMD)
-                .modifier(GlassCard())
-            }
-            .buttonStyle(.plain)
-
-            if showGitHubSearch {
-                gitHubSearchSection
-            }
-
-            // Skills list
-            let items = skillsVM.filteredSkills
-            if skillsVM.isLoading && items.isEmpty {
-                loadingRows
-            } else if items.isEmpty {
-                emptyState(
-                    icon: "sparkles",
-                    title: searchText.isEmpty ? "No Skills" : "No Results",
-                    subtitle: searchText.isEmpty ? "No skills found" : "Try a different search"
-                )
-            } else {
-                ForEach(items) { skill in
-                    NavigationLink {
-                        SkillDetailView(skill: skill, parentViewModel: skillsVM)
-                    } label: {
-                        skillRow(skill: skill)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    // MARK: - Skill Row
-
-    private func skillRow(skill: Skill) -> some View {
-        HStack(spacing: theme.spacingMD) {
-            // Entity dot with source-color coding
-            Circle()
-                .fill(skillSourceColor(skill.source))
-                .frame(width: 10, height: 10)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(skill.name)
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(skill.isActive ? theme.textPrimary : theme.textSecondary)
-                        .lineLimit(1)
-
-                    Spacer()
-
-                    // Toggle active/inactive inline
-                    if skillsVM.togglingSkills.contains(skill.id) {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .scaleEffect(0.7)
-                    } else {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(skill.isActive ? theme.success : theme.textTertiary)
-                                .frame(width: 6, height: 6)
-                            Text(skill.isActive ? "Active" : "Inactive")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(skill.isActive ? theme.success : theme.textTertiary)
-                        }
-                    }
-                }
-
-                Text(skill.description ?? "No description")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-
-                // Source badge + first tag
-                HStack(spacing: theme.spacingSM) {
-                    Text(skill.source.rawValue.capitalized)
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(skillSourceColor(skill.source))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(skillSourceColor(skill.source).opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
-
-                    if let firstTag = skill.tags.first, !firstTag.isEmpty {
-                        Text(firstTag)
-                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(theme.bgTertiary)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-                }
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-        }
-        .padding(theme.spacingMD)
-        .modifier(GlassCard())
-        .opacity(skill.isActive ? 1.0 : 0.7)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(skill.name), \(skill.source.rawValue), \(skill.isActive ? "Active" : "Inactive")")
-    }
-
-    private func skillSourceColor(_ source: SkillSource) -> Color {
-        switch source {
-        case .local: return theme.info
-        case .plugin: return theme.entityPlugin
-        case .builtin: return theme.accent
-        case .github: return theme.warning
         }
     }
 
@@ -478,15 +256,8 @@ struct BrowserView: View {
     @ViewBuilder
     private var pluginsContent: some View {
         VStack(spacing: theme.spacingSM) {
-            // Summary stats bar
-            HStack(spacing: theme.spacingMD) {
-                pluginStatBadge(label: "Installed", count: pluginsVM.plugins.count, color: theme.entityPlugin)
-                pluginStatBadge(label: "Enabled", count: pluginsVM.enabledCount, color: theme.success)
-                pluginStatBadge(label: "Disabled", count: pluginsVM.disabledCount, color: theme.textTertiary)
-            }
-
             // Category filter chips
-            if pluginsVM.pluginCategories.count > 1 {
+            if !pluginsVM.pluginCategories.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: theme.spacingSM) {
                         ForEach(pluginsVM.pluginCategories, id: \.self) { category in
@@ -508,79 +279,9 @@ struct BrowserView: View {
                             .buttonStyle(.plain)
                         }
                     }
+                    .padding(.horizontal, theme.spacingMD)
                 }
             }
-
-            // GitHub search toggle
-            Button {
-                if reduceMotion {
-                    showPluginsGitHubSearch.toggle()
-                } else {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showPluginsGitHubSearch.toggle()
-                    }
-                }
-            } label: {
-                HStack(spacing: theme.spacingSM) {
-                    Image(systemName: "globe")
-                        .foregroundStyle(theme.entityPlugin)
-                    Text("Search GitHub")
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                    Spacer()
-                    Image(systemName: showPluginsGitHubSearch ? "chevron.up" : "chevron.down")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-                .padding(theme.spacingMD)
-                .modifier(GlassCard())
-            }
-            .buttonStyle(.plain)
-
-            if showPluginsGitHubSearch {
-                pluginsGitHubSearchSection
-            }
-
-            // Marketplace search toggle
-            Button {
-                if reduceMotion {
-                    showMarketplaceSearch.toggle()
-                } else {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showMarketplaceSearch.toggle()
-                    }
-                }
-            } label: {
-                HStack(spacing: theme.spacingSM) {
-                    Image(systemName: "globe")
-                        .foregroundStyle(theme.entityPlugin)
-                    Text("Search Marketplace")
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                    Spacer()
-                    Image(systemName: showMarketplaceSearch ? "chevron.up" : "chevron.down")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-                .padding(theme.spacingMD)
-                .modifier(GlassCard())
-            }
-            .buttonStyle(.plain)
-
-            if showMarketplaceSearch {
-                marketplaceSearchSection
-            }
-
-            // Description header
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                Text("Plugins are code extensions that add new tools, agents, and capabilities to Claude Code. Install from GitHub or the marketplace.")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(theme.spacingSM)
 
             let items = pluginsVM.filteredPluginsByCategory
             if pluginsVM.isLoading && items.isEmpty {
@@ -593,447 +294,64 @@ struct BrowserView: View {
                 )
             } else {
                 ForEach(items) { plugin in
-                    NavigationLink {
-                        PluginConfigView(
-                            plugin: plugin,
-                            onToggleEnabled: { p in await pluginsVM.togglePlugin(p) },
-                            onUninstall: { p in await pluginsVM.uninstallPlugin(p) }
-                        )
-                    } label: {
-                        pluginRow(plugin)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
+                    HStack(spacing: theme.spacingMD) {
+                        // Entity dot
+                        Circle()
+                            .fill(theme.entityPlugin)
+                            .frame(width: 10, height: 10)
 
-    // MARK: - Plugin Row
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(plugin.name)
+                                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textPrimary)
+                                    .lineLimit(1)
 
-    private func pluginRow(_ plugin: Plugin) -> some View {
-        HStack(spacing: theme.spacingMD) {
-            // Entity dot
-            Circle()
-                .fill(theme.entityPlugin)
-                .frame(width: 10, height: 10)
+                                Spacer()
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(plugin.name)
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                        .lineLimit(1)
-
-                    Spacer()
-
-                    // Show progress indicator if toggling or installing
-                    if pluginsVM.togglingPlugins.contains(plugin.name) || pluginsVM.installingPlugins.contains(plugin.name) {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .scaleEffect(0.8)
-                    } else {
-                        // Enable/disable toggle button
-                        Button {
-                            Task { await pluginsVM.togglePlugin(plugin) }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
-                                    .frame(width: 6, height: 6)
-                                Text(plugin.isEnabled ? "Enabled" : "Disabled")
-                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                    .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                (plugin.isEnabled ? theme.success : theme.textTertiary).opacity(0.1)
-                            )
-                            .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                Text(plugin.description ?? "No description")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-
-                HStack(spacing: theme.spacingSM) {
-                    if let marketplace = plugin.marketplace, !marketplace.isEmpty {
-                        Text(marketplace)
-                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(theme.bgTertiary)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-
-                    if let version = plugin.version {
-                        Text("v\(version)")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
-                    }
-
-                    if let commands = plugin.commands, !commands.isEmpty {
-                        Text("\(commands.count) cmd\(commands.count == 1 ? "" : "s")")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.entityPlugin.opacity(0.8))
-                    }
-                }
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-        }
-        .padding(theme.spacingMD)
-        .modifier(GlassCard())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
-        .contextMenu {
-            Button {
-                Task { await pluginsVM.togglePlugin(plugin) }
-            } label: {
-                Label(
-                    plugin.isEnabled ? "Disable Plugin" : "Enable Plugin",
-                    systemImage: plugin.isEnabled ? "xmark.circle" : "checkmark.circle"
-                )
-            }
-
-            Button(role: .destructive) {
-                Task { await pluginsVM.uninstallPlugin(plugin) }
-            } label: {
-                Label("Uninstall", systemImage: "trash")
-            }
-        }
-    }
-
-    // MARK: - Plugin Stat Badge
-
-    private func pluginStatBadge(label: String, count: Int, color: Color) -> some View {
-        VStack(spacing: 2) {
-            Text("\(count)")
-                .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
-                .foregroundStyle(color)
-            Text(label)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, theme.spacingSM)
-        .background(color.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-    }
-
-    // MARK: - GitHub Search Section
-
-    @ViewBuilder
-    private var gitHubSearchSection: some View {
-        VStack(spacing: theme.spacingSM) {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                TextField("Search GitHub for skills...", text: Binding(
-                    get: { skillsVM.gitHubSearchText },
-                    set: { skillsVM.updateGitHubSearchText($0) }
-                ))
-                .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-                .autocorrectionDisabled()
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                #endif
-                if !skillsVM.gitHubSearchText.isEmpty {
-                    Button {
-                        skillsVM.updateGitHubSearchText("")
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(theme.textTertiary)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                }
-            }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.vertical, theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            if skillsVM.isSearchingGitHub {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingMD)
-            }
-
-            ForEach(skillsVM.gitHubResults) { result in
-                HStack(spacing: theme.spacingMD) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(result.name)
-                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                            .foregroundStyle(theme.textPrimary)
-                            .lineLimit(1)
-                        if let desc = result.description {
-                            Text(desc)
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textSecondary)
-                                .lineLimit(2)
-                        }
-                        HStack(spacing: theme.spacingSM) {
-                            if result.stars > 0 {
-                                HStack(spacing: 2) {
-                                    Image(systemName: "star.fill")
-                                        .font(.system(size: theme.fontCaption))
-                                        .foregroundStyle(.yellow)
-                                    Text("\(result.stars)")
-                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                        .foregroundStyle(theme.textTertiary)
+                                // Show progress indicator if installing
+                                if pluginsVM.installingPlugins.contains(plugin.name) {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .scaleEffect(0.8)
+                                } else {
+                                    // Status dot + text
+                                    HStack(spacing: 4) {
+                                        Circle()
+                                            .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
+                                            .frame(width: 6, height: 6)
+                                        Text(plugin.isEnabled ? "Enabled" : "Disabled")
+                                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                            .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
+                                    }
                                 }
                             }
-                            Text(result.repository)
+
+                            Text(plugin.description ?? "No description")
                                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textTertiary)
+                                .foregroundStyle(theme.textSecondary)
                                 .lineLimit(1)
-                        }
-                    }
 
-                    Spacer()
-
-                    Button {
-                        Task { _ = await skillsVM.installFromGitHub(result: result) }
-                    } label: {
-                        Text("Install")
-                            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(theme.entitySkill)
-                            .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(theme.spacingMD)
-                .modifier(GlassCard())
-            }
-        }
-    }
-
-    // MARK: - Plugins GitHub Search Section
-
-    @ViewBuilder
-    private var pluginsGitHubSearchSection: some View {
-        VStack(spacing: theme.spacingSM) {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                TextField("Search GitHub for plugins...", text: Binding(
-                    get: { pluginsVM.gitHubSearchText },
-                    set: { pluginsVM.updateGitHubSearchText($0) }
-                ))
-                .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-                .autocorrectionDisabled()
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                #endif
-                if !pluginsVM.gitHubSearchText.isEmpty {
-                    Button {
-                        pluginsVM.updateGitHubSearchText("")
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(theme.textTertiary)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                }
-            }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.vertical, theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            if pluginsVM.isSearchingGitHub {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingMD)
-            }
-
-            ForEach(pluginsVM.gitHubResults) { result in
-                let isInstalled = pluginsVM.plugins.contains { $0.name == result.name }
-                HStack(spacing: theme.spacingMD) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(result.name)
-                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                                .foregroundStyle(theme.textPrimary)
-                                .lineLimit(1)
-                            Spacer()
-                            if isInstalled {
-                                Text("Installed")
-                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                                    .foregroundStyle(theme.success)
+                            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
+                                Text(marketplace)
+                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(theme.success.opacity(0.15))
+                                    .background(theme.bgTertiary)
                                     .clipShape(RoundedRectangle(cornerRadius: 4))
                             }
                         }
-                        if let desc = result.description {
-                            Text(desc)
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textSecondary)
-                                .lineLimit(2)
-                        }
-                        HStack(spacing: theme.spacingSM) {
-                            if result.stars > 0 {
-                                HStack(spacing: 2) {
-                                    Image(systemName: "star.fill")
-                                        .font(.system(size: theme.fontCaption))
-                                        .foregroundStyle(.yellow)
-                                    Text("\(result.stars)")
-                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                        .foregroundStyle(theme.textTertiary)
-                                }
-                            }
-                            Text(result.repository)
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textTertiary)
-                                .lineLimit(1)
-                        }
-                    }
 
-                    if !isInstalled {
-                        Button {
-                            Task { _ = await pluginsVM.installFromGitHub(result: result) }
-                        } label: {
-                            if pluginsVM.installingPlugins.contains(result.name) {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                                    .scaleEffect(0.8)
-                            } else {
-                                Text("Install")
-                                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(theme.entityPlugin)
-                                    .clipShape(Capsule())
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(theme.spacingMD)
-                .modifier(GlassCard())
-            }
-        }
-    }
-
-    // MARK: - Marketplace Search Section
-
-    @ViewBuilder
-    private var marketplaceSearchSection: some View {
-        VStack(spacing: theme.spacingSM) {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                TextField("Search marketplace...", text: Binding(
-                    get: { pluginsVM.marketplaceSearchText },
-                    set: { newValue in
-                        pluginsVM.marketplaceSearchText = newValue
-                        Task { await pluginsVM.searchMarketplace(query: newValue) }
-                    }
-                ))
-                .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-                .autocorrectionDisabled()
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                #endif
-                if !pluginsVM.marketplaceSearchText.isEmpty {
-                    Button {
-                        pluginsVM.marketplaceSearchText = ""
-                        pluginsVM.searchResults = []
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
                     }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
                 }
-            }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.vertical, theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            if pluginsVM.isSearchingMarketplace {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingMD)
-            }
-
-            ForEach(pluginsVM.searchResults, id: \.name) { result in
-                let isInstalled = pluginsVM.plugins.contains { $0.name == result.name }
-                HStack(spacing: theme.spacingMD) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(result.name)
-                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                                .foregroundStyle(theme.textPrimary)
-                                .lineLimit(1)
-                            Spacer()
-                            if isInstalled {
-                                Text("Installed")
-                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                                    .foregroundStyle(theme.success)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(theme.success.opacity(0.15))
-                                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                            }
-                        }
-                        if let desc = result.description {
-                            Text(desc)
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textSecondary)
-                                .lineLimit(2)
-                        }
-                    }
-
-                    if !isInstalled {
-                        Button {
-                            Task {
-                                await pluginsVM.installPlugin(name: result.name, marketplace: "github")
-                            }
-                        } label: {
-                            if pluginsVM.installingPlugins.contains(result.name) {
-                                ProgressView()
-                                    .progressViewStyle(.circular)
-                                    .scaleEffect(0.8)
-                            } else {
-                                Text("Install")
-                                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(theme.entityPlugin)
-                                    .clipShape(Capsule())
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(theme.spacingMD)
-                .modifier(GlassCard())
             }
         }
     }
@@ -1081,7 +399,7 @@ struct BrowserView: View {
 
                 if let badge, !badge.isEmpty {
                     Text(badge)
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -1091,7 +409,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .font(.system(size: 12, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)

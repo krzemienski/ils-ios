@@ -1,35 +1,17 @@
 import Foundation
-@preconcurrency import Dispatch
 import Vapor
 import ILSShared
 import Logging
-
-/// Thread-safe boolean flag for cross-queue timeout signaling.
-///
-/// Replaces bare `var Bool` which was a data race when written from
-/// `DispatchQueue.global()` timeout handlers and read from the readQueue.
-private final class AtomicFlag: @unchecked Sendable {
-    private var _value: Bool = false
-    private let lock = NSLock()
-
-    var value: Bool {
-        get { lock.withLock { _value } }
-    }
-
-    func set() {
-        lock.withLock { _value = true }
-    }
-}
 
 /// Actor managing Claude subprocess execution with streaming JSON output.
 ///
 /// ## Architecture
 ///
 /// Supports two execution backends:
-/// 1. **Agent SDK** (default): Spawns `python3 scripts/sdk-wrapper.py` which calls the
-///    `claude-agent-sdk` Python package. The SDK wraps the Claude CLI, inheriting OAuth
-///    auth from the host environment. Claude Code nesting-detection env vars are stripped
-///    before spawning to prevent the "nested session" error.
+/// 1. **Agent SDK** (default): Spawns `node scripts/sdk-wrapper.mjs` which calls the
+///    `@anthropic-ai/claude-agent-sdk` npm package. The SDK calls the Anthropic API directly
+///    — no `claude` subprocess — which avoids the hang that occurs when spawning `claude -p`
+///    inside an active Claude Code session.
 /// 2. **CLI fallback**: Spawns `claude -p --output-format stream-json` directly. Use this
 ///    when running the backend outside a Claude Code session (standalone).
 ///
@@ -63,9 +45,6 @@ actor ClaudeExecutorService {
         d.keyDecodingStrategy = .convertFromSnakeCase
         return d
     }()
-
-    /// Shared JSON encoder — avoids per-call heap allocation
-    private static let jsonEncoder = JSONEncoder()
 
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
@@ -137,34 +116,20 @@ actor ClaudeExecutorService {
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        if Self.useAgentSDK && Self.sdkWrapperExists(workingDirectory: workingDirectory) {
+        if Self.useAgentSDK {
             return executeWithSDK(prompt: prompt, workingDirectory: workingDirectory, options: options)
         } else {
             return executeWithCLI(prompt: prompt, workingDirectory: workingDirectory, options: options)
         }
     }
 
-    /// Check if the Python SDK wrapper script exists at the expected path.
-    ///
-    /// When the wrapper is missing (fresh checkout, etc.),
-    /// we fall back to CLI mode instead of failing with a 30s timeout.
-    private nonisolated static func sdkWrapperExists(workingDirectory: String?) -> Bool {
-        let projectRoot = workingDirectory ?? FileManager.default.currentDirectoryPath
-        let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.py"
-        let exists = FileManager.default.fileExists(atPath: wrapperPath)
-        if !exists {
-            logger.info("SDK wrapper not found at \(wrapperPath), falling back to CLI mode")
-        }
-        return exists
-    }
-
     // MARK: - Agent SDK Execution
 
-    /// Execute via Python Agent SDK wrapper.
+    /// Execute via Agent SDK (Node.js wrapper).
     ///
-    /// Spawns `python3 scripts/sdk-wrapper.py '<json-config>'` where the prompt and all
-    /// options are passed as a JSON argument. The SDK wraps the Claude CLI, inheriting
-    /// OAuth auth from the host environment. No ANTHROPIC_API_KEY needed.
+    /// Spawns `node scripts/sdk-wrapper.mjs '<json-config>'` where the prompt and all
+    /// options are passed as a JSON argument. The SDK calls the Anthropic API directly,
+    /// avoiding subprocess conflicts with the parent Claude Code session.
     private nonisolated func executeWithSDK(
         prompt: String,
         workingDirectory: String?,
@@ -175,12 +140,12 @@ actor ClaudeExecutorService {
             let sdkConfig = Self.buildSDKConfig(prompt: prompt, options: options, workingDirectory: workingDirectory)
             Self.logger.debug("SDK config: \(sdkConfig.prefix(200))")
 
-            // Find the sdk-wrapper.py script relative to the backend working directory
+            // Find the sdk-wrapper.mjs script relative to the backend working directory
             let projectRoot = workingDirectory ?? FileManager.default.currentDirectoryPath
-            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.py"
+            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.mjs"
 
-            // Build the python3 command
-            let command = "python3 \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
+            // Build the node command
+            let command = "node \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
 
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
@@ -190,14 +155,8 @@ actor ClaudeExecutorService {
                 process.currentDirectoryURL = URL(fileURLWithPath: dir)
             }
 
-            // Inherit environment but strip Claude Code nesting-detection variables.
-            // The Agent SDK spawns `claude` CLI which refuses to run if it detects
-            // it's inside another Claude Code session (CLAUDECODE=1, CLAUDE_CODE_ENTRYPOINT).
-            var env = ProcessInfo.processInfo.environment
-            for key in env.keys where key.hasPrefix("CLAUDECODE") || key.hasPrefix("CLAUDE_CODE_") {
-                env.removeValue(forKey: key)
-            }
-            process.environment = env
+            // Inherit environment — the Agent SDK uses Claude Code's auth (not ANTHROPIC_API_KEY)
+            process.environment = ProcessInfo.processInfo.environment
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
@@ -228,10 +187,10 @@ actor ClaudeExecutorService {
             }
 
             // --- Timeout mechanism ---
-            let didTimeout = AtomicFlag()
+            var didTimeout = false
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout.set()
+                didTimeout = true
                 Self.logger.debug("TIMEOUT: No SDK data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -240,7 +199,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout.set()
+                    didTimeout = true
                     Self.logger.debug("TOTAL TIMEOUT: SDK process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -254,7 +213,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: didTimeout,
+                    didTimeout: &didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -322,10 +281,10 @@ actor ClaudeExecutorService {
                 return
             }
 
-            let didTimeout = AtomicFlag()
+            var didTimeout = false
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout.set()
+                didTimeout = true
                 Self.logger.debug("TIMEOUT: No CLI data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -334,7 +293,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout.set()
+                    didTimeout = true
                     Self.logger.debug("TOTAL TIMEOUT: CLI process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -348,7 +307,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: didTimeout,
+                    didTimeout: &didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -367,7 +326,7 @@ actor ClaudeExecutorService {
         errorPipe: Pipe,
         process: Process,
         sessionId: String,
-        didTimeout: AtomicFlag,
+        didTimeout: inout Bool,
         timeoutWork: DispatchWorkItem,
         totalTimeoutWork: DispatchWorkItem,
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
@@ -419,7 +378,7 @@ actor ClaudeExecutorService {
 
         let exitCode = process.terminationStatus
         if exitCode != 0 {
-            if didTimeout.value {
+            if didTimeout {
                 logger.debug("Process killed by timeout (exit \(exitCode))")
                 continuation.yield(.error(StreamError(
                     code: "TIMEOUT",
@@ -466,7 +425,7 @@ actor ClaudeExecutorService {
             Self.logger.debug("Cancelling process for session: \(sessionId)")
             // Send SIGINT first (graceful), then SIGTERM after 2s
             kill(process.processIdentifier, SIGINT)
-            try? await Task.sleep(for: .seconds(2))
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             if process.isRunning {
                 process.terminate() // SIGTERM
             }
@@ -494,7 +453,7 @@ actor ClaudeExecutorService {
 
         let jsonData: Data
         do {
-            jsonData = try Self.jsonEncoder.encode(response)
+            jsonData = try JSONEncoder().encode(response)
         } catch {
             Self.logger.error("Failed to encode permission response: \(error)")
             return false
@@ -563,13 +522,13 @@ actor ClaudeExecutorService {
         let config = SDKConfig(prompt: prompt, options: sdkOptions)
 
         do {
-            let jsonData = try Self.jsonEncoder.encode(config)
+            let jsonData = try JSONEncoder().encode(config)
             return String(data: jsonData, encoding: .utf8) ?? "{}"
         } catch {
             logger.error("Failed to encode SDK config: \(error)")
             // Fallback: encode just the prompt safely
             let fallback = SDKConfig(prompt: String(prompt.prefix(100)), options: SDKOptions())
-            if let safeData = try? Self.jsonEncoder.encode(fallback),
+            if let safeData = try? JSONEncoder().encode(fallback),
                let safeString = String(data: safeData, encoding: .utf8) {
                 return safeString
             }
@@ -587,7 +546,6 @@ actor ClaudeExecutorService {
     /// - Returns: Shell command string (prompt sent via stdin separately)
     private static func buildCommand(options: ExecutionOptions) -> String {
         var args: [String] = ["claude", "-p", "--verbose"]
-        args.reserveCapacity(30)
 
         // Output format: always stream-json for structured streaming
         args.append("--output-format")
@@ -843,7 +801,7 @@ actor ClaudeExecutorService {
         let options: SDKOptions
     }
 
-    /// Codable struct for SDK execution options passed to sdk-wrapper.py.
+    /// Codable struct for SDK execution options passed to sdk-wrapper.mjs.
     /// All fields are optional; nil values are omitted from JSON output.
     private struct SDKOptions: Codable {
         var model: String?

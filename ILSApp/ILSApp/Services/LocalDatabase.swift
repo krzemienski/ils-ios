@@ -2,19 +2,6 @@ import Foundation
 import GRDB
 import ILSShared
 
-// MARK: - Errors
-
-/// Errors that can occur during database operations.
-enum DatabaseError: LocalizedError {
-    case initializationFailed(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .initializationFailed(let reason): return "Database initialization failed: \(reason)"
-        }
-    }
-}
-
 // MARK: - Cached Record Types
 
 /// Cached session record for GRDB persistence.
@@ -258,17 +245,14 @@ actor LocalDatabase {
     /// Initialize the database, creating tables if needed.
     func initialize() throws {
         let fileManager = FileManager.default
-        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            throw DatabaseError.initializationFailed("Application Support directory not found")
-        }
+        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dbDir = appSupport.appendingPathComponent("ILS", isDirectory: true)
 
         if !fileManager.fileExists(atPath: dbDir.path) {
             try fileManager.createDirectory(at: dbDir, withIntermediateDirectories: true)
         }
 
-        let dbURL = dbDir.appendingPathComponent("cache.sqlite")
-        let dbPath = dbURL.path
+        let dbPath = dbDir.appendingPathComponent("cache.sqlite").path
         var config = Configuration()
         config.prepareDatabase { db in
             // Enable WAL mode for better concurrent access
@@ -276,14 +260,6 @@ actor LocalDatabase {
         }
 
         dbPool = try DatabasePool(path: dbPath, configuration: config)
-
-        // Apply file protection after database creation
-        #if !targetEnvironment(simulator)
-        try fileManager.setAttributes(
-            [.protectionKey: FileProtectionType.complete],
-            ofItemAtPath: dbPath
-        )
-        #endif
 
         try runMigrations()
         AppLogger.shared.info("LocalDatabase initialized at \(dbPath)", category: "cache")

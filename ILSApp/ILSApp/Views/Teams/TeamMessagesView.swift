@@ -49,7 +49,7 @@ struct TeamMessagesView: View {
 
                 if let timestamp = message.timestamp {
                     Text(formatTimestamp(timestamp))
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .font(.system(size: 10, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
             }

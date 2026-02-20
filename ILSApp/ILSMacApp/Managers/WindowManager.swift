@@ -1,17 +1,15 @@
 import SwiftUI
 import AppKit
 import ILSShared
-import Observation
 
 /// Manages multiple session windows for macOS multi-window support.
 @MainActor
-@Observable
-class WindowManager {
+class WindowManager: ObservableObject {
     /// Map of session IDs to their window identifiers
-    private(set) var openWindows: [UUID: String] = [:]
+    @Published private(set) var openWindows: [UUID: String] = [:]
 
     /// The currently focused session ID (if any)
-    var focusedSessionId: UUID?
+    @Published var focusedSessionId: UUID?
 
     /// Singleton instance for app-wide access
     static let shared = WindowManager()
@@ -217,10 +215,7 @@ class WindowManager {
 
 // MARK: - Window Frame Delegate
 
-/// NSWindowDelegate to track and save window frame changes.
-/// Marked @MainActor to match WindowManager, ensuring delegate callbacks
-/// always run on the main thread without needing Task { @MainActor in … } wrapping.
-@MainActor
+/// NSWindowDelegate to track and save window frame changes
 class WindowFrameDelegate: NSObject, NSWindowDelegate {
     let sessionId: UUID
     weak var windowManager: WindowManager?
@@ -233,11 +228,15 @@ class WindowFrameDelegate: NSObject, NSWindowDelegate {
 
     func windowDidResize(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
-        windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        Task { @MainActor in
+            windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        }
     }
 
     func windowDidMove(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
-        windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        Task { @MainActor in
+            windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        }
     }
 }

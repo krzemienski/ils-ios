@@ -74,7 +74,6 @@ actor SystemMetricsService {
     }
 
     /// List running processes sorted by CPU or memory usage.
-    /// Runs `ps aux` in a subprocess — reads stdout before waiting to avoid pipe deadlock.
     func getProcesses() -> [SystemProcessInfo] {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/ps")
@@ -86,11 +85,9 @@ actor SystemMetricsService {
 
         do {
             try process.run()
-
-            // IMPORTANT: Read stdout BEFORE waitUntilExit to prevent pipe buffer deadlock
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
             process.waitUntilExit()
 
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
             guard let output = String(data: data, encoding: .utf8) else { return [] }
 
             return parseProcessOutput(output)

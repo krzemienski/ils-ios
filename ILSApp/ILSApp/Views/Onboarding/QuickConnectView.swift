@@ -10,7 +10,7 @@ struct QuickConnectView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var selectedMode: ConnectionMode = .local
-    @State private var localURL = AppConstants.defaultServerURL
+    @State private var localURL = "http://localhost:9999"
     @State private var remoteHost = ""
     @State private var remotePort = "9999"
     @State private var tunnelURL = ""
@@ -89,7 +89,7 @@ struct QuickConnectView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: mode.icon)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .font(.system(size: 11, design: theme.fontDesign))
                         Text(mode.rawValue)
                             .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular, design: theme.fontDesign))
                     }
@@ -433,7 +433,7 @@ struct QuickConnectView: View {
             let url = resolvedURL
 
             connectionSteps[0].status = .inProgress
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await Task.sleep(nanoseconds: 300_000_000)
 
             guard let urlObj = URL(string: url), urlObj.host != nil else {
                 connectionSteps[0].status = .failure("Invalid URL")
@@ -443,7 +443,7 @@ struct QuickConnectView: View {
             connectionSteps[0].status = .success
 
             connectionSteps[1].status = .inProgress
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(nanoseconds: 200_000_000)
 
             let client = APIClient(baseURL: url)
             do {
@@ -457,7 +457,7 @@ struct QuickConnectView: View {
             }
 
             connectionSteps[2].status = .inProgress
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(nanoseconds: 200_000_000)
 
             do {
                 let health = try await client.getHealth()
@@ -478,7 +478,7 @@ struct QuickConnectView: View {
                 showSteps = false
                 showConnectedState = true
 
-                try? await Task.sleep(for: .seconds(1.5))
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
                 dismiss()
 
             } catch {
@@ -492,17 +492,17 @@ struct QuickConnectView: View {
     // MARK: - History Persistence
 
     private func loadHistory() {
-        connectionHistory = UserDefaults.standard.stringArray(forKey: AppConstants.connectionHistoryKey) ?? []
+        connectionHistory = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
     }
 
     private func saveToHistory(_ url: String) {
-        var history = UserDefaults.standard.stringArray(forKey: AppConstants.connectionHistoryKey) ?? []
+        var history = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
         history.removeAll { $0 == url }
         history.insert(url, at: 0)
         if history.count > 5 {
             history = Array(history.prefix(5))
         }
-        UserDefaults.standard.set(history, forKey: AppConstants.connectionHistoryKey)
+        UserDefaults.standard.set(history, forKey: "connectionHistory")
         connectionHistory = history
     }
 }

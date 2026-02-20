@@ -3,7 +3,6 @@ import ILSShared
 
 struct SidebarSessionRow: View {
     let session: ChatSession
-    var isActive: Bool = false
     let onTap: () -> Void
 
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -19,21 +18,21 @@ struct SidebarSessionRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     // Session name
                     Text(sessionDisplayName)
-                        .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .medium, design: theme.fontDesign))
-                        .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
 
                     // Relative time + message count
                     HStack(spacing: theme.spacingXS) {
                         Text(relativeTime)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .font(.system(size: 10, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
 
                         if session.messageCount > 0 {
                             Text("·")
                                 .foregroundStyle(theme.textTertiary)
                             Text("\(session.messageCount) msgs")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .font(.system(size: 10, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
 
@@ -41,7 +40,7 @@ struct SidebarSessionRow: View {
                             Text("·")
                                 .foregroundStyle(theme.textTertiary)
                             Image(systemName: "arrow.down.circle")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .font(.system(size: 9, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
                     }
@@ -50,13 +49,11 @@ struct SidebarSessionRow: View {
                 Spacer()
             }
             .padding(.horizontal, theme.spacingSM)
-            .padding(.vertical, theme.spacingSM)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-            .background(isActive ? theme.accent.opacity(0.15) : Color.clear)
+            .padding(.vertical, theme.spacingXS + 2)
+            .background(Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
-        .accessibilityLabel("\(sessionDisplayName), \(relativeTime)\(isActive ? ", active" : "")")
+        .accessibilityLabel("\(sessionDisplayName), \(relativeTime)")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }
@@ -65,7 +62,7 @@ struct SidebarSessionRow: View {
 
     private var sessionDisplayName: String {
         if let name = session.name, !name.isEmpty {
-            return name.cleanedSessionTitle(maxLength: 40)
+            return name
         }
         if let prompt = session.firstPrompt, !prompt.isEmpty {
             return String(prompt.prefix(40))

@@ -117,10 +117,6 @@ struct ChatMessageList: View {
 
     private var messagesContent: some View {
         LazyVStack(spacing: 0) {
-            if messages.isEmpty && !isLoadingHistory && !isStreaming {
-                emptyChatState
-            }
-
             ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
                 let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
                 let isSameSender = prevMessage?.isUser == message.isUser
@@ -130,8 +126,8 @@ struct ChatMessageList: View {
                         message: message,
                         onDelete: onDeleteMessage
                     )
-                    .padding(.horizontal, messageSpacing)
-                    .padding(.top, isSameSender ? sameSenderGap : senderGap)
+                    .padding(.horizontal, 16)
+                    .padding(.top, isSameSender ? 8 : 24)
                 } else {
                     AssistantCard(
                         message: message,
@@ -140,8 +136,8 @@ struct ChatMessageList: View {
                         },
                         onDelete: onDeleteMessage
                     )
-                    .padding(.horizontal, messageSpacing)
-                    .padding(.top, isSameSender ? sameSenderGap : senderGap)
+                    .padding(.horizontal, 16)
+                    .padding(.top, isSameSender ? 8 : 24)
                 }
             }
 
@@ -149,8 +145,8 @@ struct ChatMessageList: View {
                 StreamingIndicatorView(
                     statusText: statusText
                 )
-                .padding(.horizontal, messageSpacing)
-                .padding(.top, messageSpacing)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
                 .id("typing-indicator")
             }
 
@@ -158,29 +154,7 @@ struct ChatMessageList: View {
                 .frame(height: 1)
                 .id("bottom")
         }
-        .padding(.vertical, messageSpacing)
-    }
-
-    private var emptyChatState: some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "bubble.left.and.text.bubble.right")
-                .font(.system(size: 48, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-
-            Text("Start a Conversation")
-                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-
-            Text("Send a message to begin chatting with Claude")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, theme.spacingLG)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 100)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Empty chat. Send a message to begin.")
+        .padding(.vertical, 16)
     }
 
     /// Returns `true` while Claude is streaming but no tokens have been received yet,
@@ -202,15 +176,15 @@ struct ChatMessageList: View {
             scrollToBottom(proxy: proxy)
         } label: {
             Image(systemName: "chevron.down.circle.fill")
-                .font(.system(.title2, design: theme.fontDesign))
+                .font(.system(size: 28, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
                 .background(Circle().fill(theme.bgSecondary))
                 .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Circle())
         }
-        .padding(.trailing, messageSpacing)
-        .padding(.bottom, messageSpacing)
+        .padding(.trailing, 16)
+        .padding(.bottom, 16)
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel("Jump to bottom")
         .accessibilityHint("Scrolls to the most recent message")

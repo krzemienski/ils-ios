@@ -60,9 +60,6 @@ struct ThinkingSection: View {
                 }
             }
         }
-        .onDisappear {
-            pulseScale = 1.0
-        }
     }
 
     // MARK: - Header
@@ -98,7 +95,7 @@ struct ThinkingSection: View {
                     Text("·")
                         .foregroundStyle(theme.textTertiary)
                     Text(durationText)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
+                        .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.textTertiary)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 }
@@ -106,7 +103,7 @@ struct ThinkingSection: View {
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
+                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }

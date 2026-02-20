@@ -55,12 +55,6 @@ When fixing a specific bug or build error, **stay focused on that issue**. Do NO
 ### One Change, One Verify
 Make a change. Verify it works. Then make the next change. Do not batch 5 changes and then discover 3 of them broke the build.
 
-### Cross-Platform Parity
-After fixing any iOS issue, always check and fix the same issue in the macOS app (`ILSMacApp/`). Both platforms share `ILSShared` but have separate view layers — bugs in one often exist in the other.
-
-### Finish Before Moving On
-Complete the current task fully before starting the next one. Never leave work partially done. User has explicitly rejected incomplete work across multiple sessions.
-
 ---
 
 ## Build & Verification
@@ -79,27 +73,12 @@ xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp -destination 'plat
 swift build 2>&1 | tail -5
 ```
 
-### Validation Strictness
-Never claim PASS with partial verification. ALL criteria must be met with real evidence (screenshots, logs, curl output). "17/21 verified" is NOT passing — it's 4 failures.
-
 ### Build Failure Protocol
 If a build fails:
 1. Read the FULL error output (not just the first error)
 2. Fix ALL errors in one pass (Swift errors often cascade)
 3. Re-run the build
 4. Do NOT introduce new files, reorganize the project, or switch to XcodeGen as a "fix"
-
-### Parallel Build Verification
-When verifying changes that affect multiple targets, run builds in parallel using `run_in_background: true`:
-```bash
-# Launch all 3 in parallel — cuts verification from ~5min to ~2min
-# iOS build (background)
-xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet 2>&1 | tail -5
-# macOS build (background)
-xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' -quiet 2>&1 | tail -5
-# Backend build (background)
-swift build 2>&1 | tail -5
-```
 
 ### Backend Verification
 Always verify backend is running from the correct binary:
@@ -108,46 +87,6 @@ lsof -i :9999 -P -n  # Binary path MUST be in ils-ios, NOT ils/ILSBackend
 curl -s http://localhost:9999/health
 curl -s http://localhost:9999/api/v1/sessions | head -100
 ```
-
----
-
-## Security Pre-Commit Checks
-
-Before ANY commit, scan for:
-```bash
-# Hardcoded paths (MUST return 0 results)
-grep -rn '/Users/' Sources/ ILSApp/ --include='*.swift' | grep -v '// '
-
-# Exposed secrets (MUST return 0 results)
-grep -rn 'apiKey\|api_key\|secret\|password\|token' Sources/ ILSApp/ --include='*.swift' | grep -v '//\|Mock\|test\|example\|protocol\|enum\|case\|var.*:.*String'
-
-# Git-tracked databases (MUST return 0 results)
-git ls-files '*.sqlite' '*.db'
-```
-
-A git pre-commit hook at `.git/hooks/pre-commit` enforces these automatically.
-
----
-
-## Agent & Observer Sessions
-
-Before spawning observer/memory agent sessions:
-1. Verify authentication is active — run a minimal API call first
-2. If not authenticated, do NOT proceed — log the failure and exit
-3. Use `scripts/agent-preflight.sh` for automated pre-flight checks
-4. Prefer headless mode (`claude -p`) for monitoring tasks — fails loudly instead of silently
-
----
-
-## Automation Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/agent-preflight.sh` | Auth pre-check before observer agents |
-| `scripts/headless-build.sh` | Non-interactive build validation |
-| `scripts/headless-screenshots.sh` | Non-interactive screenshot capture |
-| `scripts/headless-audit.sh` | Non-interactive security audit |
-| `.git/hooks/pre-commit` | Auto-check for secrets before commits |
 
 ---
 
@@ -160,6 +99,3 @@ Before spawning observer/memory agent sessions:
 - **Simulator gestures**: Use `idb_describe operation:all` for accessibility tree coordinates, then `idb_tap` — never guess pixel coordinates
 - **ClaudeCodeSDK in Vapor**: SDK uses RunLoop which NIO doesn't pump. Use direct `Process` + `DispatchQueue` instead
 - **`process.terminationStatus`**: Always call `process.waitUntilExit()` first or get NSInvalidArgumentException
-- **`nonisolated(unsafe)` for Task properties in `@Observable @MainActor` classes**: `deinit` is nonisolated and cannot access `@MainActor`-isolated properties. Use `nonisolated(unsafe)` on Task properties to allow cancellation in `deinit`. The compiler misleadingly suggests plain `nonisolated` but that breaks the `@ObservationTracked` macro on mutable stored properties.
-- **Atomic file writes for config/settings**: Always use `Data.write(to:options:.atomic)` when writing config or settings files. Without `.atomic`, a crash during write permanently corrupts the file. Both `MCPController` and `PluginsController` write to user config files.
-- **Privacy Manifests required for BOTH targets**: iOS and macOS each need their own `PrivacyInfo.xcprivacy` for App Store submission (iOS 17+). Declares Required Reason API usage (UserDefaults, FileTimestamp, SystemBootTime). Missing manifest = App Store rejection.

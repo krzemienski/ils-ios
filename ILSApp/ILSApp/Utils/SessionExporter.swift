@@ -22,11 +22,7 @@ enum SessionExporter {
         panel.nameFieldStringValue = "\(session.name ?? "session").txt"
         panel.begin { response in
             if response == .OK, let url = panel.url {
-                do {
-                    try text.write(to: url, atomically: true, encoding: .utf8)
-                } catch {
-                    AppLogger.shared.error("Session export failed: \(error)", category: "export")
-                }
+                try? text.write(to: url, atomically: true, encoding: .utf8)
             }
         }
         #endif

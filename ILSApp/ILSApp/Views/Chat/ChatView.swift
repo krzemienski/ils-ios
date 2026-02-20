@@ -80,7 +80,7 @@ struct ChatView: View {
     var body: some View {
         mainContent
             .background(theme.bgPrimary)
-            .navigationTitle(session.name.cleanedSessionTitle() ?? "Chat")
+            .navigationTitle(session.name ?? "Chat")
             #if os(iOS)
             .inlineNavigationBarTitle()
             #endif
@@ -91,16 +91,14 @@ struct ChatView: View {
                 sheets.showCommandPalette = false
                 isInputFocused = true
             }
-            .presentationDetents([.medium, .large])
             .presentationBackground(theme.bgPrimary)
         }
         .sheet(isPresented: $sheets.showSessionInfo) {
             SessionInfoView(session: session)
                 .environment(appState)
-                .presentationDetents([.medium, .large])
                 .presentationBackground(theme.bgPrimary)
         }
-        .task(id: session) {
+        .task {
             await setupChatView()
         }
         .alert("Connection Error", isPresented: $sheets.showErrorAlert) {
@@ -138,11 +136,7 @@ struct ChatView: View {
             TextField("Session name", text: $actions.renameText)
             Button("Rename") {
                 Task {
-                    do {
-                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
-                    } catch {
-                        AppLogger.shared.error("Failed to rename session: \(error)", category: "chat")
-                    }
+                    let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -152,12 +146,8 @@ struct ChatView: View {
         .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
             Button("Delete", role: .destructive) {
                 Task {
-                    do {
-                        let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
-                        dismiss()
-                    } catch {
-                        AppLogger.shared.error("Failed to delete session: \(error)", category: "chat")
-                    }
+                    let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
+                    dismiss()
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -166,7 +156,6 @@ struct ChatView: View {
         }
         .sheet(isPresented: $sheets.showExportSheet) {
             ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
-                .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $sheets.showAdvancedOptions) {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
@@ -331,8 +320,6 @@ struct ChatView: View {
         }
     }
 
-    // MARK: - Helpers
-
     // MARK: - Setup
 
     /// Configure the view model and load message history.
@@ -435,7 +422,7 @@ struct StreamingStatusBanner: View {
 
             if tokenCount > 0 {
                 Text("~\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
+                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .accessibilityIdentifier("streaming-stats-text")
