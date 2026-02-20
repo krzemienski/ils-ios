@@ -84,6 +84,29 @@ ils-ios/
 
 ## Quick Start
 
+### Option A: One-Command Setup (Recommended)
+
+For new developers, the setup script handles everything automatically:
+
+```bash
+git clone https://github.com/krzemienski/ils-ios.git
+cd ils-ios
+bash scripts/setup.sh
+```
+
+The setup script:
+- ✅ Checks Swift, Xcode, Node.js, and Claude CLI installations
+- ✅ Builds the backend (`swift build`)
+- ✅ Runs database migrations (starts backend briefly, waits for health check)
+- ✅ Creates `ils.sqlite` database
+- ✅ Prints next steps when complete
+
+After setup finishes, follow the printed next steps to start the backend and open Xcode.
+
+---
+
+### Option B: Manual Setup
+
 ### 1. Clone the Repository
 
 ```bash
