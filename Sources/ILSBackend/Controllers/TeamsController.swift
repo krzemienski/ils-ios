@@ -4,10 +4,12 @@ import ILSShared
 struct TeamsController: RouteCollection {
     let fileService: TeamsFileService
     let executorService: TeamsExecutorService
+    let templateService: TeamTemplateService
 
-    init(fileService: TeamsFileService, executorService: TeamsExecutorService) {
+    init(fileService: TeamsFileService, executorService: TeamsExecutorService, templateService: TeamTemplateService) {
         self.fileService = fileService
         self.executorService = executorService
+        self.templateService = templateService
     }
 
     func boot(routes: RoutesBuilder) throws {
@@ -24,6 +26,14 @@ struct TeamsController: RouteCollection {
         teams.get(":name", "messages", use: listMessages)
         teams.post(":name", "messages", use: sendMessage)
         teams.delete(":name", "members", ":memberName", use: removeMember)
+
+        // Template endpoints
+        teams.get("templates", use: listTemplates)
+        teams.post("templates", use: createTemplate)
+        teams.get("templates", ":templateId", use: getTemplate)
+        teams.put("templates", ":templateId", use: updateTemplate)
+        teams.delete("templates", ":templateId", use: deleteTemplate)
+        teams.post("templates", ":templateId", "apply", use: applyTemplate)
     }
 
     // MARK: - Teams Management
@@ -224,6 +234,121 @@ struct TeamsController: RouteCollection {
 
         return APIResponse(success: true, data: message)
     }
+
+    // MARK: - Template Management
+
+    @Sendable
+    func listTemplates(req: Request) async throws -> APIResponse<[TeamTemplate]> {
+        let templates = try await templateService.listTemplates()
+        return APIResponse(success: true, data: templates)
+    }
+
+    @Sendable
+    func getTemplate(req: Request) async throws -> APIResponse<TeamTemplate> {
+        guard let templateId = req.parameters.get("templateId") else {
+            throw Abort(.badRequest, reason: "Template ID is required")
+        }
+
+        guard let template = try await templateService.getTemplate(id: templateId) else {
+            throw Abort(.notFound, reason: "Template '\(templateId)' not found")
+        }
+
+        return APIResponse(success: true, data: template)
+    }
+
+    @Sendable
+    func createTemplate(req: Request) async throws -> APIResponse<TeamTemplate> {
+        let request = try req.content.decode(CreateTemplateRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(request.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(request.description, maxLength: 1000, fieldName: "description")
+        try PathSanitizer.validateOptionalStringLength(request.category, maxLength: 100, fieldName: "category")
+
+        // Generate ID from name (lowercase, replace spaces with hyphens)
+        let id = request.name.lowercased().replacingOccurrences(of: " ", with: "-")
+
+        let template = try await templateService.createTemplate(
+            id: id,
+            name: request.name,
+            description: request.description,
+            category: request.category,
+            members: request.members ?? [],
+            tasks: request.tasks ?? []
+        )
+
+        return APIResponse(success: true, data: template)
+    }
+
+    @Sendable
+    func updateTemplate(req: Request) async throws -> APIResponse<TeamTemplate> {
+        guard let templateId = req.parameters.get("templateId") else {
+            throw Abort(.badRequest, reason: "Template ID is required")
+        }
+
+        let request = try req.content.decode(UpdateTemplateRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateOptionalStringLength(request.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(request.description, maxLength: 1000, fieldName: "description")
+        try PathSanitizer.validateOptionalStringLength(request.category, maxLength: 100, fieldName: "category")
+
+        let template = try await templateService.updateTemplate(
+            id: templateId,
+            name: request.name,
+            description: request.description,
+            category: request.category,
+            members: request.members,
+            tasks: request.tasks
+        )
+
+        return APIResponse(success: true, data: template)
+    }
+
+    @Sendable
+    func deleteTemplate(req: Request) async throws -> APIResponse<DeletedResponse> {
+        guard let templateId = req.parameters.get("templateId") else {
+            throw Abort(.badRequest, reason: "Template ID is required")
+        }
+
+        try await templateService.deleteTemplate(id: templateId)
+
+        return APIResponse(success: true, data: DeletedResponse(deleted: true))
+    }
+
+    @Sendable
+    func applyTemplate(req: Request) async throws -> APIResponse<AgentTeam> {
+        guard let templateId = req.parameters.get("templateId") else {
+            throw Abort(.badRequest, reason: "Template ID is required")
+        }
+
+        guard let template = try await templateService.getTemplate(id: templateId) else {
+            throw Abort(.notFound, reason: "Template '\(templateId)' not found")
+        }
+
+        let request = try req.content.decode(ApplyTemplateRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(request.teamName, maxLength: 255, fieldName: "teamName")
+        try PathSanitizer.validateOptionalStringLength(request.teamDescription, maxLength: 1000, fieldName: "teamDescription")
+
+        // Create team from template
+        let team = try await fileService.createTeam(
+            name: request.teamName,
+            description: request.teamDescription ?? template.description
+        )
+
+        // Create tasks from template
+        for templateTask in template.tasks {
+            _ = try await fileService.createTask(
+                team: request.teamName,
+                subject: templateTask.subject,
+                description: templateTask.description
+            )
+        }
+
+        return APIResponse(success: true, data: team)
+    }
 }
 
 // MARK: - Content Conformances
@@ -238,3 +363,7 @@ extension SendTeamMessageRequest: Content {}
 extension CreateTeamTaskRequest: Content {}
 extension UpdateTeamTaskRequest: Content {}
 extension ShutdownTeammateRequest: Content {}
+extension TeamTemplate: Content {}
+extension CreateTemplateRequest: Content {}
+extension UpdateTemplateRequest: Content {}
+extension ApplyTemplateRequest: Content {}
