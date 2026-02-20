@@ -11,7 +11,6 @@ struct SidebarView: View {
     @Binding var isSidebarOpen: Bool
     var onSessionSelected: (ChatSession) -> Void
 
-    @AppStorage("sidebarExpandedProjects") private var expandedProjectsStorage: String = ""
     @State private var sessionToRename: ChatSession?
     @State private var showRenameAlert = false
     @State private var renameText: String = ""
@@ -158,8 +157,8 @@ struct SidebarView: View {
                     } else if sessionsViewModel.filteredSessions.isEmpty {
                         emptyView
                     } else {
-                        ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
-                            projectGroup(name: project, sessions: sessions)
+                        ForEach(sessionsViewModel.groupedByTime, id: \.key) { group, sessions in
+                            timeGroup(label: group.displayName, sessions: sessions)
                         }
                     }
                 }
@@ -171,75 +170,44 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: - Expanded Projects Persistence
-
-    private func decodedExpandedProjects() -> Set<String> {
-        Set(expandedProjectsStorage.split(separator: ",").map(String.init).filter { !$0.isEmpty })
-    }
-
-    private func setProjectExpanded(_ name: String, isExpanded: Bool) {
-        var projects = decodedExpandedProjects()
-        if isExpanded {
-            projects.insert(name)
-        } else {
-            projects.remove(name)
-        }
-        expandedProjectsStorage = projects.sorted().joined(separator: ",")
-    }
-
-    // MARK: - Project Group
+    // MARK: - Time Group
 
     @ViewBuilder
-    private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
-        DisclosureGroup(
-            isExpanded: Binding(
-                get: { decodedExpandedProjects().contains(name) },
-                set: { isExpanded in setProjectExpanded(name, isExpanded: isExpanded) }
-            )
-        ) {
-            ForEach(sessions) { session in
-                SidebarSessionRow(session: session, isActive: isSessionActive(session)) {
-                    onSessionSelected(session)
-                    isSidebarOpen = false
+    private func timeGroup(label: String, sessions: [ChatSession]) -> some View {
+        Text(label.uppercased())
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+            .foregroundStyle(theme.textTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.top, theme.spacingSM)
+            .padding(.bottom, 2)
+
+        ForEach(sessions) { session in
+            SidebarSessionRow(session: session, isActive: isSessionActive(session)) {
+                onSessionSelected(session)
+                isSidebarOpen = false
+            }
+            .contextMenu {
+                Button {
+                    renameText = session.name ?? ""
+                    sessionToRename = session
+                } label: {
+                    Label("Rename", systemImage: "pencil")
                 }
-                .contextMenu {
-                    Button {
-                        renameText = session.name ?? ""
-                        sessionToRename = session
-                    } label: {
-                        Label("Rename", systemImage: "pencil")
+                Button {
+                    SessionExporter.share(session)
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                Button(role: .destructive) {
+                    Task {
+                        await sessionsViewModel.deleteSession(session)
                     }
-                    Button {
-                        SessionExporter.share(session)
-                    } label: {
-                        Label("Export", systemImage: "square.and.arrow.up")
-                    }
-                    Button(role: .destructive) {
-                        Task {
-                            await sessionsViewModel.deleteSession(session)
-                        }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
+                } label: {
+                    Label("Delete", systemImage: "trash")
                 }
             }
-        } label: {
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "folder.fill")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.entityProject)
-                Text(name)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-                Spacer()
-                Text("\(sessions.count)")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .padding(.vertical, theme.spacingXS)
         }
-        .tint(theme.textSecondary)
     }
 
     // MARK: - Loading & Empty States
