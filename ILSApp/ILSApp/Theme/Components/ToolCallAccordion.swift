@@ -80,7 +80,7 @@ struct ToolCallAccordion: View {
                     .frame(width: 20)
 
                 Text(toolName)
-                    .font(.system(size: 12, weight: .medium, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
@@ -135,10 +135,10 @@ struct ToolCallAccordion: View {
             ForEach(Array(pairs.enumerated()), id: \.offset) { _, pair in
                 HStack(alignment: .top, spacing: 4) {
                     Text(pair.key + ":")
-                        .font(.system(size: 11, weight: .semibold, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                     Text(pair.value)
-                        .font(.system(size: 11, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .textSelection(.enabled)
                         .lineLimit(3)
@@ -154,7 +154,7 @@ struct ToolCallAccordion: View {
             sectionLabel("Input")
 
             Text(text)
-                .font(.system(size: 11, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .textSelection(.enabled)
         }
@@ -167,7 +167,7 @@ struct ToolCallAccordion: View {
             sectionLabel("Output")
 
             Text(text)
-                .font(.system(size: 11, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(isError ? theme.error : theme.textSecondary)
                 .textSelection(.enabled)
                 .lineLimit(showFullOutput ? nil : 5)
@@ -177,7 +177,7 @@ struct ToolCallAccordion: View {
                     showFullOutput.toggle()
                 } label: {
                     Text(showFullOutput ? "Show less" : "Show more")
-                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                 }
                 .buttonStyle(.plain)

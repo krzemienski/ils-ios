@@ -14,7 +14,7 @@ struct InfoTooltipButton: View {
             isShowing.toggle()
         } label: {
             Image(systemName: "info.circle")
-                .font(.system(size: 14, design: theme.fontDesign))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .buttonStyle(.plain)

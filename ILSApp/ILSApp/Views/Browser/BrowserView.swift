@@ -227,7 +227,7 @@ struct BrowserView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: 12, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 Text("MCP servers provide Claude with access to external data sources, APIs, and tools via the Model Context Protocol.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
@@ -330,7 +330,7 @@ struct BrowserView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: 12, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 Text("Skills are prompt templates and workflows that guide Claude's behavior for specific tasks like code review, debugging, or documentation.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
@@ -339,8 +339,12 @@ struct BrowserView: View {
 
             // GitHub search toggle
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                if reduceMotion {
                     showGitHubSearch.toggle()
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showGitHubSearch.toggle()
+                    }
                 }
             } label: {
                 HStack(spacing: theme.spacingSM) {
@@ -351,7 +355,7 @@ struct BrowserView: View {
                         .foregroundStyle(theme.textPrimary)
                     Spacer()
                     Image(systemName: showGitHubSearch ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .padding(theme.spacingMD)
@@ -449,7 +453,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)
@@ -508,8 +512,12 @@ struct BrowserView: View {
 
             // GitHub search toggle
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                if reduceMotion {
                     showPluginsGitHubSearch.toggle()
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showPluginsGitHubSearch.toggle()
+                    }
                 }
             } label: {
                 HStack(spacing: theme.spacingSM) {
@@ -520,7 +528,7 @@ struct BrowserView: View {
                         .foregroundStyle(theme.textPrimary)
                     Spacer()
                     Image(systemName: showPluginsGitHubSearch ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .padding(theme.spacingMD)
@@ -534,8 +542,12 @@ struct BrowserView: View {
 
             // Marketplace search toggle
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
+                if reduceMotion {
                     showMarketplaceSearch.toggle()
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showMarketplaceSearch.toggle()
+                    }
                 }
             } label: {
                 HStack(spacing: theme.spacingSM) {
@@ -546,7 +558,7 @@ struct BrowserView: View {
                         .foregroundStyle(theme.textPrimary)
                     Spacer()
                     Image(systemName: showMarketplaceSearch ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 12, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .padding(theme.spacingMD)
@@ -562,7 +574,7 @@ struct BrowserView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: 12, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 Text("Plugins are code extensions that add new tools, agents, and capabilities to Claude Code. Install from GitHub or the marketplace.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
@@ -673,7 +685,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)
@@ -1078,7 +1090,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)

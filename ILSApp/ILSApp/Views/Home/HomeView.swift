@@ -443,7 +443,7 @@ struct HomeView: View {
     private func secondaryStat(icon: String, label: String, value: String, color: Color) -> some View {
         HStack(spacing: theme.spacingXS) {
             Image(systemName: icon)
-                .font(.system(size: 12, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(color)
                 .accessibilityHidden(true)
 

@@ -4,6 +4,7 @@ import ILSShared
 struct HooksManagementView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var viewModel = HooksViewModel()
 
@@ -89,7 +90,7 @@ struct HooksManagementView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: viewModel.iconForEventType(eventType))
                     .foregroundStyle(theme.accent)
-                    .font(.system(size: 16, design: theme.fontDesign))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -129,7 +130,7 @@ struct HooksManagementView: View {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "terminal")
                     .foregroundStyle(theme.accent)
-                    .font(.system(size: 12, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .accessibilityHidden(true)
 
                 Text(item.command ?? "No command")
@@ -235,8 +236,12 @@ struct HooksManagementView: View {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString("~/.claude/settings.json", forType: .string)
                         #endif
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        if reduceMotion {
                             showCopiedConfirmation = true
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showCopiedConfirmation = true
+                            }
                         }
                     } label: {
                         HStack(spacing: theme.spacingSM) {
@@ -256,8 +261,12 @@ struct HooksManagementView: View {
                         if copied {
                             Task { @MainActor in
                                 try? await Task.sleep(for: .seconds(2))
-                                withAnimation(.easeOut(duration: 0.3)) {
+                                if reduceMotion {
                                     showCopiedConfirmation = false
+                                } else {
+                                    withAnimation(.easeOut(duration: 0.3)) {
+                                        showCopiedConfirmation = false
+                                    }
                                 }
                             }
                         }

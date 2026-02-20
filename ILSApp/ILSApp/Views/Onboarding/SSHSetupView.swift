@@ -213,7 +213,7 @@ struct SSHSetupView: View {
                         LazyVStack(alignment: .leading, spacing: 1) {
                             ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { _, line in
                                 Text(line)
-                                    .font(.system(size: 11, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(logLineColor(line))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }

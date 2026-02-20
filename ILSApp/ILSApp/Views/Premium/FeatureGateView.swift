@@ -53,7 +53,7 @@ struct FeatureGateView<Content: View>: View {
             } label: {
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: "crown.fill")
-                        .font(.system(size: 14))
+                        .font(.system(size: theme.fontBody))
                     Text("Upgrade to Premium")
                         .font(.system(size: theme.fontBody, weight: .semibold))
                 }

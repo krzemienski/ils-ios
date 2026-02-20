@@ -94,7 +94,7 @@ struct FleetManagementView: View {
         .onAppear { viewModel.startHealthPolling() }
         .onDisappear { viewModel.stopHealthPolling() }
         .onChange(of: scenePhase) { _, newPhase in
-            viewModel.scenePhase = newPhase
+            viewModel.isActive = (newPhase == .active)
         }
     }
 
@@ -154,7 +154,7 @@ struct FleetManagementView: View {
     @ViewBuilder
     private func healthBadge(_ status: FleetHost.HealthStatus) -> some View {
         Image(systemName: healthIcon(status))
-            .font(.system(size: 12))
+            .font(.system(size: theme.fontCaption))
             .foregroundStyle(healthColor(status))
     }
 

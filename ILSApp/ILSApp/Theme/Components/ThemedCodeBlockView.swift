@@ -36,7 +36,7 @@ struct ThemedCodeBlockView: View {
     private var headerBar: some View {
         HStack {
             Text(detectedLanguage ?? language ?? "code")
-                .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Spacer()
@@ -46,7 +46,7 @@ struct ThemedCodeBlockView: View {
                     Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     Text(showCopied ? "Copied" : "Copy")
-                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 }
                 .foregroundStyle(showCopied ? theme.success : theme.textSecondary)
             }
@@ -98,11 +98,11 @@ struct ThemedCodeBlockView: View {
         Group {
             if let highlighted = highlightedCode {
                 Text(highlighted)
-                    .font(.system(size: 13, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .textSelection(.enabled)
             } else {
                 Text(code)
-                    .font(.system(size: 13, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .textSelection(.enabled)
             }

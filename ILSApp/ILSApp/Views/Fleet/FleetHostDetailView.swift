@@ -61,7 +61,7 @@ struct FleetHostDetailView: View {
             sectionLabel("Health")
             HStack {
                 Image(systemName: healthIcon(host.healthStatus))
-                    .font(.system(size: 14))
+                    .font(.system(size: theme.fontBody))
                     .foregroundStyle(healthColor(host.healthStatus))
                 Text(host.healthStatus.rawValue.capitalized)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
@@ -144,7 +144,7 @@ struct FleetHostDetailView: View {
                     } else {
                         ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
                             Text(line)
-                                .font(.system(size: 11, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }

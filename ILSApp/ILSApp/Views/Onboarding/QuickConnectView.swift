@@ -89,7 +89,7 @@ struct QuickConnectView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: mode.icon)
-                            .font(.system(size: 11, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         Text(mode.rawValue)
                             .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular, design: theme.fontDesign))
                     }
