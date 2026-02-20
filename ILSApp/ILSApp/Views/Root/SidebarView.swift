@@ -42,6 +42,8 @@ struct SidebarView: View {
     @State private var showRenameAlert = false
     /// Editable text used in the rename alert.
     @State private var renameText: String = ""
+    /// The session pending deletion confirmation, if any.
+    @State private var sessionToDelete: ChatSession?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -85,6 +87,20 @@ struct SidebarView: View {
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .alert("Delete Session", isPresented: Binding(
+            get: { sessionToDelete != nil },
+            set: { if !$0 { sessionToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let session = sessionToDelete {
+                    Task { await sessionsViewModel.deleteSession(session) }
+                }
+                sessionToDelete = nil
+            }
+            Button("Cancel", role: .cancel) { sessionToDelete = nil }
+        } message: {
+            Text("This will permanently delete this session and all its messages.")
         }
     }
 
@@ -232,9 +248,7 @@ struct SidebarView: View {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
                     Button(role: .destructive) {
-                        Task {
-                            await sessionsViewModel.deleteSession(session)
-                        }
+                        sessionToDelete = session
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
