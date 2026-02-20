@@ -199,7 +199,8 @@ struct TeamsController: RouteCollection {
             status: request.status,
             owner: request.owner,
             executionOrder: request.executionOrder,
-            visualPosition: request.visualPosition
+            visualPosition: request.visualPosition,
+            blockedBy: request.blockedBy
         )
 
         return APIResponse(success: true, data: task)

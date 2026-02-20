@@ -178,11 +178,11 @@ class TeamsViewModel {
         isLoading = false
     }
 
-    func updateTask(teamName: String, id: String, status: TeamTaskStatus? = nil, owner: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) async {
+    func updateTask(teamName: String, id: String, status: TeamTaskStatus? = nil, owner: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil, blockedBy: [String]? = nil) async {
         isLoading = true
         error = nil
         do {
-            let request = UpdateTeamTaskRequest(status: status, owner: owner, executionOrder: executionOrder, visualPosition: visualPosition)
+            let request = UpdateTeamTaskRequest(status: status, owner: owner, executionOrder: executionOrder, visualPosition: visualPosition, blockedBy: blockedBy)
             let response: APIResponse<TeamTask> = try await apiClient.put( "/teams/\(teamName)/tasks/\(id)", body: request)
             if response.success {
                 await loadTasks(teamName: teamName)

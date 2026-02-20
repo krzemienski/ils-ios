@@ -7,10 +7,13 @@ struct WorkflowBuilderView: View {
     @State private var viewModel: TeamsViewModel
     let teamName: String
     @State private var workflowNodes: [WorkflowNode] = []
+    @State private var connections: [WorkflowConnection] = []
     @State private var selectedNodeId: UUID?
+    @State private var connectingFromNodeId: UUID?
     @State private var showAddNodeSheet = false
     @State private var isSaving = false
     @State private var saveMessage: String?
+    @State private var isConnectMode = false
 
     init(teamName: String, apiClient: APIClient) {
         self.teamName = teamName
@@ -65,6 +68,16 @@ struct WorkflowBuilderView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
 
+                Label("\(connections.count) deps", systemImage: "arrow.right")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+
+                if isConnectMode {
+                    Label("Connect mode", systemImage: "link")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.warning)
+                }
+
                 if let selected = workflowNodes.first(where: { $0.id == selectedNodeId }) {
                     Label(selected.title, systemImage: "checkmark.circle.fill")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -98,8 +111,30 @@ struct WorkflowBuilderView: View {
             .buttonStyle(.plain)
 
             Button {
+                isConnectMode.toggle()
+                if !isConnectMode {
+                    connectingFromNodeId = nil
+                }
+            } label: {
+                HStack {
+                    Image(systemName: isConnectMode ? "link.circle.fill" : "link")
+                    Text("Link")
+                }
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(isConnectMode ? theme.warning : theme.info)
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM)
+                .background((isConnectMode ? theme.warning : theme.info).opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            }
+            .buttonStyle(.plain)
+            .disabled(workflowNodes.count < 2)
+
+            Button {
                 workflowNodes.removeAll()
+                connections.removeAll()
                 selectedNodeId = nil
+                connectingFromNodeId = nil
             } label: {
                 HStack {
                     Image(systemName: "trash")
@@ -148,25 +183,21 @@ struct WorkflowBuilderView: View {
     private var canvasSection: some View {
         ScrollView([.horizontal, .vertical]) {
             ZStack(alignment: .topLeading) {
-                // Canvas background
                 Rectangle()
                     .fill(theme.bgSecondary.opacity(0.3))
                     .frame(minWidth: 800, minHeight: 600)
                     .overlay(
-                        // Grid pattern
                         GeometryReader { geometry in
                             Path { path in
                                 let gridSize: CGFloat = 20
                                 let width = geometry.size.width
                                 let height = geometry.size.height
 
-                                // Vertical lines
                                 for x in stride(from: 0, through: width, by: gridSize) {
                                     path.move(to: CGPoint(x: x, y: 0))
                                     path.addLine(to: CGPoint(x: x, y: height))
                                 }
 
-                                // Horizontal lines
                                 for y in stride(from: 0, through: height, by: gridSize) {
                                     path.move(to: CGPoint(x: 0, y: y))
                                     path.addLine(to: CGPoint(x: width, y: y))
@@ -176,26 +207,30 @@ struct WorkflowBuilderView: View {
                         }
                     )
 
-                // Workflow nodes
+                connectionLines
+
                 ForEach(workflowNodes) { node in
                     WorkflowNodeView(
                         node: node,
                         isSelected: selectedNodeId == node.id,
+                        isConnectSource: connectingFromNodeId == node.id,
+                        dependencyCount: incomingConnectionCount(for: node.id),
                         theme: theme
                     )
                     .position(x: node.position.x, y: node.position.y)
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                updateNodePosition(node.id, to: value.location)
+                                if !isConnectMode {
+                                    updateNodePosition(node.id, to: value.location)
+                                }
                             }
                     )
                     .onTapGesture {
-                        selectedNodeId = node.id
+                        handleNodeTap(node)
                     }
                 }
 
-                // Empty state
                 if workflowNodes.isEmpty {
                     VStack(spacing: theme.spacingMD) {
                         Image(systemName: "flowchart")
@@ -218,18 +253,68 @@ struct WorkflowBuilderView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// Draws arrow lines for each connection between nodes.
+    private var connectionLines: some View {
+        ForEach(connections) { connection in
+            if let sourceNode = workflowNodes.first(where: { $0.id == connection.sourceNodeId }),
+               let targetNode = workflowNodes.first(where: { $0.id == connection.targetNodeId }) {
+                ConnectionLineView(
+                    from: CGPoint(x: sourceNode.position.x, y: sourceNode.position.y + 55),
+                    to: CGPoint(x: targetNode.position.x, y: targetNode.position.y - 55),
+                    color: theme.accent
+                )
+            }
+        }
+    }
+
     // MARK: - Actions
 
+    private func handleNodeTap(_ node: WorkflowNode) {
+        if isConnectMode {
+            if let fromId = connectingFromNodeId {
+                if fromId != node.id {
+                    let alreadyExists = connections.contains {
+                        $0.sourceNodeId == fromId && $0.targetNodeId == node.id
+                    }
+                    if !alreadyExists {
+                        let newConnection = WorkflowConnection(
+                            sourceNodeId: fromId,
+                            targetNodeId: node.id
+                        )
+                        connections.append(newConnection)
+                    }
+                }
+                connectingFromNodeId = nil
+            } else {
+                connectingFromNodeId = node.id
+            }
+        } else {
+            if selectedNodeId == node.id {
+                removeConnectionsForSelectedNode(node.id)
+            } else {
+                selectedNodeId = node.id
+            }
+        }
+    }
+
+    private func removeConnectionsForSelectedNode(_ nodeId: UUID) {
+        connections.removeAll { $0.sourceNodeId == nodeId || $0.targetNodeId == nodeId }
+        selectedNodeId = nil
+    }
+
+    private func incomingConnectionCount(for nodeId: UUID) -> Int {
+        connections.filter { $0.targetNodeId == nodeId }.count
+    }
+
     private func loadTasksAsNodes() {
-        // Convert existing team tasks into workflow nodes
         let tasks = viewModel.tasks
         guard !tasks.isEmpty else { return }
 
         workflowNodes = tasks.enumerated().map { index, task in
             let col = index % 3
             let row = index / 3
-            let x = Double(100 + col * 200)
-            let y = Double(150 + row * 150)
+            let x = Double(160 + col * 220)
+            let y = Double(120 + row * 160)
 
             var nodeStatus: WorkflowNodeStatus = .idle
             switch task.status {
@@ -246,6 +331,29 @@ struct WorkflowBuilderView: View {
                 position: NodePosition(x: x, y: y),
                 status: nodeStatus
             )
+        }
+
+        loadExistingConnections()
+    }
+
+    /// Rebuild connections from the existing blockedBy relationships on tasks.
+    private func loadExistingConnections() {
+        connections.removeAll()
+        let tasks = viewModel.tasks
+        for task in tasks {
+            guard let blockedBy = task.blockedBy, !blockedBy.isEmpty else { continue }
+            let targetNode = workflowNodes.first { $0.taskId == task.id }
+            guard let targetId = targetNode?.id else { continue }
+
+            for blockingTaskId in blockedBy {
+                let sourceNode = workflowNodes.first { $0.taskId == blockingTaskId }
+                guard let sourceId = sourceNode?.id else { continue }
+                let connection = WorkflowConnection(
+                    sourceNodeId: sourceId,
+                    targetNodeId: targetId
+                )
+                connections.append(connection)
+            }
         }
     }
 
@@ -268,21 +376,26 @@ struct WorkflowBuilderView: View {
         isSaving = true
         defer { isSaving = false }
 
-        // Sort nodes by y-position to determine execution order
         let sortedNodes = workflowNodes.sorted { $0.position.y < $1.position.y }
 
-        // Update each node that has a backing task with its new execution order
         for (index, node) in sortedNodes.enumerated() {
             guard let taskId = node.taskId else { continue }
+
+            let incomingConnections = connections.filter { $0.targetNodeId == node.id }
+            let blockedByIds: [String] = incomingConnections.compactMap { conn in
+                workflowNodes.first(where: { $0.id == conn.sourceNodeId })?.taskId
+            }
+
             await viewModel.updateTask(
                 teamName: teamName,
                 id: taskId,
                 executionOrder: index + 1,
-                visualPosition: index
+                visualPosition: index,
+                blockedBy: blockedByIds
             )
         }
 
-        showSaveMessage("Workflow saved ✓")
+        showSaveMessage("Workflow saved with \(connections.count) dependencies")
     }
 
     private func showSaveMessage(_ message: String) {
@@ -293,8 +406,51 @@ struct WorkflowBuilderView: View {
     }
 }
 
+// MARK: - Connection Line View
+
+struct ConnectionLineView: View {
+    let from: CGPoint
+    let to: CGPoint
+    let color: Color
+
+    var body: some View {
+        Path { path in
+            path.move(to: from)
+
+            let midY = (from.y + to.y) / 2
+            path.addCurve(
+                to: to,
+                control1: CGPoint(x: from.x, y: midY),
+                control2: CGPoint(x: to.x, y: midY)
+            )
+        }
+        .stroke(color.opacity(0.6), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+
+        arrowHead
+    }
+
+    private var arrowHead: some View {
+        let angle = atan2(to.y - from.y, to.x - from.x)
+        let arrowLength: CGFloat = 10
+        let arrowAngle: CGFloat = .pi / 6
+
+        return Path { path in
+            path.move(to: to)
+            path.addLine(to: CGPoint(
+                x: to.x - arrowLength * cos(angle - arrowAngle),
+                y: to.y - arrowLength * sin(angle - arrowAngle)
+            ))
+            path.move(to: to)
+            path.addLine(to: CGPoint(
+                x: to.x - arrowLength * cos(angle + arrowAngle),
+                y: to.y - arrowLength * sin(angle + arrowAngle)
+            ))
+        }
+        .stroke(color.opacity(0.8), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+    }
+}
+
 // MARK: - Supporting Types
-// WorkflowNode and WorkflowNodeType are now defined in Models/WorkflowNode.swift
 
 extension WorkflowNodeType {
     var iconName: String {
@@ -327,6 +483,8 @@ extension WorkflowNodeType {
 struct WorkflowNodeView: View {
     let node: WorkflowNode
     let isSelected: Bool
+    var isConnectSource: Bool = false
+    var dependencyCount: Int = 0
     let theme: ThemeSnapshot
 
     var body: some View {
@@ -341,21 +499,33 @@ struct WorkflowNodeView: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
-            if node.taskId != nil {
-                Text("#\(node.taskId ?? "")")
-                    .font(.system(size: 9, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                    .lineLimit(1)
+            HStack(spacing: 4) {
+                if let taskId = node.taskId {
+                    Text("#\(taskId)")
+                        .font(.system(size: 9, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                if dependencyCount > 0 {
+                    Text("\(dependencyCount) dep\(dependencyCount == 1 ? "" : "s")")
+                        .font(.system(size: 9, design: theme.fontDesign))
+                        .foregroundStyle(theme.info)
+                }
             }
         }
         .frame(width: 120, height: 110)
-        .background(theme.bgPrimary)
+        .background(isConnectSource ? theme.warning.opacity(0.1) : theme.bgPrimary)
         .overlay(
             RoundedRectangle(cornerRadius: theme.cornerRadius)
-                .stroke(isSelected ? theme.accent : theme.textTertiary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+                .stroke(borderColor, lineWidth: (isSelected || isConnectSource) ? 2 : 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         .shadow(color: theme.textPrimary.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+
+    private var borderColor: Color {
+        if isConnectSource { return theme.warning }
+        if isSelected { return theme.accent }
+        return theme.textTertiary.opacity(0.3)
     }
 
     private var statusColor: Color {

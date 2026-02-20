@@ -195,14 +195,17 @@ public struct UpdateTeamTaskRequest: Codable, Sendable {
     public let executionOrder: Int?
     /// New visual position.
     public let visualPosition: Int?
+    /// Updated list of blocking task IDs.
+    public let blockedBy: [String]?
 
-    public init(status: TeamTaskStatus? = nil, owner: String? = nil, subject: String? = nil, description: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) {
+    public init(status: TeamTaskStatus? = nil, owner: String? = nil, subject: String? = nil, description: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil, blockedBy: [String]? = nil) {
         self.status = status
         self.owner = owner
         self.subject = subject
         self.description = description
         self.executionOrder = executionOrder
         self.visualPosition = visualPosition
+        self.blockedBy = blockedBy
     }
 }
 
