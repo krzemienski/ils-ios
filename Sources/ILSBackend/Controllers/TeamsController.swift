@@ -248,6 +248,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Message Management
 
+    /// List all messages for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with array of TeamMessage objects for the team
     @Sendable
     func listMessages(req: Request) async throws -> APIResponse<[TeamMessage]> {
         guard let teamName = req.parameters.get("name") else {
@@ -258,6 +262,12 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: messages)
     }
 
+    /// Send a message to the specified team, persisting it via the file service.
+    ///
+    /// Validates content length (max 100,000 chars), from (max 255 chars), and to (max 255 chars).
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and SendTeamMessageRequest body (content, from, to)
+    /// - Returns: APIResponse with the newly created TeamMessage
     @Sendable
     func sendMessage(req: Request) async throws -> APIResponse<TeamMessage> {
         guard let teamName = req.parameters.get("name") else {
