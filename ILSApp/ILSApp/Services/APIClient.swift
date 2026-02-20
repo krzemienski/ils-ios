@@ -45,7 +45,7 @@ actor APIClient {
         return defaultCacheTTL
     }
 
-    init(baseURL: String = "http://localhost:9999") {
+    init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
         // Cap cache to prevent unbounded memory growth
         cache.countLimit = 100
@@ -65,7 +65,7 @@ actor APIClient {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10 // 10 seconds per request
         config.timeoutIntervalForResource = 30 // 30 seconds total
-        config.waitsForConnectivity = false
+        config.waitsForConnectivity = true
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = true
         self.session = URLSession(configuration: config)
@@ -117,14 +117,18 @@ actor APIClient {
     // MARK: - Health Check
 
     func healthCheck() async throws -> String {
-        let url = URL(string: "\(baseURL)/health")!
+        guard let url = URL(string: "\(baseURL)/health") else {
+            throw APIError.invalidURL("\(baseURL)/health")
+        }
         let (data, _) = try await session.data(from: url)
         return String(data: data, encoding: .utf8) ?? ""
     }
 
     /// Fetch structured health info (enhanced endpoint)
     func getHealth() async throws -> HealthResponse {
-        let url = URL(string: "\(baseURL)/health")!
+        guard let url = URL(string: "\(baseURL)/health") else {
+            throw APIError.invalidURL("\(baseURL)/health")
+        }
         let (data, response) = try await session.data(from: url)
         try validateResponse(response, data: data)
         return try decoder.decode(HealthResponse.self, from: data)
@@ -143,7 +147,9 @@ actor APIClient {
             return cached
         }
 
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -159,7 +165,9 @@ actor APIClient {
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -177,7 +185,9 @@ actor APIClient {
     }
 
     func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -195,7 +205,9 @@ actor APIClient {
     }
 
     func delete<T: Decodable>(_ path: String) async throws -> T {
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -215,7 +227,9 @@ actor APIClient {
     /// Execute a raw HTTP request without decoding the response.
     /// Used by SyncCoordinator to replay queued operations.
     func rawRequest(method: String, endpoint: String, body: Data?) async throws {
-        let url = URL(string: "\(baseURL)/api/v1\(endpoint)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(endpoint)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(endpoint)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -351,6 +365,7 @@ private struct ServerErrorBody: Decodable {
 // MARK: - Error Types
 
 enum APIError: Error, LocalizedError {
+    case invalidURL(String)
     case invalidResponse
     case httpError(statusCode: Int)
     case decodingError(Error)
@@ -360,6 +375,8 @@ enum APIError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .invalidURL(let urlString):
+            return "Invalid URL: \(urlString)"
         case .invalidResponse:
             return "Invalid response from server"
         case .unauthorized:
@@ -408,7 +425,7 @@ enum APIError: Error, LocalizedError {
         case .networkError:
             // Network errors are generally retriable
             return true
-        case .invalidResponse, .decodingError, .unauthorized:
+        case .invalidURL, .invalidResponse, .decodingError, .unauthorized:
             // These indicate a fundamental problem, not retriable
             return false
         case .serverError(let code, _):
