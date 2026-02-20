@@ -55,8 +55,8 @@ struct SessionWindowView: View {
         .frame(minWidth: 600, minHeight: 400)
         .focusedSceneValue(\.selectedSession, session)
         .background(WindowAccessor(sessionId: sessionId, windowManager: windowManager))
-        .onAppear {
-            loadSession()
+        .task {
+            await loadSessionAsync()
         }
         .onDisappear {
             windowManager.unregisterWindow(for: sessionId)
@@ -65,28 +65,20 @@ struct SessionWindowView: View {
 
     // MARK: - Helper Methods
 
-    private func loadSession() {
-        Task {
-            do {
-                // Use single-session endpoint instead of fetching all 22K+ sessions (O(n) → O(1))
-                let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString.lowercased())")
-                if let foundSession = response.data {
-                    await MainActor.run {
-                        self.session = foundSession
-                        self.isLoading = false
-                    }
-                } else {
-                    await MainActor.run {
-                        self.errorMessage = "Session not found"
-                        self.isLoading = false
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.isLoading = false
-                }
+    private func loadSessionAsync() async {
+        do {
+            // Use single-session endpoint instead of fetching all 22K+ sessions (O(n) -> O(1))
+            let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString.lowercased())")
+            if let foundSession = response.data {
+                self.session = foundSession
+                self.isLoading = false
+            } else {
+                self.errorMessage = "Session not found"
+                self.isLoading = false
             }
+        } catch {
+            self.errorMessage = error.localizedDescription
+            self.isLoading = false
         }
     }
 

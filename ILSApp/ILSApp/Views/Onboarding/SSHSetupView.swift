@@ -211,6 +211,7 @@ struct SSHSetupView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 1) {
+                            // Log lines are append-only; offset is stable as an identifier
                             ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { _, line in
                                 Text(line)
                                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -225,7 +226,7 @@ struct SSHSetupView: View {
                         .padding(theme.spacingSM)
                     }
                     .defaultScrollAnchor(.bottom)
-                    .frame(height: 300)
+                    .frame(minHeight: 150, maxHeight: 400)
                     .background(Color.black.opacity(0.85))
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     .onChange(of: viewModel.logLines.count) {

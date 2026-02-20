@@ -12,6 +12,7 @@ class DashboardViewModel {
     var totalCost: Double = 0.0
 
     private var client: APIClient?
+    @ObservationIgnored private var cacheTask: Task<Void, Never>?
 
     // Sparkline data (synthetic from recent sessions for visual interest)
     var sessionSparkline: [Double] { generateSparkline(count: 8, seed: stats?.sessions.total ?? 0) }
@@ -59,9 +60,10 @@ class DashboardViewModel {
         await loadRecentActivity()
         computeTotalCost()
 
-        // Cache the fresh recent sessions
+        // Cache the fresh recent sessions (stored task for deduplication + cancellation)
         if !recentSessions.isEmpty {
-            Task { [sessions = self.recentSessions] in
+            cacheTask?.cancel()
+            cacheTask = Task { [sessions = self.recentSessions] in
                 await CacheService.shared.cacheSessions(sessions)
             }
         }

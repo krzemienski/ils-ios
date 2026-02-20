@@ -15,7 +15,7 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: theme.spacingLG) {
+            LazyVStack(alignment: .leading, spacing: theme.spacingLG) {
                 welcomeSection
                 connectionBanner
 
