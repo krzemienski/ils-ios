@@ -7,6 +7,9 @@ struct HomeView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var dashboardVM = DashboardViewModel()
+    @State private var isRefreshing = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let createSessionTip = CreateSessionTip()
 
@@ -17,6 +20,7 @@ struct HomeView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: theme.spacingLG) {
                 welcomeSection
+                refreshingBanner
                 connectionBanner
 
                 if appState.isConnected {
@@ -31,6 +35,7 @@ struct HomeView: View {
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingMD)
+            .animation(.easeInOut(duration: 0.3), value: isRefreshing)
         }
         .background(theme.bgPrimary)
         .navigationTitle("Home")
@@ -40,7 +45,9 @@ struct HomeView: View {
             await dashboardVM.loadAll()
         }
         .refreshable {
+            isRefreshing = true
             await dashboardVM.loadAll()
+            isRefreshing = false
         }
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
@@ -63,6 +70,38 @@ struct HomeView: View {
             }
         }
         .padding(.top, theme.spacingSM)
+    }
+
+    // MARK: - Refreshing Banner
+
+    @ViewBuilder
+    private var refreshingBanner: some View {
+        if isRefreshing {
+            HStack(spacing: theme.spacingSM) {
+                if !reduceMotion {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.8)
+                        .tint(theme.textSecondary)
+                }
+
+                Text("Refreshing…")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingXS)
+            .background(theme.bgSecondary.opacity(0.8))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .transition(
+                .asymmetric(
+                    insertion: .move(edge: .top).combined(with: .opacity),
+                    removal: .move(edge: .top).combined(with: .opacity)
+                )
+            )
+            .accessibilityLabel("Refreshing content")
+            .accessibilityAddTraits(.updatesFrequently)
+        }
     }
 
     // MARK: - Connection Banner
@@ -325,6 +364,7 @@ struct HomeView: View {
                     onNavigate?(.browser)
                 }
             }
+            .shimmerIfActive(isRefreshing)
         }
     }
 
@@ -418,6 +458,7 @@ struct HomeView: View {
                         sparklineData: dashboardVM.mcpSparkline
                     )
                 }
+                .shimmerIfActive(isRefreshing)
 
                 // Secondary stats row: plugins + active counts
                 HStack(spacing: theme.spacingSM) {
@@ -510,6 +551,19 @@ struct HomeView: View {
             )
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Dashboard error: \(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - Conditional Shimmer Helper
+
+private extension View {
+    @ViewBuilder
+    func shimmerIfActive(_ active: Bool) -> some View {
+        if active {
+            shimmer()
+        } else {
+            self
         }
     }
 }
