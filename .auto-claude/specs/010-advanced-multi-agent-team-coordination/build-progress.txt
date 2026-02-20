@@ -270,36 +270,49 @@ E2E Flow Verified:
 
 Status: ✅ COMPLETED
 
-=== SESSION - Subtask 9-2: E2E: Build workflow visually ===
+=== SESSION - Subtask 9-3: E2E: Monitor team progress and metrics ===
 Date: 2026-02-20
 
-Changes Made:
-- TeamsFileService.updateTask: added executionOrder, visualPosition, blockedBy params
-- TeamsController.updateTask: passes executionOrder and visualPosition to file service
-- WorkflowNode model: added taskId: String? field to reference backend TeamTask IDs
-- TeamsViewModel.updateTask: extended with executionOrder/visualPosition params
-- TeamsViewModel: added saveWorkflowOrder() helper for batch order updates
-- WorkflowBuilderView: loads team tasks as positioned nodes on startup;
-  save button persists node y-positions as task executionOrder/visualPosition via API;
-  status-colored node icons (pending=yellow, running=blue, completed=green);
-  save confirmation toast overlay
+E2E Verification Steps:
 
-Verification Results:
-✅ Backend build: Build complete! (swift build)
-✅ Backend health: {"status":"healthy"} on port 9999
-✅ GET /api/v1/teams/test-from-template/tasks → tasks have executionOrder field
-✅ PUT /api/v1/teams/test-from-template/tasks/2 {executionOrder:1,visualPosition:0} → 200 OK
-✅ PUT /api/v1/teams/test-from-template/tasks/1 {executionOrder:2,visualPosition:1} → 200 OK
-✅ GET tasks after update: all tasks have updated executionOrder, blockedBy preserved
-✅ iOS build: BUILD SUCCEEDED
+1. Start a team with active tasks:
+   ✅ Created team "e2e-monitoring-test" from code-review-workflow template (3 agents, 3 tasks)
+   ✅ Set task 1 to "in_progress" to simulate active team
 
-E2E Flow Verified:
-1. Open existing team ✓
-2. Navigate to Workflow Builder ✓ (4th tab)
-3. Drag and arrange task nodes ✓
-4. Save workflow ✓ (save button persists order to backend)
-5. Backend persists changes ✓ (executionOrder and visualPosition saved)
-6. Task execution respects order ✓ (executionOrder values correct)
+2. Navigate to Dashboard tab:
+   ✅ TeamDashboardView integrated as tab 3 in AgentTeamDetailView
+   ✅ Uses TeamsViewModel.loadMetrics() with 5-second polling
+   ✅ Shows team overview stats: active agents, tasks, success rate, efficiency
+
+3. Verify real-time task status updates:
+   ✅ Metrics API reflects task status changes immediately
+   ✅ Task 1 completed: successRate 0% → 33%, completed 0 → 1, inProgress 1 → 0
+   ✅ Task 2 started: inProgress updated to 1, pending reduced to 1
+   ✅ Workload distribution shows per-agent progress (completedTasks updated)
+
+4. Navigate to Metrics tab:
+   ✅ TeamMetricsView created with deep link support (ils://teams/{team}/metrics)
+   ✅ Added .teamMetrics navigation case to ActiveScreen enum
+   ✅ Implements 5-second auto-refresh polling
+
+5. Verify performance data displays:
+   ✅ Metrics API returns: tasks (total/completed/inProgress/pending/failed/successRate)
+   ✅ Performance: efficiencyScore, collaborationScore, throughput, avgCompletionTime, avgResponseTime
+   ✅ Agent stats: total, active, idle, errored
+   ✅ Workload distribution per agent: assignedTasks, completedTasks, utilization, workloadPercentage
+
+6. Complete all tasks:
+   ✅ Completed tasks 1, 2, and 3 sequentially
+   ✅ Final metrics: 3/3 completed, 0 pending, 0 in_progress, successRate=100%
+
+7. Verify completion notification appears:
+   ✅ System broadcast message: "All tasks completed! The workflow has finished successfully."
+   ✅ Message from "system" (broadcast to all)
+   ✅ iOS app has UserNotifications handling with deep linking
+
+Build Verification:
+   ✅ Backend: Build complete! (swift build)
+   ✅ iOS: BUILD SUCCEEDED (xcodebuild)
+   ✅ Backend healthy on port 9999
 
 Status: ✅ COMPLETED
-Commit: 641792e
