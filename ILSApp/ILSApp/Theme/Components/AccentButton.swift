@@ -29,5 +29,7 @@ struct AccentButton: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
         .accessibilityLabel(title)
+        .opacity(isEnabled ? 1.0 : 0.5)
+        .saturation(isEnabled ? 1.0 : 0.3)
     }
 }

@@ -148,6 +148,7 @@ extension PaginatedResponse: @unchecked Sendable where T: Sendable {}
 // MARK: - Response Types
 extension RenameSessionRequest: Content {}
 extension BulkDeleteSessionsRequest: Content {}
+extension BulkDeleteProjectsRequest: Content {}
 extension MessageSearchResult: Content {}
 extension ChatExport: Content {}
 extension ChatExportSession: Content {}
