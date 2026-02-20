@@ -182,14 +182,18 @@ struct ToolResultView: View {
 struct ThinkingView: View {
     let thinking: String
     @State private var isExpanded = false
+    @State private var pulseScale: CGFloat = 1.0
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
             Button(action: { isExpanded.toggle() }) {
                 HStack {
                     Image(systemName: "brain")
-                        .foregroundColor(theme.info)
+                        .foregroundColor(theme.entityPlugin)
+                        .scaleEffect(pulseScale)
                     Text("Thinking")
                         .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     Spacer()
@@ -209,8 +213,36 @@ struct ThinkingView: View {
             }
         }
         .padding(theme.spacingSM)
-        .background(theme.info.opacity(0.1))
+        .background(
+            LinearGradient(
+                colors: [theme.entityPlugin.opacity(0.12), theme.info.opacity(0.06)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
         .cornerRadius(theme.cornerRadius)
+        .onAppear {
+            if !reduceMotion {
+                startPulsing()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                if !reduceMotion {
+                    startPulsing()
+                }
+            } else {
+                withAnimation(.default) {
+                    pulseScale = 1.0
+                }
+            }
+        }
+    }
+
+    private func startPulsing() {
+        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+            pulseScale = 1.15
+        }
     }
 }
 
