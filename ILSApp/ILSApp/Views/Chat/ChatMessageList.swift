@@ -58,6 +58,7 @@ struct ChatMessageList: View {
     let onLoadMore: () -> Void
     /// The encoded project path for the current session, used by permission UI.
     let sessionProjectId: String?
+    var expandAll: Binding<Bool?>? = nil
 
     /// Dynamic horizontal padding for messages, scales with the user's text size preference.
     @ScaledMetric(relativeTo: .body) private var messageSpacing: CGFloat = 16
@@ -160,7 +161,8 @@ struct ChatMessageList: View {
                         onRetry: { msg in
                             onRetryMessage(msg)
                         },
-                        onDelete: onDeleteMessage
+                        onDelete: onDeleteMessage,
+                        expandAll: expandAll
                     )
                     .padding(.horizontal, 16)
                     .padding(.top, isSameSender ? 8 : 24)
