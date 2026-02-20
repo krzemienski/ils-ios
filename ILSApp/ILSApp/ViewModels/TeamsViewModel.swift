@@ -9,6 +9,8 @@ class TeamsViewModel {
     var selectedTeam: AgentTeam?
     var tasks: [TeamTask] = []
     var messages: [TeamMessage] = []
+    var templates: [TeamTemplate] = []
+    var metrics: TeamMetricsResponse?
     var isLoading = false
     var error: String?
     var scenePhase: ScenePhase = .active {
@@ -176,11 +178,11 @@ class TeamsViewModel {
         isLoading = false
     }
 
-    func updateTask(teamName: String, id: String, status: TeamTaskStatus?, owner: String?) async {
+    func updateTask(teamName: String, id: String, status: TeamTaskStatus? = nil, owner: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil, blockedBy: [String]? = nil) async {
         isLoading = true
         error = nil
         do {
-            let request = UpdateTeamTaskRequest(status: status, owner: owner)
+            let request = UpdateTeamTaskRequest(status: status, owner: owner, executionOrder: executionOrder, visualPosition: visualPosition, blockedBy: blockedBy)
             let response: APIResponse<TeamTask> = try await apiClient.put( "/teams/\(teamName)/tasks/\(id)", body: request)
             if response.success {
                 await loadTasks(teamName: teamName)
@@ -191,6 +193,18 @@ class TeamsViewModel {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    func saveWorkflowOrder(teamName: String) async {
+        // Update each task's executionOrder based on its position in the tasks array
+        for (index, task) in tasks.enumerated() {
+            await updateTask(
+                teamName: teamName,
+                id: task.id,
+                executionOrder: index + 1,
+                visualPosition: index
+            )
+        }
     }
 
     // MARK: - Messages
@@ -226,6 +240,119 @@ class TeamsViewModel {
         isLoading = false
     }
 
+    // MARK: - Templates
+
+    func loadTemplates() async {
+        error = nil
+        do {
+            let response: APIResponse<[TeamTemplate]> = try await apiClient.get("/teams/templates")
+            if response.success, let data = response.data {
+                templates = data
+            } else {
+                error = response.error?.message ?? "Failed to load templates"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func getTemplate(id: String) async -> TeamTemplate? {
+        error = nil
+        do {
+            let response: APIResponse<TeamTemplate> = try await apiClient.get("/teams/templates/\(id)")
+            if response.success, let data = response.data {
+                return data
+            } else {
+                error = response.error?.message ?? "Failed to get template"
+                return nil
+            }
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
+
+    func createTemplate(request: CreateTemplateRequest) async {
+        isLoading = true
+        error = nil
+        do {
+            let response: APIResponse<TeamTemplate> = try await apiClient.post("/teams/templates", body: request)
+            if response.success {
+                await loadTemplates()
+            } else {
+                error = response.error?.message ?? "Failed to create template"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    func updateTemplate(id: String, request: UpdateTemplateRequest) async {
+        isLoading = true
+        error = nil
+        do {
+            let response: APIResponse<TeamTemplate> = try await apiClient.put("/teams/templates/\(id)", body: request)
+            if response.success {
+                await loadTemplates()
+            } else {
+                error = response.error?.message ?? "Failed to update template"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    func deleteTemplate(id: String) async {
+        isLoading = true
+        error = nil
+        do {
+            let response: APIResponse<DeletedResponse> = try await apiClient.delete("/teams/templates/\(id)")
+            if response.success {
+                await loadTemplates()
+            } else {
+                error = response.error?.message ?? "Failed to delete template"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    func applyTemplate(id: String, teamName: String, teamDescription: String?) async {
+        isLoading = true
+        error = nil
+        do {
+            let request = ApplyTemplateRequest(teamName: teamName, teamDescription: teamDescription)
+            let response: APIResponse<AgentTeam> = try await apiClient.post("/teams/templates/\(id)/apply", body: request)
+            if response.success {
+                await loadTeams()
+            } else {
+                error = response.error?.message ?? "Failed to apply template"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    // MARK: - Metrics
+
+    func loadMetrics(teamName: String) async {
+        error = nil
+        do {
+            let response: APIResponse<TeamMetricsResponse> = try await apiClient.get( "/teams/\(teamName)/metrics")
+            if response.success, let data = response.data {
+                metrics = data
+            } else {
+                error = response.error?.message ?? "Failed to load metrics"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     // MARK: - Polling
 
     func startPolling(teamName: String) {
@@ -244,6 +371,41 @@ class TeamsViewModel {
         pollingTask?.cancel()
         pollingTask = nil
         activeTeamName = nil
+    }
+
+    // MARK: - Export/Import
+
+    func exportTeam(name: String) async -> TeamExport? {
+        error = nil
+        do {
+            let response: APIResponse<TeamExport> = try await apiClient.get("/teams/\(name)/export")
+            if response.success, let data = response.data {
+                return data
+            } else {
+                error = response.error?.message ?? "Failed to export team"
+                return nil
+            }
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
+
+    func importTeam(export: TeamExport, overwrite: Bool? = nil) async {
+        isLoading = true
+        error = nil
+        do {
+            let request = ImportTeamRequest(export: export, overwrite: overwrite)
+            let response: APIResponse<AgentTeam> = try await apiClient.post("/teams/import", body: request)
+            if response.success {
+                await loadTeams()
+            } else {
+                error = response.error?.message ?? "Failed to import team"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
     }
 }
 

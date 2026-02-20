@@ -70,14 +70,20 @@ public struct TeamTask: Codable, Sendable, Identifiable {
     public var owner: String?
     /// IDs of tasks that block this one.
     public var blockedBy: [String]?
+    /// Execution order (lower = earlier).
+    public var executionOrder: Int?
+    /// Visual position for UI display.
+    public var visualPosition: Int?
 
-    public init(id: String, subject: String, description: String? = nil, status: TeamTaskStatus = .pending, owner: String? = nil, blockedBy: [String]? = nil) {
+    public init(id: String, subject: String, description: String? = nil, status: TeamTaskStatus = .pending, owner: String? = nil, blockedBy: [String]? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) {
         self.id = id
         self.subject = subject
         self.description = description
         self.status = status
         self.owner = owner
         self.blockedBy = blockedBy
+        self.executionOrder = executionOrder
+        self.visualPosition = visualPosition
     }
 }
 
@@ -185,12 +191,21 @@ public struct UpdateTeamTaskRequest: Codable, Sendable {
     public let subject: String?
     /// New description.
     public let description: String?
+    /// New execution order.
+    public let executionOrder: Int?
+    /// New visual position.
+    public let visualPosition: Int?
+    /// Updated list of blocking task IDs.
+    public let blockedBy: [String]?
 
-    public init(status: TeamTaskStatus? = nil, owner: String? = nil, subject: String? = nil, description: String? = nil) {
+    public init(status: TeamTaskStatus? = nil, owner: String? = nil, subject: String? = nil, description: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil, blockedBy: [String]? = nil) {
         self.status = status
         self.owner = owner
         self.subject = subject
         self.description = description
+        self.executionOrder = executionOrder
+        self.visualPosition = visualPosition
+        self.blockedBy = blockedBy
     }
 }
 
@@ -201,5 +216,35 @@ public struct ShutdownTeammateRequest: Codable, Sendable {
 
     public init(memberName: String? = nil) {
         self.memberName = memberName
+    }
+}
+
+/// Request to import a team from exported data.
+public struct ImportTeamRequest: Codable, Sendable {
+    /// Exported team data.
+    public let export: TeamExport
+    /// Whether to overwrite if team already exists.
+    public let overwrite: Bool?
+
+    public init(export: TeamExport, overwrite: Bool? = nil) {
+        self.export = export
+        self.overwrite = overwrite
+    }
+}
+
+/// Export format containing all team data for import/export operations.
+public struct TeamExport: Codable, Sendable {
+    public let name: String
+    public let description: String?
+    public let members: [TeamMember]
+    public let tasks: [TeamTask]
+    public let messages: [TeamMessage]
+
+    public init(name: String, description: String?, members: [TeamMember], tasks: [TeamTask], messages: [TeamMessage]) {
+        self.name = name
+        self.description = description
+        self.members = members
+        self.tasks = tasks
+        self.messages = messages
     }
 }
