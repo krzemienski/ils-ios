@@ -149,8 +149,9 @@ ILSBackend/
 ```
 
 **Key design decisions:**
-- Claude Code CLI invoked via `Process` + `DispatchQueue` (not ClaudeCodeSDK - see below)
-- Two-tier timeout for CLI: 30s initial response + 5min total execution
+- Two execution backends: Agent SDK (default, via `node scripts/sdk-wrapper.mjs`) and CLI fallback (`claude -p`) — see "Execution Backends" section
+- Both backends use `Process` + `DispatchQueue` for stdout reading (not ClaudeCodeSDK — Vapor's NIO doesn't pump RunLoop)
+- Two-tier timeout: 30s initial response + 5min total execution
 - External sessions read from `~/.claude/projects/*/sessions-index.json` files
 - Session deduplication: DB sessions take priority over external sessions
 - Auto-create session in DB when client sends unknown sessionId (FK constraint handling)
@@ -236,6 +237,91 @@ ILSMacApp/
 - Touch Bar support for chat
 - macOS-native settings window (`Settings` scene)
 
+## Execution Backends
+
+`ClaudeExecutorService` supports two execution backends, selected via the `useAgentSDK` static flag (default: `true`).
+
+### Agent SDK (Default)
+
+Spawns `node scripts/sdk-wrapper.mjs '<json-config>'` which invokes the `@anthropic-ai/claude-agent-sdk` npm package. The SDK calls the Anthropic API **directly** — no `claude` subprocess is involved — which avoids the hang that occurs when spawning `claude -p` inside an active Claude Code session.
+
+```
+ClaudeExecutorService.executeWithSDK()
+    |
+    v
+/bin/zsh -l -c "node scripts/sdk-wrapper.mjs '<json-config>'"
+    |
+    v
+sdk-wrapper.mjs  -->  @anthropic-ai/claude-agent-sdk
+                              |
+                              v
+                      Anthropic API (HTTPS)
+                              |
+                              v
+                       stdout (NDJSON)
+    |
+    v
+DispatchQueue reads line-by-line
+    |
+    v
+CLIMessageConverter --> StreamMessage
+```
+
+**Why SDK is preferred:**
+- Running `claude -p` as a subprocess inside an active Claude Code session causes the parent Claude process to detect the spawn and hang, preventing any output from being returned.
+- The Agent SDK bypasses this by making direct HTTPS calls to the Anthropic API — no `claude` subprocess is involved.
+- Authentication is inherited from the environment (Claude Code's auth tokens); `ANTHROPIC_API_KEY` is not required.
+- The prompt and all options are passed as a JSON argument to `sdk-wrapper.mjs`, keeping the interface clean and shell-injection-safe.
+
+### CLI Fallback
+
+Spawns `claude -p --output-format stream-json` directly as a subprocess. Use this backend when running the ILS backend **outside** a Claude Code session (e.g., standalone development on a machine where only the `claude` CLI is installed).
+
+```
+ClaudeExecutorService.executeWithCLI()
+    |
+    v
+/bin/zsh -l -c "claude -p --output-format stream-json ..."
+    |
+    v
+stdout (NDJSON)
+    |
+    v
+DispatchQueue reads line-by-line
+    |
+    v
+CLIMessageConverter --> StreamMessage
+```
+
+**When to use CLI fallback:**
+- Set `ClaudeExecutorService.useAgentSDK = false` in `configure.swift` (or toggle at runtime).
+- Use when running the backend as a standalone process outside a Claude Code session.
+- Required if Node.js / the Agent SDK npm package is not installed on the host.
+
+### Shared Output Processing
+
+Both backends produce NDJSON on stdout in the same format. The following pipeline is identical for both:
+
+| Stage | Implementation | Notes |
+|-------|---------------|-------|
+| stdout reading | `DispatchQueue` + `readDataToEndOfFile` | Avoids `RunLoop` dependency (Vapor's NIO doesn't pump RunLoop) |
+| JSON parsing | `JSONDecoder` with `.convertFromSnakeCase` | Maps `session_id` → `sessionId`, `tool_use` → `toolUse`, etc. |
+| Message conversion | `CLIMessageConverter` | Produces typed `StreamMessage` events for SSE delivery |
+| Initial timeout | 30 seconds (no stdout data) | Detects a stuck CLI or failed SDK spawn |
+| Total timeout | 5 minutes | Kills runaway processes unconditionally |
+
+### Switching Backends
+
+```swift
+// In Sources/ILSBackend/App/configure.swift
+
+// Use Agent SDK (default — required when running inside Claude Code)
+ClaudeExecutorService.useAgentSDK = true
+
+// Use CLI fallback (standalone mode, no Node.js dependency)
+ClaudeExecutorService.useAgentSDK = false
+```
+
 ## Data Flow
 
 ### Chat Streaming Flow
@@ -250,18 +336,22 @@ APIClient.streamChat(sessionId, prompt)
 POST /api/v1/chat/stream (SSE)
     |
     v
-ChatController --> ClaudeExecutorService
+ChatController --> ClaudeExecutorService.execute()
     |                    |
-    |                    v
-    |              Process("claude", "-p", prompt)
-    |                    |
-    |                    v
-    |              stdout --> DispatchQueue --> parse
-    |                    |
-    |                    v
-    |              CLIMessageConverter --> StreamMessage
-    |                    |
-    v                    v
+    |              useAgentSDK?
+    |             /            \
+    |         YES               NO
+    |          |                 |
+    |  node sdk-wrapper.mjs   claude -p
+    |  (Anthropic API direct) (--output-format stream-json)
+    |          |                 |
+    |          └────────┬────────┘
+    |                   |
+    |            stdout (NDJSON)
+    |                   |
+    |            CLIMessageConverter --> StreamMessage
+    |                   |
+    v                   v
 SSEClient <-- SSE events <-- StreamingService
     |
     v
@@ -301,7 +391,9 @@ App Launch --> DashboardViewModel.loadStats()
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| CLI integration | Direct `Process` | ClaudeCodeSDK uses RunLoop which Vapor's NIO doesn't pump |
+| Execution backend | Agent SDK (default) | Spawns `node scripts/sdk-wrapper.mjs`; SDK calls Anthropic API directly, avoiding subprocess hang inside Claude Code session |
+| CLI fallback | `claude -p --output-format stream-json` | Used when running backend standalone outside Claude Code; toggle via `ClaudeExecutorService.useAgentSDK = false` |
+| CLI integration | Direct `Process` + `DispatchQueue` | ClaudeCodeSDK uses RunLoop which Vapor's NIO doesn't pump |
 | Database | SQLite via Fluent | Simple deployment, no external DB needed |
 | Streaming | SSE + WebSocket | SSE for chat streaming, WS for live system metrics |
 | Theme storage | `ThemeSnapshot` struct | Replaced `any AppTheme` existential for 58 occurrences (performance) |
