@@ -26,6 +26,7 @@ struct TeamsController: RouteCollection {
         teams.get(":name", "messages", use: listMessages)
         teams.post(":name", "messages", use: sendMessage)
         teams.delete(":name", "members", ":memberName", use: removeMember)
+        teams.get(":name", "metrics", use: metrics)
 
         // Template endpoints
         teams.get("templates", use: listTemplates)
@@ -235,6 +236,102 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: message)
     }
 
+    // MARK: - Metrics
+
+    @Sendable
+    func metrics(req: Request) async throws -> APIResponse<TeamMetricsResponse> {
+        guard let teamName = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Team name is required")
+        }
+
+        guard var team = try await fileService.getTeam(name: teamName) else {
+            throw Abort(.notFound, reason: "Team '\(teamName)' not found")
+        }
+
+        // Update member statuses from executor service
+        for i in 0..<team.members.count {
+            let status = await executorService.getMemberStatus(teamName: teamName, memberName: team.members[i].name)
+            team.members[i].status = status
+        }
+
+        // Load tasks for this team
+        let tasks = try await fileService.listTasks(team: teamName)
+
+        // Calculate agent statistics
+        let totalAgents = team.members.count
+        let activeAgents = team.members.filter { $0.status == .active }.count
+        let idleAgents = team.members.filter { $0.status == .idle }.count
+        let erroredAgents = 0 // Currently no error status, could be added later
+
+        let agentStats = TeamMetricsResponse.AgentStats(
+            total: totalAgents,
+            active: activeAgents,
+            idle: idleAgents,
+            errored: erroredAgents
+        )
+
+        // Calculate task statistics
+        let totalTasks = tasks.count
+        let completedTasks = tasks.filter { $0.status == .completed }.count
+        let inProgressTasks = tasks.filter { $0.status == .inProgress }.count
+        let pendingTasks = tasks.filter { $0.status == .pending }.count
+        let failedTasks = 0 // Currently no failed status
+        let successRate = totalTasks > 0 ? Double(completedTasks) / Double(totalTasks) * 100 : 0.0
+
+        let taskStats = TeamMetricsResponse.TaskStats(
+            total: totalTasks,
+            completed: completedTasks,
+            inProgress: inProgressTasks,
+            pending: pendingTasks,
+            failed: failedTasks,
+            successRate: successRate
+        )
+
+        // Calculate performance metrics (simplified for now)
+        let averageCompletionTime = 0.0 // Would require task timing data
+        let averageResponseTime = 0.0 // Would require message timing data
+        let throughput = 0.0 // Would require time-based task completion tracking
+        let efficiencyScore = totalAgents > 0 ? (Double(activeAgents) / Double(totalAgents)) * 100 : 0.0
+        let collaborationScore = 0.0 // Would require message/collaboration tracking
+
+        let performance = TeamMetricsResponse.PerformanceMetrics(
+            averageCompletionTime: averageCompletionTime,
+            averageResponseTime: averageResponseTime,
+            throughput: throughput,
+            efficiencyScore: efficiencyScore,
+            collaborationScore: collaborationScore
+        )
+
+        // Calculate workload distribution per agent
+        let workloadDistribution: [TeamMetricsResponse.WorkloadDistribution] = team.members.map { member in
+            let assignedTasks = tasks.filter { $0.owner == member.name }.count
+            let completedTasksByMember = tasks.filter { $0.owner == member.name && $0.status == .completed }.count
+            let workloadPercentage = totalTasks > 0 ? Double(assignedTasks) / Double(totalTasks) * 100 : 0.0
+            let utilization = member.status == .active ? 100.0 : 0.0
+
+            return TeamMetricsResponse.WorkloadDistribution(
+                agentId: member.agentId ?? member.name,
+                agentName: member.name,
+                assignedTasks: assignedTasks,
+                completedTasks: completedTasksByMember,
+                workloadPercentage: workloadPercentage,
+                utilization: utilization
+            )
+        }
+
+        let metricsResponse = TeamMetricsResponse(
+            teamId: teamName,
+            teamName: teamName,
+            agents: agentStats,
+            tasks: taskStats,
+            performance: performance,
+            workloadDistribution: workloadDistribution,
+            timestamp: Date()
+        )
+
+        return APIResponse(success: true, data: metricsResponse)
+    }
+
     // MARK: - Template Management
 
     @Sendable
@@ -367,3 +464,4 @@ extension TeamTemplate: Content {}
 extension CreateTemplateRequest: Content {}
 extension UpdateTemplateRequest: Content {}
 extension ApplyTemplateRequest: Content {}
+extension TeamMetricsResponse: Content {}
