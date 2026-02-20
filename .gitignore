@@ -42,6 +42,7 @@ Pods/
 .omc/
 
 # Claude Code internal files
+.claude
 .claude/
 
 # Ralph TUI
