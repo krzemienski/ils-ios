@@ -82,6 +82,16 @@ public struct UpdateProjectRequest: Codable, Sendable {
     }
 }
 
+/// Request to bulk-delete projects by ID.
+public struct BulkDeleteProjectsRequest: Codable, Sendable {
+    /// Array of project UUIDs to delete.
+    public let ids: [UUID]
+
+    public init(ids: [UUID]) {
+        self.ids = ids
+    }
+}
+
 // MARK: - Session Requests
 
 /// Request to create a new Claude Code session.
