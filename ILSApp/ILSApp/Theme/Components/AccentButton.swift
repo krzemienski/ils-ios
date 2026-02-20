@@ -31,5 +31,7 @@ struct AccentButton: View {
         }
         .opacity(isEnabled ? 1.0 : 0.6)
         .accessibilityLabel(title)
+        .opacity(isEnabled ? 1.0 : 0.5)
+        .saturation(isEnabled ? 1.0 : 0.3)
     }
 }
