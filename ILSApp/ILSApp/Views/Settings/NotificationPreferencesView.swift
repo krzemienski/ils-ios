@@ -127,6 +127,9 @@ struct NotificationPreferencesView: View {
                 .tint(theme.accent)
         }
         .accessibilityLabel(accessibilityLabel)
+        .onChange(of: isOn.wrappedValue) {
+            HapticManager.selection()
+        }
     }
 }
 
