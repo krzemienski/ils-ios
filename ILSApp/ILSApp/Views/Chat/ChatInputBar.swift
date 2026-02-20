@@ -85,10 +85,12 @@ struct ChatInputBar: View {
     private var cancelButton: some View {
         Button(action: onCancel) {
             Image(systemName: "stop.circle.fill")
+                .font(.system(size: 24, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.error)
-                .frame(minWidth: 44, minHeight: 44)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .accessibilityIdentifier("cancel-button")
         .accessibilityLabel("Stop streaming")
         .accessibilityHint("Cancels the current response from Claude")
@@ -113,12 +115,14 @@ struct ChatInputBar: View {
             }
         } label: {
             Image(systemName: "arrow.up.circle.fill")
+                .font(.system(size: 24, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(text.isEmpty || isDisabled ? theme.textTertiary : theme.accent)
                 .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
                 .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
-                .frame(minWidth: 44, minHeight: 44)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .disabled(text.isEmpty || isDisabled)
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
