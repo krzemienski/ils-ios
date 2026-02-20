@@ -42,10 +42,12 @@ struct ChatInputBar: View {
     private var commandPaletteButton: some View {
         Button(action: onCommandPalette) {
             Image(systemName: "command")
+                .font(.system(size: 20, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(isDisabled ? theme.textTertiary : theme.accent)
-                .frame(minWidth: 44, minHeight: 44)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
@@ -54,10 +56,12 @@ struct ChatInputBar: View {
     private var optionsButton: some View {
         Button(action: onAdvancedOptions) {
             Image(systemName: hasCustomOptions ? "slider.horizontal.2.gobackward" : "slider.horizontal.3")
+                .font(.system(size: 20, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(hasCustomOptions ? theme.accent : (isDisabled ? theme.textTertiary : theme.textSecondary))
-                .frame(minWidth: 44, minHeight: 44)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
