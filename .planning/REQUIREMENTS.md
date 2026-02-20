@@ -9,11 +9,11 @@ Requirements for the audit. Each maps to roadmap phases.
 
 ### Build Verification (Phase 0)
 
-- [ ] **BUILD-01**: iOS app builds with zero errors on dedicated simulator (UDID: 50523130-57AA-48B0-ABD0-4D59CE455F14)
-- [ ] **BUILD-02**: macOS app builds with zero errors (platform=macOS)
-- [ ] **BUILD-03**: Backend builds with zero errors (swift build)
-- [ ] **BUILD-04**: Backend serves correct API responses from `ils-ios/` binary (verified via `lsof -i :9999`)
-- [ ] **BUILD-05**: All 3 builds run in parallel with `run_in_background: true`
+- [x] **BUILD-01**: iOS app builds with zero errors on dedicated simulator (UDID: 50523130-57AA-48B0-ABD0-4D59CE455F14)
+- [x] **BUILD-02**: macOS app builds with zero errors (platform=macOS)
+- [x] **BUILD-03**: Backend builds with zero errors (swift build)
+- [x] **BUILD-04**: Backend serves correct API responses from `ils-ios/` binary (verified via `lsof -i :9999`)
+- [x] **BUILD-05**: All 3 builds run in parallel with `run_in_background: true`
 
 ### Screen Inventory (Phase 1)
 
@@ -149,7 +149,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUILD-01 to BUILD-05 | Phase 0 | Pending |
+| BUILD-01 to BUILD-05 | Phase 0 | Complete |
 | SCRN-01 to SCRN-05 | Phase 1 | Pending |
 | IMPL-01 to IMPL-05 | Phase 2 | Pending |
 | MNDT-01 to MNDT-09 | Phase 3 | Pending |

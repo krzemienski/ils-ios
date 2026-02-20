@@ -11,7 +11,7 @@ A 10-phase audit of the ILS iOS/macOS monorepo that validates every spec-defined
 - **Group B (parallel):** Phase 3 + Phase 4 + Phase 5
 - **Group C (sequential):** Phase 6 -> Phase 7 -> Phase 8 -> Phase 9
 
-- [ ] **Phase 0: Build Verification** - All 3 targets build green, correct backend binary confirmed
+- [x] **Phase 0: Build Verification** - All 3 targets build green, correct backend binary confirmed
 - [ ] **Phase 1: Screen Inventory** - Before-state screenshots for all 28 screens (19 iPhone + 4 iPad + 5 macOS)
 - [ ] **Phase 2: Implementation Gap** - AddMCPServerView verified end-to-end
 - [ ] **Phase 3: Mandate Verification** - 9 audit mandates validated with evidence
@@ -38,7 +38,7 @@ A 10-phase audit of the ILS iOS/macOS monorepo that validates every spec-defined
 **Plans**: 1 plan
 
 Plans:
-- [ ] 00-01: Parallel build verification (iOS + macOS + Backend) with backend binary validation
+- [x] 00-01: Parallel build verification (iOS + macOS + Backend) with backend binary validation
 
 ### Phase 1: Screen Inventory
 **Goal**: Capture before-state screenshots for all screens across iPhone, iPad, and macOS
@@ -207,7 +207,7 @@ Group A (parallel): 0 + 1 + 2 -> Gate -> Group B (parallel): 3 + 4 + 5 -> Gate -
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Build Verification | 0/1 | Not started | - |
+| 0. Build Verification | 1/1 | Complete | 2026-02-20 |
 | 1. Screen Inventory | 1/2 | In Progress | - |
 | 2. Implementation Gap | 0/1 | Not started | - |
 | 3. Mandate Verification | 0/2 | Not started | - |
