@@ -113,6 +113,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Member Management
 
+    /// Spawn a new teammate in the specified team using the executor service.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and SpawnTeammateRequest body (name, agentType, model, prompt)
+    /// - Returns: APIResponse with the newly spawned TeamMember including its initial status
     @Sendable
     func spawn(req: Request) async throws -> APIResponse<TeamMember> {
         guard let teamName = req.parameters.get("name") else {
@@ -131,6 +135,13 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: member)
     }
 
+    /// Shut down one or all teammates in the specified team.
+    ///
+    /// If a `memberName` is provided in the request body, only that member is shut down.
+    /// If no body or no `memberName` is provided, all members in the team are shut down.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and optional ShutdownTeammateRequest body (memberName)
+    /// - Returns: APIResponse with AcknowledgedResponse confirming the shutdown was initiated
     @Sendable
     func shutdown(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
         guard let teamName = req.parameters.get("name") else {
@@ -150,6 +161,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: AcknowledgedResponse(acknowledged: true))
     }
 
+    /// Remove a specific member from a team, shutting them down before removal.
+    ///
+    /// - Parameter req: Vapor Request with name and memberName route parameters
+    /// - Returns: APIResponse with DeletedResponse confirming the member was removed
     @Sendable
     func removeMember(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let teamName = req.parameters.get("name") else {
