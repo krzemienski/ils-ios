@@ -12,6 +12,7 @@ struct ChatInputBar: View {
     let onAdvancedOptions: () -> Void
     @State private var sendButtonPressed = false
     @State private var resetTask: Task<Void, Never>?
+    @FocusState private var isInputFocused: Bool
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -68,12 +69,14 @@ struct ChatInputBar: View {
             .textFieldStyle(.plain)
             .lineLimit(1...5)
             .disabled(isDisabled)
+            .focused($isInputFocused)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
             )
+            .focusRing(isFocused: isInputFocused, cornerRadius: theme.cornerRadius)
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
     }
