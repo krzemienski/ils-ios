@@ -26,10 +26,10 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 // MARK: - Mac Settings View
 
 struct MacSettingsView: View {
-    @EnvironmentObject var appState: AppState
-    @EnvironmentObject var themeManager: ThemeManager
+    @Environment(AppState.self) var appState
+    @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) var theme: ThemeSnapshot
-    @StateObject var viewModel = SettingsViewModel()
+    @State var viewModel = SettingsViewModel()
 
     @State private var selectedTab: SettingsTab = .general
     @State var serverURL: String = ""
@@ -486,7 +486,7 @@ struct MacSettingsView: View {
 
 #Preview {
     MacSettingsView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

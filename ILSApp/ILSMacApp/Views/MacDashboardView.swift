@@ -4,11 +4,11 @@ import ILSShared
 // MARK: - Mac Dashboard View
 
 struct MacDashboardView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    @StateObject private var dashboardVM = DashboardViewModel()
-    @StateObject private var sessionsVM = SessionsViewModel()
+    @State private var dashboardVM = DashboardViewModel()
+    @State private var sessionsVM = SessionsViewModel()
 
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
@@ -431,7 +431,7 @@ struct MacDashboardView: View {
 
 struct NewSessionSheet: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
 
     let onSessionCreated: (ChatSession) -> Void
     let onCancel: () -> Void
@@ -499,6 +499,6 @@ struct NewSessionSheet: View {
 
 #Preview {
     MacDashboardView()
-        .environmentObject(AppState())
+        .environment(AppState())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

@@ -45,9 +45,9 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // MARK: - Mac Content View
 
 struct MacContentView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var sessionsViewModel = SessionsViewModel()
+    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -132,9 +132,9 @@ struct MacContentView: View {
             isSearchFocused = true
             return .handled
         }
-        .sheet(isPresented: $appState.showOnboarding) {
+        .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
-                .environmentObject(appState)
+                .environment(appState)
                 .environment(\.theme, theme)
         }
         .alert("Rename Session", isPresented: Binding(
@@ -602,7 +602,7 @@ struct MacSessionRow: View {
 
 #Preview {
     MacContentView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }
