@@ -9,62 +9,7 @@ struct FleetManagementView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: theme.spacingMD) {
-                ForEach(viewModel.hosts) { host in
-                    NavigationLink {
-                        FleetHostDetailView(host: host)
-                    } label: {
-                        fleetHostRow(host)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if let error = viewModel.loadError {
-                    VStack(spacing: theme.spacingSM) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.title2)
-                            .foregroundStyle(theme.error)
-                        Text(error)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                            .multilineTextAlignment(.center)
-                        Button("Retry") {
-                            Task { await viewModel.loadHosts() }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(theme.accent)
-                    }
-                    .padding(theme.spacingLG)
-                }
-
-                if let autoError = viewModel.autoRegisterError {
-                    HStack(spacing: theme.spacingSM) {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(theme.warning)
-                        Text(autoError)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                    }
-                    .padding(theme.spacingMD)
-                    .modifier(GlassCard())
-                }
-
-                if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
-                    EmptyEntityState(
-                        entityType: .system,
-                        title: "No Hosts",
-                        description: "Register a remote host to get started."
-                    )
-                }
-
-                if viewModel.isLoading {
-                    ProgressView()
-                        .tint(theme.accent)
-                        .padding(.vertical, theme.spacingLG)
-                }
-            }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.top, theme.spacingSM)
+            hostListContent
         }
         .background(theme.bgPrimary)
         .navigationTitle("Hosts")
@@ -94,8 +39,72 @@ struct FleetManagementView: View {
         .onAppear { viewModel.startHealthPolling() }
         .onDisappear { viewModel.stopHealthPolling() }
         .onChange(of: scenePhase) { _, newPhase in
-            viewModel.isActive = (newPhase == .active)
+            if newPhase == .active {
+                viewModel.startHealthPolling()
+            } else {
+                viewModel.stopHealthPolling()
+            }
         }
+    }
+
+    @ViewBuilder
+    private var hostListContent: some View {
+        LazyVStack(spacing: theme.spacingMD) {
+            ForEach(viewModel.hosts) { host in
+                NavigationLink {
+                    FleetHostDetailView(host: host)
+                } label: {
+                    fleetHostRow(host)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if let error = viewModel.loadError {
+                VStack(spacing: theme.spacingSM) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.title2)
+                        .foregroundStyle(theme.error)
+                    Text(error)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                    Button("Retry") {
+                        Task { await viewModel.loadHosts() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.accent)
+                }
+                .padding(theme.spacingLG)
+            }
+
+            if let autoError = viewModel.autoRegisterError {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(theme.warning)
+                    Text(autoError)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+
+            if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
+                EmptyEntityState(
+                    entityType: .system,
+                    title: "No Hosts",
+                    description: "Register a remote host to get started."
+                )
+            }
+
+            if viewModel.isLoading {
+                ProgressView()
+                    .tint(theme.accent)
+                    .padding(.vertical, theme.spacingLG)
+            }
+        }
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.top, theme.spacingSM)
     }
 
     // MARK: - Host Row
