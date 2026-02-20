@@ -18,63 +18,8 @@ import ILSShared
 struct MCPController: RouteCollection {
     let fileSystem: FileSystemService
 
-    /// Keywords that indicate an env value is sensitive and should be masked in API responses.
-    private static let sensitiveKeywords: [String] = ["key", "token", "secret", "password", "credential", "auth"]
-
     init(fileSystem: FileSystemService) {
         self.fileSystem = fileSystem
-    }
-
-    /// Arg flag patterns that indicate the next value is a secret.
-    /// Matches flags like `--api-key`, `--github-api-key`, `--token`, `--secret`, etc.
-    private static let sensitiveArgPatterns: [String] = [
-        "-key", "-token", "-secret", "-password", "-credential", "-auth"
-    ]
-
-    /// Returns a copy of the server with sensitive env values and args replaced by `***masked***`.
-    private func maskSensitive(_ server: MCPServer) -> MCPServer {
-        var copy = server
-
-        // Mask all env values (env vars on MCP servers are almost always secrets)
-        if let env = server.env, !env.isEmpty {
-            copy.env = env.mapValues { _ in "***masked***" }
-        }
-
-        // Mask args values that follow sensitive flag patterns
-        // e.g. ["--github-api-key", "ghp_abc123"] → ["--github-api-key", "***masked***"]
-        if !server.args.isEmpty {
-            var maskedArgs = server.args
-            for i in 0..<server.args.count {
-                let lowered = server.args[i].lowercased()
-                // Check if this arg is a flag that matches a sensitive pattern
-                if lowered.hasPrefix("-") {
-                    let isSensitive = Self.sensitiveArgPatterns.contains { lowered.hasSuffix($0) }
-                    if isSensitive {
-                        // Mask the next argument (the value) if it exists and isn't another flag
-                        if i + 1 < server.args.count && !server.args[i + 1].hasPrefix("-") {
-                            maskedArgs[i + 1] = "***masked***"
-                        }
-                    }
-                }
-                // Also mask inline `--flag=value` patterns
-                if lowered.hasPrefix("-") && lowered.contains("=") {
-                    let flagPart = String(lowered.prefix(while: { $0 != "=" }))
-                    let isSensitive = Self.sensitiveArgPatterns.contains { flagPart.hasSuffix($0) }
-                    if isSensitive, let eqIndex = server.args[i].firstIndex(of: "=") {
-                        let flag = String(server.args[i][...eqIndex])
-                        maskedArgs[i] = flag + "***masked***"
-                    }
-                }
-            }
-            copy.args = maskedArgs
-        }
-
-        return copy
-    }
-
-    /// Masks sensitive env and args values across an array of servers.
-    private func maskSensitive(_ servers: [MCPServer]) -> [MCPServer] {
-        servers.map { maskSensitive($0) }
     }
 
     func boot(routes: RoutesBuilder) throws {
@@ -119,7 +64,7 @@ struct MCPController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: maskSensitive(server)
+            data: server
         )
     }
 
@@ -143,12 +88,9 @@ struct MCPController: RouteCollection {
 
         let servers = try await fileSystem.readMCPServers(scope: scope, bypassCache: bypassCache)
 
-        // Mask sensitive env values before returning to clients
-        let maskedServers = maskSensitive(servers)
-
         // Apply pagination
         let pagination = PaginationParams(from: req)
-        let result = pagination.apply(to: maskedServers)
+        let result = pagination.apply(to: servers)
 
         return APIResponse(
             success: true,
@@ -327,7 +269,7 @@ struct MCPController: RouteCollection {
         json["enabledMcpjsonServers"] = enabledServers
 
         let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
-        try data.write(to: URL(fileURLWithPath: settingsPath), options: .atomic)
+        try data.write(to: URL(fileURLWithPath: settingsPath))
 
         // Invalidate cache so next read picks up the change
         await fileSystem.invalidateMCPServersCache()

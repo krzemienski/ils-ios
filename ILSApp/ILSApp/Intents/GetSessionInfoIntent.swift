@@ -15,7 +15,7 @@ struct GetSessionInfoIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
+        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
         guard let url = URL(string: "\(baseURL)/api/v1/sessions/\(session.id)") else {
             return .result(value: "Error: Invalid server URL")
         }
@@ -41,15 +41,12 @@ struct GetSessionInfoIntent: AppIntent {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
-            do {
-                let decoded = try decoder.decode(SessionDetailResponse.self, from: data)
-                if let detail = decoded.data {
-                    return .result(value: formatDetailedInfo(detail))
-                }
-            } catch {
-                // Decoding failed — fall back to cached entity data
+            if let json = try? decoder.decode(SessionDetailResponse.self, from: data),
+               let detail = json.data {
+                return .result(value: formatDetailedInfo(detail))
             }
 
+            // Fall back to entity data
             return .result(value: formatEntityInfo())
         } catch {
             // Network error — return what we have from the entity

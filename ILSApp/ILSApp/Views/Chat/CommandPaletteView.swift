@@ -96,11 +96,13 @@ struct CommandPaletteView: View {
             #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(theme.bgPrimary, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             #endif
             .task {
                 await loadSkills()
             }
         }
+        .preferredColorScheme(.dark)
     }
 
     /// The complete set of 16 supported slash commands, shown unfiltered when search is empty.

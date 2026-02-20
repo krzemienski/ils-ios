@@ -26,7 +26,6 @@ struct AgentTeamsListView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Agent Teams")
-        .inlineNavigationBarTitle()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -39,7 +38,6 @@ struct AgentTeamsListView: View {
         }
         .sheet(isPresented: $showCreateSheet) {
             CreateTeamView(viewModel: viewModel)
-                .presentationDetents([.medium])
         }
         .task {
             await viewModel.loadTeams()

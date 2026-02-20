@@ -2,13 +2,7 @@ import SwiftUI
 
 struct LogViewerView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-
-    private struct LogLine: Identifiable {
-        let id: Int
-        let text: String
-    }
-
-    @State private var logs: [LogLine] = []
+    @State private var logs: [String] = []
 
     var body: some View {
         ScrollView {
@@ -17,10 +11,10 @@ struct LogViewerView: View {
                     .foregroundStyle(theme.textSecondary)
             } else {
                 LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(logs) { line in
-                        Text(line.text)
+                    ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
+                        Text(line)
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(logColor(for: line.text))
+                            .foregroundStyle(logColor(for: line))
                             .padding(.horizontal, theme.spacingSM)
                             .padding(.vertical, 2)
                     }
@@ -30,7 +24,6 @@ struct LogViewerView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Logs")
-        .inlineNavigationBarTitle()
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) {
@@ -43,16 +36,14 @@ struct LogViewerView: View {
             #endif
         }
         .task {
-            let rawLogs = await AppLogger.shared.recentLogs()
-            logs = rawLogs.enumerated().map { LogLine(id: $0.offset, text: $0.element) }
+            logs = await AppLogger.shared.recentLogs()
         }
     }
 
     private var refreshButton: some View {
         Button {
             Task {
-                let rawLogs = await AppLogger.shared.recentLogs()
-                logs = rawLogs.enumerated().map { LogLine(id: $0.offset, text: $0.element) }
+                logs = await AppLogger.shared.recentLogs()
             }
         } label: {
             Image(systemName: "arrow.clockwise")

@@ -1,15 +1,28 @@
 import Vapor
 import ILSShared
 
+/// Controller for agent team management operations.
+///
+/// Routes:
+/// - `GET /teams`: List all teams
+/// - `POST /teams`: Create a new team
+/// - `GET /teams/:name`: Get a specific team by name
+/// - `DELETE /teams/:name`: Delete a team and shut down all its members
+/// - `POST /teams/:name/spawn`: Spawn a new teammate in the team
+/// - `POST /teams/:name/shutdown`: Shut down one or all teammates in the team
+/// - `GET /teams/:name/tasks`: List tasks for a team
+/// - `POST /teams/:name/tasks`: Create a new task for a team
+/// - `PUT /teams/:name/tasks/:taskId`: Update an existing task
+/// - `GET /teams/:name/messages`: List messages for a team
+/// - `POST /teams/:name/messages`: Send a message to a team
+/// - `DELETE /teams/:name/members/:memberName`: Remove a member from a team
 struct TeamsController: RouteCollection {
     let fileService: TeamsFileService
     let executorService: TeamsExecutorService
-    let templateService: TeamTemplateService
 
-    init(fileService: TeamsFileService, executorService: TeamsExecutorService, templateService: TeamTemplateService) {
+    init(fileService: TeamsFileService, executorService: TeamsExecutorService) {
         self.fileService = fileService
         self.executorService = executorService
-        self.templateService = templateService
     }
 
     func boot(routes: RoutesBuilder) throws {
@@ -26,29 +39,24 @@ struct TeamsController: RouteCollection {
         teams.get(":name", "messages", use: listMessages)
         teams.post(":name", "messages", use: sendMessage)
         teams.delete(":name", "members", ":memberName", use: removeMember)
-        teams.get(":name", "metrics", use: metrics)
-
-        // Template endpoints
-        teams.get("templates", use: listTemplates)
-        teams.post("templates", use: createTemplate)
-        teams.get("templates", ":templateId", use: getTemplate)
-        teams.put("templates", ":templateId", use: updateTemplate)
-        teams.delete("templates", ":templateId", use: deleteTemplate)
-        teams.post("templates", ":templateId", "apply", use: applyTemplate)
-
-        // Export/Import endpoints
-        teams.get(":name", "export", use: exportTeam)
-        teams.post("import", use: importTeam)
     }
 
     // MARK: - Teams Management
 
+    /// List all agent teams.
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with array of AgentTeam objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<[AgentTeam]> {
         let teams = try await fileService.listTeams()
         return APIResponse(success: true, data: teams)
     }
 
+    /// Create a new agent team with the given name and optional description.
+    ///
+    /// - Parameter req: Vapor Request with CreateTeamRequest body (name, description)
+    /// - Returns: APIResponse with the newly created AgentTeam
     @Sendable
     func create(req: Request) async throws -> APIResponse<AgentTeam> {
         let request = try req.content.decode(CreateTeamRequest.self)
@@ -61,6 +69,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: team)
     }
 
+    /// Get a specific team by name, with live member statuses from the executor service.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with the AgentTeam including current member statuses
     @Sendable
     func detail(req: Request) async throws -> APIResponse<AgentTeam> {
         guard let name = req.parameters.get("name") else {
@@ -80,6 +92,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: team)
     }
 
+    /// Delete a team by name, shutting down all active teammates before removing team files.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with DeletedResponse confirming deletion
     @Sendable
     func remove(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let name = req.parameters.get("name") else {
@@ -97,6 +113,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Member Management
 
+    /// Spawn a new teammate in the specified team using the executor service.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and SpawnTeammateRequest body (name, agentType, model, prompt)
+    /// - Returns: APIResponse with the newly spawned TeamMember including its initial status
     @Sendable
     func spawn(req: Request) async throws -> APIResponse<TeamMember> {
         guard let teamName = req.parameters.get("name") else {
@@ -115,6 +135,13 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: member)
     }
 
+    /// Shut down one or all teammates in the specified team.
+    ///
+    /// If a `memberName` is provided in the request body, only that member is shut down.
+    /// If no body or no `memberName` is provided, all members in the team are shut down.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and optional ShutdownTeammateRequest body (memberName)
+    /// - Returns: APIResponse with AcknowledgedResponse confirming the shutdown was initiated
     @Sendable
     func shutdown(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
         guard let teamName = req.parameters.get("name") else {
@@ -134,6 +161,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: AcknowledgedResponse(acknowledged: true))
     }
 
+    /// Remove a specific member from a team, shutting them down before removal.
+    ///
+    /// - Parameter req: Vapor Request with name and memberName route parameters
+    /// - Returns: APIResponse with DeletedResponse confirming the member was removed
     @Sendable
     func removeMember(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let teamName = req.parameters.get("name") else {
@@ -151,6 +182,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Task Management
 
+    /// List all tasks for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with array of TeamTask objects for the team
     @Sendable
     func listTasks(req: Request) async throws -> APIResponse<[TeamTask]> {
         guard let teamName = req.parameters.get("name") else {
@@ -161,6 +196,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: tasks)
     }
 
+    /// Create a new task for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and CreateTeamTaskRequest body (subject, description)
+    /// - Returns: APIResponse with the newly created TeamTask
     @Sendable
     func createTask(req: Request) async throws -> APIResponse<TeamTask> {
         guard let teamName = req.parameters.get("name") else {
@@ -182,6 +221,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: task)
     }
 
+    /// Update an existing task for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name and taskId route parameters and UpdateTeamTaskRequest body (status, owner)
+    /// - Returns: APIResponse with the updated TeamTask
     @Sendable
     func updateTask(req: Request) async throws -> APIResponse<TeamTask> {
         guard let teamName = req.parameters.get("name") else {
@@ -197,10 +240,7 @@ struct TeamsController: RouteCollection {
             team: teamName,
             id: taskId,
             status: request.status,
-            owner: request.owner,
-            executionOrder: request.executionOrder,
-            visualPosition: request.visualPosition,
-            blockedBy: request.blockedBy
+            owner: request.owner
         )
 
         return APIResponse(success: true, data: task)
@@ -208,6 +248,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Message Management
 
+    /// List all messages for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with array of TeamMessage objects for the team
     @Sendable
     func listMessages(req: Request) async throws -> APIResponse<[TeamMessage]> {
         guard let teamName = req.parameters.get("name") else {
@@ -218,6 +262,12 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: messages)
     }
 
+    /// Send a message to the specified team, persisting it via the file service.
+    ///
+    /// Validates content length (max 100,000 chars), from (max 255 chars), and to (max 255 chars).
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and SendTeamMessageRequest body (content, from, to)
+    /// - Returns: APIResponse with the newly created TeamMessage
     @Sendable
     func sendMessage(req: Request) async throws -> APIResponse<TeamMessage> {
         guard let teamName = req.parameters.get("name") else {
@@ -242,278 +292,6 @@ struct TeamsController: RouteCollection {
 
         return APIResponse(success: true, data: message)
     }
-
-    // MARK: - Metrics
-
-    @Sendable
-    func metrics(req: Request) async throws -> APIResponse<TeamMetricsResponse> {
-        guard let teamName = req.parameters.get("name") else {
-            throw Abort(.badRequest, reason: "Team name is required")
-        }
-
-        guard var team = try await fileService.getTeam(name: teamName) else {
-            throw Abort(.notFound, reason: "Team '\(teamName)' not found")
-        }
-
-        // Update member statuses from executor service
-        for i in 0..<team.members.count {
-            let status = await executorService.getMemberStatus(teamName: teamName, memberName: team.members[i].name)
-            team.members[i].status = status
-        }
-
-        // Load tasks for this team
-        let tasks = try await fileService.listTasks(team: teamName)
-
-        // Calculate agent statistics
-        let totalAgents = team.members.count
-        let activeAgents = team.members.filter { $0.status == .active }.count
-        let idleAgents = team.members.filter { $0.status == .idle }.count
-        let erroredAgents = 0 // Currently no error status, could be added later
-
-        let agentStats = TeamMetricsResponse.AgentStats(
-            total: totalAgents,
-            active: activeAgents,
-            idle: idleAgents,
-            errored: erroredAgents
-        )
-
-        // Calculate task statistics
-        let totalTasks = tasks.count
-        let completedTasks = tasks.filter { $0.status == .completed }.count
-        let inProgressTasks = tasks.filter { $0.status == .inProgress }.count
-        let pendingTasks = tasks.filter { $0.status == .pending }.count
-        let failedTasks = 0 // Currently no failed status
-        let successRate = totalTasks > 0 ? Double(completedTasks) / Double(totalTasks) * 100 : 0.0
-
-        let taskStats = TeamMetricsResponse.TaskStats(
-            total: totalTasks,
-            completed: completedTasks,
-            inProgress: inProgressTasks,
-            pending: pendingTasks,
-            failed: failedTasks,
-            successRate: successRate
-        )
-
-        // Calculate performance metrics (simplified for now)
-        let averageCompletionTime = 0.0 // Would require task timing data
-        let averageResponseTime = 0.0 // Would require message timing data
-        let throughput = 0.0 // Would require time-based task completion tracking
-        let efficiencyScore = totalAgents > 0 ? (Double(activeAgents) / Double(totalAgents)) * 100 : 0.0
-        let collaborationScore = 0.0 // Would require message/collaboration tracking
-
-        let performance = TeamMetricsResponse.PerformanceMetrics(
-            averageCompletionTime: averageCompletionTime,
-            averageResponseTime: averageResponseTime,
-            throughput: throughput,
-            efficiencyScore: efficiencyScore,
-            collaborationScore: collaborationScore
-        )
-
-        // Calculate workload distribution per agent
-        let workloadDistribution: [TeamMetricsResponse.WorkloadDistribution] = team.members.map { member in
-            let assignedTasks = tasks.filter { $0.owner == member.name }.count
-            let completedTasksByMember = tasks.filter { $0.owner == member.name && $0.status == .completed }.count
-            let workloadPercentage = totalTasks > 0 ? Double(assignedTasks) / Double(totalTasks) * 100 : 0.0
-            let utilization = member.status == .active ? 100.0 : 0.0
-
-            return TeamMetricsResponse.WorkloadDistribution(
-                agentId: member.agentId ?? member.name,
-                agentName: member.name,
-                assignedTasks: assignedTasks,
-                completedTasks: completedTasksByMember,
-                workloadPercentage: workloadPercentage,
-                utilization: utilization
-            )
-        }
-
-        let metricsResponse = TeamMetricsResponse(
-            teamId: teamName,
-            teamName: teamName,
-            agents: agentStats,
-            tasks: taskStats,
-            performance: performance,
-            workloadDistribution: workloadDistribution,
-            timestamp: Date()
-        )
-
-        return APIResponse(success: true, data: metricsResponse)
-    }
-
-    // MARK: - Template Management
-
-    @Sendable
-    func listTemplates(req: Request) async throws -> APIResponse<[TeamTemplate]> {
-        let templates = try await templateService.listTemplates()
-        return APIResponse(success: true, data: templates)
-    }
-
-    @Sendable
-    func getTemplate(req: Request) async throws -> APIResponse<TeamTemplate> {
-        guard let templateId = req.parameters.get("templateId") else {
-            throw Abort(.badRequest, reason: "Template ID is required")
-        }
-
-        guard let template = try await templateService.getTemplate(id: templateId) else {
-            throw Abort(.notFound, reason: "Template '\(templateId)' not found")
-        }
-
-        return APIResponse(success: true, data: template)
-    }
-
-    @Sendable
-    func createTemplate(req: Request) async throws -> APIResponse<TeamTemplate> {
-        let request = try req.content.decode(CreateTemplateRequest.self)
-
-        // Validate input lengths
-        try PathSanitizer.validateStringLength(request.name, maxLength: 255, fieldName: "name")
-        try PathSanitizer.validateOptionalStringLength(request.description, maxLength: 1000, fieldName: "description")
-        try PathSanitizer.validateOptionalStringLength(request.category, maxLength: 100, fieldName: "category")
-
-        // Generate ID from name (lowercase, replace spaces with hyphens)
-        let id = request.name.lowercased().replacingOccurrences(of: " ", with: "-")
-
-        let template = try await templateService.createTemplate(
-            id: id,
-            name: request.name,
-            description: request.description,
-            category: request.category,
-            members: request.members ?? [],
-            tasks: request.tasks ?? []
-        )
-
-        return APIResponse(success: true, data: template)
-    }
-
-    @Sendable
-    func updateTemplate(req: Request) async throws -> APIResponse<TeamTemplate> {
-        guard let templateId = req.parameters.get("templateId") else {
-            throw Abort(.badRequest, reason: "Template ID is required")
-        }
-
-        let request = try req.content.decode(UpdateTemplateRequest.self)
-
-        // Validate input lengths
-        try PathSanitizer.validateOptionalStringLength(request.name, maxLength: 255, fieldName: "name")
-        try PathSanitizer.validateOptionalStringLength(request.description, maxLength: 1000, fieldName: "description")
-        try PathSanitizer.validateOptionalStringLength(request.category, maxLength: 100, fieldName: "category")
-
-        let template = try await templateService.updateTemplate(
-            id: templateId,
-            name: request.name,
-            description: request.description,
-            category: request.category,
-            members: request.members,
-            tasks: request.tasks
-        )
-
-        return APIResponse(success: true, data: template)
-    }
-
-    @Sendable
-    func deleteTemplate(req: Request) async throws -> APIResponse<DeletedResponse> {
-        guard let templateId = req.parameters.get("templateId") else {
-            throw Abort(.badRequest, reason: "Template ID is required")
-        }
-
-        try await templateService.deleteTemplate(id: templateId)
-
-        return APIResponse(success: true, data: DeletedResponse(deleted: true))
-    }
-
-    @Sendable
-    func applyTemplate(req: Request) async throws -> APIResponse<AgentTeam> {
-        guard let templateId = req.parameters.get("templateId") else {
-            throw Abort(.badRequest, reason: "Template ID is required")
-        }
-
-        guard let template = try await templateService.getTemplate(id: templateId) else {
-            throw Abort(.notFound, reason: "Template '\(templateId)' not found")
-        }
-
-        let request = try req.content.decode(ApplyTemplateRequest.self)
-
-        // Validate input lengths
-        try PathSanitizer.validateStringLength(request.teamName, maxLength: 255, fieldName: "teamName")
-        try PathSanitizer.validateOptionalStringLength(request.teamDescription, maxLength: 1000, fieldName: "teamDescription")
-
-        // Create team from template
-        var team = try await fileService.createTeam(
-            name: request.teamName,
-            description: request.teamDescription ?? template.description
-        )
-
-        // Add members from template
-        let members = template.members.map { templateMember in
-            TeamMember(
-                name: templateMember.name,
-                agentId: templateMember.name,
-                agentType: templateMember.agentType,
-                status: .idle,
-                pid: nil
-            )
-        }
-        team.members = members
-
-        // Update team config with members
-        try await fileService.updateTeamMembers(name: request.teamName, members: members)
-
-        // Create tasks from template - map template IDs to created task IDs
-        var templateIdToActualId: [String: String] = [:]
-        let sortedTasks = template.tasks.sorted { ($0.executionOrder ?? 0) < ($1.executionOrder ?? 0) }
-
-        for templateTask in sortedTasks {
-            // Map blocked dependencies from template IDs to actual IDs
-            let mappedBlockedBy = templateTask.blockedBy?.compactMap { templateIdToActualId[$0] }
-
-            let createdTask = try await fileService.createTask(
-                team: request.teamName,
-                subject: templateTask.subject,
-                description: templateTask.description,
-                owner: templateTask.owner,
-                blockedBy: mappedBlockedBy,
-                executionOrder: templateTask.executionOrder,
-                visualPosition: nil
-            )
-
-            // Store mapping for future dependency resolution
-            templateIdToActualId[templateTask.id] = createdTask.id
-        }
-
-        // Re-fetch team to get updated state with tasks
-        guard let updatedTeam = try await fileService.getTeam(name: request.teamName) else {
-            throw Abort(.internalServerError, reason: "Failed to fetch created team")
-        }
-
-        return APIResponse(success: true, data: updatedTeam)
-    }
-
-    // MARK: - Export/Import Management
-
-    @Sendable
-    func exportTeam(req: Request) async throws -> APIResponse<TeamExport> {
-        guard let teamName = req.parameters.get("name") else {
-            throw Abort(.badRequest, reason: "Team name is required")
-        }
-
-        let export = try await fileService.exportTeam(name: teamName)
-        return APIResponse(success: true, data: export)
-    }
-
-    @Sendable
-    func importTeam(req: Request) async throws -> APIResponse<AgentTeam> {
-        let request = try req.content.decode(ImportTeamRequest.self)
-
-        // Validate input lengths
-        try PathSanitizer.validateStringLength(request.export.name, maxLength: 255, fieldName: "name")
-        try PathSanitizer.validateOptionalStringLength(request.export.description, maxLength: 1000, fieldName: "description")
-
-        let team = try await fileService.importTeam(
-            from: request.export,
-            overwrite: request.overwrite ?? false
-        )
-
-        return APIResponse(success: true, data: team)
-    }
 }
 
 // MARK: - Content Conformances
@@ -528,10 +306,3 @@ extension SendTeamMessageRequest: Content {}
 extension CreateTeamTaskRequest: Content {}
 extension UpdateTeamTaskRequest: Content {}
 extension ShutdownTeammateRequest: Content {}
-extension TeamTemplate: Content {}
-extension CreateTemplateRequest: Content {}
-extension UpdateTemplateRequest: Content {}
-extension ApplyTemplateRequest: Content {}
-extension TeamMetricsResponse: Content {}
-extension TeamExport: Content {}
-extension ImportTeamRequest: Content {}

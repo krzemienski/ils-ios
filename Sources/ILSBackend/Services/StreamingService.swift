@@ -46,7 +46,7 @@ struct StreamingService {
     private static let jsonEncoder = JSONEncoder()
 
     /// Heartbeat interval in nanoseconds (15 seconds)
-    private static let heartbeatInterval: Duration = .seconds(15)
+    private static let heartbeatInterval: UInt64 = 15_000_000_000
 
     /// Shared streaming logic for both simple and persistent SSE responses.
     ///
@@ -81,7 +81,7 @@ struct StreamingService {
 
         let heartbeatTask = Task {
             while !Task.isCancelled && isConnected {
-                try await Task.sleep(for: heartbeatInterval)
+                try await Task.sleep(nanoseconds: heartbeatInterval)
                 guard !Task.isCancelled && isConnected else { break }
                 do {
                     try await writer.write(.buffer(.init(string: createPingEvent())))

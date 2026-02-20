@@ -122,7 +122,6 @@ struct SessionInfoView: View {
             }
             .sheet(isPresented: $showExportSheet) {
                 ShareSheet(text: exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
-                .presentationDetents([.medium, .large])
             }
             .toast(isPresented: $showCopiedToast, message: "Session ID copied")
             .task {

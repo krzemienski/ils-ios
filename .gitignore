@@ -30,8 +30,6 @@ node_modules/
 
 # Databases
 *.db
-*.sqlite
-*.sqlite3
 
 # CocoaPods
 Pods/
@@ -44,12 +42,8 @@ Pods/
 .omc/
 
 # Claude Code internal files
-.claude/audit/
-.claude/plan/
-.claude/skills/
-.claude/hooks/
-.claude/settings.local.json
-.claude/ralph-loop.local.md
+.claude
+.claude/
 
 # Ralph TUI
 .ralph-tui/

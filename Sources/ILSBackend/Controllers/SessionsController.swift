@@ -255,27 +255,17 @@ struct SessionsController: RouteCollection {
             throw Abort(.badRequest, reason: "Invalid session ID")
         }
 
-        // 1. Try DB lookup first (ILS-created sessions)
-        if let session = try await SessionModel.query(on: req.db)
+        guard let session = try await SessionModel.query(on: req.db)
             .filter(\.$id == id)
             .with(\.$project)
-            .first() {
-            return APIResponse(
-                success: true,
-                data: session.toShared(projectName: session.project?.name)
-            )
+            .first() else {
+            throw Abort(.notFound, reason: "Session not found")
         }
 
-        // 2. Fallback: search external sessions (cached, deterministic UUIDs)
-        let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions()
-        if let externalSession = externalSessions.first(where: { $0.id == id }) {
-            return APIResponse(
-                success: true,
-                data: externalSession
-            )
-        }
-
-        throw Abort(.notFound, reason: "Session not found")
+        return APIResponse(
+            success: true,
+            data: session.toShared(projectName: session.project?.name)
+        )
     }
 
     /// Delete a session and its messages.

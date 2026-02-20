@@ -46,10 +46,10 @@ struct ServerStatusWidgetView: View {
             // Header with ILS branding
             HStack(spacing: 6) {
                 Image(systemName: "server.rack")
-                    .font(.caption.weight(.semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(Color(hex: WidgetColors.accent))
                 Text("ILS")
-                    .font(.caption.weight(.bold).monospaced())
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundColor(.white)
             }
 
@@ -67,7 +67,7 @@ struct ServerStatusWidgetView: View {
                         radius: 4
                     )
                 Text(entry.isConnected ? "Connected" : "Offline")
-                    .font(.caption.weight(.semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(entry.isConnected ? Color(hex: WidgetColors.success) : Color(hex: WidgetColors.error))
             }
 
@@ -78,10 +78,10 @@ struct ServerStatusWidgetView: View {
                 // Session count
                 VStack(alignment: .leading, spacing: 1) {
                     Text("\(entry.sessionCount)")
-                        .font(.body.weight(.bold).monospaced())
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
                         .foregroundColor(.white)
                     Text("Sessions")
-                        .font(.caption2.weight(.medium))
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(Color(hex: WidgetColors.textTertiary))
                 }
 
@@ -90,10 +90,10 @@ struct ServerStatusWidgetView: View {
                 // Version
                 VStack(alignment: .trailing, spacing: 1) {
                     Text("v\(entry.backendVersion)")
-                        .font(.caption2.monospaced())
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundColor(Color(hex: WidgetColors.textSecondary))
                     Text("Backend")
-                        .font(.caption2.weight(.medium))
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(Color(hex: WidgetColors.textTertiary))
                 }
             }

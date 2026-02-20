@@ -3,6 +3,7 @@ import ILSShared
 
 struct MessageView: View {
     let message: ChatMessage
+    @State private var showCopyConfirmation = false
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     // Date formatters centralized in DateFormatters.swift
@@ -16,7 +17,8 @@ struct MessageView: View {
                     if !message.text.isEmpty {
                         MessageContentView(
                             text: message.text,
-                            isUser: message.isUser
+                            isUser: message.isUser,
+                            showCopyConfirmation: $showCopyConfirmation
                         )
                     }
 
@@ -35,6 +37,21 @@ struct MessageView: View {
                         ThinkingView(thinking: thinking)
                     }
 
+                    // Copy confirmation overlay
+                    if showCopyConfirmation {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(theme.success)
+                            Text("Copied")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundColor(theme.success)
+                        }
+                        .padding(.horizontal, theme.spacingSM)
+                        .padding(.vertical, theme.spacingXS)
+                        .background(theme.success.opacity(0.1))
+                        .cornerRadius(theme.cornerRadiusSmall)
+                        .transition(.scale.combined(with: .opacity))
+                    }
                 }
                 .padding()
                 .background(message.isUser ? theme.accent.opacity(0.15) : theme.bgSecondary)
@@ -254,11 +271,13 @@ struct ThinkingView: View {
 struct MessageContentView: View {
     let text: String
     let isUser: Bool
-    @State private var showCopyConfirmation = false
+    @Binding var showCopyConfirmation: Bool
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// Cached parsed segments — avoids re-parsing on every body evaluation
-    @State private var segments: [MarkdownParser.TextSegment] = []
+    /// Parse message text into segments
+    private var segments: [MarkdownParser.TextSegment] {
+        MarkdownParser.parse(text)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -280,11 +299,15 @@ struct MessageContentView: View {
                                 NSPasteboard.general.setString(plainText, forType: .string)
                                 #endif
                                 showCopyConfirmation = true
+                                // Hide confirmation after 2 seconds
+                                Task { @MainActor in
+                                    try? await Task.sleep(for: .seconds(2))
+                                    showCopyConfirmation = false
+                                }
                             }) {
                                 Label("Copy Text", systemImage: "doc.on.doc")
                                     .accessibilityHint("Copies this text segment to clipboard")
                             }
-                            .accessibilityHint("Copies this text segment to clipboard")
                         }
 
                 case .codeBlock(let codeBlock):
@@ -304,10 +327,6 @@ struct MessageContentView: View {
                 }
             }
         }
-        .task(id: text) {
-            segments = MarkdownParser.parse(text)
-        }
-        .toast(isPresented: $showCopyConfirmation, message: "Copied")
     }
 }
 

@@ -79,7 +79,7 @@ struct ThemePreviewCard: View {
                         .stroke(theme.border, lineWidth: 0.5)
                 )
             Text(label)
-                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                .font(.system(size: 8, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
     }
@@ -91,7 +91,7 @@ struct ThemePreviewCard: View {
             if isActive {
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: 10))
                     Text("Active")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 }
@@ -99,7 +99,7 @@ struct ThemePreviewCard: View {
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.circle")
-                        .font(.system(size: theme.fontCaption))
+                        .font(.system(size: 10))
                     Text("Install")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 }

@@ -5,7 +5,6 @@ import SwiftUI
 struct ShimmerModifier: ViewModifier {
     @State private var phase: CGFloat = -1.0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
 
     func body(content: Content) -> some View {
         if reduceMotion {
@@ -16,15 +15,18 @@ struct ShimmerModifier: ViewModifier {
         } else {
             content
                 .overlay(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: max(0, phase - 0.3)),
-                            .init(color: .white.opacity(0.08), location: phase),
-                            .init(color: .clear, location: min(1, phase + 0.3))
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
+                    GeometryReader { geometry in
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: max(0, phase - 0.3)),
+                                .init(color: .white.opacity(0.08), location: phase),
+                                .init(color: .clear, location: min(1, phase + 0.3))
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                    }
                     .clipped()
                 )
                 .onAppear {
@@ -34,23 +36,6 @@ struct ShimmerModifier: ViewModifier {
                     ) {
                         phase = 2.0
                     }
-                }
-                .onChange(of: scenePhase) { _, newPhase in
-                    if newPhase != .active {
-                        withAnimation(.linear(duration: 0.1)) {
-                            phase = -1.0
-                        }
-                    } else {
-                        withAnimation(
-                            .linear(duration: 1.5)
-                            .repeatForever(autoreverses: false)
-                        ) {
-                            phase = 2.0
-                        }
-                    }
-                }
-                .onDisappear {
-                    phase = -1.0
                 }
         }
     }

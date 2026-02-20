@@ -4,7 +4,6 @@ import SwiftUI
 /// Used for memory and disk usage visualization.
 struct ProgressRing: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let progress: Double // 0.0 - 1.0
     let gradient: LinearGradient
@@ -42,7 +41,7 @@ struct ProgressRing: View {
                     .trim(from: 0, to: progress)
                     .stroke(gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: progress)
+                    .animation(.easeInOut(duration: 0.5), value: progress)
 
                 // Center label
                 VStack(spacing: 2) {

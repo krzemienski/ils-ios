@@ -8,7 +8,6 @@ struct FleetHostDetailView: View {
 
     @State private var logs: [String] = []
     @State private var isLoadingLogs = false
-    @State private var actionError: String?
 
     var body: some View {
         ScrollView {
@@ -36,8 +35,8 @@ struct FleetHostDetailView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Host Info")
             VStack(alignment: .leading, spacing: theme.spacingSM) {
-                infoRow("Address", value: "\(host.host):\(String(host.port))")
-                infoRow("Backend Port", value: String(host.backendPort))
+                infoRow("Address", value: "\(host.host):\(host.port)")
+                infoRow("Backend Port", value: "\(host.backendPort)")
                 if let username = host.username {
                     infoRow("SSH User", value: username)
                 }
@@ -60,9 +59,9 @@ struct FleetHostDetailView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Health")
             HStack {
-                Image(systemName: healthIcon(host.healthStatus))
-                    .font(.system(size: theme.fontBody))
-                    .foregroundStyle(healthColor(host.healthStatus))
+                Circle()
+                    .fill(healthColor(host.healthStatus))
+                    .frame(width: 12, height: 12)
                 Text(host.healthStatus.rawValue.capitalized)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
@@ -135,7 +134,7 @@ struct FleetHostDetailView: View {
             }
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 2) {
                     if logs.isEmpty {
                         Text("No logs available")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -144,7 +143,7 @@ struct FleetHostDetailView: View {
                     } else {
                         ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
                             Text(line)
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .font(.system(size: 11, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
@@ -181,15 +180,6 @@ struct FleetHostDetailView: View {
         }
     }
 
-    private func healthIcon(_ status: FleetHost.HealthStatus) -> String {
-        switch status {
-        case .healthy: return "checkmark.circle.fill"
-        case .degraded: return "exclamationmark.triangle.fill"
-        case .unreachable: return "xmark.circle.fill"
-        case .unknown: return "questionmark.circle.fill"
-        }
-    }
-
     private func healthColor(_ status: FleetHost.HealthStatus) -> Color {
         switch status {
         case .healthy: return theme.success
@@ -201,24 +191,14 @@ struct FleetHostDetailView: View {
 
     private func performLifecycle(_ action: LifecycleRequest.LifecycleAction) async {
         let request = LifecycleRequest(action: action, hostId: host.id)
-        do {
-            let _: LifecycleResponse = try await appState.apiClient.post("/fleet/\(host.id)/lifecycle", body: request)
-            actionError = nil
-        } catch {
-            AppLogger.shared.error("Lifecycle \(action) failed for \(host.name): \(error)", category: "hosts")
-            actionError = "Lifecycle action failed: \(error.localizedDescription)"
-        }
+        let _: LifecycleResponse? = try? await appState.apiClient.post("/fleet/\(host.id)/lifecycle", body: request)
     }
 
     private func loadLogs() async {
         isLoadingLogs = true
         defer { isLoadingLogs = false }
-        do {
-            let response: RemoteLogsResponse = try await appState.apiClient.get("/fleet/\(host.id)/logs")
+        if let response: RemoteLogsResponse = try? await appState.apiClient.get("/fleet/\(host.id)/logs") {
             logs = response.lines
-        } catch {
-            AppLogger.shared.error("Failed to load logs for \(host.name): \(error)", category: "hosts")
-            actionError = "Failed to load logs: \(error.localizedDescription)"
         }
     }
 }

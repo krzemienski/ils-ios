@@ -13,7 +13,6 @@ import Crypto
 /// Each project directory is URL-encoded and contains session metadata + transcript files.
 struct SessionFileService {
     private let fileManager = FileManager.default
-    private static let jsonDecoder = JSONDecoder()
 
     /// Home directory path
     var homeDirectory: String {
@@ -107,7 +106,7 @@ struct SessionFileService {
             let index: SessionsIndex
             do {
                 data = try Data(contentsOf: URL(fileURLWithPath: indexPath))
-                index = try Self.jsonDecoder.decode(SessionsIndex.self, from: data)
+                index = try JSONDecoder().decode(SessionsIndex.self, from: data)
             } catch {
                 // Log and skip malformed session index files
                 continue
@@ -229,6 +228,8 @@ struct SessionFileService {
         // Use a deterministic UUID based on session so IDs are stable
         let sessionUUID = UUID(uuidString: sessionId) ?? UUID()
 
+        let jsonDecoder = JSONDecoder()
+
         for line in lines {
             guard let lineData = line.data(using: .utf8) else {
                 continue
@@ -236,7 +237,7 @@ struct SessionFileService {
 
             let entry: TranscriptEntry
             do {
-                entry = try Self.jsonDecoder.decode(TranscriptEntry.self, from: lineData)
+                entry = try jsonDecoder.decode(TranscriptEntry.self, from: lineData)
             } catch {
                 // Skip malformed JSONL lines — common in partial writes
                 continue

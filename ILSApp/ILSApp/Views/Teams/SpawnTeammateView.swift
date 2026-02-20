@@ -8,7 +8,7 @@ struct SpawnTeammateView: View {
     let teamName: String
     @State private var name = ""
     @State private var agentType = ""
-    @State private var selectedModel = AppConstants.defaultModel
+    @State private var selectedModel = "sonnet"
     @State private var prompt = ""
     @State private var isSpawning = false
 

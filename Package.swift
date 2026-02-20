@@ -37,7 +37,7 @@ let package = Package(
                 .product(name: "Splash", package: "Splash"),
             ],
             path: "Sources/ILSShared",
-            exclude: ["Models/CLAUDE.md", "DTOs/CLAUDE.md", "README.md"]
+            exclude: ["Models/CLAUDE.md"]
         ),
         // Vapor backend
         .executableTarget(
@@ -50,7 +50,7 @@ let package = Package(
                 .product(name: "Yams", package: "Yams"),
             ],
             path: "Sources/ILSBackend",
-            exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md", "Controllers/CLAUDE.md", "README.md"]
+            exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"]
         ),
         // Tests
         .testTarget(

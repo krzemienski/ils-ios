@@ -483,7 +483,6 @@ struct ThemeEditorView: View {
             }) {
                 if let url = exportURL {
                     ShareSheet(items: [url])
-                        .presentationDetents([.medium, .large])
                 }
             }
         }
@@ -1146,17 +1145,12 @@ struct ThemeEditorView: View {
         do {
             let jsonData = try encoder.encode(previewTheme)
 
-            // Write to Caches/ThemeExports (not temporaryDirectory) and exclude from backup
+            // Create temporary file
             let fileName = "\(name.isEmpty ? "theme" : name.replacingOccurrences(of: " ", with: "_")).json"
-            let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            let exportDir = cachesDir.appendingPathComponent("ThemeExports", isDirectory: true)
-            try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
-            var exportDirValues = URLResourceValues()
-            exportDirValues.isExcludedFromBackup = true
-            var mutableExportDir = exportDir
-            try mutableExportDir.setResourceValues(exportDirValues)
+            let tempDirectory = FileManager.default.temporaryDirectory
+            let fileURL = tempDirectory.appendingPathComponent(fileName)
 
-            let fileURL = exportDir.appendingPathComponent(fileName)
+            // Write JSON to file
             try jsonData.write(to: fileURL)
 
             // Store URL for sharing
@@ -1205,9 +1199,9 @@ struct ThemeEditorView: View {
             return "#808080"
         }
 
-        let r = components.indices.contains(0) ? components[0] : 0
-        let g = components.indices.contains(1) ? components[1] : 0
-        let b = components.indices.contains(2) ? components[2] : 0
+        let r = components.count > 0 ? components[0] : 0
+        let g = components.count > 1 ? components[1] : 0
+        let b = components.count > 2 ? components[2] : 0
 
         return String(format: "#%02X%02X%02X",
                       Int(r * 255),

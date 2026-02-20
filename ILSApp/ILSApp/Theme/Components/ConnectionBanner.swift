@@ -71,7 +71,7 @@ struct ConnectionBannerModifier: ViewModifier {
                     wasDisconnected = false
                     dismissTask?.cancel()
                     dismissTask = Task {
-                        try? await Task.sleep(for: .seconds(2))
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
                         guard !Task.isCancelled else { return }
                         if reduceMotion {
                             showConnectedBanner = false
@@ -86,10 +86,6 @@ struct ConnectionBannerModifier: ViewModifier {
                     showConnectedBanner = false
                     dismissTask?.cancel()
                 }
-            }
-            .onDisappear {
-                dismissTask?.cancel()
-                dismissTask = nil
             }
     }
 }
