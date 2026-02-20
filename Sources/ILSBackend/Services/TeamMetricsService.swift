@@ -434,7 +434,7 @@ actor TeamMetricsService {
 
 private extension Double {
     func rounded(toPlaces places: Int = 0) -> Double {
-        let divisor = pow(10.0, Double(places))
+        let divisor = Foundation.pow(10.0, Double(places))
         return (self * divisor).rounded() / divisor
     }
 }

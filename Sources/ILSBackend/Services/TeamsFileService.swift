@@ -309,6 +309,99 @@ actor TeamsFileService {
         let messagesData = try jsonEncoder.encode(messages)
         try atomicWrite(data: messagesData, to: messagesFilePath)
     }
+
+    // MARK: - Export/Import Operations
+
+    /// Export a team with all its data (config, tasks, messages).
+    /// - Parameter name: Team name to export
+    /// - Returns: TeamExport containing all team data
+    func exportTeam(name: String) throws -> TeamExport {
+        try validateName(name)
+
+        // Check team exists
+        guard let team = try getTeam(name: name) else {
+            throw TeamsFileServiceError.teamNotFound(name)
+        }
+
+        // Gather all tasks
+        let tasks = try listTasks(team: name)
+
+        // Gather all messages
+        let messages = try listMessages(team: name)
+
+        return TeamExport(
+            name: team.name,
+            description: team.description,
+            members: team.members,
+            tasks: tasks,
+            messages: messages
+        )
+    }
+
+    /// Import a team from exported data.
+    /// - Parameters:
+    ///   - export: TeamExport data containing team configuration and data
+    ///   - overwrite: If true, overwrites existing team. If false, throws error if team exists.
+    /// - Returns: Created AgentTeam
+    func importTeam(from export: TeamExport, overwrite: Bool = false) throws -> AgentTeam {
+        try validateName(export.name)
+
+        let teamPath = teamDir(name: export.name)
+        let taskPath = taskDir(team: export.name)
+
+        // Check if team exists
+        let teamExists = fileManager.fileExists(atPath: teamPath)
+
+        if teamExists && !overwrite {
+            throw TeamsFileServiceError.teamAlreadyExists(export.name)
+        }
+
+        // Remove existing team if overwriting
+        if teamExists && overwrite {
+            try deleteTeam(name: export.name)
+        }
+
+        // Create team directories
+        try fileManager.createDirectory(
+            atPath: teamPath,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
+
+        try fileManager.createDirectory(
+            atPath: taskPath,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
+
+        // Write team config
+        let config = TeamConfig(
+            teamName: export.name,
+            description: export.description,
+            members: export.members
+        )
+
+        let configData = try jsonEncoder.encode(config)
+        let configPath = teamConfigPath(name: export.name)
+        try atomicWrite(data: configData, to: configPath)
+
+        // Write tasks
+        for task in export.tasks {
+            let taskData = try jsonEncoder.encode(task)
+            let taskFilePath = "\(taskPath)/\(task.id).json"
+            try atomicWrite(data: taskData, to: taskFilePath)
+        }
+
+        // Write messages
+        let messagesData = try jsonEncoder.encode(export.messages)
+        try atomicWrite(data: messagesData, to: messagesPath(team: export.name))
+
+        return AgentTeam(
+            name: config.teamName,
+            description: config.description,
+            members: config.members
+        )
+    }
 }
 
 // MARK: - Supporting Types
@@ -323,6 +416,15 @@ private struct TeamConfig: Codable {
         case description
         case members
     }
+}
+
+/// Export format containing all team data for import/export operations.
+struct TeamExport: Codable {
+    let name: String
+    let description: String?
+    let members: [TeamMember]
+    let tasks: [TeamTask]
+    let messages: [TeamMessage]
 }
 
 // MARK: - Errors
