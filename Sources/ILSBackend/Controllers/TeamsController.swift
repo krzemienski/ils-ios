@@ -182,6 +182,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Task Management
 
+    /// List all tasks for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with array of TeamTask objects for the team
     @Sendable
     func listTasks(req: Request) async throws -> APIResponse<[TeamTask]> {
         guard let teamName = req.parameters.get("name") else {
@@ -192,6 +196,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: tasks)
     }
 
+    /// Create a new task for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and CreateTeamTaskRequest body (subject, description)
+    /// - Returns: APIResponse with the newly created TeamTask
     @Sendable
     func createTask(req: Request) async throws -> APIResponse<TeamTask> {
         guard let teamName = req.parameters.get("name") else {
@@ -213,6 +221,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: task)
     }
 
+    /// Update an existing task for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name and taskId route parameters and UpdateTeamTaskRequest body (status, owner)
+    /// - Returns: APIResponse with the updated TeamTask
     @Sendable
     func updateTask(req: Request) async throws -> APIResponse<TeamTask> {
         guard let teamName = req.parameters.get("name") else {
