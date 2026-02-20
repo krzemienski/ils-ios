@@ -50,7 +50,8 @@ struct SidebarRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    @SceneStorage("activeScreenKey") private var activeScreenKey: String = "home"
+    // AUDIT: temporarily "browser" for screenshot capture (revert after audit)
+    @SceneStorage("activeScreenKey") private var activeScreenKey: String = "browser"
     @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
@@ -59,7 +60,13 @@ struct SidebarRootView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
 
     private var isRegularWidth: Bool {
-        horizontalSizeClass == .regular
+        #if os(iOS)
+        // iPhone Pro Max reports .regular in landscape — force iPhone layout for phones
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return false
+        }
+        #endif
+        return horizontalSizeClass == .regular
     }
 
     private var sidebarWidth: CGFloat { 280 }
