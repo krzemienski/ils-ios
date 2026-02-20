@@ -897,6 +897,7 @@
 				970C2A5F3E4A68DA171D4E85 /* SpawnTeammateView.swift */,
 				5E24F6A9BB63E2881A915BD5 /* TeamDashboardView.swift */,
 				F0F7180FB7CF6802768BD600 /* TeamMessagesView.swift */,
+				71C5A3119112426F8C3B39C5 /* TeamMetricsView.swift */,
 				6736A1D406EEE97A39A92D25 /* TeamTaskListView.swift */,
 				CEB23E923E483B8AD80AA2D8 /* TeamTemplatesView.swift */,
 				8E41AA81D0A6F09CD6C72DE4 /* WorkflowBuilderView.swift */,

@@ -21,7 +21,7 @@ struct AgentTeamDetailView: View {
             }
 
             HStack(spacing: 0) {
-                ForEach(Array(["Members", "Tasks", "Messages", "Workflow"].enumerated()), id: \.offset) { index, label in
+                ForEach(Array(["Members", "Tasks", "Messages", "Dashboard", "Workflow"].enumerated()), id: \.offset) { index, label in
                     Button {
                         selectedTab = index
                     } label: {
@@ -50,6 +50,8 @@ struct AgentTeamDetailView: View {
                 case 2:
                     TeamMessagesView(viewModel: viewModel, teamName: teamName)
                 case 3:
+                    TeamDashboardView(teamName: teamName, apiClient: appState.apiClient)
+                case 4:
                     // TODO: WorkflowBuilderView not yet added to Xcode project
                     Text("Workflow Builder for \(teamName)")
                         .foregroundStyle(theme.textPrimary)
