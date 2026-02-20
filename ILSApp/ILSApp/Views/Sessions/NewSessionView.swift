@@ -176,6 +176,13 @@ struct NewSessionView: View {
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             .focusRing(isFocused: focusedField == .systemPrompt, cornerRadius: theme.cornerRadiusSmall)
+
+            HStack {
+                Spacer()
+                Text("\(systemPrompt.count) characters")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
         }
     }
 

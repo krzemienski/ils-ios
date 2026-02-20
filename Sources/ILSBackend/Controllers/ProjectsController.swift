@@ -17,6 +17,7 @@ import Crypto
 /// - `PUT /projects/:id`: Update project metadata
 /// - `DELETE /projects/:id`: Delete a project record
 /// - `GET /projects/:id/sessions`: Get sessions for a project
+/// - `POST /projects/bulk-delete`: Bulk-delete projects by ID array
 struct ProjectsController: RouteCollection {
     private let fileSystem: FileSystemService
 
@@ -29,6 +30,7 @@ struct ProjectsController: RouteCollection {
 
         projects.get(use: index)
         projects.post(use: create)
+        projects.post("bulk-delete", use: bulkDelete)
         projects.get(":id", use: show)
         projects.put(":id", use: update)
         projects.delete(":id", use: deleteProject)
@@ -335,6 +337,31 @@ struct ProjectsController: RouteCollection {
         }
 
         try await project.delete(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: DeletedResponse()
+        )
+    }
+
+    /// Bulk-delete projects by an array of IDs.
+    /// - Parameter req: Vapor Request with BulkDeleteProjectsRequest body
+    /// - Returns: APIResponse with DeletedResponse
+    @Sendable
+    func bulkDelete(req: Request) async throws -> APIResponse<DeletedResponse> {
+        let input = try req.content.decode(BulkDeleteProjectsRequest.self)
+
+        guard !input.ids.isEmpty else {
+            throw Abort(.badRequest, reason: "ids array must not be empty")
+        }
+
+        guard input.ids.count <= 100 else {
+            throw Abort(.badRequest, reason: "Cannot delete more than 100 projects at once")
+        }
+
+        try await ProjectModel.query(on: req.db)
+            .filter(\.$id ~~ input.ids)
+            .delete()
 
         return APIResponse(
             success: true,

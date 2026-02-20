@@ -1,18 +1,61 @@
 import SwiftUI
 import ILSShared
 
+/// Multi-control input bar for composing and sending messages to Claude.
+///
+/// Renders a horizontal row containing a command-palette trigger, an advanced-options button,
+/// an expandable text field, and either a send button or a cancel button depending on
+/// ``isStreaming``. The send button uses a Task-based debounce to briefly animate a
+/// "pressed" spring scale effect before resetting, bypassed when reduce-motion is enabled.
+///
+/// ## Topics
+/// ### Bindings
+/// - ``text`` - Two-way binding to the current input text
+///
+/// ### Input Properties
+/// - ``isStreaming`` - When true, the send button is replaced by the cancel button
+/// - ``isDisabled`` - Disables all controls while processing or during an error state
+/// - ``hasCustomOptions`` - Drives an alternative icon on the options button to signal non-default settings
+///
+/// ### Callbacks
+/// - ``onSend`` - Invoked when the user taps the send button
+/// - ``onCancel`` - Invoked when the user taps the cancel/stop button during streaming
+/// - ``onCommandPalette`` - Invoked to open the command palette sheet
+/// - ``onAdvancedOptions`` - Invoked to open the advanced chat options sheet
+///
+/// ### Button Views
+/// - ``commandPaletteButton`` - Slash-command launcher (⌘ icon)
+/// - ``optionsButton`` - Advanced options toggle; adapts icon when custom options are active
+/// - ``textField`` - Vertically expandable text input (1–5 lines)
+/// - ``cancelButton`` - Stop button shown during streaming
+/// - ``sendButton`` - Spring-animated send button with haptic feedback
 struct ChatInputBar: View {
+    /// Two-way binding to the message text being composed.
     @Binding var text: String
+    /// When true, replaces the send button with the cancel/stop button.
     let isStreaming: Bool
+    /// Disables all input controls while the view is in a non-interactive state.
     var isDisabled: Bool = false
+    /// When true, changes the options button icon to indicate non-default settings are active.
     var hasCustomOptions: Bool = false
+    /// Called when the user sends the composed message.
     let onSend: () -> Void
+    /// Called when the user cancels an active streaming response.
     let onCancel: () -> Void
+    /// Called to open the command palette sheet.
     let onCommandPalette: () -> Void
+    /// Called to open the advanced chat options sheet.
     let onAdvancedOptions: () -> Void
+    /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
+    /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
     @State private var resetTask: Task<Void, Never>?
     @FocusState private var isInputFocused: Bool
+
+    /// Dynamic horizontal padding for the text field, scales with text size preference.
+    @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
+    /// Dynamic vertical padding for the text field, scales with text size preference.
+    @ScaledMetric(relativeTo: .body) private var inputPaddingV: CGFloat = 8
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
