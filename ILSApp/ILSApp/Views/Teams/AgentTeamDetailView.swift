@@ -50,7 +50,9 @@ struct AgentTeamDetailView: View {
                 case 2:
                     TeamMessagesView(viewModel: viewModel, teamName: teamName)
                 case 3:
-                    WorkflowBuilderView(teamName: teamName, apiClient: appState.apiClient)
+                    // TODO: WorkflowBuilderView not yet added to Xcode project
+                    Text("Workflow Builder for \(teamName)")
+                        .foregroundStyle(theme.textPrimary)
                 default:
                     EmptyView()
                 }

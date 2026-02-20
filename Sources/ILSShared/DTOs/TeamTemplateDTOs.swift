@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Team Template Models
 
 /// A reusable team template for common workflows.
-public struct TeamTemplate: Codable, Sendable, Identifiable {
+public struct TeamTemplate: Codable, Sendable, Identifiable, Hashable {
     /// Unique template identifier.
     public let id: String
     /// Template display name.
@@ -43,7 +43,7 @@ public struct TeamTemplate: Codable, Sendable, Identifiable {
 }
 
 /// A pre-configured team member in a template.
-public struct TemplateMember: Codable, Sendable, Identifiable {
+public struct TemplateMember: Codable, Sendable, Identifiable, Hashable {
     /// Member name.
     public let name: String
     /// Agent type/role.
@@ -64,7 +64,7 @@ public struct TemplateMember: Codable, Sendable, Identifiable {
 }
 
 /// A pre-configured task in a template.
-public struct TemplateTask: Codable, Sendable, Identifiable {
+public struct TemplateTask: Codable, Sendable, Identifiable, Hashable {
     /// Task identifier.
     public let id: String
     /// Brief task title.
@@ -101,7 +101,7 @@ public struct TemplateTask: Codable, Sendable, Identifiable {
 
 // MARK: - CGPoint Codable Extension
 
-extension CGPoint: @retroactive Codable {
+extension CGPoint: @retroactive Codable, @retroactive Hashable {
     enum CodingKeys: String, CodingKey {
         case x
         case y
@@ -118,6 +118,15 @@ extension CGPoint: @retroactive Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(x, forKey: .x)
         try container.encode(y, forKey: .y)
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(x)
+        hasher.combine(y)
+    }
+
+    public static func == (lhs: CGPoint, rhs: CGPoint) -> Bool {
+        lhs.x == rhs.x && lhs.y == rhs.y
     }
 }
 
