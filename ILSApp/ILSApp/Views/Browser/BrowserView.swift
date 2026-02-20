@@ -79,6 +79,7 @@ struct BrowserView: View {
         HStack(spacing: 0) {
             ForEach(BrowserSegment.allCases, id: \.self) { seg in
                 Button {
+                    HapticManager.selection()
                     if reduceMotion {
                         segment = seg
                     } else {
