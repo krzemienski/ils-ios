@@ -17,6 +17,11 @@ struct NewSessionView: View {
     @State private var maxTurns = ""
     @State private var showAdvanced = false
 
+    private enum FocusedField: Hashable {
+        case sessionName, systemPrompt, maxBudget, maxTurns
+    }
+    @FocusState private var focusedField: FocusedField?
+
     let onCreated: (ChatSession) -> Void
 
     private let models = ["sonnet", "opus", "haiku"]
@@ -72,6 +77,8 @@ struct NewSessionView: View {
                 .background(theme.bgSecondary)
                 .foregroundStyle(theme.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .sessionName, cornerRadius: theme.cornerRadiusSmall)
+                .focused($focusedField, equals: .sessionName)
                 .accessibilityIdentifier("session-name-field")
 
             Picker("Project", selection: $selectedProject) {
@@ -154,6 +161,7 @@ struct NewSessionView: View {
                     .foregroundStyle(theme.textPrimary)
                     .scrollContentBackground(.hidden)
                     .frame(minHeight: 80)
+                    .focused($focusedField, equals: .systemPrompt)
 
                 if systemPrompt.isEmpty {
                     Text("Custom instructions for Claude (optional)")
@@ -167,6 +175,7 @@ struct NewSessionView: View {
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .systemPrompt, cornerRadius: theme.cornerRadiusSmall)
         }
     }
 
@@ -190,10 +199,12 @@ struct NewSessionView: View {
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(width: 100)
+                    .focused($focusedField, equals: .maxBudget)
             }
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .maxBudget, cornerRadius: theme.cornerRadiusSmall)
 
             HStack {
                 Text("Max Turns")
@@ -208,10 +219,12 @@ struct NewSessionView: View {
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(width: 100)
+                    .focused($focusedField, equals: .maxTurns)
             }
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .maxTurns, cornerRadius: theme.cornerRadiusSmall)
         }
     }
 
