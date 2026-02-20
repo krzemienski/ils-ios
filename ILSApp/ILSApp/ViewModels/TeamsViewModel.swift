@@ -10,6 +10,7 @@ class TeamsViewModel {
     var tasks: [TeamTask] = []
     var messages: [TeamMessage] = []
     var templates: [TeamTemplate] = []
+    var metrics: TeamMetricsResponse?
     var isLoading = false
     var error: String?
     var scenePhase: ScenePhase = .active {
@@ -322,6 +323,22 @@ class TeamsViewModel {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    // MARK: - Metrics
+
+    func loadMetrics(teamName: String) async {
+        error = nil
+        do {
+            let response: APIResponse<TeamMetricsResponse> = try await apiClient.get( "/teams/\(teamName)/metrics")
+            if response.success, let data = response.data {
+                metrics = data
+            } else {
+                error = response.error?.message ?? "Failed to load metrics"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 
     // MARK: - Polling
