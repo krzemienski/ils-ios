@@ -1,6 +1,14 @@
 import SwiftUI
 import HighlightSwift
 
+// Preference key for measuring content width inside the horizontal ScrollView
+private struct HorizontalContentWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 /// Renders a fenced code block with language header, grammar-aware syntax highlighting,
 /// optional line numbers, and copy button. All colors from theme tokens.
 struct ThemedCodeBlockView: View {
@@ -10,9 +18,16 @@ struct ThemedCodeBlockView: View {
     @State private var highlightedCode: AttributedString?
     @State private var detectedLanguage: String?
     @State private var isExpanded = false
+    @State private var codeContentWidth: CGFloat = 0
+    @State private var scrollContainerWidth: CGFloat = 0
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// Whether the code content exceeds the visible scroll container width
+    private var hasHorizontalOverflow: Bool {
+        codeContentWidth > scrollContainerWidth + 1 && scrollContainerWidth > 0
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -63,9 +78,34 @@ struct ThemedCodeBlockView: View {
     private var codeContent: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             codeText
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: HorizontalContentWidthKey.self,
+                            value: geo.size.width
+                        )
+                    }
+                )
         }
+        .onPreferenceChange(HorizontalContentWidthKey.self) { codeContentWidth = $0 }
         .frame(maxHeight: isExpanded ? .infinity : 300)
         .background(theme.bgTertiary)
+        .overlay(
+            GeometryReader { geo in
+                Color.clear.onAppear { scrollContainerWidth = geo.size.width }
+            }
+        )
+        .overlay(alignment: .trailing) {
+            if hasHorizontalOverflow {
+                LinearGradient(
+                    colors: [theme.bgTertiary.opacity(0), theme.bgTertiary],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 32)
+                .allowsHitTesting(false)
+            }
+        }
         .overlay(alignment: .bottom) {
             if !isExpanded && lineCount > 15 {
                 Button {
