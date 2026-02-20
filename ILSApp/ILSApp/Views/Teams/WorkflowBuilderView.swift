@@ -189,50 +189,45 @@ struct WorkflowBuilderView: View {
 
     private func addNode(type: WorkflowNodeType, name: String) {
         let newNode = WorkflowNode(
+            title: name,
             type: type,
-            name: name,
-            position: CGPoint(x: 200, y: 200 + CGFloat(workflowNodes.count * 100))
+            position: NodePosition(x: 200, y: 200 + Double(workflowNodes.count * 100))
         )
         workflowNodes.append(newNode)
     }
 
     private func updateNodePosition(_ id: UUID, to position: CGPoint) {
         if let index = workflowNodes.firstIndex(where: { $0.id == id }) {
-            workflowNodes[index].position = position
+            workflowNodes[index].position = NodePosition(x: Double(position.x), y: Double(position.y))
         }
     }
 }
 
 // MARK: - Supporting Types
+// WorkflowNode and WorkflowNodeType are now defined in Models/WorkflowNode.swift
 
-struct WorkflowNode: Identifiable {
-    let id = UUID()
-    let type: WorkflowNodeType
-    let name: String
-    var position: CGPoint
-}
-
-enum WorkflowNodeType {
-    case agent
-    case task
-    case condition
-    case merge
-
+extension WorkflowNodeType {
     var iconName: String {
         switch self {
         case .agent: return "person.circle"
-        case .task: return "checkmark.circle"
+        case .action: return "checkmark.circle"
         case .condition: return "arrow.triangle.branch"
-        case .merge: return "arrow.triangle.merge"
+        case .parallel: return "arrow.triangle.merge"
+        case .trigger: return "bolt.circle"
+        case .transform: return "arrow.triangle.2.circlepath"
+        case .loop: return "arrow.circlepath"
         }
     }
 
     var displayName: String {
         switch self {
         case .agent: return "Agent"
-        case .task: return "Task"
+        case .action: return "Action"
         case .condition: return "Condition"
-        case .merge: return "Merge"
+        case .parallel: return "Parallel"
+        case .trigger: return "Trigger"
+        case .transform: return "Transform"
+        case .loop: return "Loop"
         }
     }
 }
@@ -250,7 +245,7 @@ struct WorkflowNodeView: View {
                 .font(.system(size: 24))
                 .foregroundStyle(theme.accent)
 
-            Text(node.name)
+            Text(node.title)
                 .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
                 .lineLimit(2)
@@ -282,7 +277,7 @@ struct AddWorkflowNodeSheet: View {
             Form {
                 Section {
                     Picker("Type", selection: $selectedType) {
-                        ForEach([WorkflowNodeType.agent, .task, .condition, .merge], id: \.self) { type in
+                        ForEach([WorkflowNodeType.agent, .action, .condition, .parallel], id: \.self) { type in
                             Label(type.displayName, systemImage: type.iconName)
                                 .tag(type)
                         }

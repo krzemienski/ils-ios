@@ -79,7 +79,7 @@ struct TeamTemplatesView: View {
 
                     if template.isBuiltIn {
                         Text("Built-in")
-                            .font(.system(size: theme.fontCaption2, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                             .padding(.horizontal, theme.spacingSM)
                             .padding(.vertical, theme.spacingXS)
@@ -90,7 +90,7 @@ struct TeamTemplatesView: View {
 
                 if let category = template.category, !category.isEmpty {
                     Text(category.uppercased())
-                        .font(.system(size: theme.fontCaption2, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                         .padding(.bottom, theme.spacingXS)
                 }
