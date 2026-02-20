@@ -70,14 +70,20 @@ public struct TeamTask: Codable, Sendable, Identifiable {
     public var owner: String?
     /// IDs of tasks that block this one.
     public var blockedBy: [String]?
+    /// Execution order (lower = earlier).
+    public var executionOrder: Int?
+    /// Visual position for UI display.
+    public var visualPosition: Int?
 
-    public init(id: String, subject: String, description: String? = nil, status: TeamTaskStatus = .pending, owner: String? = nil, blockedBy: [String]? = nil) {
+    public init(id: String, subject: String, description: String? = nil, status: TeamTaskStatus = .pending, owner: String? = nil, blockedBy: [String]? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) {
         self.id = id
         self.subject = subject
         self.description = description
         self.status = status
         self.owner = owner
         self.blockedBy = blockedBy
+        self.executionOrder = executionOrder
+        self.visualPosition = visualPosition
     }
 }
 
@@ -185,12 +191,18 @@ public struct UpdateTeamTaskRequest: Codable, Sendable {
     public let subject: String?
     /// New description.
     public let description: String?
+    /// New execution order.
+    public let executionOrder: Int?
+    /// New visual position.
+    public let visualPosition: Int?
 
-    public init(status: TeamTaskStatus? = nil, owner: String? = nil, subject: String? = nil, description: String? = nil) {
+    public init(status: TeamTaskStatus? = nil, owner: String? = nil, subject: String? = nil, description: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) {
         self.status = status
         self.owner = owner
         self.subject = subject
         self.description = description
+        self.executionOrder = executionOrder
+        self.visualPosition = visualPosition
     }
 }
 
