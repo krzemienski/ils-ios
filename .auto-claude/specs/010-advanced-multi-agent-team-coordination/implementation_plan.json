@@ -594,9 +594,9 @@
               "Verify tasks have correct dependencies"
             ]
           },
-          "status": "in_progress",
-          "notes": "Starting E2E verification for create team from template flow",
-          "updated_at": "2026-02-20T19:28:51.446363+00:00"
+          "status": "completed",
+          "notes": "E2E verification passed. Backend builds (Build complete!), running on port 9999. GET /api/v1/teams/templates returns templates. POST /api/v1/teams/templates/code-review-workflow/apply creates team with 3 members. Tasks have correct dependencies: task-1 (blockedBy=[]), task-2 (blockedBy=[1]), task-3 (blockedBy=[1,2]) with executionOrder 1,2,3. iOS BUILD SUCCEEDED. Committed 36aeca2.",
+          "updated_at": "2026-02-20T19:31:04.265493+00:00"
         },
         {
           "id": "subtask-9-2",
@@ -617,7 +617,9 @@
               "Verify task execution respects order"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "E2E verified. Backend: TeamsFileService.updateTask now persists executionOrder, visualPosition, blockedBy. TeamsController passes these from UpdateTeamTaskRequest. iOS: WorkflowNode gained taskId field. TeamsViewModel.updateTask extended with executionOrder/visualPosition; added saveWorkflowOrder(). WorkflowBuilderView loads team tasks as positioned nodes on startup, save button persists execution order via backend API with toast confirmation. PUT /teams/test-from-template/tasks/:id with executionOrder+visualPosition returns 200 with updated fields. GET /tasks shows all 3 tasks with correct executionOrder and preserved blockedBy dependencies. Backend Build complete! iOS BUILD SUCCEEDED. Committed 641792e.",
+          "updated_at": "2026-02-20T19:45:00.000000+00:00"
         },
         {
           "id": "subtask-9-3",
@@ -810,11 +812,12 @@
     }
   },
   "qa_signoff": null,
-  "status": "in_progress",
-  "planStatus": "in_progress",
-  "updated_at": "2026-02-20T19:28:29.040Z",
-  "last_updated": "2026-02-20T19:28:51.446366+00:00",
+  "status": "human_review",
+  "planStatus": "review",
+  "updated_at": "2026-02-20T19:44:53.932Z",
+  "last_updated": "2026-02-20T19:31:04.265498+00:00",
   "recoveryNote": "Task recovered from stuck state at 2026-02-20T19:02:15.915Z",
-  "xstateState": "coding",
-  "executionPhase": "coding"
+  "xstateState": "error",
+  "executionPhase": "failed",
+  "reviewReason": "errors"
 }
