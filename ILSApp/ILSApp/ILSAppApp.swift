@@ -169,6 +169,14 @@ class AppState {
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
+        case "teams":
+            // Parse path: ils://teams/test-team/workflow
+            let pathComponents = url.path.split(separator: "/").map(String.init)
+            if pathComponents.count >= 2, pathComponents[1] == "workflow" {
+                navigationIntent = .teamWorkflow(pathComponents[0])
+            } else {
+                navigationIntent = .teams
+            }
         case "fleet", "hosts":
             navigationIntent = .hosts
         case "themes":
