@@ -21,7 +21,7 @@ struct AgentTeamDetailView: View {
             }
 
             HStack(spacing: 0) {
-                ForEach(Array(["Members", "Tasks", "Messages"].enumerated()), id: \.offset) { index, label in
+                ForEach(Array(["Members", "Tasks", "Messages", "Workflow"].enumerated()), id: \.offset) { index, label in
                     Button {
                         selectedTab = index
                     } label: {
@@ -49,6 +49,8 @@ struct AgentTeamDetailView: View {
                     TeamTaskListView(viewModel: viewModel, teamName: teamName)
                 case 2:
                     TeamMessagesView(viewModel: viewModel, teamName: teamName)
+                case 3:
+                    WorkflowBuilderView(teamName: teamName, apiClient: appState.apiClient)
                 default:
                     EmptyView()
                 }
