@@ -34,9 +34,7 @@ struct HomeView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Home")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .inlineNavigationBarTitle()
         .task {
             dashboardVM.configure(client: appState.apiClient)
             await dashboardVM.loadAll()

@@ -100,9 +100,7 @@ struct AddMCPServerView: View {
             }
             .background(theme.bgPrimary)
             .navigationTitle("Add MCP Server")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            .inlineNavigationBarTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
