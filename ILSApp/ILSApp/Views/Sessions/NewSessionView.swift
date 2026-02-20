@@ -167,6 +167,13 @@ struct NewSessionView: View {
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            HStack {
+                Spacer()
+                Text("\(systemPrompt.count) characters")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
         }
     }
 
