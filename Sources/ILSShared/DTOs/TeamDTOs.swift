@@ -215,3 +215,33 @@ public struct ShutdownTeammateRequest: Codable, Sendable {
         self.memberName = memberName
     }
 }
+
+/// Request to import a team from exported data.
+public struct ImportTeamRequest: Codable, Sendable {
+    /// Exported team data.
+    public let export: TeamExport
+    /// Whether to overwrite if team already exists.
+    public let overwrite: Bool?
+
+    public init(export: TeamExport, overwrite: Bool? = nil) {
+        self.export = export
+        self.overwrite = overwrite
+    }
+}
+
+/// Export format containing all team data for import/export operations.
+public struct TeamExport: Codable, Sendable {
+    public let name: String
+    public let description: String?
+    public let members: [TeamMember]
+    public let tasks: [TeamTask]
+    public let messages: [TeamMessage]
+
+    public init(name: String, description: String?, members: [TeamMember], tasks: [TeamTask], messages: [TeamMessage]) {
+        self.name = name
+        self.description = description
+        self.members = members
+        self.tasks = tasks
+        self.messages = messages
+    }
+}

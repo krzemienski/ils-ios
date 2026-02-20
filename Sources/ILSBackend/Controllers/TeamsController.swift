@@ -35,6 +35,10 @@ struct TeamsController: RouteCollection {
         teams.put("templates", ":templateId", use: updateTemplate)
         teams.delete("templates", ":templateId", use: deleteTemplate)
         teams.post("templates", ":templateId", "apply", use: applyTemplate)
+
+        // Export/Import endpoints
+        teams.get(":name", "export", use: exportTeam)
+        teams.post("import", use: importTeam)
     }
 
     // MARK: - Teams Management
@@ -446,6 +450,34 @@ struct TeamsController: RouteCollection {
 
         return APIResponse(success: true, data: team)
     }
+
+    // MARK: - Export/Import Management
+
+    @Sendable
+    func exportTeam(req: Request) async throws -> APIResponse<TeamExport> {
+        guard let teamName = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Team name is required")
+        }
+
+        let export = try await fileService.exportTeam(name: teamName)
+        return APIResponse(success: true, data: export)
+    }
+
+    @Sendable
+    func importTeam(req: Request) async throws -> APIResponse<AgentTeam> {
+        let request = try req.content.decode(ImportTeamRequest.self)
+
+        // Validate input lengths
+        try PathSanitizer.validateStringLength(request.export.name, maxLength: 255, fieldName: "name")
+        try PathSanitizer.validateOptionalStringLength(request.export.description, maxLength: 1000, fieldName: "description")
+
+        let team = try await fileService.importTeam(
+            from: request.export,
+            overwrite: request.overwrite ?? false
+        )
+
+        return APIResponse(success: true, data: team)
+    }
 }
 
 // MARK: - Content Conformances
@@ -465,3 +497,5 @@ extension CreateTemplateRequest: Content {}
 extension UpdateTemplateRequest: Content {}
 extension ApplyTemplateRequest: Content {}
 extension TeamMetricsResponse: Content {}
+extension TeamExport: Content {}
+extension ImportTeamRequest: Content {}

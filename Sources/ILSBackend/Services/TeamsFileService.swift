@@ -418,15 +418,6 @@ private struct TeamConfig: Codable {
     }
 }
 
-/// Export format containing all team data for import/export operations.
-struct TeamExport: Codable {
-    let name: String
-    let description: String?
-    let members: [TeamMember]
-    let tasks: [TeamTask]
-    let messages: [TeamMessage]
-}
-
 // MARK: - Errors
 
 enum TeamsFileServiceError: Error, LocalizedError {
