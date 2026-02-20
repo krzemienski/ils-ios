@@ -237,6 +237,66 @@ ILSMacApp/
 - Touch Bar support for chat
 - macOS-native settings window (`Settings` scene)
 
+## Middleware Stack
+
+Every HTTP request to the ILS backend passes through a fixed middleware pipeline before reaching a route handler. Middleware is registered in `Sources/ILSBackend/App/configure.swift` and executes in registration order.
+
+```
+Incoming HTTP Request
+        │
+        ▼
+┌───────────────────────────────────────────┐
+│  1. CORSMiddleware           at: .beginning│
+│     Adds CORS response headers;            │
+│     handles OPTIONS preflight requests     │
+└────────────────────┬──────────────────────┘
+                     ▼
+┌───────────────────────────────────────────┐
+│  2. RequestLoggingMiddleware              │
+│     Logs method, path, status code,       │
+│     and request duration                  │
+└────────────────────┬──────────────────────┘
+                     ▼
+┌───────────────────────────────────────────┐
+│  3. ILSErrorMiddleware                    │
+│     Converts thrown Errors to structured  │
+│     JSON error responses                  │
+└────────────────────┬──────────────────────┘
+                     ▼
+┌───────────────────────────────────────────┐
+│  4. APIKeyMiddleware              (opt-in) │
+│     Validates X-API-Key header; skipped   │
+│     entirely if ILS_API_KEY is not set    │
+└────────────────────┬──────────────────────┘
+                     ▼
+┌───────────────────────────────────────────┐
+│  5. RateLimitMiddleware                   │
+│     Per-client request rate limiting via  │
+│     in-memory RateLimitStorage            │
+└────────────────────┬──────────────────────┘
+                     ▼
+               Route Handler
+```
+
+### Middleware Details
+
+| Order | Middleware | Purpose | Configurable |
+|-------|-----------|---------|-------------|
+| 1 | `CORSMiddleware` | Sets `Access-Control-*` response headers; returns `200 OK` for `OPTIONS` preflight requests. Registered at `.beginning` so CORS headers appear on error responses too | `ILS_CORS_ORIGINS` env var (comma-separated list); defaults to localhost development origins |
+| 2 | `RequestLoggingMiddleware` | Logs HTTP method, path, response status code, and request duration for every request | — |
+| 3 | `ILSErrorMiddleware` | Replaces Vapor's default `ErrorMiddleware`. Catches any thrown `Error` and serialises it as `{"error":true,"reason":"..."}` JSON with an appropriate HTTP status code | — |
+| 4 | `APIKeyMiddleware` | Validates the `X-API-Key` request header against the `ILS_API_KEY` environment variable. **Opt-in:** if `ILS_API_KEY` is not set, all requests are allowed through unconditionally | `ILS_API_KEY` env var; unset = auth disabled |
+| 5 | `RateLimitMiddleware` | Enforces per-client request rate limits using in-memory `RateLimitStorage`. Clients exceeding the limit receive `HTTP 429 Too Many Requests` | — |
+
+### Environment Variables
+
+| Variable | Middleware | Effect |
+|----------|-----------|--------|
+| `ILS_CORS_ORIGINS` | `CORSMiddleware` | Comma-separated list of allowed origins (e.g. `https://app.example.com,https://staging.example.com`). If unset, defaults to `http://localhost:3000`, `http://localhost:8080`, `http://localhost:9999`, and their `127.0.0.1` equivalents |
+| `ILS_API_KEY` | `APIKeyMiddleware` | When set, every request must include an `X-API-Key: <value>` header matching this value. When unset, API key authentication is disabled entirely |
+
+> **API auth is opt-in.** ILS is designed for local use; running without `ILS_API_KEY` is the default and expected for on-device deployments. Set `ILS_API_KEY` only when the backend is exposed over a tunnel or network where untrusted clients may reach port 9999.
+
 ## Execution Backends
 
 `ClaudeExecutorService` supports two execution backends, selected via the `useAgentSDK` static flag (default: `true`).
