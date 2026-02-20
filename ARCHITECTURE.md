@@ -435,6 +435,72 @@ StreamMessage                                       [camelCase; iOS-facing]
 StreamingService → SSE wire → SSEClient → ChatViewModel
 ```
 
+## ContentBlock Type System
+
+`ContentBlock` is the core data type for assistant response content. It is a Swift enum with associated values defined in `Sources/ILSShared/Models/ContentBlocks.swift` and appears wherever assistant or user message content is represented — in `AssistantMessage.content[]`, `UserMessage.content[]`, and the converter output from `CLIMessageConverter`.
+
+### ContentBlock Enum Cases
+
+```swift
+public enum ContentBlock: Codable, Sendable {
+    case text(TextBlock)              // Plain text response
+    case toolUse(ToolUseBlock)        // Tool invocation request
+    case toolResult(ToolResultBlock)  // Tool execution result
+    case thinking(ThinkingBlock)      // Extended thinking content
+}
+```
+
+Each case carries a dedicated struct with typed fields:
+
+| Case | Struct | Key Fields | Description |
+|------|--------|------------|-------------|
+| `.text` | `TextBlock` | `text: String` | Plain assistant text output |
+| `.toolUse` | `ToolUseBlock` | `id: String`, `name: String`, `input: AnyCodable` | Request to invoke a named tool with JSON parameters; `id` correlates with the corresponding `.toolResult` |
+| `.toolResult` | `ToolResultBlock` | `toolUseId: String`, `content: String`, `isError: Bool` | Result returned after tool execution; `toolUseId` links back to the originating `.toolUse` block |
+| `.thinking` | `ThinkingBlock` | `thinking: String` | Extended reasoning content emitted when extended thinking is enabled on the model |
+
+### StreamDelta: Character-by-Character Streaming
+
+Before a full `ContentBlock` is assembled, the Claude CLI (and Agent SDK wrapper) emit incremental **delta** events. These arrive as `StreamMessage.streamEvent` messages carrying a `StreamDelta`:
+
+```swift
+public enum StreamDelta: Codable, Sendable {
+    case textDelta(String)        // Incremental text character(s)
+    case inputJsonDelta(String)   // Incremental tool-input JSON fragment
+    case thinkingDelta(String)    // Incremental thinking character(s)
+}
+```
+
+Each delta case builds toward a final `ContentBlock`:
+
+| Delta case | Payload field | Builds toward |
+|------------|--------------|---------------|
+| `.textDelta` | `text: String` | `ContentBlock.text(TextBlock)` |
+| `.inputJsonDelta` | `partialJson: String` | `ContentBlock.toolUse(ToolUseBlock).input` (JSON assembled incrementally) |
+| `.thinkingDelta` | `thinking: String` | `ContentBlock.thinking(ThinkingBlock)` |
+
+### Event Ordering: Deltas Before Full Blocks
+
+When `--include-partial-messages` is enabled (the default in `ExecutionOptions`), the stream delivers events in this order for each content block:
+
+```
+streamEvent { eventType: "content_block_start" }   ← block type announced, no content yet
+streamEvent { eventType: "content_block_delta",     ← first delta (.textDelta / .inputJsonDelta / .thinkingDelta)
+              delta: StreamDelta }
+streamEvent { eventType: "content_block_delta", ... ← repeated for every character or JSON chunk
+              delta: StreamDelta }
+...
+streamEvent { eventType: "content_block_stop" }     ← block finalized
+...
+assistant (AssistantMessage) {                      ← complete message with full ContentBlock[]
+    content: [ContentBlock]
+}
+```
+
+`ChatViewModel` receives partial text via `streamEvent` deltas first, enabling live character-by-character rendering. The subsequent `assistant` message contains the authoritative, complete `ContentBlock[]` array and replaces the incrementally built content on arrival.
+
+> **`--include-partial-messages` flag:** Passed to `claude -p` in CLI mode, or set in the Agent SDK JSON config in SDK mode. Without this flag, only the final `assistant` message arrives — no intermediate `streamEvent` deltas are emitted and the UI displays nothing until the full response is ready. ILS always enables this flag to support live typing indicators and real-time text rendering in the chat UI.
+
 ## Data Flow
 
 ### Chat Streaming Flow
