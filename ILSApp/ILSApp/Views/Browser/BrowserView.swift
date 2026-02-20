@@ -163,6 +163,7 @@ struct BrowserView: View {
             HStack(spacing: 0) {
                 ForEach(["all", "user", "project", "local"], id: \.self) { scope in
                     Button {
+                        HapticManager.selection()
                         mcpScope = scope
                     } label: {
                         Text(scope.capitalized)
