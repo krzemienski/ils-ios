@@ -7,7 +7,7 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
-    @State private var highlightedCode: AttributedString?
+    @State private var highlightedCode: AttributedString = AttributedString()
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -157,19 +157,14 @@ struct CodeBlockView: View {
 
                     // Code text with syntax highlighting (cached via @State)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(highlightedCode ?? AttributedString(displayedLines.joined(separator: "\n")))
-                        .textSelection(.enabled)
-                        .padding(.leading, theme.spacingSM)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(highlightedCode)
+                            .lineLimit(shouldBeCollapsible && !isExpanded ? collapsedLineLimit : nil)
+                            .textSelection(.enabled)
+                            .padding(.leading, theme.spacingSM)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .accessibilityIdentifier("code-block-content")
                     .accessibilityLabel(accessibilityCodeLabel)
-                    .task(id: "\(code.hashValue)-\(language ?? "")-\(isExpanded)") {
-                        highlightedCode = SyntaxHighlighter.highlight(
-                            code: displayedLines.joined(separator: "\n"),
-                            language: language
-                        )
-                    }
                 }
                 .padding(.vertical, theme.spacingSM)
             }
@@ -181,6 +176,9 @@ struct CodeBlockView: View {
                 .strokeBorder(theme.textTertiary.opacity(0.2), lineWidth: 1)
         )
         .accessibilityIdentifier("code-block-container")
+        .task(id: "\(code)|\(language ?? "")") {
+            highlightedCode = SyntaxHighlighter.highlight(code: code, language: language)
+        }
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [code])
                 .presentationDetents([.medium, .large])
