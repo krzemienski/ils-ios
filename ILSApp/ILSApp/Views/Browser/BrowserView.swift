@@ -80,6 +80,7 @@ struct BrowserView: View {
         }
         .sheet(isPresented: $showingAddMCPServer) {
             AddMCPServerView(mcpVM: mcpVM)
+                .presentationDetents([.large])
         }
         .task {
             mcpVM.configure(client: appState.apiClient)

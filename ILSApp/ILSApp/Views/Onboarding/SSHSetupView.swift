@@ -239,19 +239,19 @@ struct SSHSetupView: View {
 
     private func logLineColor(_ line: String) -> Color {
         if line.hasPrefix("ILS_STEP:") && line.contains(":success:") {
-            return .green
+            return theme.success
         } else if line.hasPrefix("ILS_STEP:") && line.contains(":failure:") {
-            return .red
+            return theme.error
         } else if line.hasPrefix("ILS_STEP:") && line.contains(":in_progress:") {
-            return .cyan
+            return theme.info
         } else if line.hasPrefix("ILS_ERROR:") {
-            return .red
+            return theme.error
         } else if line.hasPrefix("ILS_TUNNEL_URL:") || line.hasPrefix("ILS_COMPLETE") {
-            return .green
+            return theme.success
         } else if line.hasPrefix("[ILS]") {
-            return .yellow
+            return theme.warning
         }
-        return .white.opacity(0.8)
+        return theme.textSecondary
     }
 
     // MARK: - Connecting Overlay

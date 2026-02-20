@@ -19,6 +19,9 @@ class NotificationManager: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+        // Intentional: UNUserNotificationCenter.delegate is weak, and NotificationManager
+        // is a singleton (static let shared) — so the delegate reference is always valid
+        // for the lifetime of the app. No retain cycle risk.
         center.delegate = self
         checkAuthorizationStatus()
     }
