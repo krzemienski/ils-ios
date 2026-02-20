@@ -1,9 +1,35 @@
 import SwiftUI
 import ILSShared
 
+/// Primary chat interface for interacting with Claude Code within a session.
+///
+/// Displays the full conversation history, handles real-time message streaming,
+/// and provides controls for sending messages, managing the session, and viewing session info.
+/// Coordinates with ``ChatViewModel`` for message state, ``SSEClient`` for live streaming,
+/// and ``ChatMessageList`` for rendering the conversation.
+///
+/// ## Topics
+/// ### State
+/// - ``session`` - The chat session being displayed
+/// - ``viewModel`` - View model managing chat messages and streaming
+/// - ``sheets`` - Sheet and alert presentation state
+/// - ``actions`` - Transient state for in-flight user actions
+///
+/// ### View Components
+/// - ``mainContent`` - Top-level layout container
+/// - ``statusBanner`` - Connection and streaming status indicator
+/// - ``messageList`` - Scrollable message history with gesture support
+/// - ``bottomBar`` - Input bar for composing and sending messages
+///
+/// ### Actions
+/// - ``sendMessage()`` - Send the current input text to Claude
+/// - ``retryLastMessage()`` - Resend the most recent user message
+/// - ``exportSession()`` - Export the conversation as Markdown
 struct ChatView: View {
+    /// The chat session this view is presenting.
     let session: ChatSession
     @Environment(AppState.self) var appState
+    /// View model managing chat messages, streaming state, and session connectivity.
     @State private var viewModel = ChatViewModel()
 
     // MARK: - Grouped State
@@ -32,11 +58,17 @@ struct ChatView: View {
         var isExporting = false
     }
 
+    /// State controlling sheet and alert presentation.
     @State private var sheets = SheetState()
+    /// State for transient in-flight user actions such as forking, deleting, and renaming.
     @State private var actions = ActionState()
+    /// The current text in the message input field.
     @State private var inputText = ""
+    /// Whether the user has manually scrolled up from the bottom of the message list.
     @State private var isUserScrolledUp = false
+    /// Whether the "jump to bottom" button is currently visible.
     @State private var showJumpToBottom = false
+    /// Configuration for advanced chat options applied to the next outgoing message.
     @State private var chatOptionsConfig = ChatOptionsConfig()
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
@@ -157,6 +189,7 @@ struct ChatView: View {
 
     // MARK: - View Components
 
+    /// Top-level layout stacking the status banner, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
             statusBanner
@@ -169,6 +202,7 @@ struct ChatView: View {
         }
     }
 
+    /// Conditionally shows a streaming or connection status indicator at the top of the view.
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
@@ -182,6 +216,7 @@ struct ChatView: View {
         }
     }
 
+    /// Scrollable list of chat messages with delete and retry gesture support.
     private var messageList: some View {
         ChatMessageList(
             messages: viewModel.messages,
@@ -207,6 +242,7 @@ struct ChatView: View {
         )
     }
 
+    /// Chat input bar for composing and sending messages to Claude.
     private var bottomBar: some View {
         ChatInputBar(
             text: $inputText,
@@ -221,6 +257,7 @@ struct ChatView: View {
         .focused($isInputFocused)
     }
 
+    /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
@@ -297,12 +334,14 @@ struct ChatView: View {
 
     // MARK: - Actions
 
+    /// Resend the most recent user message after a connection error.
     private func retryLastMessage() {
         if let lastUserMessage = viewModel.messages.last(where: { $0.isUser }) {
             viewModel.sendMessage(prompt: lastUserMessage.text, projectId: session.projectId)
         }
     }
 
+    /// Send the current input text as a user message to Claude.
     private func sendMessage() {
         guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
@@ -313,6 +352,7 @@ struct ChatView: View {
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
     }
 
+    /// Export the full conversation as a Markdown file for sharing.
     private func exportSession() async {
         actions.isExporting = true
         var md = "# Session: \(session.name ?? "Unnamed")\n\n"
@@ -338,10 +378,18 @@ struct ChatView: View {
 
 // MARK: - Streaming Status Banner
 
+/// A banner displayed at the top of the chat view showing real-time streaming status.
+///
+/// Adapts its icon and color to reflect the current SSE connection state, and optionally
+/// shows token count and elapsed time when a stream is actively receiving tokens.
 struct StreamingStatusBanner: View {
+    /// The human-readable status string describing the current connection or streaming state.
     let statusText: String
+    /// The current SSE connection state, used to select the appropriate icon and color.
     let connectionState: SSEClient.ConnectionState
+    /// Number of tokens received in the current stream. Shown when greater than zero.
     var tokenCount: Int = 0
+    /// Elapsed time in seconds for the current stream. Shown alongside token count.
     var elapsedSeconds: Double = 0
 
     @Environment(\.theme) private var theme: ThemeSnapshot

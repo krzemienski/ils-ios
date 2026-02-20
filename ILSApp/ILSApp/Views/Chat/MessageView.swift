@@ -254,6 +254,7 @@ struct MessageContentView: View {
                                 }
                             }) {
                                 Label("Copy Text", systemImage: "doc.on.doc")
+                                    .accessibilityHint("Copies this text segment to clipboard")
                             }
                         }
 

@@ -4,21 +4,33 @@ import SwiftUI
 /// Uses theme error color at low opacity for background, with full error color for icon and border.
 struct ErrorMessageView: View {
     let message: String
+    var onRetry: (() -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
-        HStack(alignment: .top, spacing: theme.spacingSM) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                .foregroundStyle(theme.error)
-                .frame(width: 24)
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            HStack(alignment: .top, spacing: theme.spacingSM) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.error)
+                    .frame(width: 24)
 
-            Text(message)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                Text(message)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.error)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            if let onRetry {
+                Button("Try Again") {
+                    onRetry()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.error)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(theme.spacingSM)
         .background(theme.error.opacity(0.1))
@@ -28,6 +40,6 @@ struct ErrorMessageView: View {
                 .strokeBorder(theme.error.opacity(0.3), lineWidth: 0.5)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Error: \(message)")
+        .accessibilityLabel(onRetry != nil ? "Error: \(message). Tap Try Again to retry." : "Error: \(message)")
     }
 }

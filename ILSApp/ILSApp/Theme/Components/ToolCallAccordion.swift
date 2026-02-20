@@ -59,6 +59,7 @@ struct ToolCallAccordion: View {
 
     private var headerButton: some View {
         Button {
+            HapticManager.selection()
             if reduceMotion {
                 isExpanded.toggle()
                 if let expandAll = expandAll {
