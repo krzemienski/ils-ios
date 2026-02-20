@@ -326,40 +326,159 @@ ClaudeExecutorService.useAgentSDK = false
 
 ### Chat Streaming Flow
 
+The full pipeline from user keystroke to rendered message spans 15 distinct stages across iOS client, HTTP transport, and Vapor backend.
+
 ```
-User Input --> ChatView --> ChatViewModel.sendMessage()
-    |
-    v
-APIClient.streamChat(sessionId, prompt)
-    |
-    v
-POST /api/v1/chat/stream (SSE)
-    |
-    v
-ChatController --> ClaudeExecutorService.execute()
-    |                    |
-    |              useAgentSDK?
-    |             /            \
-    |         YES               NO
-    |          |                 |
-    |  node sdk-wrapper.mjs   claude -p
-    |  (Anthropic API direct) (--output-format stream-json)
-    |          |                 |
-    |          └────────┬────────┘
-    |                   |
-    |            stdout (NDJSON)
-    |                   |
-    |            CLIMessageConverter --> StreamMessage
-    |                   |
-    v                   v
-SSEClient <-- SSE events <-- StreamingService
-    |
-    v
-ChatViewModel.messages.append(parsed)
-    |
-    v
-ChatView re-renders with new message
+┌─────────────────────────────── iOS CLIENT ───────────────────────────────────┐
+│                                                                               │
+│  1. ChatInputBar                                                              │
+│     User types message and taps Send                                          │
+│          │                                                                    │
+│          ▼                                                                    │
+│  2. ChatView                                                                  │
+│     Receives onSubmit callback, calls viewModel.sendMessage(_:)               │
+│          │                                                                    │
+│          ▼                                                                    │
+│  3. ChatViewModel.sendMessage()                          [MainActor]          │
+│     Appends optimistic user message to messages[]                             │
+│     Calls sseClient.startStream(request:)                                     │
+│          │                                                                    │
+│          ▼                                                                    │
+│  4. SSEClient.startStream(request:)                                           │
+│     Cancels any existing stream, resets messages/error state                  │
+│     Sets connectionState = .connecting                                        │
+│     Spawns Task { await performStream(request:) }                             │
+│          │                                                                    │
+│          ▼                                                                    │
+│  5. URLSession.bytes(for: urlRequest)                                         │
+│     POST /api/v1/chat/stream                                                  │
+│     Headers: Content-Type: application/json                                   │
+│              Accept: text/event-stream                                        │
+│              Last-Event-ID: <id>  (if reconnecting)                           │
+│     Races against 60s connection timeout (withThrowingTaskGroup)              │
+│     URLSession configured: 5min request timeout, 1hr resource timeout        │
+│     On connect: connectionState = .connected                                  │
+│                                                                               │
+│     ┌─ Heartbeat Watchdog (Task.detached) ───────────────────────────┐       │
+│     │  Checks every 15s; throws URLError(.timedOut) if no            │       │
+│     │  activity (data or SSE heartbeat) received in 45s              │       │
+│     └────────────────────────────────────────────────────────────────┘       │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ SSE wire (HTTP/1.1 chunked)
+┌───────────────────────────────────┼──────────────────────── VAPOR BACKEND ───┐
+│                                   ▼                                           │
+│  6. ChatController                                                            │
+│     Routes POST /api/v1/chat/stream                                           │
+│     Validates request, resolves sessionId, creates user MessageModel in DB    │
+│     Calls ClaudeExecutorService.execute(prompt:options:)                      │
+│          │                                                                    │
+│          ▼                                                                    │
+│  7. ClaudeExecutorService.execute()                                           │
+│     Returns AsyncThrowingStream<StreamMessage, Error>                         │
+│     Two-tier timeout: 30s for first stdout byte, 5min total                  │
+│          │                                                                    │
+│          │           useAgentSDK?                                             │
+│          ├──── YES ──────────────────────────────────── NO ──────────┐       │
+│          ▼                                                            ▼       │
+│  executeWithSDK()                                          executeWithCLI()   │
+│  /bin/zsh -l -c                                            /bin/zsh -l -c    │
+│  "node scripts/sdk-wrapper.mjs '<json>'"                   "claude -p         │
+│  → @anthropic-ai/claude-agent-sdk                           --output-format   │
+│  → Anthropic API (HTTPS direct)                             stream-json ..."  │
+│          │                                                            │       │
+│          └────────────────────────┬───────────────────────────────────┘       │
+│                                   ▼                                           │
+│  8. subprocess stdout (NDJSON)                                                │
+│     DispatchQueue reads line-by-line via readDataToEndOfFile                  │
+│     (not RunLoop — Vapor's NIO does not pump RunLoop)                         │
+│          │                                                                    │
+│          ▼                                                                    │
+│  9. CLIMessageConverter                                                       │
+│     JSONDecoder with .convertFromSnakeCase                                    │
+│     Parses raw CLIMessage → typed StreamMessage events:                       │
+│       .text(TextDelta)           — incremental text content                   │
+│       .toolUse(ToolUseBlock)     — tool call initiated                        │
+│       .toolResult(ToolResult)    — tool execution result                      │
+│       .thinking(ThinkingBlock)   — extended thinking content                  │
+│       .system(SystemMessage)     — session metadata (sessionId, cost)         │
+│       .error(StreamError)        — error propagation                          │
+│          │                                                                    │
+│          ▼                                                                    │
+│  10. StreamingService.createSSEResponseWithPersistence()                      │
+│      Formats each StreamMessage as SSE event with monotonic event ID          │
+│      Stores events in ring buffer (capacity 1000) for reconnection replay     │
+│      Sends SSE heartbeat ping every 15s to keep connection alive              │
+│                                                                               │
+│      ┌─ Persistence (onMessage closure) ──────────────────────────────┐      │
+│      │  Accumulates content during streaming:                         │      │
+│      │    .text        → appends to accumulatedContent string         │      │
+│      │    .toolUse     → appends JSON to toolCalls[]                  │      │
+│      │    .toolResult  → appends JSON to toolResults[]                │      │
+│      │    .system      → captures claudeSessionId, totalCostUSD       │      │
+│      │  On stream end: saves MessageModel to DB, updates session      │      │
+│      │  metadata (message_count, total_cost_usd, last_active_at)      │      │
+│      └────────────────────────────────────────────────────────────────┘      │
+│                                                                               │
+│      SSE wire format:                                                         │
+│        id: <monotonic-int>\n                                                  │
+│        event: <type>\n                                                        │
+│        data: <json>\n\n                                                       │
+│        : ping\n\n   (heartbeat, every 15s)                                    │
+│        event: done\ndata: {}\n\n   (stream complete)                          │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ SSE wire (HTTP/1.1 chunked)
+┌───────────────────────────────────┼──────────────────────── iOS CLIENT ───────┐
+│                                   ▼                                            │
+│  11. SSEClient (asyncBytes.lines loop)                                         │
+│      Parses SSE protocol: event:/data:/id: prefixes                            │
+│      Decodes data JSON → StreamMessage via JSONDecoder                         │
+│      Calls messages.append(decoded) → triggers @Published $messages            │
+│      Reconnect on network error: exponential backoff, max 3 attempts           │
+│      (2s → 4s → 8s, capped at 30s)                                            │
+│          │                                                                     │
+│          ▼                                                                     │
+│  12. SSEClient.$messages (Combine Publisher)                                   │
+│      Observed by ChatViewModel via .sink { streamMessages in ... }             │
+│          │                                                                     │
+│          ▼                                                                     │
+│  13. ChatViewModel — Message Batching (75ms timer)                             │
+│      Computes newMessages = streamMessages.dropFirst(lastProcessedIndex)       │
+│      Appends only new items to pendingStreamMessages[]                         │
+│      Starts batchTask if not running (fires every 75ms)                        │
+│          │                                                                     │
+│      ┌─ batchTask loop (every 75ms) ──────────────────────────────────┐       │
+│      │  flushPendingMessages():                                        │       │
+│      │    Converts StreamMessage → ChatMessage content blocks          │       │
+│      │    Appends/updates messages[] on @MainActor                     │       │
+│      │    Updates streamTokenCount and streamElapsedSeconds            │       │
+│      │  On stream end: final flush + stopBatchTimer()                  │       │
+│      └────────────────────────────────────────────────────────────────┘       │
+│          │                                                                     │
+│          ▼                                                                     │
+│  14. ChatViewModel.messages[] (@Observable)                                    │
+│      SwiftUI observation triggers ChatView body re-evaluation                  │
+│          │                                                                     │
+│          ▼                                                                     │
+│  15. ChatMessageList re-render                                                 │
+│      Renders updated messages[] — text deltas coalesced into assistant         │
+│      message bubble, tool calls shown inline, thinking blocks collapsible      │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Key timing and reliability details:**
+
+| Stage | Detail |
+|-------|--------|
+| Connection timeout | 60s race via `withThrowingTaskGroup` in SSEClient |
+| Heartbeat watchdog | SSEClient checks every 15s; kills stream if no activity for 45s |
+| SSE heartbeat | StreamingService sends `: ping` comment every 15s |
+| Client batching | ChatViewModel flushes pending StreamMessages every 75ms (`batchInterval = 0.075`) |
+| Persistence | StreamingService accumulates full response during stream; writes to DB only after stream ends |
+| Reconnection | SSEClient retries on network errors up to 3×; sends `Last-Event-ID` for ring-buffer replay |
+| Executor timeout | 30s for first stdout byte; 5min hard kill for runaway processes |
 
 ### Session Discovery Flow
 
