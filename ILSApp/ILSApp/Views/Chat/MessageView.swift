@@ -182,35 +182,87 @@ struct ToolResultView: View {
 struct ThinkingView: View {
     let thinking: String
     @State private var isExpanded = false
+    @State private var pulseScale: CGFloat = 1.0
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingXS) {
-            Button(action: { isExpanded.toggle() }) {
+            Button(action: {
+                if reduceMotion {
+                    isExpanded.toggle()
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isExpanded.toggle()
+                    }
+                }
+            }) {
                 HStack {
                     Image(systemName: "brain")
-                        .foregroundColor(theme.info)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.entityPlugin)
+                        .scaleEffect(pulseScale)
+                        .frame(width: 20)
                     Text("Thinking")
                         .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
                     Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(theme.textSecondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                        .foregroundStyle(theme.textTertiary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
             }
             .buttonStyle(.plain)
 
             if isExpanded {
                 Text(thinking)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundColor(theme.textSecondary)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign).italic())
+                    .foregroundStyle(theme.textSecondary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(theme.spacingSM)
                     .background(theme.bgTertiary)
                     .cornerRadius(theme.cornerRadiusSmall)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(theme.spacingSM)
-        .background(theme.info.opacity(0.1))
-        .cornerRadius(theme.cornerRadius)
+        .background(
+            LinearGradient(
+                colors: [theme.entityPlugin.opacity(0.12), theme.bgTertiary],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: theme.cornerRadius)
+                .strokeBorder(theme.entityPlugin.opacity(0.3), lineWidth: 0.5)
+        )
+        .onAppear {
+            if !reduceMotion {
+                startPulsing()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                if !reduceMotion {
+                    startPulsing()
+                }
+            } else {
+                withAnimation(.default) {
+                    pulseScale = 1.0
+                }
+            }
+        }
+    }
+
+    private func startPulsing() {
+        withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+            pulseScale = 1.15
+        }
     }
 }
 
