@@ -22,6 +22,9 @@ extension Notification.Name {
 
     /// Posted when the user wants to delete the current session.
     static let ilsDeleteSession = Notification.Name("ILSDeleteSession")
+
+    /// Posted when the user wants to toggle expand/collapse all tool call accordions.
+    static let ilsToggleExpandAllToolCalls = Notification.Name("ILSToggleExpandAllToolCalls")
 }
 
 // MARK: - ILS Commands
@@ -86,6 +89,13 @@ struct ILSCommands: Commands {
                 NotificationCenter.default.post(name: .ilsExportSession, object: nil)
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
+
+            Divider()
+
+            Button("Expand/Collapse All Tool Calls") {
+                NotificationCenter.default.post(name: .ilsToggleExpandAllToolCalls, object: nil)
+            }
+            .keyboardShortcut("e", modifiers: [.command, .option])
 
             Divider()
 
