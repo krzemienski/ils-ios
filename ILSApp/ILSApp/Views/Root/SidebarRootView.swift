@@ -12,6 +12,7 @@ enum ActiveScreen: Hashable {
     case teams
     case teamWorkflow(String)
     case teamDashboard(String)
+    case teamMetrics(String)
     case hosts
     case themes
 
@@ -26,6 +27,7 @@ enum ActiveScreen: Hashable {
         case .teams: return "teams"
         case .teamWorkflow: return "teamWorkflow"
         case .teamDashboard: return "teamDashboard"
+        case .teamMetrics: return "teamMetrics"
         case .hosts: return "hosts"
         case .themes: return "themes"
         }
@@ -195,6 +197,8 @@ struct SidebarRootView: View {
                     WorkflowBuilderView(teamName: teamName, apiClient: appState.apiClient)
                 case .teamDashboard(let teamName):
                     TeamDashboardView(teamName: teamName, apiClient: appState.apiClient)
+                case .teamMetrics(let teamName):
+                    TeamMetricsView(teamName: teamName, apiClient: appState.apiClient)
                 case .hosts:
                     hostsScreen
                 case .themes:

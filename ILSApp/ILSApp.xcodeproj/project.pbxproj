@@ -66,6 +66,7 @@
 		25150C087CAEB4B3A643C6D6 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */; };
 		2603AB480C011872E662EF77 /* InfoTooltipButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C01CFB5EC3C84F313D4CC9F /* InfoTooltipButton.swift */; };
 		265364BAEB1BEF9422A60088 /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E24F6A9BB63E2881A915BD5 /* TeamDashboardView.swift */; };
+		5881B0551D84439A8EC531F8 /* TeamMetricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C5A3119112426F8C3B39C5 /* TeamMetricsView.swift */; };
 		26B89816D115402D4EC07DCF /* SessionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634B53732914E58E3AAD3092 /* SessionWidget.swift */; };
 		278786B467D104A12CD0BF09 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DEE8624B9BCC400474F4F46 /* AppConstants.swift */; };
 		2861DF0F0B3AE3315C8A640D /* SettingsConnectionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */; };
@@ -354,6 +355,7 @@
 		F0AE54F8A383B8B86B0E134C /* AgentTeamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037032E8281B43B605677CDC /* AgentTeamDetailView.swift */; };
 		F0F643AE7F2B275AFC610602 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */; };
 		F1EEF7AA088589C065A744E6 /* TeamDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E24F6A9BB63E2881A915BD5 /* TeamDashboardView.swift */; };
+		6CA4C0B902BA4799A841B3A0 /* TeamMetricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C5A3119112426F8C3B39C5 /* TeamMetricsView.swift */; };
 		F26AD11BDD9966A1B6DF7B77 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */; };
 		F276A16D5AE2E3F7EC2DC5B8 /* WidgetDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */; };
 		F2B58597D642FD671CEFB1CA /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126022DAC2872BEEF6363538 /* MetricChart.swift */; };
@@ -465,6 +467,7 @@
 		5BEBD3082640EBC2FF87502B /* ILSApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ILSApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D406A95CF1DAFB1A1D7DAF2 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		5E24F6A9BB63E2881A915BD5 /* TeamDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamDashboardView.swift; sourceTree = "<group>"; };
+		71C5A3119112426F8C3B39C5 /* TeamMetricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMetricsView.swift; sourceTree = "<group>"; };
 		5E683D748A14BABED0367834 /* ILSMacApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSMacApp.entitlements; sourceTree = "<group>"; };
 		610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditorViewModel.swift; sourceTree = "<group>"; };
 		6157A63376D8A574079B8194 /* hud-state.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "hud-state.json"; sourceTree = "<group>"; };
@@ -1492,6 +1495,7 @@
 				C39791242B5B5EE3EEBD84FD /* SystemMetricsViewModel.swift in Sources */,
 				9CC6A104098E4A05AB99BE01 /* SystemMonitorView.swift in Sources */,
 				265364BAEB1BEF9422A60088 /* TeamDashboardView.swift in Sources */,
+				5881B0551D84439A8EC531F8 /* TeamMetricsView.swift in Sources */,
 				742E4A30A3011E8A41756395 /* TeamMessagesView.swift in Sources */,
 				DBA18F9D1D0027EB921CAF22 /* TeamTaskListView.swift in Sources */,
 				78E3753C5A5E902EEAE1D0D7 /* TeamTemplatesView.swift in Sources */,
@@ -1665,6 +1669,7 @@
 				31559366CEE80DE866B74260 /* SystemMetricsViewModel.swift in Sources */,
 				0458D7F5AA514464B36CF190 /* SystemMonitorView.swift in Sources */,
 				F1EEF7AA088589C065A744E6 /* TeamDashboardView.swift in Sources */,
+				6CA4C0B902BA4799A841B3A0 /* TeamMetricsView.swift in Sources */,
 				0454FDC092D6ECF573218246 /* TeamMessagesView.swift in Sources */,
 				065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */,
 				8E31933B76A36E4F1E42C0B5 /* TeamTemplatesView.swift in Sources */,

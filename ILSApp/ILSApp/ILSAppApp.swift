@@ -170,7 +170,7 @@ class AppState {
         case "system":
             navigationIntent = .system
         case "teams":
-            // Parse path: ils://teams/test-team/workflow or ils://teams/test-team/dashboard
+            // Parse path: ils://teams/test-team/workflow or ils://teams/test-team/dashboard or ils://teams/test-team/metrics
             let pathComponents = url.path.split(separator: "/").map(String.init)
             if pathComponents.count >= 2 {
                 let teamName = pathComponents[0]
@@ -179,6 +179,8 @@ class AppState {
                     navigationIntent = .teamWorkflow(teamName)
                 } else if action == "dashboard" {
                     navigationIntent = .teamDashboard(teamName)
+                } else if action == "metrics" {
+                    navigationIntent = .teamMetrics(teamName)
                 } else {
                     navigationIntent = .teams
                 }
