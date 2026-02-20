@@ -13,13 +13,13 @@ A 10-phase audit of the ILS iOS/macOS monorepo that validates every spec-defined
 
 - [x] **Phase 0: Build Verification** - All 3 targets build green, correct backend binary confirmed
 - [ ] **Phase 1: Screen Inventory** - Before-state screenshots for all 28 screens (19 iPhone + 4 iPad + 5 macOS)
-- [ ] **Phase 2: Implementation Gap** - AddMCPServerView verified end-to-end
-- [ ] **Phase 3: Mandate Verification** - 9 audit mandates validated with evidence
-- [ ] **Phase 4: Visual Audit** - All screens pass visual inspection across 3 platforms
-- [ ] **Phase 5: Functional Audit** - All interactive features verified with real data
-- [ ] **Phase 6: Backend Audit** - 14 API endpoints verified, security checks passed
-- [ ] **Phase 7: Integration Validation** - App data matches backend responses, zero mocks
-- [ ] **Phase 8: Edge Cases & Quality** - Empty states, Dynamic Type, VoiceOver, offline recovery
+- [x] **Phase 2: Implementation Gap** - AddMCPServerView verified end-to-end
+- [x] **Phase 3: Mandate Verification** - 9 audit mandates validated with evidence
+- [x] **Phase 4: Visual Audit** - All screens pass visual inspection across 3 platforms
+- [x] **Phase 5: Functional Audit** - All interactive features verified with real data
+- [x] **Phase 6: Backend Audit** - 14 API endpoints verified, security checks passed
+- [x] **Phase 7: Integration Validation** - App data matches backend responses, zero mocks
+- [x] **Phase 8: Edge Cases & Quality** - Empty states, Dynamic Type, VoiceOver, offline recovery
 - [ ] **Phase 9: Report & Documentation** - Final audit report with 105+ evidence artifacts
 
 ## Phase Details
@@ -90,8 +90,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Mandates 1-5 (Skills, MCP, Config, SkillDetail, Settings badges)
-- [ ] 03-02: Mandates 6-9 (Hosts rename, System Monitor, Hooks, Plugin search)
+- [x] 03-01: Mandates 1-5 (Skills, MCP, Config, SkillDetail, Settings badges)
+- [x] 03-02: Mandates 6-9 (Hosts rename, System Monitor, Hooks, Plugin search)
 
 ### Phase 4: Visual Audit
 **Goal**: Every screen passes visual inspection — correct colors, spacing, tap targets, theme tokens
@@ -131,8 +131,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Core flows (Dashboard, Sessions, Chat, Sidebar, Deep links)
-- [ ] 05-02: Browser, Settings, System Monitor, Sheets/Modals
+- [x] 05-01: Core flows (Dashboard, Sessions, Chat, Sidebar, Deep links)
+- [x] 05-02: Browser, Settings, System Monitor, Sheets/Modals
 
 ### Phase 6: Backend Audit
 **Goal**: All 14 API endpoints return correct JSON with proper structure and security
@@ -149,7 +149,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01: Curl all 14 endpoints, verify structure + security + camelCase
+- [x] 06-01: Curl all 14 endpoints, verify structure + security + camelCase
 
 ### Phase 7: Integration Validation
 **Goal**: App screenshots correlate with backend data — zero mock data anywhere
@@ -164,7 +164,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: Cross-reference app screenshots with backend curl responses
+- [x] 07-01: Cross-reference app screenshots with backend curl responses
 
 ### Phase 8: Edge Cases & Quality
 **Goal**: App handles gracefully under stress — disconnection, large data, accessibility extremes
@@ -181,8 +181,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: Empty states + offline recovery + state persistence
-- [ ] 08-02: Dynamic Type XXL + VoiceOver + large data sets
+- [x] 08-01: Empty states + offline recovery + state persistence
+- [x] 08-02: Dynamic Type XXL + VoiceOver + large data sets
 
 ### Phase 9: Report & Documentation
 **Goal**: Comprehensive audit report with all evidence cataloged and App Store readiness assessed
@@ -208,14 +208,14 @@ Group A (parallel): 0 + 1 + 2 -> Gate -> Group B (parallel): 3 + 4 + 5 -> Gate -
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Build Verification | 1/1 | Complete | 2026-02-20 |
-| 1. Screen Inventory | 1/2 | In Progress | - |
-| 2. Implementation Gap | 0/1 | Not started | - |
-| 3. Mandate Verification | 0/2 | Not started | - |
-| 4. Visual Audit | 0/2 | Not started | - |
-| 5. Functional Audit | 0/2 | Not started | - |
-| 6. Backend Audit | 0/1 | Not started | - |
-| 7. Integration Validation | 0/1 | Not started | - |
-| 8. Edge Cases & Quality | 0/2 | Not started | - |
+| 1. Screen Inventory | 1/2 | Partial (iPad/macOS done in Phase 4) | - |
+| 2. Implementation Gap | 1/1 | Complete | 2026-02-20 |
+| 3. Mandate Verification | 2/2 | Complete | 2026-02-20 |
+| 4. Visual Audit | 2/2 | Complete | 2026-02-20 |
+| 5. Functional Audit | 2/2 | Complete | 2026-02-20 |
+| 6. Backend Audit | 1/1 | Complete | 2026-02-20 |
+| 7. Integration Validation | 1/1 | Complete | 2026-02-20 |
+| 8. Edge Cases & Quality | 2/2 | Complete | 2026-02-20 |
 | 9. Report & Documentation | 0/1 | Not started | - |
 
 **Total Plans:** 15 across 10 phases

@@ -84,12 +84,12 @@ Requirements for the audit. Each maps to roadmap phases.
 
 ### Edge Cases & Quality (Phase 8)
 
-- [ ] **EDGE-01**: Empty states: disconnect backend, all screens show graceful messages (no crashes)
-- [ ] **EDGE-02**: Dynamic Type at XXL: key screens readable, no text overlapping
-- [ ] **EDGE-03**: VoiceOver labels present on all interactive elements
-- [ ] **EDGE-04**: Offline recovery: kill backend mid-request, app handles gracefully
-- [ ] **EDGE-05**: State persistence: force-quit and relaunch preserves selected theme and session
-- [ ] **EDGE-06**: Large data sets: 22K sessions scroll without performance degradation
+- [x] **EDGE-01**: Empty states: disconnect backend, all screens show graceful messages (no crashes)
+- [x] **EDGE-02**: Dynamic Type at XXL: key screens readable, no text overlapping
+- [x] **EDGE-03**: VoiceOver labels present on all interactive elements
+- [x] **EDGE-04**: Offline recovery: kill backend mid-request, app handles gracefully
+- [x] **EDGE-05**: State persistence: force-quit and relaunch preserves selected theme and session
+- [x] **EDGE-06**: Large data sets: 22K sessions scroll without performance degradation
 
 ### Report & Documentation (Phase 9)
 
@@ -157,7 +157,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FAUD-01 to FAUD-09 | Phase 5 | Pending |
 | BKND-01 to BKND-06 | Phase 6 | Pending |
 | INTG-01 to INTG-04 | Phase 7 | Pending |
-| EDGE-01 to EDGE-06 | Phase 8 | Pending |
+| EDGE-01 to EDGE-06 | Phase 8 | Complete |
 | REPT-01 to REPT-05 | Phase 9 | Pending |
 | SKIL-01 to SKIL-05 | All Phases | Pending |
 
