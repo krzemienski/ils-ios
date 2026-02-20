@@ -11,7 +11,7 @@ struct SidebarView: View {
     @Binding var isSidebarOpen: Bool
     var onSessionSelected: (ChatSession) -> Void
 
-    @State private var expandedProjects: Set<String> = []
+    @AppStorage("sidebarExpandedProjects") private var expandedProjectsStorage: String = ""
     @State private var sessionToRename: ChatSession?
     @State private var renameText: String = ""
 
@@ -170,20 +170,30 @@ struct SidebarView: View {
         }
     }
 
+    // MARK: - Expanded Projects Persistence
+
+    private func decodedExpandedProjects() -> Set<String> {
+        Set(expandedProjectsStorage.split(separator: ",").map(String.init).filter { !$0.isEmpty })
+    }
+
+    private func setProjectExpanded(_ name: String, isExpanded: Bool) {
+        var projects = decodedExpandedProjects()
+        if isExpanded {
+            projects.insert(name)
+        } else {
+            projects.remove(name)
+        }
+        expandedProjectsStorage = projects.sorted().joined(separator: ",")
+    }
+
     // MARK: - Project Group
 
     @ViewBuilder
     private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
         DisclosureGroup(
             isExpanded: Binding(
-                get: { expandedProjects.contains(name) },
-                set: { isExpanded in
-                    if isExpanded {
-                        expandedProjects.insert(name)
-                    } else {
-                        expandedProjects.remove(name)
-                    }
-                }
+                get: { decodedExpandedProjects().contains(name) },
+                set: { isExpanded in setProjectExpanded(name, isExpanded: isExpanded) }
             )
         ) {
             ForEach(sessions) { session in
