@@ -251,7 +251,39 @@ actor TeamsFileService {
         let updatedData = try jsonEncoder.encode(task)
         try atomicWrite(data: updatedData, to: taskFilePath)
 
+        // Check if all tasks are now completed and send notification
+        try checkAndNotifyWorkflowCompletion(team: team)
+
         return task
+    }
+
+    // MARK: - Workflow Completion
+
+    /// Check if all tasks in a team's workflow are completed and send a notification if so.
+    private func checkAndNotifyWorkflowCompletion(team: String) throws {
+        let tasks = try listTasks(team: team)
+
+        // Filter out deleted tasks
+        let activeTasks = tasks.filter { $0.status != .deleted }
+
+        // Check if there are tasks and all are completed
+        guard !activeTasks.isEmpty else {
+            return
+        }
+
+        let allCompleted = activeTasks.allSatisfy { $0.status == .completed }
+
+        if allCompleted {
+            // Send broadcast notification
+            let completionMessage = TeamMessage(
+                from: "system",
+                to: nil, // broadcast
+                content: "🎉 All tasks completed! The workflow has finished successfully.",
+                timestamp: Date()
+            )
+
+            try sendMessage(team: team, message: completionMessage)
+        }
     }
 
     // MARK: - Atomic File Write
