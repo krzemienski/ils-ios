@@ -53,7 +53,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: iPhone screenshot capture (19 screens via idb_describe + simulator_screenshot)
+- [x] 01-01: iPhone screenshot capture (19 screens via idb_describe + simulator_screenshot)
 - [ ] 01-02: iPad + macOS screenshot capture (4 iPad + 5 macOS)
 
 ### Phase 2: Implementation Gap
@@ -208,7 +208,7 @@ Group A (parallel): 0 + 1 + 2 -> Gate -> Group B (parallel): 3 + 4 + 5 -> Gate -
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Build Verification | 0/1 | Not started | - |
-| 1. Screen Inventory | 0/2 | Not started | - |
+| 1. Screen Inventory | 1/2 | In Progress | - |
 | 2. Implementation Gap | 0/1 | Not started | - |
 | 3. Mandate Verification | 0/2 | Not started | - |
 | 4. Visual Audit | 0/2 | Not started | - |

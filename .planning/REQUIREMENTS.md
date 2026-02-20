@@ -17,11 +17,11 @@ Requirements for the audit. Each maps to roadmap phases.
 
 ### Screen Inventory (Phase 1)
 
-- [ ] **SCRN-01**: Before-state screenshots captured for all 19 iPhone screens
+- [x] **SCRN-01**: Before-state screenshots captured for all 19 iPhone screens
 - [ ] **SCRN-02**: Before-state screenshots captured for 4 iPad screens (adaptive layout verified)
 - [ ] **SCRN-03**: Before-state screenshots captured for 5 macOS screens
-- [ ] **SCRN-04**: Each screenshot is read with Read tool and visually verified before cataloging
-- [ ] **SCRN-05**: Evidence directory created at `/tmp/ils-audit-evidence/` with organized subdirectories
+- [x] **SCRN-04**: Each screenshot is read with Read tool and visually verified before cataloging
+- [x] **SCRN-05**: Evidence directory created at `/tmp/ils-audit-evidence/` with organized subdirectories
 
 ### Implementation Gap (Phase 2)
 
