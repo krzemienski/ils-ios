@@ -322,6 +322,119 @@ ClaudeExecutorService.useAgentSDK = true
 ClaudeExecutorService.useAgentSDK = false
 ```
 
+## CLIMessage → StreamMessage Conversion
+
+Claude Code CLI (and the Agent SDK wrapper) emit NDJSON on stdout using **snake_case** field names, which is the native format of the Claude API wire protocol. The iOS app consumes **camelCase** `StreamMessage` types that are ergonomic in Swift. `CLIMessageConverter` bridges the two, and `JSONDecoder.keyDecodingStrategy = .convertFromSnakeCase` handles the bulk of field renaming automatically.
+
+### Two-Type Design
+
+| Layer | Type | Source | Key Convention |
+|-------|------|--------|----------------|
+| Raw CLI output | `CLIMessage` (enum) | `Sources/ILSShared/Models/CLIMessage.swift` | snake_case field names; mirrors Claude API wire protocol |
+| iOS-facing events | `StreamMessage` (enum) | `Sources/ILSShared/Models/StreamMessage.swift` | camelCase field names; idiomatic Swift |
+| Converter | `CLIMessageConverter` | `Sources/ILSBackend/Services/CLIMessageConverter.swift` | Stateless `enum`; `convert(_:CLIMessage) -> StreamMessage?` |
+
+### Message Type Mapping
+
+Each `CLIMessage` case maps to a corresponding `StreamMessage` case. The critical rename is `stream_event` → `streamEvent` — the string value of the `"type"` JSON field changes, not just the Swift enum case name.
+
+| `CLIMessage` case | JSON `"type"` value | `StreamMessage` case | JSON `"type"` value |
+|-------------------|---------------------|----------------------|---------------------|
+| `.system` | `"system"` | `.system` | `"system"` |
+| `.assistant` | `"assistant"` | `.assistant` | `"assistant"` |
+| `.user` | `"user"` | `.user` | `"user"` |
+| `.result` | `"result"` | `.result` | `"result"` |
+| `.streamEvent` | `"stream_event"` | `.streamEvent` | `"streamEvent"` ⚠️ renamed |
+| `.permission` | `"permission"` | `.permission` | `"permission"` |
+| *(none)* | — | `.error` | `"error"` | Injected by backend on exception |
+
+> **⚠️ `stream_event` → `streamEvent`:** The raw CLI emits `"type":"stream_event"` (snake_case). `CLIMessage.init(from:)` matches the string `"stream_event"` and decodes it as the `.streamEvent` case. `CLIMessageConverter` re-encodes it with `"type":"streamEvent"` (camelCase) so `StreamMessage` decoding on the iOS side matches the `"streamEvent"` case.
+
+### Field Renames via `.convertFromSnakeCase`
+
+`JSONDecoder` is configured with `.keyDecodingStrategy = .convertFromSnakeCase` when parsing raw CLI NDJSON. This handles all standard snake_case → camelCase transformations automatically:
+
+| Raw CLI field (snake_case) | Decoded Swift property (camelCase) | Struct |
+|----------------------------|------------------------------------|--------|
+| `session_id` | `sessionId` | `CLISystemMessage`, `CLIAssistantMessage`, `CLIUserMessage`, `CLIResultMessage` |
+| `parent_tool_use_id` | `parentToolUseId` | `CLIAssistantMessage`, `CLIUserMessage` |
+| `stop_reason` | `stopReason` | `CLIAssistantPayload` |
+| `tool_use_id` | `toolUseId` | `CLIContentBlock` |
+| `is_error` | `isError` | `CLIContentBlock`, `CLIResultMessage` |
+| `duration_ms` | `durationMs` | `CLIResultMessage`, `CLIToolUseResultMeta` |
+| `duration_api_ms` | `durationApiMs` | `CLIResultMessage` |
+| `num_turns` | `numTurns` | `CLIResultMessage` |
+| `total_cost_usd` | `totalCostUsd` | `CLIResultMessage` |
+| `input_tokens` | `inputTokens` | `CLIUsage`, `CLIModelUsageEntry` |
+| `output_tokens` | `outputTokens` | `CLIUsage`, `CLIModelUsageEntry` |
+| `cache_read_input_tokens` | `cacheReadInputTokens` | `CLIUsage` |
+| `cache_creation_input_tokens` | `cacheCreationInputTokens` | `CLIUsage` |
+| `model_usage` | `modelUsage` | `CLIResultMessage` |
+| `api_key_source` | `apiKeySource` | `CLISystemMessage` |
+| `permission_mode` | `permissionMode` | `CLISystemMessage` |
+| `claude_code_version` | `claudeCodeVersion` | `CLISystemMessage` |
+| `slash_commands` | `slashCommands` | `CLISystemMessage` |
+| `mcp_servers` | `mcpServers` | `CLISystemMessage` |
+| `num_files` | `numFiles` | `CLIToolUseResultMeta` |
+
+### Content Block Type Mapping
+
+Content blocks embedded in `CLIAssistantMessage.message.content` and `CLIUserMessage.message.content` use a `"type"` discriminator. `CLIMessageConverter.convertContentBlock(_:)` maps these string values to typed `ContentBlock` enum cases:
+
+| Raw `"type"` string | `ContentBlock` case | Swift struct | Notes |
+|---------------------|---------------------|--------------|-------|
+| `"text"` | `.text` | `TextBlock` | Plain text content |
+| `"tool_use"` | `.toolUse` | `ToolUseBlock` | Tool invocation with `id`, `name`, `input` |
+| `"tool_result"` | `.toolResult` | `ToolResultBlock` | Result of a tool call; content may be `String` or `[[String:Any]]` |
+| `"thinking"` | `.thinking` | `ThinkingBlock` | Extended thinking content |
+| *(unknown)* | `.text` | `TextBlock("[unsupported: ...]")` | Graceful fallback for unrecognised types |
+
+### Structural Differences
+
+Beyond field name changes, `CLIMessageConverter` also handles structural reshaping:
+
+| CLI structure | StreamMessage structure | Reason |
+|---------------|------------------------|--------|
+| `CLISystemMessage` has flat fields (`sessionId`, `model`, `cwd`, etc.) | `SystemMessage` wraps them in a nested `SystemData` struct | Cleaner grouping for iOS consumers |
+| `CLIAssistantMessage.message.content[]` (nested payload) | `AssistantMessage.content[]` (direct) | Flattened for simpler access |
+| `CLIUserMessage.message.content[]` (nested payload) | `UserMessage.content[]` (direct) | Flattened for simpler access |
+| `CLIResultMessage.totalCostUsd` (snake strategy → camelCase) | `ResultMessage.totalCostUSD` (all-caps USD) | `USD` is an acronym; mapped explicitly |
+| `CLIToolUseResultMeta` | `ToolUseResultMeta` | Field-by-field copy with identical camelCase names |
+
+### Code Path Summary
+
+```
+subprocess stdout (NDJSON line)
+    |
+    v
+JSONDecoder                                         [keyDecodingStrategy = .convertFromSnakeCase]
+    |
+    v
+CLIMessage                                          [snake_case → camelCase applied automatically]
+  .system / .assistant / .user / .result / .streamEvent / .permission
+    |
+    v
+CLIMessageConverter.convert(_:)                     [Sources/ILSBackend/Services/CLIMessageConverter.swift]
+    |
+    ├── system    → SystemMessage(data: SystemData(...))
+    ├── assistant → AssistantMessage(content: [ContentBlock])
+    │                   └── convertContentBlock():
+    │                         "text"        → .text(TextBlock)
+    │                         "tool_use"    → .toolUse(ToolUseBlock)
+    │                         "tool_result" → .toolResult(ToolResultBlock)
+    │                         "thinking"    → .thinking(ThinkingBlock)
+    ├── user      → UserMessage(content: [ContentBlock], toolUseResult: ToolUseResultMeta?)
+    ├── result    → ResultMessage(totalCostUSD:, usage: UsageInfo, modelUsage: [...])
+    ├── streamEvent → StreamEventMessage(type: "streamEvent", eventType:, delta:)
+    └── permission → PermissionRequest(requestId:, toolName:, toolInput:)
+    |
+    v
+StreamMessage                                       [camelCase; iOS-facing]
+    |
+    v
+StreamingService → SSE wire → SSEClient → ChatViewModel
+```
+
 ## Data Flow
 
 ### Chat Streaming Flow
