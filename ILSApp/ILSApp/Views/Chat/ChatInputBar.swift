@@ -47,8 +47,8 @@ struct ChatInputBar: View {
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .disabled(isDisabled)
+        .buttonStyle(.plain)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
     }
@@ -61,8 +61,8 @@ struct ChatInputBar: View {
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .disabled(isDisabled)
+        .buttonStyle(.plain)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
     }
@@ -122,8 +122,8 @@ struct ChatInputBar: View {
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .disabled(text.isEmpty || isDisabled)
+        .buttonStyle(.plain)
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
         .accessibilityHint("Sends the current message to Claude")
