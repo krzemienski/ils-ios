@@ -48,7 +48,6 @@ struct ThemeMarketplaceView: View {
     @State private var importError: String?
     @State private var showImportError = false
     @State private var exportData: Data?
-    @State private var filteredThemesCache: [ThemeSnapshot] = []
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -101,9 +100,6 @@ struct ThemeMarketplaceView: View {
                 Text(errorMsg)
             }
         }
-        .onAppear { updateFilteredThemes() }
-        .onChange(of: searchText) { _, _ in updateFilteredThemes() }
-        .onChange(of: selectedCategory) { _, _ in updateFilteredThemes() }
     }
 
     // MARK: - Export Filename
@@ -117,7 +113,7 @@ struct ThemeMarketplaceView: View {
     private var themeGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: theme.spacingSM) {
-                ForEach(filteredThemesCache, id: \.id) { builtinTheme in
+                ForEach(filteredThemes, id: \.id) { builtinTheme in
                     themeCard(for: builtinTheme)
                 }
             }
@@ -126,7 +122,7 @@ struct ThemeMarketplaceView: View {
         }
     }
 
-    private func themeCard(for builtinTheme: ThemeSnapshot) -> some View {
+    private func themeCard(for builtinTheme: any AppTheme) -> some View {
         let isActive = builtinTheme.id == themeManager.currentTheme.id
         return ThemePreviewCard(
             themeName: builtinTheme.name,
@@ -231,56 +227,53 @@ struct ThemeMarketplaceView: View {
 
     // MARK: - Filtered Themes
 
-    private func updateFilteredThemes() {
-        let snapshots = themeManager.availableThemes.map { ThemeSnapshot($0) }
+    private var filteredThemes: [any AppTheme] {
+        let themes = themeManager.availableThemes
 
-        let categoryFiltered: [ThemeSnapshot]
+        let categoryFiltered: [any AppTheme]
         if selectedCategory == .all {
-            categoryFiltered = snapshots
+            categoryFiltered = themes
         } else {
-            categoryFiltered = snapshots.filter { t in
+            categoryFiltered = themes.filter { t in
                 ThemeCategory.category(for: t.id) == selectedCategory
             }
         }
 
         if searchText.isEmpty {
-            filteredThemesCache = categoryFiltered
-        } else {
-            filteredThemesCache = categoryFiltered.filter { t in
-                t.name.localizedCaseInsensitiveContains(searchText)
-            }
+            return categoryFiltered
+        }
+        return categoryFiltered.filter { t in
+            t.name.localizedCaseInsensitiveContains(searchText)
         }
     }
 
     // MARK: - Import / Export
 
     private func handleImport(result: Result<[URL], Error>) {
-        Task {
-            do {
-                guard let fileURL = try result.get().first else {
-                    importError = "No file selected"
-                    showImportError = true
-                    return
-                }
-
-                guard fileURL.startAccessingSecurityScopedResource() else {
-                    importError = "Unable to access file"
-                    showImportError = true
-                    return
-                }
-                defer { fileURL.stopAccessingSecurityScopedResource() }
-
-                let jsonData = try Data(contentsOf: fileURL)
-                let manifest = try JSONDecoder().decode(ThemeManifest.self, from: jsonData)
-                let imported = ImportedTheme(manifest: manifest)
-
-                themeManager.registerTheme(imported)
-                themeManager.setTheme(imported.id)
-
-            } catch {
-                importError = "Failed to import theme: \(error.localizedDescription)"
+        do {
+            guard let fileURL = try result.get().first else {
+                importError = "No file selected"
                 showImportError = true
+                return
             }
+
+            guard fileURL.startAccessingSecurityScopedResource() else {
+                importError = "Unable to access file"
+                showImportError = true
+                return
+            }
+            defer { fileURL.stopAccessingSecurityScopedResource() }
+
+            let jsonData = try Data(contentsOf: fileURL)
+            let manifest = try JSONDecoder().decode(ThemeManifest.self, from: jsonData)
+
+            let imported = ImportedTheme(manifest: manifest)
+            themeManager.registerTheme(imported)
+            themeManager.setTheme(imported.id)
+
+        } catch {
+            importError = "Failed to import theme: \(error.localizedDescription)"
+            showImportError = true
         }
     }
 
@@ -301,21 +294,14 @@ struct ThemeMarketplaceView: View {
             )
         )
 
-        Task.detached(priority: .userInitiated) {
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                let data = try encoder.encode(manifest)
-                await MainActor.run {
-                    exportData = data
-                    showingExporter = true
-                }
-            } catch {
-                await MainActor.run {
-                    importError = "Failed to export theme: \(error.localizedDescription)"
-                    showImportError = true
-                }
-            }
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            exportData = try encoder.encode(manifest)
+            showingExporter = true
+        } catch {
+            importError = "Failed to export theme: \(error.localizedDescription)"
+            showImportError = true
         }
     }
 }

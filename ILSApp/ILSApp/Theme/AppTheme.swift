@@ -112,29 +112,19 @@ protocol AppTheme {
 /// - MCP Servers: Green (#10B981)
 /// - Plugins: Pink (#EC4899)
 /// - System: Cyan (#06B6D4)
-/// Pre-computed entity colors shared across all themes.
-enum EntityColors {
-    static let session = Color(hex: "3B82F6")
-    static let project = Color(hex: "8B5CF6")
-    static let skill = Color(hex: "F59E0B")
-    static let mcp = Color(hex: "10B981")
-    static let plugin = Color(hex: "EC4899")
-    static let system = Color(hex: "06B6D4")
-}
-
 extension AppTheme {
     /// Session entity color (blue).
-    var entitySession: Color { EntityColors.session }
+    var entitySession: Color { Color(hex: "3B82F6") }
     /// Project entity color (purple).
-    var entityProject: Color { EntityColors.project }
+    var entityProject: Color { Color(hex: "8B5CF6") }
     /// Skill entity color (amber).
-    var entitySkill: Color { EntityColors.skill }
+    var entitySkill: Color { Color(hex: "F59E0B") }
     /// MCP server entity color (green).
-    var entityMCP: Color { EntityColors.mcp }
+    var entityMCP: Color { Color(hex: "10B981") }
     /// Plugin entity color (pink).
-    var entityPlugin: Color { EntityColors.plugin }
+    var entityPlugin: Color { Color(hex: "EC4899") }
     /// System entity color (cyan).
-    var entitySystem: Color { EntityColors.system }
+    var entitySystem: Color { Color(hex: "06B6D4") }
 
     var fontDesign: Font.Design { .default }
     var isLight: Bool { false }
@@ -175,8 +165,10 @@ class ThemeManager {
     var currentTheme: any AppTheme
 
     /// Concrete snapshot of the current theme for SwiftUI environment injection.
-    /// Stored property — updated on theme change, not recomputed on every read.
-    private(set) var currentSnapshot: ThemeSnapshot = ThemeSnapshot(CyberpunkTheme())
+    /// Eliminates existential container overhead in view bodies.
+    var currentSnapshot: ThemeSnapshot {
+        ThemeSnapshot(currentTheme)
+    }
 
     private static let themeIDKey = "selectedThemeID"
 
@@ -208,7 +200,6 @@ class ThemeManager {
         ]
         self.availableThemes = themes
         self.currentTheme = themes.first(where: { $0.id == savedID }) ?? CyberpunkTheme()
-        self.currentSnapshot = ThemeSnapshot(self.currentTheme)
     }
 
     /// Switch to a different theme by ID.
@@ -216,7 +207,6 @@ class ThemeManager {
     func setTheme(_ id: String) {
         guard let theme = availableThemes.first(where: { $0.id == id }) else { return }
         currentTheme = theme
-        currentSnapshot = ThemeSnapshot(theme)
         UserDefaults.standard.set(id, forKey: Self.themeIDKey)
     }
 
@@ -234,7 +224,8 @@ class ThemeManager {
 extension Color {
     init(hex: String) {
         let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        let int = UInt64(cleaned, radix: 16) ?? 0
+        var int: UInt64 = 0
+        Scanner(string: cleaned).scanHexInt64(&int)
         let a, r, g, b: UInt64
         switch cleaned.count {
         case 6:

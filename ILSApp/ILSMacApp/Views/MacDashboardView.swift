@@ -4,12 +4,11 @@ import ILSShared
 // MARK: - Mac Dashboard View
 
 struct MacDashboardView: View {
-    @Environment(AppState.self) var appState
+    @EnvironmentObject var appState: AppState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    @State private var dashboardVM = DashboardViewModel()
-    /// Shared sessions view model passed in from MacContentView to avoid duplicate network fetches
-    var sessionsVM: SessionsViewModel
+    @StateObject private var dashboardVM = DashboardViewModel()
+    @StateObject private var sessionsVM = SessionsViewModel()
 
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
@@ -44,7 +43,8 @@ struct MacDashboardView: View {
         }
         .task {
             dashboardVM.configure(client: appState.apiClient)
-            await refreshAll()
+            sessionsVM.configure(client: appState.apiClient)
+            await loadAll()
         }
         .refreshable {
             await refreshAll()
@@ -255,7 +255,7 @@ struct MacDashboardView: View {
                 .frame(width: 10, height: 10)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(session.name.cleanedSessionTitle() ?? "Unnamed Session")
+                Text(session.name ?? "Unnamed Session")
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -348,7 +348,7 @@ struct MacDashboardView: View {
                     title: "Browse Skills",
                     subtitle: "\(dashboardVM.stats?.skills.total ?? 0) available",
                     color: theme.entitySkill,
-                    shortcut: "3"
+                    shortcut: "2"
                 ) {
                     onNavigate?(.browser)
                 }
@@ -358,7 +358,7 @@ struct MacDashboardView: View {
                     title: "MCP Servers",
                     subtitle: "\(dashboardVM.stats?.mcpServers.total ?? 0) configured",
                     color: theme.entityMCP,
-                    shortcut: "4"
+                    shortcut: "3"
                 ) {
                     onNavigate?(.browser)
                 }
@@ -368,7 +368,7 @@ struct MacDashboardView: View {
                     title: "System Monitor",
                     subtitle: "View metrics",
                     color: theme.accent,
-                    shortcut: "5"
+                    shortcut: "4"
                 ) {
                     onNavigate?(.system)
                 }
@@ -416,24 +416,34 @@ struct MacDashboardView: View {
 
     // MARK: - Helpers
 
-    private func refreshAll() async {
+    private func loadAll() async {
         await dashboardVM.loadAll()
         await sessionsVM.loadSessions(refresh: true)
     }
 
+    private func refreshAll() async {
+        await dashboardVM.loadAll()
+        await sessionsVM.loadSessions(refresh: true)
+    }
 }
 
 // MARK: - New Session Sheet
 
 struct NewSessionSheet: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @Environment(AppState.self) var appState
+    @EnvironmentObject var appState: AppState
 
     let onSessionCreated: (ChatSession) -> Void
     let onCancel: () -> Void
 
     @State private var sessionName: String = ""
-    @State private var selectedModel = ClaudeModel.sonnet
+    @State private var selectedModel: String = "sonnet"
+
+    let availableModels = [
+        "sonnet": "Claude Sonnet",
+        "opus": "Claude Opus",
+        "haiku": "Claude Haiku"
+    ]
 
     var body: some View {
         VStack(spacing: theme.spacingLG) {
@@ -457,8 +467,8 @@ struct NewSessionSheet: View {
                         .foregroundStyle(theme.textSecondary)
 
                     Picker("Model", selection: $selectedModel) {
-                        ForEach(ClaudeModel.allKnown, id: \.rawValue) { model in
-                            Text(model.displayName).tag(model)
+                        ForEach(Array(availableModels.keys.sorted()), id: \.self) { key in
+                            Text(availableModels[key] ?? key).tag(key)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -474,7 +484,7 @@ struct NewSessionSheet: View {
                 Button("Create Session") {
                     let session = ChatSession(
                         name: sessionName.isEmpty ? "New Session" : sessionName,
-                        model: selectedModel.rawValue
+                        model: selectedModel
                     )
                     onSessionCreated(session)
                 }
@@ -488,7 +498,7 @@ struct NewSessionSheet: View {
 }
 
 #Preview {
-    MacDashboardView(sessionsVM: SessionsViewModel())
-        .environment(AppState())
+    MacDashboardView()
+        .environmentObject(AppState())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

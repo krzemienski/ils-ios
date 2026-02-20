@@ -22,20 +22,20 @@ class SSEClient: ObservableObject {
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
-    private let reconnectDelay: TimeInterval = 2.0
+    private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
     private var lastEventId: String?
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
     nonisolated private let jsonDecoder = JSONDecoder()
 
-    init(baseURL: String = AppConstants.defaultServerURL) {
+    init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
 
         // Configure custom URLSession with longer timeouts for SSE streaming
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
-        config.timeoutIntervalForResource = 600 // 10 minutes for entire stream duration
+        config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = false // Disable SSE in Low Data Mode
         self.session = URLSession(configuration: config)
@@ -67,11 +67,7 @@ class SSEClient: ObservableObject {
     }
 
     private func performStream(request: ChatStreamRequest) async {
-        guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
-            self.error = APIError.invalidURL("\(baseURL)/api/v1/chat/stream")
-            self.isStreaming = false
-            return
-        }
+        let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -91,26 +87,21 @@ class SSEClient: ObservableObject {
         }
 
         do {
-            // Capture session locally to avoid retaining self in task group closures
-            let session = self.session
-
             // Race connection against 60s timeout
             let (asyncBytes, response) = try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
                 // Connection task
                 group.addTask {
-                    try await session.bytes(for: urlRequest)
+                    try await self.session.bytes(for: urlRequest)
                 }
 
                 // Timeout task
                 group.addTask {
-                    try await Task.sleep(for: .seconds(60))
+                    try await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
                     throw URLError(.timedOut)
                 }
 
                 // Return first to complete, cancel the other
-                guard let result = try await group.next() else {
-                    throw URLError(.timedOut)
-                }
+                let result = try await group.next()!
                 group.cancelAll()
                 return result
             }
@@ -129,7 +120,7 @@ class SSEClient: ObservableObject {
             // Watchdog: detect stale connections (no data/heartbeat in 45s)
             let heartbeatWatchdog = Task.detached { [weak self] in
                 while !Task.isCancelled {
-                    try await Task.sleep(for: .seconds(15))
+                    try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
                     if await lastActivity.secondsSinceLastActivity() > 45 {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in 45s", category: "sse")
                         throw URLError(.timedOut)
@@ -197,8 +188,8 @@ class SSEClient: ObservableObject {
         AppLogger.shared.warning("Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)", category: "sse")
 
         // Exponential backoff capped at 30 seconds
-        let delay = min(reconnectDelay * Double(1 << (reconnectAttempts - 1)), 30.0)
-        try? await Task.sleep(for: .seconds(delay))
+        let delay = min(reconnectDelay * UInt64(1 << (reconnectAttempts - 1)), 30_000_000_000)
+        try? await Task.sleep(nanoseconds: delay)
 
         // Check if cancelled during sleep
         if Task.isCancelled {

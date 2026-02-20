@@ -4,7 +4,6 @@ import SwiftUI
 struct LaunchScreenView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
     @State private var isAnimating = false
     @State private var glowIntensity: Double = 0.3
 
@@ -108,7 +107,7 @@ struct LaunchScreenView: View {
                         .shadow(color: theme.accent.opacity(0.5), radius: 10)
 
                     Text("INTELLIGENT LOCAL SERVER")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
                         .foregroundColor(theme.textSecondary)
                         .kerning(3)
                 }
@@ -161,29 +160,6 @@ struct LaunchScreenView: View {
                     glowIntensity = 0.8
                 }
             }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase != .active {
-                // Pause animations when not active
-                withAnimation(.linear(duration: 0.1)) {
-                    isAnimating = false
-                    glowIntensity = 0.3
-                }
-            } else if !reduceMotion {
-                withAnimation(.easeInOut(duration: 1.2)) {
-                    isAnimating = true
-                }
-                withAnimation(
-                    .easeInOut(duration: 2.0)
-                    .repeatForever(autoreverses: true)
-                ) {
-                    glowIntensity = 0.8
-                }
-            }
-        }
-        .onDisappear {
-            isAnimating = false
-            glowIntensity = 0.3
         }
     }
 }

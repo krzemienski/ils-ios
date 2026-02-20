@@ -26,18 +26,23 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 // MARK: - Mac Settings View
 
 struct MacSettingsView: View {
-    @Environment(AppState.self) var appState
-    @Environment(ThemeManager.self) var themeManager
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.theme) var theme: ThemeSnapshot
-    @State var viewModel = SettingsViewModel()
+    @StateObject var viewModel = SettingsViewModel()
 
     @State private var selectedTab: SettingsTab = .general
-    @State private var cacheCleared = false
     @State var serverURL: String = ""
     @AppStorage("colorScheme") var colorSchemePreference: String = "dark"
-    @AppStorage("defaultModel") var defaultModel: String = "sonnet"
+    @AppStorage("defaultModel") var defaultModel: String = "claude-sonnet-4-20250514"
     @AppStorage("enableAgentTeams") var enableAgentTeams: Bool = false
     @AppStorage("enableDebugMode") var enableDebugMode: Bool = false
+
+    let availableModels = [
+        "claude-sonnet-4-20250514",
+        "claude-opus-4-20250514",
+        "claude-haiku-3-5-20241022"
+    ]
 
     let availableColorSchemes = ["system", "light", "dark"]
 
@@ -105,8 +110,8 @@ struct MacSettingsView: View {
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 settingRow(label: "Default Model") {
                     Picker("Default Model", selection: $defaultModel) {
-                        ForEach(ClaudeModel.allKnown, id: \.rawValue) { model in
-                            Text(model.displayName).tag(model.rawValue)
+                        ForEach(availableModels, id: \.self) { model in
+                            Text(formatModelName(model)).tag(model)
                         }
                     }
                     .pickerStyle(.menu)
@@ -201,7 +206,7 @@ struct MacSettingsView: View {
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 settingRow(label: "Server URL") {
                     HStack(spacing: theme.spacingSM) {
-                        TextField(AppConstants.defaultServerURL, text: $serverURL)
+                        TextField("http://localhost:9999", text: $serverURL)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 280)
 
@@ -244,10 +249,10 @@ struct MacSettingsView: View {
                         ],
                         spacing: theme.spacingMD
                     ) {
-                        statItem("Sessions", value: "\(stats.sessions.total)")
-                        statItem("Projects", value: "\(stats.projects.total)")
-                        statItem("Skills", value: "\(stats.skills.total)")
-                        statItem("MCP Servers", value: "\(stats.mcpServers.total)")
+                        statItem("Sessions", value: "\(stats.sessions)")
+                        statItem("Projects", value: "\(stats.projects)")
+                        statItem("Skills", value: "\(stats.skills)")
+                        statItem("MCP Servers", value: "\(stats.mcpServers)")
                     }
                 }
                 .padding(theme.spacingMD)
@@ -278,15 +283,11 @@ struct MacSettingsView: View {
                 Divider()
 
                 settingRow(label: "Cache") {
-                    Button(cacheCleared ? "Cleared!" : "Clear Cache") {
-                        URLCache.shared.removeAllCachedResponses()
-                        cacheCleared = true
+                    Button("Clear Cache") {
                         Task {
-                            try? await Task.sleep(for: .seconds(2))
-                            await MainActor.run { cacheCleared = false }
+                            // Clear cache implementation
                         }
                     }
-                    .disabled(cacheCleared)
                 }
 
                 Text("Remove cached data and force refresh")
@@ -330,7 +331,7 @@ struct MacSettingsView: View {
                         .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
-                    Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"))")
+                    Text("Version 1.0.0 (Build 1)")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                 }
@@ -339,7 +340,7 @@ struct MacSettingsView: View {
                     .frame(width: 200)
 
                 VStack(spacing: theme.spacingXS) {
-                    Text("Intelligent Local Server")
+                    Text("Intelligent Learning System")
                         .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
@@ -468,18 +469,24 @@ struct MacSettingsView: View {
 
     func resetToDefaults() {
         colorSchemePreference = "dark"
-        defaultModel = "sonnet"
+        defaultModel = "claude-sonnet-4-20250514"
         enableAgentTeams = false
         enableDebugMode = false
-        serverURL = AppConstants.defaultServerURL
+        serverURL = "http://localhost:9999"
         themeManager.setTheme("obsidian")
     }
 
+    func formatModelName(_ model: String) -> String {
+        if model.contains("sonnet") { return "Claude Sonnet" }
+        if model.contains("opus") { return "Claude Opus" }
+        if model.contains("haiku") { return "Claude Haiku" }
+        return model
+    }
 }
 
 #Preview {
     MacSettingsView()
-        .environment(AppState())
-        .environment(ThemeManager())
+        .environmentObject(AppState())
+        .environmentObject(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

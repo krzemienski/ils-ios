@@ -9,10 +9,6 @@ struct MarkdownTextView: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// Cache keyed by theme ID so the 90-line MarkdownUI.Theme struct is only
-    /// built once per distinct theme rather than on every view body evaluation.
-    private static var themeCache: [String: MarkdownUI.Theme] = [:]
-
     var body: some View {
         Markdown(text)
             .markdownTheme(chatTheme)
@@ -20,20 +16,10 @@ struct MarkdownTextView: View {
             .textSelection(.enabled)
     }
 
-    /// Returns a cached MarkdownUI.Theme for the current theme ID, building and
-    /// storing one on first access for that ID.
+    /// Build a MarkdownUI theme dynamically from current AppTheme tokens.
+    /// MarkdownUI Theme is a struct built via result builders, so we construct
+    /// it using the current theme's colors.
     private var chatTheme: MarkdownUI.Theme {
-        if let cached = MarkdownTextView.themeCache[theme.id] {
-            return cached
-        }
-        let built = buildChatTheme()
-        MarkdownTextView.themeCache[theme.id] = built
-        return built
-    }
-
-    /// Constructs the MarkdownUI.Theme from current AppTheme tokens.
-    /// Called at most once per distinct theme ID.
-    private func buildChatTheme() -> MarkdownUI.Theme {
         let t = theme
         return Theme()
             .text {
@@ -124,4 +110,3 @@ struct MarkdownTextView: View {
             }
     }
 }
-

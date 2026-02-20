@@ -7,8 +7,6 @@ struct ProcessListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Bindable var viewModel: SystemMetricsViewModel
 
-    @State private var displayLimit = 50
-
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             // Header
@@ -85,18 +83,6 @@ struct ProcessListView: View {
                 .padding(.vertical, theme.spacingMD)
             } else {
                 // Column headers
-                let allFiltered = viewModel.filteredProcesses
-                let visibleProcesses = Array(allFiltered.prefix(displayLimit))
-                let totalCount = allFiltered.count
-
-                HStack {
-                    Text("Showing \(visibleProcesses.count) of \(totalCount) processes")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                    Spacer()
-                }
-                .padding(.horizontal, theme.spacingXS)
-
                 HStack {
                     Text("Name")
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -112,26 +98,9 @@ struct ProcessListView: View {
                 .padding(.horizontal, theme.spacingXS)
 
                 LazyVStack(spacing: 0) {
-                    ForEach(visibleProcesses, id: \.pid) { process in
+                    ForEach(viewModel.filteredProcesses.prefix(50), id: \.pid) { process in
                         processRow(process)
                     }
-                }
-
-                // Show More button when there are more processes to display
-                if displayLimit < totalCount {
-                    Button {
-                        displayLimit += 50
-                    } label: {
-                        Text("Show More (\(totalCount - displayLimit) remaining)")
-                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                            .foregroundStyle(theme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, theme.spacingSM)
-                            .background(theme.accent.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, theme.spacingSM)
                 }
             }
         }
@@ -180,23 +149,18 @@ struct ProcessListView: View {
         let color: Color
     }
 
-    private static let claudeKeywords: Set<String> = ["claude"]
-    private static let ilsKeywords: Set<String> = ["ilsbackend"]
-    private static let swiftKeywords: Set<String> = ["swift", "vapor", "swiftc"]
-    private static let nodeKeywords: Set<String> = ["node", "npm", "npx"]
-
     private func classifyProcess(_ name: String) -> ProcessBadge? {
         let lowered = name.lowercased()
-        if Self.claudeKeywords.contains(where: { lowered.contains($0) }) {
+        if lowered.contains("claude") {
             return ProcessBadge(label: "Claude", color: theme.entitySession)
         }
-        if Self.ilsKeywords.contains(where: { lowered.contains($0) }) {
+        if lowered.contains("ilsbackend") || lowered == "ilsbackend" {
             return ProcessBadge(label: "ILS", color: theme.success)
         }
-        if Self.swiftKeywords.contains(where: { lowered.contains($0) }) {
+        if lowered.contains("swift") || lowered.contains("vapor") || lowered.contains("swiftc") {
             return ProcessBadge(label: "Swift", color: theme.warning)
         }
-        if Self.nodeKeywords.contains(where: { lowered.contains($0) }) {
+        if lowered.contains("node") || lowered.contains("npm") || lowered.contains("npx") {
             return ProcessBadge(label: "Node", color: theme.entitySkill)
         }
         return nil

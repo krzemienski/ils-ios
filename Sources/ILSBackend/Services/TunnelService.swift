@@ -84,7 +84,7 @@ actor TunnelService {
             }
 
             group.addTask {
-                try await Task.sleep(for: .seconds(15))
+                try await Task.sleep(nanoseconds: 15_000_000_000)
                 throw TunnelError.timeout
             }
 
@@ -139,7 +139,7 @@ actor TunnelService {
         // For named tunnels the URL is the custom domain — no output parsing needed.
         // Wait briefly to verify cloudflared didn't crash immediately.
         let tunnelURL = domain.hasPrefix("https://") ? domain : "https://\(domain)"
-        try await Task.sleep(for: .seconds(3))
+        try await Task.sleep(nanoseconds: 3_000_000_000)
 
         guard process?.isRunning == true else {
             throw TunnelError.namedTunnelFailed
@@ -226,14 +226,11 @@ actor TunnelService {
         }
     }
 
-    /// Cached regex for tunnel URL extraction — avoids re-compiling on every call.
-    private static let tunnelURLRegex: NSRegularExpression? = {
-        try? NSRegularExpression(pattern: #"(https://[a-zA-Z0-9\-]+\.trycloudflare\.com)"#)
-    }()
-
     /// Extract a trycloudflare.com URL from cloudflared output text.
     static func extractTunnelURL(from text: String) -> String? {
-        guard let regex = tunnelURLRegex,
+        // Match https://something.trycloudflare.com
+        let pattern = #"(https://[a-zA-Z0-9\-]+\.trycloudflare\.com)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
               let match = regex.firstMatch(
                   in: text,
                   range: NSRange(text.startIndex..., in: text)

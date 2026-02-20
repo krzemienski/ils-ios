@@ -66,14 +66,10 @@ struct ThemePickerView: View {
 
     // MARK: - Theme Card
 
-    private var availableThemeIDs: Set<String> {
-        Set(themeManager.availableThemes.map(\.id))
-    }
-
     @ViewBuilder
     private func themeCard(_ preview: ThemePreview) -> some View {
         let isActive = themeManager.currentTheme.id == preview.id
-        let isAvailable = availableThemeIDs.contains(preview.id)
+        let isAvailable = themeManager.availableThemes.contains(where: { $0.id == preview.id })
 
         Button {
             if isAvailable {

@@ -20,12 +20,7 @@ final class SystemMetricsViewModel {
     var processSearchText: String = ""
     var isLoadingProcesses: Bool = false
 
-    /// Whether the metrics client has fallen back to REST polling.
-    var isPollingFallback: Bool {
-        metricsClient.useFallbackPolling
-    }
-
-    private(set) var baseURL: String
+    private let baseURL: String
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
@@ -34,7 +29,7 @@ final class SystemMetricsViewModel {
         case memory = "Memory"
     }
 
-    init(baseURL: String = AppConstants.defaultServerURL) {
+    init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
         self.metricsClient = MetricsWebSocketClient(baseURL: baseURL)
         let configuration = URLSessionConfiguration.default
@@ -42,14 +37,6 @@ final class SystemMetricsViewModel {
         self.session = URLSession(configuration: configuration)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-    }
-
-    /// Updates the base URL, recreating the metrics client only if the URL actually changed.
-    func updateBaseURL(_ newURL: String) {
-        guard newURL != baseURL else { return }
-        disconnect()
-        baseURL = newURL
-        metricsClient = MetricsWebSocketClient(baseURL: newURL)
     }
 
     // MARK: - Computed Properties
@@ -135,10 +122,9 @@ final class SystemMetricsViewModel {
         do {
             let (data, response) = try await session.data(from: url)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
-            let apiResponse = try decoder.decode(APIResponse<[ProcessInfoResponse]>.self, from: data)
-            processes = apiResponse.data ?? []
+            processes = try decoder.decode([ProcessInfoResponse].self, from: data)
         } catch {
-            AppLogger.shared.error("Failed to load processes: \(error)", category: "system")
+            // Silently fail - UI shows empty state
         }
     }
 }

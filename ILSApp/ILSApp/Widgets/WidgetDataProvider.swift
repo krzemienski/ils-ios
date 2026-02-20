@@ -100,16 +100,6 @@ struct ServerStatusEntry: TimelineEntry {
 struct WidgetDataProvider {
     private let defaults = UserDefaults(suiteName: widgetAppGroupSuite)
 
-    /// Configured URLSession for widget network requests — lower timeouts, background-friendly.
-    private static let urlSession: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 10
-        config.timeoutIntervalForResource = 15
-        config.waitsForConnectivity = true
-        config.allowsConstrainedNetworkAccess = false
-        return URLSession(configuration: config)
-    }()
-
     // MARK: - UserDefaults Keys
 
     private enum Keys {
@@ -122,7 +112,7 @@ struct WidgetDataProvider {
 
     /// The base URL for the ILS backend, read from shared UserDefaults.
     var serverURL: String {
-        defaults?.string(forKey: Keys.serverURL) ?? AppConstants.defaultServerURL
+        defaults?.string(forKey: Keys.serverURL) ?? "http://localhost:9999"
     }
 
     // MARK: - Session Data
@@ -150,7 +140,7 @@ struct WidgetDataProvider {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 10
 
-        let (data, response) = try await Self.urlSession.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -179,24 +169,16 @@ struct WidgetDataProvider {
     }
 
     private func cacheSessions(_ sessions: [WidgetSessionInfo]) {
-        do {
-            let data = try JSONEncoder().encode(sessions)
-            defaults?.set(data, forKey: Keys.cachedSessions)
-        } catch {
-            AppLogger.shared.warning("Failed to encode widget sessions: \(error)", category: "widget")
-        }
+        guard let data = try? JSONEncoder().encode(sessions) else { return }
+        defaults?.set(data, forKey: Keys.cachedSessions)
     }
 
     private func loadCachedSessions() -> [WidgetSessionInfo] {
-        guard let data = defaults?.data(forKey: Keys.cachedSessions) else {
+        guard let data = defaults?.data(forKey: Keys.cachedSessions),
+              let sessions = try? JSONDecoder().decode([WidgetSessionInfo].self, from: data) else {
             return []
         }
-        do {
-            return try JSONDecoder().decode([WidgetSessionInfo].self, from: data)
-        } catch {
-            AppLogger.shared.warning("Failed to decode cached widget sessions: \(error)", category: "widget")
-            return []
-        }
+        return sessions
     }
 
     // MARK: - Server Status
@@ -223,7 +205,7 @@ struct WidgetDataProvider {
         request.httpMethod = "GET"
         request.timeoutInterval = 5
 
-        let (data, response) = try await Self.urlSession.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -255,7 +237,7 @@ struct WidgetDataProvider {
         request.timeoutInterval = 5
 
         do {
-            let (data, _) = try await Self.urlSession.data(for: request)
+            let (data, _) = try await URLSession.shared.data(for: request)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let apiResponse = try decoder.decode(WidgetAPIResponse<WidgetListResponse>.self, from: data)

@@ -152,31 +152,6 @@ actor TeamsFileService {
         )
     }
 
-    func updateTeamMembers(name: String, members: [TeamMember]) throws {
-        try validateName(name)
-
-        let configPath = teamConfigPath(name: name)
-
-        guard fileManager.fileExists(atPath: configPath) else {
-            throw TeamsFileServiceError.teamNotFound(name)
-        }
-
-        // Read existing config
-        let data = try Data(contentsOf: URL(fileURLWithPath: configPath))
-        var config = try jsonDecoder.decode(TeamConfig.self, from: data)
-
-        // Update members
-        var updatedConfig = TeamConfig(
-            teamName: config.teamName,
-            description: config.description,
-            members: members
-        )
-
-        // Write updated config
-        let configData = try jsonEncoder.encode(updatedConfig)
-        try atomicWrite(data: configData, to: configPath)
-    }
-
     func deleteTeam(name: String) throws {
         try validateName(name)
 
@@ -218,7 +193,7 @@ actor TeamsFileService {
         return tasks.sorted { $0.id < $1.id }
     }
 
-    func createTask(team: String, subject: String, description: String?, owner: String? = nil, blockedBy: [String]? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) throws -> TeamTask {
+    func createTask(team: String, subject: String, description: String?) throws -> TeamTask {
         try validateName(team)
 
         let taskPath = taskDir(team: team)
@@ -242,10 +217,7 @@ actor TeamsFileService {
             subject: subject,
             description: description,
             status: .pending,
-            owner: owner,
-            blockedBy: blockedBy,
-            executionOrder: executionOrder,
-            visualPosition: visualPosition
+            owner: nil
         )
 
         let taskData = try jsonEncoder.encode(task)
@@ -255,7 +227,7 @@ actor TeamsFileService {
         return task
     }
 
-    func updateTask(team: String, id: String, status: TeamTaskStatus?, owner: String?, executionOrder: Int? = nil, visualPosition: Int? = nil, blockedBy: [String]? = nil) throws -> TeamTask {
+    func updateTask(team: String, id: String, status: TeamTaskStatus?, owner: String?) throws -> TeamTask {
         try validateName(team)
 
         let taskPath = taskDir(team: team)
@@ -275,52 +247,11 @@ actor TeamsFileService {
         if let owner = owner {
             task.owner = owner
         }
-        if let executionOrder = executionOrder {
-            task.executionOrder = executionOrder
-        }
-        if let visualPosition = visualPosition {
-            task.visualPosition = visualPosition
-        }
-        if let blockedBy = blockedBy {
-            task.blockedBy = blockedBy
-        }
 
         let updatedData = try jsonEncoder.encode(task)
         try atomicWrite(data: updatedData, to: taskFilePath)
 
-        // Check if all tasks are now completed and send notification
-        try checkAndNotifyWorkflowCompletion(team: team)
-
         return task
-    }
-
-    // MARK: - Workflow Completion
-
-    /// Check if all tasks in a team's workflow are completed and send a notification if so.
-    private func checkAndNotifyWorkflowCompletion(team: String) throws {
-        let tasks = try listTasks(team: team)
-
-        // Filter out deleted tasks
-        let activeTasks = tasks.filter { $0.status != .deleted }
-
-        // Check if there are tasks and all are completed
-        guard !activeTasks.isEmpty else {
-            return
-        }
-
-        let allCompleted = activeTasks.allSatisfy { $0.status == .completed }
-
-        if allCompleted {
-            // Send broadcast notification
-            let completionMessage = TeamMessage(
-                from: "system",
-                to: nil, // broadcast
-                content: "🎉 All tasks completed! The workflow has finished successfully.",
-                timestamp: Date()
-            )
-
-            try sendMessage(team: team, message: completionMessage)
-        }
     }
 
     // MARK: - Atomic File Write
@@ -377,99 +308,6 @@ actor TeamsFileService {
 
         let messagesData = try jsonEncoder.encode(messages)
         try atomicWrite(data: messagesData, to: messagesFilePath)
-    }
-
-    // MARK: - Export/Import Operations
-
-    /// Export a team with all its data (config, tasks, messages).
-    /// - Parameter name: Team name to export
-    /// - Returns: TeamExport containing all team data
-    func exportTeam(name: String) throws -> TeamExport {
-        try validateName(name)
-
-        // Check team exists
-        guard let team = try getTeam(name: name) else {
-            throw TeamsFileServiceError.teamNotFound(name)
-        }
-
-        // Gather all tasks
-        let tasks = try listTasks(team: name)
-
-        // Gather all messages
-        let messages = try listMessages(team: name)
-
-        return TeamExport(
-            name: team.name,
-            description: team.description,
-            members: team.members,
-            tasks: tasks,
-            messages: messages
-        )
-    }
-
-    /// Import a team from exported data.
-    /// - Parameters:
-    ///   - export: TeamExport data containing team configuration and data
-    ///   - overwrite: If true, overwrites existing team. If false, throws error if team exists.
-    /// - Returns: Created AgentTeam
-    func importTeam(from export: TeamExport, overwrite: Bool = false) throws -> AgentTeam {
-        try validateName(export.name)
-
-        let teamPath = teamDir(name: export.name)
-        let taskPath = taskDir(team: export.name)
-
-        // Check if team exists
-        let teamExists = fileManager.fileExists(atPath: teamPath)
-
-        if teamExists && !overwrite {
-            throw TeamsFileServiceError.teamAlreadyExists(export.name)
-        }
-
-        // Remove existing team if overwriting
-        if teamExists && overwrite {
-            try deleteTeam(name: export.name)
-        }
-
-        // Create team directories
-        try fileManager.createDirectory(
-            atPath: teamPath,
-            withIntermediateDirectories: true,
-            attributes: nil
-        )
-
-        try fileManager.createDirectory(
-            atPath: taskPath,
-            withIntermediateDirectories: true,
-            attributes: nil
-        )
-
-        // Write team config
-        let config = TeamConfig(
-            teamName: export.name,
-            description: export.description,
-            members: export.members
-        )
-
-        let configData = try jsonEncoder.encode(config)
-        let configPath = teamConfigPath(name: export.name)
-        try atomicWrite(data: configData, to: configPath)
-
-        // Write tasks
-        for task in export.tasks {
-            let taskData = try jsonEncoder.encode(task)
-            let taskFilePath = "\(taskPath)/\(task.id).json"
-            try atomicWrite(data: taskData, to: taskFilePath)
-        }
-
-        // Write messages
-        let messagesData = try jsonEncoder.encode(export.messages)
-        try atomicWrite(data: messagesData, to: messagesPath(team: export.name))
-
-        return AgentTeam(
-            name: config.teamName,
-            description: config.description,
-            members: config.members
-        )
     }
 }
 

@@ -79,7 +79,6 @@ struct FileBrowserView: View {
         }
         .sheet(item: $previewFile) { file in
             filePreviewSheet(file)
-                .presentationDetents([.medium, .large])
                 .presentationBackground(theme.bgPrimary)
         }
     }
@@ -238,8 +237,8 @@ struct FileBrowserView: View {
         let encodedPath = currentPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? currentPath
 
         do {
-            let result: APIResponse<[FileEntryResponse]> = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
-            entries = result.data ?? []
+            let result: [FileEntryResponse] = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
+            entries = result
         } catch {
             errorMessage = "Failed to load directory: \(error.localizedDescription)"
         }
@@ -260,7 +259,7 @@ struct FileBrowserView: View {
             let truncated = lines.prefix(500).joined(separator: "\n")
             previewFile = PreviewFile(name: name, content: truncated)
         } catch {
-            AppLogger.shared.error("Failed to load file preview: \(error)", category: "filebrowser")
+            // Silently fail for preview
         }
     }
 

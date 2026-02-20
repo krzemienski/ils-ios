@@ -10,8 +10,6 @@ import WidgetKit
 
 // MARK: - Activity Attributes
 
-#if canImport(ActivityKit) && os(iOS)
-
 /// Defines the static and dynamic data for a chat streaming Live Activity.
 ///
 /// Static data (set once at activity start):
@@ -52,11 +50,9 @@ private enum LiveActivityColors {
     static let border = Color(hex: "1A1A2E")
 }
 
-#endif
-
 // MARK: - Lock Screen Widget View
 
-#if canImport(WidgetKit) && canImport(ActivityKit) && os(iOS)
+#if canImport(WidgetKit) && canImport(ActivityKit)
 
 /// Lock screen presentation for the chat streaming Live Activity.
 ///
@@ -178,20 +174,19 @@ struct ChatStreamingLockScreenView: View {
 }
 
 /// Animated dots to indicate streaming is in progress.
-/// Uses SwiftUI animation instead of Timer for better energy efficiency.
 @available(iOS 16.2, *)
 private struct StreamingDotsView: View {
-    @State private var animationPhase = 0
+    @State private var dotCount = 0
 
     var body: some View {
-        Text(String(repeating: ".", count: (animationPhase % 3) + 1))
+        Text(String(repeating: ".", count: (dotCount % 3) + 1))
             .font(.system(size: 13, weight: .medium))
             .foregroundStyle(LiveActivityColors.success)
             .frame(width: 20, alignment: .leading)
-            .task {
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: .milliseconds(500))
-                    animationPhase += 1
+            .onAppear {
+                // Timer-based animation for dot cycling
+                Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                    dotCount += 1
                 }
             }
     }
@@ -329,7 +324,7 @@ struct ChatStreamingExpandedView: View {
 // MARK: - ChatViewModel Live Activity Extension
 
 extension ChatViewModel {
-    #if canImport(ActivityKit) && os(iOS)
+    #if canImport(ActivityKit)
 
     /// Start a Live Activity for the current chat streaming session.
     ///

@@ -12,7 +12,6 @@ class DashboardViewModel {
     var totalCost: Double = 0.0
 
     private var client: APIClient?
-    @ObservationIgnored private var cacheTask: Task<Void, Never>?
 
     // Sparkline data (synthetic from recent sessions for visual interest)
     var sessionSparkline: [Double] { generateSparkline(count: 8, seed: stats?.sessions.total ?? 0) }
@@ -60,10 +59,9 @@ class DashboardViewModel {
         await loadRecentActivity()
         computeTotalCost()
 
-        // Cache the fresh recent sessions (stored task for deduplication + cancellation)
+        // Cache the fresh recent sessions
         if !recentSessions.isEmpty {
-            cacheTask?.cancel()
-            cacheTask = Task { [sessions = self.recentSessions] in
+            Task.detached { [sessions = self.recentSessions] in
                 await CacheService.shared.cacheSessions(sessions)
             }
         }
@@ -79,10 +77,6 @@ class DashboardViewModel {
             if let data = response.data {
                 stats = data
             }
-        } catch is CancellationError {
-            // Normal — .task modifier cancels on view disappear
-        } catch where (error as? URLError)?.code == .cancelled || error.localizedDescription.contains("cancelled") {
-            // URLSession cancellation wrapped in APIClientError — normal during navigation
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load stats: \(error.localizedDescription)", category: "dashboard")
@@ -97,10 +91,6 @@ class DashboardViewModel {
             if let data = response.data {
                 recentSessions = data.items
             }
-        } catch is CancellationError {
-            // Normal — .task modifier cancels on view disappear
-        } catch where (error as? URLError)?.code == .cancelled || error.localizedDescription.contains("cancelled") {
-            // URLSession cancellation wrapped in APIClientError — normal during navigation
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load recent activity: \(error.localizedDescription)", category: "dashboard")

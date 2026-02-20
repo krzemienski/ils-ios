@@ -76,14 +76,9 @@ struct GitHubService: Sendable {
         }
 
         guard response.status == .ok else {
-            if response.status == .unauthorized {
-                Self.logger.error("GitHub API authentication failed — GITHUB_TOKEN is missing or invalid")
-                throw Abort(.forbidden, reason: "GitHub API authentication failed. A valid GITHUB_TOKEN environment variable is required for marketplace search.")
-            }
             if response.status == .forbidden || response.status == .tooManyRequests {
-                throw Abort(.tooManyRequests, reason: "GitHub API rate limit exceeded. Try again later.")
+                throw Abort(.tooManyRequests, reason: "GitHub API rate limit exceeded")
             }
-            Self.logger.error("GitHub API returned unexpected status: \(response.status)")
             throw Abort(.badGateway, reason: "GitHub API returned \(response.status)")
         }
 
@@ -135,14 +130,7 @@ struct GitHubService: Sendable {
         }
 
         guard response.status == .ok else {
-            if response.status == .unauthorized {
-                Self.logger.error("GitHub API authentication failed fetching \(owner)/\(repo)/\(path)")
-                throw Abort(.forbidden, reason: "GitHub API authentication failed. A valid GITHUB_TOKEN environment variable is required to fetch skill content.")
-            }
-            if response.status == .forbidden || response.status == .tooManyRequests {
-                throw Abort(.tooManyRequests, reason: "GitHub API rate limit exceeded. Try again later.")
-            }
-            throw Abort(.notFound, reason: "Could not fetch file from GitHub (status: \(response.status))")
+            throw Abort(.notFound, reason: "Could not fetch file from GitHub")
         }
 
         guard let body = response.body, let content = body.getString(at: 0, length: body.readableBytes) else {

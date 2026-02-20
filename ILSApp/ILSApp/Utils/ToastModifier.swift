@@ -16,12 +16,14 @@ struct ToastModifier: ViewModifier {
                     .background(.black.opacity(0.8), in: Capsule())
                     .padding(.bottom, 32)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .task {
-                        try? await Task.sleep(for: .seconds(2))
-                        if reduceMotion {
-                            isPresented = false
-                        } else {
-                            withAnimation { isPresented = false }
+                    .onAppear {
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(2))
+                            if reduceMotion {
+                                isPresented = false
+                            } else {
+                                withAnimation { isPresented = false }
+                            }
                         }
                     }
             }
