@@ -33,11 +33,14 @@ actor APIClient {
 
     /// Per-endpoint TTL: reference data lives longer than session/volatile data.
     private func ttl(for path: String) -> TimeInterval {
-        if path.hasPrefix("/skills") || path.hasPrefix("/mcp") || path.hasPrefix("/plugins") {
+        if path.hasPrefix("/skills") || path.hasPrefix("/mcp") || path.hasPrefix("/plugins") || path.hasPrefix("/themes") {
             return 300 // 5 minutes for static reference data
         }
+        if path.hasPrefix("/stats") || path.hasPrefix("/sessions") {
+            return 15 // 15 seconds for frequently-changing data
+        }
         if path.hasPrefix("/config") {
-            return 120 // 2 minutes for configuration
+            return 60 // 1 minute for configuration
         }
         return defaultCacheTTL
     }
