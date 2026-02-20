@@ -239,6 +239,25 @@ struct SidebarView: View {
                         Label("Delete", systemImage: "trash")
                     }
                 }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        Task {
+                            await sessionsViewModel.deleteSession(session)
+                            HapticManager.notification(.success)
+                        }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                .swipeActions(edge: .leading) {
+                    Button {
+                        renameText = session.name ?? ""
+                        sessionToRename = session
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                    .tint(.blue)
+                }
             }
         } label: {
             HStack(spacing: theme.spacingSM) {
