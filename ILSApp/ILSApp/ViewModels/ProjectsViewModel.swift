@@ -38,12 +38,25 @@ class ProjectsViewModel {
             hasMore = true
         }
 
+        // Cache-first: show cached data immediately on first page load
+        if currentOffset == 0 && projects.isEmpty {
+            let cached = await CacheService.shared.getCachedProjects()
+            if !cached.isEmpty {
+                projects = cached
+                AppLogger.shared.info("Loaded \(cached.count) projects from cache", category: "projects")
+            }
+        }
+
         do {
             let path = "/projects?limit=\(pageSize)&offset=\(currentOffset)" + (refresh ? "&refresh=true" : "")
             let response: APIResponse<ListResponse<Project>> = try await client.get(path)
             if let data = response.data {
                 if currentOffset == 0 {
                     projects = data.items
+                    // Update cache with fresh data in background
+                    Task.detached {
+                        await CacheService.shared.cacheProjects(data.items)
+                    }
                 } else {
                     projects.append(contentsOf: data.items)
                 }
