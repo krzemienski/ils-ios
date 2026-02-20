@@ -360,6 +360,41 @@ class TeamsViewModel {
         pollingTask = nil
         activeTeamName = nil
     }
+
+    // MARK: - Export/Import
+
+    func exportTeam(name: String) async -> TeamExport? {
+        error = nil
+        do {
+            let response: APIResponse<TeamExport> = try await apiClient.get("/teams/\(name)/export")
+            if response.success, let data = response.data {
+                return data
+            } else {
+                error = response.error?.message ?? "Failed to export team"
+                return nil
+            }
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
+
+    func importTeam(export: TeamExport, overwrite: Bool? = nil) async {
+        isLoading = true
+        error = nil
+        do {
+            let request = ImportTeamRequest(export: export, overwrite: overwrite)
+            let response: APIResponse<AgentTeam> = try await apiClient.post("/teams/import", body: request)
+            if response.success {
+                await loadTeams()
+            } else {
+                error = response.error?.message ?? "Failed to import team"
+            }
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
 }
 
 // Request types are defined in ILSShared/DTOs/TeamDTOs.swift:
