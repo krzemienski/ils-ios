@@ -506,6 +506,117 @@ App Launch --> DashboardViewModel.loadStats()
                    Paginate + Sort + Return
 ```
 
+### SSE Wire Protocol
+
+All streaming responses from `StreamingService` use the standard SSE (Server-Sent Events) wire format over HTTP/1.1 chunked transfer encoding.
+
+#### Event Frame Format
+
+Each event occupies three lines terminated by a blank line (`\n\n`):
+
+```
+id: <monotonic-int>\n
+event: <event-type>\n
+data: <json-payload>\n
+\n
+```
+
+**Example — assistant text delta:**
+```
+id: 42
+event: assistant
+data: {"type":"text","text":"Hello, world!"}
+
+```
+
+**Example — system event (session metadata):**
+```
+id: 1
+event: system
+data: {"sessionId":"abc123","model":"claude-opus-4-5","costUSD":0.0012}
+
+```
+
+**Example — error event:**
+```
+id: 99
+event: error
+data: {"code":"STREAM_ERROR","message":"Process exited with code 1"}
+
+```
+
+#### Event Types
+
+| Event Type | `StreamMessage` Case | Payload | Description |
+|------------|---------------------|---------|-------------|
+| `system` | `.system(SystemMessage)` | Session ID, model, cost | First event; carries Claude session ID and model info |
+| `assistant` | `.text`, `.toolUse`, `.toolResult`, `.thinking` | Content block JSON | Incremental assistant output (text deltas, tool calls, tool results, thinking blocks) |
+| `user` | `.user(UserMessage)` | User message content | Echo of the user's message |
+| `result` | `.result(ResultMessage)` | Final result + cost | End-of-turn summary with total cost |
+| `streamEvent` | `.streamEvent(StreamEvent)` | Raw SDK event | Low-level streaming events from Agent SDK |
+| `permission` | `.permission(PermissionRequest)` | Tool name, details | Permission required before tool execution |
+| `error` | `.error(StreamError)` | Error code + message | Stream error; sent on exception, then stream ends |
+
+#### Special Control Frames
+
+**Heartbeat (every 15 seconds):**
+```
+: ping\n
+\n
+```
+SSE comment syntax (`: ` prefix) — keeps the TCP connection alive and resets client inactivity timers. Sent by `StreamingService` every 15 seconds regardless of message activity. The client-side heartbeat watchdog in `SSEClient` expects at least one activity (data or ping) every 45 seconds.
+
+**Stream Complete:**
+```
+event: done\n
+data: {}\n
+\n
+```
+Sent when the `AsyncThrowingStream` is exhausted normally (no error). Signals the client that no more events will follow. The iOS `SSEClient` treats this as a clean stream end and does not attempt reconnection.
+
+#### Reconnection and Ring Buffer
+
+`StreamingService` maintains a shared `EventBuffer` actor with a **capacity of 1000 events**. Every event written to any SSE stream is stored in this ring buffer with its monotonic integer ID.
+
+**Reconnection flow:**
+1. Client disconnects (network error, app backgrounded, etc.)
+2. On reconnect, `SSEClient` sends `Last-Event-ID: <last-seen-id>` request header
+3. `StreamingService.writeSSEStream()` parses the header and calls `eventBuffer.eventsSince(lastId)`
+4. All missed events (up to 1000-event buffer capacity) are replayed immediately before the live stream resumes
+
+```
+Client reconnects with Last-Event-ID: 850
+    |
+    v
+eventBuffer.eventsSince(850)
+    |
+    v
+Replay events 851..N immediately
+    |
+    v
+Resume live stream from current position
+```
+
+**Ring buffer eviction:** When the buffer exceeds 1000 events the oldest entries are removed (`removeFirst`). Events older than the buffer window are permanently lost — clients reconnecting after a long gap receive only the most recent 1000 events.
+
+#### SSE Response Headers
+
+Every SSE response includes these headers:
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Content-Type` | `text/event-stream` | Signals SSE protocol to client |
+| `Cache-Control` | `no-cache` | Prevents proxy/CDN caching of the stream |
+| `Connection` | `keep-alive` | Keeps TCP connection open for streaming |
+| `X-Accel-Buffering` | `no` | Disables nginx proxy buffering (required for real-time delivery) |
+
+Persistence responses (chat streaming with DB writes) additionally include:
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `X-User-Message-ID` | `<UUID>` | User message DB record ID for client correlation |
+| `X-Session-ID` | `<UUID>` | Session DB record ID |
+
 ## Key Technical Decisions
 
 | Decision | Choice | Rationale |
