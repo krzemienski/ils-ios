@@ -152,6 +152,31 @@ actor TeamsFileService {
         )
     }
 
+    func updateTeamMembers(name: String, members: [TeamMember]) throws {
+        try validateName(name)
+
+        let configPath = teamConfigPath(name: name)
+
+        guard fileManager.fileExists(atPath: configPath) else {
+            throw TeamsFileServiceError.teamNotFound(name)
+        }
+
+        // Read existing config
+        let data = try Data(contentsOf: URL(fileURLWithPath: configPath))
+        var config = try jsonDecoder.decode(TeamConfig.self, from: data)
+
+        // Update members
+        var updatedConfig = TeamConfig(
+            teamName: config.teamName,
+            description: config.description,
+            members: members
+        )
+
+        // Write updated config
+        let configData = try jsonEncoder.encode(updatedConfig)
+        try atomicWrite(data: configData, to: configPath)
+    }
+
     func deleteTeam(name: String) throws {
         try validateName(name)
 
@@ -193,7 +218,7 @@ actor TeamsFileService {
         return tasks.sorted { $0.id < $1.id }
     }
 
-    func createTask(team: String, subject: String, description: String?) throws -> TeamTask {
+    func createTask(team: String, subject: String, description: String?, owner: String? = nil, blockedBy: [String]? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) throws -> TeamTask {
         try validateName(team)
 
         let taskPath = taskDir(team: team)
@@ -217,7 +242,10 @@ actor TeamsFileService {
             subject: subject,
             description: description,
             status: .pending,
-            owner: nil
+            owner: owner,
+            blockedBy: blockedBy,
+            executionOrder: executionOrder,
+            visualPosition: visualPosition
         )
 
         let taskData = try jsonEncoder.encode(task)
@@ -227,7 +255,7 @@ actor TeamsFileService {
         return task
     }
 
-    func updateTask(team: String, id: String, status: TeamTaskStatus?, owner: String?) throws -> TeamTask {
+    func updateTask(team: String, id: String, status: TeamTaskStatus?, owner: String?, executionOrder: Int? = nil, visualPosition: Int? = nil, blockedBy: [String]? = nil) throws -> TeamTask {
         try validateName(team)
 
         let taskPath = taskDir(team: team)
@@ -246,6 +274,15 @@ actor TeamsFileService {
         }
         if let owner = owner {
             task.owner = owner
+        }
+        if let executionOrder = executionOrder {
+            task.executionOrder = executionOrder
+        }
+        if let visualPosition = visualPosition {
+            task.visualPosition = visualPosition
+        }
+        if let blockedBy = blockedBy {
+            task.blockedBy = blockedBy
         }
 
         let updatedData = try jsonEncoder.encode(task)

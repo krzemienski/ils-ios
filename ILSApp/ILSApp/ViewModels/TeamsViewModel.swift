@@ -178,11 +178,11 @@ class TeamsViewModel {
         isLoading = false
     }
 
-    func updateTask(teamName: String, id: String, status: TeamTaskStatus?, owner: String?) async {
+    func updateTask(teamName: String, id: String, status: TeamTaskStatus? = nil, owner: String? = nil, executionOrder: Int? = nil, visualPosition: Int? = nil) async {
         isLoading = true
         error = nil
         do {
-            let request = UpdateTeamTaskRequest(status: status, owner: owner)
+            let request = UpdateTeamTaskRequest(status: status, owner: owner, executionOrder: executionOrder, visualPosition: visualPosition)
             let response: APIResponse<TeamTask> = try await apiClient.put( "/teams/\(teamName)/tasks/\(id)", body: request)
             if response.success {
                 await loadTasks(teamName: teamName)
@@ -193,6 +193,18 @@ class TeamsViewModel {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    func saveWorkflowOrder(teamName: String) async {
+        // Update each task's executionOrder based on its position in the tasks array
+        for (index, task) in tasks.enumerated() {
+            await updateTask(
+                teamName: teamName,
+                id: task.id,
+                executionOrder: index + 1,
+                visualPosition: index
+            )
+        }
     }
 
     // MARK: - Messages

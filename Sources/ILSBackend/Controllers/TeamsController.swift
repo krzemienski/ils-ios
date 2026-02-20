@@ -197,7 +197,9 @@ struct TeamsController: RouteCollection {
             team: teamName,
             id: taskId,
             status: request.status,
-            owner: request.owner
+            owner: request.owner,
+            executionOrder: request.executionOrder,
+            visualPosition: request.visualPosition
         )
 
         return APIResponse(success: true, data: task)
@@ -434,21 +436,54 @@ struct TeamsController: RouteCollection {
         try PathSanitizer.validateOptionalStringLength(request.teamDescription, maxLength: 1000, fieldName: "teamDescription")
 
         // Create team from template
-        let team = try await fileService.createTeam(
+        var team = try await fileService.createTeam(
             name: request.teamName,
             description: request.teamDescription ?? template.description
         )
 
-        // Create tasks from template
-        for templateTask in template.tasks {
-            _ = try await fileService.createTask(
-                team: request.teamName,
-                subject: templateTask.subject,
-                description: templateTask.description
+        // Add members from template
+        let members = template.members.map { templateMember in
+            TeamMember(
+                name: templateMember.name,
+                agentId: templateMember.name,
+                agentType: templateMember.agentType,
+                status: .idle,
+                pid: nil
             )
         }
+        team.members = members
 
-        return APIResponse(success: true, data: team)
+        // Update team config with members
+        try await fileService.updateTeamMembers(name: request.teamName, members: members)
+
+        // Create tasks from template - map template IDs to created task IDs
+        var templateIdToActualId: [String: String] = [:]
+        let sortedTasks = template.tasks.sorted { ($0.executionOrder ?? 0) < ($1.executionOrder ?? 0) }
+
+        for templateTask in sortedTasks {
+            // Map blocked dependencies from template IDs to actual IDs
+            let mappedBlockedBy = templateTask.blockedBy?.compactMap { templateIdToActualId[$0] }
+
+            let createdTask = try await fileService.createTask(
+                team: request.teamName,
+                subject: templateTask.subject,
+                description: templateTask.description,
+                owner: templateTask.owner,
+                blockedBy: mappedBlockedBy,
+                executionOrder: templateTask.executionOrder,
+                visualPosition: nil
+            )
+
+            // Store mapping for future dependency resolution
+            templateIdToActualId[templateTask.id] = createdTask.id
+        }
+
+        // Re-fetch team to get updated state with tasks
+        guard let updatedTeam = try await fileService.getTeam(name: request.teamName) else {
+            throw Abort(.internalServerError, reason: "Failed to fetch created team")
+        }
+
+        return APIResponse(success: true, data: updatedTeam)
     }
 
     // MARK: - Export/Import Management

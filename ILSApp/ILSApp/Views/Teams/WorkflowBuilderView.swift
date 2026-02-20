@@ -9,6 +9,8 @@ struct WorkflowBuilderView: View {
     @State private var workflowNodes: [WorkflowNode] = []
     @State private var selectedNodeId: UUID?
     @State private var showAddNodeSheet = false
+    @State private var isSaving = false
+    @State private var saveMessage: String?
 
     init(teamName: String, apiClient: APIClient) {
         self.teamName = teamName
@@ -33,6 +35,22 @@ struct WorkflowBuilderView: View {
         }
         .task {
             await viewModel.loadTeamDetail(name: teamName)
+            await viewModel.loadTasks(teamName: teamName)
+            loadTasksAsNodes()
+        }
+        .overlay(alignment: .bottom) {
+            if let message = saveMessage {
+                Text(message)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.success)
+                    .padding(.horizontal, theme.spacingMD)
+                    .padding(.vertical, theme.spacingSM)
+                    .background(theme.success.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                    .padding(.bottom, theme.spacingLG)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.3), value: saveMessage != nil)
+            }
         }
     }
 
@@ -46,6 +64,12 @@ struct WorkflowBuilderView: View {
                 Label("\(workflowNodes.count) nodes", systemImage: "circle.hexagonpath")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
+
+                if let selected = workflowNodes.first(where: { $0.id == selectedNodeId }) {
+                    Label(selected.title, systemImage: "checkmark.circle.fill")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -94,10 +118,17 @@ struct WorkflowBuilderView: View {
             Spacer()
 
             Button {
-                // Save workflow action
+                Task {
+                    await saveWorkflow()
+                }
             } label: {
                 HStack {
-                    Image(systemName: "square.and.arrow.down")
+                    if isSaving {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "square.and.arrow.down")
+                    }
                     Text("Save")
                 }
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -108,7 +139,7 @@ struct WorkflowBuilderView: View {
                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             }
             .buttonStyle(.plain)
-            .disabled(workflowNodes.isEmpty)
+            .disabled(workflowNodes.isEmpty || isSaving)
         }
         .padding(theme.spacingMD)
         .background(theme.bgSecondary)
@@ -187,6 +218,37 @@ struct WorkflowBuilderView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: - Actions
+
+    private func loadTasksAsNodes() {
+        // Convert existing team tasks into workflow nodes
+        let tasks = viewModel.tasks
+        guard !tasks.isEmpty else { return }
+
+        workflowNodes = tasks.enumerated().map { index, task in
+            let col = index % 3
+            let row = index / 3
+            let x = Double(100 + col * 200)
+            let y = Double(150 + row * 150)
+
+            var nodeStatus: WorkflowNodeStatus = .idle
+            switch task.status {
+            case .pending: nodeStatus = .pending
+            case .inProgress: nodeStatus = .running
+            case .completed: nodeStatus = .completed
+            case .deleted: nodeStatus = .skipped
+            }
+
+            return WorkflowNode(
+                taskId: task.id,
+                title: task.subject,
+                type: .action,
+                position: NodePosition(x: x, y: y),
+                status: nodeStatus
+            )
+        }
+    }
+
     private func addNode(type: WorkflowNodeType, name: String) {
         let newNode = WorkflowNode(
             title: name,
@@ -199,6 +261,34 @@ struct WorkflowBuilderView: View {
     private func updateNodePosition(_ id: UUID, to position: CGPoint) {
         if let index = workflowNodes.firstIndex(where: { $0.id == id }) {
             workflowNodes[index].position = NodePosition(x: Double(position.x), y: Double(position.y))
+        }
+    }
+
+    private func saveWorkflow() async {
+        isSaving = true
+        defer { isSaving = false }
+
+        // Sort nodes by y-position to determine execution order
+        let sortedNodes = workflowNodes.sorted { $0.position.y < $1.position.y }
+
+        // Update each node that has a backing task with its new execution order
+        for (index, node) in sortedNodes.enumerated() {
+            guard let taskId = node.taskId else { continue }
+            await viewModel.updateTask(
+                teamName: teamName,
+                id: taskId,
+                executionOrder: index + 1,
+                visualPosition: index
+            )
+        }
+
+        showSaveMessage("Workflow saved ✓")
+    }
+
+    private func showSaveMessage(_ message: String) {
+        saveMessage = message
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            saveMessage = nil
         }
     }
 }
@@ -243,15 +333,22 @@ struct WorkflowNodeView: View {
         VStack(spacing: 8) {
             Image(systemName: node.type.iconName)
                 .font(.system(size: 24))
-                .foregroundStyle(theme.accent)
+                .foregroundStyle(statusColor)
 
             Text(node.title)
                 .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
+
+            if node.taskId != nil {
+                Text("#\(node.taskId ?? "")")
+                    .font(.system(size: 9, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .lineLimit(1)
+            }
         }
-        .frame(width: 120, height: 100)
+        .frame(width: 120, height: 110)
         .background(theme.bgPrimary)
         .overlay(
             RoundedRectangle(cornerRadius: theme.cornerRadius)
@@ -259,6 +356,17 @@ struct WorkflowNodeView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         .shadow(color: theme.textPrimary.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+
+    private var statusColor: Color {
+        switch node.status {
+        case .idle: return theme.accent
+        case .pending: return theme.warning
+        case .running: return theme.info
+        case .completed: return theme.success
+        case .failed: return theme.error
+        case .skipped: return theme.textTertiary
+        }
     }
 }
 

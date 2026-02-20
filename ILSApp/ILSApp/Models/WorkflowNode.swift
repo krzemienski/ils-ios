@@ -5,6 +5,8 @@ import Foundation
 /// A node in a visual workflow builder.
 struct WorkflowNode: Identifiable, Equatable {
     let id: UUID
+    /// Optional reference to a backend TeamTask ID.
+    var taskId: String?
     var title: String
     var type: WorkflowNodeType
     var position: NodePosition
@@ -16,6 +18,7 @@ struct WorkflowNode: Identifiable, Equatable {
 
     init(
         id: UUID = UUID(),
+        taskId: String? = nil,
         title: String,
         type: WorkflowNodeType,
         position: NodePosition = NodePosition(x: 0, y: 0),
@@ -26,6 +29,7 @@ struct WorkflowNode: Identifiable, Equatable {
         metadata: NodeMetadata? = nil
     ) {
         self.id = id
+        self.taskId = taskId
         self.title = title
         self.type = type
         self.position = position
@@ -38,6 +42,7 @@ struct WorkflowNode: Identifiable, Equatable {
 
     static func == (lhs: WorkflowNode, rhs: WorkflowNode) -> Bool {
         lhs.id == rhs.id &&
+        lhs.taskId == rhs.taskId &&
         lhs.title == rhs.title &&
         lhs.type == rhs.type &&
         lhs.position == rhs.position &&
