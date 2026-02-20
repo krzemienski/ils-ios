@@ -506,6 +506,122 @@ App Launch --> DashboardViewModel.loadStats()
                    Paginate + Sort + Return
 ```
 
+### Permission Request Flow
+
+When Claude needs to execute a tool in `delegate` permission mode, it pauses execution and emits a permission request message. The iOS client displays a modal, collects the user's decision, and forwards it back to the CLI process via stdin — allowing the stream to continue.
+
+**Prerequisites:** The session must be started with `permissionMode: .delegate`. In any other mode (`default`, `auto`, `bypassPermissions`), Claude either auto-approves or auto-denies tool calls without this round-trip.
+
+```
+┌─────────────────────────────── VAPOR BACKEND ────────────────────────────────┐
+│                                                                               │
+│  Claude CLI subprocess (in delegate mode)                                     │
+│  Wants to execute a tool → writes permission request to stdout (NDJSON):      │
+│                                                                               │
+│    {"type":"permission","request_id":"<uuid>",                                │
+│     "tool_name":"Bash","tool_input":{"command":"rm -rf /tmp/foo"}}            │
+│          │                                                                    │
+│          ▼                                                                    │
+│  ClaudeExecutorService (DispatchQueue stdout reader)                          │
+│  Reads line → processJsonLine() → JSONDecoder → CLIMessage.permission         │
+│          │                                                                    │
+│          ▼                                                                    │
+│  CLIMessageConverter.convert()                                                │
+│  CLIMessage.permission → StreamMessage.permission(PermissionRequest)          │
+│    PermissionRequest {                                                         │
+│      requestId:  "<uuid>"                                                     │
+│      toolName:   "Bash"                                                       │
+│      toolInput:  AnyCodable({"command": "rm -rf /tmp/foo"})                   │
+│    }                                                                           │
+│          │                                                                    │
+│          ▼                                                                    │
+│  StreamingService                                                             │
+│  Formats as SSE event:                                                        │
+│    id: <n>                                                                    │
+│    event: permission                                                          │
+│    data: {"type":"permission","requestId":"<uuid>",                           │
+│           "toolName":"Bash","toolInput":{...}}                                │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ SSE wire (HTTP/1.1 chunked)
+┌───────────────────────────────────┼──────────────────────── iOS CLIENT ───────┐
+│                                   ▼                                            │
+│  SSEClient                                                                     │
+│  Parses SSE line → decodes data JSON → StreamMessage.permission(req)           │
+│  Appends to messages[] → triggers $messages Combine publisher                  │
+│          │                                                                     │
+│          ▼                                                                     │
+│  ChatViewModel.flushPendingMessages()                                          │
+│  Handles .permission(permissionReq):                                           │
+│    pendingPermissionRequest = permissionReq   ← @Observable triggers UI        │
+│          │                                                                     │
+│          ▼                                                                     │
+│  ChatView                                                                      │
+│  .sheet(item: $viewModel.pendingPermissionRequest) { req in                    │
+│      PermissionRequestModal(request: req, onDecision: { decision in            │
+│          viewModel.respondToPermission(requestId: req.requestId,               │
+│                                        decision: decision)                     │
+│      })                                                                        │
+│  }                                                                             │
+│          │                                                                     │
+│   User taps "Allow" or "Deny"                                                  │
+│          │                                                                     │
+│          ▼                                                                     │
+│  ChatViewModel.respondToPermission(requestId:decision:)                        │
+│    pendingPermissionRequest = nil    ← dismisses modal immediately             │
+│    Task { POST /api/v1/chat/permission/{sessionId}/{requestId}                 │
+│           body: PermissionDecision { decision: "allow" | "deny" }             │
+│    }                                                                           │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ HTTP POST
+┌───────────────────────────────────┼──────────────────────── VAPOR BACKEND ───┐
+│                                   ▼                                           │
+│  ChatController.permission(req:)                                              │
+│  Extracts sessionId + requestId from path params                              │
+│  Decodes PermissionDecision body                                              │
+│  Calls executor.sendPermissionResponse(sessionId:requestId:decision:)         │
+│          │                                                                    │
+│          ▼                                                                    │
+│  ClaudeExecutorService.sendPermissionResponse()   [actor-isolated]            │
+│  Looks up activeStdinHandles[sessionId]                                       │
+│  Encodes PermissionResponsePayload as JSON line:                              │
+│                                                                               │
+│    {"type":"permission_response","id":"<uuid>","decision":"allow"}            │
+│                                                                               │
+│  Appends "\n" and writes to subprocess stdin (FileHandle.write())             │
+│  Returns true → ChatController returns 200 AcknowledgedResponse              │
+│          │                                                                    │
+│          ▼                                                                    │
+│  Claude CLI subprocess reads JSON line from stdin                             │
+│  Proceeds with tool execution ("allow") or skips it ("deny")                 │
+│  Continues streaming remaining NDJSON output to stdout                        │
+│                                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Stdin JSON format (written to Claude CLI process stdin):**
+
+```json
+{"type":"permission_response","id":"<requestId>","decision":"allow|deny"}\n
+```
+
+| Field | Type | Values | Description |
+|-------|------|--------|-------------|
+| `type` | String | `"permission_response"` | Fixed discriminator required by Claude CLI |
+| `id` | String | UUID string | Must match the `requestId` from the permission request |
+| `decision` | String | `"allow"` or `"deny"` | Whether Claude may proceed with the tool call |
+
+**Key implementation details:**
+
+| Aspect | Detail |
+|--------|--------|
+| Permission mode | Must be `delegate` — set at session creation time via `ExecutionOptions.permissionMode` |
+| Stdin handle lifecycle | `ClaudeExecutorService` stores `FileHandle` in `activeStdinHandles[sessionId]` when the subprocess starts; removed on process exit |
+| Modal dismissal | `pendingPermissionRequest` is cleared to `nil` immediately on user tap (before the HTTP POST completes) for instant UI responsiveness |
+| Process-gone handling | If `activeStdinHandles[sessionId]` has no entry (process already exited), `sendPermissionResponse` returns `false` and `ChatController` throws `HTTP 410 Gone` |
+| Concurrent sessions | Each session has its own stdin handle keyed by session ID — multiple simultaneous sessions each route independently |
+
 ### SSE Wire Protocol
 
 All streaming responses from `StreamingService` use the standard SSE (Server-Sent Events) wire format over HTTP/1.1 chunked transfer encoding.
