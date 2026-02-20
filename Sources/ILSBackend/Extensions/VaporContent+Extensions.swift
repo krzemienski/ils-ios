@@ -148,6 +148,7 @@ extension PaginatedResponse: Content where T: Content {}
 // MARK: - Response Types
 extension RenameSessionRequest: Content {}
 extension BulkDeleteSessionsRequest: Content {}
+extension BulkDeleteProjectsRequest: Content {}
 extension MessageSearchResult: Content {}
 extension ChatExport: Content {}
 extension ChatExportSession: Content {}
