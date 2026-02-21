@@ -7,7 +7,6 @@ struct HomeView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var dashboardVM = DashboardViewModel()
-    @State private var sessionsVM = SessionsViewModel()
     @State private var isRefreshing = false
     @State private var showNewSessionSheet = false
 
@@ -15,6 +14,8 @@ struct HomeView: View {
 
     private let createSessionTip = CreateSessionTip()
 
+    /// Shared sessions view model owned by SidebarRootView.
+    var sessionsVM: SessionsViewModel
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
@@ -51,14 +52,13 @@ struct HomeView: View {
         #endif
         .task {
             dashboardVM.configure(client: appState.apiClient)
-            sessionsVM.configure(client: appState.apiClient)
             await dashboardVM.loadAll()
-            await sessionsVM.loadSessions(refresh: true)
+            // Sessions are loaded by SidebarRootView (shared VM)
         }
         .refreshable {
             isRefreshing = true
             await dashboardVM.loadAll()
-            await sessionsVM.loadSessions(refresh: true)
+            await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
             isRefreshing = false
         }
         .onChange(of: appState.isConnected) { _, connected in
@@ -468,7 +468,7 @@ private extension View {
 
 #Preview {
     NavigationStack {
-        HomeView()
+        HomeView(sessionsVM: SessionsViewModel())
             .environment(AppState())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }

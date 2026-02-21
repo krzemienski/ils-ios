@@ -58,6 +58,7 @@ struct SidebarRootView: View {
     @State private var sidebarDragOffset: CGFloat = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var browserSegment: BrowserSegment = .mcp
+    @State private var sessionsVM = SessionsViewModel()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -99,6 +100,10 @@ struct SidebarRootView: View {
                 activeScreen = restored
             }
         }
+        .task {
+            sessionsVM.configure(client: appState.apiClient)
+            await sessionsVM.loadSessions(refresh: true)
+        }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
@@ -113,6 +118,7 @@ struct SidebarRootView: View {
     private var iPadLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(
+                sessionsViewModel: sessionsVM,
                 activeScreen: $activeScreen,
                 isSidebarOpen: .constant(true),
                 onSessionSelected: { session in
@@ -223,6 +229,7 @@ struct SidebarRootView: View {
     private var sidebarPanel: some View {
         HStack(spacing: 0) {
             SidebarView(
+                sessionsViewModel: sessionsVM,
                 activeScreen: $activeScreen,
                 isSidebarOpen: $isSidebarOpen,
                 onSessionSelected: { session in
@@ -249,6 +256,7 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var homeScreen: some View {
         HomeView(
+            sessionsVM: sessionsVM,
             onSessionSelected: { session in
                 activeScreen = .chat(session)
             },

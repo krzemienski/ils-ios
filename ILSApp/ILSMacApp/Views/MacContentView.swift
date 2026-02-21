@@ -310,6 +310,7 @@ struct MacContentView: View {
         switch activeScreen {
         case .home:
             HomeView(
+                sessionsVM: sessionsViewModel,
                 onSessionSelected: { session in
                     activeScreen = .chat(session)
                 },

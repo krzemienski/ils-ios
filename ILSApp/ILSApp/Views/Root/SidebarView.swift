@@ -26,8 +26,10 @@ import ILSShared
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
+
+    /// Shared sessions view model owned by SidebarRootView.
+    @Bindable var sessionsViewModel: SessionsViewModel
 
     /// The currently active navigation destination.
     @Binding var activeScreen: ActiveScreen
@@ -79,10 +81,7 @@ struct SidebarView: View {
             .environment(appState)
             .environment(\.theme, theme)
         }
-        .task {
-            sessionsViewModel.configure(client: appState.apiClient)
-            await sessionsViewModel.loadSessions(refresh: true)
-        }
+        // Sessions are loaded by SidebarRootView (shared VM)
         .alert("Rename Session", isPresented: Binding(
             get: { sessionToRename != nil },
             set: { if !$0 { sessionToRename = nil } }
