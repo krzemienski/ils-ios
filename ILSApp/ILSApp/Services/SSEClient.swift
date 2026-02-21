@@ -1,14 +1,15 @@
 import Foundation
-import Combine
+import Observation
 import ILSShared
 
 /// Server-Sent Events client for streaming chat responses
 @MainActor
-class SSEClient: ObservableObject {
-    @Published var messages: [StreamMessage] = []
-    @Published var isStreaming: Bool = false
-    @Published var error: Error?
-    @Published var connectionState: ConnectionState = .disconnected
+@Observable
+class SSEClient {
+    var messages: [StreamMessage] = []
+    var isStreaming: Bool = false
+    var error: Error?
+    var connectionState: ConnectionState = .disconnected
 
     enum ConnectionState: Equatable {
         case disconnected
@@ -17,13 +18,13 @@ class SSEClient: ObservableObject {
         case reconnecting(attempt: Int)
     }
 
-    private var streamTask: Task<Void, Never>?
+    nonisolated(unsafe) private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
-    private let session: URLSession
+    nonisolated(unsafe) private let session: URLSession
     private var lastEventId: String?
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
@@ -219,8 +220,8 @@ class SSEClient: ObservableObject {
     }
 
     /// Message IDs sent by server for client correlation
-    @Published var userMessageId: String?
-    @Published var assistantMessageId: String?
+    var userMessageId: String?
+    var assistantMessageId: String?
 
     private func parseAndAddMessage(event: String, data: String) async {
         // Handle special event types

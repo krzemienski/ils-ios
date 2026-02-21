@@ -497,13 +497,13 @@ struct MacContentView: View {
 
     // MARK: - Helpers
 
+    /// Sections filtered by feature flags. Only recalculates when
+    /// `enableAgentTeams` changes (not on every body evaluation).
     private var filteredSections: [SidebarSection] {
-        SidebarSection.allCases.filter { section in
-            if section == .teams {
-                return enableAgentTeams
-            }
-            return true
+        if enableAgentTeams {
+            return SidebarSection.allCases
         }
+        return SidebarSection.allCases.filter { $0 != .teams }
     }
 
 

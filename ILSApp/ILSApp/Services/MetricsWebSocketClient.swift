@@ -1,22 +1,24 @@
 import Foundation
+import Observation
 import ILSShared
 
 /// WebSocket client for live system metrics streaming.
 /// Falls back to REST polling if WebSocket fails 3 times.
 @MainActor
-final class MetricsWebSocketClient: ObservableObject {
-    @Published var latestMetrics: SystemMetricsResponse?
-    @Published var isConnected: Bool = false
+@Observable
+final class MetricsWebSocketClient {
+    var latestMetrics: SystemMetricsResponse?
+    var isConnected: Bool = false
 
     /// Sliding window of recent data points for charts (max 60).
-    @Published var cpuHistory: [MetricDataPoint] = []
-    @Published var memoryHistory: [MetricDataPoint] = []
-    @Published var diskHistory: [MetricDataPoint] = []
-    @Published var networkInHistory: [MetricDataPoint] = []
-    @Published var networkOutHistory: [MetricDataPoint] = []
+    var cpuHistory: [MetricDataPoint] = []
+    var memoryHistory: [MetricDataPoint] = []
+    var diskHistory: [MetricDataPoint] = []
+    var networkInHistory: [MetricDataPoint] = []
+    var networkOutHistory: [MetricDataPoint] = []
 
     let baseURL: String
-    private var webSocketTask: URLSessionWebSocketTask?
+    nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private let decoder: JSONDecoder
 
@@ -25,9 +27,9 @@ final class MetricsWebSocketClient: ObservableObject {
     private let maxWSFailures: Int = 3
     private let maxHistorySize: Int = 60
 
-    private var reconnectTask: Task<Void, Never>?
-    private var pollingTask: Task<Void, Never>?
-    private var receiveTask: Task<Void, Never>?
+    nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
+    nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
+    nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
     private var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
