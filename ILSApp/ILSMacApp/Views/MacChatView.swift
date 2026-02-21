@@ -1,11 +1,9 @@
 import SwiftUI
 import ILSShared
-import Combine
-
 struct MacChatView: View {
     let session: ChatSession
-    @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel = ChatViewModel()
+    @Environment(AppState.self) var appState
+    @State private var viewModel = ChatViewModel()
     @State private var inputText = ""
     @State private var showCommandPalette = false
     @State private var showSessionInfo = false
@@ -39,7 +37,7 @@ struct MacChatView: View {
 
     @ViewBuilder
     private var chatWithAlerts: some View {
-        styledContent
+        contentWithKeyHandlers
             .alert("Connection Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) {}
                 Button("Retry") {
@@ -93,6 +91,11 @@ struct MacChatView: View {
             } message: {
                 Text("This will permanently delete this session and all its messages.")
             }
+    }
+
+    @ViewBuilder
+    private var contentWithKeyHandlers: some View {
+        styledContent
             .navigationDestination(item: $navigateToForked) { session in
                 MacChatView(session: session)
             }
@@ -103,7 +106,8 @@ struct MacChatView: View {
                     }
                 }
             }
-            .onKeyPress(.init("k"), modifiers: .command) {
+            .onKeyPress("k", phases: .down) { press in
+                guard press.modifiers.contains(.command) else { return .ignored }
                 showCommandPalette = true
                 return .handled
             }
@@ -139,6 +143,7 @@ struct MacChatView: View {
 
     @ViewBuilder
     private var styledContent: some View {
+        @Bindable var viewModel = viewModel
         mainContent
             .background(theme.bgPrimary)
             .navigationTitle(session.name ?? "Chat")
@@ -166,7 +171,7 @@ struct MacChatView: View {
             }
             .sheet(isPresented: $showSessionInfo) {
                 SessionInfoView(session: session)
-                    .environmentObject(appState)
+                    .environment(appState)
                     .frame(minWidth: 500, minHeight: 400)
                     .presentationBackground(theme.bgPrimary)
             }
@@ -187,20 +192,12 @@ struct MacChatView: View {
                 viewModel.sessionId = session.id
                 viewModel.encodedProjectPath = session.encodedProjectPath
                 viewModel.claudeSessionId = session.claudeSessionId
-
-                await withTaskGroup(of: Void.self) { group in
-                    group.addTask { @MainActor in
-                        for await _ in viewModel.$error.values {
-                            guard !Task.isCancelled else { return }
-                            if viewModel.error != nil {
-                                errorId = UUID()
-                                showErrorAlert = true
-                            }
-                        }
-                    }
-                    group.addTask { @MainActor in
-                        await viewModel.loadMessageHistory()
-                    }
+                await viewModel.loadMessageHistory()
+            }
+            .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
+                if newValue != nil {
+                    errorId = UUID()
+                    showErrorAlert = true
                 }
             }
     }

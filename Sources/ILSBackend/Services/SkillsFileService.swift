@@ -129,17 +129,35 @@ struct SkillsFileService {
         return skills
     }
 
+    /// Directories to skip during recursive skill scanning.
+    /// These contain dependency files, not actual skills.
+    private static let excludedDirectories: Set<String> = [
+        "node_modules", ".git", "__pycache__", ".venv", "venv",
+        ".build", "build", "dist", ".cache", ".npm", ".yarn",
+        "vendor", "Pods", ".swiftpm"
+    ]
+
     /// Recursively scan directory for skill .md files (both SKILL.md in dirs and standalone .md files).
     /// - Parameters:
     ///   - path: Current directory path to scan
     ///   - basePath: Original base path (skills directory)
+    ///   - depth: Current recursion depth (max 3 to avoid deep traversal)
     /// - Returns: Array of Skill objects
-    private func scanSkillsRecursively(at path: String, basePath: String) throws -> [Skill] {
+    private func scanSkillsRecursively(at path: String, basePath: String, depth: Int = 0) throws -> [Skill] {
+        // Limit recursion depth to prevent traversing deep dependency trees
+        guard depth <= 3 else { return [] }
+
         var skills: [Skill] = []
 
         let contents = try fileManager.contentsOfDirectory(atPath: path)
 
         for item in contents {
+            // Skip hidden directories and excluded directories
+            guard !item.hasPrefix("."),
+                  !Self.excludedDirectories.contains(item) else {
+                continue
+            }
+
             let itemPath = "\(path)/\(item)"
             var isDirectory: ObjCBool = false
 
@@ -154,7 +172,7 @@ struct SkillsFileService {
                     }
 
                     // Recursively scan subdirectory for more skills
-                    let subSkills = try scanSkillsRecursively(at: itemPath, basePath: basePath)
+                    let subSkills = try scanSkillsRecursively(at: itemPath, basePath: basePath, depth: depth + 1)
                     skills.append(contentsOf: subSkills)
                 } else if item.hasSuffix(".md") && item != "SKILL.md" {
                     // Parse standalone .md files as skills

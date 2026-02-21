@@ -91,7 +91,7 @@ struct ThemePreviewCard: View {
             if isActive {
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 10))
+                        .font(.system(size: theme.fontCaption))
                     Text("Active")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 }
@@ -99,7 +99,7 @@ struct ThemePreviewCard: View {
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.circle")
-                        .font(.system(size: 10))
+                        .font(.system(size: theme.fontCaption))
                     Text("Install")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 }

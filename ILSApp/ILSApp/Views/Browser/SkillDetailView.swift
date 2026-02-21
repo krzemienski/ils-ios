@@ -165,7 +165,7 @@ struct SkillDetailView: View {
                         Spacer()
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
-                                .font(.system(size: 10, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.warning)
                             Text("\(stars)")
                                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))

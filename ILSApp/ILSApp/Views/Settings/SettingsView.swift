@@ -128,7 +128,7 @@ struct SettingsView: View {
                         }
                     } else {
                         LabeledContent("Default Model") {
-                            Text(formatModelName(config.model ?? "claude-sonnet-4-20250514"))
+                            Text(formatModelName(config.model ?? SettingsViewModel.defaultModelID))
                                 .foregroundColor(ILSTheme.secondaryText)
                         }
                     }
@@ -523,7 +523,7 @@ struct SettingsView: View {
     private func resetEditedValues() {
         // Reset edited values to current config values
         if let config = viewModel.config?.content {
-            editedModel = config.model ?? "claude-sonnet-4-20250514"
+            editedModel = config.model ?? SettingsViewModel.defaultModelID
             editedColorScheme = config.theme?.colorScheme ?? "system"
         }
     }

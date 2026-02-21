@@ -28,14 +28,14 @@ struct SidebarSessionRow: View {
                     // Relative time + message count
                     HStack(spacing: theme.spacingXS) {
                         Text(relativeTime)
-                            .font(.system(size: 10, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
 
                         if session.messageCount > 0 {
                             Text("·")
                                 .foregroundStyle(theme.textTertiary)
                             Text("\(session.messageCount) msgs")
-                                .font(.system(size: 10, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
 

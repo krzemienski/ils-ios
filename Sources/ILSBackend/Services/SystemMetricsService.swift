@@ -85,9 +85,14 @@ actor SystemMetricsService {
 
         do {
             try process.run()
+
+            // CRITICAL: Read data BEFORE waitUntilExit to prevent pipe buffer deadlock.
+            // If ps aux output exceeds ~64KB pipe buffer, the process blocks on write
+            // while we block on waitUntilExit — classic deadlock. Since this is an actor,
+            // the deadlock also blocks all other actor calls (getMetrics, etc.).
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
             process.waitUntilExit()
 
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
             guard let output = String(data: data, encoding: .utf8) else { return [] }
 
             return parseProcessOutput(output)

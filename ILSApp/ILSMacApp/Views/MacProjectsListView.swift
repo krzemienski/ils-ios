@@ -5,9 +5,9 @@ import SwiftUI
 // MARK: - Mac Projects List View
 
 struct MacProjectsListView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var viewModel = ProjectsViewModel()
+    @State private var viewModel = ProjectsViewModel()
 
     @State private var searchText: String = ""
     @State private var selectedProject: Project?
@@ -401,6 +401,6 @@ struct ProjectFormSheet: View {
 
 #Preview {
     MacProjectsListView()
-        .environmentObject(AppState())
+        .environment(AppState())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

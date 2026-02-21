@@ -28,8 +28,8 @@ struct HomeView: View {
                 TipView(createSessionTip)
                     .tipBackground(theme.bgSecondary)
 
-                recentSessionsSection
                 quickActionsGrid
+                recentSessionsSection
                 statsSection
             }
             .padding(.horizontal, theme.spacingMD)
@@ -47,7 +47,6 @@ struct HomeView: View {
         }
         #if os(iOS)
         .inlineNavigationBarTitle()
-        .toolbar(.hidden, for: .navigationBar)
         #endif
         .task {
             dashboardVM.configure(client: appState.apiClient)

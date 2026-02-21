@@ -339,7 +339,7 @@ struct BrowserView: View {
 
                             if let marketplace = plugin.marketplace, !marketplace.isEmpty {
                                 Text(marketplace)
-                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                                     .foregroundStyle(theme.textTertiary)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -349,7 +349,7 @@ struct BrowserView: View {
                         }
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 12, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                     }
                     .padding(theme.spacingMD)
@@ -404,7 +404,7 @@ struct BrowserView: View {
 
                 if let badge, !badge.isEmpty {
                     Text(badge)
-                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -414,7 +414,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)

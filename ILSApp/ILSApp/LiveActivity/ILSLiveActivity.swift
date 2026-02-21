@@ -1,12 +1,8 @@
 import SwiftUI
 
-#if canImport(ActivityKit)
+#if os(iOS)
 import ActivityKit
-#endif
-
-#if canImport(WidgetKit)
 import WidgetKit
-#endif
 
 // MARK: - Activity Attributes
 
@@ -51,8 +47,6 @@ private enum LiveActivityColors {
 }
 
 // MARK: - Lock Screen Widget View
-
-#if canImport(WidgetKit) && canImport(ActivityKit)
 
 /// Lock screen presentation for the chat streaming Live Activity.
 ///
@@ -319,12 +313,9 @@ struct ChatStreamingExpandedView: View {
     }
 }
 
-#endif
-
 // MARK: - ChatViewModel Live Activity Extension
 
 extension ChatViewModel {
-    #if canImport(ActivityKit)
 
     /// Start a Live Activity for the current chat streaming session.
     ///
@@ -445,6 +436,6 @@ extension ChatViewModel {
             }
         }
     }
-
-    #endif
 }
+
+#endif

@@ -45,9 +45,9 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // MARK: - Mac Content View
 
 struct MacContentView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var sessionsViewModel = SessionsViewModel()
+    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -59,6 +59,7 @@ struct MacContentView: View {
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
+        @Bindable var appState = appState
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar (left column)
             sidebarContent
@@ -134,7 +135,7 @@ struct MacContentView: View {
         }
         .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
-                .environmentObject(appState)
+                .environment(appState)
                 .environment(\.theme, theme)
         }
         .alert("Rename Session", isPresented: Binding(
@@ -216,7 +217,8 @@ struct MacContentView: View {
     }
 
     private var sessionsListView: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        @Bindable var sessionsViewModel = sessionsViewModel
+        return VStack(alignment: .leading, spacing: 0) {
             // Section header
             HStack {
                 Text("SESSIONS")
@@ -602,7 +604,7 @@ struct MacSessionRow: View {
 
 #Preview {
     MacContentView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

@@ -39,7 +39,7 @@ struct SettingsConfigSection: View {
                     }
                 } else if let config = viewModel.config?.content {
                     Picker("Default Model", selection: Binding(
-                        get: { config.model ?? "claude-sonnet-4-20250514" },
+                        get: { config.model ?? SettingsViewModel.defaultModelID },
                         set: { newModel in
                             Task {
                                 _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
@@ -53,6 +53,10 @@ struct SettingsConfigSection: View {
                     }
                     .tint(theme.accent)
                     .accessibilityLabel("Default Claude model")
+                    settingAnnotation(
+                        isInherited: config.model == nil,
+                        tooltip: "The Claude model used for conversations. When inherited, uses the model configured in your host CLI settings."
+                    )
 
                     Picker("Color Scheme", selection: $colorSchemePreference) {
                         ForEach(availableColorSchemes, id: \.self) { scheme in
@@ -61,6 +65,10 @@ struct SettingsConfigSection: View {
                     }
                     .tint(theme.accent)
                     .accessibilityLabel("Color scheme preference")
+                    settingAnnotation(
+                        isInherited: config.theme?.colorScheme == nil,
+                        tooltip: "Controls the app's appearance. System follows your device setting."
+                    )
 
                     if let channel = config.autoUpdatesChannel {
                         settingsRow("Updates Channel", value: channel.capitalized)
@@ -82,6 +90,10 @@ struct SettingsConfigSection: View {
                     }
                     .tint(theme.accent)
                     .accessibilityLabel("Enable extended thinking mode")
+                    settingAnnotation(
+                        isInherited: config.alwaysThinkingEnabled == nil,
+                        tooltip: "Enables extended thinking mode for deeper reasoning. Uses more tokens per response."
+                    )
 
                     Toggle(isOn: Binding(
                         get: { config.includeCoAuthoredBy ?? false },
@@ -99,6 +111,10 @@ struct SettingsConfigSection: View {
                     }
                     .tint(theme.accent)
                     .accessibilityLabel("Include co-authored-by attribution")
+                    settingAnnotation(
+                        isInherited: config.includeCoAuthoredBy == nil,
+                        tooltip: "Adds co-authored-by attribution to git commits made during Claude sessions."
+                    )
                 } else {
                     Text("No configuration loaded")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -179,6 +195,10 @@ struct SettingsConfigSection: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 if let config = viewModel.config?.content, let permissions = config.permissions {
                     settingsRow("Default Mode", value: permissions.defaultMode?.capitalized ?? "Prompt")
+                    settingAnnotation(
+                        isInherited: permissions.defaultMode == nil,
+                        tooltip: "Controls which tools Claude can use without asking. Inherited from host CLI configuration."
+                    )
 
                     if let allowed = permissions.allow, !allowed.isEmpty {
                         DisclosureGroup {
@@ -393,5 +413,63 @@ struct SettingsConfigSection: View {
         if let h = hooks.preToolUse { count += h.count }
         if let h = hooks.postToolUse { count += h.count }
         return count
+    }
+
+    // MARK: - Setting Annotation
+
+    @ViewBuilder
+    func settingAnnotation(isInherited: Bool, tooltip: String) -> some View {
+        HStack(spacing: theme.spacingSM) {
+            InheritanceBadge(isInherited: isInherited)
+            Spacer()
+            SettingsInfoButton(text: tooltip)
+        }
+    }
+}
+
+// MARK: - Inheritance Badge
+
+struct InheritanceBadge: View {
+    @Environment(\.theme) private var theme: ThemeSnapshot
+    let isInherited: Bool
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: isInherited ? "link" : "pencil")
+            Text(isInherited ? "Host Default" : "Custom")
+        }
+        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+        .foregroundStyle(isInherited ? theme.textTertiary : theme.accent)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(
+            (isInherited ? theme.textTertiary : theme.accent).opacity(0.12)
+        )
+        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Settings Info Button
+
+struct SettingsInfoButton: View {
+    @Environment(\.theme) private var theme: ThemeSnapshot
+    let text: String
+    @State private var isShowing = false
+
+    var body: some View {
+        Button { isShowing.toggle() } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isShowing) {
+            Text(text)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .padding()
+                .frame(maxWidth: 280)
+                .presentationCompactAdaptation(.popover)
+        }
     }
 }

@@ -422,7 +422,7 @@ struct StreamingStatusBanner: View {
 
             if tokenCount > 0 {
                 Text("~\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
-                    .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
                     .foregroundStyle(theme.textTertiary)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .accessibilityIdentifier("streaming-stats-text")

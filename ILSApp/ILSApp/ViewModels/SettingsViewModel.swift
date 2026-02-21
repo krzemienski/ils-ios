@@ -5,6 +5,8 @@ import ILSShared
 @MainActor
 @Observable
 class SettingsViewModel {
+    static let defaultModelID = "claude-sonnet-4-20250514"
+
     var stats: StatsResponse?
     var config: ConfigInfo?
     var claudeVersion: String?

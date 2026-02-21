@@ -1,7 +1,5 @@
 import SwiftUI
 import ILSShared
-import Combine
-
 /// Focused value key for the currently selected session
 struct FocusedSessionKey: FocusedValueKey {
     typealias Value = ChatSession
@@ -17,8 +15,8 @@ extension FocusedValues {
 @main
 struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var appState = AppState()
-    @StateObject private var themeManager = ThemeManager()
+    @State private var appState = AppState()
+    @State private var themeManager = ThemeManager()
     @StateObject private var windowManager = WindowManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
@@ -36,8 +34,8 @@ struct ILSMacApp: App {
         // Main application window
         WindowGroup {
             MacContentView()
-                .environmentObject(appState)
-                .environmentObject(themeManager)
+                .environment(appState)
+                .environment(themeManager)
                 .environmentObject(windowManager)
                 .environmentObject(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)
@@ -68,8 +66,8 @@ struct ILSMacApp: App {
         WindowGroup("Session", for: UUID.self) { $sessionId in
             if let sessionId {
                 SessionWindowView(sessionId: sessionId)
-                    .environmentObject(appState)
-                    .environmentObject(themeManager)
+                    .environment(appState)
+                    .environment(themeManager)
                     .environmentObject(windowManager)
                     .environmentObject(notificationManager)
                     .environment(\.theme, themeManager.currentSnapshot)
@@ -87,18 +85,23 @@ struct ILSMacApp: App {
 
 /// Global application state — thin coordinator delegating to focused managers.
 @MainActor
-class AppState: ObservableObject {
-    @Published var selectedProject: Project?
-    @Published var selectedTab: String = "dashboard"
-    @Published var navigationIntent: ActiveScreen?
-    @Published var lastSessionId: UUID?
-    @Published var isOffline: Bool = false
-    @Published var showOnboarding: Bool = false
+@Observable
+class AppState {
+    var selectedProject: Project?
+    var selectedTab: String = "dashboard"
+    var navigationIntent: ActiveScreen?
+    var lastSessionId: UUID?
+    var isOffline: Bool = false
+    var showOnboarding: Bool = false {
+        didSet {
+            if connectionManager.showOnboarding != showOnboarding {
+                connectionManager.showOnboarding = showOnboarding
+            }
+        }
+    }
 
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
-
-    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Forwarding Properties
 
@@ -112,21 +115,8 @@ class AppState: ObservableObject {
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
 
-        // Forward ConnectionManager changes so SwiftUI views observing AppState update
-        cm.objectWillChange.sink { [weak self] (_: Void) in
-            self?.objectWillChange.send()
-        }.store(in: &cancellables)
-
-        // Sync showOnboarding bidirectionally with removeDuplicates to prevent
-        // infinite recursion (@Published emits on willSet before storage updates,
-        // so property-read guards are unreliable — use stream dedup instead)
-        cm.$showOnboarding.removeDuplicates().sink { [weak self] (value: Bool) in
-            self?.showOnboarding = value
-        }.store(in: &cancellables)
-
-        $showOnboarding.dropFirst().removeDuplicates().sink { [weak cm] (value: Bool) in
-            cm?.showOnboarding = value
-        }.store(in: &cancellables)
+        // Sync initial onboarding state from ConnectionManager
+        self.showOnboarding = cm.showOnboarding
 
         pollingManager.checkConnection()
     }

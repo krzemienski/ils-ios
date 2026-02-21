@@ -7,20 +7,15 @@ import AppKit
 struct SessionWindowView: View {
     let sessionId: UUID
 
-    @EnvironmentObject private var appState: AppState
-    @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(AppState.self) private var appState
+    @Environment(ThemeManager.self) private var themeManager
     @EnvironmentObject private var windowManager: WindowManager
     @Environment(\.theme) private var theme
 
-    @StateObject private var viewModel: ChatViewModel
+    @State private var viewModel = ChatViewModel()
     @State private var session: ChatSession?
     @State private var isLoading = true
     @State private var errorMessage: String?
-
-    init(sessionId: UUID) {
-        self.sessionId = sessionId
-        _viewModel = StateObject(wrappedValue: ChatViewModel())
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -117,7 +112,7 @@ struct WindowAccessor: NSViewRepresentable {
 
 #Preview {
     SessionWindowView(sessionId: UUID())
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environmentObject(WindowManager.shared)
 }
