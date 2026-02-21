@@ -8,13 +8,6 @@ struct SettingsView: View {
     @State private var serverURL: String = ""
     @State private var colorSchemePreference: String = "system"
 
-    // Available options
-    private let availableModels = [
-        "claude-sonnet-4-20250514",
-        "claude-opus-4-20250514",
-        "claude-haiku-3-5-20241022"
-    ]
-
     private let availableColorSchemes = ["system", "light", "dark"]
 
     var body: some View {
@@ -80,9 +73,9 @@ struct SettingsView: View {
         SettingsConfigSection(
             viewModel: viewModel,
             colorSchemePreference: $colorSchemePreference,
-            availableModels: availableModels,
+            availableModels: ClaudeModel.allModelIDs,
             availableColorSchemes: availableColorSchemes,
-            formatModelName: formatModelName
+            formatModelName: ClaudeModel.displayNameForID
         )
     }
 
@@ -90,9 +83,9 @@ struct SettingsView: View {
         SettingsConfigSection(
             viewModel: viewModel,
             colorSchemePreference: $colorSchemePreference,
-            availableModels: availableModels,
+            availableModels: ClaudeModel.allModelIDs,
             availableColorSchemes: availableColorSchemes,
-            formatModelName: formatModelName
+            formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
     }
 
@@ -131,17 +124,6 @@ struct SettingsView: View {
     }
 
     // MARK: - Helpers
-
-    private func formatModelName(_ model: String) -> String {
-        if model.contains("sonnet") {
-            return "Claude Sonnet"
-        } else if model.contains("opus") {
-            return "Claude Opus"
-        } else if model.contains("haiku") {
-            return "Claude Haiku"
-        }
-        return model
-    }
 }
 
 #Preview {

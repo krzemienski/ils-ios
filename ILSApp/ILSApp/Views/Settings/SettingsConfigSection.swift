@@ -70,9 +70,11 @@ struct SettingsConfigSection: View {
                         tooltip: "Controls the app's appearance. System follows your device setting."
                     )
 
-                    if let channel = config.autoUpdatesChannel {
-                        settingsRow("Updates Channel", value: channel.capitalized)
-                    }
+                    settingsRow("Updates Channel", value: (config.autoUpdatesChannel ?? "stable").capitalized)
+                    settingAnnotation(
+                        isInherited: config.autoUpdatesChannel == nil,
+                        tooltip: "Controls which release channel Claude CLI auto-updates from. Stable is recommended for production use."
+                    )
 
                     Toggle(isOn: Binding(
                         get: { config.alwaysThinkingEnabled ?? false },
@@ -170,6 +172,10 @@ struct SettingsConfigSection: View {
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
+                    HStack {
+                        Spacer()
+                        SettingsInfoButton(text: "Your Anthropic API key for authenticating with the Claude API. For security, API keys cannot be edited through the iOS app.")
+                    }
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -252,9 +258,14 @@ struct SettingsConfigSection: View {
                     if let hooks = config.hooks {
                         let hookCount = countHooks(hooks)
                         settingsRow("Hooks Configured", value: "\(hookCount)")
+                        hookEventBreakdown(hooks)
                     } else {
                         settingsRow("Hooks Configured", value: "0")
                     }
+                    settingAnnotation(
+                        isInherited: config.hooks == nil,
+                        tooltip: "Lifecycle hooks that run custom commands at specific events (session start, before/after tool use). Configured in ~/.claude/settings.json."
+                    )
 
                     if let plugins = config.enabledPlugins {
                         let enabledCount = plugins.filter { $0.value }.count
@@ -413,6 +424,27 @@ struct SettingsConfigSection: View {
         if let h = hooks.preToolUse { count += h.count }
         if let h = hooks.postToolUse { count += h.count }
         return count
+    }
+
+    @ViewBuilder
+    func hookEventBreakdown(_ hooks: HooksConfig) -> some View {
+        let events: [(String, Int)] = [
+            ("SessionStart", hooks.sessionStart?.count ?? 0),
+            ("SubagentStart", hooks.subagentStart?.count ?? 0),
+            ("UserPromptSubmit", hooks.userPromptSubmit?.count ?? 0),
+            ("PreToolUse", hooks.preToolUse?.count ?? 0),
+            ("PostToolUse", hooks.postToolUse?.count ?? 0)
+        ].filter { $0.1 > 0 }
+
+        if !events.isEmpty {
+            HStack(spacing: theme.spacingSM) {
+                ForEach(events, id: \.0) { event in
+                    Text("\(event.1) \(event.0)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
+        }
     }
 
     // MARK: - Setting Annotation
