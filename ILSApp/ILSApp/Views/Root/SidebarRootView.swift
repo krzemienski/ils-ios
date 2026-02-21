@@ -99,10 +99,24 @@ struct SidebarRootView: View {
             if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
                 activeScreen = restored
             }
+            // Non-chat screens are restored above; chat requires async session fetch
         }
         .task {
             sessionsVM.configure(client: appState.apiClient)
             await sessionsVM.loadSessions(refresh: true)
+
+            // Restore chat session if app was backgrounded while viewing chat
+            if activeScreenKey == "chat", !lastChatSessionId.isEmpty,
+               let uuid = UUID(uuidString: lastChatSessionId) {
+                // Check loaded sessions first before making an API call
+                if let session = sessionsVM.sessions.first(where: { $0.id == uuid }) {
+                    activeScreen = .chat(session)
+                } else {
+                    // Fallback: create minimal session for restoration
+                    let session = ChatSession(id: uuid, name: "Session")
+                    activeScreen = .chat(session)
+                }
+            }
         }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
