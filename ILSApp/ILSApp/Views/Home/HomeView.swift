@@ -9,6 +9,7 @@ struct HomeView: View {
     @State private var dashboardVM = DashboardViewModel()
     @State private var sessionsVM = SessionsViewModel()
     @State private var isRefreshing = false
+    @State private var showNewSessionSheet = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -36,6 +37,14 @@ struct HomeView: View {
             .animation(.easeInOut(duration: 0.3), value: isRefreshing)
         }
         .background(theme.bgPrimary)
+        .sheet(isPresented: $showNewSessionSheet) {
+            NewSessionView { session in
+                showNewSessionSheet = false
+                onSessionSelected?(session)
+            }
+            .environment(appState)
+            .environment(\.theme, theme)
+        }
         #if os(iOS)
         .inlineNavigationBarTitle()
         .toolbar(.hidden, for: .navigationBar)
@@ -281,8 +290,7 @@ struct HomeView: View {
                     title: "New Session",
                     color: theme.entitySession
                 ) {
-                    let newSession = ChatSession(name: "New Session", model: "sonnet")
-                    onSessionSelected?(newSession)
+                    showNewSessionSheet = true
                 }
 
                 quickActionCard(

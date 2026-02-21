@@ -44,6 +44,7 @@ struct SidebarView: View {
     @State private var renameText: String = ""
     /// The session pending deletion confirmation, if any.
     @State private var sessionToDelete: ChatSession?
+    @State private var showNewSessionSheet = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -69,6 +70,15 @@ struct SidebarView: View {
             bottomActions
         }
         .background(theme.bgSidebar)
+        .sheet(isPresented: $showNewSessionSheet) {
+            NewSessionView { session in
+                showNewSessionSheet = false
+                onSessionSelected(session)
+                isSidebarOpen = false
+            }
+            .environment(appState)
+            .environment(\.theme, theme)
+        }
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadSessions(refresh: true)
@@ -337,9 +347,7 @@ struct SidebarView: View {
     private var bottomActions: some View {
         Button {
             HapticManager.impact(.medium)
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
-            onSessionSelected(newSession)
-            isSidebarOpen = false
+            showNewSessionSheet = true
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "plus.circle.fill")

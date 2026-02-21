@@ -9,6 +9,7 @@ class ProjectsViewModel {
     var isLoading = false
     var error: Error?
     var hasMore = true
+    var searchText: String = ""
     private var currentOffset = 0
     private let pageSize = 50
 
@@ -18,6 +19,15 @@ class ProjectsViewModel {
 
     func configure(client: APIClient) {
         self.client = client
+    }
+
+    /// Projects filtered by the current search text (case-insensitive on name and path).
+    var filteredProjects: [Project] {
+        guard !searchText.isEmpty else { return projects }
+        let query = searchText.lowercased()
+        return projects.filter {
+            $0.name.lowercased().contains(query) || $0.path.lowercased().contains(query)
+        }
     }
 
     /// Empty state text for UI display
