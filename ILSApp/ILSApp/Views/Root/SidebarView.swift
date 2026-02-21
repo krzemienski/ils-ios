@@ -148,6 +148,7 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
             sidebarNavItem(icon: "desktopcomputer", label: "Profiles", screen: .fleet)
+            sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)
@@ -239,7 +240,10 @@ struct SidebarView: View {
             )
         ) {
             ForEach(sessions) { session in
-                SidebarSessionRow(session: session) {
+                SidebarSessionRow(
+                    session: session,
+                    isActive: isSessionActive(session)
+                ) {
                     onSessionSelected(session)
                     isSidebarOpen = false
                 }
@@ -395,9 +399,18 @@ struct SidebarView: View {
 
     // MARK: - Helpers
 
+    private func isSessionActive(_ session: ChatSession) -> Bool {
+        if case .chat(let activeSession) = activeScreen {
+            return activeSession.id == session.id
+        }
+        return false
+    }
+
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {
-        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.fleet, .fleet):
+        case (.home, .home), (.system, .system), (.settings, .settings),
+             (.browser, .browser), (.teams, .teams), (.fleet, .fleet),
+             (.themes, .themes):
             return true
         case (.chat, .chat):
             return true
