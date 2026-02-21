@@ -41,6 +41,11 @@ actor SyncCoordinator {
     private static let maxBackoffSeconds: Double = 30
     private static let storageKey = "ils_sync_queue"
 
+    /// Reusable encoder/decoder — avoids allocating new instances on every
+    /// persistQueue()/loadQueue() call (JSONEncoder/Decoder are expensive to init).
+    private let encoder = JSONEncoder()
+    private static let decoder = JSONDecoder()
+
     private var queue: [QueuedOperation] = []
     private var isDraining = false
 
@@ -182,7 +187,7 @@ actor SyncCoordinator {
 
     private func persistQueue() {
         do {
-            let data = try JSONEncoder().encode(queue)
+            let data = try encoder.encode(queue)
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         } catch {
             AppLogger.shared.error(
@@ -197,7 +202,7 @@ actor SyncCoordinator {
             return []
         }
         do {
-            return try JSONDecoder().decode([QueuedOperation].self, from: data)
+            return try decoder.decode([QueuedOperation].self, from: data)
         } catch {
             AppLogger.shared.error(
                 "Failed to load sync queue: \(error.localizedDescription)",

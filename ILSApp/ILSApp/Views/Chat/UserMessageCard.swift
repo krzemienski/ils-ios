@@ -11,11 +11,7 @@ struct UserMessageCard: View {
 
     var body: some View {
         HStack {
-            #if os(iOS)
-            Spacer(minLength: UIScreen.main.bounds.width * 0.2)
-            #else
-            Spacer(minLength: NSScreen.main?.frame.width ?? 800 * 0.2)
-            #endif
+            Spacer(minLength: 0)
 
             VStack(alignment: .trailing, spacing: 4) {
                 // Message text

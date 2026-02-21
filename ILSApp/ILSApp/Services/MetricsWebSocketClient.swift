@@ -140,8 +140,11 @@ final class MetricsWebSocketClient: ObservableObject {
 
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
         history.append(MetricDataPoint(timestamp: date, value: value))
+        // Only ever 1 excess element since we append 1 at a time.
+        // removeFirst() on a 61-element array is O(60) but acceptable
+        // for this tick rate. Full Deque migration is a future optimization.
         if history.count > maxHistorySize {
-            history.removeFirst(history.count - maxHistorySize)
+            history.removeFirst()
         }
     }
 

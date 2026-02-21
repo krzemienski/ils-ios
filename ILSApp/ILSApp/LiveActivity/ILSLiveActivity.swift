@@ -182,6 +182,7 @@ private struct StreamingDotsView: View {
                 timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
                     dotCount += 1
                 }
+                timer?.tolerance = 0.1  // Enable timer coalescing for energy efficiency
             }
             .onDisappear {
                 timer?.invalidate()

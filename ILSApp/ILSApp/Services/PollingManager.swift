@@ -3,7 +3,10 @@ import SwiftUI
 /// Manages connection health polling and retry logic.
 @MainActor
 class PollingManager {
-    weak var connectionManager: ConnectionManager?
+    /// Unowned is safe: ConnectionManager creates and owns PollingManager,
+    /// so ConnectionManager always outlives this instance. Avoids atomic
+    /// weak-reference overhead on every health poll cycle.
+    unowned let connectionManager: ConnectionManager
 
     private var retryTask: Task<Void, Never>?
     private var healthPollTask: Task<Void, Never>?
@@ -19,7 +22,8 @@ class PollingManager {
 
     func checkConnection() {
         Task { [weak self] in
-            guard let self, let cm = self.connectionManager else { return }
+            guard let self else { return }
+            let cm = self.connectionManager
             do {
                 AppLogger.shared.info("Checking connection to: \(cm.serverURL)", category: "app")
                 let response = try await cm.apiClient.healthCheck()
@@ -52,7 +56,8 @@ class PollingManager {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: delay)
                 guard !Task.isCancelled else { break }
-                guard let self, let cm = self.connectionManager else { break }
+                guard let self else { break }
+                let cm = self.connectionManager
                 do {
                     AppLogger.shared.info("Retry attempt to: \(cm.serverURL)", category: "app")
                     let response = try await cm.apiClient.healthCheck()
@@ -82,7 +87,8 @@ class PollingManager {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 30_000_000_000)
                 guard !Task.isCancelled else { break }
-                guard let self, let cm = self.connectionManager else { break }
+                guard let self else { break }
+                let cm = self.connectionManager
                 do {
                     _ = try await cm.apiClient.healthCheck()
                 } catch {
