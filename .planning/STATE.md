@@ -1,18 +1,18 @@
 # Project State — ILS iOS/macOS Cross-Platform Audit
 
 ## Current Phase
-Phase 2: Navigation + Layout
+Phase 3: Settings & Config
 
 ## Progress
-Phase 1 Plan 1/1 COMPLETE | Phases 1/10
+Phase 2 Plan 1/1 COMPLETE | Phases 2/10
 
 ## Phase Status
 
 | Phase | Status | Started | Completed |
 |-------|--------|---------|-----------|
 | 1. Discovery & Research | COMPLETE | 2026-02-20 | 2026-02-21 |
-| 2. Navigation + Layout | IN PROGRESS | 2026-02-21 | — |
-| 3. Settings & Config | PLANNED | — | — |
+| 2. Navigation + Layout | COMPLETE | 2026-02-21 | 2026-02-21 |
+| 3. Settings & Config | IN PROGRESS | 2026-02-21 | — |
 | 4. Skills/Plugins/Hooks/Themes | PLANNED | — | — |
 | 5. System Monitor + Profiles | PLANNED | — | — |
 | 6. Backend API Audit | PLANNED | — | — |
@@ -46,6 +46,10 @@ Phase 1 Plan 1/1 COMPLETE | Phases 1/10
 | VG-03B | PASS | `evidence/phase-01-research/tech-research-summary.md` |
 | VG-03C | PASS | `evidence/phase-01-research/ux-platform-audit.md` |
 | VG-04 | PASS | `evidence/phase-01-research/unified-context.md` |
+| VG-05 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
+| VG-06 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
+| VG-07 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
+| VG-08 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
 
 ## Decisions
 
@@ -56,17 +60,22 @@ Phase 1 Plan 1/1 COMPLETE | Phases 1/10
 | 01-01 | Fix ThemesController to return built-in themes from ThemeManager (simpler than DB seeding) |
 | 01-01 | Read config from ~/.claude/settings.json hierarchy, not legacy ~/.claude.json |
 | 01-01 | No changes needed to font token system (Dynamic Type works automatically) |
+| 02-02 | Keep ZStack sidebar on iPhone, NavigationSplitView on iPad — no migration needed |
+| 02-02 | Keep hamburger button in chat detail — sidebar-based app pattern, not push/pop |
+| 02-02 | Shared SessionsViewModel owned by SidebarRootView for data consistency (REQ-15) |
+| 02-02 | BrowserView accepts initialSegment for tab-specific quick action navigation |
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01 | 01 | 11min | 4 | 4 |
+| 02 | 02 | 40min | 6 | 8 |
 
 ## Session Continuity
 
 Last session: 2026-02-21
-Stopped at: Completed 01-01-PLAN.md (Phase 1 Discovery & Research). Phase 2 ready.
+Stopped at: Completed 02-02-PLAN.md (Phase 2 Navigation + Layout). Phase 3 ready.
 Resume file: N/A
 
 ## Quick Tasks Completed
