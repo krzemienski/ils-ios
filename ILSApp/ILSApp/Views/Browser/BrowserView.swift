@@ -12,6 +12,9 @@ enum BrowserSegment: String, CaseIterable {
 // MARK: - Browser View
 
 struct BrowserView: View {
+    /// Optional initial segment to show when the view first appears.
+    var initialSegment: BrowserSegment = .mcp
+
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -62,6 +65,7 @@ struct BrowserView: View {
         .inlineNavigationBarTitle()
         #endif
         .task {
+            segment = initialSegment
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)

@@ -57,6 +57,7 @@ struct SidebarRootView: View {
     @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var browserSegment: BrowserSegment = .mcp
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -253,6 +254,10 @@ struct SidebarRootView: View {
             },
             onNavigate: { screen in
                 activeScreen = screen
+            },
+            onNavigateToBrowser: { segment in
+                browserSegment = segment
+                activeScreen = .browser
             }
         )
     }
@@ -269,7 +274,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private var browserScreen: some View {
-        BrowserView()
+        BrowserView(initialSegment: browserSegment)
     }
 
     @ViewBuilder

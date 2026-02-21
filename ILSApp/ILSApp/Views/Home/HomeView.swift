@@ -17,6 +17,7 @@ struct HomeView: View {
 
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
+    var onNavigateToBrowser: ((BrowserSegment) -> Void)?
 
     var body: some View {
         ScrollView {
@@ -298,7 +299,7 @@ struct HomeView: View {
                     subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
                     color: theme.entitySkill
                 ) {
-                    onNavigate?(.browser)
+                    onNavigateToBrowser?(.skills)
                 }
 
                 quickActionCard(
@@ -307,7 +308,7 @@ struct HomeView: View {
                     subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
                     color: theme.entityMCP
                 ) {
-                    onNavigate?(.browser)
+                    onNavigateToBrowser?(.mcp)
                 }
 
                 quickActionCard(
@@ -316,7 +317,7 @@ struct HomeView: View {
                     subtitle: statsSubtitle(dashboardVM.stats?.plugins.total),
                     color: theme.entityPlugin
                 ) {
-                    onNavigate?(.browser)
+                    onNavigateToBrowser?(.plugins)
                 }
             }
             .shimmerIfActive(isRefreshing)
