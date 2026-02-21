@@ -1,6 +1,21 @@
 import Vapor
 import ILSShared
 
+/// Controller for agent team management operations.
+///
+/// Routes:
+/// - `GET /teams`: List all teams
+/// - `POST /teams`: Create a new team
+/// - `GET /teams/:name`: Get a specific team by name
+/// - `DELETE /teams/:name`: Delete a team and shut down all its members
+/// - `POST /teams/:name/spawn`: Spawn a new teammate in the team
+/// - `POST /teams/:name/shutdown`: Shut down one or all teammates in the team
+/// - `GET /teams/:name/tasks`: List tasks for a team
+/// - `POST /teams/:name/tasks`: Create a new task for a team
+/// - `PUT /teams/:name/tasks/:taskId`: Update an existing task
+/// - `GET /teams/:name/messages`: List messages for a team
+/// - `POST /teams/:name/messages`: Send a message to a team
+/// - `DELETE /teams/:name/members/:memberName`: Remove a member from a team
 struct TeamsController: RouteCollection {
     let fileService: TeamsFileService
     let executorService: TeamsExecutorService
@@ -28,12 +43,20 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Teams Management
 
+    /// List all agent teams.
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with array of AgentTeam objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<[AgentTeam]> {
         let teams = try await fileService.listTeams()
         return APIResponse(success: true, data: teams)
     }
 
+    /// Create a new agent team with the given name and optional description.
+    ///
+    /// - Parameter req: Vapor Request with CreateTeamRequest body (name, description)
+    /// - Returns: APIResponse with the newly created AgentTeam
     @Sendable
     func create(req: Request) async throws -> APIResponse<AgentTeam> {
         let request = try req.content.decode(CreateTeamRequest.self)
@@ -46,6 +69,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: team)
     }
 
+    /// Get a specific team by name, with live member statuses from the executor service.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with the AgentTeam including current member statuses
     @Sendable
     func detail(req: Request) async throws -> APIResponse<AgentTeam> {
         guard let name = req.parameters.get("name") else {
@@ -65,6 +92,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: team)
     }
 
+    /// Delete a team by name, shutting down all active teammates before removing team files.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with DeletedResponse confirming deletion
     @Sendable
     func remove(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let name = req.parameters.get("name") else {
@@ -82,6 +113,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Member Management
 
+    /// Spawn a new teammate in the specified team using the executor service.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and SpawnTeammateRequest body (name, agentType, model, prompt)
+    /// - Returns: APIResponse with the newly spawned TeamMember including its initial status
     @Sendable
     func spawn(req: Request) async throws -> APIResponse<TeamMember> {
         guard let teamName = req.parameters.get("name") else {
@@ -100,6 +135,13 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: member)
     }
 
+    /// Shut down one or all teammates in the specified team.
+    ///
+    /// If a `memberName` is provided in the request body, only that member is shut down.
+    /// If no body or no `memberName` is provided, all members in the team are shut down.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and optional ShutdownTeammateRequest body (memberName)
+    /// - Returns: APIResponse with AcknowledgedResponse confirming the shutdown was initiated
     @Sendable
     func shutdown(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
         guard let teamName = req.parameters.get("name") else {
@@ -119,6 +161,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: AcknowledgedResponse(acknowledged: true))
     }
 
+    /// Remove a specific member from a team, shutting them down before removal.
+    ///
+    /// - Parameter req: Vapor Request with name and memberName route parameters
+    /// - Returns: APIResponse with DeletedResponse confirming the member was removed
     @Sendable
     func removeMember(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let teamName = req.parameters.get("name") else {
@@ -136,6 +182,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Task Management
 
+    /// List all tasks for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with array of TeamTask objects for the team
     @Sendable
     func listTasks(req: Request) async throws -> APIResponse<[TeamTask]> {
         guard let teamName = req.parameters.get("name") else {
@@ -146,6 +196,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: tasks)
     }
 
+    /// Create a new task for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and CreateTeamTaskRequest body (subject, description)
+    /// - Returns: APIResponse with the newly created TeamTask
     @Sendable
     func createTask(req: Request) async throws -> APIResponse<TeamTask> {
         guard let teamName = req.parameters.get("name") else {
@@ -167,6 +221,10 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: task)
     }
 
+    /// Update an existing task for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name and taskId route parameters and UpdateTeamTaskRequest body (status, owner)
+    /// - Returns: APIResponse with the updated TeamTask
     @Sendable
     func updateTask(req: Request) async throws -> APIResponse<TeamTask> {
         guard let teamName = req.parameters.get("name") else {
@@ -190,6 +248,10 @@ struct TeamsController: RouteCollection {
 
     // MARK: - Message Management
 
+    /// List all messages for the specified team.
+    ///
+    /// - Parameter req: Vapor Request with name route parameter
+    /// - Returns: APIResponse with array of TeamMessage objects for the team
     @Sendable
     func listMessages(req: Request) async throws -> APIResponse<[TeamMessage]> {
         guard let teamName = req.parameters.get("name") else {
@@ -200,6 +262,12 @@ struct TeamsController: RouteCollection {
         return APIResponse(success: true, data: messages)
     }
 
+    /// Send a message to the specified team, persisting it via the file service.
+    ///
+    /// Validates content length (max 100,000 chars), from (max 255 chars), and to (max 255 chars).
+    ///
+    /// - Parameter req: Vapor Request with name route parameter and SendTeamMessageRequest body (content, from, to)
+    /// - Returns: APIResponse with the newly created TeamMessage
     @Sendable
     func sendMessage(req: Request) async throws -> APIResponse<TeamMessage> {
         guard let teamName = req.parameters.get("name") else {

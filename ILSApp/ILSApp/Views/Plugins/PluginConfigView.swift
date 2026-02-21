@@ -138,6 +138,7 @@ struct PluginConfigView: View {
                         Toggle("", isOn: Binding(
                             get: { plugin.isEnabled },
                             set: { _ in
+                                HapticManager.selection()
                                 Task { await toggleEnabled() }
                             }
                         ))

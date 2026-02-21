@@ -42,11 +42,8 @@ Pods/
 .omc/
 
 # Claude Code internal files
-.claude/audit/
-.claude/plan/
-.claude/skills/
-.claude/hooks/
-.claude/ralph-loop.local.md
+.claude
+.claude/
 
 # Ralph TUI
 .ralph-tui/

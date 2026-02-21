@@ -1,19 +1,49 @@
 import SwiftUI
 import ILSShared
 
+/// Navigation sidebar for the iOS app providing access to screens and chat sessions.
+///
+/// Displays the app header with connection status, a list of primary navigation destinations,
+/// a searchable session list grouped by recency, and a button to create new sessions.
+/// Sessions are loaded via `SessionsViewModel` and can be renamed or deleted via context menus.
+///
+/// ## Topics
+/// ### Bindings
+/// - ``activeScreen`` - Currently active navigation destination
+/// - ``isSidebarOpen`` - Whether the sidebar is currently visible
+/// - ``onSessionSelected`` - Callback invoked when a session is tapped
+///
+/// ### View Sections
+/// - ``headerSection`` - App logo and backend connection status indicator
+/// - ``navigationItems`` - Primary navigation links (Home, System Monitor, Browse, Settings)
+/// - ``sessionsSection`` - Searchable, time-grouped session list with pull-to-refresh
+/// - ``bottomActions`` - "New Session" button that creates and opens a fresh session
+///
+/// ### Session Management
+/// - ``timeGroup(label:sessions:)`` - Section header and rows for sessions in a time period
+/// - ``loadingView`` - Skeleton placeholder shown while sessions are loading
+/// - ``emptyView`` - Empty state shown when no sessions match the current search
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
+    /// The currently active navigation destination.
     @Binding var activeScreen: ActiveScreen
+    /// Whether the sidebar overlay is currently open.
     @Binding var isSidebarOpen: Bool
+    /// Called when the user selects a session from the list.
     var onSessionSelected: (ChatSession) -> Void
 
     @State private var expandedProjects: Set<String> = []
+    /// The session currently being renamed, if any.
     @State private var sessionToRename: ChatSession?
+    @State private var showRenameAlert = false
+    /// Editable text used in the rename alert.
     @State private var renameText: String = ""
+    /// The session pending deletion confirmation, if any.
+    @State private var sessionToDelete: ChatSession?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -57,6 +87,20 @@ struct SidebarView: View {
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .alert("Delete Session", isPresented: Binding(
+            get: { sessionToDelete != nil },
+            set: { if !$0 { sessionToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let session = sessionToDelete {
+                    Task { await sessionsViewModel.deleteSession(session) }
+                }
+                sessionToDelete = nil
+            }
+            Button("Cancel", role: .cancel) { sessionToDelete = nil }
+        } message: {
+            Text("This will permanently delete this session and all its messages.")
         }
     }
 
@@ -204,12 +248,29 @@ struct SidebarView: View {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
                     Button(role: .destructive) {
+                        sessionToDelete = session
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
                         Task {
                             await sessionsViewModel.deleteSession(session)
+                            HapticManager.notification(.success)
                         }
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
+                }
+                .swipeActions(edge: .leading) {
+                    Button {
+                        renameText = session.name ?? ""
+                        sessionToRename = session
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                    .tint(.blue)
                 }
             }
         } label: {

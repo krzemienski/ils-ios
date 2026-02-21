@@ -101,8 +101,13 @@ struct MacChatView: View {
                 showCommandPalette = true
                 return .handled
             }
-            .onKeyPress(.return, phases: .down) { keyPress in
-                guard keyPress.modifiers.contains(.command) else { return .ignored }
+            .onKeyPress("e", phases: .down) { press in
+                guard press.modifiers.contains(.command) && press.modifiers.contains(.option) else { return .ignored }
+                NotificationCenter.default.post(name: .ilsToggleExpandAllToolCalls, object: nil)
+                return .handled
+            }
+            .onKeyPress(.return, phases: .down) { press in
+                guard press.modifiers.contains(.command) else { return .ignored }
                 if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming {
                     sendMessage()
                     return .handled

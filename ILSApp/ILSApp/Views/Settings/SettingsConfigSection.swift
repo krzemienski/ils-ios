@@ -69,6 +69,7 @@ struct SettingsConfigSection: View {
                     Toggle(isOn: Binding(
                         get: { config.alwaysThinkingEnabled ?? false },
                         set: { newValue in
+                            HapticManager.selection()
                             Task {
                                 _ = await viewModel.saveConfigToggle(key: "alwaysThinkingEnabled", value: newValue)
                                 await viewModel.loadConfig()
@@ -85,6 +86,7 @@ struct SettingsConfigSection: View {
                     Toggle(isOn: Binding(
                         get: { config.includeCoAuthoredBy ?? false },
                         set: { newValue in
+                            HapticManager.selection()
                             Task {
                                 _ = await viewModel.saveConfigToggle(key: "includeCoAuthoredBy", value: newValue)
                                 await viewModel.loadConfig()
@@ -297,7 +299,13 @@ struct SettingsConfigSection: View {
                 sectionLabel("Experimental")
 
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
-                    Toggle(isOn: $enableAgentTeams) {
+                    Toggle(isOn: Binding(
+                        get: { enableAgentTeams },
+                        set: { newValue in
+                            HapticManager.selection()
+                            enableAgentTeams = newValue
+                        }
+                    )) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Agent Teams")
                                 .font(.system(size: theme.fontBody, design: theme.fontDesign))

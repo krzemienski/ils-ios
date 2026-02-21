@@ -109,6 +109,18 @@ struct AssistantCard: View {
             }
         }
         .accessibilityLabel("Assistant said: \(message.text.prefix(100))")
+        #if os(macOS)
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ILSToggleExpandAllToolCalls"))) { _ in
+            let newValue = (expandAllToolCalls == true) ? false : true
+            if reduceMotion {
+                expandAllToolCalls = newValue
+            } else {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    expandAllToolCalls = newValue
+                }
+            }
+        }
+        #endif
     }
 
     // MARK: - Metadata Row

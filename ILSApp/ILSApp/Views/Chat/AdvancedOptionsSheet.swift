@@ -182,18 +182,30 @@ struct AdvancedOptionsSheet: View {
             Toggle("Continue Previous Session", isOn: $config.continueConversation)
                 .foregroundColor(theme.textPrimary)
                 .accessibilityLabel("Continue previous session toggle")
+                .onChange(of: config.continueConversation) { _, _ in
+                    HapticManager.selection()
+                }
 
             Toggle("Disable Session Persistence", isOn: $config.noSessionPersistence)
                 .foregroundColor(theme.textPrimary)
                 .accessibilityLabel("Disable session persistence toggle")
+                .onChange(of: config.noSessionPersistence) { _, _ in
+                    HapticManager.selection()
+                }
 
             Toggle("Stream Partial Messages", isOn: $config.includePartialMessages)
                 .foregroundColor(theme.textPrimary)
                 .accessibilityLabel("Stream partial messages toggle")
+                .onChange(of: config.includePartialMessages) { _, _ in
+                    HapticManager.selection()
+                }
 
             Toggle("Debug Mode", isOn: $config.debug)
                 .foregroundColor(theme.textPrimary)
                 .accessibilityLabel("Debug mode toggle")
+                .onChange(of: config.debug) { _, _ in
+                    HapticManager.selection()
+                }
 
             TextField("Agent", text: $config.agent)
                 .foregroundColor(theme.textPrimary)

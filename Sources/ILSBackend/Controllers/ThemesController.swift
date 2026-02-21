@@ -3,6 +3,14 @@ import Fluent
 import ILSShared
 import Foundation
 
+/// Controller for custom theme management operations.
+///
+/// Routes:
+/// - `GET /themes`: List all custom themes (paginated)
+/// - `POST /themes`: Create a new custom theme
+/// - `GET /themes/:id`: Get a single custom theme by ID
+/// - `PUT /themes/:id`: Update an existing custom theme
+/// - `DELETE /themes/:id`: Delete a custom theme
 struct ThemesController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let themes = routes.grouped("themes")
@@ -14,11 +22,14 @@ struct ThemesController: RouteCollection {
         themes.delete(":id", use: delete)
     }
 
-    /// GET /themes - List all custom themes
+    /// List all custom themes, sorted by most recently updated.
     ///
-    /// Query parameters:
+    /// Supports pagination via query parameters:
     /// - `page`: Page number (1-based, default 1)
     /// - `limit`: Items per page (default 50, max 200)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with paginated list of CustomTheme objects
     @Sendable
     func index(req: Request) async throws -> APIResponse<ListResponse<CustomTheme>> {
         let themes = try await ThemeModel.query(on: req.db)
@@ -37,7 +48,10 @@ struct ThemesController: RouteCollection {
         )
     }
 
-    /// POST /themes - Create a new custom theme
+    /// Create a new custom theme with the provided colors, typography, and layout properties.
+    ///
+    /// - Parameter req: Vapor Request with CreateCustomThemeRequest body
+    /// - Returns: APIResponse with the newly created CustomTheme
     @Sendable
     func create(req: Request) async throws -> APIResponse<CustomTheme> {
         let input = try req.content.decode(CreateCustomThemeRequest.self)
@@ -68,7 +82,10 @@ struct ThemesController: RouteCollection {
         )
     }
 
-    /// GET /themes/:id - Get a single custom theme by ID
+    /// Get a single custom theme by its UUID.
+    ///
+    /// - Parameter req: Vapor Request with `id` route parameter
+    /// - Returns: APIResponse with the matching CustomTheme
     @Sendable
     func show(req: Request) async throws -> APIResponse<CustomTheme> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -85,7 +102,10 @@ struct ThemesController: RouteCollection {
         )
     }
 
-    /// PUT /themes/:id - Update an existing custom theme
+    /// Update an existing custom theme; only provided fields are changed.
+    ///
+    /// - Parameter req: Vapor Request with `id` route parameter and UpdateCustomThemeRequest body
+    /// - Returns: APIResponse with the updated CustomTheme
     @Sendable
     func update(req: Request) async throws -> APIResponse<CustomTheme> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -141,7 +161,10 @@ struct ThemesController: RouteCollection {
         )
     }
 
-    /// DELETE /themes/:id - Delete a custom theme
+    /// Delete a custom theme by its UUID.
+    ///
+    /// - Parameter req: Vapor Request with `id` route parameter
+    /// - Returns: APIResponse with DeletedResponse confirming deletion
     @Sendable
     func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let id = req.parameters.get("id", as: UUID.self) else {

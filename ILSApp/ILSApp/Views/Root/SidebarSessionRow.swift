@@ -8,7 +8,10 @@ struct SidebarSessionRow: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            HapticManager.selection()
+            onTap()
+        }) {
             HStack(spacing: theme.spacingSM) {
                 // Active indicator
                 Circle()

@@ -23,6 +23,7 @@ struct BrowserView: View {
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""
     @State private var mcpScope: String = "all"
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -79,6 +80,7 @@ struct BrowserView: View {
         HStack(spacing: 0) {
             ForEach(BrowserSegment.allCases, id: \.self) { seg in
                 Button {
+                    HapticManager.selection()
                     if reduceMotion {
                         segment = seg
                     } else {
@@ -130,6 +132,7 @@ struct BrowserView: View {
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 #endif
+                .focused($isSearchFocused)
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
@@ -146,6 +149,7 @@ struct BrowserView: View {
         .padding(.vertical, theme.spacingSM)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
         .onChange(of: searchText) { _, text in
             mcpVM.searchText = text
             skillsVM.searchText = text
@@ -162,6 +166,7 @@ struct BrowserView: View {
             HStack(spacing: 0) {
                 ForEach(["all", "user", "project", "local"], id: \.self) { scope in
                     Button {
+                        HapticManager.selection()
                         mcpScope = scope
                     } label: {
                         Text(scope.capitalized)

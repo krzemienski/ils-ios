@@ -6,7 +6,7 @@ actor APIClient {
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
     nonisolated private let encoder: JSONEncoder
-    private var cache: [String: CacheEntry] = [:]
+    private let cache = NSCache<NSString, CacheEntryObject>()
     private let defaultCacheTTL: TimeInterval = 30 // 30 seconds
 
     /// Optional API key for authenticated requests.
@@ -16,17 +16,39 @@ actor APIClient {
     /// Keychain key for persisting the API key (migrated from UserDefaults).
     private static let apiKeyKeychainKey = "ils_api_key"
 
-    private struct CacheEntry {
-        let data: Data
+    /// NSCache-backed entry storing the decoded value to avoid re-decoding on cache hits.
+    private final class CacheEntryObject: NSObject {
+        let value: Any
         let timestamp: Date
+
+        init(value: Any, timestamp: Date) {
+            self.value = value
+            self.timestamp = timestamp
+        }
 
         func isValid(ttl: TimeInterval) -> Bool {
             Date().timeIntervalSince(timestamp) < ttl
         }
     }
 
-    init(baseURL: String = "http://localhost:9999") {
+    /// Per-endpoint TTL: reference data lives longer than session/volatile data.
+    private func ttl(for path: String) -> TimeInterval {
+        if path.hasPrefix("/skills") || path.hasPrefix("/mcp") || path.hasPrefix("/plugins") || path.hasPrefix("/themes") {
+            return 300 // 5 minutes for static reference data
+        }
+        if path.hasPrefix("/stats") || path.hasPrefix("/sessions") {
+            return 15 // 15 seconds for frequently-changing data
+        }
+        if path.hasPrefix("/config") {
+            return 60 // 1 minute for configuration
+        }
+        return defaultCacheTTL
+    }
+
+    init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
+        // Cap cache to prevent unbounded memory growth
+        cache.countLimit = 100
         // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
         if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
             self.apiKey = keychainKey
@@ -43,7 +65,7 @@ actor APIClient {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10 // 10 seconds per request
         config.timeoutIntervalForResource = 30 // 30 seconds total
-        config.waitsForConnectivity = false
+        config.waitsForConnectivity = true
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = true
         self.session = URLSession(configuration: config)
@@ -95,14 +117,18 @@ actor APIClient {
     // MARK: - Health Check
 
     func healthCheck() async throws -> String {
-        let url = URL(string: "\(baseURL)/health")!
+        guard let url = URL(string: "\(baseURL)/health") else {
+            throw APIError.invalidURL("\(baseURL)/health")
+        }
         let (data, _) = try await session.data(from: url)
         return String(data: data, encoding: .utf8) ?? ""
     }
 
     /// Fetch structured health info (enhanced endpoint)
     func getHealth() async throws -> HealthResponse {
-        let url = URL(string: "\(baseURL)/health")!
+        guard let url = URL(string: "\(baseURL)/health") else {
+            throw APIError.invalidURL("\(baseURL)/health")
+        }
         let (data, response) = try await session.data(from: url)
         try validateResponse(response, data: data)
         return try decoder.decode(HealthResponse.self, from: data)
@@ -111,15 +137,19 @@ actor APIClient {
     // MARK: - Generic Request Methods
 
     func get<T: Decodable>(_ path: String, cacheTTL: TimeInterval? = nil) async throws -> T {
-        let cacheKey = path
-        let ttl = cacheTTL ?? defaultCacheTTL
+        let cacheKey = path as NSString
+        let effectiveTTL = cacheTTL ?? ttl(for: path)
 
-        // Check cache
-        if let entry = cache[cacheKey], entry.isValid(ttl: ttl) {
-            return try decoder.decode(T.self, from: entry.data)
+        // Return the already-decoded value on cache hit — no JSON re-parsing
+        if let entry = cache.object(forKey: cacheKey),
+           entry.isValid(ttl: effectiveTTL),
+           let cached = entry.value as? T {
+            return cached
         }
 
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -128,14 +158,16 @@ actor APIClient {
         let (data, response) = try await performWithRetry(request: request)
         try validateResponse(response, data: data)
 
-        // Cache the raw data
-        cache[cacheKey] = CacheEntry(data: data, timestamp: Date())
-
-        return try decoder.decode(T.self, from: data)
+        let decoded: T = try decoder.decode(T.self, from: data)
+        // Store decoded value; NSCache evicts entries under memory pressure automatically
+        cache.setObject(CacheEntryObject(value: decoded, timestamp: Date()), forKey: cacheKey)
+        return decoded
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -153,7 +185,9 @@ actor APIClient {
     }
 
     func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -171,7 +205,9 @@ actor APIClient {
     }
 
     func delete<T: Decodable>(_ path: String) async throws -> T {
-        let url = URL(string: "\(baseURL)/api/v1\(path)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -191,7 +227,9 @@ actor APIClient {
     /// Execute a raw HTTP request without decoding the response.
     /// Used by SyncCoordinator to replay queued operations.
     func rawRequest(method: String, endpoint: String, body: Data?) async throws {
-        let url = URL(string: "\(baseURL)/api/v1\(endpoint)")!
+        guard let url = URL(string: "\(baseURL)/api/v1\(endpoint)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(endpoint)")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -220,20 +258,20 @@ actor APIClient {
     /// Removes the exact resource path and its parent list endpoint.
     private func invalidateCacheForMutation(path: String) {
         // Remove exact path (e.g. /sessions/abc-123)
-        cache.removeValue(forKey: path)
+        cache.removeObject(forKey: path as NSString)
         // Remove list endpoint (e.g. /sessions)
         let components = path.split(separator: "/")
         if components.count >= 1 {
             let listPath = "/\(components[0])"
-            cache.removeValue(forKey: listPath)
+            cache.removeObject(forKey: listPath as NSString)
         }
     }
 
     func invalidateCache(for path: String? = nil) {
         if let path = path {
-            cache.removeValue(forKey: path)
+            cache.removeObject(forKey: path as NSString)
         } else {
-            cache.removeAll()
+            cache.removeAllObjects()
         }
     }
 
@@ -327,6 +365,7 @@ private struct ServerErrorBody: Decodable {
 // MARK: - Error Types
 
 enum APIError: Error, LocalizedError {
+    case invalidURL(String)
     case invalidResponse
     case httpError(statusCode: Int)
     case decodingError(Error)
@@ -336,6 +375,8 @@ enum APIError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .invalidURL(let urlString):
+            return "Invalid URL: \(urlString)"
         case .invalidResponse:
             return "Invalid response from server"
         case .unauthorized:
@@ -384,7 +425,7 @@ enum APIError: Error, LocalizedError {
         case .networkError:
             // Network errors are generally retriable
             return true
-        case .invalidResponse, .decodingError, .unauthorized:
+        case .invalidURL, .invalidResponse, .decodingError, .unauthorized:
             // These indicate a fundamental problem, not retriable
             return false
         case .serverError(let code, _):
