@@ -299,63 +299,31 @@ struct BrowserView: View {
                 )
             } else {
                 ForEach(items) { plugin in
-                    HStack(spacing: theme.spacingMD) {
-                        // Entity dot
-                        Circle()
-                            .fill(theme.entityPlugin)
-                            .frame(width: 10, height: 10)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(plugin.name)
-                                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                                    .foregroundStyle(theme.textPrimary)
-                                    .lineLimit(1)
-
-                                Spacer()
-
-                                // Show progress indicator if installing
-                                if pluginsVM.installingPlugins.contains(plugin.name) {
-                                    ProgressView()
-                                        .progressViewStyle(.circular)
-                                        .scaleEffect(0.8)
+                    NavigationLink {
+                        PluginConfigView(
+                            plugin: plugin,
+                            onToggleEnabled: { p in
+                                if p.isEnabled {
+                                    await pluginsVM.disablePlugin(p)
                                 } else {
-                                    // Status dot + text
-                                    HStack(spacing: 4) {
-                                        Circle()
-                                            .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
-                                            .frame(width: 6, height: 6)
-                                        Text(plugin.isEnabled ? "Enabled" : "Disabled")
-                                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                            .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
-                                    }
+                                    await pluginsVM.enablePlugin(p)
                                 }
+                            },
+                            onUninstall: { p in
+                                await pluginsVM.uninstallPlugin(p)
                             }
-
-                            Text(plugin.description ?? "No description")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textSecondary)
-                                .lineLimit(1)
-
-                            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
-                                Text(marketplace)
-                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                                    .foregroundStyle(theme.textTertiary)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(theme.bgTertiary)
-                                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                            }
-                        }
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
+                        )
+                    } label: {
+                        browserRow(
+                            name: plugin.name,
+                            subtitle: plugin.description ?? "No description",
+                            status: plugin.isEnabled ? "Enabled" : "Disabled",
+                            statusColor: plugin.isEnabled ? theme.success : theme.textTertiary,
+                            entityColor: theme.entityPlugin,
+                            badge: plugin.marketplace
+                        )
                     }
-                    .padding(theme.spacingMD)
-                    .modifier(GlassCard())
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
+                    .buttonStyle(.plain)
                 }
             }
         }

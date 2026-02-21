@@ -99,6 +99,7 @@
 		3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */; };
 		3ECD0B190A2B788BC969453C /* ChatInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */; };
 		40997FC49BFC57C456944DED /* PluginConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3BC0DD1C11AD1171B166F7 /* PluginConfigView.swift */; };
+		B2A3C4D5E6F78901BCDEF234 /* PluginConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3BC0DD1C11AD1171B166F7 /* PluginConfigView.swift */; };
 		40F5BFCA27CF950AED4747DD /* ThemeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05E3DDA4E3B80E90339047E5 /* ThemeEditorView.swift */; };
 		415FA9BEB8D7C968A1383F44 /* ObsidianTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20728850B297F9D25F6F821B /* ObsidianTheme.swift */; };
 		42C80AD52ED864B490D75042 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */; };
@@ -1576,6 +1577,7 @@
 				7DD00BA344A1692F5ABD2093 /* PermissionRequestModal.swift in Sources */,
 				38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */,
 				C846CD1BD5DBBFE74F0E364D /* PluginsViewModel.swift in Sources */,
+				B2A3C4D5E6F78901BCDEF234 /* PluginConfigView.swift in Sources */,
 				0EFDA4E7DCAE34C2C86A459A /* PollingManager.swift in Sources */,
 				AD9610B7C1DA26BBA4952DE0 /* ProcessListView.swift in Sources */,
 				24D62F464A17880544BFF3F0 /* ProgressRing.swift in Sources */,

@@ -312,9 +312,9 @@ struct PluginConfigView: View {
 
     private func checkForUpdates() async {
         isCheckingUpdates = true
-        // Simulate network delay for update check
-        try? await Task.sleep(for: .seconds(1.5))
-        updateAvailable = Bool.random()
-        isCheckingUpdates = false
+        defer { isCheckingUpdates = false }
+        // TODO: Connect to real update endpoint when available
+        try? await Task.sleep(for: .seconds(1.0))
+        updateAvailable = false
     }
 }

@@ -11,7 +11,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
-    case fleet = "Fleet"
+    case fleet = "Profiles"
     case themes = "Themes"
     case settings = "Settings"
 
@@ -23,7 +23,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
-        case .fleet: return "server.rack"
+        case .fleet: return "desktopcomputer"
         case .themes: return "paintpalette.fill"
         case .settings: return "gearshape.fill"
         }

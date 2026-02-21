@@ -42,11 +42,19 @@ struct ThemesListView: View {
             await viewModel.loadThemes()
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            #if os(iOS)
+            ToolbarItem(placement: .topBarTrailing) {
                 Button(action: { showingImporter = true }) {
                     Label("Import", systemImage: "square.and.arrow.down")
                 }
             }
+            #else
+            ToolbarItem {
+                Button(action: { showingImporter = true }) {
+                    Label("Import", systemImage: "square.and.arrow.down")
+                }
+            }
+            #endif
 
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { showingNewTheme = true }) {
@@ -55,10 +63,16 @@ struct ThemesListView: View {
             }
         }
         .sheet(isPresented: $showingNewTheme) {
-            Text("New Theme Editor - Coming Soon")
+            NavigationStack {
+                ThemeEditorView()
+            }
+            .environment(viewModel)
         }
         .sheet(item: $selectedTheme) { theme in
-            Text("Theme Editor for \(theme.name) - Coming Soon")
+            NavigationStack {
+                ThemeEditorView(theme: theme)
+            }
+            .environment(viewModel)
         }
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {
@@ -145,6 +159,7 @@ struct ThemesListView: View {
 
 struct ThemeRowView: View {
     let theme: CustomTheme
+    @Environment(\.theme) private var appTheme: ThemeSnapshot
 
     private static let relativeDateFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
@@ -156,60 +171,60 @@ struct ThemeRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(theme.name)
-                    .font(ILSTheme.headlineFont)
+                    .font(.system(size: appTheme.fontBody, weight: .semibold, design: appTheme.fontDesign))
+                    .foregroundStyle(appTheme.textPrimary)
 
                 Spacer()
 
                 if let version = theme.version {
                     Text("v\(version)")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.secondaryText)
+                        .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                        .foregroundStyle(appTheme.textSecondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(ILSTheme.tertiaryBackground)
-                        .cornerRadius(ILSTheme.cornerRadiusS)
+                        .background(appTheme.bgTertiary)
+                        .clipShape(RoundedRectangle(cornerRadius: appTheme.cornerRadiusSmall))
                 }
             }
 
             if let description = theme.description {
                 Text(description)
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.secondaryText)
+                    .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                    .foregroundStyle(appTheme.textSecondary)
                     .lineLimit(2)
             }
 
             if let author = theme.author {
                 Text("by \(author)")
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
+                    .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                    .foregroundStyle(appTheme.textTertiary)
                     .lineLimit(1)
             }
 
             HStack {
-                // Show which token categories are customized
                 if theme.colors != nil {
                     Label("Colors", systemImage: "paintpalette.fill")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.tertiaryText)
+                        .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                        .foregroundStyle(appTheme.textTertiary)
                 }
 
                 if theme.typography != nil {
                     Label("Typography", systemImage: "textformat")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.tertiaryText)
+                        .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                        .foregroundStyle(appTheme.textTertiary)
                 }
 
                 if theme.spacing != nil {
                     Label("Spacing", systemImage: "ruler")
-                        .font(ILSTheme.captionFont)
-                        .foregroundColor(ILSTheme.tertiaryText)
+                        .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                        .foregroundStyle(appTheme.textTertiary)
                 }
 
                 Spacer()
 
                 Text(formattedDate(theme.updatedAt))
-                    .font(ILSTheme.captionFont)
-                    .foregroundColor(ILSTheme.tertiaryText)
+                    .font(.system(size: appTheme.fontCaption, design: appTheme.fontDesign))
+                    .foregroundStyle(appTheme.textTertiary)
             }
         }
         .padding(.vertical, 4)

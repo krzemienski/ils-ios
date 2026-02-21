@@ -147,9 +147,7 @@ struct SidebarView: View {
             if enableAgentTeams {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
-            #if DEBUG
-            sidebarNavItem(icon: "server.rack", label: "Fleet", screen: .fleet)
-            #endif
+            sidebarNavItem(icon: "desktopcomputer", label: "Profiles", screen: .fleet)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)

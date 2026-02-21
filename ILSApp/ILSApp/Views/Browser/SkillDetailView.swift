@@ -45,41 +45,43 @@ struct SkillDetailView: View {
         .inlineNavigationBarTitle()
         #endif
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                HStack(spacing: theme.spacingSM) {
-                    Button {
-                        if isEditing {
-                            saveEdit()
-                        } else {
-                            startEditing()
+            if skill.source == .local || skill.source == .github {
+                ToolbarItem(placement: .primaryAction) {
+                    HStack(spacing: theme.spacingSM) {
+                        Button {
+                            if isEditing {
+                                saveEdit()
+                            } else {
+                                startEditing()
+                            }
+                        } label: {
+                            if isSaving {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(theme.accent)
+                            } else {
+                                Image(systemName: isEditing ? "checkmark" : "pencil")
+                                    .foregroundStyle(theme.accent)
+                            }
                         }
-                    } label: {
-                        if isSaving {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(theme.accent)
-                        } else {
-                            Image(systemName: isEditing ? "checkmark" : "pencil")
-                                .foregroundStyle(theme.accent)
-                        }
-                    }
-                    .disabled(isSaving || isDeleting)
-                    .accessibilityLabel(isEditing ? "Save" : "Edit")
+                        .disabled(isSaving || isDeleting)
+                        .accessibilityLabel(isEditing ? "Save" : "Edit")
 
-                    Button {
-                        showDeleteAlert = true
-                    } label: {
-                        if isDeleting {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .tint(theme.error)
-                        } else {
-                            Image(systemName: "trash")
-                                .foregroundStyle(theme.error)
+                        Button {
+                            showDeleteAlert = true
+                        } label: {
+                            if isDeleting {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(theme.error)
+                            } else {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(theme.error)
+                            }
                         }
+                        .disabled(isSaving || isDeleting)
+                        .accessibilityLabel("Delete")
                     }
-                    .disabled(isSaving || isDeleting)
-                    .accessibilityLabel("Delete")
                 }
             }
         }

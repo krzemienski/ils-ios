@@ -32,7 +32,7 @@ final class FleetViewModel {
             hosts = fleet.hosts
             activeHostId = fleet.activeHostId
         } catch {
-            loadError = "Failed to load fleet hosts: \(error.localizedDescription)"
+            loadError = "Failed to load backend profiles: \(error.localizedDescription)"
         }
     }
 
