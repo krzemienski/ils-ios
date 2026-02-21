@@ -171,6 +171,7 @@ struct ChatStreamingLockScreenView: View {
 @available(iOS 16.2, *)
 private struct StreamingDotsView: View {
     @State private var dotCount = 0
+    @State private var timer: Timer?
 
     var body: some View {
         Text(String(repeating: ".", count: (dotCount % 3) + 1))
@@ -178,10 +179,13 @@ private struct StreamingDotsView: View {
             .foregroundStyle(LiveActivityColors.success)
             .frame(width: 20, alignment: .leading)
             .onAppear {
-                // Timer-based animation for dot cycling
-                Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
                     dotCount += 1
                 }
+            }
+            .onDisappear {
+                timer?.invalidate()
+                timer = nil
             }
     }
 }

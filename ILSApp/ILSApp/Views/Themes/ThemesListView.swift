@@ -17,15 +17,7 @@ struct ThemesListView: View {
                 ErrorStateView(error: error) {
                     await viewModel.retryLoadThemes()
                 }
-            } else if viewModel.themes.isEmpty && !viewModel.isLoading {
-                EmptyStateView(
-                    title: "No Custom Themes",
-                    systemImage: "paintpalette",
-                    description: "Create a custom theme to personalize your app",
-                    actionTitle: "Create Theme"
-                ) {
-                    showingNewTheme = true
-                }
+                .listRowBackground(Color.clear)
             } else {
                 ForEach(viewModel.themes) { theme in
                     ThemeRowView(theme: theme)
@@ -37,6 +29,7 @@ struct ThemesListView: View {
                 .onDelete(perform: deleteTheme)
             }
         }
+        .scrollContentBackground(.hidden)
         .navigationTitle("Custom Themes")
         .refreshable {
             await viewModel.loadThemes()
@@ -77,6 +70,15 @@ struct ThemesListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.themes.isEmpty {
                 ProgressView("Loading themes...")
+            } else if viewModel.themes.isEmpty && !viewModel.isLoading && viewModel.error == nil {
+                EmptyStateView(
+                    title: "No Custom Themes",
+                    systemImage: "paintpalette",
+                    description: "Create a custom theme to personalize your app",
+                    actionTitle: "Create Theme"
+                ) {
+                    showingNewTheme = true
+                }
             }
         }
         .task {
