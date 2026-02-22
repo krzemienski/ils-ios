@@ -1,10 +1,10 @@
 # Project State — ILS iOS/macOS Cross-Platform Audit
 
 ## Current Phase
-Phase 3: Settings & Config
+Phase 5: System Monitor + Profiles
 
 ## Progress
-Phase 2 Plan 1/1 COMPLETE | Phases 2/10
+Phase 4 Plan 1/1 COMPLETE | Phases 4/10
 
 ## Phase Status
 
@@ -12,8 +12,8 @@ Phase 2 Plan 1/1 COMPLETE | Phases 2/10
 |-------|--------|---------|-----------|
 | 1. Discovery & Research | COMPLETE | 2026-02-20 | 2026-02-21 |
 | 2. Navigation + Layout | COMPLETE | 2026-02-21 | 2026-02-21 |
-| 3. Settings & Config | IN PROGRESS | 2026-02-21 | — |
-| 4. Skills/Plugins/Hooks/Themes | PLANNED | — | — |
+| 3. Settings & Config | COMPLETE | 2026-02-21 | 2026-02-21 |
+| 4. Skills/Plugins/Hooks/Themes | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 5. System Monitor + Profiles | PLANNED | — | — |
 | 6. Backend API Audit | PLANNED | — | — |
 | 7. Convergence | PLANNED | — | — |
@@ -50,6 +50,16 @@ Phase 2 Plan 1/1 COMPLETE | Phases 2/10
 | VG-06 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
 | VG-07 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
 | VG-08 | PASS | `evidence/phase-02-streams/stream1/navigation-verification.md` |
+| VG-09 | PASS | `evidence/phase-02-streams/stream2/vg09-config-flow.md` |
+| VG-10 | PASS | `evidence/phase-02-streams/stream2/vg10-inheritance-ui.md` |
+| VG-11 | PASS | `evidence/phase-02-streams/stream2/vg11-settings-fixes.md` |
+| VG-12 | PASS | Skills API: 1336 clean skills, 0 contamination, no node_modules |
+| VG-13 | PASS | PluginConfigView + NavigationLink in BrowserView |
+| VG-14 | PASS | PluginConfigView uninstall confirmation + PluginsViewModel |
+| VG-15 | PASS | MCPServerDetailView: masking + reveal + 5s auto-hide |
+| VG-16 | PASS | HooksManagementView + NavigationLink from SettingsConfigSection |
+| VG-17 | PASS | CustomThemeAdapter + ThemePickerView Built-in/Custom sections |
+| VG-18 | PASS | githubBrowseSection in BrowserView skillsContent |
 
 ## Decisions
 
@@ -64,6 +74,15 @@ Phase 2 Plan 1/1 COMPLETE | Phases 2/10
 | 02-02 | Keep hamburger button in chat detail — sidebar-based app pattern, not push/pop |
 | 02-02 | Shared SessionsViewModel owned by SidebarRootView for data consistency (REQ-15) |
 | 02-02 | BrowserView accepts initialSegment for tab-specific quick action navigation |
+| 03-03 | Option C for config enrichment: no backend change, iOS handles nil with InheritanceBadge |
+| 03-03 | Card-based settings layout (not Form-based) with themed section components |
+| 03-03 | Interactive toggles for Extended Thinking and Include Co-Author via saveConfigToggle() |
+| 03-03 | ClaudeModel.allKnown populates model picker (not hardcoded 3-item array) |
+| 03-03 | 5 SettingsInfoButton tooltips (exceeds REQ-10 minimum of 3) |
+| 04-04 | Stop recursing into skill subdirs when SKILL.md found (examples/ are docs, not skills) |
+| 04-04 | CustomThemeAdapter falls back to ObsidianTheme for nil tokens (no crash on partial themes) |
+| 04-04 | Custom theme IDs prefixed "custom-" to distinguish from built-in themes in ThemePickerView |
+| 04-04 | MCP auto-hide uses Task-based timer stored in @State dict, cancelled on manual hide |
 
 ## Performance Metrics
 
@@ -71,11 +90,13 @@ Phase 2 Plan 1/1 COMPLETE | Phases 2/10
 |-------|------|----------|-------|-------|
 | 01 | 01 | 11min | 4 | 4 |
 | 02 | 02 | 40min | 6 | 8 |
+| 03 | 03 | ~3hrs | 6 | 3 modified + 32 evidence |
+| 04 | 04 | ~90min | 7 | 9 modified + 1 created |
 
 ## Session Continuity
 
-Last session: 2026-02-21
-Stopped at: Completed 02-02-PLAN.md (Phase 2 Navigation + Layout). Phase 3 ready.
+Last session: 2026-02-22
+Stopped at: Completed 04-PLAN.md (Phase 4 Skills/Plugins/Hooks/Themes). Phase 5 ready.
 Resume file: N/A
 
 ## Quick Tasks Completed
