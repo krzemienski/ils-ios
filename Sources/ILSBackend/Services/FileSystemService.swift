@@ -109,7 +109,7 @@ struct FileSystemService {
 
     // MARK: - Path Properties (exposed for backward compatibility)
 
-    /// User's home directory path (e.g., `/Users/username`)
+    /// User's home directory path (resolves `~` to absolute path)
     var homeDirectory: String {
         config.homeDirectory
     }
