@@ -42,6 +42,8 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 18 P02 | 2min | 2 tasks | 3 files |
 | Phase 18 P03 | 5min | 2 tasks | 4 files |
 | Phase 18 P04 | 6min | 2 tasks | 3 files |
+| Phase 19 P01 | 2min | 2 tasks | 4 files |
+| Phase 19 P02 | 2min | 2 tasks | 3 files |
 | Phase 19 P03 | 1min | 1 tasks | 1 files |
 
 ## Accumulated Context
@@ -63,6 +65,8 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 18-02]: Reachability-only health check for MCP (no loadServers), 1.5x backoff multiplier for Teams (15s-120s), Live Activity timer 1.0s
 - [Phase 18-03]: AppLogger.shared.error() for macOS API error logging; SQLiteConfiguration(enableForeignKeys: true) for pool-level FK enforcement; Set<String> for O(1) theme availability lookup
 - [Phase 18-04]: Used ILSShared EmptyBody instead of private duplicate; followed configure(client:) pattern from ProjectsViewModel; kept projectsViewModel in View for UI binding
+- [Phase 19-01]: Task.cancel() safe from nonisolated deinit -- no workaround needed; @ObservationIgnored added to SystemMetricsViewModel.processRefreshTask; Task.sleep(for:) for readable polling in HostProfilesViewModel
+- [Phase 19-02]: nonisolated + Task { @MainActor in } for NotificationManager delegate; Task-based debounce replacing GCD DispatchWorkItem; windowWillClose for delegate lifecycle cleanup
 - [Phase 19-03]: Removed [weak self] entirely from Task.detached watchdog -- watchdog needs no reference to SSEClient, only Sendable LastActivityTracker actor
 
 ### Phase 18 Entry Checklist
@@ -98,6 +102,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 19-03-PLAN.md
+Stopped at: Completed 19-01-PLAN.md (re-executed with code changes)
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (165 issues, full detail)

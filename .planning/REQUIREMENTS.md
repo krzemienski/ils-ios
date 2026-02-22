@@ -11,9 +11,9 @@
 
 - [x] **CONC-01** [CRITICAL]: Convert AppLogger from `@unchecked Sendable` to actor or `OSAllocatedUnfairLock` — `Services/AppLogger.swift:4`
 - [x] **CONC-02** [CRITICAL]: Add `@MainActor` to SyntaxHighlighter enum, remove `nonisolated(unsafe)` on `highlighterCache` — `Utils/SyntaxHighlighter.swift:14`
-- [ ] **CONC-03** [HIGH]: Fix SkillsViewModel `nonisolated(unsafe)` on Task property — `ViewModels/SkillsViewModel.swift:39`
-- [ ] **CONC-04** [HIGH]: Fix MCPViewModel `nonisolated(unsafe)` on healthTimer — `ViewModels/MCPViewModel.swift:17`
-- [ ] **CONC-05** [HIGH]: Fix SystemMetricsViewModel `nonisolated(unsafe)` pattern — `ViewModels/SystemMetricsViewModel.swift:34`
+- [x] **CONC-03** [HIGH]: Fix SkillsViewModel `nonisolated(unsafe)` on Task property — `ViewModels/SkillsViewModel.swift:39`
+- [x] **CONC-04** [HIGH]: Fix MCPViewModel `nonisolated(unsafe)` on healthTimer — `ViewModels/MCPViewModel.swift:17`
+- [x] **CONC-05** [HIGH]: Fix SystemMetricsViewModel `nonisolated(unsafe)` pattern — `ViewModels/SystemMetricsViewModel.swift:34`
 - [ ] **CONC-06** [HIGH]: Fix NotificationManager `@preconcurrency` delegate isolation mismatch — `ILSMacApp/Managers/NotificationManager.swift:151`
 - [ ] **CONC-07** [HIGH]: Fix WindowAccessor `DispatchQueue.main.async` accessing @MainActor state — `ILSMacApp/Views/SessionWindowView.swift:101`
 - [ ] **CONC-08** [HIGH]: Fix WindowFrameDelegate.debounceSave GCD accessing @MainActor — `ILSMacApp/Managers/WindowManager.swift:252`
@@ -194,7 +194,7 @@
 
 ## Memory Lifecycle (4 issues: 0 CRITICAL, 1 HIGH, 2 MEDIUM, 1 LOW)
 
-- [ ] **MEM-01** [HIGH]: Migrate HostProfilesViewModel Timer to Task — `ViewModels/HostProfilesViewModel.swift:72`
+- [x] **MEM-01** [HIGH]: Migrate HostProfilesViewModel Timer to Task — `ViewModels/HostProfilesViewModel.swift:72`
 - [ ] **MEM-02** [MEDIUM]: Clean up WindowFrameDelegate when OS closes window
 - [ ] **MEM-03** [MEDIUM]: Add SystemMetricsViewModel deinit cancellation
 - [ ] **MEM-04** [LOW]: Minor memory lifecycle improvement
@@ -248,9 +248,9 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 |-------------|-------|--------|
 | CONC-01 | Phase 18 | Complete |
 | CONC-02 | Phase 18 | Complete |
-| CONC-03 | Phase 19 | Pending |
-| CONC-04 | Phase 19 | Pending |
-| CONC-05 | Phase 19 | Pending |
+| CONC-03 | Phase 19 | Complete |
+| CONC-04 | Phase 19 | Complete |
+| CONC-05 | Phase 19 | Complete |
 | CONC-06 | Phase 19 | Pending |
 | CONC-07 | Phase 19 | Pending |
 | CONC-08 | Phase 19 | Pending |
@@ -395,7 +395,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | SEC-03 | Phase 23 | Pending |
 | SEC-04 | Phase 23 | Pending |
 | SEC-05 | Phase 23 | Pending |
-| MEM-01 | Phase 19 | Pending |
+| MEM-01 | Phase 19 | Complete |
 | MEM-02 | Phase 19 | Pending |
 | MEM-03 | Phase 23 | Pending |
 | MEM-04 | Phase 23 | Pending |
