@@ -55,8 +55,13 @@ class DashboardViewModel {
             }
         }
 
-        await loadStats()
-        await loadRecentActivity()
+        // SPERF-04: Run loadStats and loadRecentActivity in parallel.
+        // Both write to different @Observable properties (stats vs recentSessions).
+        // The actual network calls run on the APIClient actor, so async let allows
+        // both requests to be in-flight simultaneously rather than waiting sequentially.
+        async let statsResult: Void = loadStats()
+        async let recentResult: Void = loadRecentActivity()
+        _ = await (statsResult, recentResult)
         computeTotalCost()
 
         // Cache the fresh recent sessions

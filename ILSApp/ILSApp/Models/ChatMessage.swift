@@ -2,6 +2,23 @@ import Foundation
 
 // MARK: - Chat Message Models
 
+/// SPERF-03: Copy Overhead Analysis
+///
+/// ChatMessage is a value type with 11 stored properties (~200 bytes per instance):
+///   2 UUIDs, 1 Bool, 2 Strings, 2 small arrays, 2 optionals, 2 numbers.
+///
+/// During streaming, the ChatViewModel accumulates text into a local `inout ChatMessage`
+/// variable and appends to the `messages` array only once at the end of streaming.
+/// This means per-token struct copies do NOT occur during streaming -- only local
+/// mutation of a stack-allocated value.
+///
+/// The String `text` property benefits from Swift's copy-on-write semantics, so
+/// even when the final message is appended to the array, the String buffer is shared
+/// until the next mutation. The `toolCalls` and `toolResults` arrays are typically
+/// empty during text streaming, adding negligible copy cost.
+///
+/// Conclusion: The struct value type is appropriate here. The streaming path is already
+/// optimal (inout mutation), and the final copy uses CoW for Strings and empty arrays.
 struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     let isUser: Bool
@@ -14,6 +31,12 @@ struct ChatMessage: Identifiable, Equatable {
     var isFromHistory: Bool = false
     var tokenCount: Int = 0
     var elapsedSeconds: Double = 0
+
+    /// Append text in-place, making intent explicit for streaming accumulation.
+    @inline(__always)
+    mutating func appendText(_ newText: String) {
+        text += newText
+    }
 
     init(
         id: UUID = UUID(),
