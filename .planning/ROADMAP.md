@@ -178,7 +178,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
-| 11. Launch & Baseline | v2.0 | 1/2 | Gap closure | 2026-02-22 |
+| 11. Launch & Baseline | 2/2 | Complete   | 2026-02-22 | 2026-02-22 |
 | 12. Service Layer | v2.0 | 0/? | Not started | - |
 | 13. ViewModel & Model | v2.0 | 0/? | Not started | - |
 | 14. SSE & Background | v2.0 | 0/? | Not started | - |

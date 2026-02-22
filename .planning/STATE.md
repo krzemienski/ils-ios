@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 ## Current Position
 
 Phase: 11 of 17 (Launch & Baseline) -- first phase of v2.0
-Plan: 1 of 1 COMPLETE
+Plan: 2 of 2 COMPLETE
 Status: Phase 11 complete
-Last activity: 2026-02-22 -- Completed 11-01-PLAN.md (launch optimization)
+Last activity: 2026-02-22 -- Completed 11-02-PLAN.md (Instruments baseline report)
 
 Progress: [█░░░░░░░░░] 14% (v2.0) -- 1/7 phases complete
 
@@ -24,15 +24,16 @@ Commits: 82ead44 (audit remediation), 1eb9a1c (final gate), f4cb4c8 (bughunt), c
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v2.0)
-- Average duration: 5min
-- Total execution time: 0.08 hours
+- Total plans completed: 2 (v2.0)
+- Average duration: 5.5min
+- Total execution time: 0.18 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 11-launch-baseline | 1 | 5min | 5min |
+| 11-launch-baseline | 2 | 11min | 5.5min |
+| Phase 11 P02 | 6min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -44,6 +45,9 @@ Commits: 82ead44 (audit remediation), 1eb9a1c (final gate), f4cb4c8 (bughunt), c
 - Zero new SPM dependencies needed -- all Apple SDK APIs
 - Moved .task from ZStack to SidebarRootView for content-driven launch dismissal
 - Used Task.detached(priority: .background) for TipKit and CacheService to avoid blocking main thread
+- Instruments trace captured via xcrun xctrace on simulator -- 838ms cold-start baseline established
+- Memory baseline: 273MB RSS at cold start, 286MB steady state
+- [Phase 11]: Instruments trace captured via xcrun xctrace on simulator -- 838ms cold-start baseline established
 
 ### Pending Todos
 
@@ -57,5 +61,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 11-01-PLAN.md -- Phase 11 done, ready for Phase 12
+Stopped at: Completed 11-02-PLAN.md -- Phase 11 fully complete (gap closure done), ready for Phase 12
 Resume file: None
