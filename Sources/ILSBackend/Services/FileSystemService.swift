@@ -19,6 +19,7 @@ actor FileSystemCache {
     private var skillsCache: CacheEntry<[Skill]>?
     private var mcpServersCache: CacheEntry<[MCPServer]>?
     private var externalSessionsCache: CacheEntry<[ChatSession]>?
+    private var pluginsCache: CacheEntry<[Plugin]>?
 
     /// Default TTL: 30 seconds
     private let defaultTTL: TimeInterval = 30
@@ -63,10 +64,26 @@ actor FileSystemCache {
         externalSessionsCache = nil
     }
 
+    func getCachedPlugins(ttl: TimeInterval? = nil) -> [Plugin]? {
+        guard let cache = pluginsCache, cache.isValid(ttl: ttl ?? defaultTTL) else {
+            return nil
+        }
+        return cache.value
+    }
+
+    func setCachedPlugins(_ plugins: [Plugin]) {
+        pluginsCache = CacheEntry(value: plugins, timestamp: Date())
+    }
+
+    func invalidatePlugins() {
+        pluginsCache = nil
+    }
+
     func invalidateAll() {
         skillsCache = nil
         mcpServersCache = nil
         externalSessionsCache = nil
+        pluginsCache = nil
     }
 
     func invalidateSkills() {
