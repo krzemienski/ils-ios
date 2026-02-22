@@ -40,107 +40,18 @@ struct PluginsController: RouteCollection {
     /// Reads from `~/.claude/plugins/installed_plugins.json` and `~/.claude/settings.json`
     /// to build a list of installed plugins with their enabled status, commands, and agents.
     ///
+    /// Query parameters:
+    /// - `refresh`: If "true", bypasses the file system cache
+    /// - `page`: Page number (1-based, default 1)
+    /// - `limit`: Items per page (default 50, max 200)
+    ///
     /// - Parameter req: Vapor Request
     /// - Returns: APIResponse with list of Plugin objects
     @Sendable
     func list(req: Request) async throws -> APIResponse<ListResponse<Plugin>> {
-        let fm = FileManager.default
-        let installedPluginsPath = "\(fileSystem.claudeDirectory)/plugins/installed_plugins.json"
-        let settingsPath = fileSystem.userSettingsPath
+        let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
 
-        var plugins: [Plugin] = []
-
-        // Read enabled status from settings.json
-        var enabledPlugins: [String: Bool] = [:]
-        if fm.fileExists(atPath: settingsPath),
-           let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
-           let settingsJson = try? JSONSerialization.jsonObject(with: settingsData) as? [String: Any],
-           let enabled = settingsJson["enabledPlugins"] as? [String: Bool] {
-            enabledPlugins = enabled
-        }
-
-        // Read installed plugins from installed_plugins.json
-        guard fm.fileExists(atPath: installedPluginsPath),
-              let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let pluginsDict = json["plugins"] as? [String: Any] else {
-            return APIResponse(
-                success: true,
-                data: ListResponse(items: plugins)
-            )
-        }
-
-        // Parse each plugin entry
-        for (pluginKey, value) in pluginsDict {
-            // pluginKey format: "plugin-name@marketplace"
-            guard let installsArray = value as? [[String: Any]],
-                  let latestInstall = installsArray.first else {
-                continue
-            }
-
-            // Parse plugin key to get name and marketplace
-            let parts = pluginKey.split(separator: "@", maxSplits: 1)
-            let pluginName = String(parts.first ?? Substring(pluginKey))
-            let marketplace = parts.count > 1 ? String(parts[1]) : nil
-
-            // Extract install info
-            let installPath = latestInstall["installPath"] as? String
-            let version = latestInstall["version"] as? String
-            // Note: installedAt and lastUpdated available but not currently used
-            _ = latestInstall["installedAt"] as? String
-            _ = latestInstall["lastUpdated"] as? String
-
-            // Check enabled status (default to true if not specified)
-            let isEnabled = enabledPlugins[pluginKey] ?? true
-
-            // Try to read plugin manifest for description, commands, agents
-            var description: String?
-            var commands: [String] = []
-            var agents: [String] = []
-
-            if let path = installPath {
-                // Try to read plugin.json or manifest
-                let manifestPath = "\(path)/.claude-plugin/plugin.json"
-                let altManifestPath = "\(path)/plugin.json"
-
-                if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
-                   let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
-                    description = manifest["description"] as? String
-                } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
-                          let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
-                    description = manifest["description"] as? String
-                }
-
-                // Check for commands directory
-                let commandsPath = "\(path)/commands"
-                if let cmdContents = try? fm.contentsOfDirectory(atPath: commandsPath) {
-                    commands = cmdContents.filter { $0.hasSuffix(".md") }
-                        .map { "/\(pluginName):\($0.replacingOccurrences(of: ".md", with: ""))" }
-                }
-
-                // Check for agents directory
-                let agentsPath = "\(path)/agents"
-                if let agentContents = try? fm.contentsOfDirectory(atPath: agentsPath) {
-                    agents = agentContents.filter { $0.hasSuffix(".md") }
-                        .map { $0.replacingOccurrences(of: ".md", with: "") }
-                }
-            }
-
-            plugins.append(Plugin(
-                name: pluginName,
-                description: description,
-                marketplace: marketplace,
-                isInstalled: true,
-                isEnabled: isEnabled,
-                version: version,
-                commands: commands.isEmpty ? nil : commands,
-                agents: agents.isEmpty ? nil : agents,
-                path: installPath
-            ))
-        }
-
-        // Sort by name for consistent ordering
-        plugins.sort { $0.name.lowercased() < $1.name.lowercased() }
+        let plugins = try await fileSystem.listPlugins(bypassCache: bypassCache)
 
         // Apply pagination
         let pagination = PaginationParams(from: req)
@@ -196,6 +107,7 @@ struct PluginsController: RouteCollection {
     ///
     /// Query parameters:
     /// - `q`: Search query (required, case-insensitive)
+    /// - `refresh`: If "true", bypasses the file system cache
     ///
     /// - Parameter req: Vapor Request
     /// - Returns: APIResponse with filtered list of Plugin objects
@@ -205,11 +117,12 @@ struct PluginsController: RouteCollection {
             throw Abort(.badRequest, reason: "Query parameter 'q' is required")
         }
 
+        let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
         let lowercasedQuery = query.lowercased()
 
-        // Get all installed plugins and filter
-        let allPluginsResponse = try await list(req: req)
-        let filtered = (allPluginsResponse.data?.items ?? []).filter { plugin in
+        // Get all installed plugins from cache and filter
+        let allPlugins = try await fileSystem.listPlugins(bypassCache: bypassCache)
+        let filtered = allPlugins.filter { plugin in
             plugin.name.lowercased().contains(lowercasedQuery) ||
             (plugin.description?.lowercased().contains(lowercasedQuery) ?? false)
         }
@@ -337,6 +250,9 @@ struct PluginsController: RouteCollection {
         let jsonData = try JSONSerialization.data(withJSONObject: pluginsJson, options: [.prettyPrinted, .sortedKeys])
         try jsonData.write(to: URL(fileURLWithPath: installedPath))
 
+        // Invalidate cache so the new plugin shows up
+        await fileSystem.invalidatePluginsCache()
+
         // Read plugin manifest for description
         var description: String?
         for manifestName in [".claude-plugin/plugin.json", "plugin.json", "package.json"] {
@@ -384,6 +300,9 @@ struct PluginsController: RouteCollection {
 
         _ = try fileSystem.writeConfig(scope: "user", content: config)
 
+        // Invalidate cache so enabled status change is reflected
+        await fileSystem.invalidatePluginsCache()
+
         return APIResponse(
             success: true,
             data: EnabledResponse(enabled: true)
@@ -409,6 +328,9 @@ struct PluginsController: RouteCollection {
         config.enabledPlugins = enabled
 
         _ = try fileSystem.writeConfig(scope: "user", content: config)
+
+        // Invalidate cache so enabled status change is reflected
+        await fileSystem.invalidatePluginsCache()
 
         return APIResponse(
             success: true,
@@ -437,6 +359,9 @@ struct PluginsController: RouteCollection {
         if fm.fileExists(atPath: pluginPath) {
             try fm.removeItem(atPath: pluginPath)
         }
+
+        // Invalidate cache so the removed plugin is no longer returned
+        await fileSystem.invalidatePluginsCache()
 
         return APIResponse(
             success: true,
