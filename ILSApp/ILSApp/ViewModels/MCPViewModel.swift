@@ -14,7 +14,7 @@ class MCPViewModel {
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
-    @ObservationIgnored nonisolated(unsafe) private var healthTimer: Task<Void, Never>?
+    @ObservationIgnored private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
     var isSelecting = false

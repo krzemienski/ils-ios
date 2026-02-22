@@ -31,7 +31,7 @@ final class SystemMetricsViewModel {
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
-    nonisolated(unsafe) private var processRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var processRefreshTask: Task<Void, Never>?
     private let processRefreshInterval: TimeInterval = 15 // seconds (balanced CPU vs freshness)
 
     enum ProcessSortOption: String, CaseIterable {
