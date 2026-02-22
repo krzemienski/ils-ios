@@ -157,6 +157,8 @@ class AppState {
             navigationIntent = .themes
         case "hooks":
             navigationIntent = .hooks
+        case "teams":
+            navigationIntent = .teams
         default:
             break
         }

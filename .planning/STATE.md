@@ -1,10 +1,10 @@
 # Project State — ILS iOS/macOS Cross-Platform Audit
 
 ## Current Phase
-Phase 5: System Monitor + Profiles
+Phase 8: Platform Validation
 
 ## Progress
-Phase 5 Plan 1/1 IN PROGRESS (tasks 5.1-5.3 done, 5.4-5.5 pending) | Phases 4/10
+Phase 8 Plan 1/1 PENDING | Phases 7/10
 
 ## Phase Status
 
@@ -14,9 +14,9 @@ Phase 5 Plan 1/1 IN PROGRESS (tasks 5.1-5.3 done, 5.4-5.5 pending) | Phases 4/10
 | 2. Navigation + Layout | COMPLETE | 2026-02-21 | 2026-02-21 |
 | 3. Settings & Config | COMPLETE | 2026-02-21 | 2026-02-21 |
 | 4. Skills/Plugins/Hooks/Themes | COMPLETE | 2026-02-22 | 2026-02-22 |
-| 5. System Monitor + Profiles | IN PROGRESS | 2026-02-22 | — |
-| 6. Backend API Audit | PLANNED | — | — |
-| 7. Convergence | PLANNED | — | — |
+| 5. System Monitor + Profiles | COMPLETE | 2026-02-22 | 2026-02-22 |
+| 6. Backend API Audit | COMPLETE | 2026-02-22 | 2026-02-22 |
+| 7. Convergence | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 8. Platform Validation | PLANNED | — | — |
 | 9. Functional + Bug Hunt | PLANNED | — | — |
 | 10. Final Gate | PLANNED | — | — |
@@ -31,10 +31,13 @@ Phase 5 Plan 1/1 IN PROGRESS (tasks 5.1-5.3 done, 5.4-5.5 pending) | Phases 4/10
 | 4 | `04-skills-plugins-hooks-themes/04-PLAN.md` | 211 | 4 |
 | 5 | `05-system-monitor-profiles/05-PLAN.md` | 201 | 3 |
 | 6 | `06-backend-api-audit/06-PLAN.md` | 387 | 4 |
-| 7 | `07-convergence/07-PLAN.md` | 396 | 3 |
-| 8 | `08-platform-validation/08-PLAN.md` | 603 | 5 |
-| 9 | `09-functional-bughunt/09-PLAN.md` | 426 | 4 |
-| 10 | `10-final-gate/10-PLAN.md` | 566 | 3 |
+
+### Phase Plan Updates (rewritten 2026-02-22)
+Plans 7-10 rewritten with ios-validation-runner protocol, functional-validation mandate, and all-opus models:
+| 7 | `07-convergence/07-PLAN.md` | 538 | 3 |
+| 8 | `08-platform-validation/08-PLAN.md` | 1024 | 5 |
+| 9 | `09-functional-bughunt/09-PLAN.md` | 961 | 4 |
+| 10 | `10-final-gate/10-PLAN.md` | 985 | 3 |
 
 ## Validation Gates
 
@@ -60,8 +63,13 @@ Phase 5 Plan 1/1 IN PROGRESS (tasks 5.1-5.3 done, 5.4-5.5 pending) | Phases 4/10
 | VG-16 | PASS | HooksManagementView + NavigationLink from SettingsConfigSection |
 | VG-17 | PASS | CustomThemeAdapter + ThemePickerView Built-in/Custom sections |
 | VG-18 | PASS | githubBrowseSection in BrowserView skillsContent |
-| VG-19 | PENDING | System Monitor tasks 5.1-5.3 done; awaiting task 5.5 verification |
-| VG-20 | PENDING | Fleet rename task 5.4 in progress; awaiting task 5.5 verification |
+| VG-19 | PASS | System Monitor live metrics, processes endpoint, WebSocket — 05-VERIFICATION.md |
+| VG-20 | PASS | Fleet→Host Profiles rename, deep links, both platforms — 05-VERIFICATION.md |
+| VG-25a | PASS | All 3 targets build: 0 errors — evidence/phase-07-convergence/build-*.log |
+| VG-25b | PASS | 10/10 iOS screens render with real data — evidence/phase-07-convergence/ios-*.png |
+| VG-25c | PASS | 5/5 deep links route correctly — evidence/phase-07-convergence/deeplink-*.png |
+| VG-25f | PASS | 23/23 cross-stream audit points PASS — evidence/phase-07-convergence/audit-report.md |
+| VG-25g | PASS | 1 MEDIUM fix applied (teams deep link), 0 CRITICAL/HIGH — convergence-report.md |
 
 ## Decisions
 
@@ -98,12 +106,14 @@ Phase 5 Plan 1/1 IN PROGRESS (tasks 5.1-5.3 done, 5.4-5.5 pending) | Phases 4/10
 | 02 | 02 | 40min | 6 | 8 |
 | 03 | 03 | ~3hrs | 6 | 3 modified + 32 evidence |
 | 04 | 04 | ~90min | 7 | 9 modified + 1 created |
-| 05 | 05 | 19min | 3/5 | 5 modified |
+| 05 | 05 | ~45min | 5 | 8 modified + verification |
+| 06 | 06 | ~40min | 5 | 3 modified + audit script + inventory |
+| 07 | 07 | ~30min | 5 | 1 fix + 23 evidence files |
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed tasks 5.1-5.3 (system monitor backend fix, WebSocket hardening, process list UI). Tasks 5.4 (Fleet rename, handled by parallel agent) and 5.5 (verification) pending.
+Stopped at: Phase 7 complete. 10/10 iOS screens PASS, 23/23 audit points PASS, 1 fix (teams deep link). Ready for Phase 8.
 Resume file: N/A
 
 ## Quick Tasks Completed
