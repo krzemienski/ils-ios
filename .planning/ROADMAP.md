@@ -71,10 +71,11 @@
   1. App shows interactive UI within 1 second of cold launch (measured via Instruments Time Profiler)
   2. TipKit, CacheService, and other non-critical services initialize after the first frame is visible
   3. Instruments baseline report exists documenting before/after launch time, memory allocation, and CPU profile
-**Plans**: 1 plan
+**Plans**: 2 plans
 
 Plans:
 - [x] 11-01-PLAN.md -- Remove artificial launch delay, defer non-critical init, capture before/after baseline
+- [ ] 11-02-PLAN.md -- Gap closure: Capture Instruments baseline trace and structured report
 
 ---
 
@@ -177,7 +178,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
-| 11. Launch & Baseline | v2.0 | 1/1 | Complete | 2026-02-22 |
+| 11. Launch & Baseline | v2.0 | 1/2 | Gap closure | 2026-02-22 |
 | 12. Service Layer | v2.0 | 0/? | Not started | - |
 | 13. ViewModel & Model | v2.0 | 0/? | Not started | - |
 | 14. SSE & Background | v2.0 | 0/? | Not started | - |
