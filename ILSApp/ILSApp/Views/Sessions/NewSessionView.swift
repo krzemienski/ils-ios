@@ -107,7 +107,16 @@ struct NewSessionView: View {
             .task(id: forkSearchText) {
                 try? await Task.sleep(for: .milliseconds(200))
                 guard !Task.isCancelled else { return }
-                debouncedForkResults = filteredRecentSessions
+                if forkSearchText.isEmpty {
+                    debouncedForkResults = recentSessions
+                } else {
+                    let query = forkSearchText.lowercased()
+                    debouncedForkResults = recentSessions.filter {
+                        ($0.name ?? "").lowercased().contains(query)
+                            || ($0.projectName ?? "").lowercased().contains(query)
+                            || $0.model.lowercased().contains(query)
+                    }
+                }
             }
         }
         #if os(iOS)
@@ -348,16 +357,6 @@ struct NewSessionView: View {
         .padding(.vertical, theme.spacingXS + 2)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-    }
-
-    private var filteredRecentSessions: [ChatSession] {
-        guard !forkSearchText.isEmpty else { return recentSessions }
-        let query = forkSearchText.lowercased()
-        return recentSessions.filter {
-            ($0.name ?? "").lowercased().contains(query)
-                || ($0.projectName ?? "").lowercased().contains(query)
-                || $0.model.lowercased().contains(query)
-        }
     }
 
     @ViewBuilder

@@ -121,6 +121,12 @@ class SessionsViewModel {
         }
     }
 
+    /// Look up a session by its ID. Uses a linear scan which is fine for the
+    /// typical loaded session count (~50). Called once during state restoration.
+    func session(byID id: UUID) -> ChatSession? {
+        sessions.first { $0.id == id }
+    }
+
     /// Empty state text for UI display
     var emptyStateText: String {
         if isLoading {

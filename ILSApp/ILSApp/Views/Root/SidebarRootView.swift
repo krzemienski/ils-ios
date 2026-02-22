@@ -118,9 +118,7 @@ struct SidebarRootView: View {
             // Restore chat session if app was backgrounded while viewing chat
             if activeScreenKey == "chat", !lastChatSessionId.isEmpty,
                let uuid = UUID(uuidString: lastChatSessionId) {
-                // O(1) dictionary lookup instead of O(n) first(where:)
-                let sessionIndex = Dictionary(uniqueKeysWithValues: sessionsVM.sessions.map { ($0.id, $0) })
-                if let session = sessionIndex[uuid] {
+                if let session = sessionsVM.session(byID: uuid) {
                     activeScreen = .chat(session)
                 } else {
                     // Fallback: create minimal session for restoration

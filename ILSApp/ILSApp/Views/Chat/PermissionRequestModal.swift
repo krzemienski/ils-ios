@@ -9,6 +9,8 @@ struct PermissionRequestModal: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
+    /// Pre-computed formatted tool input string, populated on appear.
+    @State private var formattedToolInput: String = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,6 +34,9 @@ struct PermissionRequestModal: View {
             actionButtons
         }
         .background(theme.bgPrimary)
+        .task {
+            formattedToolInput = Self.formatToolInput(request.toolInput)
+        }
     }
 
     // MARK: - Header
@@ -99,7 +104,7 @@ struct PermissionRequestModal: View {
                 .textCase(.uppercase)
                 .kerning(1)
 
-            Text(formatToolInput())
+            Text(formattedToolInput)
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .lineLimit(20)
@@ -188,15 +193,15 @@ struct PermissionRequestModal: View {
         }
     }
 
-    private func formatToolInput() -> String {
-        // AnyCodable wraps the tool input — extract a readable preview
-        if let dict = request.toolInput.value as? [String: Any] {
+    /// Formats tool input for display. Static to keep it out of the body evaluation path.
+    private static func formatToolInput(_ toolInput: AnyCodable) -> String {
+        if let dict = toolInput.value as? [String: Any] {
             return dict.map { key, value in
                 "\(key): \(String(describing: value))"
             }
             .sorted()
             .joined(separator: "\n")
         }
-        return String(describing: request.toolInput.value)
+        return String(describing: toolInput.value)
     }
 }
