@@ -83,11 +83,8 @@ class SessionsViewModel {
     /// Rebuild the lowercase search cache when sessions array changes
     private func rebuildSearchCache() {
         searchCache = sessions.map { session in
-            let text = [
-                session.name?.lowercased() ?? "",
-                session.projectName?.lowercased() ?? "",
-                session.firstPrompt?.lowercased() ?? ""
-            ].joined(separator: " ")
+            // String interpolation avoids intermediate Array<String> + .joined() allocation
+            let text = "\(session.name?.lowercased() ?? "") \(session.projectName?.lowercased() ?? "") \(session.firstPrompt?.lowercased() ?? "")"
             return (session, text)
         }
         // Invalidate grouped cache

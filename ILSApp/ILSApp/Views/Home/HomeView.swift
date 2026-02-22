@@ -7,15 +7,18 @@ struct HomeView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var dashboardVM = DashboardViewModel()
-    @State private var sessionsVM = SessionsViewModel()
     @State private var isRefreshing = false
+    @State private var showNewSessionSheet = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let createSessionTip = CreateSessionTip()
 
+    /// Shared sessions view model owned by SidebarRootView.
+    var sessionsVM: SessionsViewModel
     var onSessionSelected: ((ChatSession) -> Void)?
     var onNavigate: ((ActiveScreen) -> Void)?
+    var onNavigateToBrowser: ((BrowserSegment) -> Void)?
 
     var body: some View {
         ScrollView {
@@ -27,8 +30,8 @@ struct HomeView: View {
                 TipView(createSessionTip)
                     .tipBackground(theme.bgSecondary)
 
-                recentSessionsSection
                 quickActionsGrid
+                recentSessionsSection
                 statsSection
             }
             .padding(.horizontal, theme.spacingMD)
@@ -36,20 +39,26 @@ struct HomeView: View {
             .animation(.easeInOut(duration: 0.3), value: isRefreshing)
         }
         .background(theme.bgPrimary)
+        .sheet(isPresented: $showNewSessionSheet) {
+            NewSessionView { session in
+                showNewSessionSheet = false
+                onSessionSelected?(session)
+            }
+            .environment(appState)
+            .environment(\.theme, theme)
+        }
         #if os(iOS)
         .inlineNavigationBarTitle()
-        .toolbar(.hidden, for: .navigationBar)
         #endif
         .task {
             dashboardVM.configure(client: appState.apiClient)
-            sessionsVM.configure(client: appState.apiClient)
             await dashboardVM.loadAll()
-            await sessionsVM.loadSessions(refresh: true)
+            // Sessions are loaded by SidebarRootView (shared VM)
         }
         .refreshable {
             isRefreshing = true
             await dashboardVM.loadAll()
-            await sessionsVM.loadSessions(refresh: true)
+            await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
             isRefreshing = false
         }
         .onChange(of: appState.isConnected) { _, connected in
@@ -281,8 +290,7 @@ struct HomeView: View {
                     title: "New Session",
                     color: theme.entitySession
                 ) {
-                    let newSession = ChatSession(name: "New Session", model: "sonnet")
-                    onSessionSelected?(newSession)
+                    showNewSessionSheet = true
                 }
 
                 quickActionCard(
@@ -291,7 +299,7 @@ struct HomeView: View {
                     subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
                     color: theme.entitySkill
                 ) {
-                    onNavigate?(.browser)
+                    onNavigateToBrowser?(.skills)
                 }
 
                 quickActionCard(
@@ -300,7 +308,7 @@ struct HomeView: View {
                     subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
                     color: theme.entityMCP
                 ) {
-                    onNavigate?(.browser)
+                    onNavigateToBrowser?(.mcp)
                 }
 
                 quickActionCard(
@@ -309,7 +317,7 @@ struct HomeView: View {
                     subtitle: statsSubtitle(dashboardVM.stats?.plugins.total),
                     color: theme.entityPlugin
                 ) {
-                    onNavigate?(.browser)
+                    onNavigateToBrowser?(.plugins)
                 }
             }
             .shimmerIfActive(isRefreshing)
@@ -460,7 +468,7 @@ private extension View {
 
 #Preview {
     NavigationStack {
-        HomeView()
+        HomeView(sessionsVM: SessionsViewModel())
             .environment(AppState())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }

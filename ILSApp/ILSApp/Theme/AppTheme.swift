@@ -161,14 +161,22 @@ extension EnvironmentValues {
 @MainActor
 @Observable
 class ThemeManager {
-    /// Currently active theme.
-    var currentTheme: any AppTheme
+    /// Currently active theme (internal storage).
+    @ObservationIgnored private var _currentTheme: any AppTheme = CyberpunkTheme()
+
+    /// Currently active theme. Setting this automatically rebuilds the cached snapshot.
+    var currentTheme: any AppTheme {
+        get { _currentTheme }
+        set {
+            _currentTheme = newValue
+            currentSnapshot = ThemeSnapshot(newValue)
+        }
+    }
 
     /// Concrete snapshot of the current theme for SwiftUI environment injection.
+    /// Cached — only rebuilt when `currentTheme` changes via `setTheme()`.
     /// Eliminates existential container overhead in view bodies.
-    var currentSnapshot: ThemeSnapshot {
-        ThemeSnapshot(currentTheme)
-    }
+    private(set) var currentSnapshot: ThemeSnapshot = ThemeSnapshot(CyberpunkTheme())
 
     private static let themeIDKey = "selectedThemeID"
 
@@ -199,7 +207,9 @@ class ThemeManager {
             SnowTheme()
         ]
         self.availableThemes = themes
-        self.currentTheme = themes.first(where: { $0.id == savedID }) ?? CyberpunkTheme()
+        let selectedTheme = themes.first(where: { $0.id == savedID }) ?? CyberpunkTheme()
+        self._currentTheme = selectedTheme
+        self.currentSnapshot = ThemeSnapshot(selectedTheme)
     }
 
     /// Switch to a different theme by ID.
@@ -224,8 +234,7 @@ class ThemeManager {
 extension Color {
     init(hex: String) {
         let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: cleaned).scanHexInt64(&int)
+        let int = UInt64(cleaned, radix: 16) ?? 0
         let a, r, g, b: UInt64
         switch cleaned.count {
         case 6:

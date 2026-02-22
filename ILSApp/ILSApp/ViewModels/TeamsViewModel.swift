@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 import Observation
 import ILSShared
 
@@ -13,14 +13,14 @@ class TeamsViewModel {
     var error: String?
 
     private let apiClient: APIClient
-    @ObservationIgnored private var pollingTimer: Timer?
+    @ObservationIgnored private var pollingTask: Task<Void, Never>?
 
     init(apiClient: APIClient) {
         self.apiClient = apiClient
     }
 
     deinit {
-        pollingTimer?.invalidate()
+        pollingTask?.cancel()
     }
 
     // MARK: - Teams
@@ -210,17 +210,20 @@ class TeamsViewModel {
 
     func startPolling(teamName: String) {
         stopPolling()
-        pollingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        // Use a single Task with sleep instead of Timer + Task-per-tick.
+        // Avoids creating a new Task object every 15 seconds.
+        pollingTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                guard !Task.isCancelled else { break }
                 await self?.loadTeamDetail(name: teamName)
             }
         }
-        pollingTimer?.tolerance = 1.0
     }
 
     func stopPolling() {
-        pollingTimer?.invalidate()
-        pollingTimer = nil
+        pollingTask?.cancel()
+        pollingTask = nil
     }
 }
 

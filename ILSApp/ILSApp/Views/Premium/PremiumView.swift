@@ -33,7 +33,9 @@ struct PremiumView: View {
             }
             .background(theme.bgPrimary.ignoresSafeArea())
             .navigationTitle("ILS Premium")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }

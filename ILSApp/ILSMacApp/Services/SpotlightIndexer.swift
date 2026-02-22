@@ -75,7 +75,9 @@ final class SpotlightIndexer {
 
     private func buildDescription(for session: ChatSession) -> String {
         var parts: [String] = ["Claude Code session"]
-        parts.append("Model: \(session.model)")
+        if !session.model.isEmpty {
+            parts.append("Model: \(session.model)")
+        }
         if let project = session.projectName {
             parts.append("Project: \(project)")
         }

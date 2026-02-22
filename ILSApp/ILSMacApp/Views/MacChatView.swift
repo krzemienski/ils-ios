@@ -1,7 +1,5 @@
 import SwiftUI
 import ILSShared
-import Combine
-
 struct MacChatView: View {
     let session: ChatSession
     @Environment(AppState.self) var appState
@@ -39,15 +37,19 @@ struct MacChatView: View {
 
     @ViewBuilder
     private var chatWithAlerts: some View {
-        chatWithKeyHandlersInner
+        contentWithKeyHandlers
             .alert("Connection Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) {}
-                Button("Retry") { retryLastMessage() }
+                Button("Retry") {
+                    retryLastMessage()
+                }
             } message: {
                 Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
             }
             .alert("Session Forked", isPresented: $showForkAlert) {
-                Button("Open Fork") { navigateToForked = forkedSession }
+                Button("Open Fork") {
+                    navigateToForked = forkedSession
+                }
                 Button("Stay Here", role: .cancel) {}
             } message: {
                 if let forked = forkedSession {
@@ -56,21 +58,23 @@ struct MacChatView: View {
             }
             .alert("Delete Message", isPresented: $showDeleteConfirmation) {
                 Button("Delete", role: .destructive) {
-                    if let msg = messageToDelete { viewModel.deleteMessage(msg); messageToDelete = nil }
+                    if let msg = messageToDelete {
+                        viewModel.deleteMessage(msg)
+                        messageToDelete = nil
+                    }
                 }
-                Button("Cancel", role: .cancel) { messageToDelete = nil }
+                Button("Cancel", role: .cancel) {
+                    messageToDelete = nil
+                }
             } message: {
                 Text("Are you sure you want to delete this message?")
             }
-    }
-
-    @ViewBuilder
-    private var chatWithKeyHandlers: some View {
-        styledContent
             .alert("Rename Session", isPresented: $isRenaming) {
                 TextField("Session name", text: $renameText)
                 Button("Rename") {
-                    Task { let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText) }
+                    Task {
+                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                    }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -87,17 +91,23 @@ struct MacChatView: View {
             } message: {
                 Text("This will permanently delete this session and all its messages.")
             }
-            .navigationDestination(item: $navigateToForked) { s in MacChatView(session: s) }
-            .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active { Task { await viewModel.refreshMessages() } }
-            }
     }
 
     @ViewBuilder
-    private var chatWithKeyHandlersInner: some View {
-        chatWithKeyHandlers
-            .onKeyPress(KeyEquivalent("k"), phases: .down) { keyPress in
-                guard keyPress.modifiers.contains(.command) else { return .ignored }
+    private var contentWithKeyHandlers: some View {
+        styledContent
+            .navigationDestination(item: $navigateToForked) { session in
+                MacChatView(session: session)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    Task {
+                        await viewModel.refreshMessages()
+                    }
+                }
+            }
+            .onKeyPress("k", phases: .down) { press in
+                guard press.modifiers.contains(.command) else { return .ignored }
                 showCommandPalette = true
                 return .handled
             }
@@ -133,6 +143,7 @@ struct MacChatView: View {
 
     @ViewBuilder
     private var styledContent: some View {
+        @Bindable var viewModel = viewModel
         mainContent
             .background(theme.bgPrimary)
             .navigationTitle(session.name ?? "Chat")
@@ -169,18 +180,12 @@ struct MacChatView: View {
                     .frame(minWidth: 500, minHeight: 600)
                     .presentationBackground(theme.bgPrimary)
             }
-            .sheet(item: Bindable(viewModel).pendingPermissionRequest) { request in
+            .sheet(item: $viewModel.pendingPermissionRequest) { request in
                 PermissionRequestModal(request: request) { decision in
                     viewModel.respondToPermission(requestId: request.requestId, decision: decision)
                 }
                 .frame(minWidth: 500, minHeight: 300)
                 .presentationBackground(theme.bgPrimary)
-            }
-            .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
-                if newValue != nil {
-                    errorId = UUID()
-                    showErrorAlert = true
-                }
             }
             .task {
                 viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
@@ -188,6 +193,12 @@ struct MacChatView: View {
                 viewModel.encodedProjectPath = session.encodedProjectPath
                 viewModel.claudeSessionId = session.claudeSessionId
                 await viewModel.loadMessageHistory()
+            }
+            .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
+                if newValue != nil {
+                    errorId = UUID()
+                    showErrorAlert = true
+                }
             }
     }
 

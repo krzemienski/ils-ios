@@ -249,11 +249,9 @@ struct FileBrowserView: View {
     private func previewFileContent(_ name: String) async {
         let filePath = currentPath == "/" ? "/\(name)" : "\(currentPath)/\(name)"
         let encodedPath = filePath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? filePath
-        guard let url = URL(string: "\(appState.serverURL)/api/v1/system/files?path=\(encodedPath)&preview=true") else { return }
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
+            let data = try await appState.apiClient.getRawData("/system/files?path=\(encodedPath)&preview=true")
             let content = String(data: data, encoding: .utf8) ?? "Unable to read file"
             let lines = content.components(separatedBy: "\n")
             let truncated = lines.prefix(500).joined(separator: "\n")

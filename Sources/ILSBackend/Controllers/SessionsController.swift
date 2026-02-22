@@ -334,42 +334,46 @@ struct SessionsController: RouteCollection {
             throw Abort(.notFound, reason: "Session not found")
         }
 
-        // Create the forked session
-        let forked = SessionModel(
-            claudeSessionId: nil,
-            name: original.name.map { "\($0) (Fork)" } ?? "Untitled (Fork)",
-            projectId: original.$project.id,
-            model: original.model,
-            permissionMode: PermissionMode(rawValue: original.permissionMode) ?? .default,
-            forkedFrom: original.id
-        )
-
-        try await forked.save(on: req.db)
-
-        guard let forkedId = forked.id else {
-            throw Abort(.internalServerError, reason: "Failed to create forked session")
-        }
-
-        // Copy all messages from original to forked session
-        let originalMessages = try await MessageModel.query(on: req.db)
-            .filter(\.$session.$id == id)
-            .sort(\.$createdAt, .ascending)
-            .all()
-
-        for originalMessage in originalMessages {
-            let copiedMessage = MessageModel(
-                sessionId: forkedId,
-                role: MessageRole(rawValue: originalMessage.role) ?? .user,
-                content: originalMessage.content,
-                toolCalls: originalMessage.toolCalls,
-                toolResults: originalMessage.toolResults
+        // Wrap fork in a transaction so session + messages are created atomically
+        let forked = try await req.db.transaction { db in
+            let forked = SessionModel(
+                claudeSessionId: nil,
+                name: original.name.map { "\($0) (Fork)" } ?? "Untitled (Fork)",
+                projectId: original.$project.id,
+                model: original.model,
+                permissionMode: PermissionMode(rawValue: original.permissionMode) ?? .default,
+                forkedFrom: original.id
             )
-            try await copiedMessage.save(on: req.db)
-        }
 
-        // Update message count on forked session
-        forked.messageCount = originalMessages.count
-        try await forked.save(on: req.db)
+            try await forked.save(on: db)
+
+            guard let forkedId = forked.id else {
+                throw Abort(.internalServerError, reason: "Failed to create forked session")
+            }
+
+            // Copy all messages from original to forked session
+            let originalMessages = try await MessageModel.query(on: db)
+                .filter(\.$session.$id == id)
+                .sort(\.$createdAt, .ascending)
+                .all()
+
+            for originalMessage in originalMessages {
+                let copiedMessage = MessageModel(
+                    sessionId: forkedId,
+                    role: MessageRole(rawValue: originalMessage.role) ?? .user,
+                    content: originalMessage.content,
+                    toolCalls: originalMessage.toolCalls,
+                    toolResults: originalMessage.toolResults
+                )
+                try await copiedMessage.save(on: db)
+            }
+
+            // Update message count on forked session
+            forked.messageCount = originalMessages.count
+            try await forked.save(on: db)
+
+            return forked
+        }
 
         return APIResponse(
             success: true,

@@ -42,6 +42,9 @@ enum MarkdownParser {
         let nsText = text as NSString
         let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
 
+        // Pre-allocate: each match produces up to 2 segments (plain text before + code block)
+        segments.reserveCapacity(matches.count * 2 + 1)
+
         for match in matches {
             let matchRange = match.range
             let matchStartIndex = text.index(text.startIndex, offsetBy: matchRange.location)
@@ -98,6 +101,9 @@ enum MarkdownParser {
 
         let nsText = text as NSString
         let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+
+        // Pre-allocate: each match produces up to 2 segments (plain text before + inline code)
+        segments.reserveCapacity(matches.count * 2 + 1)
 
         for match in matches {
             let matchRange = match.range

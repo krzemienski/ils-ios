@@ -9,30 +9,7 @@ struct QuickConnectView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    @State private var selectedMode: ConnectionMode = .local
-    @State private var localURL = "http://localhost:9999"
-    @State private var remoteHost = ""
-    @State private var remotePort = "9999"
-    @State private var tunnelURL = ""
-
-    @State private var isConnecting = false
-    @State private var connectionSteps: [ConnectionStep] = []
-    @State private var showSteps = false
-    @State private var connectionResult: ConnectionResult?
-    @State private var backendInfo: BackendInfo?
-    @State private var showConnectedState = false
-
-    @State private var connectionHistory: [String] = []
-
-    enum ConnectionResult {
-        case success
-        case failure(String)
-    }
-
-    struct BackendInfo {
-        let claudeVersion: String
-        let status: String
-    }
+    @State private var viewModel = QuickConnectViewModel()
 
     var body: some View {
         ScrollView {
@@ -41,23 +18,23 @@ struct QuickConnectView: View {
 
                 modeContent
 
-                if showSteps {
+                if viewModel.showSteps {
                     connectionStepsView
                 }
 
-                if let result = connectionResult, !showSteps {
+                if let result = viewModel.connectionResult, !viewModel.showSteps {
                     resultBanner(result)
                 }
 
-                if showConnectedState, let info = backendInfo {
+                if viewModel.showConnectedState, let info = viewModel.backendInfo {
                     backendInfoCard(info)
                 }
 
-                if !showSteps && !showConnectedState {
+                if !viewModel.showSteps && !viewModel.showConnectedState {
                     connectButton
                 }
 
-                if !connectionHistory.isEmpty && !showSteps && !showConnectedState {
+                if !viewModel.connectionHistory.isEmpty && !viewModel.showSteps && !viewModel.showConnectedState {
                     recentSection
                 }
 
@@ -72,9 +49,9 @@ struct QuickConnectView: View {
         .inlineNavigationBarTitle()
         #endif
         .onAppear {
-            loadHistory()
+            viewModel.loadHistory()
             if !appState.serverURL.isEmpty {
-                localURL = appState.serverURL
+                viewModel.localURL = appState.serverURL
             }
         }
     }
@@ -85,18 +62,18 @@ struct QuickConnectView: View {
         HStack(spacing: 0) {
             ForEach(ConnectionMode.allCases) { mode in
                 Button {
-                    selectedMode = mode
+                    viewModel.selectedMode = mode
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: mode.icon)
                             .font(.system(size: 11, design: theme.fontDesign))
                         Text(mode.rawValue)
-                            .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, weight: viewModel.selectedMode == mode ? .semibold : .regular, design: theme.fontDesign))
                     }
-                    .foregroundStyle(selectedMode == mode ? theme.textPrimary : theme.textSecondary)
+                    .foregroundStyle(viewModel.selectedMode == mode ? theme.textPrimary : theme.textSecondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, theme.spacingSM)
-                    .background(selectedMode == mode ? theme.accent.opacity(0.15) : Color.clear)
+                    .background(viewModel.selectedMode == mode ? theme.accent.opacity(0.15) : Color.clear)
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
                 }
                 .buttonStyle(.plain)
@@ -113,7 +90,7 @@ struct QuickConnectView: View {
 
     @ViewBuilder
     private var modeContent: some View {
-        switch selectedMode {
+        switch viewModel.selectedMode {
         case .local:
             localModeView
         case .remote:
@@ -133,7 +110,8 @@ struct QuickConnectView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
-            TextField("Server URL", text: $localURL)
+            @Bindable var vm = viewModel
+            TextField("Server URL", text: $vm.localURL)
                 .textFieldStyle(.roundedBorder)
                 #if os(iOS)
                 .keyboardType(.URL)
@@ -160,8 +138,9 @@ struct QuickConnectView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
+            @Bindable var vm = viewModel
             HStack(spacing: 12) {
-                TextField("Hostname / IP", text: $remoteHost)
+                TextField("Hostname / IP", text: $vm.remoteHost)
                     .textFieldStyle(.roundedBorder)
                     #if os(iOS)
                     .keyboardType(.URL)
@@ -173,7 +152,7 @@ struct QuickConnectView: View {
                     .accessibilityIdentifier("remote-host-field")
                     .accessibilityLabel("Remote hostname or IP address")
 
-                TextField("Port", text: $remotePort)
+                TextField("Port", text: $vm.remotePort)
                     .textFieldStyle(.roundedBorder)
                     #if os(iOS)
                     .keyboardType(.numberPad)
@@ -198,7 +177,8 @@ struct QuickConnectView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
-            TextField("https://your-tunnel.trycloudflare.com", text: $tunnelURL)
+            @Bindable var vm = viewModel
+            TextField("https://your-tunnel.trycloudflare.com", text: $vm.tunnelURL)
                 .textFieldStyle(.roundedBorder)
                 #if os(iOS)
                 .keyboardType(.URL)
@@ -210,7 +190,7 @@ struct QuickConnectView: View {
                 .accessibilityIdentifier("tunnel-url-field")
                 .accessibilityLabel("Cloudflare tunnel URL")
 
-            if !tunnelURL.isEmpty && !isValidTunnelURL(tunnelURL) {
+            if !viewModel.tunnelURL.isEmpty && !viewModel.isValidTunnelURL(viewModel.tunnelURL) {
                 Label("Enter a valid URL (trycloudflare.com or https://)", systemImage: "exclamationmark.triangle.fill")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundColor(theme.warning)
@@ -224,7 +204,7 @@ struct QuickConnectView: View {
     // MARK: - Connection Steps View
 
     private var connectionStepsView: some View {
-        ConnectionStepsView(steps: connectionSteps)
+        ConnectionStepsView(steps: viewModel.connectionSteps)
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
@@ -294,9 +274,15 @@ struct QuickConnectView: View {
 
     private var connectButton: some View {
         Button {
-            startConnection()
+            Task {
+                let success = await viewModel.connect(appState: appState)
+                if success {
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    dismiss()
+                }
+            }
         } label: {
-            if isConnecting {
+            if viewModel.isConnecting {
                 ProgressView()
                     .controlSize(.small)
                     .frame(maxWidth: .infinity)
@@ -310,7 +296,7 @@ struct QuickConnectView: View {
         }
         .buttonStyle(.borderedProminent)
         .tint(theme.accent)
-        .disabled(!isConnectEnabled || isConnecting)
+        .disabled(!viewModel.isConnectEnabled || viewModel.isConnecting)
         .accessibilityIdentifier("connect-button")
         .accessibilityLabel("Connect to server")
     }
@@ -323,9 +309,9 @@ struct QuickConnectView: View {
                 .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
-            ForEach(connectionHistory, id: \.self) { url in
+            ForEach(viewModel.connectionHistory, id: \.self) { url in
                 Button {
-                    fillFromHistory(url)
+                    viewModel.fillFromHistory(url)
                 } label: {
                     HStack {
                         Image(systemName: "clock.arrow.circlepath")
@@ -347,162 +333,5 @@ struct QuickConnectView: View {
                 }
             }
         }
-    }
-
-    // MARK: - Helpers
-
-    private var isConnectEnabled: Bool {
-        switch selectedMode {
-        case .local:
-            return !localURL.isEmpty
-        case .remote:
-            return !remoteHost.isEmpty && !remotePort.isEmpty
-        case .tunnel:
-            return !tunnelURL.isEmpty && isValidTunnelURL(tunnelURL)
-        }
-    }
-
-    private var resolvedURL: String {
-        switch selectedMode {
-        case .local:
-            return localURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .remote:
-            let host = remoteHost.trimmingCharacters(in: .whitespacesAndNewlines)
-            let port = remotePort.trimmingCharacters(in: .whitespacesAndNewlines)
-            return "http://\(host):\(port)"
-        case .tunnel:
-            var url = tunnelURL.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !url.hasPrefix("http://") && !url.hasPrefix("https://") {
-                url = "https://\(url)"
-            }
-            if url.hasSuffix("/") {
-                url = String(url.dropLast())
-            }
-            return url
-        }
-    }
-
-    private func isValidTunnelURL(_ urlString: String) -> Bool {
-        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
-
-        if trimmed.contains("trycloudflare.com") { return true }
-        if trimmed.hasPrefix("https://") { return true }
-        if trimmed.contains(".") && !trimmed.contains(" ") { return true }
-
-        return false
-    }
-
-    private func fillFromHistory(_ url: String) {
-        if url.contains("trycloudflare.com") {
-            selectedMode = .tunnel
-            tunnelURL = url
-        } else if url.starts(with: "http://localhost") || url.starts(with: "http://127.0.0.1") {
-            selectedMode = .local
-            localURL = url
-        } else {
-            if let urlObj = URL(string: url), let host = urlObj.host {
-                selectedMode = .remote
-                remoteHost = host
-                if let port = urlObj.port {
-                    remotePort = String(port)
-                }
-            } else {
-                selectedMode = .local
-                localURL = url
-            }
-        }
-    }
-
-    // MARK: - Connection Logic
-
-    private func startConnection() {
-        isConnecting = true
-        showSteps = true
-        connectionResult = nil
-        backendInfo = nil
-        showConnectedState = false
-
-        connectionSteps = [
-            ConnectionStep(id: 0, name: "DNS Resolve", icon: "network", status: .pending),
-            ConnectionStep(id: 1, name: "TCP Connect", icon: "cable.connector", status: .pending),
-            ConnectionStep(id: 2, name: "Health Check", icon: "heart.fill", status: .pending)
-        ]
-
-        Task {
-            let url = resolvedURL
-
-            connectionSteps[0].status = .inProgress
-            try? await Task.sleep(nanoseconds: 300_000_000)
-
-            guard let urlObj = URL(string: url), urlObj.host != nil else {
-                connectionSteps[0].status = .failure("Invalid URL")
-                isConnecting = false
-                return
-            }
-            connectionSteps[0].status = .success
-
-            connectionSteps[1].status = .inProgress
-            try? await Task.sleep(nanoseconds: 200_000_000)
-
-            let client = APIClient(baseURL: url)
-            do {
-                _ = try await client.healthCheck()
-                connectionSteps[1].status = .success
-            } catch {
-                connectionSteps[1].status = .failure("Cannot reach server")
-                isConnecting = false
-                HapticManager.notification(.error)
-                return
-            }
-
-            connectionSteps[2].status = .inProgress
-            try? await Task.sleep(nanoseconds: 200_000_000)
-
-            do {
-                let health = try await client.getHealth()
-                connectionSteps[2].status = .success
-
-                saveToHistory(url)
-
-                try await appState.connectToServer(url: url)
-
-                HapticManager.notification(.success)
-
-                backendInfo = BackendInfo(
-                    claudeVersion: health.claudeVersion ?? "Unknown",
-                    status: health.status
-                )
-
-                isConnecting = false
-                showSteps = false
-                showConnectedState = true
-
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                dismiss()
-
-            } catch {
-                connectionSteps[2].status = .failure("Health check failed")
-                isConnecting = false
-                HapticManager.notification(.error)
-            }
-        }
-    }
-
-    // MARK: - History Persistence
-
-    private func loadHistory() {
-        connectionHistory = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
-    }
-
-    private func saveToHistory(_ url: String) {
-        var history = UserDefaults.standard.stringArray(forKey: "connectionHistory") ?? []
-        history.removeAll { $0 == url }
-        history.insert(url, at: 0)
-        if history.count > 5 {
-            history = Array(history.prefix(5))
-        }
-        UserDefaults.standard.set(history, forKey: "connectionHistory")
-        connectionHistory = history
     }
 }

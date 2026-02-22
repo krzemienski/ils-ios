@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 import Observation
 import ILSShared
 
@@ -78,7 +77,7 @@ class ChatViewModel {
 
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
-    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
     @ObservationIgnored private var connectingTimer: Task<Void, Never>?
 
     // MARK: - Shared Decoder
@@ -102,69 +101,87 @@ class ChatViewModel {
     deinit {
         batchTask?.cancel()
         connectingTimer?.cancel()
-        cancellables.removeAll()
+        for task in observationTasks { task.cancel() }
     }
 
     private func setupBindings() {
         guard let sseClient else { return }
 
-        sseClient.$isStreaming
-            .sink { [weak self] streaming in
-                guard let self = self else { return }
-                self.isStreaming = streaming
+        // Cancel any previous observation tasks
+        for task in observationTasks { task.cancel() }
+        observationTasks.removeAll()
 
-                if streaming {
-                    // Reset streaming stats
-                    self.streamTokenCount = 0
-                    self.streamElapsedSeconds = 0
-                    self.streamStartTime = Date()
-                } else {
-                    // Streaming ended - flush remaining messages and stop timer
-                    self.flushPendingMessages()
-                    self.stopBatchTimer()
-                    self.lastProcessedMessageIndex = 0
-                    self.streamStartTime = nil
+        // Single observation task that tracks all SSEClient properties
+        // Uses withObservationTracking (Swift Observation) instead of Combine publishers
+        observationTasks.append(Task { @MainActor [weak self] in
+            var lastStreaming = sseClient.isStreaming
+            var lastState = sseClient.connectionState
+            var lastMessageCount = 0
+
+            while let self, !Task.isCancelled {
+                // Wait for any tracked SSEClient property to change
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    withObservationTracking {
+                        _ = sseClient.isStreaming
+                        _ = sseClient.error
+                        _ = sseClient.connectionState
+                        _ = sseClient.messages
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+                guard !Task.isCancelled else { break }
+
+                // Sync isStreaming
+                let streaming = sseClient.isStreaming
+                if streaming != lastStreaming {
+                    self.isStreaming = streaming
+                    if streaming {
+                        self.streamTokenCount = 0
+                        self.streamElapsedSeconds = 0
+                        self.streamStartTime = Date()
+                        lastMessageCount = 0
+                    } else {
+                        self.flushPendingMessages()
+                        self.stopBatchTimer()
+                        self.lastProcessedMessageIndex = 0
+                        self.streamStartTime = nil
+                        lastMessageCount = 0
+                    }
+                    lastStreaming = streaming
+                }
+
+                // Sync error
+                self.error = sseClient.error
+
+                // Sync connectionState
+                let state = sseClient.connectionState
+                if state != lastState {
+                    self.connectionState = state
+                    if case .connecting = state {
+                        self.startConnectingTimer()
+                    } else {
+                        self.connectingTimer?.cancel()
+                        self.connectingTimer = nil
+                        self.connectingTooLong = false
+                    }
+                    lastState = state
+                }
+
+                // Process new messages
+                let msgs = sseClient.messages
+                if msgs.count > lastMessageCount {
+                    let newMessages = msgs.suffix(from: self.lastProcessedMessageIndex)
+                    if !newMessages.isEmpty {
+                        self.pendingStreamMessages.reserveCapacity(self.pendingStreamMessages.count + newMessages.count)
+                        self.pendingStreamMessages.append(contentsOf: newMessages)
+                        self.lastProcessedMessageIndex = msgs.count
+                        self.startBatchTimer()
+                    }
+                    lastMessageCount = msgs.count
                 }
             }
-            .store(in: &cancellables)
-
-        sseClient.$error
-            .sink { [weak self] err in
-                self?.error = err
-            }
-            .store(in: &cancellables)
-
-        sseClient.$connectionState
-            .sink { [weak self] state in
-                guard let self = self else { return }
-                self.connectionState = state
-                if case .connecting = state {
-                    self.startConnectingTimer()
-                } else {
-                    self.connectingTimer?.cancel()
-                    self.connectingTimer = nil
-                    self.connectingTooLong = false
-                }
-            }
-            .store(in: &cancellables)
-
-        sseClient.$messages
-            .sink { [weak self] streamMessages in
-                guard let self = self else { return }
-
-                // Only process NEW messages since last index
-                let newMessages = Array(streamMessages.dropFirst(self.lastProcessedMessageIndex))
-                if !newMessages.isEmpty {
-                    // Accumulate only new messages in pending buffer
-                    self.pendingStreamMessages.reserveCapacity(self.pendingStreamMessages.count + newMessages.count)
-                    self.pendingStreamMessages.append(contentsOf: newMessages)
-                    self.lastProcessedMessageIndex = streamMessages.count
-
-                    // Start batch timer if not already running
-                    self.startBatchTimer()
-                }
-            }
-            .store(in: &cancellables)
+        })
     }
 
     /// Start the batch timer to flush pending messages at regular intervals
@@ -408,7 +425,8 @@ class ChatViewModel {
     func cancel() {
         // Notify backend to kill Claude CLI process (best-effort, fire-and-forget)
         if let sessionId = sessionId, let apiClient = apiClient {
-            Task {
+            Task { [weak self] in
+                _ = self  // prevent unused capture warning
                 do {
                     let _: APIResponse<DeletedResponse> = try await apiClient.post("/chat/cancel/\(sessionId.uuidString)", body: EmptyBody())
                 } catch {
@@ -428,7 +446,8 @@ class ChatViewModel {
         guard let apiClient, let sessionId else { return }
         pendingPermissionRequest = nil
 
-        Task {
+        Task { [weak self] in
+            _ = self  // prevent unused capture warning
             do {
                 let body = PermissionDecision(decision: decision)
                 let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
@@ -438,6 +457,33 @@ class ChatViewModel {
             } catch {
                 AppLogger.shared.warning("Permission response failed (non-fatal): \(error)", category: "chat")
             }
+        }
+    }
+
+    /// Rename the current session.
+    func renameSession(name: String) async {
+        guard let sessionId = sessionId, let apiClient else { return }
+
+        do {
+            let _: APIResponse<ChatSession> = try await apiClient.renameSession(id: sessionId, name: name)
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to rename session: \(error)", category: "chat")
+        }
+    }
+
+    /// Delete the current session permanently.
+    /// Returns `true` if the deletion succeeded.
+    func deleteSession() async -> Bool {
+        guard let sessionId = sessionId, let apiClient else { return false }
+
+        do {
+            let _: APIResponse<String> = try await apiClient.delete("/sessions/\(sessionId.uuidString)")
+            return true
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to delete session: \(error)", category: "chat")
+            return false
         }
     }
 

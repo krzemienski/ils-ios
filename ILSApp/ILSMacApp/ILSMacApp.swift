@@ -1,6 +1,5 @@
 import SwiftUI
 import ILSShared
-
 /// Focused value key for the currently selected session
 struct FocusedSessionKey: FocusedValueKey {
     typealias Value = ChatSession
@@ -18,8 +17,8 @@ struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
-    @StateObject private var windowManager = WindowManager.shared
-    @StateObject private var notificationManager = NotificationManager.shared
+    @State private var windowManager = WindowManager.shared
+    @State private var notificationManager = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
@@ -37,8 +36,8 @@ struct ILSMacApp: App {
             MacContentView()
                 .environment(appState)
                 .environment(themeManager)
-                .environmentObject(windowManager)
-                .environmentObject(notificationManager)
+                .environment(windowManager)
+                .environment(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)
                 .preferredColorScheme(computedColorScheme)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -69,8 +68,8 @@ struct ILSMacApp: App {
                 SessionWindowView(sessionId: sessionId)
                     .environment(appState)
                     .environment(themeManager)
-                    .environmentObject(windowManager)
-                    .environmentObject(notificationManager)
+                    .environment(windowManager)
+                    .environment(notificationManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -93,28 +92,32 @@ class AppState {
     var navigationIntent: ActiveScreen?
     var lastSessionId: UUID?
     var isOffline: Bool = false
+    var showOnboarding: Bool = false {
+        didSet {
+            if connectionManager.showOnboarding != showOnboarding {
+                connectionManager.showOnboarding = showOnboarding
+            }
+        }
+    }
 
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
 
     // MARK: - Forwarding Properties
-    // With @Observable, SwiftUI automatically tracks through property chains.
 
     var isConnected: Bool { connectionManager.isConnected }
     var serverURL: String { connectionManager.serverURL }
     var apiClient: APIClient { connectionManager.apiClient }
     var sseClient: SSEClient { connectionManager.sseClient }
 
-    /// Delegates showOnboarding to ConnectionManager for cross-component sync.
-    var showOnboarding: Bool {
-        get { connectionManager.showOnboarding }
-        set { connectionManager.showOnboarding = newValue }
-    }
-
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
+
+        // Sync initial onboarding state from ConnectionManager
+        self.showOnboarding = cm.showOnboarding
+
         pollingManager.checkConnection()
     }
 
@@ -163,14 +166,20 @@ class AppState {
             } else {
                 navigationIntent = .home
             }
-        case "projects", "plugins", "mcp", "skills":
+        case "browser", "projects", "plugins", "mcp", "skills":
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
-        case "fleet":
-            navigationIntent = .fleet
+        case "fleet", "profiles":
+            navigationIntent = .hostProfiles
+        case "themes":
+            navigationIntent = .themes
+        case "hooks":
+            navigationIntent = .hooks
+        case "teams":
+            navigationIntent = .teams
         default:
             break
         }

@@ -30,6 +30,40 @@ public enum ClaudeModel: Codable, Hashable, Sendable, CustomStringConvertible {
 
     public var description: String { rawValue }
 
+    /// Human-readable display name for the model.
+    public var displayName: String {
+        switch self {
+        case .haiku: return "Claude Haiku"
+        case .sonnet: return "Claude Sonnet"
+        case .opus: return "Claude Opus"
+        case .unknown(let value): return value
+        }
+    }
+
+    /// All known model families (excludes `.unknown`).
+    public static let allKnown: [ClaudeModel] = [.sonnet, .opus, .haiku]
+
+    /// Full model ID strings used in Claude CLI config files.
+    /// These map to the model families above and are the values
+    /// stored in `~/.claude/settings.json` under the `model` key.
+    public static let allModelIDs: [String] = [
+        "claude-sonnet-4-20250514",
+        "claude-opus-4-20250514",
+        "claude-haiku-3-5-20241022"
+    ]
+
+    /// Returns a display-friendly name for a full model ID string.
+    public static func displayNameForID(_ modelID: String) -> String {
+        if modelID.contains("sonnet") {
+            return "Claude Sonnet"
+        } else if modelID.contains("opus") {
+            return "Claude Opus"
+        } else if modelID.contains("haiku") {
+            return "Claude Haiku"
+        }
+        return modelID
+    }
+
     /// Creates a ``ClaudeModel`` from a raw string value.
     public init(rawValue: String) {
         switch rawValue {

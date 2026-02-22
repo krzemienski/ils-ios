@@ -5,7 +5,7 @@ import ILSShared
 struct MacSessionsListView: View {
     @State private var viewModel = SessionsViewModel()
     @Environment(AppState.self) var appState
-    @EnvironmentObject var windowManager: WindowManager
+    @Environment(WindowManager.self) var windowManager
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     // Callbacks
@@ -364,7 +364,7 @@ struct MacSessionRowContent: View {
         onExportSession: { _ in }
     )
     .environment(AppState())
-    .environmentObject(WindowManager.shared)
+    .environment(WindowManager.shared)
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     .frame(width: 320, height: 600)
 }

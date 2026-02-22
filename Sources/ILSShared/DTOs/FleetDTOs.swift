@@ -1,5 +1,14 @@
 import Foundation
 
+// MARK: - Host Profiles Typealiases (migration path)
+
+/// Typealias for migration path — new code should use `RegisterHostProfileRequest`.
+public typealias RegisterHostProfileRequest = RegisterFleetHostRequest
+/// Typealias for migration path — new code should use `HostProfileListResponse`.
+public typealias HostProfileListResponse = FleetListResponse
+/// Typealias for migration path — new code should use `HostProfileHealthResponse`.
+public typealias HostProfileHealthResponse = FleetHealthResponse
+
 // MARK: - Fleet Requests
 
 /// Request payload for registering a new fleet host with the ILS backend.

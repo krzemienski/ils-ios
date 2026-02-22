@@ -1,19 +1,21 @@
 import Foundation
+import Observation
 import ILSShared
 
 /// WebSocket client for live system metrics streaming.
 /// Falls back to REST polling if WebSocket fails 3 times.
 @MainActor
-final class MetricsWebSocketClient: ObservableObject {
-    @Published var latestMetrics: SystemMetricsResponse?
-    @Published var isConnected: Bool = false
+@Observable
+final class MetricsWebSocketClient {
+    var latestMetrics: SystemMetricsResponse?
+    var isConnected: Bool = false
 
     /// Sliding window of recent data points for charts (max 60).
-    @Published var cpuHistory: [MetricDataPoint] = []
-    @Published var memoryHistory: [MetricDataPoint] = []
-    @Published var diskHistory: [MetricDataPoint] = []
-    @Published var networkInHistory: [MetricDataPoint] = []
-    @Published var networkOutHistory: [MetricDataPoint] = []
+    var cpuHistory: [MetricDataPoint] = []
+    var memoryHistory: [MetricDataPoint] = []
+    var diskHistory: [MetricDataPoint] = []
+    var networkInHistory: [MetricDataPoint] = []
+    var networkOutHistory: [MetricDataPoint] = []
 
     let baseURL: String
     private var webSocketTask: URLSessionWebSocketTask?
@@ -28,9 +30,11 @@ final class MetricsWebSocketClient: ObservableObject {
     private var reconnectTask: Task<Void, Never>?
     private var pollingTask: Task<Void, Never>?
     private var receiveTask: Task<Void, Never>?
+    private var heartbeatTask: Task<Void, Never>?
     private var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
+    private let heartbeatInterval: TimeInterval = 15 // Send ping every 15 seconds
 
     init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
@@ -39,11 +43,10 @@ final class MetricsWebSocketClient: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    deinit {
-        reconnectTask?.cancel()
-        pollingTask?.cancel()
-        receiveTask?.cancel()
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
+    /// Call from view's onDisappear to ensure all tasks and connections are torn down.
+    /// Replaces deinit-based cleanup which cannot safely access @MainActor state.
+    func cleanup() {
+        disconnect()
     }
 
     // MARK: - Public API
@@ -73,9 +76,15 @@ final class MetricsWebSocketClient: ObservableObject {
         receiveTask = nil
         pollingTask?.cancel()
         pollingTask = nil
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
+        // Reset failure state so a subsequent connect() starts fresh (MEMORY.md bug fix)
+        wsFailureCount = 0
+        reconnectAttempts = 0
+        useFallbackPolling = false
     }
 
     // MARK: - WebSocket
@@ -97,6 +106,31 @@ final class MetricsWebSocketClient: ObservableObject {
 
         receiveTask = Task { [weak self] in
             await self?.receiveLoop()
+        }
+
+        // Start heartbeat to detect stale connections
+        startHeartbeat()
+    }
+
+    private func startHeartbeat() {
+        heartbeatTask?.cancel()
+        heartbeatTask = Task { [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(self.heartbeatInterval * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                guard let wsTask = self.webSocketTask else { return }
+                // Send a ping; if pong is not received the connection is stale
+                let pingSucceeded = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+                    wsTask.sendPing { error in
+                        cont.resume(returning: error == nil)
+                    }
+                }
+                if !pingSucceeded {
+                    await self.handleWSDisconnect()
+                    return
+                }
+            }
         }
     }
 
@@ -139,14 +173,19 @@ final class MetricsWebSocketClient: ObservableObject {
     }
 
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
-        history.append(MetricDataPoint(timestamp: date, value: value))
-        if history.count > maxHistorySize {
-            history.removeFirst(history.count - maxHistorySize)
+        if history.count >= maxHistorySize {
+            // Avoid O(n) removeFirst() by rebuilding from suffix.
+            // suffix() returns an ArraySlice (O(1)), Array init copies only the
+            // retained elements once. Net cost: one O(k) copy vs O(k) shift per tick.
+            history = Array(history.suffix(maxHistorySize - 1))
         }
+        history.append(MetricDataPoint(timestamp: date, value: value))
     }
 
     private func handleWSDisconnect() async {
         isConnected = false
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         wsFailureCount += 1
@@ -181,7 +220,7 @@ final class MetricsWebSocketClient: ObservableObject {
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
+                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
             }
         }
     }

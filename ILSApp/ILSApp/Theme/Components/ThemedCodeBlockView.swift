@@ -59,7 +59,7 @@ struct ThemedCodeBlockView: View {
             Button(action: copyCode) {
                 HStack(spacing: 4) {
                     Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 10, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     Text(showCopied ? "Copied" : "Copy")
                         .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
                 }
