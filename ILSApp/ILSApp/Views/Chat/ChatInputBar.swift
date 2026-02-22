@@ -99,10 +99,11 @@ struct ChatInputBar: View {
     private var optionsButton: some View {
         Button(action: onAdvancedOptions) {
             Image(systemName: hasCustomOptions ? "slider.horizontal.2.gobackward" : "slider.horizontal.3")
+                .font(.system(size: 20))
                 .foregroundStyle(hasCustomOptions ? theme.accent : (isDisabled ? theme.textTertiary : theme.textSecondary))
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
