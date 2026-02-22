@@ -24,6 +24,9 @@ final class SystemMetricsViewModel {
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
+    nonisolated(unsafe) private var processRefreshTask: Task<Void, Never>?
+    private let processRefreshInterval: TimeInterval = 5 // seconds
+
     enum ProcessSortOption: String, CaseIterable {
         case cpu = "CPU"
         case memory = "Memory"
@@ -104,10 +107,35 @@ final class SystemMetricsViewModel {
 
     func connect() {
         metricsClient.connect()
+        startProcessAutoRefresh()
     }
 
     func disconnect() {
         metricsClient.disconnect()
+        stopProcessAutoRefresh()
+    }
+
+    // MARK: - Process Auto-Refresh
+
+    /// Start polling processes every 5 seconds while the view is visible.
+    func startProcessAutoRefresh() {
+        stopProcessAutoRefresh()
+        processRefreshTask = Task { [weak self] in
+            guard let self else { return }
+            // Initial load
+            await self.loadProcesses()
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(self.processRefreshInterval * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                await self.loadProcesses()
+            }
+        }
+    }
+
+    /// Stop the process auto-refresh timer.
+    func stopProcessAutoRefresh() {
+        processRefreshTask?.cancel()
+        processRefreshTask = nil
     }
 
     // MARK: - Process Loading
