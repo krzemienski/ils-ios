@@ -1,5 +1,28 @@
 import SwiftUI
 
+// MARK: - PreferenceKeys
+
+private struct CBContentWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CBViewWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CBScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 /// View that displays a code block with syntax highlighting, line numbers, and actions
 struct CodeBlockView: View {
     let code: String
@@ -14,6 +37,9 @@ struct CodeBlockView: View {
     @State private var cachedShouldBeCollapsible: Bool = false
     /// Lines currently visible (respects collapse state) — cached via `.task(id: code)` and `.onChange(of: isExpanded)`.
     @State private var cachedDisplayedLines: [String] = []
+    @State private var contentWidth: CGFloat = 0
+    @State private var viewWidth: CGFloat = 0
+    @State private var scrollOffset: CGFloat = 0
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -152,8 +178,29 @@ struct CodeBlockView: View {
                     .accessibilityLabel(accessibilityCodeLabel)
                 }
                 .padding(.vertical, theme.spacingSM)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear
+                            .preference(key: CBContentWidthKey.self, value: geo.size.width)
+                            .preference(key: CBScrollOffsetKey.self,
+                                        value: geo.frame(in: .named("hCodeScrollCB")).minX)
+                    }
+                )
             }
+            .coordinateSpace(name: "hCodeScrollCB")
+            .background(
+                GeometryReader { geo in
+                    Color.clear
+                        .preference(key: CBViewWidthKey.self, value: geo.size.width)
+                }
+            )
+            .onPreferenceChange(CBContentWidthKey.self) { contentWidth = $0 }
+            .onPreferenceChange(CBViewWidthKey.self) { viewWidth = $0 }
+            .onPreferenceChange(CBScrollOffsetKey.self) { scrollOffset = -$0 }
             .background(theme.bgTertiary)
+            .overlay(alignment: .trailing) {
+                scrollGradientOverlay
+            }
         }
         .cornerRadius(theme.cornerRadius)
         .overlay(
@@ -194,6 +241,27 @@ struct CodeBlockView: View {
                 }.value
             }
         }
+    }
+
+    // MARK: - Scroll Gradient Overlay
+
+    @ViewBuilder
+    private var scrollGradientOverlay: some View {
+        if shouldShowScrollIndicator {
+            LinearGradient(
+                colors: [theme.bgTertiary.opacity(0), theme.bgTertiary.opacity(0.85)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(width: 32)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var shouldShowScrollIndicator: Bool {
+        guard contentWidth > viewWidth else { return false }
+        let remainingScroll = contentWidth - viewWidth - scrollOffset
+        return remainingScroll > 1
     }
 
     /// Accessibility label for the code content
