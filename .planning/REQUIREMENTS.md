@@ -1,4 +1,4 @@
-# Requirements — v2.0 Performance Optimization Suite
+# Requirements -- v2.0 Performance Optimization Suite
 
 **Milestone:** v2.0 Performance Optimization Suite
 **Created:** 2026-02-22
@@ -71,27 +71,27 @@
 
 | REQ | Phase | Status |
 |-----|-------|--------|
-| LAUNCH-01 | — | Pending |
-| LAUNCH-02 | — | Pending |
-| MEM-01 | — | Pending |
-| MEM-02 | — | Pending |
-| MEM-03 | — | Pending |
-| NET-01 | — | Pending |
-| NET-02 | — | Pending |
-| NET-03 | — | Pending |
-| RENDER-01 | — | Pending |
-| RENDER-02 | — | Pending |
-| RENDER-03 | — | Pending |
-| BATT-01 | — | Pending |
-| BATT-02 | — | Pending |
-| BATT-03 | — | Pending |
-| TEST-01 | — | Pending |
-| TEST-02 | — | Pending |
-| TEST-03 | — | Pending |
-| TEST-04 | — | Pending |
-| COMPAT-01 | — | Pending |
-| COMPAT-02 | — | Pending |
+| LAUNCH-01 | Phase 11 | Pending |
+| LAUNCH-02 | Phase 11 | Pending |
+| MEM-01 | Phase 12 | Pending |
+| MEM-02 | Phase 13 | Pending |
+| MEM-03 | Phase 13 | Pending |
+| NET-01 | Phase 12 | Pending |
+| NET-02 | Phase 13 | Pending |
+| NET-03 | Phase 12 | Pending |
+| RENDER-01 | Phase 15 | Pending |
+| RENDER-02 | Phase 15 | Pending |
+| RENDER-03 | Phase 15 | Pending |
+| BATT-01 | Phase 14 | Pending |
+| BATT-02 | Phase 14 | Pending |
+| BATT-03 | Phase 15 | Pending |
+| TEST-01 | Phase 17 | Pending |
+| TEST-02 | Phase 17 | Pending |
+| TEST-03 | Phase 17 | Pending |
+| TEST-04 | Phase 17 | Pending |
+| COMPAT-01 | Phase 16 | Pending |
+| COMPAT-02 | Phase 16 | Pending |
 
 ---
 
-*20 requirements | 6 categories | All approved 2026-02-22*
+*20 requirements | 7 categories | All approved 2026-02-22*
