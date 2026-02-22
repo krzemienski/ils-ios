@@ -31,27 +31,24 @@ struct ILSAppApp: App {
                     .onOpenURL { url in
                         appState.handleURL(url)
                     }
+                    .task {
+                        withAnimation(.easeOut(duration: 0.4)) {
+                            showLaunchScreen = false
+                        }
+                        Task.detached(priority: .background) {
+                            try? Tips.configure([
+                                .displayFrequency(.daily),
+                                .datastoreLocation(.applicationDefault)
+                            ])
+                            await CacheService.shared.initialize()
+                        }
+                    }
 
                 if showLaunchScreen {
                     LaunchScreenView()
                         .environment(\.theme, themeManager.currentSnapshot)
                         .transition(.opacity)
                         .zIndex(1)
-                }
-            }
-            .task {
-                // Configure TipKit onboarding system
-                try? Tips.configure([
-                    .displayFrequency(.daily),
-                    .datastoreLocation(.applicationDefault)
-                ])
-
-                // Initialize local cache database
-                await CacheService.shared.initialize()
-
-                try? await Task.sleep(for: .seconds(2.2))
-                withAnimation(.easeOut(duration: 0.5)) {
-                    showLaunchScreen = false
                 }
             }
         }
