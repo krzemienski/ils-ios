@@ -201,7 +201,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 18-01-PLAN.md -- Concurrency safety: AppLogger OSAllocatedUnfairLock, SyntaxHighlighter @MainActor, CodeBlockView highlight caching
+- [x] 18-01-PLAN.md -- Concurrency safety: AppLogger OSAllocatedUnfairLock, SyntaxHighlighter @MainActor, CodeBlockView highlight caching
 - [ ] 18-02-PLAN.md -- Energy efficiency: Live Activity timer 1.0s, MCP lightweight health check, Teams exponential backoff
 - [ ] 18-03-PLAN.md -- Architecture + DB: MacChatView do/catch, MacSettingsView private @State, ThemePickerView Set, SQLite FK pool config
 - [ ] 18-04-PLAN.md -- NewSessionView ViewModel extraction: three async creation flows to NewSessionViewModel
@@ -325,7 +325,7 @@ Plans:
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |
 | 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
-| 18. CRITICAL Fixes | 1/4 | In Progress|  | - |
+| 18. CRITICAL Fixes | v3.0 | 2/4 | In Progress | - |
 | 19. Concurrency + Memory HIGH | v3.0 | 0/? | Not started | - |
 | 20. Architecture + Performance HIGH | v3.0 | 0/? | Not started | - |
 | 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |

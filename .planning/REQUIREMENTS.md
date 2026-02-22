@@ -9,8 +9,8 @@
 
 ## Concurrency Safety (18 issues: 2 CRITICAL, 7 HIGH, 6 MEDIUM, 3 LOW)
 
-- [ ] **CONC-01** [CRITICAL]: Convert AppLogger from `@unchecked Sendable` to actor or `OSAllocatedUnfairLock` — `Services/AppLogger.swift:4`
-- [ ] **CONC-02** [CRITICAL]: Add `@MainActor` to SyntaxHighlighter enum, remove `nonisolated(unsafe)` on `highlighterCache` — `Utils/SyntaxHighlighter.swift:14`
+- [x] **CONC-01** [CRITICAL]: Convert AppLogger from `@unchecked Sendable` to actor or `OSAllocatedUnfairLock` — `Services/AppLogger.swift:4`
+- [x] **CONC-02** [CRITICAL]: Add `@MainActor` to SyntaxHighlighter enum, remove `nonisolated(unsafe)` on `highlighterCache` — `Utils/SyntaxHighlighter.swift:14`
 - [ ] **CONC-03** [HIGH]: Fix SkillsViewModel `nonisolated(unsafe)` on Task property — `ViewModels/SkillsViewModel.swift:39`
 - [ ] **CONC-04** [HIGH]: Fix MCPViewModel `nonisolated(unsafe)` on healthTimer — `ViewModels/MCPViewModel.swift:17`
 - [ ] **CONC-05** [HIGH]: Fix SystemMetricsViewModel `nonisolated(unsafe)` pattern — `ViewModels/SystemMetricsViewModel.swift:34`
@@ -95,7 +95,7 @@
 
 ## SwiftUI Performance (14 issues: 2 CRITICAL, 4 HIGH, 7 MEDIUM, 1 LOW)
 
-- [ ] **UIPERF-01** [CRITICAL]: Cache SyntaxHighlighter in CodeBlockView with @State + .task(id:) — `Views/Chat/CodeBlockView.swift:156`
+- [x] **UIPERF-01** [CRITICAL]: Cache SyntaxHighlighter in CodeBlockView with @State + .task(id:) — `Views/Chat/CodeBlockView.swift:156`
 - [ ] **UIPERF-02** [CRITICAL]: Pre-compute Set for ThemePickerView.availableThemes — `Views/Settings/ThemePickerView.swift:203`
 - [ ] **UIPERF-03** [HIGH]: Convert SyntaxHighlighter keyword arrays to Set for O(1) lookup — `Utils/SyntaxHighlighter.swift` (17+ sites)
 - [ ] **UIPERF-04** [HIGH]: Pre-compute classifyProcess() in ViewModel — `Views/System/ProcessListView.swift:114,169`
@@ -246,8 +246,8 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONC-01 | Phase 18 | Pending |
-| CONC-02 | Phase 18 | Pending |
+| CONC-01 | Phase 18 | Complete |
+| CONC-02 | Phase 18 | Complete |
 | CONC-03 | Phase 19 | Pending |
 | CONC-04 | Phase 19 | Pending |
 | CONC-05 | Phase 19 | Pending |
@@ -320,7 +320,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ARCH-18 | Phase 23 | Pending |
 | ARCH-19 | Phase 23 | Pending |
 | ARCH-20 | Phase 23 | Pending |
-| UIPERF-01 | Phase 18 | Pending |
+| UIPERF-01 | Phase 18 | Complete |
 | UIPERF-02 | Phase 18 | Pending |
 | UIPERF-03 | Phase 20 | Pending |
 | UIPERF-04 | Phase 20 | Pending |
