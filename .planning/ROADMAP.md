@@ -237,10 +237,13 @@ Plans:
   3. SyntaxHighlighter keyword arrays are Set<String> at all 17+ call sites — O(1) lookup replaces O(n) Array.contains
   4. ProcessListView pre-computes classifyProcess() results in the ViewModel before ForEach iteration; ThemeMarketplaceView reads theme files via async Task, not Data(contentsOf:) on the main thread
   5. ChatMessage streaming produces fewer struct copies (value type optimization or @Observable reference); DashboardViewModel stats calls are parallelized with async let; SessionsController backend sort is indexed or paginated
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 20-01: TBD
+- [ ] 20-01-PLAN.md -- View body logic extractions: CommandPaletteView, CodeBlockView, NewSessionView, SidebarRootView, PermissionRequestModal
+- [ ] 20-02-PLAN.md -- Settings/FileBrowser architecture: PollingManager SwiftUI removal, Binding setter fixes, hookEventBreakdown, sortedEntries
+- [ ] 20-03-PLAN.md -- Performance: ProcessListView pre-computation, ThemeMarketplaceView async I/O, DashboardViewModel parallelization, ChatMessage optimization, SPERF-02 documentation
+- [ ] 20-04-PLAN.md -- Backend: SessionsController sort optimization, SPERF-06 Set verification
 
 ---
 
@@ -329,7 +332,7 @@ Plans:
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
-| 20. Architecture + Performance HIGH | v3.0 | 0/? | Not started | - |
+| 20. Architecture + Performance HIGH | v3.0 | 0/4 | Planned | - |
 | 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 0/? | Not started | - |
 | 23. All MEDIUM + LOW Issues | v3.0 | 0/? | Not started | - |
