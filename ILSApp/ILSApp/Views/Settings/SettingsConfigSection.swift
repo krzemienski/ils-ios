@@ -257,10 +257,30 @@ struct SettingsConfigSection: View {
                 if let config = viewModel.config?.content {
                     if let hooks = config.hooks {
                         let hookCount = countHooks(hooks)
-                        settingsRow("Hooks Configured", value: "\(hookCount)")
+                        NavigationLink {
+                            HooksManagementView()
+                        } label: {
+                            HStack {
+                                settingsRow("Hooks Configured", value: "\(hookCount)")
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
                         hookEventBreakdown(hooks)
                     } else {
-                        settingsRow("Hooks Configured", value: "0")
+                        NavigationLink {
+                            HooksManagementView()
+                        } label: {
+                            HStack {
+                                settingsRow("Hooks Configured", value: "0")
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
                     settingAnnotation(
                         isInherited: config.hooks == nil,

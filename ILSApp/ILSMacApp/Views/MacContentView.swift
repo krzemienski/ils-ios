@@ -332,6 +332,8 @@ struct MacContentView: View {
             FleetManagementView()
         case .themes:
             ThemesListView()
+        case .hooks:
+            HooksManagementView()
         }
     }
 
@@ -564,6 +566,7 @@ struct MacContentView: View {
         case .teams: selectedSection = .teams
         case .fleet: selectedSection = .fleet
         case .themes: selectedSection = .themes
+        case .hooks: selectedSection = .settings  // hooks navigates from settings context
         case .chat: selectedSection = .home
         }
         activeScreen = intent
