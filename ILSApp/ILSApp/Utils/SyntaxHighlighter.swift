@@ -3,15 +3,14 @@ import Splash
 import SwiftUI
 
 /// Wrapper around Splash library for syntax highlighting code
+@MainActor
 enum SyntaxHighlighter {
     /// Shared output format instance (stateless, safe to reuse)
     private static let outputFormat = AttributedStringOutputFormat()
 
     /// Cache of highlighters keyed by language to avoid per-call allocation.
-    /// `nonisolated(unsafe)` is safe here because:
-    /// - Dictionary reads/writes happen only on @MainActor (SwiftUI rendering)
-    /// - Splash.SyntaxHighlighter is a struct, so values are copied on read
-    nonisolated(unsafe) private static var highlighterCache: [String: Splash.SyntaxHighlighter<AttributedStringOutputFormat>] = [:]
+    /// Safe because entire enum is @MainActor isolated — no concurrent access.
+    private static var highlighterCache: [String: Splash.SyntaxHighlighter<AttributedStringOutputFormat>] = [:]
 
     /// Highlight code with syntax colors using Splash
     /// - Parameters:
