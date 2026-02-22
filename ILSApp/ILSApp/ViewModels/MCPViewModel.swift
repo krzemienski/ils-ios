@@ -173,9 +173,15 @@ class MCPViewModel {
     }
 
     func checkHealth() async {
+        guard let client else { return }
         isHealthChecking = true
-        await loadServers()
-        lastHealthCheck = Date()
+        do {
+            // Only check reachability — do not reload full server list
+            let _: APIResponse<ListResponse<MCPServer>> = try await client.get("/mcp")
+            lastHealthCheck = Date()
+        } catch {
+            AppLogger.shared.warning("MCP health check failed: \(error.localizedDescription)", category: "mcp")
+        }
         isHealthChecking = false
     }
 
