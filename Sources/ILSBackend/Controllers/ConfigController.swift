@@ -55,11 +55,21 @@ struct ConfigController: RouteCollection {
 
         var errors: [String] = []
 
-        // Validate model name if present
+        // Validate model name if present.
+        // Accepts short aliases (sonnet, opus, haiku) and full versioned model IDs.
+        // Any string beginning with "claude-" is accepted to accommodate future model releases.
         if let model = input.content.model {
-            let validModels = ["sonnet", "opus", "haiku", "claude-sonnet-4-5", "claude-opus-4-5", "claude-3-5-sonnet", "claude-3-5-haiku"]
-            if !validModels.contains(model) && !model.hasPrefix("claude-") {
-                errors.append("Invalid model name: \(model)")
+            let validShortAliases = [
+                "sonnet", "opus", "haiku",
+                // claude-3 family
+                "claude-3-5-sonnet", "claude-3-5-haiku", "claude-3-opus", "claude-3-sonnet", "claude-3-haiku",
+                // claude-4 family (as of 2026-02)
+                "claude-sonnet-4-5", "claude-opus-4-5",
+                "claude-sonnet-4-6", "claude-opus-4-6",
+                "claude-haiku-4-5"
+            ]
+            if !validShortAliases.contains(model) && !model.hasPrefix("claude-") {
+                errors.append("Invalid model name: \(model). Use a short alias (sonnet, opus, haiku) or a full claude- prefixed model ID.")
             }
         }
 

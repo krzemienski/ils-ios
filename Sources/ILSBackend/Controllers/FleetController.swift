@@ -116,6 +116,9 @@ struct FleetController: RouteCollection {
     }
 
     /// Get health status for a specific host.
+    ///
+    /// Performs a real HTTP GET to `http(s)://{host}:{backendPort}/health` to verify
+    /// the remote backend is reachable. Falls back to `.unknown` on timeout or error.
     @Sendable
     func health(req: Request) async throws -> APIResponse<FleetHealthResponse> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
@@ -126,18 +129,50 @@ struct FleetController: RouteCollection {
             throw Abort(.notFound, reason: "Host not found")
         }
 
-        // Update health check timestamp
+        // Perform a real HTTP health check to the host's backend port
+        let backendPort = host.backendPort
+        let scheme = backendPort == 443 ? "https" : "http"
+        let healthURL = "\(scheme)://\(host.host):\(backendPort)/health"
+
+        var healthStatus: FleetHost.HealthStatus = .unknown
+        var backendVersion = "unknown"
+        var claudeAvailable = false
+
+        if let url = URL(string: healthURL) {
+            do {
+                let config = URLSessionConfiguration.ephemeral
+                config.timeoutIntervalForRequest = 5 // 5-second timeout for health checks
+                let checkSession = URLSession(configuration: config)
+                let (data, response) = try await checkSession.data(from: url)
+                if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
+                    healthStatus = .healthy
+                    // Try to parse version from health response JSON
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                       let ver = json["version"] as? String {
+                        backendVersion = ver
+                    }
+                    claudeAvailable = true
+                } else {
+                    healthStatus = .degraded
+                }
+            } catch {
+                // Connection refused, timeout, or DNS failure
+                healthStatus = .unreachable
+            }
+        }
+
+        // Persist updated health status and timestamp
         host.lastHealthCheck = Date()
-        host.healthStatus = FleetHost.HealthStatus.healthy.rawValue
+        host.healthStatus = healthStatus.rawValue
         try await host.save(on: req.db)
 
         return APIResponse(
             success: true,
             data: FleetHealthResponse(
                 hostId: host.id ?? UUID(),
-                status: .healthy,
-                backendVersion: "1.0.0",
-                claudeAvailable: true,
+                status: healthStatus,
+                backendVersion: backendVersion,
+                claudeAvailable: claudeAvailable,
                 lastChecked: Date()
             )
         )
