@@ -11,14 +11,14 @@ final class HostProfilesViewModel {
     var loadError: String?
 
     private let apiClient: APIClient
-    @ObservationIgnored private var healthTimer: Timer?
+    @ObservationIgnored private var healthTask: Task<Void, Never>?
 
     init(apiClient: APIClient = APIClient()) {
         self.apiClient = apiClient
     }
 
     deinit {
-        healthTimer?.invalidate()
+        healthTask?.cancel()
     }
 
     func loadHosts() async {
@@ -69,17 +69,19 @@ final class HostProfilesViewModel {
     }
 
     func startHealthPolling(interval: TimeInterval = 30) {
-        healthTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                await self?.refreshAllHealth()
+        healthTask?.cancel()
+        healthTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(interval))
+                guard let self, !Task.isCancelled else { break }
+                await self.refreshAllHealth()
             }
         }
-        healthTimer?.tolerance = 5
     }
 
     func stopHealthPolling() {
-        healthTimer?.invalidate()
-        healthTimer = nil
+        healthTask?.cancel()
+        healthTask = nil
     }
 
     private func refreshAllHealth() async {
