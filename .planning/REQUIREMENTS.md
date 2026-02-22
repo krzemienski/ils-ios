@@ -55,8 +55,8 @@
 - [x] **SPERF-02** [HIGH]: Eliminate `any AppTheme` existential boxing in ThemeManager
 - [x] **SPERF-03** [HIGH]: Reduce ChatMessage struct copy during streaming
 - [x] **SPERF-04** [HIGH]: Parallelize sequential API calls in DashboardViewModel timer
-- [ ] **SPERF-05** [HIGH]: Optimize SessionsController sorting for 22K+ sessions
-- [ ] **SPERF-06** [HIGH]: MCPViewModel.checkHealth() full reload (deduplicates with SPERF-01)
+- [x] **SPERF-05** [HIGH]: Optimize SessionsController sorting for 22K+ sessions
+- [x] **SPERF-06** [HIGH]: MCPViewModel.checkHealth() full reload (deduplicates with SPERF-01)
 - [ ] **SPERF-07** [MEDIUM]: Reduce String allocations in message rendering loop
 - [ ] **SPERF-08** [MEDIUM]: Eliminate redundant dictionary lookups in sidebar
 - [ ] **SPERF-09** [MEDIUM]: Fix Array copy in session filtering
@@ -97,7 +97,7 @@
 
 - [x] **UIPERF-01** [CRITICAL]: Cache SyntaxHighlighter in CodeBlockView with @State + .task(id:) — `Views/Chat/CodeBlockView.swift:156`
 - [x] **UIPERF-02** [CRITICAL]: Pre-compute Set for ThemePickerView.availableThemes — `Views/Settings/ThemePickerView.swift:203`
-- [ ] **UIPERF-03** [HIGH]: Convert SyntaxHighlighter keyword arrays to Set for O(1) lookup — `Utils/SyntaxHighlighter.swift` (17+ sites)
+- [x] **UIPERF-03** [HIGH]: Convert SyntaxHighlighter keyword arrays to Set for O(1) lookup — `Utils/SyntaxHighlighter.swift` (17+ sites)
 - [x] **UIPERF-04** [HIGH]: Pre-compute classifyProcess() in ViewModel — `Views/System/ProcessListView.swift:114,169`
 - [x] **UIPERF-05** [HIGH]: Move Data(contentsOf:) off main thread in ThemeMarketplaceView — `Views/Themes/ThemeMarketplaceView.swift:278`
 - [ ] **UIPERF-06** [HIGH]: Cache cascading computed properties in CodeBlockView — `Views/Chat/CodeBlockView.swift:17-32`
@@ -286,8 +286,8 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | SPERF-02 | Phase 20 | Complete |
 | SPERF-03 | Phase 20 | Complete |
 | SPERF-04 | Phase 20 | Complete |
-| SPERF-05 | Phase 20 | Pending |
-| SPERF-06 | Phase 20 | Pending |
+| SPERF-05 | Phase 20 | Complete |
+| SPERF-06 | Phase 20 | Complete |
 | SPERF-07 | Phase 23 | Pending |
 | SPERF-08 | Phase 23 | Pending |
 | SPERF-09 | Phase 23 | Pending |
@@ -322,7 +322,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ARCH-20 | Phase 23 | Pending |
 | UIPERF-01 | Phase 18 | Complete |
 | UIPERF-02 | Phase 18 | Complete |
-| UIPERF-03 | Phase 20 | Pending |
+| UIPERF-03 | Phase 20 | Complete |
 | UIPERF-04 | Phase 20 | Complete |
 | UIPERF-05 | Phase 20 | Complete |
 | UIPERF-06 | Phase 20 | Pending |
