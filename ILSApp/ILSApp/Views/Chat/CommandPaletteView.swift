@@ -20,9 +20,9 @@ import ILSShared
 /// ### Callbacks
 /// - ``onSelect`` - Receives the formatted command string (e.g. `/compact`, `--model opus`)
 ///
-/// ### Computed Properties
-/// - ``builtInCommands`` - ``allBuiltInCommands`` filtered by ``searchText``
-/// - ``filteredSkills`` - ``skills`` filtered by ``searchText``
+/// ### Debounced Filtering
+/// - ``debouncedBuiltInCommands`` - Built-in commands filtered by search via `.task(id:)`
+/// - ``debouncedFilteredSkills`` - Skills filtered by search via `.task(id:)`
 ///
 /// ### Async Loading
 /// - ``loadSkills()`` - Fetches skills from the API and populates ``skills``
@@ -134,16 +134,6 @@ struct CommandPaletteView: View {
         CommandItem(name: "/status", description: "Show current session status and connection info", icon: "info.circle"),
         CommandItem(name: "/terminal-setup", description: "Install shell integration for enhanced terminal support", icon: "terminal")
     ]
-
-    /// Built-in commands filtered by ``searchText`` (name and description, case-insensitive).
-    private var builtInCommands: [CommandItem] {
-        Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
-    }
-
-    /// API-loaded skills filtered by ``searchText`` (name, case-insensitive).
-    private var filteredSkills: [Skill] {
-        skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
 
     /// Forwards the selected command string to ``onSelect`` and dismisses the sheet.
     private func selectCommand(_ command: String) {
