@@ -158,12 +158,13 @@ struct ChatInputBar: View {
             }
         } label: {
             Image(systemName: "arrow.up.circle.fill")
+                .font(.system(size: 20))
                 .foregroundStyle(text.isEmpty || isDisabled ? theme.textTertiary : theme.accent)
                 .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
                 .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .disabled(text.isEmpty || isDisabled)
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
