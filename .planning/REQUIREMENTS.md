@@ -17,7 +17,7 @@
 - [ ] **CONC-06** [HIGH]: Fix NotificationManager `@preconcurrency` delegate isolation mismatch — `ILSMacApp/Managers/NotificationManager.swift:151`
 - [ ] **CONC-07** [HIGH]: Fix WindowAccessor `DispatchQueue.main.async` accessing @MainActor state — `ILSMacApp/Views/SessionWindowView.swift:101`
 - [ ] **CONC-08** [HIGH]: Fix WindowFrameDelegate.debounceSave GCD accessing @MainActor — `ILSMacApp/Managers/WindowManager.swift:252`
-- [ ] **CONC-09** [HIGH]: Fix SSEClient `Task.detached` accessing @MainActor self — `Services/SSEClient.swift:130`
+- [x] **CONC-09** [HIGH]: Fix SSEClient `Task.detached` accessing @MainActor self — `Services/SSEClient.swift:130`
 - [ ] **CONC-10** [MEDIUM]: Fix ClaudeExecutorService.readQueue access from nonisolated context
 - [ ] **CONC-11** [MEDIUM]: Fix HostProfilesViewModel deinit accessing @MainActor properties
 - [ ] **CONC-12** [MEDIUM]: Fix SpotlightIndexer callback footgun
@@ -254,7 +254,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | CONC-06 | Phase 19 | Pending |
 | CONC-07 | Phase 19 | Pending |
 | CONC-08 | Phase 19 | Pending |
-| CONC-09 | Phase 19 | Pending |
+| CONC-09 | Phase 19 | Complete |
 | CONC-10 | Phase 23 | Pending |
 | CONC-11 | Phase 23 | Pending |
 | CONC-12 | Phase 23 | Pending |
