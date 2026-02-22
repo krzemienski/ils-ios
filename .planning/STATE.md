@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-22)
 
 ## Current Position
 
-Phase: 18 (in progress)
-Plan: 01, 02, 03 of 4 complete
-Status: Executing Phase 18 plans
-Last activity: 2026-02-22 — Completed 18-03 (macOS error handling, @State privacy, ThemePickerView Set, SQLite FK pool config)
+Phase: 18 (complete)
+Plan: 04 of 4 complete (all plans done)
+Status: Phase 18 complete -- ready for Phase 19
+Last activity: 2026-02-22 — Completed 18-04 (NewSessionView ViewModel extraction)
 
-Progress: [███░░░░░░░] ~11% (v3.0 — 3 of ~28 plans across 7 phases)
+Progress: [████░░░░░░] ~14% (v3.0 — 4 of ~28 plans across 7 phases)
 
 ## Previous Milestone (v1.0 Cross-Platform Audit)
 
@@ -41,6 +41,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 18 P01 | 3min | 2 tasks | 3 files |
 | Phase 18 P02 | 2min | 2 tasks | 3 files |
 | Phase 18 P03 | 5min | 2 tasks | 4 files |
+| Phase 18 P04 | 6min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -60,6 +61,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 18-01]: OSAllocatedUnfairLock for AppLogger (not actor -- sync callers cannot await); @MainActor enum for SyntaxHighlighter; .task(id:) caching for CodeBlockView
 - [Phase 18-02]: Reachability-only health check for MCP (no loadServers), 1.5x backoff multiplier for Teams (15s-120s), Live Activity timer 1.0s
 - [Phase 18-03]: AppLogger.shared.error() for macOS API error logging; SQLiteConfiguration(enableForeignKeys: true) for pool-level FK enforcement; Set<String> for O(1) theme availability lookup
+- [Phase 18-04]: Used ILSShared EmptyBody instead of private duplicate; followed configure(client:) pattern from ProjectsViewModel; kept projectsViewModel in View for UI binding
 
 ### Phase 18 Entry Checklist
 
@@ -94,6 +96,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 18-03-PLAN.md (macOS error handling, state privacy, perf, DB fixes)
+Stopped at: Completed 18-04-PLAN.md -- Phase 18 complete
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (165 issues, full detail)

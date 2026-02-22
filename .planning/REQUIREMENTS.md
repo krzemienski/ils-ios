@@ -74,7 +74,7 @@
 
 - [x] **ARCH-01** [CRITICAL]: Route MacChatView API calls through SessionsViewModel — `ILSMacApp/Views/MacChatView.swift:75-87`
 - [x] **ARCH-02** [CRITICAL]: Add do/catch to MacChatView unhandled Task error — `ILSMacApp/Views/MacChatView.swift:75-77`
-- [ ] **ARCH-03** [CRITICAL]: Extract NewSessionView 3 inline async flows to NewSessionViewModel — `Views/Sessions/NewSessionView.swift:794-870`
+- [x] **ARCH-03** [CRITICAL]: Extract NewSessionView 3 inline async flows to NewSessionViewModel — `Views/Sessions/NewSessionView.swift:794-870`
 - [x] **ARCH-04** [CRITICAL]: Add `private` to MacSettingsView @State — `ILSMacApp/Views/MacSettingsView.swift:32,35`
 - [ ] **ARCH-05** [HIGH]: Extract CommandPaletteView dual computed properties to ViewModel — `Views/Chat/CommandPaletteView.swift:139-146`
 - [ ] **ARCH-06** [HIGH]: Extract NewSessionView.filteredRecentSessions — `Views/Sessions/NewSessionView.swift:352-360`
@@ -302,7 +302,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | SPERF-18 | Phase 23 | Pending |
 | ARCH-01 | Phase 18 | Complete |
 | ARCH-02 | Phase 18 | Complete |
-| ARCH-03 | Phase 18 | Pending |
+| ARCH-03 | Phase 18 | Complete |
 | ARCH-04 | Phase 18 | Complete |
 | ARCH-05 | Phase 20 | Pending |
 | ARCH-06 | Phase 20 | Pending |

@@ -178,7 +178,7 @@ Plans:
 
 **Coverage:** 165/165 requirements mapped across Phases 18-23. Phase 24 validates all prior phases.
 
-- [ ] **Phase 18: CRITICAL Fixes** - 13 CRITICAL issues: data races, energy waste, architecture violations, performance bottlenecks, database safety
+- [x] **Phase 18: CRITICAL Fixes** - 13 CRITICAL issues: data races, energy waste, architecture violations, performance bottlenecks, database safety (completed 2026-02-22)
 - [ ] **Phase 19: Concurrency + Memory HIGH** - 9 HIGH issues: nonisolated(unsafe) patterns, GCD-to-Task migration, Timer-to-Task, window cleanup
 - [ ] **Phase 20: Architecture + Performance HIGH** - 17 HIGH issues: logic-in-view extractions, Set conversions, async file I/O, process classification, backend sorts
 - [ ] **Phase 21: Navigation + Codable HIGH** - 10 HIGH issues: dead path cleanup, macOS navigation parity, try?-to-do/catch conversions, Codable best practices
@@ -325,7 +325,7 @@ Plans:
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |
 | 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
-| 18. CRITICAL Fixes | 3/4 | In Progress|  | - |
+| 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | v3.0 | 0/? | Not started | - |
 | 20. Architecture + Performance HIGH | v3.0 | 0/? | Not started | - |
 | 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |
