@@ -19,6 +19,7 @@ struct NewSessionView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var projectsViewModel = ProjectsViewModel()
+    @State private var sessionViewModel = NewSessionViewModel()
     @State private var selectedMode: NewSessionMode = .project
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"
@@ -27,7 +28,6 @@ struct NewSessionView: View {
     @State private var maxBudget = ""
     @State private var maxTurns = ""
     @State private var sessionName = ""
-    @State private var isCreating = false
     @State private var showConfig = false
 
     // Fork mode state
@@ -97,6 +97,7 @@ struct NewSessionView: View {
             }
             .task {
                 projectsViewModel.configure(client: appState.apiClient)
+                sessionViewModel.configure(client: appState.apiClient)
                 await projectsViewModel.loadProjects()
             }
             .task {
@@ -621,14 +622,14 @@ struct NewSessionView: View {
             performAction()
         } label: {
             HStack(spacing: theme.spacingSM) {
-                if isCreating {
+                if sessionViewModel.isCreating {
                     ProgressView()
                         .tint(theme.textOnAccent)
                         .controlSize(.small)
                 } else {
                     Image(systemName: actionButtonIcon)
                 }
-                Text(isCreating ? "Creating..." : actionButtonTitle)
+                Text(sessionViewModel.isCreating ? "Creating..." : actionButtonTitle)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundStyle(theme.textOnAccent)
@@ -637,8 +638,8 @@ struct NewSessionView: View {
             .background(actionButtonEnabled ? theme.accent : theme.accent.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
-        .disabled(isCreating || !actionButtonEnabled)
-        .opacity(isCreating ? 0.7 : 1.0)
+        .disabled(sessionViewModel.isCreating || !actionButtonEnabled)
+        .opacity(sessionViewModel.isCreating ? 0.7 : 1.0)
         .padding(.top, theme.spacingSM)
         .accessibilityIdentifier("start-session-button")
     }
@@ -789,102 +790,49 @@ struct NewSessionView: View {
     }
 
     private func createSession() {
-        isCreating = true
-
         Task {
-            let request = CreateSessionRequest(
+            if let session = await sessionViewModel.createSession(
                 projectId: selectedProject?.id,
                 name: sessionName.isEmpty ? nil : sessionName,
                 model: selectedModel,
-                permissionMode: PermissionMode(rawValue: permissionMode),
+                permissionMode: permissionMode,
                 systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
-                maxBudgetUSD: Double(maxBudget),
-                maxTurns: Int(maxTurns)
-            )
-
-            do {
-                let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
-                if let session = response.data {
-                    await MainActor.run {
-                        HapticManager.notification(.success)
-                        onCreated(session)
-                        dismiss()
-                    }
-                }
-            } catch {
-                HapticManager.notification(.error)
-                AppLogger.shared.error("Failed to create session: \(error)", category: "ui")
+                maxBudget: maxBudget,
+                maxTurns: maxTurns
+            ) {
+                onCreated(session)
+                dismiss()
             }
-
-            isCreating = false
         }
     }
 
     private func forkSession() {
         guard let sourceSession = selectedSession else { return }
-        isCreating = true
-
         Task {
-            do {
-                let response: APIResponse<ChatSession> = try await appState.apiClient.post(
-                    "/sessions/\(sourceSession.id)/fork",
-                    body: EmptyBody()
-                )
-                if let forkedSession = response.data {
-                    await MainActor.run {
-                        HapticManager.notification(.success)
-                        onCreated(forkedSession)
-                        dismiss()
-                    }
-                }
-            } catch {
-                HapticManager.notification(.error)
-                AppLogger.shared.error("Failed to fork session: \(error)", category: "ui")
+            if let forkedSession = await sessionViewModel.forkSession(sourceSessionId: sourceSession.id) {
+                onCreated(forkedSession)
+                dismiss()
             }
-
-            isCreating = false
         }
     }
 
     private func createProjectAndSession() {
         guard !newProjectName.isEmpty, !newProjectPath.isEmpty else { return }
-        isCreating = true
-
         Task {
-            if let project = await projectsViewModel.createProject(
-                name: newProjectName,
-                path: newProjectPath,
-                defaultModel: selectedModel,
-                description: nil
+            if let session = await sessionViewModel.createProjectAndSession(
+                projectName: newProjectName,
+                projectPath: newProjectPath,
+                sessionName: sessionName.isEmpty ? nil : sessionName,
+                model: selectedModel,
+                permissionMode: permissionMode,
+                systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
+                maxBudget: maxBudget,
+                maxTurns: maxTurns,
+                projectsViewModel: projectsViewModel
             ) {
-                let request = CreateSessionRequest(
-                    projectId: project.id,
-                    name: sessionName.isEmpty ? nil : sessionName,
-                    model: selectedModel,
-                    permissionMode: PermissionMode(rawValue: permissionMode),
-                    systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
-                    maxBudgetUSD: Double(maxBudget),
-                    maxTurns: Int(maxTurns)
-                )
-
-                do {
-                    let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
-                    if let session = response.data {
-                        await MainActor.run {
-                            HapticManager.notification(.success)
-                            onCreated(session)
-                            dismiss()
-                        }
-                    }
-                } catch {
-                    HapticManager.notification(.error)
-                    AppLogger.shared.error("Failed to create session for new project: \(error)", category: "ui")
-                }
-            } else {
-                HapticManager.notification(.error)
+                onCreated(session)
+                dismiss()
             }
-
-            isCreating = false
         }
     }
 
@@ -898,10 +846,6 @@ struct NewSessionView: View {
         )
     }
 }
-
-// MARK: - Empty Body for POST requests without body
-
-private struct EmptyBody: Codable {}
 
 #Preview {
     NewSessionView { _ in }
