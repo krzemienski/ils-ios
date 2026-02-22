@@ -129,10 +129,11 @@ struct ChatInputBar: View {
     private var cancelButton: some View {
         Button(action: onCancel) {
             Image(systemName: "stop.circle.fill")
+                .font(.system(size: 20))
                 .foregroundStyle(theme.error)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .accessibilityIdentifier("cancel-button")
         .accessibilityLabel("Stop streaming")
         .accessibilityHint("Cancels the current response from Claude")
