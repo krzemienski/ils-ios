@@ -257,9 +257,32 @@ actor LocalDatabase {
         config.prepareDatabase { db in
             // Enable WAL mode for better concurrent access
             try db.execute(sql: "PRAGMA journal_mode = WAL")
+            // Enforce referential integrity
+            try db.execute(sql: "PRAGMA foreign_keys = ON")
         }
 
         dbPool = try DatabasePool(path: dbPath, configuration: config)
+
+        // Apply file protection so the database is accessible after first unlock (background refresh, widgets)
+        try fileManager.setAttributes(
+            [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+            ofItemAtPath: dbPath
+        )
+        // Also protect WAL and SHM journal files if they exist
+        let walPath = dbPath + "-wal"
+        let shmPath = dbPath + "-shm"
+        if fileManager.fileExists(atPath: walPath) {
+            try? fileManager.setAttributes(
+                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                ofItemAtPath: walPath
+            )
+        }
+        if fileManager.fileExists(atPath: shmPath) {
+            try? fileManager.setAttributes(
+                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                ofItemAtPath: shmPath
+            )
+        }
 
         try runMigrations()
         AppLogger.shared.info("LocalDatabase initialized at \(dbPath)", category: "cache")

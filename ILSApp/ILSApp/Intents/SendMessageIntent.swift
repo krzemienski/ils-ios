@@ -20,20 +20,25 @@ struct SendMessageIntent: AppIntent {
         Summary("Send \(\.$message) to \(\.$session)")
     }
 
+    /// Codable request body for chat stream.
+    private struct ChatStreamBody: Encodable {
+        let prompt: String
+        let sessionId: String
+    }
+
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
         guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
             return .result(value: "Error: Invalid server URL")
         }
 
-        // Build the chat stream request body
-        let body: [String: Any] = [
-            "prompt": message,
-            "sessionId": session.id
-        ]
-
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
-            return .result(value: "Error: Failed to encode request")
+        // Build the chat stream request body using Codable
+        let body = ChatStreamBody(prompt: message, sessionId: session.id)
+        let jsonData: Data
+        do {
+            jsonData = try JSONEncoder().encode(body)
+        } catch {
+            return .result(value: "Error: Failed to encode request — \(error.localizedDescription)")
         }
 
         var request = URLRequest(url: url)
@@ -49,7 +54,7 @@ struct SendMessageIntent: AppIntent {
         }
 
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await IntentURLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse else {
                 return .result(value: "Error: Invalid response from server")
             }

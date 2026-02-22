@@ -14,7 +14,7 @@ class MCPViewModel {
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
-    private var healthTimer: Task<Void, Never>?
+    @ObservationIgnored nonisolated(unsafe) private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
     var isSelecting = false
@@ -28,6 +28,10 @@ class MCPViewModel {
     private var searchCache: [(server: MCPServer, searchText: String)] = []
 
     init() {}
+
+    deinit {
+        healthTimer?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client

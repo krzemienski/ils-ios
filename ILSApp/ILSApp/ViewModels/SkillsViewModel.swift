@@ -28,20 +28,23 @@ class SkillsViewModel {
             gitHubResults = []
             return
         }
-        searchTask = Task {
+        searchTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 300_000_000)
-            if !Task.isCancelled {
-                await searchGitHub(query: gitHubSearchText)
-            }
+            guard let self, !Task.isCancelled else { return }
+            await searchGitHub(query: gitHubSearchText)
         }
     }
 
     private var client: APIClient?
-    private var searchTask: Task<Void, Never>?
+    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
     /// Precomputed lowercase search strings keyed by skill index, rebuilt when skills change
     private var searchCache: [(skill: Skill, searchText: String)] = []
 
     init() {}
+
+    deinit {
+        searchTask?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client

@@ -9,7 +9,7 @@ struct SessionWindowView: View {
 
     @Environment(AppState.self) private var appState
     @Environment(ThemeManager.self) private var themeManager
-    @EnvironmentObject private var windowManager: WindowManager
+    @Environment(WindowManager.self) private var windowManager
     @Environment(\.theme) private var theme
 
     @State private var viewModel = ChatViewModel()
@@ -114,5 +114,5 @@ struct WindowAccessor: NSViewRepresentable {
     SessionWindowView(sessionId: UUID())
         .environment(AppState())
         .environment(ThemeManager())
-        .environmentObject(WindowManager.shared)
+        .environment(WindowManager.shared)
 }

@@ -85,7 +85,7 @@ class PollingManager {
         guard healthPollTask == nil else { return }
         healthPollTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                try? await Task.sleep(nanoseconds: 60_000_000_000) // 60s health check
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
                 let cm = self.connectionManager

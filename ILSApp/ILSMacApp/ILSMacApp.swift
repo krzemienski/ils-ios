@@ -17,8 +17,8 @@ struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
-    @StateObject private var windowManager = WindowManager.shared
-    @StateObject private var notificationManager = NotificationManager.shared
+    @State private var windowManager = WindowManager.shared
+    @State private var notificationManager = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
@@ -36,8 +36,8 @@ struct ILSMacApp: App {
             MacContentView()
                 .environment(appState)
                 .environment(themeManager)
-                .environmentObject(windowManager)
-                .environmentObject(notificationManager)
+                .environment(windowManager)
+                .environment(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)
                 .preferredColorScheme(computedColorScheme)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -68,8 +68,8 @@ struct ILSMacApp: App {
                 SessionWindowView(sessionId: sessionId)
                     .environment(appState)
                     .environment(themeManager)
-                    .environmentObject(windowManager)
-                    .environmentObject(notificationManager)
+                    .environment(windowManager)
+                    .environment(notificationManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
@@ -166,7 +166,7 @@ class AppState {
             } else {
                 navigationIntent = .home
             }
-        case "projects", "plugins", "mcp", "skills":
+        case "browser", "projects", "plugins", "mcp", "skills":
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings
@@ -176,6 +176,10 @@ class AppState {
             navigationIntent = .hostProfiles
         case "themes":
             navigationIntent = .themes
+        case "hooks":
+            navigationIntent = .hooks
+        case "teams":
+            navigationIntent = .teams
         default:
             break
         }

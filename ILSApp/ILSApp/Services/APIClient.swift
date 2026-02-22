@@ -243,6 +243,21 @@ actor APIClient {
         invalidateCacheForMutation(path: endpoint)
     }
 
+    /// Execute a GET request and return the raw `Data` without JSON decoding.
+    /// Useful for endpoints that return plain text or binary content.
+    func getRawData(_ path: String) async throws -> Data {
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        applyAuth(to: &request)
+
+        let (data, response) = try await performWithRetry(request: request)
+        try validateResponse(response, data: data)
+        return data
+    }
+
     // MARK: - Session Helpers
 
     private struct RenameBody: Encodable {

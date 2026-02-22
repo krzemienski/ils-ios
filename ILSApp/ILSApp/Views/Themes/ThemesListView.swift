@@ -4,7 +4,14 @@ import UniformTypeIdentifiers
 
 struct ThemesListView: View {
     @Environment(AppState.self) var appState
+    @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var viewModel = ThemesViewModel()
+
+    private static let jsonDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
     @State private var showingNewTheme = false
     @State private var selectedTheme: CustomTheme?
     @State private var showingImporter = false
@@ -94,6 +101,7 @@ struct ThemesListView: View {
                 await handleImport(result: result)
             }
         }
+        .background(theme.bgPrimary)
         .alert("Import Error", isPresented: $showImportError) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -131,9 +139,7 @@ struct ThemesListView: View {
             let jsonData = try Data(contentsOf: fileURL)
 
             // Decode theme
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let importedTheme = try decoder.decode(CustomTheme.self, from: jsonData)
+            let importedTheme = try Self.jsonDecoder.decode(CustomTheme.self, from: jsonData)
 
             // Create theme via API
             let created = await viewModel.createTheme(

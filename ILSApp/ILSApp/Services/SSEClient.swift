@@ -18,13 +18,13 @@ class SSEClient {
         case reconnecting(attempt: Int)
     }
 
-    nonisolated(unsafe) private var streamTask: Task<Void, Never>?
+    private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
-    nonisolated(unsafe) private let session: URLSession
+    private let session: URLSession
     private var lastEventId: String?
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
@@ -42,8 +42,11 @@ class SSEClient {
         self.session = URLSession(configuration: config)
     }
 
-    deinit {
-        streamTask?.cancel()
+    /// Tear down session and cancel in-flight tasks.
+    /// Call from view's onDisappear; replaces deinit-based cleanup
+    /// which cannot safely access @MainActor state.
+    func cleanup() {
+        cancel()
         session.invalidateAndCancel()
     }
 
@@ -68,7 +71,12 @@ class SSEClient {
     }
 
     private func performStream(request: ChatStreamRequest) async {
-        let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
+        guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
+            AppLogger.shared.error("Invalid stream URL: \(baseURL)/api/v1/chat/stream", category: "sse")
+            self.error = URLError(.badURL)
+            self.isStreaming = false
+            return
+        }
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")

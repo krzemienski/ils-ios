@@ -48,10 +48,24 @@ actor SyncCoordinator {
 
     private var queue: [QueuedOperation] = []
     private var isDraining = false
+    private var persistTask: Task<Void, Never>?
+    private nonisolated let notificationObserver: NSObjectProtocol
 
     private init() {
         queue = Self.loadQueue()
-        observeNetworkChanges()
+        notificationObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task {
+                await SyncCoordinator.shared.drainQueue()
+            }
+        }
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(notificationObserver)
     }
 
     // MARK: - Public API
@@ -169,26 +183,35 @@ actor SyncCoordinator {
         }
     }
 
-    // MARK: - Network Observation
+    // MARK: - Persistence (file-backed in Application Support)
 
-    private nonisolated func observeNetworkChanges() {
-        NotificationCenter.default.addObserver(
-            forName: .networkDidBecomeAvailable,
-            object: nil,
-            queue: .main
-        ) { _ in
-            Task {
-                await SyncCoordinator.shared.drainQueue()
-            }
+    /// File URL for persisting the sync queue. Uses Application Support instead of
+    /// UserDefaults because queued operations can contain arbitrary-size request bodies
+    /// and UserDefaults is not designed for large data blobs.
+    private static var queueFileURL: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let dir = appSupport.appendingPathComponent("ILS", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: dir.path) {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir.appendingPathComponent("sync_queue.json")
+    }
+
+    /// Debounced persist: coalesces rapid queue mutations into a single
+    /// file write after a 200ms quiet period.
+    private func persistQueue() {
+        persistTask?.cancel()
+        persistTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms debounce
+            guard !Task.isCancelled, let self else { return }
+            await self.flushQueueToDisk()
         }
     }
 
-    // MARK: - Persistence
-
-    private func persistQueue() {
+    private func flushQueueToDisk() {
         do {
             let data = try encoder.encode(queue)
-            UserDefaults.standard.set(data, forKey: Self.storageKey)
+            try data.write(to: Self.queueFileURL, options: [.atomic])
         } catch {
             AppLogger.shared.error(
                 "Failed to persist sync queue: \(error.localizedDescription)",
@@ -198,10 +221,23 @@ actor SyncCoordinator {
     }
 
     private static func loadQueue() -> [QueuedOperation] {
-        guard let data = UserDefaults.standard.data(forKey: storageKey) else {
+        let url = queueFileURL
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            // Migrate from UserDefaults if data exists there (one-time)
+            if let legacyData = UserDefaults.standard.data(forKey: storageKey) {
+                UserDefaults.standard.removeObject(forKey: storageKey)
+                do {
+                    let ops = try decoder.decode([QueuedOperation].self, from: legacyData)
+                    try legacyData.write(to: url, options: [.atomic])
+                    return ops
+                } catch {
+                    return []
+                }
+            }
             return []
         }
         do {
+            let data = try Data(contentsOf: url)
             return try decoder.decode([QueuedOperation].self, from: data)
         } catch {
             AppLogger.shared.error(

@@ -423,7 +423,7 @@ struct ThemeEditorView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             TabView {
                 // MARK: - Editor Tab
                 editorForm
@@ -1137,23 +1137,26 @@ struct ThemeEditorView: View {
 
     // MARK: - Export Theme
 
-    private func exportTheme() {
+    private static let themeEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
 
+    private func exportTheme() {
         do {
-            let jsonData = try encoder.encode(previewTheme)
+            let jsonData = try Self.themeEncoder.encode(previewTheme)
 
-            // Create temporary file
+            // Write to Caches (survives backgrounding, unlike tmp/)
             let fileName = "\(name.isEmpty ? "theme" : name.replacingOccurrences(of: " ", with: "_")).json"
-            let tempDirectory = FileManager.default.temporaryDirectory
-            let fileURL = tempDirectory.appendingPathComponent(fileName)
+            let exportDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+                .appendingPathComponent("ThemeExports", isDirectory: true)
+            try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
+            let fileURL = exportDir.appendingPathComponent(fileName)
 
-            // Write JSON to file
             try jsonData.write(to: fileURL)
 
-            // Store URL for sharing
             exportURL = fileURL
             showShareSheet = true
         } catch {

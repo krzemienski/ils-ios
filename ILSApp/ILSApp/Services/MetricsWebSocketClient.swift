@@ -18,7 +18,7 @@ final class MetricsWebSocketClient {
     var networkOutHistory: [MetricDataPoint] = []
 
     let baseURL: String
-    nonisolated(unsafe) private var webSocketTask: URLSessionWebSocketTask?
+    private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private let decoder: JSONDecoder
 
@@ -27,10 +27,10 @@ final class MetricsWebSocketClient {
     private let maxWSFailures: Int = 3
     private let maxHistorySize: Int = 60
 
-    nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
-    nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
-    nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
-    nonisolated(unsafe) private var heartbeatTask: Task<Void, Never>?
+    private var reconnectTask: Task<Void, Never>?
+    private var pollingTask: Task<Void, Never>?
+    private var receiveTask: Task<Void, Never>?
+    private var heartbeatTask: Task<Void, Never>?
     private var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
@@ -43,12 +43,10 @@ final class MetricsWebSocketClient {
         decoder.dateDecodingStrategy = .iso8601
     }
 
-    deinit {
-        reconnectTask?.cancel()
-        pollingTask?.cancel()
-        receiveTask?.cancel()
-        heartbeatTask?.cancel()
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
+    /// Call from view's onDisappear to ensure all tasks and connections are torn down.
+    /// Replaces deinit-based cleanup which cannot safely access @MainActor state.
+    func cleanup() {
+        disconnect()
     }
 
     // MARK: - Public API
@@ -175,13 +173,13 @@ final class MetricsWebSocketClient {
     }
 
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
-        history.append(MetricDataPoint(timestamp: date, value: value))
-        // Only ever 1 excess element since we append 1 at a time.
-        // removeFirst() on a 61-element array is O(60) but acceptable
-        // for this tick rate. Full Deque migration is a future optimization.
-        if history.count > maxHistorySize {
-            history.removeFirst()
+        if history.count >= maxHistorySize {
+            // Avoid O(n) removeFirst() by rebuilding from suffix.
+            // suffix() returns an ArraySlice (O(1)), Array init copies only the
+            // retained elements once. Net cost: one O(k) copy vs O(k) shift per tick.
+            history = Array(history.suffix(maxHistorySize - 1))
         }
+        history.append(MetricDataPoint(timestamp: date, value: value))
     }
 
     private func handleWSDisconnect() async {
@@ -222,7 +220,7 @@ final class MetricsWebSocketClient {
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
+                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
             }
         }
     }

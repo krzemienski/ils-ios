@@ -75,8 +75,8 @@ struct LaunchScreenView: View {
                                     endPoint: .bottom
                                 )
                             )
-                            .shadow(color: theme.accent.opacity(glowIntensity), radius: 20)
-                            .shadow(color: theme.accentSecondary.opacity(glowIntensity), radius: 30)
+                            .shadow(color: theme.accent.opacity(glowIntensity), radius: 10)
+                            .shadow(color: theme.accentSecondary.opacity(glowIntensity), radius: 15)
 
                         // Subtitle indicator capsules
                         HStack(spacing: 2) {
@@ -160,6 +160,10 @@ struct LaunchScreenView: View {
                     glowIntensity = 0.8
                 }
             }
+        }
+        .onDisappear {
+            isAnimating = false
+            glowIntensity = 0.3
         }
     }
 }

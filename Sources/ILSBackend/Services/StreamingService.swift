@@ -12,20 +12,36 @@ actor EventCounter {
     }
 }
 
-/// Ring buffer storing recent SSE events for replay on reconnect
+/// Ring buffer storing recent SSE events for replay on reconnect.
+/// Uses a circular write index to avoid O(n) array shifts from removeFirst().
 actor EventBuffer {
-    private var buffer: [(id: Int, data: String)] = []
-    private let capacity = 1000
+    private var buffer: [(id: Int, data: String)?]
+    private var writeIndex: Int = 0
+    private var count: Int = 0
+    private let capacity: Int
+
+    init(capacity: Int = 1000) {
+        self.capacity = capacity
+        self.buffer = Array(repeating: nil, count: capacity)
+    }
 
     func store(id: Int, data: String) {
-        buffer.append((id: id, data: data))
-        if buffer.count > capacity {
-            buffer.removeFirst(buffer.count - capacity)
-        }
+        buffer[writeIndex] = (id: id, data: data)
+        writeIndex = (writeIndex + 1) % capacity
+        if count < capacity { count += 1 }
     }
 
     func eventsSince(_ lastId: Int) -> [(id: Int, data: String)] {
-        buffer.filter { $0.id > lastId }
+        // Read from oldest to newest
+        var result: [(id: Int, data: String)] = []
+        let start = count < capacity ? 0 : writeIndex
+        for i in 0..<count {
+            let index = (start + i) % capacity
+            if let event = buffer[index], event.id > lastId {
+                result.append(event)
+            }
+        }
+        return result
     }
 }
 

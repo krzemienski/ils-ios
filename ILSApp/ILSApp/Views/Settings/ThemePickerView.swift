@@ -58,7 +58,6 @@ struct ThemePickerView: View {
                 }
 
                 // Custom themes (registered via CustomThemeAdapter)
-                let customThemes = themeManager.availableThemes.filter { $0.id.hasPrefix("custom-") }
                 if !customThemes.isEmpty {
                     sectionLabel("Custom")
 
@@ -77,6 +76,12 @@ struct ThemePickerView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
+    }
+
+    // MARK: - Custom Themes (filtered outside body)
+
+    private var customThemes: [any AppTheme] {
+        themeManager.availableThemes.filter { $0.id.hasPrefix("custom-") }
     }
 
     // MARK: - Section Label

@@ -136,11 +136,7 @@ struct ChatView: View {
             TextField("Session name", text: $actions.renameText)
             Button("Rename") {
                 Task {
-                    do {
-                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: actions.renameText)
-                    } catch {
-                        viewModel.error = error
-                    }
+                    await viewModel.renameSession(name: actions.renameText)
                 }
             }
             Button("Cancel", role: .cancel) {}
@@ -150,11 +146,8 @@ struct ChatView: View {
         .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
             Button("Delete", role: .destructive) {
                 Task {
-                    do {
-                        let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
+                    if await viewModel.deleteSession() {
                         dismiss()
-                    } catch {
-                        viewModel.error = error
                     }
                 }
             }
@@ -363,22 +356,10 @@ struct ChatView: View {
     /// Export the full conversation as a Markdown file for sharing.
     private func exportSession() async {
         actions.isExporting = true
-        var md = "# Session: \(session.name ?? "Unnamed")\n\n"
-        md += "Model: \(session.model.capitalized)\n"
-        md += "Status: \(session.status.rawValue.capitalized)\n"
-        md += "Created: \(session.createdAt.formatted())\n"
-        md += "Last Active: \(session.lastActiveAt.formatted())\n"
-        if let cost = session.totalCostUSD {
-            md += "Cost: $\(String(format: "%.4f", cost))\n"
-        }
-        md += "\n---\n\n"
-
-        for message in viewModel.messages {
-            let role = message.isUser ? "User" : "Assistant"
-            md += "## \(role)\n\n\(message.text)\n\n"
-        }
-
-        actions.exportMarkdown = md
+        actions.exportMarkdown = SessionExportService.exportMarkdown(
+            session: session,
+            messages: viewModel.messages
+        )
         actions.isExporting = false
         sheets.showExportSheet = true
     }

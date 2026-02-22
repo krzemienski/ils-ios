@@ -1,6 +1,18 @@
 import AppIntents
 import Foundation
 
+/// Shared URLSession for App Intents with `waitsForConnectivity` enabled.
+/// Defined once so all intent structs reuse the same configuration.
+@available(iOS 16.0, *)
+enum IntentURLSession {
+    static let shared: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.timeoutIntervalForRequest = 15
+        return URLSession(configuration: config)
+    }()
+}
+
 /// Creates a new Claude Code session via the ILS backend.
 @available(iOS 16.0, *)
 struct CreateSessionIntent: AppIntent {
@@ -17,19 +29,34 @@ struct CreateSessionIntent: AppIntent {
         Summary("Create session \(\.$name) with \(\.$model)")
     }
 
+    /// Codable request body for session creation.
+    private struct CreateSessionBody: Encodable {
+        let name: String
+        let model: String
+    }
+
+    /// Codable response wrapper matching the backend's APIResponse<T>.
+    private struct CreateSessionAPIResponse: Decodable {
+        let success: Bool
+        let data: SessionData?
+
+        struct SessionData: Decodable {
+            let id: String
+        }
+    }
+
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
         guard let url = URL(string: "\(baseURL)/api/v1/sessions") else {
             return .result(value: "Error: Invalid server URL")
         }
 
-        let body: [String: String] = [
-            "name": name,
-            "model": model.rawValue
-        ]
-
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
-            return .result(value: "Error: Failed to encode request")
+        let body = CreateSessionBody(name: name, model: model.rawValue)
+        let jsonData: Data
+        do {
+            jsonData = try JSONEncoder().encode(body)
+        } catch {
+            return .result(value: "Error: Failed to encode request — \(error.localizedDescription)")
         }
 
         var request = URLRequest(url: url)
@@ -45,17 +72,20 @@ struct CreateSessionIntent: AppIntent {
         }
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await IntentURLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse else {
                 return .result(value: "Error: Invalid response from server")
             }
 
             if (200...299).contains(httpResponse.statusCode) {
-                // Try to extract the session ID from the response
-                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let sessionData = json["data"] as? [String: Any],
-                   let sessionId = sessionData["id"] as? String {
-                    return .result(value: "Created session \"\(name)\" (ID: \(sessionId.prefix(8))...)")
+                // Extract the session ID using Codable
+                do {
+                    let decoded = try JSONDecoder().decode(CreateSessionAPIResponse.self, from: data)
+                    if let sessionId = decoded.data?.id {
+                        return .result(value: "Created session \"\(name)\" (ID: \(sessionId.prefix(8))...)")
+                    }
+                } catch {
+                    // Decode failed but session was created — fall through
                 }
                 return .result(value: "Created session: \(name)")
             } else {

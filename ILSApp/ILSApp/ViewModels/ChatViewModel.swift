@@ -171,7 +171,7 @@ class ChatViewModel {
                 // Process new messages
                 let msgs = sseClient.messages
                 if msgs.count > lastMessageCount {
-                    let newMessages = Array(msgs.dropFirst(self.lastProcessedMessageIndex))
+                    let newMessages = msgs.suffix(from: self.lastProcessedMessageIndex)
                     if !newMessages.isEmpty {
                         self.pendingStreamMessages.reserveCapacity(self.pendingStreamMessages.count + newMessages.count)
                         self.pendingStreamMessages.append(contentsOf: newMessages)
@@ -425,7 +425,8 @@ class ChatViewModel {
     func cancel() {
         // Notify backend to kill Claude CLI process (best-effort, fire-and-forget)
         if let sessionId = sessionId, let apiClient = apiClient {
-            Task {
+            Task { [weak self] in
+                _ = self  // prevent unused capture warning
                 do {
                     let _: APIResponse<DeletedResponse> = try await apiClient.post("/chat/cancel/\(sessionId.uuidString)", body: EmptyBody())
                 } catch {
@@ -445,7 +446,8 @@ class ChatViewModel {
         guard let apiClient, let sessionId else { return }
         pendingPermissionRequest = nil
 
-        Task {
+        Task { [weak self] in
+            _ = self  // prevent unused capture warning
             do {
                 let body = PermissionDecision(decision: decision)
                 let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
@@ -455,6 +457,33 @@ class ChatViewModel {
             } catch {
                 AppLogger.shared.warning("Permission response failed (non-fatal): \(error)", category: "chat")
             }
+        }
+    }
+
+    /// Rename the current session.
+    func renameSession(name: String) async {
+        guard let sessionId = sessionId, let apiClient else { return }
+
+        do {
+            let _: APIResponse<ChatSession> = try await apiClient.renameSession(id: sessionId, name: name)
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to rename session: \(error)", category: "chat")
+        }
+    }
+
+    /// Delete the current session permanently.
+    /// Returns `true` if the deletion succeeded.
+    func deleteSession() async -> Bool {
+        guard let sessionId = sessionId, let apiClient else { return false }
+
+        do {
+            let _: APIResponse<String> = try await apiClient.delete("/sessions/\(sessionId.uuidString)")
+            return true
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to delete session: \(error)", category: "chat")
+            return false
         }
     }
 

@@ -150,31 +150,10 @@ struct SessionInfoView: View {
 
     private func exportSession() async {
         isExporting = true
-        let s = displaySession
-        var md = "# Session: \(s.name ?? "Unnamed")\n\n"
-        md += "Model: \(s.model.capitalized)\n"
-        md += "Status: \(s.status.rawValue.capitalized)\n"
-        md += "Created: \(s.createdAt.formatted())\n"
-        md += "Last Active: \(s.lastActiveAt.formatted())\n"
-        if let cost = s.totalCostUSD {
-            md += "Cost: $\(String(format: "%.4f", cost))\n"
-        }
-        md += "\n---\n\n"
-
-        // Fetch messages
-        do {
-            let response: APIResponse<ListResponse<Message>> = try await appState.apiClient.get("/sessions/\(session.id.uuidString)/messages?limit=500")
-            if let messages = response.data?.items {
-                for message in messages {
-                    let role = message.role.rawValue.capitalized
-                    md += "## \(role)\n\n\(message.content)\n\n"
-                }
-            }
-        } catch {
-            md += "_Failed to load messages: \(error.localizedDescription)_\n"
-        }
-
-        exportMarkdown = md
+        exportMarkdown = await SessionExportService.exportMarkdown(
+            session: displaySession,
+            apiClient: appState.apiClient
+        )
         isExporting = false
         showExportSheet = true
     }

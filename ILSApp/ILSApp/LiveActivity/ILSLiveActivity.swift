@@ -68,18 +68,18 @@ struct ChatStreamingLockScreenView: View {
             // Header: session name + model badge
             HStack {
                 Image(systemName: "brain.head.profile")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(LiveActivityColors.accent)
 
                 Text(context.attributes.sessionName)
-                    .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                    .font(.subheadline.weight(.semibold).monospaced())
                     .foregroundStyle(LiveActivityColors.textPrimary)
                     .lineLimit(1)
 
                 Spacer()
 
                 Text(context.attributes.model)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.caption.weight(.medium).monospaced())
                     .foregroundStyle(LiveActivityColors.accent)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
@@ -93,21 +93,21 @@ struct ChatStreamingLockScreenView: View {
             if context.state.isStreaming {
                 HStack(spacing: 4) {
                     Text("Claude is responding")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(LiveActivityColors.success)
 
                     StreamingDotsView()
                 }
             } else {
                 Text("Response complete")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.footnote.weight(.medium))
                     .foregroundStyle(LiveActivityColors.textSecondary)
             }
 
             // Message preview
             if !context.state.messagePreview.isEmpty {
                 Text(context.state.messagePreview)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.caption.monospaced())
                     .foregroundStyle(LiveActivityColors.textSecondary)
                     .lineLimit(2)
                     .truncationMode(.tail)
@@ -117,10 +117,10 @@ struct ChatStreamingLockScreenView: View {
             HStack {
                 Label {
                     Text(formatTokenCount(context.state.tokenCount))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .font(.caption.weight(.medium).monospaced())
                 } icon: {
                     Image(systemName: "number.square")
-                        .font(.system(size: 11))
+                        .font(.caption)
                 }
                 .foregroundStyle(LiveActivityColors.textSecondary)
 
@@ -128,14 +128,14 @@ struct ChatStreamingLockScreenView: View {
 
                 if context.state.elapsedSeconds > 0 {
                     Text(formatElapsed(context.state.elapsedSeconds))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .font(.caption.weight(.medium).monospaced())
                         .foregroundStyle(LiveActivityColors.textSecondary)
 
                     Spacer()
                 }
 
                 Text(formatCost(context.state.cost))
-                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .font(.caption.weight(.semibold).monospaced())
                     .foregroundStyle(LiveActivityColors.accent)
             }
         }
@@ -175,7 +175,7 @@ private struct StreamingDotsView: View {
 
     var body: some View {
         Text(String(repeating: ".", count: (dotCount % 3) + 1))
-            .font(.system(size: 13, weight: .medium))
+            .font(.footnote.weight(.medium))
             .foregroundStyle(LiveActivityColors.success)
             .frame(width: 20, alignment: .leading)
             .onAppear {
@@ -198,7 +198,7 @@ private struct StreamingDotsView: View {
 struct ChatStreamingCompactLeading: View {
     var body: some View {
         Image(systemName: "brain.head.profile")
-            .font(.system(size: 12))
+            .font(.caption)
             .foregroundStyle(LiveActivityColors.accent)
     }
 }
@@ -212,7 +212,7 @@ struct ChatStreamingCompactTrailing: View {
         Text(tokenCount >= 1000
              ? String(format: "%.1fk", Double(tokenCount) / 1000.0)
              : "\(tokenCount)")
-            .font(.system(size: 12, weight: .medium, design: .monospaced))
+            .font(.caption.weight(.medium).monospaced())
             .foregroundStyle(LiveActivityColors.textPrimary)
     }
 }
@@ -237,18 +237,18 @@ struct ChatStreamingExpandedView: View {
             // Top row: icon + session name
             HStack(spacing: 6) {
                 Image(systemName: "brain.head.profile")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(LiveActivityColors.accent)
 
                 Text(attributes.sessionName)
-                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                    .font(.subheadline.weight(.semibold).monospaced())
                     .foregroundStyle(LiveActivityColors.textPrimary)
                     .lineLimit(1)
 
                 Spacer()
 
                 Text(attributes.model)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.caption.weight(.medium).monospaced())
                     .foregroundStyle(LiveActivityColors.accent.opacity(0.8))
             }
 
@@ -260,33 +260,33 @@ struct ChatStreamingExpandedView: View {
                             .fill(LiveActivityColors.success)
                             .frame(width: 6, height: 6)
                         Text("Streaming")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.caption.weight(.medium))
                             .foregroundStyle(LiveActivityColors.success)
                     }
                 } else {
                     Text("Complete")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(LiveActivityColors.textSecondary)
                 }
 
                 Spacer()
 
                 Text(formatCost(state.cost))
-                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .font(.caption.weight(.semibold).monospaced())
                     .foregroundStyle(LiveActivityColors.accent)
             }
 
             // Bottom row: tokens + elapsed
             HStack {
                 Text(formatTokenCount(state.tokenCount))
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.caption.monospaced())
                     .foregroundStyle(LiveActivityColors.textSecondary)
 
                 Spacer()
 
                 if state.elapsedSeconds > 0 {
                     Text(formatElapsed(state.elapsedSeconds))
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.caption.monospaced())
                         .foregroundStyle(LiveActivityColors.textSecondary)
                 }
             }

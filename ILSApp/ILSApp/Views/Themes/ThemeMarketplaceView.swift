@@ -41,6 +41,13 @@ struct ThemeMarketplaceView: View {
     @Environment(\.theme) private var theme
     @Environment(ThemeManager.self) var themeManager
 
+    private static let jsonDecoder = JSONDecoder()
+    private static let jsonEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return encoder
+    }()
+
     @State private var searchText = ""
     @State private var selectedCategory: ThemeCategory = .all
     @State private var showingImporter = false
@@ -48,6 +55,7 @@ struct ThemeMarketplaceView: View {
     @State private var importError: String?
     @State private var showImportError = false
     @State private var exportData: Data?
+    @State private var cachedFilteredThemes: [any AppTheme] = []
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -93,6 +101,9 @@ struct ThemeMarketplaceView: View {
                 showImportError = true
             }
         }
+        .onAppear { cachedFilteredThemes = computeFilteredThemes() }
+        .onChange(of: searchText) { _, _ in cachedFilteredThemes = computeFilteredThemes() }
+        .onChange(of: selectedCategory) { _, _ in cachedFilteredThemes = computeFilteredThemes() }
         .alert("Error", isPresented: $showImportError) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -113,7 +124,7 @@ struct ThemeMarketplaceView: View {
     private var themeGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: theme.spacingSM) {
-                ForEach(filteredThemes, id: \.id) { builtinTheme in
+                ForEach(cachedFilteredThemes, id: \.id) { builtinTheme in
                     themeCard(for: builtinTheme)
                 }
             }
@@ -227,7 +238,7 @@ struct ThemeMarketplaceView: View {
 
     // MARK: - Filtered Themes
 
-    private var filteredThemes: [any AppTheme] {
+    private func computeFilteredThemes() -> [any AppTheme] {
         let themes = themeManager.availableThemes
 
         let categoryFiltered: [any AppTheme]
@@ -265,7 +276,7 @@ struct ThemeMarketplaceView: View {
             defer { fileURL.stopAccessingSecurityScopedResource() }
 
             let jsonData = try Data(contentsOf: fileURL)
-            let manifest = try JSONDecoder().decode(ThemeManifest.self, from: jsonData)
+            let manifest = try Self.jsonDecoder.decode(ThemeManifest.self, from: jsonData)
 
             let imported = ImportedTheme(manifest: manifest)
             themeManager.registerTheme(imported)
@@ -295,9 +306,7 @@ struct ThemeMarketplaceView: View {
         )
 
         do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            exportData = try encoder.encode(manifest)
+            exportData = try Self.jsonEncoder.encode(manifest)
             showingExporter = true
         } catch {
             importError = "Failed to export theme: \(error.localizedDescription)"

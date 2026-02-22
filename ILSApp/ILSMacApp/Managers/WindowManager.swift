@@ -1,15 +1,17 @@
 import SwiftUI
 import AppKit
+import Observation
 import ILSShared
 
 /// Manages multiple session windows for macOS multi-window support.
 @MainActor
-class WindowManager: ObservableObject {
+@Observable
+class WindowManager {
     /// Map of session IDs to their window identifiers
-    @Published private(set) var openWindows: [UUID: String] = [:]
+    private(set) var openWindows: [UUID: String] = [:]
 
     /// The currently focused session ID (if any)
-    @Published var focusedSessionId: UUID?
+    var focusedSessionId: UUID?
 
     /// Singleton instance for app-wide access
     static let shared = WindowManager()
@@ -215,10 +217,13 @@ class WindowManager: ObservableObject {
 
 // MARK: - Window Frame Delegate
 
-/// NSWindowDelegate to track and save window frame changes
+/// NSWindowDelegate to track and save window frame changes.
+/// Uses a 500ms debounce to avoid flooding UserDefaults during resize/move drags.
+@MainActor
 class WindowFrameDelegate: NSObject, NSWindowDelegate {
     let sessionId: UUID
     weak var windowManager: WindowManager?
+    private var saveWorkItem: DispatchWorkItem?
 
     init(sessionId: UUID, windowManager: WindowManager) {
         self.sessionId = sessionId
@@ -228,15 +233,22 @@ class WindowFrameDelegate: NSObject, NSWindowDelegate {
 
     func windowDidResize(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
-        Task { @MainActor in
-            windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
-        }
+        debounceSave(window: window)
     }
 
     func windowDidMove(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
-        Task { @MainActor in
-            windowManager?.saveWindowFrame(window: window, sessionId: sessionId)
+        debounceSave(window: window)
+    }
+
+    private func debounceSave(window: NSWindow) {
+        saveWorkItem?.cancel()
+        let sessionId = self.sessionId
+        let manager = self.windowManager
+        let workItem = DispatchWorkItem { [weak manager] in
+            manager?.saveWindowFrame(window: window, sessionId: sessionId)
         }
+        saveWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
     }
 }

@@ -56,7 +56,10 @@ struct SkillsFileService {
     /// Scans both `~/.claude/skills/` (local) and `~/.claude/plugins/cache/*/skills/` (plugin).
     /// - Returns: Array of Skill objects
     func scanSkills() throws -> [Skill] {
+        // Pre-allocate for typical skill count to avoid repeated array growth.
+        // Production environments commonly have 1000+ skills across local + plugin sources.
         var skills: [Skill] = []
+        skills.reserveCapacity(1500)
 
         // 1. Scan local skills from ~/.claude/skills/
         if fileManager.fileExists(atPath: skillsDirectory) {

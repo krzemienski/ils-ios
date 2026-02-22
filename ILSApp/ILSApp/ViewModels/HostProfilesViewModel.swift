@@ -70,7 +70,9 @@ final class HostProfilesViewModel {
 
     func startHealthPolling(interval: TimeInterval = 30) {
         healthTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            Task { await self?.refreshAllHealth() }
+            Task { @MainActor [weak self] in
+                await self?.refreshAllHealth()
+            }
         }
         healthTimer?.tolerance = 5
     }

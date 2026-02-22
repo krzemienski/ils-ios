@@ -41,6 +41,10 @@ struct CommandPaletteView: View {
     @State private var skills: [Skill] = []
     /// True while the initial skills API call is in flight.
     @State private var isLoading = true
+    /// Debounced filtered built-in commands.
+    @State private var debouncedBuiltInCommands: [CommandItem] = Self.allBuiltInCommands
+    /// Debounced filtered skills.
+    @State private var debouncedFilteredSkills: [Skill] = []
 
     /// Called with the formatted command string when the user selects an entry.
     let onSelect: (String) -> Void
@@ -53,15 +57,15 @@ struct CommandPaletteView: View {
                 } else {
                     // Built-in commands
                     Section("Built-in") {
-                        ForEach(builtInCommands) { command in
+                        ForEach(debouncedBuiltInCommands) { command in
                             CommandRow(command: command, onSelect: selectCommand)
                         }
                     }
 
                     // Skills
-                    if !filteredSkills.isEmpty {
+                    if !debouncedFilteredSkills.isEmpty {
                         Section("Skills") {
-                            ForEach(filteredSkills) { skill in
+                            ForEach(debouncedFilteredSkills) { skill in
                                 SkillRow(skill: skill) {
                                     selectCommand("/\(skill.name)")
                                 }
@@ -100,6 +104,12 @@ struct CommandPaletteView: View {
             #endif
             .task {
                 await loadSkills()
+            }
+            .task(id: searchText) {
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                debouncedBuiltInCommands = Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
+                debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
             }
         }
         .preferredColorScheme(.dark)

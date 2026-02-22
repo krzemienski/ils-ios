@@ -35,6 +35,7 @@ struct NewSessionView: View {
     @State private var isLoadingSessions = false
     @State private var selectedSession: ChatSession?
     @State private var forkSearchText = ""
+    @State private var debouncedForkResults: [ChatSession] = []
 
     // New Project mode state
     @State private var newProjectName = ""
@@ -100,6 +101,12 @@ struct NewSessionView: View {
             }
             .task {
                 await loadRecentSessions()
+                debouncedForkResults = recentSessions
+            }
+            .task(id: forkSearchText) {
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                debouncedForkResults = filteredRecentSessions
             }
         }
         #if os(iOS)
@@ -302,11 +309,11 @@ struct NewSessionView: View {
 
             if isLoadingSessions {
                 projectLoadingView
-            } else if filteredRecentSessions.isEmpty {
+            } else if debouncedForkResults.isEmpty {
                 noResultsView(text: forkSearchText.isEmpty ? "No recent sessions" : "No matching sessions")
             } else {
                 LazyVStack(spacing: 2) {
-                    ForEach(filteredRecentSessions) { session in
+                    ForEach(debouncedForkResults) { session in
                         forkSessionRow(session)
                     }
                 }

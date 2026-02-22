@@ -15,17 +15,24 @@ struct MetricDataPoint: Identifiable {
 @Observable
 final class SystemMetricsViewModel {
     var metricsClient: MetricsWebSocketClient
-    var processes: [ProcessInfoResponse] = []
-    var processSortBy: ProcessSortOption = .cpu
+    var processes: [ProcessInfoResponse] = [] {
+        didSet { _cachedSortedProcesses = nil }
+    }
+    var processSortBy: ProcessSortOption = .cpu {
+        didSet { _cachedSortedProcesses = nil }
+    }
     var processSearchText: String = ""
     var isLoadingProcesses: Bool = false
+
+    /// Cached sorted processes to avoid re-sorting on every `filteredProcesses` access.
+    private var _cachedSortedProcesses: [ProcessInfoResponse]?
 
     private let baseURL: String
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
     nonisolated(unsafe) private var processRefreshTask: Task<Void, Never>?
-    private let processRefreshInterval: TimeInterval = 5 // seconds
+    private let processRefreshInterval: TimeInterval = 15 // seconds (balanced CPU vs freshness)
 
     enum ProcessSortOption: String, CaseIterable {
         case cpu = "CPU"
@@ -89,18 +96,27 @@ final class SystemMetricsViewModel {
     }
 
     var filteredProcesses: [ProcessInfoResponse] {
-        let sorted: [ProcessInfoResponse]
-        switch processSortBy {
-        case .cpu:
-            sorted = processes.sorted { $0.cpuPercent > $1.cpuPercent }
-        case .memory:
-            sorted = processes.sorted { $0.memoryMB > $1.memoryMB }
-        }
-
+        let sorted = sortedProcesses
         if processSearchText.isEmpty {
             return sorted
         }
         return sorted.filter { $0.name.localizedCaseInsensitiveContains(processSearchText) }
+    }
+
+    /// Memoized sorted process list; invalidated when `processes` or `processSortBy` changes.
+    private var sortedProcesses: [ProcessInfoResponse] {
+        if let cached = _cachedSortedProcesses {
+            return cached
+        }
+        let result: [ProcessInfoResponse]
+        switch processSortBy {
+        case .cpu:
+            result = processes.sorted { $0.cpuPercent > $1.cpuPercent }
+        case .memory:
+            result = processes.sorted { $0.memoryMB > $1.memoryMB }
+        }
+        _cachedSortedProcesses = result
+        return result
     }
 
     // MARK: - Connection

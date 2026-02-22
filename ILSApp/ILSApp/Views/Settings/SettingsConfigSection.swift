@@ -288,7 +288,7 @@ struct SettingsConfigSection: View {
                     )
 
                     if let plugins = config.enabledPlugins {
-                        let enabledCount = plugins.filter { $0.value }.count
+                        let enabledCount = plugins.count(where: { $0.value })
                         settingsRow("Enabled Plugins", value: "\(enabledCount)")
                     } else {
                         settingsRow("Enabled Plugins", value: "0")

@@ -77,18 +77,19 @@ struct FleetController: RouteCollection {
             throw Abort(.notFound, reason: "Host not found")
         }
 
-        // Deactivate all hosts first
-        let allHosts = try await FleetHostModel.query(on: req.db).all()
-        for h in allHosts {
-            if h.isActive {
-                h.isActive = false
-                try await h.save(on: req.db)
+        // Wrap activation in a transaction so deactivate-all + activate is atomic
+        try await req.db.transaction { db in
+            let allHosts = try await FleetHostModel.query(on: db).all()
+            for h in allHosts {
+                if h.isActive {
+                    h.isActive = false
+                    try await h.save(on: db)
+                }
             }
-        }
 
-        // Activate the requested host
-        host.isActive = true
-        try await host.save(on: req.db)
+            host.isActive = true
+            try await host.save(on: db)
+        }
 
         return APIResponse(
             success: true,
@@ -143,13 +144,13 @@ struct FleetController: RouteCollection {
                 let config = URLSessionConfiguration.ephemeral
                 config.timeoutIntervalForRequest = 5 // 5-second timeout for health checks
                 let checkSession = URLSession(configuration: config)
+                defer { checkSession.invalidateAndCancel() }
                 let (data, response) = try await checkSession.data(from: url)
                 if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
                     healthStatus = .healthy
-                    // Try to parse version from health response JSON
-                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                       let ver = json["version"] as? String {
-                        backendVersion = ver
+                    // Parse version from health response JSON using Codable
+                    if let healthBody = try? JSONDecoder().decode(HealthCheckBody.self, from: data) {
+                        backendVersion = healthBody.version ?? backendVersion
                     }
                     claudeAvailable = true
                 } else {
@@ -177,4 +178,12 @@ struct FleetController: RouteCollection {
             )
         )
     }
+}
+
+// MARK: - Codable Helper
+
+/// Codable type for decoding the remote backend's `/health` JSON response.
+private struct HealthCheckBody: Decodable {
+    let version: String?
+    let status: String?
 }
