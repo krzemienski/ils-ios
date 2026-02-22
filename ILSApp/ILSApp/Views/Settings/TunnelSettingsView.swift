@@ -33,6 +33,11 @@ struct TunnelSettingsView: View {
     @State private var cfTunnelName = ""
     @State private var cfDomain = ""
 
+    private enum FocusedField: Hashable {
+        case cfToken, cfTunnelName, cfDomain
+    }
+    @FocusState private var focusedField: FocusedField?
+
     var body: some View {
         ScrollView {
             VStack(spacing: theme.spacingMD) {
@@ -321,6 +326,8 @@ struct TunnelSettingsView: View {
                                 .padding(theme.spacingSM)
                                 .background(theme.bgSecondary)
                                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                                .focusRing(isFocused: focusedField == .cfToken, cornerRadius: theme.cornerRadiusSmall)
+                                .focused($focusedField, equals: .cfToken)
                                 .accessibilityLabel("Cloudflare API token")
                         }
 
@@ -335,6 +342,8 @@ struct TunnelSettingsView: View {
                                 .padding(theme.spacingSM)
                                 .background(theme.bgSecondary)
                                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                                .focusRing(isFocused: focusedField == .cfTunnelName, cornerRadius: theme.cornerRadiusSmall)
+                                .focused($focusedField, equals: .cfTunnelName)
                                 .accessibilityLabel("Tunnel name")
                         }
 
@@ -352,6 +361,8 @@ struct TunnelSettingsView: View {
                                 .padding(theme.spacingSM)
                                 .background(theme.bgSecondary)
                                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                                .focusRing(isFocused: focusedField == .cfDomain, cornerRadius: theme.cornerRadiusSmall)
+                                .focused($focusedField, equals: .cfDomain)
                                 .accessibilityLabel("Custom domain")
                         }
                         // Save & Start button
