@@ -325,7 +325,7 @@ Plans:
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |
 | 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
-| 18. CRITICAL Fixes | v3.0 | 2/4 | In Progress | - |
+| 18. CRITICAL Fixes | 3/4 | In Progress|  | - |
 | 19. Concurrency + Memory HIGH | v3.0 | 0/? | Not started | - |
 | 20. Architecture + Performance HIGH | v3.0 | 0/? | Not started | - |
 | 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |

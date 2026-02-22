@@ -72,10 +72,10 @@
 
 ## SwiftUI Architecture (20 issues: 4 CRITICAL, 9 HIGH, 5 MEDIUM, 2 LOW)
 
-- [ ] **ARCH-01** [CRITICAL]: Route MacChatView API calls through SessionsViewModel — `ILSMacApp/Views/MacChatView.swift:75-87`
-- [ ] **ARCH-02** [CRITICAL]: Add do/catch to MacChatView unhandled Task error — `ILSMacApp/Views/MacChatView.swift:75-77`
+- [x] **ARCH-01** [CRITICAL]: Route MacChatView API calls through SessionsViewModel — `ILSMacApp/Views/MacChatView.swift:75-87`
+- [x] **ARCH-02** [CRITICAL]: Add do/catch to MacChatView unhandled Task error — `ILSMacApp/Views/MacChatView.swift:75-77`
 - [ ] **ARCH-03** [CRITICAL]: Extract NewSessionView 3 inline async flows to NewSessionViewModel — `Views/Sessions/NewSessionView.swift:794-870`
-- [ ] **ARCH-04** [CRITICAL]: Add `private` to MacSettingsView @State — `ILSMacApp/Views/MacSettingsView.swift:32,35`
+- [x] **ARCH-04** [CRITICAL]: Add `private` to MacSettingsView @State — `ILSMacApp/Views/MacSettingsView.swift:32,35`
 - [ ] **ARCH-05** [HIGH]: Extract CommandPaletteView dual computed properties to ViewModel — `Views/Chat/CommandPaletteView.swift:139-146`
 - [ ] **ARCH-06** [HIGH]: Extract NewSessionView.filteredRecentSessions — `Views/Sessions/NewSessionView.swift:352-360`
 - [ ] **ARCH-07** [HIGH]: Extract SidebarRootView dictionary construction — `Views/Root/SidebarRootView.swift:122`
@@ -96,7 +96,7 @@
 ## SwiftUI Performance (14 issues: 2 CRITICAL, 4 HIGH, 7 MEDIUM, 1 LOW)
 
 - [x] **UIPERF-01** [CRITICAL]: Cache SyntaxHighlighter in CodeBlockView with @State + .task(id:) — `Views/Chat/CodeBlockView.swift:156`
-- [ ] **UIPERF-02** [CRITICAL]: Pre-compute Set for ThemePickerView.availableThemes — `Views/Settings/ThemePickerView.swift:203`
+- [x] **UIPERF-02** [CRITICAL]: Pre-compute Set for ThemePickerView.availableThemes — `Views/Settings/ThemePickerView.swift:203`
 - [ ] **UIPERF-03** [HIGH]: Convert SyntaxHighlighter keyword arrays to Set for O(1) lookup — `Utils/SyntaxHighlighter.swift` (17+ sites)
 - [ ] **UIPERF-04** [HIGH]: Pre-compute classifyProcess() in ViewModel — `Views/System/ProcessListView.swift:114,169`
 - [ ] **UIPERF-05** [HIGH]: Move Data(contentsOf:) off main thread in ThemeMarketplaceView — `Views/Themes/ThemeMarketplaceView.swift:278`
@@ -166,7 +166,7 @@
 
 ## Database Schema (7 issues: 1 CRITICAL, 2 HIGH, 4 MEDIUM, 0 LOW)
 
-- [ ] **DB-01** [CRITICAL]: Set PRAGMA foreign_keys via pool configuration callback — `Sources/ILSBackend/App/configure.swift:79-81`
+- [x] **DB-01** [CRITICAL]: Set PRAGMA foreign_keys via pool configuration callback — `Sources/ILSBackend/App/configure.swift:79-81`
 - [ ] **DB-02** [HIGH]: Remove DROP TABLE from all revert() functions — All migration files
 - [ ] **DB-03** [HIGH]: Add FK constraints data validation
 - [ ] **DB-04** [MEDIUM]: Add indexes on frequently queried columns
@@ -300,10 +300,10 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | SPERF-16 | Phase 23 | Pending |
 | SPERF-17 | Phase 23 | Pending |
 | SPERF-18 | Phase 23 | Pending |
-| ARCH-01 | Phase 18 | Pending |
-| ARCH-02 | Phase 18 | Pending |
+| ARCH-01 | Phase 18 | Complete |
+| ARCH-02 | Phase 18 | Complete |
 | ARCH-03 | Phase 18 | Pending |
-| ARCH-04 | Phase 18 | Pending |
+| ARCH-04 | Phase 18 | Complete |
 | ARCH-05 | Phase 20 | Pending |
 | ARCH-06 | Phase 20 | Pending |
 | ARCH-07 | Phase 20 | Pending |
@@ -321,7 +321,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ARCH-19 | Phase 23 | Pending |
 | ARCH-20 | Phase 23 | Pending |
 | UIPERF-01 | Phase 18 | Complete |
-| UIPERF-02 | Phase 18 | Pending |
+| UIPERF-02 | Phase 18 | Complete |
 | UIPERF-03 | Phase 20 | Pending |
 | UIPERF-04 | Phase 20 | Pending |
 | UIPERF-05 | Phase 20 | Pending |
@@ -376,7 +376,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | A11Y-06 | Phase 23 | Pending |
 | A11Y-07 | Phase 23 | Pending |
 | A11Y-08 | Phase 23 | Pending |
-| DB-01 | Phase 18 | Pending |
+| DB-01 | Phase 18 | Complete |
 | DB-02 | Phase 22 | Pending |
 | DB-03 | Phase 22 | Pending |
 | DB-04 | Phase 23 | Pending |
