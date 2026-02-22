@@ -218,10 +218,12 @@ Plans:
   3. SSEClient's Task.detached closure captures only Sendable values and does not access @MainActor self directly
   4. HostProfilesViewModel uses Task instead of Timer.scheduledTimer — Timer is gone from all ViewModel files
   5. WindowFrameDelegate registers a window close notification and cancels its debounce Task when the OS closes the window
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 19-01: TBD
+- [ ] 19-01-PLAN.md -- iOS ViewModel nonisolated(unsafe) removal + Timer-to-Task migration
+- [ ] 19-02-PLAN.md -- macOS GCD-to-Task migration + window close cleanup
+- [ ] 19-03-PLAN.md -- SSEClient Task.detached isolation fix
 
 ---
 
@@ -326,7 +328,7 @@ Plans:
 | 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
-| 19. Concurrency + Memory HIGH | v3.0 | 0/? | Not started | - |
+| 19. Concurrency + Memory HIGH | v3.0 | 0/3 | Planned | - |
 | 20. Architecture + Performance HIGH | v3.0 | 0/? | Not started | - |
 | 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 0/? | Not started | - |
