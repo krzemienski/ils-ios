@@ -4,7 +4,7 @@
 Phase 5: System Monitor + Profiles
 
 ## Progress
-Phase 4 Plan 1/1 COMPLETE | Phases 4/10
+Phase 5 Plan 1/1 IN PROGRESS (tasks 5.1-5.3 done, 5.4-5.5 pending) | Phases 4/10
 
 ## Phase Status
 
@@ -14,7 +14,7 @@ Phase 4 Plan 1/1 COMPLETE | Phases 4/10
 | 2. Navigation + Layout | COMPLETE | 2026-02-21 | 2026-02-21 |
 | 3. Settings & Config | COMPLETE | 2026-02-21 | 2026-02-21 |
 | 4. Skills/Plugins/Hooks/Themes | COMPLETE | 2026-02-22 | 2026-02-22 |
-| 5. System Monitor + Profiles | PLANNED | — | — |
+| 5. System Monitor + Profiles | IN PROGRESS | 2026-02-22 | — |
 | 6. Backend API Audit | PLANNED | — | — |
 | 7. Convergence | PLANNED | — | — |
 | 8. Platform Validation | PLANNED | — | — |
@@ -60,6 +60,8 @@ Phase 4 Plan 1/1 COMPLETE | Phases 4/10
 | VG-16 | PASS | HooksManagementView + NavigationLink from SettingsConfigSection |
 | VG-17 | PASS | CustomThemeAdapter + ThemePickerView Built-in/Custom sections |
 | VG-18 | PASS | githubBrowseSection in BrowserView skillsContent |
+| VG-19 | PENDING | System Monitor tasks 5.1-5.3 done; awaiting task 5.5 verification |
+| VG-20 | PENDING | Fleet rename task 5.4 in progress; awaiting task 5.5 verification |
 
 ## Decisions
 
@@ -83,6 +85,10 @@ Phase 4 Plan 1/1 COMPLETE | Phases 4/10
 | 04-04 | CustomThemeAdapter falls back to ObsidianTheme for nil tokens (no crash on partial themes) |
 | 04-04 | Custom theme IDs prefixed "custom-" to distinguish from built-in themes in ThemePickerView |
 | 04-04 | MCP auto-hide uses Task-based timer stored in @State dict, cancelled on manual hide |
+| 05-05 | Use DispatchQueue.global() + withCheckedContinuation for subprocess execution off NIO event loop |
+| 05-05 | Heartbeat ping every 15s using callback-based sendPing(pongReceiveHandler:) — no async overload available |
+| 05-05 | disconnect() resets wsFailureCount and reconnectAttempts to fix stale state bug (MEMORY.md) |
+| 05-05 | Process count shows N-of-total badge when list truncated at 50, plain N when under limit |
 
 ## Performance Metrics
 
@@ -92,11 +98,12 @@ Phase 4 Plan 1/1 COMPLETE | Phases 4/10
 | 02 | 02 | 40min | 6 | 8 |
 | 03 | 03 | ~3hrs | 6 | 3 modified + 32 evidence |
 | 04 | 04 | ~90min | 7 | 9 modified + 1 created |
+| 05 | 05 | 19min | 3/5 | 5 modified |
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 04-PLAN.md (Phase 4 Skills/Plugins/Hooks/Themes). Phase 5 ready.
+Stopped at: Completed tasks 5.1-5.3 (system monitor backend fix, WebSocket hardening, process list UI). Tasks 5.4 (Fleet rename, handled by parallel agent) and 5.5 (verification) pending.
 Resume file: N/A
 
 ## Quick Tasks Completed
