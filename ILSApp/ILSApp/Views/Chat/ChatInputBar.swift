@@ -115,8 +115,8 @@ struct ChatInputBar: View {
             .lineLimit(1...5)
             .disabled(isDisabled)
             .focused($isInputFocused)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, inputPaddingH)
+            .padding(.vertical, inputPaddingV)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
