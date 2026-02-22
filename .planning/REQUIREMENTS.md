@@ -14,9 +14,9 @@
 - [x] **CONC-03** [HIGH]: Fix SkillsViewModel `nonisolated(unsafe)` on Task property — `ViewModels/SkillsViewModel.swift:39`
 - [x] **CONC-04** [HIGH]: Fix MCPViewModel `nonisolated(unsafe)` on healthTimer — `ViewModels/MCPViewModel.swift:17`
 - [x] **CONC-05** [HIGH]: Fix SystemMetricsViewModel `nonisolated(unsafe)` pattern — `ViewModels/SystemMetricsViewModel.swift:34`
-- [ ] **CONC-06** [HIGH]: Fix NotificationManager `@preconcurrency` delegate isolation mismatch — `ILSMacApp/Managers/NotificationManager.swift:151`
-- [ ] **CONC-07** [HIGH]: Fix WindowAccessor `DispatchQueue.main.async` accessing @MainActor state — `ILSMacApp/Views/SessionWindowView.swift:101`
-- [ ] **CONC-08** [HIGH]: Fix WindowFrameDelegate.debounceSave GCD accessing @MainActor — `ILSMacApp/Managers/WindowManager.swift:252`
+- [x] **CONC-06** [HIGH]: Fix NotificationManager `@preconcurrency` delegate isolation mismatch — `ILSMacApp/Managers/NotificationManager.swift:151`
+- [x] **CONC-07** [HIGH]: Fix WindowAccessor `DispatchQueue.main.async` accessing @MainActor state — `ILSMacApp/Views/SessionWindowView.swift:101`
+- [x] **CONC-08** [HIGH]: Fix WindowFrameDelegate.debounceSave GCD accessing @MainActor — `ILSMacApp/Managers/WindowManager.swift:252`
 - [x] **CONC-09** [HIGH]: Fix SSEClient `Task.detached` accessing @MainActor self — `Services/SSEClient.swift:130`
 - [ ] **CONC-10** [MEDIUM]: Fix ClaudeExecutorService.readQueue access from nonisolated context
 - [ ] **CONC-11** [MEDIUM]: Fix HostProfilesViewModel deinit accessing @MainActor properties
@@ -195,7 +195,7 @@
 ## Memory Lifecycle (4 issues: 0 CRITICAL, 1 HIGH, 2 MEDIUM, 1 LOW)
 
 - [x] **MEM-01** [HIGH]: Migrate HostProfilesViewModel Timer to Task — `ViewModels/HostProfilesViewModel.swift:72`
-- [ ] **MEM-02** [MEDIUM]: Clean up WindowFrameDelegate when OS closes window
+- [x] **MEM-02** [MEDIUM]: Clean up WindowFrameDelegate when OS closes window
 - [ ] **MEM-03** [MEDIUM]: Add SystemMetricsViewModel deinit cancellation
 - [ ] **MEM-04** [LOW]: Minor memory lifecycle improvement
 
@@ -251,9 +251,9 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | CONC-03 | Phase 19 | Complete |
 | CONC-04 | Phase 19 | Complete |
 | CONC-05 | Phase 19 | Complete |
-| CONC-06 | Phase 19 | Pending |
-| CONC-07 | Phase 19 | Pending |
-| CONC-08 | Phase 19 | Pending |
+| CONC-06 | Phase 19 | Complete |
+| CONC-07 | Phase 19 | Complete |
+| CONC-08 | Phase 19 | Complete |
 | CONC-09 | Phase 19 | Complete |
 | CONC-10 | Phase 23 | Pending |
 | CONC-11 | Phase 23 | Pending |
@@ -396,7 +396,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | SEC-04 | Phase 23 | Pending |
 | SEC-05 | Phase 23 | Pending |
 | MEM-01 | Phase 19 | Complete |
-| MEM-02 | Phase 19 | Pending |
+| MEM-02 | Phase 19 | Complete |
 | MEM-03 | Phase 23 | Pending |
 | MEM-04 | Phase 23 | Pending |
 | LAYOUT-01 | Phase 22 | Pending |
