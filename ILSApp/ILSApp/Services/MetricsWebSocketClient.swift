@@ -30,9 +30,11 @@ final class MetricsWebSocketClient {
     nonisolated(unsafe) private var reconnectTask: Task<Void, Never>?
     nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
     nonisolated(unsafe) private var receiveTask: Task<Void, Never>?
+    nonisolated(unsafe) private var heartbeatTask: Task<Void, Never>?
     private var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
+    private let heartbeatInterval: TimeInterval = 15 // Send ping every 15 seconds
 
     init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
@@ -45,6 +47,7 @@ final class MetricsWebSocketClient {
         reconnectTask?.cancel()
         pollingTask?.cancel()
         receiveTask?.cancel()
+        heartbeatTask?.cancel()
         webSocketTask?.cancel(with: .goingAway, reason: nil)
     }
 
@@ -75,9 +78,15 @@ final class MetricsWebSocketClient {
         receiveTask = nil
         pollingTask?.cancel()
         pollingTask = nil
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
+        // Reset failure state so a subsequent connect() starts fresh (MEMORY.md bug fix)
+        wsFailureCount = 0
+        reconnectAttempts = 0
+        useFallbackPolling = false
     }
 
     // MARK: - WebSocket
@@ -99,6 +108,31 @@ final class MetricsWebSocketClient {
 
         receiveTask = Task { [weak self] in
             await self?.receiveLoop()
+        }
+
+        // Start heartbeat to detect stale connections
+        startHeartbeat()
+    }
+
+    private func startHeartbeat() {
+        heartbeatTask?.cancel()
+        heartbeatTask = Task { [weak self] in
+            guard let self else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(self.heartbeatInterval * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                guard let wsTask = self.webSocketTask else { return }
+                // Send a ping; if pong is not received the connection is stale
+                let pingSucceeded = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+                    wsTask.sendPing { error in
+                        cont.resume(returning: error == nil)
+                    }
+                }
+                if !pingSucceeded {
+                    await self.handleWSDisconnect()
+                    return
+                }
+            }
         }
     }
 
@@ -152,6 +186,8 @@ final class MetricsWebSocketClient {
 
     private func handleWSDisconnect() async {
         isConnected = false
+        heartbeatTask?.cancel()
+        heartbeatTask = nil
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         wsFailureCount += 1
