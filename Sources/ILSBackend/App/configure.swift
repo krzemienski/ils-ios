@@ -1,7 +1,6 @@
 import Vapor
 import Fluent
 import FluentSQLiteDriver
-import SQLKit
 
 func configure(_ app: Application) async throws {
     // CORS middleware — restrict to configured origins (default: localhost only)
@@ -55,13 +54,13 @@ func configure(_ app: Application) async throws {
     app.routes.defaultMaxBodySize = "10mb"
 
     // Database configuration
+    // SQLiteConfiguration.enableForeignKeys defaults to true, which issues
+    // PRAGMA foreign_keys = ON on every pooled connection via SQLiteKit's
+    // SQLiteConnectionSource. This ensures FK constraints are enforced
+    // across all connections, not just the first one.
     let dbPath = app.directory.workingDirectory + "ils.sqlite"
-    app.databases.use(.sqlite(.file(dbPath)), as: .sqlite)
-
-    // Enable foreign key enforcement — SQLite disables this by default.
-    // Must be set per-connection, so we run it after migrations.
-    // Fluent's SQLite driver creates connections lazily; we execute the PRAGMA
-    // via a raw query after autoMigrate to ensure the pool's connections have it.
+    let sqliteConfig = SQLiteConfiguration(storage: .file(path: dbPath), enableForeignKeys: true)
+    app.databases.use(.sqlite(sqliteConfig), as: .sqlite)
 
     // Register migrations
     app.migrations.add(CreateProjects())
@@ -74,11 +73,6 @@ func configure(_ app: Application) async throws {
 
     // Run migrations
     try await app.autoMigrate()
-
-    // Enable foreign key constraints on the SQLite connection
-    if let sqlDB = app.db as? SQLDatabase {
-        try await sqlDB.raw("PRAGMA foreign_keys = ON").run()
-    }
 
     // Register routes
     try routes(app)
