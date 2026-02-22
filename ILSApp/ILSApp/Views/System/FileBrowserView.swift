@@ -12,6 +12,7 @@ struct FileBrowserView: View {
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var previewFile: PreviewFile?
+    @State private var cachedSortedEntries: [FileEntryResponse] = []
 
     struct PreviewFile: Identifiable {
         let id = UUID()
@@ -60,7 +61,7 @@ struct FileBrowserView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(sortedEntries, id: \.name) { entry in
+                        ForEach(cachedSortedEntries, id: \.name) { entry in
                             fileRow(entry)
                             Divider()
                                 .background(theme.bgTertiary)
@@ -76,6 +77,9 @@ struct FileBrowserView: View {
         #endif
         .task {
             await loadDirectory()
+        }
+        .onChange(of: entries) { _, newEntries in
+            cachedSortedEntries = Self.sortEntries(newEntries)
         }
         .sheet(item: $previewFile) { file in
             filePreviewSheet(file)
@@ -143,7 +147,8 @@ struct FileBrowserView: View {
 
     // MARK: - File Row
 
-    private var sortedEntries: [FileEntryResponse] {
+    /// Sorts entries: directories first, then alphabetical.
+    private static func sortEntries(_ entries: [FileEntryResponse]) -> [FileEntryResponse] {
         entries.sorted { a, b in
             if a.isDirectory && !b.isDirectory { return true }
             if !a.isDirectory && b.isDirectory { return false }
@@ -239,6 +244,7 @@ struct FileBrowserView: View {
         do {
             let result: [FileEntryResponse] = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
             entries = result
+            cachedSortedEntries = Self.sortEntries(result)
         } catch {
             errorMessage = "Failed to load directory: \(error.localizedDescription)"
         }

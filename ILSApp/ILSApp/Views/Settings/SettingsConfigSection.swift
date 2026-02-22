@@ -259,7 +259,7 @@ struct SettingsConfigSection: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        hookEventBreakdown(hooks)
+                        hookBreakdownView
                     } else {
                         NavigationLink {
                             HooksManagementView()
@@ -437,16 +437,11 @@ struct SettingsConfigSection: View {
         return count
     }
 
+    /// Reads pre-computed hook event breakdown from ViewModel
+    /// instead of building filtered arrays inline in the view body.
     @ViewBuilder
-    func hookEventBreakdown(_ hooks: HooksConfig) -> some View {
-        let events: [(String, Int)] = [
-            ("SessionStart", hooks.sessionStart?.count ?? 0),
-            ("SubagentStart", hooks.subagentStart?.count ?? 0),
-            ("UserPromptSubmit", hooks.userPromptSubmit?.count ?? 0),
-            ("PreToolUse", hooks.preToolUse?.count ?? 0),
-            ("PostToolUse", hooks.postToolUse?.count ?? 0)
-        ].filter { $0.1 > 0 }
-
+    var hookBreakdownView: some View {
+        let events = viewModel.hookEventBreakdown
         if !events.isEmpty {
             HStack(spacing: theme.spacingSM) {
                 ForEach(events, id: \.0) { event in
