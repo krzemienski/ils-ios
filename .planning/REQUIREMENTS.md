@@ -8,8 +8,8 @@
 
 ## Launch Time
 
-- [ ] **LAUNCH-01**: App cold-starts in under 1 second (remove 2.2s artificial delay, content-driven launch dismiss)
-- [ ] **LAUNCH-02**: Non-critical initialization (TipKit, CacheService) deferred to background after UI visible
+- [x] **LAUNCH-01**: App cold-starts in under 1 second (remove 2.2s artificial delay, content-driven launch dismiss)
+- [x] **LAUNCH-02**: Non-critical initialization (TipKit, CacheService) deferred to background after UI visible
 
 ## Memory
 
@@ -71,8 +71,8 @@
 
 | REQ | Phase | Status |
 |-----|-------|--------|
-| LAUNCH-01 | Phase 11 | Pending |
-| LAUNCH-02 | Phase 11 | Pending |
+| LAUNCH-01 | Phase 11 | Complete |
+| LAUNCH-02 | Phase 11 | Complete |
 | MEM-01 | Phase 12 | Pending |
 | MEM-02 | Phase 13 | Pending |
 | MEM-03 | Phase 13 | Pending |
