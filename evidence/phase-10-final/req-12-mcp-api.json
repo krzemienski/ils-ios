@@ -1,0 +1,211 @@
+{
+    "success": true,
+    "data": {
+        "total": 16,
+        "items": [
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-puppeteer"
+                ],
+                "env": {},
+                "name": "puppeteer",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "ED77E92A-72EE-43EF-B63A-18F98EBB6DDC",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-github"
+                ],
+                "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "REDACTED"
+                },
+                "name": "github",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "CA8B3973-4B1B-4678-B830-F740166E768E",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-memory"
+                ],
+                "name": "memory",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "FFD6C28B-EDC3-4677-A80A-3460D0A43226",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "tavily-mcp@latest"
+                ],
+                "env": {
+                    "TAVILY_API_KEY": "tvly...b98O"
+                },
+                "name": "tavily",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "F79E9C2B-B25D-4491-889F-E2AAF7348445",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "@playwright/mcp@latest"
+                ],
+                "name": "playwright",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "14C7C918-4D52-4BC7-BE50-3D9B59AE313F",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "/opt/homebrew/bin/tuist",
+                "args": [
+                    "mcp",
+                    "start"
+                ],
+                "name": "tuist",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "14C61CE8-1A2B-4346-A4E9-52CD2CCAEA5A",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "echo",
+                "args": [
+                    "--version"
+                ],
+                "name": "audit-verify",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "9205ACEC-02E7-46C0-80E6-A34D0C708432",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "firecrawl-mcp"
+                ],
+                "env": {
+                    "FIRECRAWL_API_KEY": "fc-0...970b"
+                },
+                "name": "firecrawl-mcp",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "96E9BA98-BB04-4E6F-851A-FB61DB822A3F",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "https://mcp.supabase.com/mcp?project_ref=dngnmalbjapetqdafhvg",
+                "args": [],
+                "name": "supabase",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "C23C4498-513E-4B9F-9831-755E32431838",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "uvx",
+                "args": [
+                    "mcp-server-fetch"
+                ],
+                "env": {},
+                "name": "fetch",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "1AE0E99C-0041-4A0F-9929-74FAECCAA8D9",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "chrome-devtools-mcp@latest"
+                ],
+                "env": {},
+                "name": "chrome-devtools",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "E817292B-7ED4-4BC0-B340-0AA6F726E22C",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "uvx",
+                "args": [
+                    "--from",
+                    "git+https://github.com/oraios/serena",
+                    "serena",
+                    "start-mcp-server",
+                    "--enable-web-dashboard",
+                    "False"
+                ],
+                "name": "serena",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "41B0500D-D6B1-49A3-8224-490C36C1A249",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "repomix",
+                    "--mcp"
+                ],
+                "env": {},
+                "name": "repomix",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "06803923-6B66-4EEC-AD78-CF72E7CEE84D",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "@jpisnice/shadcn-ui-mcp-server",
+                    "--github-api-key",
+                    "REDACTED_GITHUB_TOKEN"
+                ],
+                "name": "shadcn-ui",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "C7D84339-C89E-42A2-9909-07AC6DB46B18",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "https://mcp.context7.com/mcp",
+                "args": [],
+                "name": "context7",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "83C4B78F-038F-4FF2-9D44-B474DEF60B69",
+                "scope": "user",
+                "status": "healthy"
+            },
+            {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-sequential-thinking"
+                ],
+                "env": {},
+                "name": "sequential-thinking",
+                "configPath": "/Users/nick/.mcp.json",
+                "id": "D7ECFF2A-FDB4-4E68-B559-279BA90B3ECA",
+                "scope": "user",
+                "status": "healthy"
+            }
+        ]
+    }
+}

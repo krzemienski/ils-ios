@@ -1,0 +1,10 @@
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ConfigEditorView.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/LogViewerView.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/NotificationPreferencesView.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsAboutSection.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsAppearanceSection.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsConfigSection.swift:11
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsConnectionSection.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/SettingsView.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/ThemePickerView.swift:0
+/Users/nick/Desktop/ils-ios/ILSApp/ILSApp/Views/Settings/TunnelSettingsView.swift:0
