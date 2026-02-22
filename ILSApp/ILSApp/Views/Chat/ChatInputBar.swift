@@ -86,10 +86,11 @@ struct ChatInputBar: View {
     private var commandPaletteButton: some View {
         Button(action: onCommandPalette) {
             Image(systemName: "command")
+                .font(.system(size: 20))
                 .foregroundStyle(isDisabled ? theme.textTertiary : theme.accent)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
