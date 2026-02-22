@@ -148,9 +148,11 @@ class NotificationManager: NSObject {
 
 // MARK: - UNUserNotificationCenterDelegate
 
-extension NotificationManager: @preconcurrency UNUserNotificationCenterDelegate {
-    /// Handle notification when app is in foreground
-    func userNotificationCenter(
+extension NotificationManager: UNUserNotificationCenterDelegate {
+    /// Handle notification when app is in foreground.
+    /// nonisolated because UNUserNotificationCenterDelegate is not @MainActor in the SDK.
+    /// This method doesn't access any @MainActor state — just calls the completion handler.
+    nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
@@ -160,8 +162,10 @@ extension NotificationManager: @preconcurrency UNUserNotificationCenterDelegate 
         completionHandler([])
     }
 
-    /// Handle notification interaction (when user clicks on notification)
-    func userNotificationCenter(
+    /// Handle notification interaction (when user clicks on notification).
+    /// nonisolated because UNUserNotificationCenterDelegate is not @MainActor in the SDK.
+    /// Hops to MainActor for NSApplication and NotificationCenter access.
+    nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
@@ -171,15 +175,17 @@ extension NotificationManager: @preconcurrency UNUserNotificationCenterDelegate 
         // Extract session ID and open the session
         if let sessionIdString = userInfo["sessionId"] as? String,
            let sessionId = UUID(uuidString: sessionIdString) {
-            // Post notification to open session
-            // This will be handled by MacContentView or SessionsViewModel
-            NotificationCenter.default.post(
-                name: NSNotification.Name("OpenSessionFromNotification"),
-                object: sessionId
-            )
+            Task { @MainActor in
+                // Post notification to open session
+                // This will be handled by MacContentView or SessionsViewModel
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("OpenSessionFromNotification"),
+                    object: sessionId
+                )
 
-            // Bring app to front
-            NSApplication.shared.activate(ignoringOtherApps: true)
+                // Bring app to front
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
         }
 
         completionHandler()
