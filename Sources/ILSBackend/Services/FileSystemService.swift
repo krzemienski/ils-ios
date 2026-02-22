@@ -294,6 +294,128 @@ struct FileSystemService {
         await FileSystemCache.shared.invalidateExternalSessions()
     }
 
+    // MARK: - Plugins Management
+
+    /// List all installed plugins from `~/.claude/plugins/installed_plugins.json`, with optional caching.
+    ///
+    /// Reads installed plugin entries and augments each with enabled status from
+    /// `~/.claude/settings.json`, manifest description, and discovered commands/agents.
+    ///
+    /// - Parameter bypassCache: If true, forces a fresh scan from disk
+    /// - Returns: Array of Plugin objects sorted by name
+    func listPlugins(bypassCache: Bool = false) async throws -> [Plugin] {
+        if !bypassCache, let cached = await FileSystemCache.shared.getCachedPlugins() {
+            return cached
+        }
+
+        let plugins = try scanPlugins()
+        await FileSystemCache.shared.setCachedPlugins(plugins)
+        return plugins
+    }
+
+    /// Scan all installed plugins from disk without using cache.
+    /// - Returns: Array of Plugin objects sorted by name
+    func scanPlugins() throws -> [Plugin] {
+        let fm = FileManager.default
+        let installedPluginsPath = "\(claudeDirectory)/plugins/installed_plugins.json"
+        let settingsPath = userSettingsPath
+
+        var plugins: [Plugin] = []
+
+        // Read enabled status from settings.json
+        var enabledPlugins: [String: Bool] = [:]
+        if fm.fileExists(atPath: settingsPath),
+           let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
+           let settingsJson = try? JSONSerialization.jsonObject(with: settingsData) as? [String: Any],
+           let enabled = settingsJson["enabledPlugins"] as? [String: Bool] {
+            enabledPlugins = enabled
+        }
+
+        // Read installed plugins from installed_plugins.json
+        guard fm.fileExists(atPath: installedPluginsPath),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let pluginsDict = json["plugins"] as? [String: Any] else {
+            return plugins
+        }
+
+        // Parse each plugin entry
+        for (pluginKey, value) in pluginsDict {
+            // pluginKey format: "plugin-name@marketplace"
+            guard let installsArray = value as? [[String: Any]],
+                  let latestInstall = installsArray.first else {
+                continue
+            }
+
+            // Parse plugin key to get name and marketplace
+            let parts = pluginKey.split(separator: "@", maxSplits: 1)
+            let pluginName = String(parts.first ?? Substring(pluginKey))
+            let marketplace = parts.count > 1 ? String(parts[1]) : nil
+
+            // Extract install info
+            let installPath = latestInstall["installPath"] as? String
+            let version = latestInstall["version"] as? String
+
+            // Check enabled status (default to true if not specified)
+            let isEnabled = enabledPlugins[pluginKey] ?? true
+
+            // Try to read plugin manifest for description, commands, agents
+            var description: String?
+            var commands: [String] = []
+            var agents: [String] = []
+
+            if let path = installPath {
+                // Try to read plugin.json or manifest
+                let manifestPath = "\(path)/.claude-plugin/plugin.json"
+                let altManifestPath = "\(path)/plugin.json"
+
+                if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
+                   let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
+                          let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                }
+
+                // Check for commands directory
+                let commandsPath = "\(path)/commands"
+                if let cmdContents = try? fm.contentsOfDirectory(atPath: commandsPath) {
+                    commands = cmdContents.filter { $0.hasSuffix(".md") }
+                        .map { "/\(pluginName):\($0.replacingOccurrences(of: ".md", with: ""))" }
+                }
+
+                // Check for agents directory
+                let agentsPath = "\(path)/agents"
+                if let agentContents = try? fm.contentsOfDirectory(atPath: agentsPath) {
+                    agents = agentContents.filter { $0.hasSuffix(".md") }
+                        .map { $0.replacingOccurrences(of: ".md", with: "") }
+                }
+            }
+
+            plugins.append(Plugin(
+                name: pluginName,
+                description: description,
+                marketplace: marketplace,
+                isInstalled: true,
+                isEnabled: isEnabled,
+                version: version,
+                commands: commands.isEmpty ? nil : commands,
+                agents: agents.isEmpty ? nil : agents,
+                path: installPath
+            ))
+        }
+
+        // Sort by name for consistent ordering
+        plugins.sort { $0.name.lowercased() < $1.name.lowercased() }
+
+        return plugins
+    }
+
+    /// Invalidate the plugins cache, forcing next read to scan from disk.
+    func invalidatePluginsCache() async {
+        await FileSystemCache.shared.invalidatePlugins()
+    }
+
     /// Read messages from a session's JSONL transcript file.
     /// - Parameters:
     ///   - encodedProjectPath: URL-encoded project directory name
