@@ -10,9 +10,12 @@ enum ActiveScreen: Hashable {
     case settings
     case browser
     case teams
-    case fleet
+    case hostProfiles
     case themes
     case hooks
+
+    /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
+    static var fleet: ActiveScreen { .hostProfiles }
 
     /// String key for @SceneStorage persistence (excludes associated values).
     var storageKey: String {
@@ -23,7 +26,7 @@ enum ActiveScreen: Hashable {
         case .settings: return "settings"
         case .browser: return "browser"
         case .teams: return "teams"
-        case .fleet: return "fleet"
+        case .hostProfiles: return "hostProfiles"
         case .themes: return "themes"
         case .hooks: return "hooks"
         }
@@ -37,7 +40,7 @@ enum ActiveScreen: Hashable {
         case "settings": return .settings
         case "browser": return .browser
         case "teams": return .teams
-        case "fleet": return .fleet
+        case "fleet", "hostProfiles": return .hostProfiles  // "fleet" kept for backward compat
         case "themes": return .themes
         case "hooks": return .hooks
         default: return nil  // "chat" requires session — handled separately
@@ -194,8 +197,8 @@ struct SidebarRootView: View {
                     browserScreen
                 case .teams:
                     teamsScreen
-                case .fleet:
-                    fleetScreen
+                case .hostProfiles:
+                    hostProfilesScreen
                 case .themes:
                     themesScreen
                 case .hooks:
@@ -314,8 +317,8 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var fleetScreen: some View {
-        FleetManagementView()
+    private var hostProfilesScreen: some View {
+        HostProfilesView()
     }
 
     @ViewBuilder

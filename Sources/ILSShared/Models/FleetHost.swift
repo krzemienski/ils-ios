@@ -1,5 +1,8 @@
 import Foundation
 
+/// Typealias for migration path — UI-facing code should use `HostProfile`.
+public typealias HostProfile = FleetHost
+
 /// Represents a remote host in the ILS fleet for distributed Claude Code execution.
 public struct FleetHost: Codable, Identifiable, Hashable, Sendable {
     /// Unique identifier for this fleet host.

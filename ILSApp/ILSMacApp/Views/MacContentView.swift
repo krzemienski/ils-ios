@@ -11,7 +11,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
-    case fleet = "Profiles"
+    case hostProfiles = "Host Profiles"
     case themes = "Themes"
     case settings = "Settings"
 
@@ -23,7 +23,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
-        case .fleet: return "desktopcomputer"
+        case .hostProfiles: return "desktopcomputer"
         case .themes: return "paintpalette.fill"
         case .settings: return "gearshape.fill"
         }
@@ -35,7 +35,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
-        case .fleet: return .fleet
+        case .hostProfiles: return .hostProfiles
         case .themes: return .themes
         case .settings: return .settings
         }
@@ -328,8 +328,8 @@ struct MacContentView: View {
             BrowserView()
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
-        case .fleet:
-            FleetManagementView()
+        case .hostProfiles:
+            HostProfilesView()
         case .themes:
             ThemesListView()
         case .hooks:
@@ -564,7 +564,7 @@ struct MacContentView: View {
         case .settings: selectedSection = .settings
         case .browser: selectedSection = .browser
         case .teams: selectedSection = .teams
-        case .fleet: selectedSection = .fleet
+        case .hostProfiles: selectedSection = .hostProfiles
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .settings  // hooks navigates from settings context
         case .chat: selectedSection = .home

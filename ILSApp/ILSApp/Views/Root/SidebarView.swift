@@ -146,7 +146,8 @@ struct SidebarView: View {
             if enableAgentTeams {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
-            sidebarNavItem(icon: "desktopcomputer", label: "Profiles", screen: .fleet)
+            sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
+            sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
             sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
@@ -408,8 +409,8 @@ struct SidebarView: View {
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {
         case (.home, .home), (.system, .system), (.settings, .settings),
-             (.browser, .browser), (.teams, .teams), (.fleet, .fleet),
-             (.themes, .themes):
+             (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
+             (.themes, .themes), (.hooks, .hooks):
             return true
         case (.chat, .chat):
             return true
