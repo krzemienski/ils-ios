@@ -2,10 +2,14 @@ import SwiftUI
 
 struct AccentButton: View {
     @Environment(\.theme) private var theme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
     let title: String
     let icon: String?
     let action: () -> Void
+
+    @State private var isPressed = false
+    @State private var resetTask: Task<Void, Never>?
 
     init(_ title: String, icon: String? = nil, action: @escaping () -> Void) {
         self.title = title
@@ -14,7 +18,23 @@ struct AccentButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            HapticManager.impact(.medium)
+
+            if !reduceMotion {
+                isPressed = true
+            }
+            action()
+
+            if !reduceMotion {
+                resetTask?.cancel()
+                resetTask = Task {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    guard !Task.isCancelled else { return }
+                    isPressed = false
+                }
+            }
+        } label: {
             HStack(spacing: theme.spacingSM) {
                 if let icon {
                     Image(systemName: icon)
@@ -28,10 +48,13 @@ struct AccentButton: View {
             .padding(.vertical, theme.spacingSM + 2)
             .background(theme.accent.opacity(isEnabled ? 1.0 : 0.4))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .scaleEffect(isPressed ? 0.85 : 1.0)
+            .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
         }
         .opacity(isEnabled ? 1.0 : 0.6)
         .accessibilityLabel(title)
         .opacity(isEnabled ? 1.0 : 0.5)
         .saturation(isEnabled ? 1.0 : 0.3)
+        .onDisappear { resetTask?.cancel() }
     }
 }

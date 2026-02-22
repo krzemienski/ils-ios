@@ -10,8 +10,12 @@ enum ActiveScreen: Hashable {
     case settings
     case browser
     case teams
-    case fleet
+    case hostProfiles
     case themes
+    case hooks
+
+    /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
+    static var fleet: ActiveScreen { .hostProfiles }
 
     /// String key for @SceneStorage persistence (excludes associated values).
     var storageKey: String {
@@ -22,8 +26,9 @@ enum ActiveScreen: Hashable {
         case .settings: return "settings"
         case .browser: return "browser"
         case .teams: return "teams"
-        case .fleet: return "fleet"
+        case .hostProfiles: return "hostProfiles"
         case .themes: return "themes"
+        case .hooks: return "hooks"
         }
     }
 
@@ -35,8 +40,9 @@ enum ActiveScreen: Hashable {
         case "settings": return .settings
         case "browser": return .browser
         case "teams": return .teams
-        case "fleet": return .fleet
+        case "fleet", "hostProfiles": return .hostProfiles  // "fleet" kept for backward compat
         case "themes": return .themes
+        case "hooks": return .hooks
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -46,6 +52,7 @@ enum ActiveScreen: Hashable {
 
 struct SidebarRootView: View {
     @Environment(AppState.self) var appState
+    @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -57,6 +64,8 @@ struct SidebarRootView: View {
     @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var browserSegment: BrowserSegment = .mcp
+    @State private var sessionsVM = SessionsViewModel()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -97,6 +106,28 @@ struct SidebarRootView: View {
             if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
                 activeScreen = restored
             }
+            // Non-chat screens are restored above; chat requires async session fetch
+        }
+        .task {
+            sessionsVM.configure(client: appState.apiClient)
+            await sessionsVM.loadSessions(refresh: true)
+            // Load custom themes from backend and register with ThemeManager
+            // This allows custom themes to appear in ThemePickerView alongside built-ins
+            await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
+
+            // Restore chat session if app was backgrounded while viewing chat
+            if activeScreenKey == "chat", !lastChatSessionId.isEmpty,
+               let uuid = UUID(uuidString: lastChatSessionId) {
+                // O(1) dictionary lookup instead of O(n) first(where:)
+                let sessionIndex = Dictionary(uniqueKeysWithValues: sessionsVM.sessions.map { ($0.id, $0) })
+                if let session = sessionIndex[uuid] {
+                    activeScreen = .chat(session)
+                } else {
+                    // Fallback: create minimal session for restoration
+                    let session = ChatSession(id: uuid, name: "Session")
+                    activeScreen = .chat(session)
+                }
+            }
         }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
@@ -112,6 +143,7 @@ struct SidebarRootView: View {
     private var iPadLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(
+                sessionsViewModel: sessionsVM,
                 activeScreen: $activeScreen,
                 isSidebarOpen: .constant(true),
                 onSessionSelected: { session in
@@ -166,10 +198,12 @@ struct SidebarRootView: View {
                     browserScreen
                 case .teams:
                     teamsScreen
-                case .fleet:
-                    fleetScreen
+                case .hostProfiles:
+                    hostProfilesScreen
                 case .themes:
                     themesScreen
+                case .hooks:
+                    hooksScreen
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -222,6 +256,7 @@ struct SidebarRootView: View {
     private var sidebarPanel: some View {
         HStack(spacing: 0) {
             SidebarView(
+                sessionsViewModel: sessionsVM,
                 activeScreen: $activeScreen,
                 isSidebarOpen: $isSidebarOpen,
                 onSessionSelected: { session in
@@ -248,11 +283,16 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var homeScreen: some View {
         HomeView(
+            sessionsVM: sessionsVM,
             onSessionSelected: { session in
                 activeScreen = .chat(session)
             },
             onNavigate: { screen in
                 activeScreen = screen
+            },
+            onNavigateToBrowser: { segment in
+                browserSegment = segment
+                activeScreen = .browser
             }
         )
     }
@@ -269,7 +309,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private var browserScreen: some View {
-        BrowserView()
+        BrowserView(initialSegment: browserSegment)
     }
 
     @ViewBuilder
@@ -278,13 +318,18 @@ struct SidebarRootView: View {
     }
 
     @ViewBuilder
-    private var fleetScreen: some View {
-        FleetManagementView()
+    private var hostProfilesScreen: some View {
+        HostProfilesView()
     }
 
     @ViewBuilder
     private var themesScreen: some View {
         ThemesListView()
+    }
+
+    @ViewBuilder
+    private var hooksScreen: some View {
+        HooksManagementView()
     }
 
     // MARK: - Sidebar Logic (iPhone)

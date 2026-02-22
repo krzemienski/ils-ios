@@ -8,7 +8,7 @@ struct FleetManagementView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: theme.spacingMD) {
+            LazyVStack(spacing: theme.spacingMD) {
                 ForEach(viewModel.hosts) { host in
                     NavigationLink {
                         FleetHostDetailView(host: host)
@@ -39,8 +39,8 @@ struct FleetManagementView: View {
                 if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
                     EmptyEntityState(
                         entityType: .system,
-                        title: "No Hosts",
-                        description: "Register a remote host to get started."
+                        title: "No Backend Profiles",
+                        description: "Add a backend profile to connect to a remote ILS host."
                     )
                 }
 
@@ -54,7 +54,7 @@ struct FleetManagementView: View {
             .padding(.top, theme.spacingSM)
         }
         .background(theme.bgPrimary)
-        .navigationTitle("Fleet")
+        .navigationTitle("Backend Profiles")
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -103,7 +103,7 @@ struct FleetManagementView: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text("\(host.host):\(host.backendPort)")
+                Text(verbatim: "\(host.host):\(host.backendPort)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                 if let platform = host.platform {

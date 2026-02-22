@@ -36,7 +36,7 @@ struct FleetHostDetailView: View {
             sectionLabel("Host Info")
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 infoRow("Address", value: "\(host.host):\(host.port)")
-                infoRow("Backend Port", value: "\(host.backendPort)")
+                infoRow("Backend Port", value: String(host.backendPort))
                 if let username = host.username {
                     infoRow("SSH User", value: username)
                 }
@@ -134,7 +134,7 @@ struct FleetHostDetailView: View {
             }
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 2) {
+                LazyVStack(alignment: .leading, spacing: 2) {
                     if logs.isEmpty {
                         Text("No logs available")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))

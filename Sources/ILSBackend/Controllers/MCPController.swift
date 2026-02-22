@@ -321,20 +321,55 @@ struct MCPController: RouteCollection {
             let contents = (try? fm.contentsOfDirectory(atPath: logsDir)) ?? []
             let matchingLogs = contents.filter { $0.lowercased().contains(name.lowercased()) || $0.contains("mcp") }
 
+            let isoFormatter = ISO8601DateFormatter()
+            let isoFormatterFrac: ISO8601DateFormatter = {
+                let f = ISO8601DateFormatter()
+                f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                return f
+            }()
+
             for logFile in matchingLogs.prefix(3) {
                 let logPath = "\(logsDir)/\(logFile)"
                 if let content = try? String(contentsOfFile: logPath, encoding: .utf8) {
                     let lines = content.components(separatedBy: .newlines)
                     // Take last N lines
                     let recentLines = lines.suffix(clampedLimit)
-                    let formatter = ISO8601DateFormatter()
-                    let now = formatter.string(from: Date())
 
                     for line in recentLines where !line.trimmingCharacters(in: .whitespaces).isEmpty {
+                        // Attempt to parse a leading ISO8601 timestamp from the log line.
+                        // Common formats: "2026-02-22T10:30:00Z INFO ..." or "[2026-02-22T10:30:00Z] ..."
+                        var timestamp = isoFormatter.string(from: Date()) // fallback: now
+                        var message = line
+                        var level = "info"
+
+                        // Strip optional leading bracket
+                        let stripped = line.hasPrefix("[") ? String(line.dropFirst()) : line
+                        let parts = stripped.components(separatedBy: .whitespaces)
+
+                        if let first = parts.first {
+                            let candidate = first.hasSuffix("]") ? String(first.dropLast()) : first
+                            if let parsedDate = isoFormatterFrac.date(from: candidate) ?? isoFormatter.date(from: candidate) {
+                                timestamp = isoFormatter.string(from: parsedDate)
+                                // Reconstruct message without the leading timestamp token
+                                let remaining = parts.dropFirst().joined(separator: " ")
+                                message = remaining.isEmpty ? line : remaining
+                            }
+                        }
+
+                        // Detect log level keyword in message
+                        let msgLower = message.lowercased()
+                        if msgLower.hasPrefix("error") || msgLower.contains("[error]") {
+                            level = "error"
+                        } else if msgLower.hasPrefix("warn") || msgLower.contains("[warn]") {
+                            level = "warn"
+                        } else if msgLower.hasPrefix("debug") || msgLower.contains("[debug]") {
+                            level = "debug"
+                        }
+
                         logEntries.append(MCPLogEntry(
-                            timestamp: now,
-                            level: "info",
-                            message: line
+                            timestamp: timestamp,
+                            level: level,
+                            message: message
                         ))
                     }
                 }

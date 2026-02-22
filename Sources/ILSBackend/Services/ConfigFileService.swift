@@ -79,7 +79,16 @@ struct ConfigFileService {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(content)
-        try data.write(to: URL(fileURLWithPath: path))
+        var fileURL = URL(fileURLWithPath: path)
+        try data.write(to: fileURL)
+
+        // Exclude config files from iCloud/Finder backups on macOS —
+        // these are local machine-specific settings that shouldn't be restored onto a different host
+        #if os(macOS)
+        var resourceValues = URLResourceValues()
+        resourceValues.isExcludedFromBackup = true
+        try fileURL.setResourceValues(resourceValues)
+        #endif
 
         return ConfigInfo(
             scope: scope,

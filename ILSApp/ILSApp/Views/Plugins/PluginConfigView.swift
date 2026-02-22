@@ -138,6 +138,7 @@ struct PluginConfigView: View {
                         Toggle("", isOn: Binding(
                             get: { plugin.isEnabled },
                             set: { _ in
+                                HapticManager.selection()
                                 Task { await toggleEnabled() }
                             }
                         ))
@@ -271,7 +272,7 @@ struct PluginConfigView: View {
 
     private func badgeLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -285,7 +286,7 @@ struct PluginConfigView: View {
                 .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
                 .frame(width: 6, height: 6)
             Text(plugin.isEnabled ? "Active" : "Disabled")
-                .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
         }
     }
@@ -311,9 +312,9 @@ struct PluginConfigView: View {
 
     private func checkForUpdates() async {
         isCheckingUpdates = true
-        // Simulate network delay for update check
-        try? await Task.sleep(for: .seconds(1.5))
-        updateAvailable = Bool.random()
-        isCheckingUpdates = false
+        defer { isCheckingUpdates = false }
+        // TODO: Connect to real update endpoint when available
+        try? await Task.sleep(for: .seconds(1.0))
+        updateAvailable = false
     }
 }

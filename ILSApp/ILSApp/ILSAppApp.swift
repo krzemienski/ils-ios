@@ -151,8 +151,14 @@ class AppState {
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
-        case "fleet":
-            navigationIntent = .fleet
+        case "fleet", "profiles":
+            navigationIntent = .hostProfiles
+        case "themes":
+            navigationIntent = .themes
+        case "hooks":
+            navigationIntent = .hooks
+        case "teams":
+            navigationIntent = .teams
         default:
             break
         }

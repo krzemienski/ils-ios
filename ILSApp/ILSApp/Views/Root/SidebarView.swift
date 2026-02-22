@@ -26,8 +26,10 @@ import ILSShared
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
+
+    /// Shared sessions view model owned by SidebarRootView.
+    @Bindable var sessionsViewModel: SessionsViewModel
 
     /// The currently active navigation destination.
     @Binding var activeScreen: ActiveScreen
@@ -42,6 +44,9 @@ struct SidebarView: View {
     @State private var showRenameAlert = false
     /// Editable text used in the rename alert.
     @State private var renameText: String = ""
+    /// The session pending deletion confirmation, if any.
+    @State private var sessionToDelete: ChatSession?
+    @State private var showNewSessionSheet = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -67,10 +72,16 @@ struct SidebarView: View {
             bottomActions
         }
         .background(theme.bgSidebar)
-        .task {
-            sessionsViewModel.configure(client: appState.apiClient)
-            await sessionsViewModel.loadSessions(refresh: true)
+        .sheet(isPresented: $showNewSessionSheet) {
+            NewSessionView { session in
+                showNewSessionSheet = false
+                onSessionSelected(session)
+                isSidebarOpen = false
+            }
+            .environment(appState)
+            .environment(\.theme, theme)
         }
+        // Sessions are loaded by SidebarRootView (shared VM)
         .alert("Rename Session", isPresented: Binding(
             get: { sessionToRename != nil },
             set: { if !$0 { sessionToRename = nil } }
@@ -85,6 +96,20 @@ struct SidebarView: View {
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .alert("Delete Session", isPresented: Binding(
+            get: { sessionToDelete != nil },
+            set: { if !$0 { sessionToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let session = sessionToDelete {
+                    Task { await sessionsViewModel.deleteSession(session) }
+                }
+                sessionToDelete = nil
+            }
+            Button("Cancel", role: .cancel) { sessionToDelete = nil }
+        } message: {
+            Text("This will permanently delete this session and all its messages.")
         }
     }
 
@@ -121,9 +146,9 @@ struct SidebarView: View {
             if enableAgentTeams {
                 sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
             }
-            #if DEBUG
-            sidebarNavItem(icon: "server.rack", label: "Fleet", screen: .fleet)
-            #endif
+            sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
+            sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
+            sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)
@@ -215,7 +240,10 @@ struct SidebarView: View {
             )
         ) {
             ForEach(sessions) { session in
-                SidebarSessionRow(session: session) {
+                SidebarSessionRow(
+                    session: session,
+                    isActive: isSessionActive(session)
+                ) {
                     onSessionSelected(session)
                     isSidebarOpen = false
                 }
@@ -232,12 +260,29 @@ struct SidebarView: View {
                         Label("Export", systemImage: "square.and.arrow.up")
                     }
                     Button(role: .destructive) {
+                        sessionToDelete = session
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
                         Task {
                             await sessionsViewModel.deleteSession(session)
+                            HapticManager.notification(.success)
                         }
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
+                }
+                .swipeActions(edge: .leading) {
+                    Button {
+                        renameText = session.name ?? ""
+                        sessionToRename = session
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                    .tint(.blue)
                 }
             }
         } label: {
@@ -304,9 +349,7 @@ struct SidebarView: View {
     private var bottomActions: some View {
         Button {
             HapticManager.impact(.medium)
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
-            onSessionSelected(newSession)
-            isSidebarOpen = false
+            showNewSessionSheet = true
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "plus.circle.fill")
@@ -356,9 +399,18 @@ struct SidebarView: View {
 
     // MARK: - Helpers
 
+    private func isSessionActive(_ session: ChatSession) -> Bool {
+        if case .chat(let activeSession) = activeScreen {
+            return activeSession.id == session.id
+        }
+        return false
+    }
+
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
         switch (activeScreen, screen) {
-        case (.home, .home), (.system, .system), (.settings, .settings), (.browser, .browser), (.teams, .teams), (.fleet, .fleet):
+        case (.home, .home), (.system, .system), (.settings, .settings),
+             (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
+             (.themes, .themes), (.hooks, .hooks):
             return true
         case (.chat, .chat):
             return true

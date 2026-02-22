@@ -2,17 +2,6 @@ import Foundation
 import Observation
 import ILSShared
 
-// MARK: - Hashable conformance for MCPServer (needed for NavigationLink)
-extension MCPServer: @retroactive Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-
-    public static func == (lhs: MCPServer, rhs: MCPServer) -> Bool {
-        lhs.id == rhs.id
-    }
-}
-
 @MainActor
 @Observable
 class MCPViewModel {
@@ -25,7 +14,7 @@ class MCPViewModel {
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
-    private var healthTimer: Task<Void, Never>?
+    @ObservationIgnored nonisolated(unsafe) private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
     var isSelecting = false
@@ -39,6 +28,10 @@ class MCPViewModel {
     private var searchCache: [(server: MCPServer, searchText: String)] = []
 
     init() {}
+
+    deinit {
+        healthTimer?.cancel()
+    }
 
     func configure(client: APIClient) {
         self.client = client

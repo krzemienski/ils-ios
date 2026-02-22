@@ -11,9 +11,22 @@ struct ProcessListView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             // Header
             HStack {
-                Text("Processes")
-                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
+                HStack(spacing: theme.spacingXS) {
+                    Text("Processes")
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+
+                    // Show count of displayed / total processes
+                    let displayed = min(viewModel.filteredProcesses.count, 50)
+                    let total = viewModel.filteredProcesses.count
+                    Text(total > 50 ? "\(displayed) of \(total)" : "\(displayed)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(theme.bgTertiary)
+                        .clipShape(Capsule())
+                }
 
                 Spacer()
 
@@ -129,8 +142,12 @@ struct ProcessListView: View {
                 .frame(width: 50, alignment: .trailing)
 
             Text(String(format: "%.1f%%", process.cpuPercent))
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(process.cpuPercent > 50 ? theme.warning : theme.textSecondary)
+                .font(.system(size: theme.fontCaption, weight: process.cpuPercent > 50 ? .semibold : .regular, design: theme.fontDesign))
+                .foregroundStyle(
+                    process.cpuPercent > 80 ? theme.error :
+                    process.cpuPercent > 50 ? theme.warning :
+                    theme.textSecondary
+                )
                 .frame(width: 50, alignment: .trailing)
 
             Text(String(format: "%.0fM", process.memoryMB))

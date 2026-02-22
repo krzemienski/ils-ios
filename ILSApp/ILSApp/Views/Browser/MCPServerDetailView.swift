@@ -8,6 +8,34 @@ struct MCPServerDetailView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showCopiedToast = false
+    @State private var revealedKeys: Set<String> = []
+    @State private var autoHideTasks: [String: Task<Void, Never>] = [:]
+
+    /// Patterns that indicate a value is sensitive and should be masked.
+    private static let sensitivePatterns: [(key: String, value: String)] = [
+        // Key name patterns (case-insensitive partial match)
+        ("key", ""), ("token", ""), ("secret", ""), ("password", ""),
+        ("auth", ""), ("credential", ""), ("bearer", ""),
+        // Value prefix patterns
+        ("", "sk-"), ("", "sk_"), ("", "AKIA"), ("", "ghp_"),
+        ("", "gho_"), ("", "ghs_"), ("", "github_pat_"),
+        ("", "xoxb-"), ("", "xoxp-"), ("", "Bearer ")
+    ]
+
+    private func isSensitive(key: String, value: String) -> Bool {
+        let lowerKey = key.lowercased()
+        for pattern in Self.sensitivePatterns {
+            if !pattern.key.isEmpty && lowerKey.contains(pattern.key) { return true }
+            if !pattern.value.isEmpty && value.hasPrefix(pattern.value) { return true }
+        }
+        return false
+    }
+
+    private func maskedValue(_ value: String) -> String {
+        guard value.count > 4 else { return "••••" }
+        let suffix = String(value.suffix(4))
+        return "••••••••\(suffix)"
+    }
 
     var body: some View {
         ScrollView {
@@ -38,6 +66,10 @@ struct MCPServerDetailView: View {
                     sectionCard(title: "Environment Variables") {
                         VStack(spacing: theme.spacingSM) {
                             ForEach(sortedKeys, id: \.self) { key in
+                                let value = env[key] ?? ""
+                                let sensitive = isSensitive(key: key, value: value)
+                                let revealed = revealedKeys.contains(key)
+
                                 HStack {
                                     Text(key)
                                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -45,10 +77,46 @@ struct MCPServerDetailView: View {
 
                                     Spacer()
 
-                                    Text(env[key] ?? "")
-                                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                                        .foregroundStyle(theme.textSecondary)
-                                        .lineLimit(1)
+                                    if sensitive {
+                                        Text(revealed ? value : maskedValue(value))
+                                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                            .foregroundStyle(theme.textSecondary)
+                                            .lineLimit(1)
+
+                                        Button {
+                                            if revealed {
+                                                revealedKeys.remove(key)
+                                                autoHideTasks[key]?.cancel()
+                                                autoHideTasks[key] = nil
+                                            } else {
+                                                revealedKeys.insert(key)
+                                                // Auto-hide after 5 seconds
+                                                autoHideTasks[key]?.cancel()
+                                                autoHideTasks[key] = Task {
+                                                    try? await Task.sleep(for: .seconds(5))
+                                                    if !Task.isCancelled {
+                                                        await MainActor.run {
+                                                            revealedKeys.remove(key)
+                                                            autoHideTasks[key] = nil
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } label: {
+                                            Image(systemName: revealed ? "eye.slash" : "eye")
+                                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                                .foregroundStyle(theme.textTertiary)
+                                                .frame(minWidth: 30, minHeight: 30)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel(revealed ? "Hide \(key)" : "Reveal \(key)")
+                                    } else {
+                                        Text(value)
+                                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                            .foregroundStyle(theme.textSecondary)
+                                            .lineLimit(1)
+                                    }
                                 }
                             }
                         }

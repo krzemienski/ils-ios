@@ -15,18 +15,17 @@ struct ShimmerModifier: ViewModifier {
         } else {
             content
                 .overlay(
-                    GeometryReader { geometry in
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: max(0, phase - 0.3)),
-                                .init(color: .white.opacity(0.08), location: phase),
-                                .init(color: .clear, location: min(1, phase + 0.3))
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                    }
+                    // LinearGradient fills its overlay parent naturally —
+                    // GeometryReader was unnecessary and caused 60 layout passes/sec
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: max(0, phase - 0.3)),
+                            .init(color: .white.opacity(0.08), location: phase),
+                            .init(color: .clear, location: min(1, phase + 0.3))
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                     .clipped()
                 )
                 .onAppear {

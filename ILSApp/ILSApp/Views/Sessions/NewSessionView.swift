@@ -1,21 +1,50 @@
 import SwiftUI
 import ILSShared
 
+// MARK: - Entry Mode
+
+enum NewSessionMode: String, CaseIterable, Identifiable {
+    case project = "Project"
+    case fork = "Fork"
+    case newProject = "New Project"
+
+    var id: String { rawValue }
+}
+
+// MARK: - NewSessionView
+
 struct NewSessionView: View {
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var projectsViewModel = ProjectsViewModel()
-    @State private var sessionName = ""
+    @State private var selectedMode: NewSessionMode = .project
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"
     @State private var permissionMode = "default"
-    @State private var isCreating = false
     @State private var systemPrompt = ""
     @State private var maxBudget = ""
     @State private var maxTurns = ""
-    @State private var showAdvanced = false
+    @State private var sessionName = ""
+    @State private var isCreating = false
+    @State private var showConfig = false
+
+    // Fork mode state
+    @State private var recentSessions: [ChatSession] = []
+    @State private var isLoadingSessions = false
+    @State private var selectedSession: ChatSession?
+    @State private var forkSearchText = ""
+    @State private var debouncedForkResults: [ChatSession] = []
+
+    // New Project mode state
+    @State private var newProjectName = ""
+    @State private var newProjectPath = ""
+
+    private enum FocusedField: Hashable {
+        case sessionName, systemPrompt, maxBudget, maxTurns
+    }
+    @FocusState private var focusedField: FocusedField?
 
     let onCreated: (ChatSession) -> Void
 
@@ -26,18 +55,34 @@ struct NewSessionView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: theme.spacingMD) {
-                    sessionDetailsSection
-                    modelSection
-                    permissionsSection
-                    systemPromptSection
-                    limitsSection
-                    advancedSection
-                    createButton
+            VStack(spacing: 0) {
+                modePicker
+                    .padding(.horizontal, theme.spacingMD)
+                    .padding(.top, theme.spacingSM)
+                    .padding(.bottom, theme.spacingSM)
+
+                Divider().overlay(theme.divider)
+
+                ScrollView {
+                    VStack(spacing: theme.spacingMD) {
+                        switch selectedMode {
+                        case .project:
+                            projectPickerSection
+                        case .fork:
+                            forkSessionSection
+                        case .newProject:
+                            createProjectSection
+                        }
+
+                        if canShowConfig {
+                            configurationSection
+                        }
+
+                        actionButton
+                    }
+                    .padding(.horizontal, theme.spacingMD)
+                    .padding(.vertical, theme.spacingSM)
                 }
-                .padding(.horizontal, theme.spacingMD)
-                .padding(.vertical, theme.spacingSM)
             }
             .background(theme.bgPrimary)
             .navigationTitle("New Session")
@@ -54,38 +99,385 @@ struct NewSessionView: View {
                 projectsViewModel.configure(client: appState.apiClient)
                 await projectsViewModel.loadProjects()
             }
+            .task {
+                await loadRecentSessions()
+                debouncedForkResults = recentSessions
+            }
+            .task(id: forkSearchText) {
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                debouncedForkResults = filteredRecentSessions
+            }
         }
-        .presentationDetents([.medium, .large])
+        #if os(iOS)
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        #endif
     }
 
-    // MARK: - Session Details
+    // MARK: - Can Show Config
+
+    private var canShowConfig: Bool {
+        switch selectedMode {
+        case .project:
+            return true
+        case .fork:
+            return selectedSession != nil
+        case .newProject:
+            return !newProjectName.isEmpty && !newProjectPath.isEmpty
+        }
+    }
+
+    // MARK: - Mode Picker
 
     @ViewBuilder
-    private var sessionDetailsSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionLabel("Session Details")
+    private var modePicker: some View {
+        HStack(spacing: 0) {
+            ForEach(NewSessionMode.allCases) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedMode = mode
+                    }
+                } label: {
+                    Text(mode.rawValue)
+                        .font(.system(size: theme.fontCaption, weight: selectedMode == mode ? .semibold : .regular, design: theme.fontDesign))
+                        .foregroundStyle(selectedMode == mode ? theme.textPrimary : theme.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                        .background(selectedMode == mode ? theme.accent.opacity(0.15) : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        .accessibilityIdentifier("mode-picker")
+    }
 
-            TextField("Session Name (optional)", text: $sessionName)
+    // MARK: - Project Picker Section
+
+    @ViewBuilder
+    private var projectPickerSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Select Project")
+
+            projectSearchBar
+
+            noProjectRow
+
+            if projectsViewModel.isLoading && projectsViewModel.projects.isEmpty {
+                projectLoadingView
+            } else if projectsViewModel.filteredProjects.isEmpty && !projectsViewModel.searchText.isEmpty {
+                noResultsView(text: "No matching projects")
+            } else {
+                LazyVStack(spacing: 2) {
+                    ForEach(projectsViewModel.filteredProjects) { project in
+                        projectRow(project)
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier("project-list")
+    }
+
+    @ViewBuilder
+    private var projectSearchBar: some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+            TextField("Search projects...", text: $projectsViewModel.searchText)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+            if !projectsViewModel.searchText.isEmpty {
+                Button {
+                    projectsViewModel.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+            }
+        }
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingXS + 2)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+    }
+
+    @ViewBuilder
+    private var noProjectRow: some View {
+        Button {
+            selectedProject = nil
+        } label: {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "house.fill")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(width: 28)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("No Project (Home Directory)")
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Text("Start without project context")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+
+                Spacer()
+
+                if selectedProject == nil {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(theme.accent)
+                }
+            }
+            .padding(theme.spacingSM)
+            .background(selectedProject == nil ? theme.accent.opacity(0.08) : theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func projectRow(_ project: Project) -> some View {
+        let isSelected = selectedProject?.id == project.id
+        Button {
+            selectedProject = project
+        } label: {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "folder.fill")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.entityProject)
+                    .frame(width: 28)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(project.name)
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    HStack(spacing: theme.spacingXS) {
+                        Text(truncatedPath(project.path))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                            .lineLimit(1)
+
+                        if let count = project.sessionCount, count > 0 {
+                            Text("\u{00b7}")
+                                .foregroundStyle(theme.textTertiary)
+                            Text("\(count) sessions")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                    }
+                }
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(theme.accent)
+                }
+            }
+            .padding(theme.spacingSM)
+            .background(isSelected ? theme.accent.opacity(0.08) : theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(project.name), \(project.path)")
+    }
+
+    // MARK: - Fork Session Section
+
+    @ViewBuilder
+    private var forkSessionSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Fork from Session")
+
+            Text("Creates a copy of the selected session's conversation as a new starting point.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+
+            forkSearchBar
+
+            if isLoadingSessions {
+                projectLoadingView
+            } else if debouncedForkResults.isEmpty {
+                noResultsView(text: forkSearchText.isEmpty ? "No recent sessions" : "No matching sessions")
+            } else {
+                LazyVStack(spacing: 2) {
+                    ForEach(debouncedForkResults) { session in
+                        forkSessionRow(session)
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier("session-list")
+    }
+
+    @ViewBuilder
+    private var forkSearchBar: some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+            TextField("Search sessions...", text: $forkSearchText)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+            if !forkSearchText.isEmpty {
+                Button {
+                    forkSearchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+            }
+        }
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingXS + 2)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+    }
+
+    private var filteredRecentSessions: [ChatSession] {
+        guard !forkSearchText.isEmpty else { return recentSessions }
+        let query = forkSearchText.lowercased()
+        return recentSessions.filter {
+            ($0.name ?? "").lowercased().contains(query)
+                || ($0.projectName ?? "").lowercased().contains(query)
+                || $0.model.lowercased().contains(query)
+        }
+    }
+
+    @ViewBuilder
+    private func forkSessionRow(_ session: ChatSession) -> some View {
+        let isSelected = selectedSession?.id == session.id
+        Button {
+            selectedSession = session
+        } label: {
+            HStack(spacing: theme.spacingSM) {
+                Circle()
+                    .fill(session.status == .active ? theme.success : theme.textTertiary.opacity(0.3))
+                    .frame(width: 8, height: 8)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(session.name ?? "Unnamed Session")
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    HStack(spacing: theme.spacingXS) {
+                        if let projectName = session.projectName {
+                            Text(projectName)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.entityProject)
+                        }
+
+                        Text(session.model.capitalized)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.entitySession)
+
+                        Text("\u{00b7}")
+                            .foregroundStyle(theme.textTertiary)
+
+                        Text("\(session.messageCount) msgs")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                }
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(theme.accent)
+                }
+            }
+            .padding(theme.spacingSM)
+            .background(isSelected ? theme.accent.opacity(0.08) : theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
+    }
+
+    // MARK: - Create Project Section
+
+    @ViewBuilder
+    private var createProjectSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Create New Project")
+
+            TextField("Project Name", text: $newProjectName)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .padding(theme.spacingSM)
                 .background(theme.bgSecondary)
                 .foregroundStyle(theme.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-                .accessibilityIdentifier("session-name-field")
+                .accessibilityIdentifier("new-project-name")
 
-            Picker("Project", selection: $selectedProject) {
-                Text("No Project").tag(nil as Project?)
-                ForEach(projectsViewModel.projects) { project in
-                    Text(project.name).tag(project as Project?)
-                }
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "folder.badge.plus")
+                    .foregroundStyle(theme.textTertiary)
+                TextField("Directory Path (e.g. ~/projects/my-app)", text: $newProjectPath)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
             }
-            .tint(theme.accent)
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            .accessibilityIdentifier("project-picker")
+            .accessibilityIdentifier("new-project-path")
+
+            Text("Enter the full path to your project directory on the server.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
         }
+        .accessibilityIdentifier("create-project-form")
+    }
+
+    // MARK: - Configuration Section
+
+    @ViewBuilder
+    private var configurationSection: some View {
+        DisclosureGroup("Configuration", isExpanded: $showConfig) {
+            VStack(spacing: theme.spacingMD) {
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Session Name")
+                    TextField("Session Name (optional)", text: $sessionName)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .padding(theme.spacingSM)
+                        .background(theme.bgTertiary)
+                        .foregroundStyle(theme.textPrimary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        .focusRing(isFocused: focusedField == .sessionName, cornerRadius: theme.cornerRadiusSmall)
+                        .focused($focusedField, equals: .sessionName)
+                        .accessibilityIdentifier("session-name-field")
+                }
+
+                modelSection
+                permissionsSection
+                systemPromptSection
+                limitsSection
+            }
+            .padding(.top, theme.spacingSM)
+        }
+        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+        .foregroundStyle(theme.textSecondary)
+        .tint(theme.textTertiary)
+        .padding(theme.spacingSM)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
     }
 
     // MARK: - Model Selection
@@ -112,7 +504,7 @@ struct NewSessionView: View {
                 }
             }
             .padding(4)
-            .background(theme.bgSecondary)
+            .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             .accessibilityLabel("Claude model selection")
         }
@@ -132,7 +524,7 @@ struct NewSessionView: View {
             }
             .tint(theme.accent)
             .padding(theme.spacingSM)
-            .background(theme.bgSecondary)
+            .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
             Text(permissionDescription)
@@ -153,7 +545,8 @@ struct NewSessionView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .scrollContentBackground(.hidden)
-                    .frame(minHeight: 80)
+                    .frame(minHeight: 60)
+                    .focused($focusedField, equals: .systemPrompt)
 
                 if systemPrompt.isEmpty {
                     Text("Custom instructions for Claude (optional)")
@@ -165,15 +558,9 @@ struct NewSessionView: View {
                 }
             }
             .padding(theme.spacingSM)
-            .background(theme.bgSecondary)
+            .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            HStack {
-                Spacer()
-                Text("\(systemPrompt.count) characters")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
+            .focusRing(isFocused: focusedField == .systemPrompt, cornerRadius: theme.cornerRadiusSmall)
         }
     }
 
@@ -197,10 +584,12 @@ struct NewSessionView: View {
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(width: 100)
+                    .focused($focusedField, equals: .maxBudget)
             }
             .padding(theme.spacingSM)
-            .background(theme.bgSecondary)
+            .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .maxBudget, cornerRadius: theme.cornerRadiusSmall)
 
             HStack {
                 Text("Max Turns")
@@ -215,38 +604,21 @@ struct NewSessionView: View {
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .frame(width: 100)
+                    .focused($focusedField, equals: .maxTurns)
             }
             .padding(theme.spacingSM)
-            .background(theme.bgSecondary)
+            .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .maxTurns, cornerRadius: theme.cornerRadiusSmall)
         }
     }
 
-    // MARK: - Advanced
+    // MARK: - Action Button
 
     @ViewBuilder
-    private var advancedSection: some View {
-        DisclosureGroup("Advanced Options", isExpanded: $showAdvanced) {
-            VStack(spacing: theme.spacingSM) {
-                Text("Advanced options available when connected")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-        }
-        .font(.system(size: theme.fontBody, design: theme.fontDesign))
-        .foregroundStyle(theme.textSecondary)
-        .tint(theme.textTertiary)
-        .padding(theme.spacingSM)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-    }
-
-    // MARK: - Create Button
-
-    @ViewBuilder
-    private var createButton: some View {
+    private var actionButton: some View {
         Button {
-            createSession()
+            performAction()
         } label: {
             HStack(spacing: theme.spacingSM) {
                 if isCreating {
@@ -254,21 +626,90 @@ struct NewSessionView: View {
                         .tint(theme.textOnAccent)
                         .controlSize(.small)
                 } else {
-                    Image(systemName: "plus.circle.fill")
+                    Image(systemName: actionButtonIcon)
                 }
-                Text(isCreating ? "Creating..." : "Create Session")
+                Text(isCreating ? "Creating..." : actionButtonTitle)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundStyle(theme.textOnAccent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, theme.spacingSM)
-            .background(theme.accent)
+            .background(actionButtonEnabled ? theme.accent : theme.accent.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
-        .disabled(isCreating)
+        .disabled(isCreating || !actionButtonEnabled)
         .opacity(isCreating ? 0.7 : 1.0)
         .padding(.top, theme.spacingSM)
-        .accessibilityIdentifier("create-session-button")
+        .accessibilityIdentifier("start-session-button")
+    }
+
+    private var actionButtonTitle: String {
+        switch selectedMode {
+        case .project: return "Start Session"
+        case .fork: return "Fork & Start"
+        case .newProject: return "Create Project & Start"
+        }
+    }
+
+    private var actionButtonIcon: String {
+        switch selectedMode {
+        case .project: return "plus.circle.fill"
+        case .fork: return "arrow.triangle.branch"
+        case .newProject: return "folder.badge.plus"
+        }
+    }
+
+    private var actionButtonEnabled: Bool {
+        switch selectedMode {
+        case .project:
+            return true
+        case .fork:
+            return selectedSession != nil
+        case .newProject:
+            return !newProjectName.isEmpty && !newProjectPath.isEmpty
+        }
+    }
+
+    // MARK: - Shared Sub-views
+
+    @ViewBuilder
+    private var projectLoadingView: some View {
+        VStack(spacing: theme.spacingSM) {
+            ForEach(0..<3, id: \.self) { _ in
+                HStack(spacing: theme.spacingSM) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(theme.bgTertiary)
+                        .frame(width: 28, height: 28)
+                    VStack(alignment: .leading, spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(theme.bgTertiary)
+                            .frame(width: 120, height: 14)
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(theme.bgTertiary)
+                            .frame(width: 180, height: 10)
+                    }
+                    Spacer()
+                }
+                .padding(theme.spacingSM)
+                .background(theme.bgSecondary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+            .shimmer()
+        }
+    }
+
+    @ViewBuilder
+    private func noResultsView(text: String) -> some View {
+        VStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 24, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+            Text(text)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, theme.spacingLG)
     }
 
     // MARK: - Helpers
@@ -279,7 +720,15 @@ struct NewSessionView: View {
             .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
-                .kerning(1)
+            .kerning(1)
+    }
+
+    private func truncatedPath(_ path: String) -> String {
+        let components = path.split(separator: "/")
+        if components.count > 3 {
+            return ".../" + components.suffix(2).joined(separator: "/")
+        }
+        return path
     }
 
     private func formattedMode(_ mode: String) -> String {
@@ -297,20 +746,46 @@ struct NewSessionView: View {
     private var permissionDescription: String {
         switch permissionMode {
         case "default":
-            return "Standard permission behavior — Claude will ask before executing tools."
+            return "Standard permission behavior -- Claude will ask before executing tools."
         case "acceptEdits":
             return "Automatically approve file edits without prompting."
         case "plan":
-            return "Planning mode — Claude will plan but not execute changes."
+            return "Planning mode -- Claude will plan but not execute changes."
         case "bypassPermissions":
             return "Skip all permission checks. Use with caution."
         case "delegate":
             return "Delegate permission decisions to the calling process."
         case "dontAsk":
-            return "Never prompt — deny any action that requires permission."
+            return "Never prompt -- deny any action that requires permission."
         default:
             return ""
         }
+    }
+
+    // MARK: - Actions
+
+    private func performAction() {
+        switch selectedMode {
+        case .project:
+            createSession()
+        case .fork:
+            forkSession()
+        case .newProject:
+            createProjectAndSession()
+        }
+    }
+
+    private func loadRecentSessions() async {
+        isLoadingSessions = true
+        do {
+            let response: APIResponse<ListResponse<ChatSession>> = try await appState.apiClient.get("/sessions?limit=30")
+            if let data = response.data {
+                recentSessions = data.items
+            }
+        } catch {
+            AppLogger.shared.error("Failed to load recent sessions: \(error)", category: "ui")
+        }
+        isLoadingSessions = false
     }
 
     private func createSession() {
@@ -345,6 +820,74 @@ struct NewSessionView: View {
         }
     }
 
+    private func forkSession() {
+        guard let sourceSession = selectedSession else { return }
+        isCreating = true
+
+        Task {
+            do {
+                let response: APIResponse<ChatSession> = try await appState.apiClient.post(
+                    "/sessions/\(sourceSession.id)/fork",
+                    body: EmptyBody()
+                )
+                if let forkedSession = response.data {
+                    await MainActor.run {
+                        HapticManager.notification(.success)
+                        onCreated(forkedSession)
+                        dismiss()
+                    }
+                }
+            } catch {
+                HapticManager.notification(.error)
+                AppLogger.shared.error("Failed to fork session: \(error)", category: "ui")
+            }
+
+            isCreating = false
+        }
+    }
+
+    private func createProjectAndSession() {
+        guard !newProjectName.isEmpty, !newProjectPath.isEmpty else { return }
+        isCreating = true
+
+        Task {
+            if let project = await projectsViewModel.createProject(
+                name: newProjectName,
+                path: newProjectPath,
+                defaultModel: selectedModel,
+                description: nil
+            ) {
+                let request = CreateSessionRequest(
+                    projectId: project.id,
+                    name: sessionName.isEmpty ? nil : sessionName,
+                    model: selectedModel,
+                    permissionMode: PermissionMode(rawValue: permissionMode),
+                    systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
+                    maxBudgetUSD: Double(maxBudget),
+                    maxTurns: Int(maxTurns)
+                )
+
+                do {
+                    let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
+                    if let session = response.data {
+                        await MainActor.run {
+                            HapticManager.notification(.success)
+                            onCreated(session)
+                            dismiss()
+                        }
+                    }
+                } catch {
+                    HapticManager.notification(.error)
+                    AppLogger.shared.error("Failed to create session for new project: \(error)", category: "ui")
+                }
+            } else {
+                HapticManager.notification(.error)
+            }
+
+            isCreating = false
+        }
+    }
+
     func buildChatOptions() -> ChatOptions {
         ChatOptions(
             model: selectedModel,
@@ -354,10 +897,14 @@ struct NewSessionView: View {
             systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt
         )
     }
-
 }
+
+// MARK: - Empty Body for POST requests without body
+
+private struct EmptyBody: Codable {}
 
 #Preview {
     NewSessionView { _ in }
+        .environment(AppState())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

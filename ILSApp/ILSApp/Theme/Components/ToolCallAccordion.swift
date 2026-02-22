@@ -87,18 +87,18 @@ struct ToolCallAccordion: View {
 
                 if isError {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 10, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.error)
                 } else if isExpanded {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 10, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }
@@ -190,7 +190,7 @@ struct ToolCallAccordion: View {
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .semibold, design: theme.fontDesign))
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
                 .kerning(1)

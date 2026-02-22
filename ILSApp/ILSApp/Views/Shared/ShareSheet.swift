@@ -9,18 +9,26 @@ struct ShareSheet: UIViewControllerRepresentable {
     /// Share raw items (URLs, strings, images, etc.)
     init(items: [Any]) {
         self.activityItems = items
+        let tempPath = FileManager.default.temporaryDirectory.path
         self.tempURLs = items.compactMap { $0 as? URL }.filter {
-            $0.path.hasPrefix(FileManager.default.temporaryDirectory.path)
+            $0.path.hasPrefix(tempPath) || $0.path.contains("ShareExports")
         }
     }
 
-    /// Share text content as a temporary file.
+    /// Share text content as a file in Caches (survives backgrounding, cleaned up after share).
     init(text: String, fileName: String) {
         let data = Data(text.utf8)
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        try? data.write(to: tempURL)
-        self.activityItems = [tempURL]
-        self.tempURLs = [tempURL]
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("ShareExports", isDirectory: true)
+        try? FileManager.default.createDirectory(at: cachesDir, withIntermediateDirectories: true)
+        let fileURL = cachesDir.appendingPathComponent(fileName)
+        do {
+            try data.write(to: fileURL)
+        } catch {
+            AppLogger.shared.error("ShareSheet file write failed: \(error.localizedDescription)", category: "share")
+        }
+        self.activityItems = [fileURL]
+        self.tempURLs = [fileURL]
     }
 
     func makeUIViewController(context: Context) -> UIActivityViewController {

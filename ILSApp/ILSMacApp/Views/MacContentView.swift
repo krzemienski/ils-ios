@@ -11,7 +11,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
-    case fleet = "Fleet"
+    case hostProfiles = "Host Profiles"
     case themes = "Themes"
     case settings = "Settings"
 
@@ -23,7 +23,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
-        case .fleet: return "server.rack"
+        case .hostProfiles: return "desktopcomputer"
         case .themes: return "paintpalette.fill"
         case .settings: return "gearshape.fill"
         }
@@ -35,7 +35,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
-        case .fleet: return .fleet
+        case .hostProfiles: return .hostProfiles
         case .themes: return .themes
         case .settings: return .settings
         }
@@ -45,9 +45,9 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // MARK: - Mac Content View
 
 struct MacContentView: View {
-    @EnvironmentObject var appState: AppState
+    @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @StateObject private var sessionsViewModel = SessionsViewModel()
+    @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -59,6 +59,7 @@ struct MacContentView: View {
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
+        @Bindable var appState = appState
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar (left column)
             sidebarContent
@@ -134,7 +135,7 @@ struct MacContentView: View {
         }
         .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
-                .environmentObject(appState)
+                .environment(appState)
                 .environment(\.theme, theme)
         }
         .alert("Rename Session", isPresented: Binding(
@@ -216,7 +217,8 @@ struct MacContentView: View {
     }
 
     private var sessionsListView: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        @Bindable var sessionsViewModel = sessionsViewModel
+        return VStack(alignment: .leading, spacing: 0) {
             // Section header
             HStack {
                 Text("SESSIONS")
@@ -308,6 +310,7 @@ struct MacContentView: View {
         switch activeScreen {
         case .home:
             HomeView(
+                sessionsVM: sessionsViewModel,
                 onSessionSelected: { session in
                     activeScreen = .chat(session)
                 },
@@ -325,10 +328,12 @@ struct MacContentView: View {
             BrowserView()
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
-        case .fleet:
-            FleetManagementView()
+        case .hostProfiles:
+            HostProfilesView()
         case .themes:
             ThemesListView()
+        case .hooks:
+            HooksManagementView()
         }
     }
 
@@ -495,13 +500,13 @@ struct MacContentView: View {
 
     // MARK: - Helpers
 
+    /// Sections filtered by feature flags. Only recalculates when
+    /// `enableAgentTeams` changes (not on every body evaluation).
     private var filteredSections: [SidebarSection] {
-        SidebarSection.allCases.filter { section in
-            if section == .teams {
-                return enableAgentTeams
-            }
-            return true
+        if enableAgentTeams {
+            return SidebarSection.allCases
         }
+        return SidebarSection.allCases.filter { $0 != .teams }
     }
 
 
@@ -559,8 +564,9 @@ struct MacContentView: View {
         case .settings: selectedSection = .settings
         case .browser: selectedSection = .browser
         case .teams: selectedSection = .teams
-        case .fleet: selectedSection = .fleet
+        case .hostProfiles: selectedSection = .hostProfiles
         case .themes: selectedSection = .themes
+        case .hooks: selectedSection = .settings  // hooks navigates from settings context
         case .chat: selectedSection = .home
         }
         activeScreen = intent
@@ -602,7 +608,7 @@ struct MacSessionRow: View {
 
 #Preview {
     MacContentView()
-        .environmentObject(AppState())
-        .environmentObject(ThemeManager())
+        .environment(AppState())
+        .environment(ThemeManager())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

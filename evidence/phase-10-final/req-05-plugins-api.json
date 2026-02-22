@@ -1,0 +1,804 @@
+{
+    "success": true,
+    "data": {
+        "total": 97,
+        "items": [
+            {
+                "isEnabled": false,
+                "version": "c65410127f70",
+                "name": "agent-ascii-ui-mockup-generator",
+                "id": "C55C59AC-0763-415A-8923-4DD065260754",
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/agent-ascii-ui-mockup-generator/c65410127f70",
+                "isInstalled": true,
+                "agents": [
+                    "ascii-ui-mockup-generator"
+                ],
+                "marketplace": "agent-toolkit"
+            },
+            {
+                "isEnabled": false,
+                "version": "0.0.1",
+                "name": "agent-browse",
+                "id": "E7859B9F-CFCA-4953-BBCD-B86AA7CE1098",
+                "path": "/Users/nick/.claude/plugins/cache/browser-tools/agent-browse/0.0.1",
+                "isInstalled": true,
+                "marketplace": "browser-tools"
+            },
+            {
+                "isEnabled": false,
+                "version": "c65410127f70",
+                "name": "agent-codebase-pattern-finder",
+                "id": "03B71786-D89D-4C20-9277-CDE84DAF545D",
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/agent-codebase-pattern-finder/c65410127f70",
+                "isInstalled": true,
+                "agents": [
+                    "codebase-pattern-finder"
+                ],
+                "marketplace": "agent-toolkit"
+            },
+            {
+                "isEnabled": false,
+                "version": "c65410127f70",
+                "name": "agent-general-purpose",
+                "id": "E2DFD105-1C66-4AA6-88A8-E2509922AF66",
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/agent-general-purpose/c65410127f70",
+                "isInstalled": true,
+                "agents": [
+                    "general-purpose"
+                ],
+                "marketplace": "agent-toolkit"
+            },
+            {
+                "isEnabled": false,
+                "version": "c65410127f70",
+                "name": "agent-md-refactor",
+                "id": "9F671F31-BDE5-47D9-A0B8-EF1295FEE875",
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/agent-md-refactor/c65410127f70",
+                "isInstalled": true,
+                "marketplace": "agent-toolkit"
+            },
+            {
+                "isEnabled": false,
+                "version": "c65410127f70",
+                "name": "agent-mermaid-diagram-specialist",
+                "id": "BD5C05BD-3367-4CB4-9F24-2FE993697671",
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/agent-mermaid-diagram-specialist/c65410127f70",
+                "isInstalled": true,
+                "agents": [
+                    "mermaid-diagram-specialist"
+                ],
+                "marketplace": "agent-toolkit"
+            },
+            {
+                "isEnabled": true,
+                "version": "aa296ec81e8c",
+                "name": "agent-sdk-dev",
+                "id": "EBD6E9EC-0AAF-4568-9501-9C77E0960737",
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/agent-sdk-dev/aa296ec81e8c",
+                "isInstalled": true,
+                "description": "Claude Agent SDK Development Plugin",
+                "agents": [
+                    "agent-sdk-verifier-ts",
+                    "agent-sdk-verifier-py"
+                ],
+                "marketplace": "claude-plugins-official",
+                "commands": [
+                    "/agent-sdk-dev:new-sdk-app"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "c65410127f70",
+                "name": "agent-ui-ux-designer",
+                "id": "0E47B08B-12E6-4689-BCD4-266B89FCA6EE",
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/agent-ui-ux-designer/c65410127f70",
+                "isInstalled": true,
+                "agents": [
+                    "ui-ux-designer"
+                ],
+                "marketplace": "agent-toolkit"
+            },
+            {
+                "isEnabled": true,
+                "version": "1.0.1",
+                "name": "autonomous-skill",
+                "id": "D2F2DB72-A24A-4A6E-B9A7-9F0A3D08477D",
+                "path": "/Users/nick/.claude/plugins/cache/claude-code-settings/autonomous-skill/1.0.1",
+                "isInstalled": true,
+                "description": "Use when user wants to execute long-running tasks that require multiple sessions to complete. This skill manages task decomposition, progress tracking, and autonomous execution using Claude Code headless mode with auto-continuation. Trigger phrases: autonomous, long-running task, multi-session, \u81ea\u4e3b\u6267\u884c, \u957f\u65f6\u4efb\u52a1, autonomous skill.",
+                "marketplace": "claude-code-settings"
+            },
+            {
+                "isEnabled": true,
+                "version": "2.18.0",
+                "name": "axiom",
+                "id": "FD65FF67-249D-4571-9451-C338438CB8E4",
+                "path": "/Users/nick/.claude/plugins/cache/axiom-marketplace/axiom/2.18.0",
+                "isInstalled": true,
+                "agents": [
+                    "spm-conflict-resolver",
+                    "swiftui-nav-auditor",
+                    "test-runner",
+                    "accessibility-auditor",
+                    "build-fixer",
+                    "iap-auditor",
+                    "networking-auditor",
+                    "core-data-auditor",
+                    "textkit-auditor",
+                    "codable-auditor",
+                    "swiftui-architecture-auditor",
+                    "concurrency-auditor",
+                    "camera-auditor",
+                    "swift-performance-analyzer",
+                    "iap-implementation",
+                    "swiftui-performance-analyzer",
+                    "testing-auditor",
+                    "energy-auditor",
+                    "test-debugger",
+                    "icloud-auditor",
+                    "simulator-tester",
+                    "liquid-glass-auditor",
+                    "crash-analyzer",
+                    "build-optimizer",
+                    "memory-auditor",
+                    "modernization-helper",
+                    "storage-auditor",
+                    "performance-profiler",
+                    "security-privacy-scanner",
+                    "test-failure-analyzer"
+                ],
+                "marketplace": "axiom-marketplace",
+                "commands": [
+                    "/axiom:analyze-crash",
+                    "/axiom:run-tests",
+                    "/axiom:status",
+                    "/axiom:screenshot",
+                    "/axiom:test-simulator",
+                    "/axiom:audit",
+                    "/axiom:optimize-build",
+                    "/axiom:fix-build",
+                    "/axiom:ask",
+                    "/axiom:profile"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "0.0.1",
+                "name": "browser-automation",
+                "id": "E776007B-311A-4537-A19C-F66E99A4D3CD",
+                "path": "/Users/nick/.claude/plugins/cache/browser-tools/browser-automation/0.0.1",
+                "isInstalled": true,
+                "marketplace": "browser-tools"
+            },
+            {
+                "isEnabled": false,
+                "version": "24decef76f74",
+                "name": "ccc-skills",
+                "id": "9982C7F9-35FF-40BF-9892-E29107818C21",
+                "path": "/Users/nick/.claude/plugins/cache/ccc/ccc-skills/24decef76f74",
+                "isInstalled": true,
+                "marketplace": "ccc",
+                "commands": [
+                    "/ccc-skills:streak",
+                    "/ccc-skills:streak-switch",
+                    "/ccc-skills:streak-insights",
+                    "/ccc-skills:streak-list",
+                    "/ccc-skills:streak-stats",
+                    "/ccc-skills:streak-new"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "2.1.4",
+                "name": "claude-code-settings",
+                "id": "855FEE6D-728A-4665-9875-21F22D716E38",
+                "path": "/Users/nick/.claude/plugins/cache/claude-code-settings/claude-code-settings/2.1.4",
+                "isInstalled": true,
+                "description": "Claude Code settings and skills for spec-driven development workflows",
+                "agents": [
+                    "insight-documenter",
+                    "ui-engineer",
+                    "instruction-reflector",
+                    "command-creator",
+                    "github-issue-fixer",
+                    "deep-reflector",
+                    "pr-reviewer"
+                ],
+                "marketplace": "claude-code-settings",
+                "commands": [
+                    "/claude-code-settings:eureka",
+                    "/claude-code-settings:reflection-harder",
+                    "/claude-code-settings:think-harder",
+                    "/claude-code-settings:translate",
+                    "/claude-code-settings:reflection",
+                    "/claude-code-settings:think-ultra"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "1.0.0",
+                "name": "claude-code-setup",
+                "id": "9FF37341-D967-4B50-8187-63C29957DC3D",
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/claude-code-setup/1.0.0",
+                "isInstalled": true,
+                "description": "Analyze codebases and recommend tailored Claude Code automations such as hooks, skills, MCP servers, and subagents.",
+                "marketplace": "claude-plugins-official"
+            },
+            {
+                "isEnabled": true,
+                "version": "1.0.0",
+                "name": "claude-md-management",
+                "id": "4AFD7EAB-0F22-4A31-997F-18D0F0ADF8CA",
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/claude-md-management/1.0.0",
+                "isInstalled": true,
+                "description": "Tools to maintain and improve CLAUDE.md files - audit quality, capture session learnings, and keep project memory current.",
+                "marketplace": "claude-plugins-official",
+                "commands": [
+                    "/claude-md-management:revise-claude-md"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "10.3.1",
+                "name": "claude-mem",
+                "id": "A9C491CD-CEFB-42E0-984C-BF93A1B9BD74",
+                "path": "/Users/nick/.claude/plugins/cache/thedotmack/claude-mem/10.3.1",
+                "isInstalled": true,
+                "description": "Persistent memory system for Claude Code - seamlessly preserve context across sessions",
+                "marketplace": "thedotmack",
+                "commands": [
+                    "/claude-mem:do",
+                    "/claude-mem:make-plan"
+                ]
+            },
+            {
+                "isEnabled": false,
+                "version": "1.4.1",
+                "name": "claude-reflect",
+                "id": "68C96877-768B-46BD-BEB0-40DBC9502983",
+                "path": "/Users/nick/.claude/plugins/cache/claude-code-plugins-plus/claude-reflect/1.4.1",
+                "isInstalled": true,
+                "description": "Self-learning system for Claude Code that captures corrections and updates CLAUDE.md automatically",
+                "marketplace": "claude-code-plugins-plus",
+                "commands": [
+                    "/claude-reflect:skip-reflect",
+                    "/claude-reflect:reflect",
+                    "/claude-reflect:view-queue"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "1.0.0",
+                "name": "claude-session-driver",
+                "id": "6B3952E6-E494-4C3A-8EE4-367320187870",
+                "path": "/Users/nick/.claude/plugins/cache/superpowers-marketplace/claude-session-driver/1.0.0",
+                "isInstalled": true,
+                "description": "Launch, control, and monitor other Claude Code sessions as workers via tmux",
+                "marketplace": "superpowers-marketplace"
+            },
+            {
+                "isEnabled": false,
+                "version": "aa296ec81e8c",
+                "name": "code-review",
+                "id": "C7230F30-1907-48F5-99F2-16CC256A0DFC",
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/code-review/aa296ec81e8c",
+                "isInstalled": true,
+                "description": "Automated code review for pull requests using multiple specialized agents with confidence-based scoring",
+                "marketplace": "claude-plugins-official",
+                "commands": [
+                    "/code-review:code-review"
+                ]
+            },
+            {
+                "isEnabled": true,
+                "version": "1.0.0",
+                "name": "code-simplifier",
+                "id": "3B72E51F-19B3-4D93-8DF3-C16D2D4AFB97",
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/code-simplifier/1.0.0",
+                "isInstalled": true,
+                "description": "Agent that simplifies and refines code for clarity, consistency, and maintainability while preserving functionality",
+                "agents": [
+                    "code-simplifier"
+                ],
+                "marketplace": "claude-plugins-official"
+            },
+            {
+                "version": "c65410127f70",
+                "isInstalled": true,
+                "id": "A45FEF78-A390-4AA0-B92B-E17FD8B3EE69",
+                "marketplace": "agent-toolkit",
+                "name": "command-creator",
+                "isEnabled": true,
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/command-creator/c65410127f70"
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/every-marketplace/compound-engineering/2.28.0",
+                "version": "2.28.0",
+                "isInstalled": true,
+                "id": "DF0B0C9E-B5F1-4FA6-89C2-755EBBA5B621",
+                "marketplace": "every-marketplace",
+                "name": "compound-engineering",
+                "description": "AI-powered development tools. 28 agents, 24 commands, 15 skills, 1 MCP server for code review, research, design, and workflow automation.",
+                "isEnabled": false,
+                "commands": [
+                    "/compound-engineering:test-browser",
+                    "/compound-engineering:resolve_parallel",
+                    "/compound-engineering:reproduce-bug",
+                    "/compound-engineering:xcode-test",
+                    "/compound-engineering:generate_command",
+                    "/compound-engineering:changelog",
+                    "/compound-engineering:deploy-docs",
+                    "/compound-engineering:triage",
+                    "/compound-engineering:deepen-plan",
+                    "/compound-engineering:report-bug",
+                    "/compound-engineering:lfg",
+                    "/compound-engineering:create-agent-skill",
+                    "/compound-engineering:resolve_pr_parallel",
+                    "/compound-engineering:plan_review",
+                    "/compound-engineering:agent-native-audit",
+                    "/compound-engineering:resolve_todo_parallel",
+                    "/compound-engineering:release-docs",
+                    "/compound-engineering:feature-video",
+                    "/compound-engineering:heal-skill"
+                ]
+            },
+            {
+                "version": "c65410127f70",
+                "isInstalled": true,
+                "id": "30D002F6-07B0-4CDC-8642-E7106048546F",
+                "marketplace": "agent-toolkit",
+                "name": "crafting-effective-readmes",
+                "isEnabled": false,
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/crafting-effective-readmes/c65410127f70"
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/context-engineering-kit/customaize-agent/1.3.1",
+                "version": "1.3.1",
+                "isInstalled": true,
+                "id": "BF062BB2-395C-4572-945B-AAF36F048162",
+                "marketplace": "context-engineering-kit",
+                "name": "customaize-agent",
+                "description": "Commands and skills for writing and refining commands, hooks, skills for Claude Code, includes Anthropic Best Practices and Agent Persuasion Principles that can be useful for sub-agent workflows.",
+                "isEnabled": true,
+                "commands": [
+                    "/customaize-agent:create-skill",
+                    "/customaize-agent:apply-anthropic-skill-best-practices",
+                    "/customaize-agent:create-command",
+                    "/customaize-agent:create-hook",
+                    "/customaize-agent:test-skill",
+                    "/customaize-agent:test-prompt",
+                    "/customaize-agent:create-agent",
+                    "/customaize-agent:create-workflow-command"
+                ]
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/context-engineering-kit/ddd/1.0.0",
+                "version": "1.0.0",
+                "isInstalled": true,
+                "id": "177E14BF-E341-41B5-84E5-40BBDFDC0771",
+                "marketplace": "context-engineering-kit",
+                "name": "ddd",
+                "description": "Introduces command to update CLAUDE.md with best practices for domain-driven development, focused on quality of code, includes Clean Architecture, SOLID principles, and other design patterns.",
+                "isEnabled": true,
+                "commands": [
+                    "/ddd:setup-code-formating"
+                ]
+            },
+            {
+                "version": "0.1.0",
+                "isInstalled": true,
+                "id": "491D8D03-E78E-44DA-BCEF-F27F0CF3B507",
+                "marketplace": "dotai",
+                "name": "debug",
+                "description": "Systematic debugging and root cause analysis framework - four-phase investigation process ensuring understanding before fixes",
+                "isEnabled": false,
+                "path": "/Users/nick/.claude/plugins/cache/dotai/debug/0.1.0"
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/ccc/deckling/0.1.0",
+                "version": "0.1.0",
+                "isInstalled": true,
+                "id": "6C49289A-0F88-4F4C-BD8C-84130D0814C3",
+                "marketplace": "ccc",
+                "name": "deckling",
+                "description": "Generate native PPTX files using Anthropic Platform Skills. No ugly python-pptx - uses Anthropic's server-side rendering engine.",
+                "isEnabled": false,
+                "commands": [
+                    "/deckling:deckling"
+                ]
+            },
+            {
+                "version": "0.1.0",
+                "isInstalled": true,
+                "id": "015F9B4A-F83E-4CAA-9BB2-4CB1281AD3D1",
+                "marketplace": "dotai",
+                "name": "dig",
+                "description": "Dig into library source code - clone and explore repos to answer API questions",
+                "isEnabled": false,
+                "path": "/Users/nick/.claude/plugins/cache/dotai/dig/0.1.0"
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/context-engineering-kit/docs/1.1.0",
+                "version": "1.1.0",
+                "isInstalled": true,
+                "id": "AD43C298-BF75-4953-BC7A-62D0A185ED22",
+                "marketplace": "context-engineering-kit",
+                "name": "docs",
+                "description": "Commands for analysing project, writing and refining documentation.",
+                "isEnabled": true,
+                "commands": [
+                    "/docs:update-docs"
+                ]
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/claude-code-workflows/documentation-generation/1.2.1",
+                "agents": [
+                    "reference-builder",
+                    "docs-architect",
+                    "api-documenter",
+                    "tutorial-engineer",
+                    "mermaid-expert"
+                ],
+                "version": "1.2.1",
+                "isInstalled": true,
+                "id": "1CFA0469-71AA-4628-AAF7-5E169C1251A8",
+                "marketplace": "claude-code-workflows",
+                "name": "documentation-generation",
+                "isEnabled": false,
+                "commands": [
+                    "/documentation-generation:doc-generate"
+                ]
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/dotai/dotai/1.0.0",
+                "version": "1.0.0",
+                "isInstalled": true,
+                "id": "69926554-15F8-4B31-B4DE-6DC6614548AC",
+                "marketplace": "dotai",
+                "name": "dotai",
+                "description": "Complete development toolkit - documentation, PRDs, design docs, debugging, PR workflows, and planning",
+                "isEnabled": false,
+                "commands": [
+                    "/dotai:update-tech-stack",
+                    "/dotai:update-app-design",
+                    "/dotai:install",
+                    "/dotai:create-app-design",
+                    "/dotai:create-tech-stack"
+                ]
+            },
+            {
+                "version": "c65410127f70",
+                "isInstalled": true,
+                "id": "7E60F6DC-D1A8-43CE-B6C6-0EA9A27AE872",
+                "marketplace": "agent-toolkit",
+                "name": "draw-io",
+                "isEnabled": true,
+                "path": "/Users/nick/.claude/plugins/cache/agent-toolkit/draw-io/c65410127f70"
+            },
+            {
+                "version": "1.0.0",
+                "isInstalled": true,
+                "id": "2ADFF300-9C32-457F-8BE9-05A652C79427",
+                "marketplace": "superpowers-marketplace",
+                "name": "elements-of-style",
+                "description": "Writing guidance based on William Strunk Jr.'s The Elements of Style (1918)",
+                "isEnabled": true,
+                "path": "/Users/nick/.claude/plugins/cache/superpowers-marketplace/elements-of-style/1.0.0"
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/superpowers-marketplace/episodic-memory/1.0.15",
+                "agents": [
+                    "search-conversations"
+                ],
+                "version": "1.0.15",
+                "isInstalled": true,
+                "id": "68CBE2CE-787C-4B9E-AB89-8CB98836AFAB",
+                "marketplace": "superpowers-marketplace",
+                "name": "episodic-memory",
+                "description": "Semantic search for Claude Code conversations. Remember past discussions, decisions, and patterns.",
+                "isEnabled": true,
+                "commands": [
+                    "/episodic-memory:search-conversations"
+                ]
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/essentials-claude-code/essentials/3.42.0",
+                "agents": [
+                    "mr-description-creator-default",
+                    "beads-converter-default",
+                    "document-creator-default",
+                    "code-quality-plan-creator-default",
+                    "plan-creator-default",
+                    "prompt-creator-default",
+                    "codemap-creator-default",
+                    "bug-plan-creator-default",
+                    "tasks-converter-default"
+                ],
+                "version": "3.42.0",
+                "isInstalled": true,
+                "id": "510A018A-61C6-4A24-996B-CEB79693ED19",
+                "marketplace": "essentials-claude-code",
+                "name": "essentials",
+                "isEnabled": true,
+                "commands": [
+                    "/essentials:beads-swarm",
+                    "/essentials:tasks-swarm",
+                    "/essentials:implement-swarm",
+                    "/essentials:plan-swarm",
+                    "/essentials:document-creator",
+                    "/essentials:code-quality-plan-creator",
+                    "/essentials:beads-loop",
+                    "/essentials:tasks-converter",
+                    "/essentials:cancel-swarm",
+                    "/essentials:codemap-creator",
+                    "/essentials:plan-loop",
+                    "/essentials:implement-loop",
+                    "/essentials:ralph-config",
+                    "/essentials:tasks-loop",
+                    "/essentials:mr-description-creator",
+                    "/essentials:reset-beads",
+                    "/essentials:bug-plan-creator",
+                    "/essentials:beads-converter",
+                    "/essentials:prompt-creator",
+                    "/essentials:cancel-loop",
+                    "/essentials:show-status",
+                    "/essentials:reset-prd",
+                    "/essentials:plan-creator"
+                ]
+            },
+            {
+                "version": "aa296ec81e8c",
+                "isInstalled": true,
+                "id": "826AE624-6867-4965-9898-80FD54DC6F97",
+                "marketplace": "claude-plugins-official",
+                "name": "explanatory-output-style",
+                "description": "Adds educational insights about implementation choices and codebase patterns (mimics the deprecated Explanatory output style)",
+                "isEnabled": false,
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/explanatory-output-style/aa296ec81e8c"
+            },
+            {
+                "version": "1.0.0",
+                "isInstalled": true,
+                "id": "F2E1B19B-51F3-44C1-9256-2570F1879053",
+                "marketplace": "expo-plugins",
+                "name": "expo-app-design",
+                "description": "Build robust, productivity apps with Expo",
+                "isEnabled": false,
+                "path": "/Users/nick/.claude/plugins/cache/expo-plugins/expo-app-design/1.0.0"
+            },
+            {
+                "version": "1.0.0",
+                "isInstalled": true,
+                "id": "4BAC21B3-BB4E-47DF-A3FC-8D78829733F7",
+                "marketplace": "expo-plugins",
+                "name": "expo-deployment",
+                "description": "Deploying Expo apps to iOS App Store, Android Play Store, web hosting, and CI/CD workflows",
+                "isEnabled": false,
+                "path": "/Users/nick/.claude/plugins/cache/expo-plugins/expo-deployment/1.0.0"
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/feature-dev/aa296ec81e8c",
+                "agents": [
+                    "code-reviewer",
+                    "code-explorer",
+                    "code-architect"
+                ],
+                "version": "aa296ec81e8c",
+                "isInstalled": true,
+                "id": "C8480F48-D2F6-4EFF-B586-ECC712C1F9DD",
+                "marketplace": "claude-plugins-official",
+                "name": "feature-dev",
+                "description": "Comprehensive feature development workflow with specialized agents for codebase exploration, architecture design, and quality review",
+                "isEnabled": true,
+                "commands": [
+                    "/feature-dev:feature-dev"
+                ]
+            },
+            {
+                "path": "/Users/nick/.claude/plugins/cache/context-engineering-kit/fpf/1.1.1",
+                "agents": [
+                    "fpf-agent"
+                ],
+                "version": "1.1.1",
+                "isInstalled": true,
+                "id": "E8BC77D6-D4BB-400D-9879-F2430456E4AF",
+                "marketplace": "context-engineering-kit",
+                "name": "fpf",
+                "description": "First Principles Framework (FPF) for structured reasoning using workflow command pattern. Implements ADI (Abduction-Deduction-Induction) cycle via propose-hypotheses workflow with fpf-agent for hypothesis generation, logical verification, empirical validation, and auditable decision-making. Includes utility commands for status, query, decay, actualize, and reset.",
+                "isEnabled": true,
+                "commands": [
+                    "/fpf:actualize",
+                    "/fpf:status",
+                    "/fpf:propose-hypotheses",
+                    "/fpf:query",
+                    "/fpf:decay",
+                    "/fpf:reset"
+                ]
+            },
+            {
+                "version": "aa296ec81e8c",
+                "isInstalled": true,
+                "id": "4205F6D4-2D5D-4FDD-952A-2EC794C9ACA3",
+                "marketplace": "claude-plugins-official",
+                "name": "frontend-design",
+                "description": "Frontend design skill for UI/UX implementation",
+                "isEnabled": true,
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/frontend-design/aa296ec81e8c"
+            },
+            {
+                "isInstalled": true,
+                "commands": [
+                    "/frontend-mobile-development:component-scaffold"
+                ],
+                "id": "DBD53CCA-1A3B-44A5-8768-64C1ADE45352",
+                "marketplace": "claude-code-workflows",
+                "isEnabled": false,
+                "version": "1.2.1",
+                "agents": [
+                    "mobile-developer",
+                    "frontend-developer"
+                ],
+                "name": "frontend-mobile-development",
+                "path": "/Users/nick/.claude/plugins/cache/claude-code-workflows/frontend-mobile-development/1.2.1"
+            },
+            {
+                "isInstalled": true,
+                "description": "Comprehensive skill pack with 66 specialized skills for full-stack developers: 12 language experts (Python, TypeScript, Go, Rust, C++, Swift, Kotlin, C#, PHP, Java, SQL, JavaScript), 10 backend frameworks, 6 frontend/mobile, plus infrastructure, DevOps, security, and testing. Features progressive disclosure architecture for 50% faster loading.",
+                "id": "12149492-7004-4A1F-BCDF-2C873E13980F",
+                "marketplace": "fullstack-dev-skills",
+                "isEnabled": true,
+                "version": "0.4.8",
+                "name": "fullstack-dev-skills",
+                "path": "/Users/nick/.claude/plugins/cache/fullstack-dev-skills/fullstack-dev-skills/0.4.8"
+            },
+            {
+                "isInstalled": true,
+                "description": "Introduces commands for commit and PRs creation, plus skills for git worktrees and notes.",
+                "commands": [
+                    "/git:load-issues",
+                    "/git:attach-review-to-pr",
+                    "/git:create-pr",
+                    "/git:commit",
+                    "/git:analyze-issue"
+                ],
+                "id": "2AF774BB-3A84-4219-BA3C-2337078E2D43",
+                "marketplace": "context-engineering-kit",
+                "isEnabled": true,
+                "version": "1.1.0",
+                "name": "git",
+                "path": "/Users/nick/.claude/plugins/cache/context-engineering-kit/git/1.1.0"
+            },
+            {
+                "isInstalled": true,
+                "description": "Claude Code hooks for workflow tracing, session management, and observability. Capture multi-agent workflow traces in JSONL format for analysis and debugging.",
+                "id": "668B2358-CED9-4C9B-A0CF-466D6A05490F",
+                "marketplace": "aiwg",
+                "isEnabled": false,
+                "version": "1.0.0",
+                "name": "hooks",
+                "path": "/Users/nick/.claude/plugins/cache/aiwg/hooks/1.0.0"
+            },
+            {
+                "isInstalled": true,
+                "id": "1E593FC8-31E7-4FED-8963-A2289FD1BB8F",
+                "marketplace": "daymade-skills",
+                "isEnabled": true,
+                "version": "1.1.0",
+                "name": "iOS-APP-developer",
+                "path": "/Users/nick/.claude/plugins/cache/daymade-skills/iOS-APP-developer/1.1.0"
+            },
+            {
+                "isInstalled": true,
+                "description": "Inspired by Japanese continuous improvement philosophy, Agile and Lean development practices. Introduces commands for analysis of root cause of issues and problems, including 5 Whys, Cause and Effect Analysis, and other techniques.",
+                "commands": [
+                    "/kaizen:analyse-problem",
+                    "/kaizen:cause-and-effect",
+                    "/kaizen:plan-do-check-act",
+                    "/kaizen:analyse",
+                    "/kaizen:why",
+                    "/kaizen:root-cause-tracing"
+                ],
+                "id": "6BA326C5-E420-4503-8D81-7CFBE3366CDB",
+                "marketplace": "context-engineering-kit",
+                "isEnabled": true,
+                "version": "1.0.0",
+                "name": "kaizen",
+                "path": "/Users/nick/.claude/plugins/cache/context-engineering-kit/kaizen/1.0.0"
+            },
+            {
+                "isInstalled": true,
+                "description": "Continuous learning system - extracts reusable knowledge from work sessions into Claude Code skills",
+                "id": "19B7F954-6374-48CB-B000-D42C729F1BCF",
+                "marketplace": "dotai",
+                "isEnabled": true,
+                "version": "3.0.0",
+                "name": "learn",
+                "path": "/Users/nick/.claude/plugins/cache/dotai/learn/3.0.0"
+            },
+            {
+                "isInstalled": true,
+                "description": "Interactive learning mode that requests meaningful code contributions at decision points (mimics the unshipped Learning output style)",
+                "id": "B58ADA85-1CB2-4771-AF7B-63A846123405",
+                "marketplace": "claude-plugins-official",
+                "isEnabled": false,
+                "version": "aa296ec81e8c",
+                "name": "learning-output-style",
+                "path": "/Users/nick/.claude/plugins/cache/claude-plugins-official/learning-output-style/aa296ec81e8c"
+            },
+            {
+                "isInstalled": true,
+                "description": "Marketing automation framework with 37 specialized agents for campaign management, content strategy, brand compliance, and analytics. Full campaign lifecycle from strategy to measurement.",
+                "commands": [
+                    "/marketing:pr-launch",
+                    "/marketing:campaign-analytics",
+                    "/marketing:event-marketing",
+                    "/marketing:intake-from-campaign",
+                    "/marketing:campaign-kickoff",
+                    "/marketing:content-planning",
+                    "/marketing:intake-start-campaign",
+                    "/marketing:marketing-intake",
+                    "/marketing:legal-compliance",
+                    "/marketing:brand-audit",
+                    "/marketing:asset-production",
+                    "/marketing:email-campaign",
+                    "/marketing:brand-review",
+                    "/marketing:marketing-status",
+                    "/marketing:competitive-analysis",
+                    "/marketing:social-strategy",
+                    "/marketing:creative-brief",
+                    "/marketing:budget-review",
+                    "/marketing:video-production",
+                    "/marketing:marketing-retrospective",
+                    "/marketing:marketing-intake-wizard",
+                    "/marketing:sales-enablement",
+                    "/marketing:crisis-response"
+                ],
+                "id": "6A2B617B-76AF-47D2-A460-9F80127796E4",
+                "marketplace": "aiwg",
+                "isEnabled": false,
+                "version": "2024.12.4",
+                "agents": [
+                    "pr-specialist",
+                    "email-marketer",
+                    "graphic-designer",
+                    "data-analyst",
+                    "technical-marketing-writer",
+                    "content-writer",
+                    "campaign-orchestrator",
+                    "quality-controller",
+                    "seo-specialist",
+                    "workflow-coordinator",
+                    "reporting-specialist",
+                    "art-director",
+                    "accessibility-checker",
+                    "editor",
+                    "marketing-analyst",
+                    "creative-director",
+                    "project-manager",
+                    "channel-strategist",
+                    "copywriter",
+                    "campaign-strategist",
+                    "asset-manager",
+                    "corporate-communications",
+                    "media-relations",
+                    "scriptwriter",
+                    "content-strategist",
+                    "crisis-communications",
+                    "legal-reviewer",
+                    "market-researcher",
+                    "budget-planner",
+                    "internal-communications",
+                    "brand-guardian",
+                    "video-producer",
+                    "social-media-specialist",
+                    "attribution-specialist",
+                    "positioning-specialist",
+                    "production-coordinator",
+                    "traffic-manager"
+                ],
+                "name": "marketing",
+                "path": "/Users/nick/.claude/plugins/cache/aiwg/marketing/2024.12.4"
+            }
+        ]
+    }
+}

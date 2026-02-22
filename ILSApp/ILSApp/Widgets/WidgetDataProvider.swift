@@ -100,6 +100,15 @@ struct ServerStatusEntry: TimelineEntry {
 struct WidgetDataProvider {
     private let defaults = UserDefaults(suiteName: widgetAppGroupSuite)
 
+    /// Configured URLSession for background widget fetches.
+    /// `isDiscretionary = true` lets the system defer requests to save energy.
+    private static let urlSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.isDiscretionary = true
+        config.timeoutIntervalForRequest = 10
+        return URLSession(configuration: config)
+    }()
+
     // MARK: - UserDefaults Keys
 
     private enum Keys {
@@ -140,7 +149,7 @@ struct WidgetDataProvider {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 10
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await Self.urlSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -169,16 +178,23 @@ struct WidgetDataProvider {
     }
 
     private func cacheSessions(_ sessions: [WidgetSessionInfo]) {
-        guard let data = try? JSONEncoder().encode(sessions) else { return }
-        defaults?.set(data, forKey: Keys.cachedSessions)
+        do {
+            let data = try JSONEncoder().encode(sessions)
+            defaults?.set(data, forKey: Keys.cachedSessions)
+        } catch {
+            // Widget context has no AppLogger; silently skip caching on encode failure
+        }
     }
 
     private func loadCachedSessions() -> [WidgetSessionInfo] {
-        guard let data = defaults?.data(forKey: Keys.cachedSessions),
-              let sessions = try? JSONDecoder().decode([WidgetSessionInfo].self, from: data) else {
+        guard let data = defaults?.data(forKey: Keys.cachedSessions) else {
             return []
         }
-        return sessions
+        do {
+            return try JSONDecoder().decode([WidgetSessionInfo].self, from: data)
+        } catch {
+            return []
+        }
     }
 
     // MARK: - Server Status
@@ -205,7 +221,7 @@ struct WidgetDataProvider {
         request.httpMethod = "GET"
         request.timeoutInterval = 5
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await Self.urlSession.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -237,7 +253,7 @@ struct WidgetDataProvider {
         request.timeoutInterval = 5
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await Self.urlSession.data(for: request)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let apiResponse = try decoder.decode(WidgetAPIResponse<WidgetListResponse>.self, from: data)

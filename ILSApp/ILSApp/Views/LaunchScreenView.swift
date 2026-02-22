@@ -75,8 +75,8 @@ struct LaunchScreenView: View {
                                     endPoint: .bottom
                                 )
                             )
-                            .shadow(color: theme.accent.opacity(glowIntensity), radius: 20)
-                            .shadow(color: theme.accentSecondary.opacity(glowIntensity), radius: 30)
+                            .shadow(color: theme.accent.opacity(glowIntensity), radius: 10)
+                            .shadow(color: theme.accentSecondary.opacity(glowIntensity), radius: 15)
 
                         // Subtitle indicator capsules
                         HStack(spacing: 2) {
@@ -107,7 +107,7 @@ struct LaunchScreenView: View {
                         .shadow(color: theme.accent.opacity(0.5), radius: 10)
 
                     Text("INTELLIGENT LOCAL SERVER")
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
                         .foregroundColor(theme.textSecondary)
                         .kerning(3)
                 }
@@ -160,6 +160,10 @@ struct LaunchScreenView: View {
                     glowIntensity = 0.8
                 }
             }
+        }
+        .onDisappear {
+            isAnimating = false
+            glowIntensity = 0.3
         }
     }
 }

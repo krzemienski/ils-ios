@@ -99,6 +99,7 @@ struct TunnelSettingsView: View {
                         Toggle("", isOn: Binding(
                             get: { isRunning },
                             set: { newValue in
+                                HapticManager.selection()
                                 Task {
                                     if newValue {
                                         await startTunnel()

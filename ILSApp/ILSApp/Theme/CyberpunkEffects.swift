@@ -11,6 +11,7 @@ struct GlowEffect: ViewModifier {
         content
             .shadow(color: color.opacity(opacity), radius: radius)
             .shadow(color: color.opacity(opacity * 0.5), radius: radius * 2)
+            .drawingGroup()
     }
 }
 
@@ -34,20 +35,24 @@ struct PulsingGlow: ViewModifier {
     let color: Color
     @State private var isAnimating = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .shadow(
-                color: color.opacity(isAnimating ? 0.6 : 0.2),
-                radius: isAnimating ? 15 : 5
+                color: color.opacity(reduceMotion ? 0.4 : (isAnimating ? 0.6 : 0.2)),
+                radius: reduceMotion ? 10 : (isAnimating ? 15 : 5)
             )
             .onAppear {
+                guard !reduceMotion, !isAnimating else { return }
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
+                guard !reduceMotion else { return }
                 if newPhase == .active {
+                    guard !isAnimating else { return }
                     withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                         isAnimating = true
                     }
@@ -72,18 +77,22 @@ struct PulsingModifier: ViewModifier {
     let active: Bool
     @State private var isAnimating = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .opacity(active && isAnimating ? 0.5 : 1.0)
+            .opacity(reduceMotion ? 1.0 : (active && isAnimating ? 0.5 : 1.0))
             .onAppear {
-                guard active else { return }
+                guard active, !isAnimating, !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
             .onChange(of: active) { oldValue, newValue in
+                guard !reduceMotion else { return }
                 if newValue {
+                    guard !isAnimating else { return }
+                    isAnimating = false // reset before re-arming
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                         isAnimating = true
                     }
@@ -92,8 +101,10 @@ struct PulsingModifier: ViewModifier {
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
-                guard active else { return }
+                guard active, !reduceMotion else { return }
                 if newPhase == .active {
+                    guard !isAnimating else { return }
+                    isAnimating = false // reset before re-arming
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                         isAnimating = true
                     }
@@ -127,6 +138,7 @@ struct ScanlineOverlay: View {
                 y += lineSpacing
             }
         }
+        .drawingGroup()
         .allowsHitTesting(false)
     }
 }

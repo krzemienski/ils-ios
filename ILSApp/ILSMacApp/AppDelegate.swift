@@ -2,6 +2,7 @@ import Cocoa
 import SwiftUI
 
 /// AppDelegate for macOS-specific app lifecycle and menu bar customization
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {

@@ -50,6 +50,7 @@ struct ChatInputBar: View {
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
     @State private var resetTask: Task<Void, Never>?
+    @FocusState private var isInputFocused: Bool
 
     /// Dynamic horizontal padding for the text field, scales with text size preference.
     @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
@@ -111,12 +112,14 @@ struct ChatInputBar: View {
             .textFieldStyle(.plain)
             .lineLimit(1...5)
             .disabled(isDisabled)
+            .focused($isInputFocused)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
             )
+            .focusRing(isFocused: isInputFocused, cornerRadius: theme.cornerRadius)
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
     }

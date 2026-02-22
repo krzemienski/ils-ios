@@ -1,14 +1,15 @@
 import Foundation
-import Combine
+import Observation
 import ILSShared
 
 /// Server-Sent Events client for streaming chat responses
 @MainActor
-class SSEClient: ObservableObject {
-    @Published var messages: [StreamMessage] = []
-    @Published var isStreaming: Bool = false
-    @Published var error: Error?
-    @Published var connectionState: ConnectionState = .disconnected
+@Observable
+class SSEClient {
+    var messages: [StreamMessage] = []
+    var isStreaming: Bool = false
+    var error: Error?
+    var connectionState: ConnectionState = .disconnected
 
     enum ConnectionState: Equatable {
         case disconnected
@@ -41,8 +42,11 @@ class SSEClient: ObservableObject {
         self.session = URLSession(configuration: config)
     }
 
-    deinit {
-        streamTask?.cancel()
+    /// Tear down session and cancel in-flight tasks.
+    /// Call from view's onDisappear; replaces deinit-based cleanup
+    /// which cannot safely access @MainActor state.
+    func cleanup() {
+        cancel()
         session.invalidateAndCancel()
     }
 
@@ -67,7 +71,12 @@ class SSEClient: ObservableObject {
     }
 
     private func performStream(request: ChatStreamRequest) async {
-        let url = URL(string: "\(baseURL)/api/v1/chat/stream")!
+        guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
+            AppLogger.shared.error("Invalid stream URL: \(baseURL)/api/v1/chat/stream", category: "sse")
+            self.error = URLError(.badURL)
+            self.isStreaming = false
+            return
+        }
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -219,8 +228,8 @@ class SSEClient: ObservableObject {
     }
 
     /// Message IDs sent by server for client correlation
-    @Published var userMessageId: String?
-    @Published var assistantMessageId: String?
+    var userMessageId: String?
+    var assistantMessageId: String?
 
     private func parseAndAddMessage(event: String, data: String) async {
         // Handle special event types

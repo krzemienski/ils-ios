@@ -9,19 +9,27 @@ struct MarkdownTextView: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
+    /// Cached MarkdownUI theme — only rebuilt when the app theme changes.
+    @State private var cachedTheme: MarkdownUI.Theme = .basic
+    @State private var cachedThemeId: String = ""
+
     var body: some View {
         Markdown(text)
-            .markdownTheme(chatTheme)
+            .markdownTheme(cachedTheme)
             .markdownCodeSyntaxHighlighter(ILSCodeHighlighter())
             .textSelection(.enabled)
+            .onChange(of: theme.id, initial: true) {
+                guard theme.id != cachedThemeId else { return }
+                cachedThemeId = theme.id
+                cachedTheme = buildChatTheme(from: theme)
+            }
     }
 
     /// Build a MarkdownUI theme dynamically from current AppTheme tokens.
     /// MarkdownUI Theme is a struct built via result builders, so we construct
-    /// it using the current theme's colors.
-    private var chatTheme: MarkdownUI.Theme {
-        let t = theme
-        return Theme()
+    /// it using the current theme's colors. Only called when theme.id changes.
+    private func buildChatTheme(from t: ThemeSnapshot) -> MarkdownUI.Theme {
+        Theme()
             .text {
                 ForegroundColor(t.textPrimary)
                 FontSize(.em(1.0))

@@ -1,13 +1,15 @@
 import SwiftUI
 import AppKit
+import Observation
 import UserNotifications
 import ILSShared
 
 /// Manages native macOS notifications for message updates
 @MainActor
-class NotificationManager: NSObject, ObservableObject {
+@Observable
+class NotificationManager: NSObject {
     /// Whether notification permissions have been granted
-    @Published private(set) var isAuthorized: Bool = false
+    private(set) var isAuthorized: Bool = false
 
     /// Singleton instance for app-wide access
     static let shared = NotificationManager()

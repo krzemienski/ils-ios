@@ -12,6 +12,9 @@ enum BrowserSegment: String, CaseIterable {
 // MARK: - Browser View
 
 struct BrowserView: View {
+    /// Optional initial segment to show when the view first appears.
+    var initialSegment: BrowserSegment = .mcp
+
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -23,6 +26,7 @@ struct BrowserView: View {
     @State private var segment: BrowserSegment = .mcp
     @State private var searchText = ""
     @State private var mcpScope: String = "all"
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -61,6 +65,7 @@ struct BrowserView: View {
         .inlineNavigationBarTitle()
         #endif
         .task {
+            segment = initialSegment
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)
@@ -79,6 +84,7 @@ struct BrowserView: View {
         HStack(spacing: 0) {
             ForEach(BrowserSegment.allCases, id: \.self) { seg in
                 Button {
+                    HapticManager.selection()
                     if reduceMotion {
                         segment = seg
                     } else {
@@ -130,6 +136,7 @@ struct BrowserView: View {
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 #endif
+                .focused($isSearchFocused)
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
@@ -146,6 +153,7 @@ struct BrowserView: View {
         .padding(.vertical, theme.spacingSM)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
         .onChange(of: searchText) { _, text in
             mcpVM.searchText = text
             skillsVM.searchText = text
@@ -162,6 +170,7 @@ struct BrowserView: View {
             HStack(spacing: 0) {
                 ForEach(["all", "user", "project", "local"], id: \.self) { scope in
                     Button {
+                        HapticManager.selection()
                         mcpScope = scope
                     } label: {
                         Text(scope.capitalized)
@@ -226,11 +235,17 @@ struct BrowserView: View {
         let items = skillsVM.filteredSkills
         if skillsVM.isLoading && items.isEmpty {
             loadingRows
+        } else if items.isEmpty && searchText.isEmpty {
+            emptyState(
+                icon: "sparkles",
+                title: "No Skills",
+                subtitle: "No skills found in ~/.claude/skills"
+            )
         } else if items.isEmpty {
             emptyState(
                 icon: "sparkles",
-                title: searchText.isEmpty ? "No Skills" : "No Results",
-                subtitle: searchText.isEmpty ? "No skills found" : "Try a different search"
+                title: "No Results",
+                subtitle: "Try a different search"
             )
         } else {
             ForEach(items) { skill in
@@ -249,6 +264,155 @@ struct BrowserView: View {
                 .buttonStyle(.plain)
             }
         }
+
+        // GitHub Browse Section
+        githubBrowseSection
+    }
+
+    // MARK: - GitHub Browse Section
+
+    @ViewBuilder
+    private var githubBrowseSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            // Section header
+            HStack {
+                Image(systemName: "globe")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text("BROWSE GITHUB")
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .tracking(1)
+                Spacer()
+            }
+            .padding(.top, theme.spacingMD)
+
+            // GitHub search field
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                TextField("Search GitHub for skills...", text: $skillsVM.gitHubSearchText)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .onChange(of: skillsVM.gitHubSearchText) { _, text in
+                        skillsVM.updateGitHubSearchText(text)
+                    }
+                if !skillsVM.gitHubSearchText.isEmpty {
+                    Button {
+                        skillsVM.gitHubSearchText = ""
+                        skillsVM.gitHubResults = []
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                if skillsVM.isSearchingGitHub {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.7)
+                        .tint(theme.accent)
+                }
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            // GitHub results
+            if !skillsVM.gitHubResults.isEmpty {
+                VStack(spacing: theme.spacingSM) {
+                    ForEach(skillsVM.gitHubResults, id: \.repository) { result in
+                        gitHubResultRow(result)
+                    }
+                }
+            } else if !skillsVM.gitHubSearchText.isEmpty && !skillsVM.isSearchingGitHub {
+                Text("No skills found on GitHub for \"\(skillsVM.gitHubSearchText)\"")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingSM)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func gitHubResultRow(_ result: GitHubSearchResult) -> some View {
+        HStack(spacing: theme.spacingMD) {
+            // Entity dot
+            Circle()
+                .fill(theme.entitySkill.opacity(0.6))
+                .frame(width: 10, height: 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(result.name.isEmpty ? result.repository : result.name)
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    if result.stars > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.warning)
+                            Text("\(result.stars)")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                        }
+                    }
+                }
+
+                if let description = result.description {
+                    Text(description)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .lineLimit(2)
+                }
+
+                Text(result.repository)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .lineLimit(1)
+            }
+
+            // Install button
+            Button {
+                Task {
+                    let installed = await skillsVM.installFromGitHub(result: result)
+                    if installed {
+                        HapticManager.impact(.medium)
+                    }
+                }
+            } label: {
+                if skillsVM.isLoading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.7)
+                        .tint(theme.accent)
+                        .frame(width: 60)
+                } else {
+                    Text("Install")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textOnAccent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(theme.accent)
+                        .clipShape(Capsule())
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(skillsVM.isLoading)
+        }
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
     }
 
     // MARK: - Plugins Content
@@ -294,66 +458,118 @@ struct BrowserView: View {
                 )
             } else {
                 ForEach(items) { plugin in
-                    HStack(spacing: theme.spacingMD) {
-                        // Entity dot
-                        Circle()
-                            .fill(theme.entityPlugin)
-                            .frame(width: 10, height: 10)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(plugin.name)
-                                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                                    .foregroundStyle(theme.textPrimary)
-                                    .lineLimit(1)
-
-                                Spacer()
-
-                                // Show progress indicator if installing
-                                if pluginsVM.installingPlugins.contains(plugin.name) {
-                                    ProgressView()
-                                        .progressViewStyle(.circular)
-                                        .scaleEffect(0.8)
+                    NavigationLink {
+                        PluginConfigView(
+                            plugin: plugin,
+                            onToggleEnabled: { p in
+                                if p.isEnabled {
+                                    await pluginsVM.disablePlugin(p)
                                 } else {
-                                    // Status dot + text
-                                    HStack(spacing: 4) {
-                                        Circle()
-                                            .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
-                                            .frame(width: 6, height: 6)
-                                        Text(plugin.isEnabled ? "Enabled" : "Disabled")
-                                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                            .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
-                                    }
+                                    await pluginsVM.enablePlugin(p)
                                 }
+                            },
+                            onUninstall: { p in
+                                await pluginsVM.uninstallPlugin(p)
                             }
-
-                            Text(plugin.description ?? "No description")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textSecondary)
-                                .lineLimit(1)
-
-                            if let marketplace = plugin.marketplace, !marketplace.isEmpty {
-                                Text(marketplace)
-                                    .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
-                                    .foregroundStyle(theme.textTertiary)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(theme.bgTertiary)
-                                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                            }
-                        }
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
+                        )
+                    } label: {
+                        pluginRow(plugin)
                     }
-                    .padding(theme.spacingMD)
-                    .modifier(GlassCard())
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
+                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    // MARK: - Plugin Row (enhanced with status indicators)
+
+    private func pluginRow(_ plugin: Plugin) -> some View {
+        let isInstalling = pluginsVM.installingPlugins.contains(plugin.name)
+
+        return HStack(spacing: theme.spacingMD) {
+            // Entity dot
+            Circle()
+                .fill(theme.entityPlugin)
+                .frame(width: 10, height: 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(plugin.name)
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    // Install progress spinner
+                    if isInstalling {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .scaleEffect(0.7)
+                            .tint(theme.accent)
+                    } else {
+                        // Status dot + text
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(plugin.isEnabled ? theme.success : theme.textTertiary)
+                                .frame(width: 6, height: 6)
+                            Text(plugin.isEnabled ? "Enabled" : "Disabled")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
+                        }
+                    }
+                }
+
+                Text(plugin.description ?? "No description")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .lineLimit(1)
+
+                // Badges row: version, source, stars, marketplace
+                HStack(spacing: 6) {
+                    if let version = plugin.version {
+                        pluginBadge("v\(version)", color: theme.textTertiary)
+                    }
+                    if let source = plugin.source {
+                        pluginBadge(
+                            source == .official ? "Official" : "Community",
+                            color: source == .official ? theme.accent : theme.entitySkill
+                        )
+                    }
+                    if let stars = plugin.stars, stars > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.warning)
+                            Text("\(stars)")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                    }
+                    if let marketplace = plugin.marketplace, !marketplace.isEmpty {
+                        pluginBadge(marketplace, color: theme.textTertiary)
+                    }
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(plugin.name), \(plugin.isEnabled ? "Enabled" : "Disabled")")
+    }
+
+    private func pluginBadge(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+            .foregroundStyle(color)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(color.opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
     // MARK: - Shared Row
@@ -399,7 +615,7 @@ struct BrowserView: View {
 
                 if let badge, !badge.isEmpty {
                     Text(badge)
-                        .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -409,7 +625,7 @@ struct BrowserView: View {
             }
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)
