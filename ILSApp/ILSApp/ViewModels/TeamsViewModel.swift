@@ -14,6 +14,11 @@ class TeamsViewModel {
 
     private let apiClient: APIClient
     @ObservationIgnored private var pollingTask: Task<Void, Never>?
+    @ObservationIgnored private var currentPollInterval: TimeInterval = 15
+    @ObservationIgnored private var previousTeamHash: Int = 0
+    private static let minPollInterval: TimeInterval = 15
+    private static let maxPollInterval: TimeInterval = 120
+    private static let backoffMultiplier: Double = 1.5
 
     init(apiClient: APIClient) {
         self.apiClient = apiClient
@@ -210,13 +215,31 @@ class TeamsViewModel {
 
     func startPolling(teamName: String) {
         stopPolling()
-        // Use a single Task with sleep instead of Timer + Task-per-tick.
-        // Avoids creating a new Task object every 15 seconds.
+        currentPollInterval = Self.minPollInterval
+        previousTeamHash = computeTeamHash()
+
         pollingTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                try? await Task.sleep(nanoseconds: UInt64((self?.currentPollInterval ?? 15) * 1_000_000_000))
                 guard !Task.isCancelled else { break }
+
                 await self?.loadTeamDetail(name: teamName)
+
+                // Check if data changed — apply exponential backoff when idle
+                let newHash = self?.computeTeamHash() ?? 0
+                if newHash == self?.previousTeamHash {
+                    // No changes — increase interval with backoff
+                    if let self {
+                        self.currentPollInterval = min(
+                            self.currentPollInterval * Self.backoffMultiplier,
+                            Self.maxPollInterval
+                        )
+                    }
+                } else {
+                    // Data changed — reset to minimum interval
+                    self?.currentPollInterval = Self.minPollInterval
+                    self?.previousTeamHash = newHash
+                }
             }
         }
     }
@@ -224,6 +247,17 @@ class TeamsViewModel {
     func stopPolling() {
         pollingTask?.cancel()
         pollingTask = nil
+        currentPollInterval = Self.minPollInterval
+    }
+
+    /// Compute a hash of the current team state for change detection
+    private func computeTeamHash() -> Int {
+        var hasher = Hasher()
+        hasher.combine(selectedTeam?.name)
+        hasher.combine(selectedTeam?.members.count)
+        hasher.combine(tasks.count)
+        hasher.combine(messages.count)
+        return hasher.finalize()
     }
 }
 
