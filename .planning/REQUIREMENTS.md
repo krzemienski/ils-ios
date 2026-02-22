@@ -242,6 +242,178 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 
 ---
 
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CONC-01 | Phase 18 | Pending |
+| CONC-02 | Phase 18 | Pending |
+| CONC-03 | Phase 19 | Pending |
+| CONC-04 | Phase 19 | Pending |
+| CONC-05 | Phase 19 | Pending |
+| CONC-06 | Phase 19 | Pending |
+| CONC-07 | Phase 19 | Pending |
+| CONC-08 | Phase 19 | Pending |
+| CONC-09 | Phase 19 | Pending |
+| CONC-10 | Phase 23 | Pending |
+| CONC-11 | Phase 23 | Pending |
+| CONC-12 | Phase 23 | Pending |
+| CONC-13 | Phase 23 | Pending |
+| CONC-14 | Phase 23 | Pending |
+| CONC-15 | Phase 23 | Pending |
+| CONC-16 | Phase 23 | Pending |
+| CONC-17 | Phase 23 | Pending |
+| CONC-18 | Phase 23 | Pending |
+| ENRG-01 | Phase 18 | Pending |
+| ENRG-02 | Phase 18 | Pending |
+| ENRG-03 | Phase 18 | Pending |
+| ENRG-04 | Phase 22 | Pending |
+| ENRG-05 | Phase 22 | Pending |
+| ENRG-06 | Phase 22 | Pending |
+| ENRG-07 | Phase 22 | Pending |
+| ENRG-08 | Phase 23 | Pending |
+| ENRG-09 | Phase 23 | Pending |
+| ENRG-10 | Phase 23 | Pending |
+| ENRG-11 | Phase 23 | Pending |
+| ENRG-12 | Phase 23 | Pending |
+| ENRG-13 | Phase 23 | Pending |
+| ENRG-14 | Phase 23 | Pending |
+| ENRG-15 | Phase 23 | Pending |
+| ENRG-16 | Phase 23 | Pending |
+| ENRG-17 | Phase 23 | Pending |
+| ENRG-18 | Phase 23 | Pending |
+| SPERF-01 | Phase 18 | Pending |
+| SPERF-02 | Phase 20 | Pending |
+| SPERF-03 | Phase 20 | Pending |
+| SPERF-04 | Phase 20 | Pending |
+| SPERF-05 | Phase 20 | Pending |
+| SPERF-06 | Phase 20 | Pending |
+| SPERF-07 | Phase 23 | Pending |
+| SPERF-08 | Phase 23 | Pending |
+| SPERF-09 | Phase 23 | Pending |
+| SPERF-10 | Phase 23 | Pending |
+| SPERF-11 | Phase 23 | Pending |
+| SPERF-12 | Phase 23 | Pending |
+| SPERF-13 | Phase 23 | Pending |
+| SPERF-14 | Phase 23 | Pending |
+| SPERF-15 | Phase 23 | Pending |
+| SPERF-16 | Phase 23 | Pending |
+| SPERF-17 | Phase 23 | Pending |
+| SPERF-18 | Phase 23 | Pending |
+| ARCH-01 | Phase 18 | Pending |
+| ARCH-02 | Phase 18 | Pending |
+| ARCH-03 | Phase 18 | Pending |
+| ARCH-04 | Phase 18 | Pending |
+| ARCH-05 | Phase 20 | Pending |
+| ARCH-06 | Phase 20 | Pending |
+| ARCH-07 | Phase 20 | Pending |
+| ARCH-08 | Phase 20 | Pending |
+| ARCH-09 | Phase 20 | Pending |
+| ARCH-10 | Phase 20 | Pending |
+| ARCH-11 | Phase 20 | Pending |
+| ARCH-12 | Phase 20 | Pending |
+| ARCH-13 | Phase 20 | Pending |
+| ARCH-14 | Phase 23 | Pending |
+| ARCH-15 | Phase 23 | Pending |
+| ARCH-16 | Phase 23 | Pending |
+| ARCH-17 | Phase 23 | Pending |
+| ARCH-18 | Phase 23 | Pending |
+| ARCH-19 | Phase 23 | Pending |
+| ARCH-20 | Phase 23 | Pending |
+| UIPERF-01 | Phase 18 | Pending |
+| UIPERF-02 | Phase 18 | Pending |
+| UIPERF-03 | Phase 20 | Pending |
+| UIPERF-04 | Phase 20 | Pending |
+| UIPERF-05 | Phase 20 | Pending |
+| UIPERF-06 | Phase 20 | Pending |
+| UIPERF-07 | Phase 23 | Pending |
+| UIPERF-08 | Phase 23 | Pending |
+| UIPERF-09 | Phase 23 | Pending |
+| UIPERF-10 | Phase 23 | Pending |
+| UIPERF-11 | Phase 23 | Pending |
+| UIPERF-12 | Phase 23 | Pending |
+| UIPERF-13 | Phase 23 | Pending |
+| UIPERF-14 | Phase 23 | Pending |
+| NAV-01 | Phase 21 | Pending |
+| NAV-02 | Phase 21 | Pending |
+| NAV-03 | Phase 21 | Pending |
+| NAV-04 | Phase 21 | Pending |
+| NAV-05 | Phase 23 | Pending |
+| NAV-06 | Phase 23 | Pending |
+| NAV-07 | Phase 23 | Pending |
+| NAV-08 | Phase 23 | Pending |
+| NAV-09 | Phase 23 | Pending |
+| NAV-10 | Phase 23 | Pending |
+| NAV-11 | Phase 23 | Pending |
+| NAV-12 | Phase 23 | Pending |
+| NAV-13 | Phase 23 | Pending |
+| CODBL-01 | Phase 21 | Pending |
+| CODBL-02 | Phase 21 | Pending |
+| CODBL-03 | Phase 21 | Pending |
+| CODBL-04 | Phase 21 | Pending |
+| CODBL-05 | Phase 21 | Pending |
+| CODBL-06 | Phase 21 | Pending |
+| CODBL-07 | Phase 23 | Pending |
+| CODBL-08 | Phase 23 | Pending |
+| CODBL-09 | Phase 23 | Pending |
+| CODBL-10 | Phase 23 | Pending |
+| CODBL-11 | Phase 23 | Pending |
+| CODBL-12 | Phase 23 | Pending |
+| CODBL-13 | Phase 23 | Pending |
+| BUILD-01 | Phase 22 | Pending |
+| BUILD-02 | Phase 22 | Pending |
+| BUILD-03 | Phase 23 | Pending |
+| BUILD-04 | Phase 23 | Pending |
+| BUILD-05 | Phase 23 | Pending |
+| BUILD-06 | Phase 23 | Pending |
+| BUILD-07 | Phase 23 | Pending |
+| BUILD-08 | Phase 23 | Pending |
+| A11Y-01 | Phase 22 | Pending |
+| A11Y-02 | Phase 22 | Pending |
+| A11Y-03 | Phase 22 | Pending |
+| A11Y-04 | Phase 23 | Pending |
+| A11Y-05 | Phase 23 | Pending |
+| A11Y-06 | Phase 23 | Pending |
+| A11Y-07 | Phase 23 | Pending |
+| A11Y-08 | Phase 23 | Pending |
+| DB-01 | Phase 18 | Pending |
+| DB-02 | Phase 22 | Pending |
+| DB-03 | Phase 22 | Pending |
+| DB-04 | Phase 23 | Pending |
+| DB-05 | Phase 23 | Pending |
+| DB-06 | Phase 23 | Pending |
+| DB-07 | Phase 23 | Pending |
+| NET-01 | Phase 22 | Pending |
+| NET-02 | Phase 23 | Pending |
+| NET-03 | Phase 23 | Pending |
+| NET-04 | Phase 23 | Pending |
+| NET-05 | Phase 23 | Pending |
+| NET-06 | Phase 23 | Pending |
+| NET-07 | Phase 23 | Pending |
+| SEC-01 | Phase 23 | Pending |
+| SEC-02 | Phase 23 | Pending |
+| SEC-03 | Phase 23 | Pending |
+| SEC-04 | Phase 23 | Pending |
+| SEC-05 | Phase 23 | Pending |
+| MEM-01 | Phase 19 | Pending |
+| MEM-02 | Phase 19 | Pending |
+| MEM-03 | Phase 23 | Pending |
+| MEM-04 | Phase 23 | Pending |
+| LAYOUT-01 | Phase 22 | Pending |
+| LAYOUT-02 | Phase 23 | Pending |
+| LAYOUT-03 | Phase 23 | Pending |
+| LAYOUT-04 | Phase 23 | Pending |
+| MOD-01 | Phase 23 | Pending |
+| MOD-02 | Phase 23 | Pending |
+| MOD-03 | Phase 23 | Pending |
+| MOD-04 | Phase 23 | Pending |
+| MOD-05 | Phase 23 | Pending |
+| MOD-06 | Phase 23 | Pending |
+| MOD-07 | Phase 23 | Pending |
+| MOD-08 | Phase 23 | Pending |
+
+---
+
 ## Deferred (v2.0 Performance — resume after v3.0)
 
 - [ ] PERF-01: App launches in under 1 second (Phase 11 DONE)
@@ -263,3 +435,4 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 ---
 
 *165 requirements | 15 categories | All approved 2026-02-22*
+*Traceability added 2026-02-22 | 165/165 mapped to Phases 18-23*

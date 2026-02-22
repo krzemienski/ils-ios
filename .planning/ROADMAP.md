@@ -4,6 +4,7 @@
 
 - **v1.0 Cross-Platform Audit** - Phases 1-10 (shipped 2026-02-21)
 - **v2.0 Performance Optimization Suite** - Phases 11-17 (in progress)
+- **v3.0 Comprehensive Audit Remediation** - Phases 18-24 (started 2026-02-22)
 
 ## Phases
 
@@ -171,17 +172,160 @@ Plans:
 
 ---
 
+## v3.0 Comprehensive Audit Remediation
+
+**Milestone Goal:** Eliminate all 165 issues found across 15 Axiom audits (13 CRITICAL, 49 HIGH, 73 MEDIUM, 30 LOW). Every v1.0 and v2.0 REQ must remain PASS at the end of Phase 24. No new features — code health only.
+
+**Coverage:** 165/165 requirements mapped across Phases 18-23. Phase 24 validates all prior phases.
+
+- [ ] **Phase 18: CRITICAL Fixes** - 13 CRITICAL issues: data races, energy waste, architecture violations, performance bottlenecks, database safety
+- [ ] **Phase 19: Concurrency + Memory HIGH** - 9 HIGH issues: nonisolated(unsafe) patterns, GCD-to-Task migration, Timer-to-Task, window cleanup
+- [ ] **Phase 20: Architecture + Performance HIGH** - 17 HIGH issues: logic-in-view extractions, Set conversions, async file I/O, process classification, backend sorts
+- [ ] **Phase 21: Navigation + Codable HIGH** - 10 HIGH issues: dead path cleanup, macOS navigation parity, try?-to-do/catch conversions, Codable best practices
+- [ ] **Phase 22: Energy + Build + Accessibility + Networking HIGH** - 13 HIGH issues: animation lifecycle, SSE background suspend, build flags, Dynamic Type, SSH validation, migration safety, layout
+- [ ] **Phase 23: All MEDIUM + LOW Issues** - 103 remaining issues grouped by file proximity for efficient editing
+- [ ] **Phase 24: Validation + Documentation** - Build verification, functional validation, audit re-run
+
+---
+
+### Phase 18: CRITICAL Fixes
+**Goal**: Every CRITICAL finding is resolved — data races are eliminated, energy-wasteful polling patterns are corrected, architecture violations are patched, and the database enforces foreign keys across all connections
+**Depends on**: Phase 11 (baseline established; builds pass)
+**Requirements**: CONC-01, CONC-02, ENRG-01, ENRG-02, ENRG-03, SPERF-01, ARCH-01, ARCH-02, ARCH-03, ARCH-04, UIPERF-01, UIPERF-02, DB-01
+**Success Criteria** (what must be TRUE):
+  1. AppLogger is an actor (or uses OSAllocatedUnfairLock) and SyntaxHighlighter is @MainActor — Swift compiler accepts these files with strict sendability and no nonisolated(unsafe) workarounds
+  2. Live Activity timer fires at 1.0s or greater; MCP health check calls a lightweight endpoint (not full loadServers()); Teams polling applies exponential backoff — observable via Instruments Energy or code review
+  3. MacChatView API calls are routed through SessionsViewModel with do/catch; NewSessionView's three async creation flows live in NewSessionViewModel; MacSettingsView @State properties are private
+  4. CodeBlockView caches syntax highlighting with @State + .task(id: code) so tokenization does not run on every body evaluation; ThemePickerView pre-computes an availableThemes Set
+  5. configure.swift sets PRAGMA foreign_keys via pool configuration callback so all pooled connections enforce FK constraints
+**Plans**: TBD
+
+Plans:
+- [ ] 18-01: TBD
+
+---
+
+### Phase 19: Concurrency + Memory HIGH
+**Goal**: All nonisolated(unsafe) patterns on Task and Timer properties are replaced with correct actor-isolated equivalents, GCD-to-@MainActor crossings in macOS managers are eliminated, SSEClient uses structured concurrency, and the last legacy Timer in ViewModel layer is migrated to Task
+**Depends on**: Phase 18 (CRITICAL concurrency fixes must be stable before touching related files)
+**Requirements**: CONC-03, CONC-04, CONC-05, CONC-06, CONC-07, CONC-08, CONC-09, MEM-01, MEM-02
+**Success Criteria** (what must be TRUE):
+  1. SkillsViewModel, MCPViewModel, and SystemMetricsViewModel have no nonisolated(unsafe) declarations — their Task/Timer properties use actor-safe storage (@MainActor var or stored in isolated context)
+  2. NotificationManager compiles without @preconcurrency delegate suppression; WindowAccessor and WindowFrameDelegate use MainActor.run or Task { @MainActor in } instead of DispatchQueue.main.async
+  3. SSEClient's Task.detached closure captures only Sendable values and does not access @MainActor self directly
+  4. HostProfilesViewModel uses Task instead of Timer.scheduledTimer — Timer is gone from all ViewModel files
+  5. WindowFrameDelegate registers a window close notification and cancels its debounce Task when the OS closes the window
+**Plans**: TBD
+
+Plans:
+- [ ] 19-01: TBD
+
+---
+
+### Phase 20: Architecture + Performance HIGH
+**Goal**: Business logic is extracted from view bodies into ViewModels across six views, PollingManager no longer imports SwiftUI, Binding setters contain no async operations, SyntaxHighlighter keyword arrays are replaced with Sets, process classification is pre-computed in the ViewModel, and file I/O is moved off the main thread
+**Depends on**: Phase 19 (concurrency patterns must be correct before refactoring ViewModels they touch)
+**Requirements**: ARCH-05, ARCH-06, ARCH-07, ARCH-08, ARCH-09, ARCH-10, ARCH-11, ARCH-12, ARCH-13, SPERF-02, SPERF-03, SPERF-04, SPERF-05, SPERF-06, UIPERF-03, UIPERF-04, UIPERF-05, UIPERF-06
+**Success Criteria** (what must be TRUE):
+  1. CommandPaletteView, NewSessionView, SidebarRootView, SettingsConfigSection, SettingsView, FileBrowserView, and PermissionRequestModal have no computed properties or async work in their view bodies — all moved to their respective ViewModels
+  2. PollingManager.swift has no SwiftUI import; Binding setters in SettingsConfigSection call synchronous ViewModel methods only (no await in setter body)
+  3. SyntaxHighlighter keyword arrays are Set<String> at all 17+ call sites — O(1) lookup replaces O(n) Array.contains
+  4. ProcessListView pre-computes classifyProcess() results in the ViewModel before ForEach iteration; ThemeMarketplaceView reads theme files via async Task, not Data(contentsOf:) on the main thread
+  5. ChatMessage streaming produces fewer struct copies (value type optimization or @Observable reference); DashboardViewModel stats calls are parallelized with async let; SessionsController backend sort is indexed or paginated
+**Plans**: TBD
+
+Plans:
+- [ ] 20-01: TBD
+
+---
+
+### Phase 21: Navigation + Codable HIGH
+**Goal**: Dead navigation paths are removed, nested NavigationStack in sheets is eliminated, macOS gains a NavigationStack in its detail column and a hooks screen route, and all silent try? failure sites in APIClient, CacheService, and AuthService are replaced with do/catch error logging
+**Depends on**: Phase 20 (ViewModel extractions must be complete before navigation paths that reference them are cleaned up)
+**Requirements**: NAV-01, NAV-02, NAV-03, NAV-04, CODBL-01, CODBL-02, CODBL-03, CODBL-04, CODBL-05, CODBL-06
+**Success Criteria** (what must be TRUE):
+  1. SidebarRootView.navigationPath and its associated NavigationStack are removed; no NavigationStack is nested inside a .sheet presentation in any file
+  2. MacContentView's detail column is wrapped in a NavigationStack; MacContentView includes a route for the hooks screen that shows the hooks management UI
+  3. APIClient, CacheService, and AuthService have zero try? at JSON decode and Keychain operation sites — all failures are caught and logged with the specific error
+  4. All JSONDecoders in the app have an explicit dateDecodingStrategy set; backend controllers that build JSON manually are replaced with Codable-conforming response types
+  5. String-backed enum types in DTOs validate input on decode and throw a meaningful DecodingError for unrecognized values
+**Plans**: TBD
+
+Plans:
+- [ ] 21-01: TBD
+
+---
+
+### Phase 22: Energy + Build + Accessibility + Networking HIGH
+**Goal**: Animations pause when views are not visible, SSE disconnects on background, build settings are optimized for debug speed, fixed font sizes in three views are replaced with Dynamic Type, SSH host key validation is non-trivial, dangerous migration reverts are removed, and the SidebarRootView size-class switch preserves view identity
+**Depends on**: Phase 21 (navigation must be stable before touching views that depend on it; Codable changes must be in before database migration work)
+**Requirements**: ENRG-04, ENRG-05, ENRG-06, ENRG-07, BUILD-01, BUILD-02, A11Y-01, A11Y-02, A11Y-03, NET-01, DB-02, DB-03, LAYOUT-01
+**Success Criteria** (what must be TRUE):
+  1. CyberpunkEffects PulsingGlow reads isActive from environment or a @State flag tied to onAppear/onDisappear and stops its animation loop when the view is off-screen; SSEClient disconnects within 5 seconds of scenePhase moving to background
+  2. project.pbxproj sets DEBUG_INFORMATION_FORMAT = dwarf (not dwarf-with-dsym) and ONLY_ACTIVE_ARCH = YES for debug configurations — incremental build time visibly faster
+  3. PremiumView, LaunchScreenView, and ScreenshotView use Dynamic Type text styles or font(_:) with a TextStyle argument — zero hardcoded point sizes remain in those files
+  4. CitadelSSHService uses known_hosts or a user-presented fingerprint confirmation instead of .acceptAnything()
+  5. All migration revert() functions use IF EXISTS table drops or are empty stubs — no DROP TABLE that destroys production data on accidental revert; FK constraint data validation is added to at least one migration; SidebarRootView uses a single stable root view with conditional content rather than branching between two NavigationStack instances
+**Plans**: TBD
+
+Plans:
+- [ ] 22-01: TBD
+
+---
+
+### Phase 23: All MEDIUM + LOW Issues
+**Goal**: Every MEDIUM and LOW finding is resolved or explicitly documented as accepted (with rationale) — code health across concurrency, energy, performance, architecture, navigation, Codable, build, accessibility, database, networking, security, memory, layout, and modernization reaches the standard set by the CRITICAL and HIGH phases
+**Depends on**: Phase 22 (all HIGH issues resolved; MEDIUM fixes build on corrected foundations)
+**Requirements**: CONC-10, CONC-11, CONC-12, CONC-13, CONC-14, CONC-15, CONC-16, CONC-17, CONC-18, ENRG-08, ENRG-09, ENRG-10, ENRG-11, ENRG-12, ENRG-13, ENRG-14, ENRG-15, ENRG-16, ENRG-17, ENRG-18, SPERF-07, SPERF-08, SPERF-09, SPERF-10, SPERF-11, SPERF-12, SPERF-13, SPERF-14, SPERF-15, SPERF-16, SPERF-17, SPERF-18, ARCH-14, ARCH-15, ARCH-16, ARCH-17, ARCH-18, ARCH-19, ARCH-20, UIPERF-07, UIPERF-08, UIPERF-09, UIPERF-10, UIPERF-11, UIPERF-12, UIPERF-13, UIPERF-14, NAV-05, NAV-06, NAV-07, NAV-08, NAV-09, NAV-10, NAV-11, NAV-12, NAV-13, CODBL-07, CODBL-08, CODBL-09, CODBL-10, CODBL-11, CODBL-12, CODBL-13, BUILD-03, BUILD-04, BUILD-05, BUILD-06, BUILD-07, BUILD-08, A11Y-04, A11Y-05, A11Y-06, A11Y-07, A11Y-08, DB-04, DB-05, DB-06, DB-07, NET-02, NET-03, NET-04, NET-05, NET-06, NET-07, SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, MEM-03, MEM-04, LAYOUT-02, LAYOUT-03, LAYOUT-04, MOD-01, MOD-02, MOD-03, MOD-04, MOD-05, MOD-06, MOD-07, MOD-08
+**Success Criteria** (what must be TRUE):
+  1. All concurrency MEDIUM patterns are resolved: ClaudeExecutorService.readQueue, HostProfilesViewModel deinit, SpotlightIndexer, SyncCoordinator, DashboardViewModel Task.detached, and SessionsViewModel Task.detached cache writes use correct isolation
+  2. All energy MEDIUM patterns are addressed: WebSocket metrics gate on view visibility, log viewer gates on visibility, animations check Low Power Mode, Timer tolerance is set on all timers, adaptive polling by battery level is implemented or explicitly deferred with rationale
+  3. All architecture MEDIUM patterns are resolved: SessionsViewModel split consideration is documented, redundant ProjectsViewModel removed from NewSessionView, fire-and-forget Tasks converted to .task modifier where applicable, toast timer deduplication extracted to shared modifier, view helper functions marked private
+  4. All navigation, Codable, build, accessibility, database, networking, security, memory, layout, and modernization MEDIUM and LOW items are either fixed or have a documented acceptance note in the code — zero silent deferrals
+  5. Both iOS and macOS build successfully with zero warnings introduced by the MEDIUM/LOW fixes
+**Plans**: TBD
+
+Plans:
+- [ ] 23-01: TBD
+
+---
+
+### Phase 24: Validation + Documentation
+**Goal**: The full codebase builds cleanly on all three targets (iOS, macOS, Backend), all v1.0 audit REQs remain PASS, a representative functional test pass confirms no regressions, and the audit findings document is updated to reflect the resolved state
+**Depends on**: Phase 23 (all 165 issues must be addressed before final validation)
+**Requirements**: (validates all 165 REQ-IDs from Phases 18-23 — no new requirement IDs)
+**Success Criteria** (what must be TRUE):
+  1. `xcodebuild` for ILSApp scheme and ILSMacApp scheme both exit 0 with zero errors; `swift build` for ILSBackend exits 0 with zero errors
+  2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS on the simulator: sidebar navigation, settings inheritance, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP servers, backend API, zero visual regressions, session consistency
+  3. A re-run of the 15 Axiom audits (or a representative subset of CRITICAL/HIGH checks) confirms zero CRITICAL findings remain open
+  4. scratch/audit-findings-2026-02-22.md is updated with a resolution column showing the phase and commit that addressed each finding
+**Plans**: TBD
+
+Plans:
+- [ ] 24-01: TBD
+
+---
+
 ## Progress
 
-**Execution Order:** Phase 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
+**v2.0 Execution Order:** Phase 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
+
+**v3.0 Execution Order:** Phase 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
-| 11. Launch & Baseline | 2/2 | Complete    | 2026-02-22 | 2026-02-22 |
+| 11. Launch & Baseline | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 12. Service Layer | v2.0 | 0/? | Not started | - |
 | 13. ViewModel & Model | v2.0 | 0/? | Not started | - |
 | 14. SSE & Background | v2.0 | 0/? | Not started | - |
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |
 | 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
+| 18. CRITICAL Fixes | v3.0 | 0/? | Not started | - |
+| 19. Concurrency + Memory HIGH | v3.0 | 0/? | Not started | - |
+| 20. Architecture + Performance HIGH | v3.0 | 0/? | Not started | - |
+| 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |
+| 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 0/? | Not started | - |
+| 23. All MEDIUM + LOW Issues | v3.0 | 0/? | Not started | - |
+| 24. Validation + Documentation | v3.0 | 0/? | Not started | - |
