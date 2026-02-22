@@ -30,9 +30,9 @@
 
 ## Energy Efficiency (18 issues: 3 CRITICAL, 4 HIGH, 7 MEDIUM, 4 LOW)
 
-- [ ] **ENRG-01** [CRITICAL]: Reduce Live Activity timer from 0.5s to 1.0s or SwiftUI animation — `LiveActivity/ILSLiveActivity.swift:182`
-- [ ] **ENRG-02** [CRITICAL]: Replace MCP health poll full server reload with lightweight health-only endpoint — `ViewModels/MCPViewModel.swift:175`
-- [ ] **ENRG-03** [CRITICAL]: Add exponential backoff to Teams 15s poll — `ViewModels/TeamsViewModel.swift:211`
+- [x] **ENRG-01** [CRITICAL]: Reduce Live Activity timer from 0.5s to 1.0s or SwiftUI animation — `LiveActivity/ILSLiveActivity.swift:182`
+- [x] **ENRG-02** [CRITICAL]: Replace MCP health poll full server reload with lightweight health-only endpoint — `ViewModels/MCPViewModel.swift:175`
+- [x] **ENRG-03** [CRITICAL]: Add exponential backoff to Teams 15s poll — `ViewModels/TeamsViewModel.swift:211`
 - [ ] **ENRG-04** [HIGH]: Pause CyberpunkEffects PulsingGlow when view not visible
 - [ ] **ENRG-05** [HIGH]: Close SSE connection on app background
 - [ ] **ENRG-06** [HIGH]: Batch network requests on rapid navigation
@@ -51,7 +51,7 @@
 
 ## Swift Performance (18 issues: 1 CRITICAL, 5 HIGH, 8 MEDIUM, 4 LOW)
 
-- [ ] **SPERF-01** [CRITICAL]: MCPViewModel.checkHealth() calls full loadServers() every 30s (same root cause as ENRG-02) — `ViewModels/MCPViewModel.swift:175`
+- [x] **SPERF-01** [CRITICAL]: MCPViewModel.checkHealth() calls full loadServers() every 30s (same root cause as ENRG-02) — `ViewModels/MCPViewModel.swift:175`
 - [ ] **SPERF-02** [HIGH]: Eliminate `any AppTheme` existential boxing in ThemeManager
 - [ ] **SPERF-03** [HIGH]: Reduce ChatMessage struct copy during streaming
 - [ ] **SPERF-04** [HIGH]: Parallelize sequential API calls in DashboardViewModel timer
@@ -264,9 +264,9 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | CONC-16 | Phase 23 | Pending |
 | CONC-17 | Phase 23 | Pending |
 | CONC-18 | Phase 23 | Pending |
-| ENRG-01 | Phase 18 | Pending |
-| ENRG-02 | Phase 18 | Pending |
-| ENRG-03 | Phase 18 | Pending |
+| ENRG-01 | Phase 18 | Complete |
+| ENRG-02 | Phase 18 | Complete |
+| ENRG-03 | Phase 18 | Complete |
 | ENRG-04 | Phase 22 | Pending |
 | ENRG-05 | Phase 22 | Pending |
 | ENRG-06 | Phase 22 | Pending |
@@ -282,7 +282,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ENRG-16 | Phase 23 | Pending |
 | ENRG-17 | Phase 23 | Pending |
 | ENRG-18 | Phase 23 | Pending |
-| SPERF-01 | Phase 18 | Pending |
+| SPERF-01 | Phase 18 | Complete |
 | SPERF-02 | Phase 20 | Pending |
 | SPERF-03 | Phase 20 | Pending |
 | SPERF-04 | Phase 20 | Pending |
