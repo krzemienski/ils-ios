@@ -127,15 +127,13 @@ class SSEClient {
             let lastActivity = LastActivityTracker()
 
             // Watchdog: detect stale connections (no data/heartbeat in 45s)
-            let heartbeatWatchdog = Task.detached { [weak self] in
+            let heartbeatWatchdog = Task.detached {
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
                     if await lastActivity.secondsSinceLastActivity() > 45 {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in 45s", category: "sse")
                         throw URLError(.timedOut)
                     }
-                    // Verify self still exists
-                    guard self != nil else { return }
                 }
             }
             defer { heartbeatWatchdog.cancel() }
