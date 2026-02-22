@@ -1,0 +1,127 @@
+import Foundation
+import Observation
+import ILSShared
+
+@MainActor
+@Observable
+class NewSessionViewModel {
+    var isCreating = false
+
+    private var apiClient: APIClient?
+
+    func configure(client: APIClient) {
+        self.apiClient = client
+    }
+
+    /// Create a new session, optionally associated with a project.
+    /// Returns the created session on success, nil on failure.
+    func createSession(
+        projectId: UUID?,
+        name: String?,
+        model: String,
+        permissionMode: String,
+        systemPrompt: String?,
+        maxBudget: String,
+        maxTurns: String
+    ) async -> ChatSession? {
+        guard let apiClient else { return nil }
+        isCreating = true
+        defer { isCreating = false }
+
+        let request = CreateSessionRequest(
+            projectId: projectId,
+            name: name,
+            model: model,
+            permissionMode: PermissionMode(rawValue: permissionMode),
+            systemPrompt: systemPrompt,
+            maxBudgetUSD: Double(maxBudget),
+            maxTurns: Int(maxTurns)
+        )
+
+        do {
+            let response: APIResponse<ChatSession> = try await apiClient.post("/sessions", body: request)
+            if let session = response.data {
+                HapticManager.notification(.success)
+                return session
+            }
+        } catch {
+            HapticManager.notification(.error)
+            AppLogger.shared.error("Failed to create session: \(error)", category: "ui")
+        }
+        return nil
+    }
+
+    /// Fork an existing session.
+    /// Returns the forked session on success, nil on failure.
+    func forkSession(sourceSessionId: UUID) async -> ChatSession? {
+        guard let apiClient else { return nil }
+        isCreating = true
+        defer { isCreating = false }
+
+        do {
+            let response: APIResponse<ChatSession> = try await apiClient.post(
+                "/sessions/\(sourceSessionId)/fork",
+                body: EmptyBody()
+            )
+            if let forkedSession = response.data {
+                HapticManager.notification(.success)
+                return forkedSession
+            }
+        } catch {
+            HapticManager.notification(.error)
+            AppLogger.shared.error("Failed to fork session: \(error)", category: "ui")
+        }
+        return nil
+    }
+
+    /// Create a new project and then create a session within it.
+    /// Returns the created session on success, nil on failure.
+    func createProjectAndSession(
+        projectName: String,
+        projectPath: String,
+        sessionName: String?,
+        model: String,
+        permissionMode: String,
+        systemPrompt: String?,
+        maxBudget: String,
+        maxTurns: String,
+        projectsViewModel: ProjectsViewModel
+    ) async -> ChatSession? {
+        guard let apiClient else { return nil }
+        isCreating = true
+        defer { isCreating = false }
+
+        guard let project = await projectsViewModel.createProject(
+            name: projectName,
+            path: projectPath,
+            defaultModel: model,
+            description: nil
+        ) else {
+            HapticManager.notification(.error)
+            AppLogger.shared.error("Failed to create project '\(projectName)'", category: "ui")
+            return nil
+        }
+
+        let request = CreateSessionRequest(
+            projectId: project.id,
+            name: sessionName,
+            model: model,
+            permissionMode: PermissionMode(rawValue: permissionMode),
+            systemPrompt: systemPrompt,
+            maxBudgetUSD: Double(maxBudget),
+            maxTurns: Int(maxTurns)
+        )
+
+        do {
+            let response: APIResponse<ChatSession> = try await apiClient.post("/sessions", body: request)
+            if let session = response.data {
+                HapticManager.notification(.success)
+                return session
+            }
+        } catch {
+            HapticManager.notification(.error)
+            AppLogger.shared.error("Failed to create session for new project: \(error)", category: "ui")
+        }
+        return nil
+    }
+}

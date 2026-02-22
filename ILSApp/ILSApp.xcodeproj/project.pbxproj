@@ -206,6 +206,7 @@
 		8D4E73909DF2B5040331F415 /* ChatMessageList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18502885F5B6E45B14619177 /* ChatMessageList.swift */; };
 		8DABBEB4FEE67AC676D005FA /* ILSLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98FD0B430247AE5A4C83D990 /* ILSLiveActivity.swift */; };
 		8DC8290512BF30B7D1574021 /* LocalDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */; };
+		8EFC8ABE8A64356720814CFF /* NewSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B5A3A7DE6A8C29B6859190C /* NewSessionViewModel.swift */; };
 		90D58E27CFDEB9AB8BFEFEAD /* EmberTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA08AF75B109E531A23DCAD /* EmberTheme.swift */; };
 		9138C1BC26EAD042F2AB2F32 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */; };
 		91A5D38E3832D8230E17CC34 /* ScreenshotProtectionModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEB7C4FC628243D87DB95FBE /* ScreenshotProtectionModifier.swift */; };
@@ -307,6 +308,7 @@
 		D34412D635D61666C3E92EDE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ECE4D8717C9C64D19FE78B2 /* OnboardingView.swift */; };
 		D442E177F99016622A2B12BD /* SettingsConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */; };
 		D442F47EAA2CCE0D5ADD20DA /* Scenario10_DashboardAndAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87BBB3407D22A2279F4D8250 /* Scenario10_DashboardAndAnalytics.swift */; };
+		D49238EC3538EA2ABD3266C3 /* NewSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B5A3A7DE6A8C29B6859190C /* NewSessionViewModel.swift */; };
 		D5ED11A460131301452F9A86 /* CyberpunkTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 948140787A5BDADAC7635EC4 /* CyberpunkTheme.swift */; };
 		D71AFEBF42AAA69EDD1F38A8 /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */; };
 		D772A51606D786C53190FC8F /* PaperTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E2E2D610433EEF6DEB506A /* PaperTheme.swift */; };
@@ -475,6 +477,7 @@
 		67A1119DD3085087D1336D9A /* ILSApp.xctestplan */ = {isa = PBXFileReference; path = ILSApp.xctestplan; sourceTree = "<group>"; };
 		685FF84BB2B79DC7BC1AB69F /* SparklineChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparklineChart.swift; sourceTree = "<group>"; };
 		6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreenView.swift; sourceTree = "<group>"; };
+		6B5A3A7DE6A8C29B6859190C /* NewSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionViewModel.swift; sourceTree = "<group>"; };
 		6CB6410FDBABFD56EC9C9B28 /* Scenario08_SettingsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario08_SettingsConfiguration.swift; sourceTree = "<group>"; };
 		6E65F9892954F605C2737A7D /* TeamsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamsViewModel.swift; sourceTree = "<group>"; };
 		6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateView.swift; sourceTree = "<group>"; };
@@ -1053,6 +1056,7 @@
 				24D353CDD851FB15B68338DA /* FleetViewModel.swift */,
 				ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */,
 				974AE71DCAD6F3D4705F56B8 /* MCPViewModel.swift */,
+				6B5A3A7DE6A8C29B6859190C /* NewSessionViewModel.swift */,
 				49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */,
 				8E4E9B9B4ADFE072002F72ED /* ProjectsViewModel.swift */,
 				35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */,
@@ -1451,6 +1455,7 @@
 				B0724A065B4366563281BDFE /* NeonNoirTheme.swift in Sources */,
 				1A3BD36BCCDBF50CF8EA735E /* NetworkMonitor.swift in Sources */,
 				EEEDCB8AFE31EB3109B5ED66 /* NewSessionView.swift in Sources */,
+				8EFC8ABE8A64356720814CFF /* NewSessionViewModel.swift in Sources */,
 				3013A38F73E6762D7FB50E77 /* NotificationPreferencesView.swift in Sources */,
 				D27CDEB3FFF8814B55E98B49 /* ObsidianTheme.swift in Sources */,
 				E22DF7F6525F8DA5149951D2 /* OfflineIndicator.swift in Sources */,
@@ -1623,6 +1628,7 @@
 				80AF8390762975EE963049E9 /* NeonNoirTheme.swift in Sources */,
 				22F9854D3C5AB0DC6518F326 /* NetworkMonitor.swift in Sources */,
 				4A1532CA971F2EF89C94DD7D /* NewSessionView.swift in Sources */,
+				D49238EC3538EA2ABD3266C3 /* NewSessionViewModel.swift in Sources */,
 				43CC6416BC415173ABF41E24 /* NotificationManager.swift in Sources */,
 				FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */,
 				415FA9BEB8D7C968A1383F44 /* ObsidianTheme.swift in Sources */,
