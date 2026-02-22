@@ -45,6 +45,7 @@ struct NewSessionView: View {
 
     private enum FocusedField: Hashable {
         case sessionName, systemPrompt, maxBudget, maxTurns
+        case projectSearch, forkSearch, newProjectName, newProjectPath
     }
     @FocusState private var focusedField: FocusedField?
 
@@ -201,6 +202,7 @@ struct NewSessionView: View {
             TextField("Search projects...", text: $projectsViewModel.searchText)
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
+                .focused($focusedField, equals: .projectSearch)
             if !projectsViewModel.searchText.isEmpty {
                 Button {
                     projectsViewModel.searchText = ""
@@ -217,6 +219,7 @@ struct NewSessionView: View {
         .padding(.vertical, theme.spacingXS + 2)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: focusedField == .projectSearch, cornerRadius: theme.cornerRadiusSmall)
     }
 
     @ViewBuilder
@@ -341,6 +344,7 @@ struct NewSessionView: View {
             TextField("Search sessions...", text: $forkSearchText)
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
+                .focused($focusedField, equals: .forkSearch)
             if !forkSearchText.isEmpty {
                 Button {
                     forkSearchText = ""
@@ -357,6 +361,7 @@ struct NewSessionView: View {
         .padding(.vertical, theme.spacingXS + 2)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: focusedField == .forkSearch, cornerRadius: theme.cornerRadiusSmall)
     }
 
     @ViewBuilder
@@ -425,6 +430,8 @@ struct NewSessionView: View {
                 .background(theme.bgSecondary)
                 .foregroundStyle(theme.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .newProjectName, cornerRadius: theme.cornerRadiusSmall)
+                .focused($focusedField, equals: .newProjectName)
                 .accessibilityIdentifier("new-project-name")
 
             HStack(spacing: theme.spacingSM) {
@@ -433,10 +440,12 @@ struct NewSessionView: View {
                 TextField("Directory Path (e.g. ~/projects/my-app)", text: $newProjectPath)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
+                    .focused($focusedField, equals: .newProjectPath)
             }
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .newProjectPath, cornerRadius: theme.cornerRadiusSmall)
             .accessibilityIdentifier("new-project-path")
 
             Text("Enter the full path to your project directory on the server.")
