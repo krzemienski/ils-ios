@@ -92,6 +92,11 @@ struct SkillsFileService {
             // We're looking for directories named "skills"
             guard url.lastPathComponent == "skills" else { continue }
 
+            // Skip skills directories inside example/test plugin directories
+            let pathComponents = url.pathComponents
+            let containsExamples = pathComponents.contains("examples") || pathComponents.contains("tests") || pathComponents.contains("test")
+            guard !containsExamples else { continue }
+
             var isDirectory: ObjCBool = false
             guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory),
                   isDirectory.boolValue else {
@@ -134,18 +139,33 @@ struct SkillsFileService {
     private static let excludedDirectories: Set<String> = [
         "node_modules", ".git", "__pycache__", ".venv", "venv",
         ".build", "build", "dist", ".cache", ".npm", ".yarn",
-        "vendor", "Pods", ".swiftpm"
+        "vendor", "Pods", ".swiftpm", "examples", "tests", "test"
+    ]
+
+    /// Standalone .md filenames that are documentation, not skill definitions.
+    /// These appear in project roots and should not be imported as skills.
+    private static let excludedFilenames: Set<String> = [
+        "README.md", "CLAUDE.md", "DEV.md", "LICENSE.md", "SPECIFICATION.md",
+        "CHANGELOG.md", "CONTRIBUTING.md", "AGENTS.md", "VALIDATION-REPORT.md",
+        "API_REFERENCE.md", "ROADMAP.md"
     ]
 
     /// Recursively scan directory for skill .md files (both SKILL.md in dirs and standalone .md files).
+    ///
+    /// Strategy:
+    /// - Directories containing SKILL.md are treated as named skills; their subdirectories are NOT recursed
+    ///   (they contain reference docs, examples, templates — not additional skills).
+    /// - Directories without SKILL.md are treated as namespaces and recursed into (depth-limited).
+    /// - Standalone .md files at the top level are treated as skills.
+    ///
     /// - Parameters:
     ///   - path: Current directory path to scan
     ///   - basePath: Original base path (skills directory)
-    ///   - depth: Current recursion depth (max 3 to avoid deep traversal)
+    ///   - depth: Current recursion depth (max 2 to avoid deep traversal)
     /// - Returns: Array of Skill objects
     private func scanSkillsRecursively(at path: String, basePath: String, depth: Int = 0) throws -> [Skill] {
-        // Limit recursion depth to prevent traversing deep dependency trees
-        guard depth <= 3 else { return [] }
+        // Limit recursion depth to prevent traversing deep namespace trees
+        guard depth <= 2 else { return [] }
 
         var skills: [Skill] = []
 
@@ -163,19 +183,23 @@ struct SkillsFileService {
 
             if fileManager.fileExists(atPath: itemPath, isDirectory: &isDirectory) {
                 if isDirectory.boolValue {
-                    // Check for SKILL.md in this directory (traditional format)
+                    // Check for SKILL.md in this directory (named-skill format)
                     let skillMdPath = "\(itemPath)/SKILL.md"
                     if fileManager.fileExists(atPath: skillMdPath) {
+                        // Parse the skill and STOP — do not recurse into subdirs.
+                        // Subdirectories of a skill directory (examples/, reference/, templates/)
+                        // contain documentation, not additional skills.
                         if let skill = try? parseSkillFile(at: skillMdPath, name: item) {
                             skills.append(skill)
                         }
+                    } else {
+                        // No SKILL.md — treat as a namespace directory and recurse.
+                        let subSkills = try scanSkillsRecursively(at: itemPath, basePath: basePath, depth: depth + 1)
+                        skills.append(contentsOf: subSkills)
                     }
-
-                    // Recursively scan subdirectory for more skills
-                    let subSkills = try scanSkillsRecursively(at: itemPath, basePath: basePath, depth: depth + 1)
-                    skills.append(contentsOf: subSkills)
-                } else if item.hasSuffix(".md") && item != "SKILL.md" {
-                    // Parse standalone .md files as skills
+                } else if item.hasSuffix(".md") && !Self.excludedFilenames.contains(item) {
+                    // Standalone .md file — treat as a skill (e.g. cloud-infrastructure-security.md)
+                    // Exclude well-known documentation filenames (README, CLAUDE, LICENSE, etc.)
                     let skillName = String(item.dropLast(3)) // Remove .md extension
                     if let skill = try? parseSkillFile(at: itemPath, name: skillName) {
                         skills.append(skill)
