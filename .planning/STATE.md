@@ -1,10 +1,10 @@
 # Project State — ILS iOS/macOS Cross-Platform Audit
 
 ## Current Phase
-Phase 9: Functional + Bug Hunt
+Phase 10: Final Gate
 
 ## Progress
-Phase 9 Plan 1/1 PENDING | Phases 8/10
+Phase 10 Plan 1/1 PENDING | Phases 9/10
 
 ## Phase Status
 
@@ -18,7 +18,7 @@ Phase 9 Plan 1/1 PENDING | Phases 8/10
 | 6. Backend API Audit | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 7. Convergence | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 8. Platform Validation | COMPLETE | 2026-02-22 | 2026-02-22 |
-| 9. Functional + Bug Hunt | PLANNED | — | — |
+| 9. Functional + Bug Hunt | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 10. Final Gate | PLANNED | — | — |
 
 ## Plan Files (all written 2026-02-21)
@@ -75,6 +75,12 @@ Plans 7-10 rewritten with ios-validation-runner protocol, functional-validation 
 | VG-26C | PASS | iPad Pro 13" 10/10 screens — evidence/phase-08-platforms/ipad-pro-13/validation-log.md |
 | VG-26D | PASS | macOS 13/13 screens — evidence/phase-08-platforms/mac/validation-log.md |
 | VG-27 | PASS | 49/49 screens across 4 platforms — evidence/phase-08-platforms/consolidated-report.md |
+| VG-28 | PASS | iOS 16/16 screens PASS — evidence/phase-09-bughunt/task-9.1/verdict.md |
+| VG-29 | PASS | macOS functional PASS (automation limitation only) — evidence/phase-09-bughunt/task-9.2/verdict.md |
+| VG-30 | PASS | Stress: 0 crashes, 31 deep links, 30 tabs, 5 lifecycle cycles — evidence/phase-09-bughunt/task-9.6/verdict.md |
+| VG-31 | CONDITIONAL PASS | VoiceOver: 19 bugs (8 P2, 11 P3), core flows excellent — evidence/phase-09-bughunt/task-9.7/verdict.md |
+| VG-32 | CONDITIONAL PASS | Dynamic Type: 8 bugs (3 P2 fixed, 5 P3), all sizes render — evidence/phase-09-bughunt/task-9.8/verdict.md |
+| VG-33 | PASS | Deep links: 14/14 routes + 5 edge cases, 0 crashes — evidence/phase-09-bughunt/task-9.9/verdict.md |
 
 ## Decisions
 
@@ -115,11 +121,12 @@ Plans 7-10 rewritten with ios-validation-runner protocol, functional-validation 
 | 06 | 06 | ~40min | 5 | 3 modified + audit script + inventory |
 | 07 | 07 | ~30min | 5 | 1 fix + 23 evidence files |
 | 08 | 08 | ~30min | 6 | 0 fixes + 86 evidence files |
+| 09 | 09 | ~45min | 7/10 | 7 fixes + 65 evidence files |
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 8 complete. 49/49 screens PASS across 4 platforms (iPhone 16 Pro, iPhone 16 Pro Max, iPad Pro 13", macOS). 0 CRITICAL/HIGH. Ready for Phase 9.
+Stopped at: Phase 9 complete. 30 bugs found (0 P0, 0 P1, 12 P2, 18 P3). 7 fixes applied (3 sub-HIG fonts, 4 port formatting). Both builds GREEN. Ready for Phase 10 (Final Gate).
 Resume file: N/A
 
 ## Quick Tasks Completed

@@ -44,7 +44,7 @@ struct SidebarSessionRow: View {
                             Text("·")
                                 .foregroundStyle(theme.textTertiary)
                             Image(systemName: "arrow.down.circle")
-                                .font(.system(size: 9, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                         }
                     }

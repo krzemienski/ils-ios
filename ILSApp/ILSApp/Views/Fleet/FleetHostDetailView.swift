@@ -36,7 +36,7 @@ struct FleetHostDetailView: View {
             sectionLabel("Host Info")
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 infoRow("Address", value: "\(host.host):\(host.port)")
-                infoRow("Backend Port", value: "\(host.backendPort)")
+                infoRow("Backend Port", value: String(host.backendPort))
                 if let username = host.username {
                     infoRow("SSH User", value: username)
                 }

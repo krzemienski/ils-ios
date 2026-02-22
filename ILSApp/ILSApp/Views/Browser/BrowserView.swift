@@ -539,7 +539,7 @@ struct BrowserView: View {
                     if let stars = plugin.stars, stars > 0 {
                         HStack(spacing: 2) {
                             Image(systemName: "star.fill")
-                                .font(.system(size: 9, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.warning)
                             Text("\(stars)")
                                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))

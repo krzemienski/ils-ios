@@ -103,7 +103,7 @@ struct HostProfilesView: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text("\(host.host):\(host.backendPort)")
+                Text(verbatim: "\(host.host):\(host.backendPort)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                 if let platform = host.platform {
