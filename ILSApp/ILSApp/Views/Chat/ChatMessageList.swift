@@ -168,12 +168,10 @@ struct ChatMessageList: View {
             }
 
             if shouldShowTypingIndicator() {
-                StreamingIndicatorView(
-                    statusText: statusText
-                )
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .id("typing-indicator")
+                TypingIndicatorBubble()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .id("typing-indicator")
             }
 
             Color.clear
