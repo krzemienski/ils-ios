@@ -74,30 +74,55 @@ actor SystemMetricsService {
     }
 
     /// List running processes sorted by CPU or memory usage.
-    func getProcesses() -> [SystemProcessInfo] {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/ps")
-        process.arguments = ["aux"]
+    ///
+    /// Runs `ps aux` on a global DispatchQueue to avoid blocking the NIO event loop.
+    /// Uses `withCheckedThrowingContinuation` so the actor is not held during subprocess
+    /// execution. Reads stdout BEFORE calling `waitUntilExit()` to prevent the classic
+    /// pipe-buffer deadlock (ps output > 64KB blocks the subprocess write while we block
+    /// on waitUntilExit). A 5-second timeout prevents permanent hangs.
+    func getProcesses() async -> [SystemProcessInfo] {
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/bin/ps")
+                process.arguments = ["aux"]
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
+                let outPipe = Pipe()
+                let errPipe = Pipe()
+                process.standardOutput = outPipe
+                process.standardError = errPipe
 
-        do {
-            try process.run()
+                // 5-second timeout: terminate the process if it hangs
+                let timeoutItem = DispatchWorkItem {
+                    process.terminate()
+                }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 5, execute: timeoutItem)
 
-            // CRITICAL: Read data BEFORE waitUntilExit to prevent pipe buffer deadlock.
-            // If ps aux output exceeds ~64KB pipe buffer, the process blocks on write
-            // while we block on waitUntilExit — classic deadlock. Since this is an actor,
-            // the deadlock also blocks all other actor calls (getMetrics, etc.).
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            process.waitUntilExit()
+                do {
+                    try process.run()
 
-            guard let output = String(data: data, encoding: .utf8) else { return [] }
+                    // CRITICAL: Read stdout and stderr on the dispatch queue BEFORE
+                    // calling waitUntilExit(). If we call waitUntilExit() first and
+                    // the pipe buffer fills (>64KB), the subprocess blocks on write
+                    // while we block on exit — deadlock. Reading drains the pipe first.
+                    let data = outPipe.fileHandleForReading.readDataToEndOfFile()
+                    _ = errPipe.fileHandleForReading.readDataToEndOfFile()
 
-            return parseProcessOutput(output)
-        } catch {
-            return []
+                    process.waitUntilExit()
+                    timeoutItem.cancel()
+
+                    guard let output = String(data: data, encoding: .utf8) else {
+                        continuation.resume(returning: [])
+                        return
+                    }
+
+                    let results = Self.parseProcessOutputStatic(output)
+                    continuation.resume(returning: results)
+                } catch {
+                    timeoutItem.cancel()
+                    continuation.resume(returning: [])
+                }
+            }
         }
     }
 
@@ -357,7 +382,8 @@ actor SystemMetricsService {
     }
 
     /// Parse `ps aux` output into process info structs.
-    private func parseProcessOutput(_ output: String) -> [SystemProcessInfo] {
+    /// Static so it can be called from a DispatchQueue closure without capturing the actor.
+    private static func parseProcessOutputStatic(_ output: String) -> [SystemProcessInfo] {
         let lines = output.components(separatedBy: "\n")
         guard lines.count > 1 else { return [] }
 
