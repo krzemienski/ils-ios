@@ -1,10 +1,10 @@
 # Project State — ILS iOS/macOS Cross-Platform Audit
 
 ## Current Phase
-Phase 8: Platform Validation
+Phase 9: Functional + Bug Hunt
 
 ## Progress
-Phase 8 Plan 1/1 PENDING | Phases 7/10
+Phase 9 Plan 1/1 PENDING | Phases 8/10
 
 ## Phase Status
 
@@ -17,7 +17,7 @@ Phase 8 Plan 1/1 PENDING | Phases 7/10
 | 5. System Monitor + Profiles | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 6. Backend API Audit | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 7. Convergence | COMPLETE | 2026-02-22 | 2026-02-22 |
-| 8. Platform Validation | PLANNED | — | — |
+| 8. Platform Validation | COMPLETE | 2026-02-22 | 2026-02-22 |
 | 9. Functional + Bug Hunt | PLANNED | — | — |
 | 10. Final Gate | PLANNED | — | — |
 
@@ -70,6 +70,11 @@ Plans 7-10 rewritten with ios-validation-runner protocol, functional-validation 
 | VG-25c | PASS | 5/5 deep links route correctly — evidence/phase-07-convergence/deeplink-*.png |
 | VG-25f | PASS | 23/23 cross-stream audit points PASS — evidence/phase-07-convergence/audit-report.md |
 | VG-25g | PASS | 1 MEDIUM fix applied (teams deep link), 0 CRITICAL/HIGH — convergence-report.md |
+| VG-26A | PASS | iPhone 16 Pro 13/13 screens — evidence/phase-08-platforms/iphone-16-pro/validation-log.md |
+| VG-26B | PASS | iPhone 16 Pro Max 13/13 screens — evidence/phase-08-platforms/iphone-16-pro-max/validation-log.md |
+| VG-26C | PASS | iPad Pro 13" 10/10 screens — evidence/phase-08-platforms/ipad-pro-13/validation-log.md |
+| VG-26D | PASS | macOS 13/13 screens — evidence/phase-08-platforms/mac/validation-log.md |
+| VG-27 | PASS | 49/49 screens across 4 platforms — evidence/phase-08-platforms/consolidated-report.md |
 
 ## Decisions
 
@@ -109,11 +114,12 @@ Plans 7-10 rewritten with ios-validation-runner protocol, functional-validation 
 | 05 | 05 | ~45min | 5 | 8 modified + verification |
 | 06 | 06 | ~40min | 5 | 3 modified + audit script + inventory |
 | 07 | 07 | ~30min | 5 | 1 fix + 23 evidence files |
+| 08 | 08 | ~30min | 6 | 0 fixes + 86 evidence files |
 
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 7 complete. 10/10 iOS screens PASS, 23/23 audit points PASS, 1 fix (teams deep link). Ready for Phase 8.
+Stopped at: Phase 8 complete. 49/49 screens PASS across 4 platforms (iPhone 16 Pro, iPhone 16 Pro Max, iPad Pro 13", macOS). 0 CRITICAL/HIGH. Ready for Phase 9.
 Resume file: N/A
 
 ## Quick Tasks Completed
