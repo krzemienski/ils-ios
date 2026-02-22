@@ -52,9 +52,9 @@
 ## Swift Performance (18 issues: 1 CRITICAL, 5 HIGH, 8 MEDIUM, 4 LOW)
 
 - [x] **SPERF-01** [CRITICAL]: MCPViewModel.checkHealth() calls full loadServers() every 30s (same root cause as ENRG-02) — `ViewModels/MCPViewModel.swift:175`
-- [ ] **SPERF-02** [HIGH]: Eliminate `any AppTheme` existential boxing in ThemeManager
-- [ ] **SPERF-03** [HIGH]: Reduce ChatMessage struct copy during streaming
-- [ ] **SPERF-04** [HIGH]: Parallelize sequential API calls in DashboardViewModel timer
+- [x] **SPERF-02** [HIGH]: Eliminate `any AppTheme` existential boxing in ThemeManager
+- [x] **SPERF-03** [HIGH]: Reduce ChatMessage struct copy during streaming
+- [x] **SPERF-04** [HIGH]: Parallelize sequential API calls in DashboardViewModel timer
 - [ ] **SPERF-05** [HIGH]: Optimize SessionsController sorting for 22K+ sessions
 - [ ] **SPERF-06** [HIGH]: MCPViewModel.checkHealth() full reload (deduplicates with SPERF-01)
 - [ ] **SPERF-07** [MEDIUM]: Reduce String allocations in message rendering loop
@@ -98,8 +98,8 @@
 - [x] **UIPERF-01** [CRITICAL]: Cache SyntaxHighlighter in CodeBlockView with @State + .task(id:) — `Views/Chat/CodeBlockView.swift:156`
 - [x] **UIPERF-02** [CRITICAL]: Pre-compute Set for ThemePickerView.availableThemes — `Views/Settings/ThemePickerView.swift:203`
 - [ ] **UIPERF-03** [HIGH]: Convert SyntaxHighlighter keyword arrays to Set for O(1) lookup — `Utils/SyntaxHighlighter.swift` (17+ sites)
-- [ ] **UIPERF-04** [HIGH]: Pre-compute classifyProcess() in ViewModel — `Views/System/ProcessListView.swift:114,169`
-- [ ] **UIPERF-05** [HIGH]: Move Data(contentsOf:) off main thread in ThemeMarketplaceView — `Views/Themes/ThemeMarketplaceView.swift:278`
+- [x] **UIPERF-04** [HIGH]: Pre-compute classifyProcess() in ViewModel — `Views/System/ProcessListView.swift:114,169`
+- [x] **UIPERF-05** [HIGH]: Move Data(contentsOf:) off main thread in ThemeMarketplaceView — `Views/Themes/ThemeMarketplaceView.swift:278`
 - [ ] **UIPERF-06** [HIGH]: Cache cascading computed properties in CodeBlockView — `Views/Chat/CodeBlockView.swift:17-32`
 - [ ] **UIPERF-07** [MEDIUM]: Reduce ThemeEditorView 50+ @State properties
 - [ ] **UIPERF-08** [MEDIUM]: Cache logColor() per row in LogViewerView
@@ -283,9 +283,9 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ENRG-17 | Phase 23 | Pending |
 | ENRG-18 | Phase 23 | Pending |
 | SPERF-01 | Phase 18 | Complete |
-| SPERF-02 | Phase 20 | Pending |
-| SPERF-03 | Phase 20 | Pending |
-| SPERF-04 | Phase 20 | Pending |
+| SPERF-02 | Phase 20 | Complete |
+| SPERF-03 | Phase 20 | Complete |
+| SPERF-04 | Phase 20 | Complete |
 | SPERF-05 | Phase 20 | Pending |
 | SPERF-06 | Phase 20 | Pending |
 | SPERF-07 | Phase 23 | Pending |
@@ -323,8 +323,8 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | UIPERF-01 | Phase 18 | Complete |
 | UIPERF-02 | Phase 18 | Complete |
 | UIPERF-03 | Phase 20 | Pending |
-| UIPERF-04 | Phase 20 | Pending |
-| UIPERF-05 | Phase 20 | Pending |
+| UIPERF-04 | Phase 20 | Complete |
+| UIPERF-05 | Phase 20 | Complete |
 | UIPERF-06 | Phase 20 | Pending |
 | UIPERF-07 | Phase 23 | Pending |
 | UIPERF-08 | Phase 23 | Pending |

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v3.0 Comprehensive Audit Remediation — Phase 19 (Concurrency & Memory HIGH) in progress
+**Current focus:** v3.0 Comprehensive Audit Remediation — Phase 20 COMPLETE, ready for Phase 21 (Navigation + Code Block)
 
 ## Current Position
 
-Phase: 19 (in progress)
-Plan: 03 of 3 complete (all plans done)
-Status: Phase 19 complete -- ready for Phase 20
-Last activity: 2026-02-22 — Completed 19-03 (SSEClient heartbeat watchdog isolation)
+Phase: 20 (complete)
+Plan: 4 of 4 complete
+Status: Phase 20 COMPLETE — all 4 plans executed, ready for Phase 21
+Last activity: 2026-02-22 — Completed 20-04-PLAN.md (session sort optimization + SPERF-06 verification)
 
-Progress: [███████░░░] ~25% (v3.0 — 7 of ~28 plans across 7 phases)
+Progress: [████████░░] ~35% (v3.0 — 11 of ~31 plans across 7 phases)
 
 ## Previous Milestone (v1.0 Cross-Platform Audit)
 
@@ -45,6 +45,9 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 19 P01 | 2min | 2 tasks | 4 files |
 | Phase 19 P02 | 2min | 2 tasks | 3 files |
 | Phase 19 P03 | 1min | 1 tasks | 1 files |
+| Phase 20 P03 | 3min | 2 tasks | 5 files |
+| Phase 20 P04 | 3min | 1 tasks | 2 files |
+| Phase 20 P03 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -68,6 +71,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 19-01]: Task.cancel() safe from nonisolated deinit -- no workaround needed; @ObservationIgnored added to SystemMetricsViewModel.processRefreshTask; Task.sleep(for:) for readable polling in HostProfilesViewModel
 - [Phase 19-02]: nonisolated + Task { @MainActor in } for NotificationManager delegate; Task-based debounce replacing GCD DispatchWorkItem; windowWillClose for delegate lifecycle cleanup
 - [Phase 19-03]: Removed [weak self] entirely from Task.detached watchdog -- watchdog needs no reference to SSEClient, only Sendable LastActivityTracker actor
+- [Phase 20-03]: @State dictionary cache for ProcessListView classification (avoids ViewModel coupling); Task {} for fileImporter I/O; async let for DashboardViewModel parallel API calls; ChatMessage struct retained after copy analysis (inout + CoW); SPERF-02 documented as resolved-by-design
 
 ### Phase 18 Entry Checklist
 
@@ -102,6 +106,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 19-02-PLAN.md
+Stopped at: Completed 20-03-PLAN.md
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (165 issues, full detail)
