@@ -48,6 +48,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 20 P01 | 5min | 2 tasks | 6 files |
 | Phase 20 P03 | 3min | 2 tasks | 5 files |
 | Phase 20 P04 | 3min | 1 tasks | 2 files |
+| Phase 20 P02 | 7min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 20-03]: @State dictionary cache for ProcessListView classification (avoids ViewModel coupling); Task {} for fileImporter I/O; async let for DashboardViewModel parallel API calls; ChatMessage struct retained after copy analysis (inout + CoW); SPERF-02 documented as resolved-by-design
 - [Phase 20-01]: O(n) first(where:) for session restoration instead of dictionary (small count, one-time); static formatToolInput for PermissionRequestModal; @State + .task(id:) caching pattern for CodeBlockView lines
 - [Phase 20-04]: Strategy B for session sort: pre-sort at cache time + O(n) early-exit merge at request time; SPERF-06 verified (17/17 keyword rules use Set<String>); Fluent .sort() on DB query
+- [Phase 20]: Used PollingManager.AppPhase enum to decouple service from SwiftUI.ScenePhase (ARCH-08)
+- [Phase 20]: Fire-and-forget ViewModel methods for synchronous Binding setters (ARCH-09)
 
 ### Phase 18 Entry Checklist
 

@@ -180,7 +180,7 @@ Plans:
 
 - [x] **Phase 18: CRITICAL Fixes** - 13 CRITICAL issues: data races, energy waste, architecture violations, performance bottlenecks, database safety (completed 2026-02-22)
 - [x] **Phase 19: Concurrency + Memory HIGH** - 9 HIGH issues: nonisolated(unsafe) patterns, GCD-to-Task migration, Timer-to-Task, window cleanup (completed 2026-02-22)
-- [ ] **Phase 20: Architecture + Performance HIGH** - 17 HIGH issues: logic-in-view extractions, Set conversions, async file I/O, process classification, backend sorts
+- [x] **Phase 20: Architecture + Performance HIGH** - 17 HIGH issues: logic-in-view extractions, Set conversions, async file I/O, process classification, backend sorts (completed 2026-02-22)
 - [ ] **Phase 21: Navigation + Codable HIGH** - 10 HIGH issues: dead path cleanup, macOS navigation parity, try?-to-do/catch conversions, Codable best practices
 - [ ] **Phase 22: Energy + Build + Accessibility + Networking HIGH** - 13 HIGH issues: animation lifecycle, SSE background suspend, build flags, Dynamic Type, SSH validation, migration safety, layout
 - [ ] **Phase 23: All MEDIUM + LOW Issues** - 103 remaining issues grouped by file proximity for efficient editing
@@ -332,7 +332,7 @@ Plans:
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
-| 20. Architecture + Performance HIGH | 3/4 | In Progress|  | - |
+| 20. Architecture + Performance HIGH | 4/4 | Complete   | 2026-02-22 | - |
 | 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 0/? | Not started | - |
 | 23. All MEDIUM + LOW Issues | v3.0 | 0/? | Not started | - |

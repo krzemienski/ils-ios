@@ -79,11 +79,11 @@
 - [x] **ARCH-05** [HIGH]: Extract CommandPaletteView dual computed properties to ViewModel — `Views/Chat/CommandPaletteView.swift:139-146`
 - [x] **ARCH-06** [HIGH]: Extract NewSessionView.filteredRecentSessions — `Views/Sessions/NewSessionView.swift:352-360`
 - [x] **ARCH-07** [HIGH]: Extract SidebarRootView dictionary construction — `Views/Root/SidebarRootView.swift:122`
-- [ ] **ARCH-08** [HIGH]: Remove PollingManager SwiftUI import (testability violation) — `Services/PollingManager.swift:1`
-- [ ] **ARCH-09** [HIGH]: Fix async operations in Binding setters in SettingsConfigSection — `Views/Settings/SettingsConfigSection.swift:43-48,83-87,104-108`
-- [ ] **ARCH-10** [HIGH]: Route SettingsView.testConnection() through ViewModel — `Views/Settings/SettingsView.swift:100-104`
-- [ ] **ARCH-11** [HIGH]: Extract SettingsConfigSection.hookEventBreakdown — `Views/Settings/SettingsConfigSection.swift:451-458`
-- [ ] **ARCH-12** [HIGH]: Extract FileBrowserView.sortedEntries — `Views/System/FileBrowserView.swift:146-152`
+- [x] **ARCH-08** [HIGH]: Remove PollingManager SwiftUI import (testability violation) — `Services/PollingManager.swift:1`
+- [x] **ARCH-09** [HIGH]: Fix async operations in Binding setters in SettingsConfigSection — `Views/Settings/SettingsConfigSection.swift:43-48,83-87,104-108`
+- [x] **ARCH-10** [HIGH]: Route SettingsView.testConnection() through ViewModel — `Views/Settings/SettingsView.swift:100-104`
+- [x] **ARCH-11** [HIGH]: Extract SettingsConfigSection.hookEventBreakdown — `Views/Settings/SettingsConfigSection.swift:451-458`
+- [x] **ARCH-12** [HIGH]: Extract FileBrowserView.sortedEntries — `Views/System/FileBrowserView.swift:146-152`
 - [x] **ARCH-13** [HIGH]: Extract PermissionRequestModal.formatToolInput() — `Views/Chat/PermissionRequestModal.swift:191-201`
 - [ ] **ARCH-14** [MEDIUM]: Consider splitting SessionsViewModel (24 properties)
 - [ ] **ARCH-15** [MEDIUM]: Remove redundant ProjectsViewModel in NewSessionView
@@ -307,11 +307,11 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ARCH-05 | Phase 20 | Complete |
 | ARCH-06 | Phase 20 | Complete |
 | ARCH-07 | Phase 20 | Complete |
-| ARCH-08 | Phase 20 | Pending |
-| ARCH-09 | Phase 20 | Pending |
-| ARCH-10 | Phase 20 | Pending |
-| ARCH-11 | Phase 20 | Pending |
-| ARCH-12 | Phase 20 | Pending |
+| ARCH-08 | Phase 20 | Complete |
+| ARCH-09 | Phase 20 | Complete |
+| ARCH-10 | Phase 20 | Complete |
+| ARCH-11 | Phase 20 | Complete |
+| ARCH-12 | Phase 20 | Complete |
 | ARCH-13 | Phase 20 | Complete |
 | ARCH-14 | Phase 23 | Pending |
 | ARCH-15 | Phase 23 | Pending |
