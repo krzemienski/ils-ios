@@ -12,6 +12,7 @@ enum ActiveScreen: Hashable {
     case teams
     case fleet
     case themes
+    case hooks
 
     /// String key for @SceneStorage persistence (excludes associated values).
     var storageKey: String {
@@ -24,6 +25,7 @@ enum ActiveScreen: Hashable {
         case .teams: return "teams"
         case .fleet: return "fleet"
         case .themes: return "themes"
+        case .hooks: return "hooks"
         }
     }
 
@@ -37,6 +39,7 @@ enum ActiveScreen: Hashable {
         case "teams": return .teams
         case "fleet": return .fleet
         case "themes": return .themes
+        case "hooks": return .hooks
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -46,6 +49,7 @@ enum ActiveScreen: Hashable {
 
 struct SidebarRootView: View {
     @Environment(AppState.self) var appState
+    @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -104,6 +108,9 @@ struct SidebarRootView: View {
         .task {
             sessionsVM.configure(client: appState.apiClient)
             await sessionsVM.loadSessions(refresh: true)
+            // Load custom themes from backend and register with ThemeManager
+            // This allows custom themes to appear in ThemePickerView alongside built-ins
+            await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
 
             // Restore chat session if app was backgrounded while viewing chat
             if activeScreenKey == "chat", !lastChatSessionId.isEmpty,
@@ -191,6 +198,8 @@ struct SidebarRootView: View {
                     fleetScreen
                 case .themes:
                     themesScreen
+                case .hooks:
+                    hooksScreen
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -312,6 +321,11 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var themesScreen: some View {
         ThemesListView()
+    }
+
+    @ViewBuilder
+    private var hooksScreen: some View {
+        HooksManagementView()
     }
 
     // MARK: - Sidebar Logic (iPhone)

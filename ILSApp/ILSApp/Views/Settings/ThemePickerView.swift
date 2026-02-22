@@ -48,9 +48,24 @@ struct ThemePickerView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
+                // Built-in themes
+                sectionLabel("Built-in")
+
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(ThemePreview.all) { preview in
                         themeCard(preview)
+                    }
+                }
+
+                // Custom themes (registered via CustomThemeAdapter)
+                let customThemes = themeManager.availableThemes.filter { $0.id.hasPrefix("custom-") }
+                if !customThemes.isEmpty {
+                    sectionLabel("Custom")
+
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(customThemes, id: \.id) { customTheme in
+                            customThemeCard(customTheme)
+                        }
                     }
                 }
             }
@@ -62,6 +77,117 @@ struct ThemePickerView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
+    }
+
+    // MARK: - Section Label
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+            .foregroundStyle(theme.textTertiary)
+            .tracking(1)
+    }
+
+    // MARK: - Custom Theme Card
+
+    @ViewBuilder
+    private func customThemeCard(_ appTheme: any AppTheme) -> some View {
+        let isActive = themeManager.currentTheme.id == appTheme.id
+        let snapshot = ThemeSnapshot(appTheme)
+
+        Button {
+            if reduceMotion {
+                themeManager.setTheme(appTheme.id)
+            } else {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    themeManager.setTheme(appTheme.id)
+                }
+            }
+        } label: {
+            VStack(spacing: 0) {
+                // Preview area
+                ZStack {
+                    snapshot.bgPrimary
+
+                    VStack(spacing: 6) {
+                        HStack {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(snapshot.textPrimary)
+                                .frame(width: 40, height: 6)
+                            Spacer()
+                            Circle()
+                                .fill(snapshot.accent)
+                                .frame(width: 8, height: 8)
+                        }
+                        .padding(.horizontal, 10)
+
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(snapshot.bgSecondary)
+                            .frame(height: 24)
+                            .padding(.horizontal, 10)
+
+                        VStack(spacing: 3) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(snapshot.accent.opacity(0.6))
+                                        .frame(width: 5, height: 5)
+                                    RoundedRectangle(cornerRadius: 1.5)
+                                        .fill(snapshot.textPrimary.opacity(0.4))
+                                        .frame(height: 4)
+                                }
+                                .padding(.horizontal, 10)
+                            }
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.top, 10)
+
+                    if isActive {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 20, design: theme.fontDesign))
+                                    .foregroundStyle(snapshot.accent)
+                                    .background(
+                                        Circle()
+                                            .fill(snapshot.bgPrimary)
+                                            .frame(width: 18, height: 18)
+                                    )
+                            }
+                            Spacer()
+                        }
+                        .padding(6)
+                    }
+                }
+                .frame(height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+                VStack(spacing: 6) {
+                    HStack(spacing: 4) {
+                        swatchCircle(snapshot.bgPrimary, border: appTheme.isLight)
+                        swatchCircle(snapshot.accent, border: false)
+                        swatchCircle(snapshot.textPrimary, border: appTheme.isLight)
+                        swatchCircle(snapshot.bgSecondary, border: appTheme.isLight)
+                    }
+
+                    Text(appTheme.name)
+                        .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .regular, design: theme.fontDesign))
+                        .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
+                        .lineLimit(1)
+                }
+                .padding(.vertical, theme.spacingSM)
+            }
+            .modifier(GlassCard())
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
+                    .stroke(isActive ? theme.accent : Color.clear, lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(appTheme.name) theme\(isActive ? ", active" : "")")
     }
 
     // MARK: - Theme Card
