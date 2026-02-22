@@ -266,8 +266,10 @@ struct FileSystemService {
             return cached
         }
         let converted = try sessions.scanExternalSessionsAsChatSessions()
-        await FileSystemCache.shared.setCachedExternalSessions(converted)
-        return converted
+        // Pre-sort at cache time (once) so callers can merge without re-sorting 22K+ items per request
+        let sorted = converted.sorted { $0.lastActiveAt > $1.lastActiveAt }
+        await FileSystemCache.shared.setCachedExternalSessions(sorted)
+        return sorted
     }
 
     /// Invalidate the external sessions cache.
