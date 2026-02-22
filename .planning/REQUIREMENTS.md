@@ -76,15 +76,15 @@
 - [x] **ARCH-02** [CRITICAL]: Add do/catch to MacChatView unhandled Task error — `ILSMacApp/Views/MacChatView.swift:75-77`
 - [x] **ARCH-03** [CRITICAL]: Extract NewSessionView 3 inline async flows to NewSessionViewModel — `Views/Sessions/NewSessionView.swift:794-870`
 - [x] **ARCH-04** [CRITICAL]: Add `private` to MacSettingsView @State — `ILSMacApp/Views/MacSettingsView.swift:32,35`
-- [ ] **ARCH-05** [HIGH]: Extract CommandPaletteView dual computed properties to ViewModel — `Views/Chat/CommandPaletteView.swift:139-146`
-- [ ] **ARCH-06** [HIGH]: Extract NewSessionView.filteredRecentSessions — `Views/Sessions/NewSessionView.swift:352-360`
-- [ ] **ARCH-07** [HIGH]: Extract SidebarRootView dictionary construction — `Views/Root/SidebarRootView.swift:122`
+- [x] **ARCH-05** [HIGH]: Extract CommandPaletteView dual computed properties to ViewModel — `Views/Chat/CommandPaletteView.swift:139-146`
+- [x] **ARCH-06** [HIGH]: Extract NewSessionView.filteredRecentSessions — `Views/Sessions/NewSessionView.swift:352-360`
+- [x] **ARCH-07** [HIGH]: Extract SidebarRootView dictionary construction — `Views/Root/SidebarRootView.swift:122`
 - [ ] **ARCH-08** [HIGH]: Remove PollingManager SwiftUI import (testability violation) — `Services/PollingManager.swift:1`
 - [ ] **ARCH-09** [HIGH]: Fix async operations in Binding setters in SettingsConfigSection — `Views/Settings/SettingsConfigSection.swift:43-48,83-87,104-108`
 - [ ] **ARCH-10** [HIGH]: Route SettingsView.testConnection() through ViewModel — `Views/Settings/SettingsView.swift:100-104`
 - [ ] **ARCH-11** [HIGH]: Extract SettingsConfigSection.hookEventBreakdown — `Views/Settings/SettingsConfigSection.swift:451-458`
 - [ ] **ARCH-12** [HIGH]: Extract FileBrowserView.sortedEntries — `Views/System/FileBrowserView.swift:146-152`
-- [ ] **ARCH-13** [HIGH]: Extract PermissionRequestModal.formatToolInput() — `Views/Chat/PermissionRequestModal.swift:191-201`
+- [x] **ARCH-13** [HIGH]: Extract PermissionRequestModal.formatToolInput() — `Views/Chat/PermissionRequestModal.swift:191-201`
 - [ ] **ARCH-14** [MEDIUM]: Consider splitting SessionsViewModel (24 properties)
 - [ ] **ARCH-15** [MEDIUM]: Remove redundant ProjectsViewModel in NewSessionView
 - [ ] **ARCH-16** [MEDIUM]: Convert fire-and-forget Tasks to .task modifier
@@ -100,7 +100,7 @@
 - [x] **UIPERF-03** [HIGH]: Convert SyntaxHighlighter keyword arrays to Set for O(1) lookup — `Utils/SyntaxHighlighter.swift` (17+ sites)
 - [x] **UIPERF-04** [HIGH]: Pre-compute classifyProcess() in ViewModel — `Views/System/ProcessListView.swift:114,169`
 - [x] **UIPERF-05** [HIGH]: Move Data(contentsOf:) off main thread in ThemeMarketplaceView — `Views/Themes/ThemeMarketplaceView.swift:278`
-- [ ] **UIPERF-06** [HIGH]: Cache cascading computed properties in CodeBlockView — `Views/Chat/CodeBlockView.swift:17-32`
+- [x] **UIPERF-06** [HIGH]: Cache cascading computed properties in CodeBlockView — `Views/Chat/CodeBlockView.swift:17-32`
 - [ ] **UIPERF-07** [MEDIUM]: Reduce ThemeEditorView 50+ @State properties
 - [ ] **UIPERF-08** [MEDIUM]: Cache logColor() per row in LogViewerView
 - [ ] **UIPERF-09** [MEDIUM]: Eliminate duplicate SessionsViewModel in MacDashboardView
@@ -304,15 +304,15 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | ARCH-02 | Phase 18 | Complete |
 | ARCH-03 | Phase 18 | Complete |
 | ARCH-04 | Phase 18 | Complete |
-| ARCH-05 | Phase 20 | Pending |
-| ARCH-06 | Phase 20 | Pending |
-| ARCH-07 | Phase 20 | Pending |
+| ARCH-05 | Phase 20 | Complete |
+| ARCH-06 | Phase 20 | Complete |
+| ARCH-07 | Phase 20 | Complete |
 | ARCH-08 | Phase 20 | Pending |
 | ARCH-09 | Phase 20 | Pending |
 | ARCH-10 | Phase 20 | Pending |
 | ARCH-11 | Phase 20 | Pending |
 | ARCH-12 | Phase 20 | Pending |
-| ARCH-13 | Phase 20 | Pending |
+| ARCH-13 | Phase 20 | Complete |
 | ARCH-14 | Phase 23 | Pending |
 | ARCH-15 | Phase 23 | Pending |
 | ARCH-16 | Phase 23 | Pending |
@@ -325,7 +325,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | UIPERF-03 | Phase 20 | Complete |
 | UIPERF-04 | Phase 20 | Complete |
 | UIPERF-05 | Phase 20 | Complete |
-| UIPERF-06 | Phase 20 | Pending |
+| UIPERF-06 | Phase 20 | Complete |
 | UIPERF-07 | Phase 23 | Pending |
 | UIPERF-08 | Phase 23 | Pending |
 | UIPERF-09 | Phase 23 | Pending |

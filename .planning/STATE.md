@@ -45,6 +45,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 19 P01 | 2min | 2 tasks | 4 files |
 | Phase 19 P02 | 2min | 2 tasks | 3 files |
 | Phase 19 P03 | 1min | 1 tasks | 1 files |
+| Phase 20 P01 | 5min | 2 tasks | 6 files |
 | Phase 20 P03 | 3min | 2 tasks | 5 files |
 | Phase 20 P04 | 3min | 1 tasks | 2 files |
 
@@ -71,6 +72,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 19-02]: nonisolated + Task { @MainActor in } for NotificationManager delegate; Task-based debounce replacing GCD DispatchWorkItem; windowWillClose for delegate lifecycle cleanup
 - [Phase 19-03]: Removed [weak self] entirely from Task.detached watchdog -- watchdog needs no reference to SSEClient, only Sendable LastActivityTracker actor
 - [Phase 20-03]: @State dictionary cache for ProcessListView classification (avoids ViewModel coupling); Task {} for fileImporter I/O; async let for DashboardViewModel parallel API calls; ChatMessage struct retained after copy analysis (inout + CoW); SPERF-02 documented as resolved-by-design
+- [Phase 20-01]: O(n) first(where:) for session restoration instead of dictionary (small count, one-time); static formatToolInput for PermissionRequestModal; @State + .task(id:) caching pattern for CodeBlockView lines
 - [Phase 20-04]: Strategy B for session sort: pre-sort at cache time + O(n) early-exit merge at request time; SPERF-06 verified (17/17 keyword rules use Set<String>); Fluent .sort() on DB query
 
 ### Phase 18 Entry Checklist
@@ -106,6 +108,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Completed 20-04-PLAN.md (Phase 20 COMPLETE)
+Stopped at: Completed 20-01-PLAN.md (Phase 20 COMPLETE)
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (165 issues, full detail)
