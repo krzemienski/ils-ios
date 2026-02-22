@@ -107,6 +107,25 @@ class SettingsViewModel {
         }
     }
 
+    // MARK: - Fire-and-forget wrappers (synchronous entry points for Binding setters)
+
+    /// Updates the default model from a Binding setter without requiring Task/await.
+    func updateModel(_ newModel: String) {
+        guard let config = config?.content else { return }
+        Task {
+            _ = await saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
+            await loadConfig()
+        }
+    }
+
+    /// Updates a boolean toggle from a Binding setter without requiring Task/await.
+    func updateToggle(key: String, value: Bool) {
+        Task {
+            _ = await saveConfigToggle(key: key, value: value)
+            await loadConfig()
+        }
+    }
+
     func saveConfigToggle(key: String, value: Bool) async -> String? {
         guard let client else { return "Client not configured" }
         isSaving = true

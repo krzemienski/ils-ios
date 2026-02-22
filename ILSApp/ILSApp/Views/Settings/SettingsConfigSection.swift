@@ -41,10 +41,7 @@ struct SettingsConfigSection: View {
                     Picker("Default Model", selection: Binding(
                         get: { config.model ?? SettingsViewModel.defaultModelID },
                         set: { newModel in
-                            Task {
-                                _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
-                                await viewModel.loadConfig()
-                            }
+                            viewModel.updateModel(newModel)
                         }
                     )) {
                         ForEach(availableModels, id: \.self) { model in
@@ -80,10 +77,7 @@ struct SettingsConfigSection: View {
                         get: { config.alwaysThinkingEnabled ?? false },
                         set: { newValue in
                             HapticManager.selection()
-                            Task {
-                                _ = await viewModel.saveConfigToggle(key: "alwaysThinkingEnabled", value: newValue)
-                                await viewModel.loadConfig()
-                            }
+                            viewModel.updateToggle(key: "alwaysThinkingEnabled", value: newValue)
                         }
                     )) {
                         Text("Extended Thinking")
@@ -101,10 +95,7 @@ struct SettingsConfigSection: View {
                         get: { config.includeCoAuthoredBy ?? false },
                         set: { newValue in
                             HapticManager.selection()
-                            Task {
-                                _ = await viewModel.saveConfigToggle(key: "includeCoAuthoredBy", value: newValue)
-                                await viewModel.loadConfig()
-                            }
+                            viewModel.updateToggle(key: "includeCoAuthoredBy", value: newValue)
                         }
                     )) {
                         Text("Include Co-Author")

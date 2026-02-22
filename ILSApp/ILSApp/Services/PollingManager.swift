@@ -1,8 +1,14 @@
-import SwiftUI
+import Foundation
 
 /// Manages connection health polling and retry logic.
 @MainActor
 class PollingManager {
+    /// Scene lifecycle phase mirroring SwiftUI.ScenePhase
+    /// so PollingManager has no SwiftUI dependency.
+    enum AppPhase {
+        case active, inactive, background
+    }
+
     /// Unowned is safe: ConnectionManager creates and owns PollingManager,
     /// so ConnectionManager always outlives this instance. Avoids atomic
     /// weak-reference overhead on every health poll cycle.
@@ -106,7 +112,7 @@ class PollingManager {
         healthPollTask = nil
     }
 
-    func handleScenePhase(_ phase: ScenePhase) {
+    func handleScenePhase(_ phase: AppPhase) {
         switch phase {
         case .active:
             checkConnection()
@@ -114,8 +120,6 @@ class PollingManager {
             stopHealthPolling()
             stopRetryPolling()
         case .inactive:
-            break
-        @unknown default:
             break
         }
     }
