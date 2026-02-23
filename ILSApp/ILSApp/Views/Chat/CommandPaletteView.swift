@@ -50,67 +50,65 @@ struct CommandPaletteView: View {
     let onSelect: (String) -> Void
 
     var body: some View {
-        NavigationStack {
-            List {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    // Built-in commands
-                    Section("Built-in") {
-                        ForEach(debouncedBuiltInCommands) { command in
-                            CommandRow(command: command, onSelect: selectCommand)
-                        }
+        List {
+            if isLoading {
+                ProgressView()
+            } else {
+                // Built-in commands
+                Section("Built-in") {
+                    ForEach(debouncedBuiltInCommands) { command in
+                        CommandRow(command: command, onSelect: selectCommand)
                     }
+                }
 
-                    // Skills
-                    if !debouncedFilteredSkills.isEmpty {
-                        Section("Skills") {
-                            ForEach(debouncedFilteredSkills) { skill in
-                                SkillRow(skill: skill) {
-                                    selectCommand("/\(skill.name)")
-                                }
-                            }
-                        }
-                    }
-
-                    // Model switching
-                    Section("Switch Model") {
-                        ForEach(["sonnet", "opus", "haiku"], id: \.self) { model in
-                            Button {
-                                selectCommand("--model \(model)")
-                            } label: {
-                                Label(model.capitalized, systemImage: "cpu")
+                // Skills
+                if !debouncedFilteredSkills.isEmpty {
+                    Section("Skills") {
+                        ForEach(debouncedFilteredSkills) { skill in
+                            SkillRow(skill: skill) {
+                                selectCommand("/\(skill.name)")
                             }
                         }
                     }
                 }
-            }
-            .scrollContentBackground(.hidden)
-            .background(theme.bgPrimary)
-            .searchable(text: $searchText, prompt: "Search commands...")
-            .navigationTitle("Commands")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+
+                // Model switching
+                Section("Switch Model") {
+                    ForEach(["sonnet", "opus", "haiku"], id: \.self) { model in
+                        Button {
+                            selectCommand("--model \(model)")
+                        } label: {
+                            Label(model.capitalized, systemImage: "cpu")
+                        }
+                    }
                 }
             }
-            #if os(iOS)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(theme.bgPrimary, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            #endif
-            .task {
-                await loadSkills()
+        }
+        .scrollContentBackground(.hidden)
+        .background(theme.bgPrimary)
+        .searchable(text: $searchText, prompt: "Search commands...")
+        .navigationTitle("Commands")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
             }
-            .task(id: searchText) {
-                try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { return }
-                debouncedBuiltInCommands = Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
-                debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
-            }
+        }
+        #if os(iOS)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(theme.bgPrimary, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
+        .task {
+            await loadSkills()
+        }
+        .task(id: searchText) {
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled else { return }
+            debouncedBuiltInCommands = Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
+            debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
         }
         .preferredColorScheme(.dark)
     }

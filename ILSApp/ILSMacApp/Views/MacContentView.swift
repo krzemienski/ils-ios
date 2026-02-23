@@ -13,6 +13,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case teams = "Agent Teams"
     case hostProfiles = "Host Profiles"
     case themes = "Themes"
+    case hooks = "Hooks"
     case settings = "Settings"
 
     var id: String { rawValue }
@@ -25,6 +26,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .teams: return "person.3.fill"
         case .hostProfiles: return "desktopcomputer"
         case .themes: return "paintpalette.fill"
+        case .hooks: return "bolt.fill"
         case .settings: return "gearshape.fill"
         }
     }
@@ -37,6 +39,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .teams: return .teams
         case .hostProfiles: return .hostProfiles
         case .themes: return .themes
+        case .hooks: return .hooks
         case .settings: return .settings
         }
     }
@@ -70,8 +73,10 @@ struct MacContentView: View {
                 .navigationSplitViewColumnWidth(min: 250, ideal: 320, max: 500)
         } detail: {
             // Detail view (main content)
-            detailContent
-                .navigationSplitViewColumnWidth(min: 600, ideal: 800)
+            NavigationStack {
+                detailContent
+            }
+            .navigationSplitViewColumnWidth(min: 600, ideal: 800)
         }
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
@@ -566,7 +571,7 @@ struct MacContentView: View {
         case .teams: selectedSection = .teams
         case .hostProfiles: selectedSection = .hostProfiles
         case .themes: selectedSection = .themes
-        case .hooks: selectedSection = .settings  // hooks navigates from settings context
+        case .hooks: selectedSection = .hooks
         case .chat: selectedSection = .home
         }
         activeScreen = intent

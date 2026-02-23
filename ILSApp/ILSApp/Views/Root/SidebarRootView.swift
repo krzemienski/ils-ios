@@ -61,7 +61,6 @@ struct SidebarRootView: View {
     @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
-    @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var browserSegment: BrowserSegment = .mcp
@@ -84,18 +83,12 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
             activeScreen = screen
-            if navigationPath.count > 0 {
-                navigationPath.removeLast(navigationPath.count)
-            }
             appState.navigationIntent = nil
             if !isRegularWidth {
                 closeSidebar()
             }
         }
         .onChange(of: activeScreen) { _, newScreen in
-            if navigationPath.count > 0 {
-                navigationPath.removeLast(navigationPath.count)
-            }
             activeScreenKey = newScreen.storageKey
             // Persist the chat session ID for state restoration
             if case .chat(let session) = newScreen {
@@ -181,7 +174,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             Group {
                 switch activeScreen {
                 case .home:

@@ -15,52 +15,50 @@ struct CreateTeamView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Team Name", text: $name)
-                        #if os(iOS)
-                        .autocapitalization(.none)
-                        #endif
-                        .disableAutocorrection(true)
-                } header: {
-                    Text("Name")
-                        .foregroundStyle(theme.textSecondary)
-                } footer: {
-                    Text("Only alphanumeric characters and hyphens allowed")
-                        .foregroundStyle(theme.textTertiary)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                }
-
-                Section {
-                    TextField("Description (optional)", text: $description, axis: .vertical)
-                        .lineLimit(3...6)
-                } header: {
-                    Text("Description")
-                        .foregroundStyle(theme.textSecondary)
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .background(theme.bgPrimary)
-            .navigationTitle("Create Team")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+        Form {
+            Section {
+                TextField("Team Name", text: $name)
+                    #if os(iOS)
+                    .autocapitalization(.none)
+                    #endif
+                    .disableAutocorrection(true)
+            } header: {
+                Text("Name")
                     .foregroundStyle(theme.textSecondary)
-                }
+            } footer: {
+                Text("Only alphanumeric characters and hyphens allowed")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+            }
 
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        createTeam()
-                    }
-                    .foregroundStyle(theme.accent)
-                    .disabled(!isValidName || isCreating)
+            Section {
+                TextField("Description (optional)", text: $description, axis: .vertical)
+                    .lineLimit(3...6)
+            } header: {
+                Text("Description")
+                    .foregroundStyle(theme.textSecondary)
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(theme.bgPrimary)
+        .navigationTitle("Create Team")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
                 }
+                .foregroundStyle(theme.textSecondary)
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Create") {
+                    createTeam()
+                }
+                .foregroundStyle(theme.accent)
+                .disabled(!isValidName || isCreating)
             }
         }
     }

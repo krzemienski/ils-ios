@@ -54,68 +54,66 @@ struct NewSessionView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                modePicker
-                    .padding(.horizontal, theme.spacingMD)
-                    .padding(.top, theme.spacingSM)
-                    .padding(.bottom, theme.spacingSM)
+        VStack(spacing: 0) {
+            modePicker
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.top, theme.spacingSM)
+                .padding(.bottom, theme.spacingSM)
 
-                Divider().overlay(theme.divider)
+            Divider().overlay(theme.divider)
 
-                ScrollView {
-                    VStack(spacing: theme.spacingMD) {
-                        switch selectedMode {
-                        case .project:
-                            projectPickerSection
-                        case .fork:
-                            forkSessionSection
-                        case .newProject:
-                            createProjectSection
-                        }
-
-                        if canShowConfig {
-                            configurationSection
-                        }
-
-                        actionButton
+            ScrollView {
+                VStack(spacing: theme.spacingMD) {
+                    switch selectedMode {
+                    case .project:
+                        projectPickerSection
+                    case .fork:
+                        forkSessionSection
+                    case .newProject:
+                        createProjectSection
                     }
-                    .padding(.horizontal, theme.spacingMD)
-                    .padding(.vertical, theme.spacingSM)
+
+                    if canShowConfig {
+                        configurationSection
+                    }
+
+                    actionButton
                 }
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM)
             }
-            .background(theme.bgPrimary)
-            .navigationTitle("New Session")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(theme.textSecondary)
-                }
+        }
+        .background(theme.bgPrimary)
+        .navigationTitle("New Session")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(theme.textSecondary)
             }
-            .task {
-                projectsViewModel.configure(client: appState.apiClient)
-                sessionViewModel.configure(client: appState.apiClient)
-                await projectsViewModel.loadProjects()
-            }
-            .task {
-                await loadRecentSessions()
+        }
+        .task {
+            projectsViewModel.configure(client: appState.apiClient)
+            sessionViewModel.configure(client: appState.apiClient)
+            await projectsViewModel.loadProjects()
+        }
+        .task {
+            await loadRecentSessions()
+            debouncedForkResults = recentSessions
+        }
+        .task(id: forkSearchText) {
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled else { return }
+            if forkSearchText.isEmpty {
                 debouncedForkResults = recentSessions
-            }
-            .task(id: forkSearchText) {
-                try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { return }
-                if forkSearchText.isEmpty {
-                    debouncedForkResults = recentSessions
-                } else {
-                    let query = forkSearchText.lowercased()
-                    debouncedForkResults = recentSessions.filter {
-                        ($0.name ?? "").lowercased().contains(query)
-                            || ($0.projectName ?? "").lowercased().contains(query)
-                            || $0.model.lowercased().contains(query)
-                    }
+            } else {
+                let query = forkSearchText.lowercased()
+                debouncedForkResults = recentSessions.filter {
+                    ($0.name ?? "").lowercased().contains(query)
+                        || ($0.projectName ?? "").lowercased().contains(query)
+                        || $0.model.lowercased().contains(query)
                 }
             }
         }

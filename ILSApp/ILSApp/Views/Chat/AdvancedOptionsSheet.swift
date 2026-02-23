@@ -59,27 +59,25 @@ struct AdvancedOptionsSheet: View {
     @Binding var config: ChatOptionsConfig
 
     var body: some View {
-        NavigationStack {
-            Form {
-                systemPromptSection
-                modelExecutionSection
-                toolControlSection
-                advancedSection
-                resetSection
-            }
-            .scrollContentBackground(.hidden)
-            .background(theme.bgPrimary)
-            .tint(theme.accent)
-            .navigationTitle("Chat Options")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .foregroundColor(theme.accent)
-                        .accessibilityLabel("Done configuring chat options")
-                }
+        Form {
+            systemPromptSection
+            modelExecutionSection
+            toolControlSection
+            advancedSection
+            resetSection
+        }
+        .scrollContentBackground(.hidden)
+        .background(theme.bgPrimary)
+        .tint(theme.accent)
+        .navigationTitle("Chat Options")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }
+                    .foregroundColor(theme.accent)
+                    .accessibilityLabel("Done configuring chat options")
             }
         }
     }

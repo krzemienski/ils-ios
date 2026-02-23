@@ -17,30 +17,28 @@ struct PremiumView: View {
     @State private var selectedProductID: String = SubscriptionManager.annualProductID
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: theme.spacingLG) {
-                    heroSection
-                    featureComparisonSection
-                    subscriptionOptionsSection
-                    trialCallout
-                    purchaseButton
-                    restoreLink
-                    legalLinks
-                }
-                .padding(.horizontal, theme.spacingMD)
-                .padding(.bottom, theme.spacingXL)
+        ScrollView {
+            VStack(spacing: theme.spacingLG) {
+                heroSection
+                featureComparisonSection
+                subscriptionOptionsSection
+                trialCallout
+                purchaseButton
+                restoreLink
+                legalLinks
             }
-            .background(theme.bgPrimary.ignoresSafeArea())
-            .navigationTitle("ILS Premium")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
-                        .foregroundStyle(theme.textSecondary)
-                }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.bottom, theme.spacingXL)
+        }
+        .background(theme.bgPrimary.ignoresSafeArea())
+        .navigationTitle("ILS Premium")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close") { dismiss() }
+                    .foregroundStyle(theme.textSecondary)
             }
         }
     }
