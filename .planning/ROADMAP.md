@@ -297,7 +297,13 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 23-01: TBD
+- [ ] 23-01-PLAN.md -- Concurrency + Energy remaining MEDIUM (6 issues: readQueue, Task.detached, WebSocket visibility, health check docs, adaptive polling docs)
+- [ ] 23-02-PLAN.md -- SwiftUI Architecture MEDIUM (5 issues: ProjectsViewModel removal, toast dedup modifier, private helpers, SessionsViewModel docs)
+- [ ] 23-03-PLAN.md -- SwiftUI Performance MEDIUM (6 issues: macOS duplicate VMs, ForEach identity, skills cache, logColor, ThemeEditor docs)
+- [ ] 23-04-PLAN.md -- Codable + Navigation MEDIUM (8 issues: date handling, decoder errors, value validation, deep link validation, nav architecture docs)
+- [ ] 23-05-PLAN.md -- Accessibility + Modernization + Build MEDIUM (8 issues: a11y labels, VoiceOver grouping, String(describing:), protocol cleanup, type-check flags)
+- [ ] 23-06-PLAN.md -- Database + Networking + Security + Layout MEDIUM (9 issues: migration versioning, reconnect limit, network gate, localhost constants, Keychain UX, spacing, macOS frames)
+- [ ] 23-07-PLAN.md -- LOW sweep + Swift Perf remaining + Modernization (search cache, sidebar lookups, type annotations, deprecation audit, doc comments)
 
 ---
 
