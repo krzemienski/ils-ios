@@ -234,6 +234,11 @@ struct ChatView: View {
             onRetryMessage: { msg in
                 viewModel.retryMessage(msg, projectId: session.projectId)
             },
+            canLoadMore: viewModel.canLoadOlderMessages,
+            isLoadingMore: viewModel.isLoadingOlderMessages,
+            onLoadMore: {
+                Task { await viewModel.loadOlderMessages() }
+            },
             sessionProjectId: session.projectId?.uuidString
         )
         .simultaneousGesture(

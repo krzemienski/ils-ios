@@ -50,6 +50,12 @@ struct ChatMessageList: View {
     let onDeleteMessage: (ChatMessage) -> Void
     /// Called when the user chooses to retry a message via context menu.
     let onRetryMessage: (ChatMessage) -> Void
+    /// Whether older messages are available to load.
+    let canLoadMore: Bool
+    /// Whether older messages are currently being fetched.
+    let isLoadingMore: Bool
+    /// Called when the user taps "Load earlier messages".
+    let onLoadMore: () -> Void
     /// The encoded project path for the current session, used by permission UI.
     let sessionProjectId: String?
 
@@ -117,6 +123,24 @@ struct ChatMessageList: View {
 
     private var messagesContent: some View {
         LazyVStack(spacing: 0) {
+            if canLoadMore {
+                Button {
+                    onLoadMore()
+                } label: {
+                    if isLoadingMore {
+                        ProgressView()
+                            .padding()
+                    } else {
+                        Label("Load earlier messages", systemImage: "arrow.up.circle")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.accent)
+                            .padding()
+                    }
+                }
+                .disabled(isLoadingMore)
+                .id("load-more")
+            }
+
             ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
                 let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
                 let isSameSender = prevMessage?.isUser == message.isUser

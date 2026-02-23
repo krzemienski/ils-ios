@@ -88,6 +88,13 @@ class ChatViewModel {
         return d
     }()
 
+    // MARK: - Message Windowing
+    private let messageWindowSize = 50
+    private(set) var totalMessageCount = 0
+    private var currentOffset = 0
+    var canLoadOlderMessages: Bool { currentOffset > 0 }
+    var isLoadingOlderMessages = false
+
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
     @ObservationIgnored private var batchTask: Task<Void, Never>?
@@ -238,11 +245,26 @@ class ChatViewModel {
         do {
             // Branch: external sessions load from JSONL transcript, ILS sessions from DB
             if let encodedProjectPath = encodedProjectPath, let claudeSessionId = claudeSessionId {
-                let path = "/sessions/transcript/\(encodedProjectPath)/\(claudeSessionId)"
-                let response: APIResponse<ListResponse<Message>> = try await apiClient.get(path)
+                // First, fetch with limit to get total count
+                let initialPath = "/sessions/transcript/\(encodedProjectPath)/\(claudeSessionId)?limit=\(messageWindowSize)"
+                let response: APIResponse<ListResponse<Message>> = try await apiClient.get(initialPath)
 
                 if let data = response.data {
-                    let loadedMessages = data.items.map { message -> ChatMessage in
+                    totalMessageCount = data.total
+
+                    // If more messages exist than the window, fetch the last window
+                    let finalItems: [Message]
+                    if totalMessageCount > messageWindowSize {
+                        currentOffset = max(0, totalMessageCount - messageWindowSize)
+                        let windowPath = "/sessions/transcript/\(encodedProjectPath)/\(claudeSessionId)?limit=\(messageWindowSize)&offset=\(currentOffset)"
+                        let windowResponse: APIResponse<ListResponse<Message>> = try await apiClient.get(windowPath)
+                        finalItems = windowResponse.data?.items ?? data.items
+                    } else {
+                        currentOffset = 0
+                        finalItems = data.items
+                    }
+
+                    let loadedMessages = finalItems.map { message -> ChatMessage in
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
@@ -259,10 +281,26 @@ class ChatViewModel {
                     }
                 }
             } else if let sessionId = sessionId {
-                let response: APIResponse<ListResponse<Message>> = try await apiClient.get("/sessions/\(sessionId.uuidString)/messages")
+                // First, fetch with limit to get total count
+                let initialPath = "/sessions/\(sessionId.uuidString)/messages?limit=\(messageWindowSize)"
+                let response: APIResponse<ListResponse<Message>> = try await apiClient.get(initialPath)
 
                 if let data = response.data {
-                    let loadedMessages = data.items.map { message -> ChatMessage in
+                    totalMessageCount = data.total
+
+                    // If more messages exist than the window, fetch the last window
+                    let finalItems: [Message]
+                    if totalMessageCount > messageWindowSize {
+                        currentOffset = max(0, totalMessageCount - messageWindowSize)
+                        let windowPath = "/sessions/\(sessionId.uuidString)/messages?limit=\(messageWindowSize)&offset=\(currentOffset)"
+                        let windowResponse: APIResponse<ListResponse<Message>> = try await apiClient.get(windowPath)
+                        finalItems = windowResponse.data?.items ?? data.items
+                    } else {
+                        currentOffset = 0
+                        finalItems = data.items
+                    }
+
+                    let loadedMessages = finalItems.map { message -> ChatMessage in
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
@@ -300,6 +338,63 @@ class ChatViewModel {
         }
 
         isLoadingHistory = false
+    }
+
+    /// Load older messages from before the current window and prepend them.
+    func loadOlderMessages() async {
+        guard canLoadOlderMessages, !isLoadingOlderMessages, let apiClient else { return }
+        isLoadingOlderMessages = true
+
+        let newOffset = max(0, currentOffset - messageWindowSize)
+        let fetchLimit = currentOffset - newOffset
+        guard fetchLimit > 0 else {
+            isLoadingOlderMessages = false
+            return
+        }
+
+        do {
+            if let encodedProjectPath, let claudeSessionId {
+                let path = "/sessions/transcript/\(encodedProjectPath)/\(claudeSessionId)?limit=\(fetchLimit)&offset=\(newOffset)"
+                let response: APIResponse<ListResponse<Message>> = try await apiClient.get(path)
+                if let data = response.data {
+                    let olderMessages = data.items.map { message -> ChatMessage in
+                        ChatMessage(
+                            id: message.id,
+                            isUser: message.role == .user,
+                            text: message.content,
+                            toolCalls: parseToolCalls(from: message.toolCalls),
+                            timestamp: message.createdAt,
+                            isFromHistory: true
+                        )
+                    }
+                    messages = olderMessages + messages
+                }
+            } else if let sessionId {
+                let path = "/sessions/\(sessionId.uuidString)/messages?limit=\(fetchLimit)&offset=\(newOffset)"
+                let response: APIResponse<ListResponse<Message>> = try await apiClient.get(path)
+                if let data = response.data {
+                    let olderMessages = data.items.map { message -> ChatMessage in
+                        ChatMessage(
+                            id: message.id,
+                            isUser: message.role == .user,
+                            text: message.content,
+                            toolCalls: parseToolCalls(from: message.toolCalls),
+                            toolResults: parseToolResults(from: message.toolResults),
+                            thinking: nil,
+                            cost: nil,
+                            timestamp: message.createdAt,
+                            isFromHistory: true
+                        )
+                    }
+                    messages = olderMessages + messages
+                }
+            }
+            currentOffset = newOffset
+        } catch {
+            AppLogger.shared.error("Failed to load older messages: \(error)", category: "chat")
+        }
+
+        isLoadingOlderMessages = false
     }
 
     /// Reload messages on foreground return, preserving any in-progress stream
