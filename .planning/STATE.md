@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v3.0 Comprehensive Audit Remediation — COMPLETE
+**Current focus:** v2.0 Service Layer Optimization (Phase 12)
 
 ## Current Position
 
-Phase: 24 COMPLETE (MILESTONE DONE)
+Phase: 12-service-layer-optimization COMPLETE
 Plan: 1 of 1 executed
-Status: Phase 24 DONE — All 3 builds pass (iOS, macOS, Backend). 6 Axiom audits re-run with 0 CRITICAL findings from original 165 issues. Resolution document created (scratch/audit-findings-resolved.md).
-Last activity: 2026-02-23 — Phase 24 validation complete
+Status: Phase 12 Plan 01 DONE — In-flight request coalescing, 10MB NSCache totalCostLimit, iOS memory pressure observer. All 3 builds pass.
+Last activity: 2026-02-23 — Phase 12 Plan 01 executed
 
-Progress: [████████████] 100% (v3.0 — 24 plans executed across Phases 18-24; ALL 165 audit findings resolved)
+Progress: [████████████] 100% (v2.0 Phase 12 — 1/1 plans executed)
 
 ## Previous Milestone (v1.0 Cross-Platform Audit)
 
@@ -51,6 +51,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 20 P02 | 7min | 2 tasks | 7 files |
 | Phase 21 P01 | 4min | 3 tasks | 9 files |
 | Phase 21 P02 | 6min | 6 tasks | 22 files |
+| Phase 12 P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 22-01]: isVisible+onDisappear for PulsingGlow/PulsingModifier animation lifecycle; SSE background disconnect via NotificationCenter didEnterBackgroundNotification; ENRG-06 request batching documentation
 - [Phase 22-02]: BUILD-01/02 already correct (dwarf, ONLY_ACTIVE_ARCH); PremiumView 4 hardcoded sizes→theme.font*; LaunchScreenView size:11→theme.fontCaption; LAYOUT-01 size-class documentation
 - [Phase 22-03]: NET-01 TOFU documentation at .acceptAnything(); 6 migration reverts→no-ops (DB-02); PRAGMA foreign_key_check in DEBUG (DB-03); ENRG-07 verified resolved in Phase 19
+- [Phase 12-01]: Task<Any, Error> for in-flight dictionary (heterogeneous generics); MemoryLayout.stride for NSCache cost estimation; memory pressure observer in .task modifier; 100MB memory target deferred to profiling phase
 
 ### Phase 18 Entry Checklist
 
@@ -118,8 +120,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: v3.0 MILESTONE COMPLETE — Phase 24 validated all 165 findings resolved
+Stopped at: Completed 12-01-PLAN.md
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (original), scratch/audit-findings-resolved.md (resolution trace)
 Phase 23 commit: eca6ca1
 Phase 24 commit: b733ec1
+Phase 12-01 commits: 56d80b2, 06d9715

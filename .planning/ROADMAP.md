@@ -55,7 +55,7 @@
 **Milestone Goal:** Optimize all five performance dimensions (launch, memory, network, rendering, battery) to production-quality baselines with regression test infrastructure. Every optimization must preserve all 15 v1.0 audit REQs.
 
 - [x] **Phase 11: Launch & Baseline** - Remove artificial delay, defer non-critical init, establish Instruments baselines
-- [ ] **Phase 12: Service Layer Optimization** - Request deduplication, cache cost limits, memory pressure handling
+- [x] **Phase 12: Service Layer Optimization** - Request deduplication, cache cost limits, memory pressure handling (completed 2026-02-23)
 - [ ] **Phase 13: ViewModel & Model Optimization** - Parallel data loading, SSE buffer flush, chat message windowing
 - [ ] **Phase 14: SSE & Background Lifecycle** - Low Power Mode polling, background suspend/resume for SSE and WebSocket
 - [ ] **Phase 15: View Layer Rendering** - 60fps session scrolling, chat virtualization, off-thread syntax highlighting, animation gating
@@ -333,7 +333,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
 | 11. Launch & Baseline | v2.0 | 2/2 | Complete | 2026-02-22 |
-| 12. Service Layer | v2.0 | 0/? | Not started | - |
+| 12. Service Layer | 1/1 | Complete   | 2026-02-23 | - |
 | 13. ViewModel & Model | v2.0 | 0/? | Not started | - |
 | 14. SSE & Background | v2.0 | 0/? | Not started | - |
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |

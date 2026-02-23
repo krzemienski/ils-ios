@@ -176,9 +176,9 @@
 
 ## Networking (7 issues: 0 CRITICAL, 1 HIGH, 4 MEDIUM, 2 LOW)
 
-- [ ] **NET-01** [HIGH]: Replace SSH `.acceptAnything()` host key validator — `Services/CitadelSSHService.swift:54`
+- [x] **NET-01** [HIGH]: Replace SSH `.acceptAnything()` host key validator — `Services/CitadelSSHService.swift:54`
 - [ ] **NET-02** [MEDIUM]: Add reconnection timeout to MetricsWebSocketClient
-- [ ] **NET-03** [MEDIUM]: Add network-state gate to PollingManager
+- [x] **NET-03** [MEDIUM]: Add network-state gate to PollingManager
 - [ ] **NET-04** [MEDIUM]: Implement request retry with exponential backoff
 - [ ] **NET-05** [MEDIUM]: Add certificate pinning
 - [ ] **NET-06** [LOW]: Minor networking improvement 1
@@ -383,9 +383,9 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | DB-05 | Phase 23 | Pending |
 | DB-06 | Phase 23 | Pending |
 | DB-07 | Phase 23 | Pending |
-| NET-01 | Phase 22 | Pending |
+| NET-01 | Phase 22 | Complete |
 | NET-02 | Phase 23 | Pending |
-| NET-03 | Phase 23 | Pending |
+| NET-03 | Phase 23 | Complete |
 | NET-04 | Phase 23 | Pending |
 | NET-05 | Phase 23 | Pending |
 | NET-06 | Phase 23 | Pending |
