@@ -173,10 +173,12 @@ struct CodeBlockView: View {
             } else {
                 cachedDisplayedLines = lines
             }
-            highlightedCode = SyntaxHighlighter.highlight(
-                code: cachedDisplayedLines.joined(separator: "\n"),
-                language: language
-            )
+            // Move highlighting off main thread
+            let codeToHighlight = cachedDisplayedLines.joined(separator: "\n")
+            let lang = language
+            highlightedCode = await Task.detached(priority: .userInitiated) {
+                SyntaxHighlighter.highlight(code: codeToHighlight, language: lang)
+            }.value
         }
         .onChange(of: isExpanded) { _, expanded in
             if cachedShouldBeCollapsible && !expanded {
@@ -184,10 +186,13 @@ struct CodeBlockView: View {
             } else {
                 cachedDisplayedLines = cachedCodeLines
             }
-            highlightedCode = SyntaxHighlighter.highlight(
-                code: cachedDisplayedLines.joined(separator: "\n"),
-                language: language
-            )
+            let codeToHighlight = cachedDisplayedLines.joined(separator: "\n")
+            let lang = language
+            Task {
+                highlightedCode = await Task.detached(priority: .userInitiated) {
+                    SyntaxHighlighter.highlight(code: codeToHighlight, language: lang)
+                }.value
+            }
         }
     }
 
