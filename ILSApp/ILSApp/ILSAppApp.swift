@@ -2,6 +2,9 @@ import SwiftUI
 import Observation
 import ILSShared
 import TipKit
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @main
 struct ILSAppApp: App {
@@ -42,6 +45,21 @@ struct ILSAppApp: App {
                             ])
                             await CacheService.shared.initialize()
                         }
+                        #if os(iOS)
+                        // MEM-01: Proactive cache eviction under memory pressure.
+                        // NSCache handles its own in-memory eviction, but CacheService
+                        // (GRDB-backed persistent cache) needs explicit cleanup.
+                        NotificationCenter.default.addObserver(
+                            forName: UIApplication.didReceiveMemoryWarningNotification,
+                            object: nil,
+                            queue: .main
+                        ) { _ in
+                            Task {
+                                await CacheService.shared.cleanupExpired()
+                                AppLogger.shared.warning("Memory pressure: caches evicted", category: "memory")
+                            }
+                        }
+                        #endif
                     }
 
                 if showLaunchScreen {
