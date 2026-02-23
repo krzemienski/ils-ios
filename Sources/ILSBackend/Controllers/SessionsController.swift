@@ -461,7 +461,7 @@ struct SessionsController: RouteCollection {
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 200, 1), 1000)
         let offset = max(req.query[Int.self, at: "offset"] ?? 0, 0)
 
-        let messages = try fileSystem.readTranscriptMessages(
+        let result = try fileSystem.readTranscriptMessages(
             encodedProjectPath: encodedProjectPath,
             sessionId: sessionId,
             limit: limit,
@@ -470,7 +470,7 @@ struct SessionsController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: ListResponse(items: messages)
+            data: ListResponse(items: result.messages, total: result.total)
         )
     }
 

@@ -283,8 +283,8 @@ struct FileSystemService {
     ///   - sessionId: Session UUID
     ///   - limit: Maximum number of messages to return
     ///   - offset: Number of messages to skip
-    /// - Returns: Array of Message objects
-    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
+    /// - Returns: TranscriptResult containing paginated messages and total count
+    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> SessionFileService.TranscriptResult {
         try sessions.readTranscriptMessages(encodedProjectPath: encodedProjectPath, sessionId: sessionId, limit: limit, offset: offset)
     }
 }
