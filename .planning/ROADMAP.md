@@ -183,8 +183,8 @@ Plans:
 - [x] **Phase 20: Architecture + Performance HIGH** - 17 HIGH issues: logic-in-view extractions, Set conversions, async file I/O, process classification, backend sorts (completed 2026-02-22)
 - [x] **Phase 21: Navigation + Codable HIGH** - 10 HIGH issues: dead path cleanup, macOS navigation parity, try?-to-do/catch conversions, Codable best practices (completed 2026-02-22)
 - [x] **Phase 22: Energy + Build + Accessibility + Networking HIGH** - 13 HIGH issues: animation lifecycle, SSE background suspend, build flags, Dynamic Type, SSH validation, migration safety, layout (completed 2026-02-22)
-- [ ] **Phase 23: All MEDIUM + LOW Issues** - 103 remaining issues grouped by file proximity for efficient editing
-- [ ] **Phase 24: Validation + Documentation** - Build verification, functional validation, audit re-run
+- [x] **Phase 23: All MEDIUM + LOW Issues** - 103 remaining issues grouped by file proximity for efficient editing (completed 2026-02-22)
+- [x] **Phase 24: Validation + Documentation** - Build verification, functional validation, audit re-run (completed 2026-02-23)
 
 ---
 
@@ -202,9 +202,9 @@ Plans:
 
 Plans:
 - [x] 18-01-PLAN.md -- Concurrency safety: AppLogger OSAllocatedUnfairLock, SyntaxHighlighter @MainActor, CodeBlockView highlight caching
-- [ ] 18-02-PLAN.md -- Energy efficiency: Live Activity timer 1.0s, MCP lightweight health check, Teams exponential backoff
-- [ ] 18-03-PLAN.md -- Architecture + DB: MacChatView do/catch, MacSettingsView private @State, ThemePickerView Set, SQLite FK pool config
-- [ ] 18-04-PLAN.md -- NewSessionView ViewModel extraction: three async creation flows to NewSessionViewModel
+- [x] 18-02-PLAN.md -- Energy efficiency: Live Activity timer 1.0s, MCP lightweight health check, Teams exponential backoff
+- [x] 18-03-PLAN.md -- Architecture + DB: MacChatView do/catch, MacSettingsView private @State, ThemePickerView Set, SQLite FK pool config
+- [x] 18-04-PLAN.md -- NewSessionView ViewModel extraction: three async creation flows to NewSessionViewModel
 
 ---
 
@@ -297,13 +297,13 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 23-01-PLAN.md -- Concurrency + Energy remaining MEDIUM (6 issues: readQueue, Task.detached, WebSocket visibility, health check docs, adaptive polling docs)
-- [ ] 23-02-PLAN.md -- SwiftUI Architecture MEDIUM (5 issues: ProjectsViewModel removal, toast dedup modifier, private helpers, SessionsViewModel docs)
-- [ ] 23-03-PLAN.md -- SwiftUI Performance MEDIUM (6 issues: macOS duplicate VMs, ForEach identity, skills cache, logColor, ThemeEditor docs)
-- [ ] 23-04-PLAN.md -- Codable + Navigation MEDIUM (8 issues: date handling, decoder errors, value validation, deep link validation, nav architecture docs)
-- [ ] 23-05-PLAN.md -- Accessibility + Modernization + Build MEDIUM (8 issues: a11y labels, VoiceOver grouping, String(describing:), protocol cleanup, type-check flags)
-- [ ] 23-06-PLAN.md -- Database + Networking + Security + Layout MEDIUM (9 issues: migration versioning, reconnect limit, network gate, localhost constants, Keychain UX, spacing, macOS frames)
-- [ ] 23-07-PLAN.md -- LOW sweep + Swift Perf remaining + Modernization (search cache, sidebar lookups, type annotations, deprecation audit, doc comments)
+- [x] 23-01-PLAN.md -- Concurrency + Energy remaining MEDIUM (6 issues: readQueue, Task.detached, WebSocket visibility, health check docs, adaptive polling docs)
+- [x] 23-02-PLAN.md -- SwiftUI Architecture MEDIUM (5 issues: ProjectsViewModel removal, toast dedup modifier, private helpers, SessionsViewModel docs)
+- [x] 23-03-PLAN.md -- SwiftUI Performance MEDIUM (6 issues: macOS duplicate VMs, ForEach identity, skills cache, logColor, ThemeEditor docs)
+- [x] 23-04-PLAN.md -- Codable + Navigation MEDIUM (8 issues: date handling, decoder errors, value validation, deep link validation, nav architecture docs)
+- [x] 23-05-PLAN.md -- Accessibility + Modernization + Build MEDIUM (8 issues: a11y labels, VoiceOver grouping, String(describing:), protocol cleanup, type-check flags)
+- [x] 23-06-PLAN.md -- Database + Networking + Security + Layout MEDIUM (9 issues: migration versioning, reconnect limit, network gate, localhost constants, Keychain UX, spacing, macOS frames)
+- [x] 23-07-PLAN.md -- LOW sweep + Swift Perf remaining + Modernization (search cache, sidebar lookups, type annotations, deprecation audit, doc comments)
 
 ---
 
@@ -319,7 +319,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 24-01: TBD
+- [x] 24-01-PLAN.md -- Build verification (3 targets), Axiom audit re-run (6 audits), resolution document, state updates
 
 ---
 
@@ -344,5 +344,5 @@ Plans:
 | 20. Architecture + Performance HIGH | 4/4 | Complete   | 2026-02-22 | - |
 | 21. Navigation + Codable HIGH | v3.0 | 2/2 | Complete | 2026-02-22 |
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 3/3 | Complete | 2026-02-22 |
-| 23. All MEDIUM + LOW Issues | v3.0 | 0/? | Not started | - |
-| 24. Validation + Documentation | v3.0 | 0/? | Not started | - |
+| 23. All MEDIUM + LOW Issues | v3.0 | 7/7 | Complete | 2026-02-22 |
+| 24. Validation + Documentation | v3.0 | 1/1 | Complete | 2026-02-23 |
