@@ -135,10 +135,12 @@ Plans:
   2. Chat view with 200+ messages scrolls smoothly and scroll-to-bottom works without frame drops
   3. Code blocks with 100+ lines in chat render syntax highlighting without blocking the main thread (highlighting computed off-main-thread with cached results)
   4. CyberpunkEffects, ShimmerModifier, and StreamingIndicatorView animations are paused when Low Power Mode is active or the app is in background
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 15-01: TBD
+- [ ] 15-01-PLAN.md -- Off-main-thread syntax highlighting: SyntaxHighlighter OSAllocatedUnfairLock, CodeBlockView Task.detached
+- [ ] 15-02-PLAN.md -- Session list and chat optimization: SidebarView List migration, ChatMessageList stable identity + message windowing
+- [ ] 15-03-PLAN.md -- Animation Low Power Mode gating: ShimmerModifier, StreamingIndicatorView, PulsingGlow, PulsingModifier
 
 ---
 
