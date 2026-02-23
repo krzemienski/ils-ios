@@ -1,14 +1,21 @@
 import SwiftUI
+import Foundation
 
 /// Single pulsing orange dot with "Claude is thinking..." text.
 /// Left-aligned, minimal footprint on pure black background.
+/// Three-tier animation hierarchy: reduceMotion > Low Power Mode > scenePhase.
 struct StreamingIndicatorView: View {
     var statusText: String?
 
     @State private var isPulsing = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+
+    private var shouldAnimate: Bool {
+        !reduceMotion && !isLowPowerMode && scenePhase == .active
+    }
 
     var body: some View {
         HStack(spacing: 8) {
@@ -29,25 +36,35 @@ struct StreamingIndicatorView: View {
         }
         .padding(.leading, 10)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard shouldAnimate else { return }
             withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
                 isPulsing = true
             }
         }
+        .onDisappear {
+            isPulsing = false
+        }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                guard !reduceMotion else { return }
+            if shouldAnimate {
                 withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
                     isPulsing = true
                 }
             } else {
-                if reduceMotion {
+                if reduceMotion || isLowPowerMode {
                     isPulsing = false
                 } else {
                     withAnimation(.default) {
                         isPulsing = false
                     }
                 }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(
+            for: Notification.Name.NSProcessInfoPowerStateDidChange
+        )) { _ in
+            isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+            if isLowPowerMode {
+                isPulsing = false
             }
         }
         .accessibilityLabel("AI is responding")
