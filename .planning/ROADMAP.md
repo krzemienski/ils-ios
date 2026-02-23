@@ -88,10 +88,10 @@ Plans:
   1. Navigating rapidly between tabs does not fire duplicate GET requests for the same endpoint (visible in network log or Instruments)
   2. NSCache totalCostLimit is set and the app evicts cached data when receiving a memory warning
   3. App memory stays under 100MB during typical browsing of sessions, skills, and settings screens
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 12-01: TBD
+- [ ] 12-01-PLAN.md -- In-flight request coalescing, NSCache totalCostLimit, memory pressure observer (NET-01/NET-03/MEM-01 already resolved in v3.0)
 
 ---
 
