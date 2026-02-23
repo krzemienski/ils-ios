@@ -181,7 +181,7 @@ Plans:
 - [x] **Phase 18: CRITICAL Fixes** - 13 CRITICAL issues: data races, energy waste, architecture violations, performance bottlenecks, database safety (completed 2026-02-22)
 - [x] **Phase 19: Concurrency + Memory HIGH** - 9 HIGH issues: nonisolated(unsafe) patterns, GCD-to-Task migration, Timer-to-Task, window cleanup (completed 2026-02-22)
 - [x] **Phase 20: Architecture + Performance HIGH** - 17 HIGH issues: logic-in-view extractions, Set conversions, async file I/O, process classification, backend sorts (completed 2026-02-22)
-- [ ] **Phase 21: Navigation + Codable HIGH** - 10 HIGH issues: dead path cleanup, macOS navigation parity, try?-to-do/catch conversions, Codable best practices
+- [x] **Phase 21: Navigation + Codable HIGH** - 10 HIGH issues: dead path cleanup, macOS navigation parity, try?-to-do/catch conversions, Codable best practices (completed 2026-02-22)
 - [ ] **Phase 22: Energy + Build + Accessibility + Networking HIGH** - 13 HIGH issues: animation lifecycle, SSE background suspend, build flags, Dynamic Type, SSH validation, migration safety, layout
 - [ ] **Phase 23: All MEDIUM + LOW Issues** - 103 remaining issues grouped by file proximity for efficient editing
 - [ ] **Phase 24: Validation + Documentation** - Build verification, functional validation, audit re-run
@@ -260,7 +260,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 21-01: TBD
+- [x] 21-01-PLAN.md -- Navigation: dead NavigationPath, nested NavigationStack in sheets, macOS detail NavigationStack, hooks route
+- [x] 21-02-PLAN.md -- Codable: APIClient try? documentation, .iso8601 dateDecodingStrategy, backend do/catch logging, 20 enum validating init(from:)
 
 ---
 
@@ -333,7 +334,7 @@ Plans:
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
 | 20. Architecture + Performance HIGH | 4/4 | Complete   | 2026-02-22 | - |
-| 21. Navigation + Codable HIGH | v3.0 | 0/? | Not started | - |
+| 21. Navigation + Codable HIGH | v3.0 | 2/2 | Complete | 2026-02-22 |
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 0/? | Not started | - |
 | 23. All MEDIUM + LOW Issues | v3.0 | 0/? | Not started | - |
 | 24. Validation + Documentation | v3.0 | 0/? | Not started | - |
