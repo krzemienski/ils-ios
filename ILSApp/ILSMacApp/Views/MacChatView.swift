@@ -251,7 +251,7 @@ struct MacChatView: View {
 
     private var messageList: some View {
         ChatMessageList(
-            messages: viewModel.messages,
+            messages: viewModel.displayMessages,
             isStreaming: viewModel.isStreaming,
             isLoadingHistory: viewModel.isLoadingHistory,
             statusText: viewModel.statusText,

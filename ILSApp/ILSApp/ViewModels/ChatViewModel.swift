@@ -95,6 +95,33 @@ class ChatViewModel {
     var canLoadOlderMessages: Bool { currentOffset > 0 }
     var isLoadingOlderMessages = false
 
+    // MARK: - Display Windowing
+
+    /// Windowed messages for display -- shows the most recent messages up to displayWindowSize.
+    /// For small conversations, returns all messages.
+    var displayMessages: [ChatMessage] {
+        let windowSize = messageWindowSize
+        if messages.count <= windowSize {
+            return messages
+        }
+        return Array(messages.suffix(windowSize))
+    }
+
+    /// Whether older messages exist beyond the current display window.
+    var hasOlderDisplayMessages: Bool {
+        messages.count > messageWindowSize
+    }
+
+    /// Get the previous message before the given message in the full messages array.
+    /// Used for same-sender grouping in ChatMessageList.
+    func previousMessage(before message: ChatMessage) -> ChatMessage? {
+        guard let index = messages.firstIndex(where: { $0.id == message.id }),
+              index > 0 else {
+            return nil
+        }
+        return messages[index - 1]
+    }
+
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
     @ObservationIgnored private var batchTask: Task<Void, Never>?

@@ -141,8 +141,12 @@ struct ChatMessageList: View {
                 .id("load-more")
             }
 
-            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
+            ForEach(messages) { message in
+                let prevMessage: ChatMessage? = {
+                    guard let idx = messages.firstIndex(where: { $0.id == message.id }),
+                          idx > 0 else { return nil }
+                    return messages[idx - 1]
+                }()
                 let isSameSender = prevMessage?.isUser == message.isUser
 
                 if message.isUser {
