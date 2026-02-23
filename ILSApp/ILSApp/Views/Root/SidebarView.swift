@@ -202,21 +202,30 @@ struct SidebarView: View {
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 
-            // Session list
-            ScrollView {
-                LazyVStack(spacing: 2) {
-                    if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
-                        loadingView
-                    } else if sessionsViewModel.filteredSessions.isEmpty {
-                        emptyView
-                    } else {
-                        ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
-                            projectGroup(name: project, sessions: sessions)
-                        }
+            // Session list — List provides view recycling (UICollectionView-backed)
+            List {
+                if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
+                    loadingView
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
+                } else if sessionsViewModel.filteredSessions.isEmpty {
+                    emptyView
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
+                } else {
+                    ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
+                        projectGroup(name: project, sessions: sessions)
                     }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
                 }
-                .padding(.horizontal, theme.spacingSM)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(theme.bgSidebar)
             .refreshable {
                 await sessionsViewModel.loadSessions(refresh: true)
             }
