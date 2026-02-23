@@ -48,7 +48,7 @@ struct PremiumView: View {
     private var heroSection: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "crown.fill")
-                .font(.system(size: 48))
+                .font(.system(size: theme.fontTitle1 * 1.5))
                 .foregroundStyle(theme.accentGradient)
                 .padding(.top, theme.spacingLG)
 
@@ -128,7 +128,7 @@ struct PremiumView: View {
 
     private func checkmark(active: Bool) -> some View {
         Image(systemName: active ? "checkmark.circle.fill" : "xmark.circle")
-            .font(.system(size: 16))
+            .font(.system(size: theme.fontBody))
             .foregroundStyle(active ? theme.success : theme.textTertiary.opacity(0.5))
     }
 
@@ -175,7 +175,7 @@ struct PremiumView: View {
                 Spacer()
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.system(size: theme.fontTitle2))
                     .foregroundStyle(isSelected ? theme.accent : theme.textTertiary)
             }
             .padding(theme.spacingMD)
@@ -194,7 +194,7 @@ struct PremiumView: View {
     private var trialCallout: some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: "gift.fill")
-                .font(.system(size: 20))
+                .font(.system(size: theme.fontTitle3))
                 .foregroundStyle(theme.accent)
 
             VStack(alignment: .leading, spacing: 2) {

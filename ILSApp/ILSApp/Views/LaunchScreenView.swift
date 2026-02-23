@@ -64,7 +64,7 @@ struct LaunchScreenView: View {
                     // Terminal prompt symbol with neon effect
                     VStack(spacing: 4) {
                         Text(">_")
-                            .font(.system(size: 60, weight: .bold, design: .monospaced))
+                            .font(.system(size: 60, weight: .bold, design: .monospaced)) // A11Y-02: Brand logo — fixed size by design
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [
@@ -101,13 +101,13 @@ struct LaunchScreenView: View {
                 // App name with cyberpunk styling
                 VStack(spacing: 8) {
                     Text("ILS")
-                        .font(.system(size: 32, weight: .bold, design: .monospaced))
+                        .font(.system(size: 32, weight: .bold, design: .monospaced)) // A11Y-02: Brand title — fixed size by design
                         .foregroundColor(theme.textPrimary)
                         .kerning(12)
                         .shadow(color: theme.accent.opacity(0.5), radius: 10)
 
                     Text("INTELLIGENT LOCAL SERVER")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
                         .foregroundColor(theme.textSecondary)
                         .kerning(3)
                 }

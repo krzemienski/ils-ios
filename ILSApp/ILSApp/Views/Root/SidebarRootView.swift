@@ -73,6 +73,10 @@ struct SidebarRootView: View {
     private var sidebarWidth: CGFloat { 280 }
 
     var body: some View {
+        // LAYOUT-01: Size-class branch is intentional — iPad uses NavigationSplitView, iPhone uses
+        // custom sheet-based sidebar. These are structurally incompatible views. Identity loss on
+        // rotation is accepted: iPhone rarely rotates in this app, and iPad stays in regular width.
+        // @SceneStorage persists activeScreen across rebuilds for state restoration.
         Group {
             if isRegularWidth {
                 iPadLayout
