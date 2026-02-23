@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v2.0 Performance Optimization — Phase 13 COMPLETE, Wave 1 continues (14, 15)
+**Current focus:** v2.0 Performance Optimization — Phase 14 COMPLETE, Wave 1 continues (15)
 
 ## Current Position
 
-Phase: 13-viewmodel-model-optimization COMPLETE
-Plan: 2 of 2 (All plans COMPLETE)
-Status: Phase 13 fully complete. Ready for Phase 14 (SSE/Background) and Phase 15 (View Rendering).
-Last activity: 2026-02-23 — Phase 13 Plan 02 executed
+Phase: 14-sse-background-lifecycle COMPLETE
+Plan: 1 of 1 (All plans COMPLETE)
+Status: Phase 14 fully complete. Ready for Phase 15 (View Rendering).
+Last activity: 2026-02-23 — Phase 14 Plan 01 executed
 
-Progress: [██--------] 22% (v2.0 Phases 13-17 — 2/9 plans executed)
+Progress: [███-------] 33% (v2.0 Phases 13-17 — 3/9 plans executed)
 
 ### Execution Order
 - Wave 1 (parallel): Phase 13 (ViewModel/Model), Phase 14 (SSE/Background), Phase 15 (View Rendering)
@@ -59,6 +59,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 12 P01 | 3min | 2 tasks | 2 files |
 | Phase 13 P01 | 5min | 2 tasks | 1 files |
 | Phase 13 P02 | 16min | 2 tasks | 7 files |
+| Phase 14 P01 | 20min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 12-01]: Task<Any, Error> for in-flight dictionary (heterogeneous generics); MemoryLayout.stride for NSCache cost estimation; memory pressure observer in .task modifier; 100MB memory target deferred to profiling phase
 - [Phase 13-01]: Belt-and-suspenders deinit for SystemMetricsViewModel processRefreshTask; NET-02 verified (maxReconnectAttempts=10); MEM-02 verified (windowWillClose cancels debounceTask)
 - [Phase 13-02]: Two-pass initial load for chat windowing (total count then last 50); TranscriptResult struct for total+items from file endpoints; LazyVStack identity-based scroll preservation on prepend; macOS MacChatView updated alongside iOS ChatView
+- [Phase 14-01]: LowPowerModeMonitor @Observable singleton modeled on NetworkMonitor; LPM interval check once at loop start (not per-iteration); SSE watchdog timeout checked once at creation; PollingManager restarts active loops on LPM toggle; no .inactive disconnect in SystemMonitorView
 
 ### Phase 18 Entry Checklist
 
@@ -129,7 +131,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 13-02-PLAN.md (Phase 13 fully complete)
+Stopped at: Completed 14-01-PLAN.md (Phase 14 fully complete)
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (original), scratch/audit-findings-resolved.md (resolution trace)
 Phase 23 commit: eca6ca1
@@ -137,3 +139,4 @@ Phase 24 commit: b733ec1
 Phase 12-01 commits: 56d80b2, 06d9715
 Phase 13-01 commits: 03909b4
 Phase 13-02 commits: 06dacdf, b011a4e
+Phase 14-01 commits: 1f848c9, 77b0207
