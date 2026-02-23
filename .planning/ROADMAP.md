@@ -149,10 +149,10 @@ Plans:
   1. ILSMacApp scheme builds successfully on macOS 14+ with zero errors
   2. All 15 v1.0 audit REQs pass re-validation on iOS (sidebar navigation, settings inheritance, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP servers, backend API, zero visual regressions, session consistency)
   3. Any iOS-only APIs used in optimization phases have macOS-appropriate guards or alternatives
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 16-01: TBD
+- [ ] 16-01-PLAN.md -- Build all 3 targets (iOS, macOS, Backend), fix macOS compilation errors, re-validate 15 v1.0 REQs, spot-check macOS functionality
 
 ---
 
