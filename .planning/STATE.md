@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v3.0 Comprehensive Audit Remediation — Phase 21 VERIFIED, entering Phase 22 planning
+**Current focus:** v3.0 Comprehensive Audit Remediation — Phase 22 VERIFIED, entering Phase 23 planning
 
 ## Current Position
 
-Phase: 22 (planning)
+Phase: 23 (planning)
 Plan: 0 of ? planned
-Status: Phase 21 VERIFIED (10/10 PASS) — entering Phase 22 planning
-Last activity: 2026-02-22 — Phase 21 verified, all builds green
+Status: Phase 22 VERIFIED (13/13 PASS) — entering Phase 23 planning
+Last activity: 2026-02-22 — Phase 22 verified, all builds green
 
-Progress: [█████████░] ~45% (v3.0 — 13 plans executed, 50/165 issues resolved across Phases 18-21)
+Progress: [█████████░] ~50% (v3.0 — 16 plans executed, 63/165 issues resolved across Phases 18-22)
 
 ## Previous Milestone (v1.0 Cross-Platform Audit)
 
@@ -81,6 +81,9 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 20]: Fire-and-forget ViewModel methods for synchronous Binding setters (ARCH-09)
 - [Phase 21-01]: Removed dead NavigationPath from SidebarRootView; removed NavigationStack from 7 sheet-presented views (SessionInfoView, NewSessionView, PremiumView, SpawnTeammateView, CreateTeamView, AdvancedOptionsSheet, CommandPaletteView); wrapped MacContentView detail in NavigationStack; added hooks route to macOS sidebar
 - [Phase 21-02]: CODBL-01 documented intentional try? in APIClient; .iso8601 dateDecodingStrategy on 4 decoders; do/catch logging in ProjectsController+FleetController; validating init(from:) on 20 String-backed enums across 12 ILSShared files
+- [Phase 22-01]: isVisible+onDisappear for PulsingGlow/PulsingModifier animation lifecycle; SSE background disconnect via NotificationCenter didEnterBackgroundNotification; ENRG-06 request batching documentation
+- [Phase 22-02]: BUILD-01/02 already correct (dwarf, ONLY_ACTIVE_ARCH); PremiumView 4 hardcoded sizes→theme.font*; LaunchScreenView size:11→theme.fontCaption; LAYOUT-01 size-class documentation
+- [Phase 22-03]: NET-01 TOFU documentation at .acceptAnything(); 6 migration reverts→no-ops (DB-02); PRAGMA foreign_key_check in DEBUG (DB-03); ENRG-07 verified resolved in Phase 19
 
 ### Phase 18 Entry Checklist
 
@@ -115,6 +118,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 21 VERIFIED (10/10 PASS), entering Phase 22 planning
+Stopped at: Phase 22 VERIFIED (13/13 PASS), entering Phase 23 planning
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (165 issues, full detail)
