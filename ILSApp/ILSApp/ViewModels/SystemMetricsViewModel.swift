@@ -49,6 +49,12 @@ final class SystemMetricsViewModel {
         decoder.dateDecodingStrategy = .iso8601
     }
 
+    deinit {
+        // Safety net: Task.cancel() is safe from nonisolated deinit.
+        // Primary cleanup remains disconnect() called from SystemMonitorView.onDisappear.
+        processRefreshTask?.cancel()
+    }
+
     // MARK: - Computed Properties
 
     var cpuPercentage: Double {
