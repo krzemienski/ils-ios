@@ -177,7 +177,7 @@
 ## Networking (7 issues: 0 CRITICAL, 1 HIGH, 4 MEDIUM, 2 LOW)
 
 - [x] **NET-01** [HIGH]: Replace SSH `.acceptAnything()` host key validator — `Services/CitadelSSHService.swift:54`
-- [ ] **NET-02** [MEDIUM]: Add reconnection timeout to MetricsWebSocketClient
+- [x] **NET-02** [MEDIUM]: Add reconnection timeout to MetricsWebSocketClient
 - [x] **NET-03** [MEDIUM]: Add network-state gate to PollingManager
 - [ ] **NET-04** [MEDIUM]: Implement request retry with exponential backoff
 - [ ] **NET-05** [MEDIUM]: Add certificate pinning
@@ -196,7 +196,7 @@
 
 - [x] **MEM-01** [HIGH]: Migrate HostProfilesViewModel Timer to Task — `ViewModels/HostProfilesViewModel.swift:72`
 - [x] **MEM-02** [MEDIUM]: Clean up WindowFrameDelegate when OS closes window
-- [ ] **MEM-03** [MEDIUM]: Add SystemMetricsViewModel deinit cancellation
+- [x] **MEM-03** [MEDIUM]: Add SystemMetricsViewModel deinit cancellation
 - [ ] **MEM-04** [LOW]: Minor memory lifecycle improvement
 
 ## SwiftUI Layout (4 issues: 0 CRITICAL, 1 HIGH, 3 MEDIUM, 0 LOW)
@@ -384,7 +384,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | DB-06 | Phase 23 | Pending |
 | DB-07 | Phase 23 | Pending |
 | NET-01 | Phase 22 | Complete |
-| NET-02 | Phase 23 | Pending |
+| NET-02 | Phase 23 | Complete |
 | NET-03 | Phase 23 | Complete |
 | NET-04 | Phase 23 | Pending |
 | NET-05 | Phase 23 | Pending |
@@ -397,7 +397,7 @@ These issues span multiple audits and a single fix addresses multiple REQs:
 | SEC-05 | Phase 23 | Pending |
 | MEM-01 | Phase 19 | Complete |
 | MEM-02 | Phase 19 | Complete |
-| MEM-03 | Phase 23 | Pending |
+| MEM-03 | Phase 23 | Complete |
 | MEM-04 | Phase 23 | Pending |
 | LAYOUT-01 | Phase 22 | Pending |
 | LAYOUT-02 | Phase 23 | Pending |

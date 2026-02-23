@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v2.0 Performance Optimization — Phases 13-17 PLANNED, ready for execution
+**Current focus:** v2.0 Performance Optimization — Phase 13 in execution
 
 ## Current Position
 
-Phase: 13-17 ALL PLANNED
-Plan: 9 plans across 5 phases (13: 2 plans, 14: 1 plan, 15: 3 plans, 16: 1 plan, 17: 2 plans)
-Status: All 9 plans validated (frontmatter + structure). Ready for execution starting Phase 13.
-Last activity: 2026-02-23 — Phases 13-17 planned in parallel
+Phase: 13-viewmodel-model-optimization
+Plan: 2 of 2 (Plan 01 COMPLETE, Plan 02 next)
+Status: Executing Phase 13. Plan 01 complete (NET-02, MEM-02, MEM-03 resolved).
+Last activity: 2026-02-23 — Phase 13 Plan 01 executed
 
-Progress: [████████████] 100% (v2.0 Phases 13-17 — 9/9 plans created)
+Progress: [█---------] 11% (v2.0 Phases 13-17 — 1/9 plans executed)
 
 ### Execution Order
 - Wave 1 (parallel): Phase 13 (ViewModel/Model), Phase 14 (SSE/Background), Phase 15 (View Rendering)
@@ -57,6 +57,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 21 P01 | 4min | 3 tasks | 9 files |
 | Phase 21 P02 | 6min | 6 tasks | 22 files |
 | Phase 12 P01 | 3min | 2 tasks | 2 files |
+| Phase 13 P01 | 5min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 22-02]: BUILD-01/02 already correct (dwarf, ONLY_ACTIVE_ARCH); PremiumView 4 hardcoded sizes→theme.font*; LaunchScreenView size:11→theme.fontCaption; LAYOUT-01 size-class documentation
 - [Phase 22-03]: NET-01 TOFU documentation at .acceptAnything(); 6 migration reverts→no-ops (DB-02); PRAGMA foreign_key_check in DEBUG (DB-03); ENRG-07 verified resolved in Phase 19
 - [Phase 12-01]: Task<Any, Error> for in-flight dictionary (heterogeneous generics); MemoryLayout.stride for NSCache cost estimation; memory pressure observer in .task modifier; 100MB memory target deferred to profiling phase
+- [Phase 13-01]: Belt-and-suspenders deinit for SystemMetricsViewModel processRefreshTask; NET-02 verified (maxReconnectAttempts=10); MEM-02 verified (windowWillClose cancels debounceTask)
 
 ### Phase 18 Entry Checklist
 
@@ -125,9 +127,10 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 12-01-PLAN.md
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (original), scratch/audit-findings-resolved.md (resolution trace)
 Phase 23 commit: eca6ca1
 Phase 24 commit: b733ec1
 Phase 12-01 commits: 56d80b2, 06d9715
+Phase 13-01 commits: 03909b4
