@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import ILSShared
+#if os(iOS)
+import UIKit
+#endif
 
 /// Server-Sent Events client for streaming chat responses
 @MainActor
@@ -44,6 +47,21 @@ class SSEClient {
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = false // Disable SSE in Low Data Mode
         self.session = URLSession(configuration: config)
+
+        // ENRG-05: Cancel active SSE stream on background to save battery radio.
+        // NotificationCenter observer is registered on main queue to match @MainActor isolation.
+        #if os(iOS)
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.isStreaming else { return }
+                self.cancel()
+            }
+        }
+        #endif
     }
 
     /// Tear down session and cancel in-flight tasks.

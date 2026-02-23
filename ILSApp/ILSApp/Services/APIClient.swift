@@ -140,6 +140,10 @@ actor APIClient {
         let cacheKey = path as NSString
         let effectiveTTL = cacheTTL ?? ttl(for: path)
 
+        // ENRG-06: Request deduplication/batching — rapid navigation reuses in-flight cached
+        // responses via NSCache. Multiple concurrent GET requests to the same endpoint within
+        // the TTL window share a single decoded result without additional network calls.
+        // Reference data (skills, mcp, plugins, themes) TTL = 5 min; volatile data TTL = 15s.
         // Return the already-decoded value on cache hit — no JSON re-parsing
         if let entry = cache.object(forKey: cacheKey),
            entry.isValid(ttl: effectiveTTL),
