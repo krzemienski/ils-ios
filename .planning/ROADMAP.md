@@ -103,10 +103,11 @@ Plans:
   1. Dashboard stats and recent activity load simultaneously (observable as faster dashboard render vs sequential)
   2. After sending messages in a long chat session, memory does not grow unboundedly (SSE buffer flushed after ChatViewModel processes each batch)
   3. Opening a chat with 200+ messages shows the most recent ~50 messages immediately, with older messages loadable on scroll-up
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 13-01: TBD
+- [ ] 13-01-PLAN.md -- Verify NET-02/MEM-02 resolved, implement MEM-03 SystemMetricsViewModel deinit
+- [ ] 13-02-PLAN.md -- Chat message windowing: backend total count, ChatViewModel pagination, load-more UI
 
 ---
 
