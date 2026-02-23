@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v2.0 Performance Optimization — Phase 15 in progress, Wave 1 continues
+**Current focus:** v2.0 Performance Optimization — Phase 15 COMPLETE, Wave 1 fully done
 
 ## Current Position
 
-Phase: 15-view-layer-rendering
-Plan: 2 of 3 (Plan 02 COMPLETE)
-Status: Phase 15 Plan 02 complete. Plan 03 remaining.
-Last activity: 2026-02-23 — Phase 15 Plan 02 executed
+Phase: 15-view-layer-rendering COMPLETE
+Plan: 3 of 3 (All plans COMPLETE)
+Status: Phase 15 fully complete. Wave 1 done (13, 14, 15). Ready for Wave 2 (Phase 16).
+Last activity: 2026-02-23 — Phase 15 Plan 03 executed
 
-Progress: [█████-----] 56% (v2.0 Phases 13-17 — 5/9 plans executed)
+Progress: [██████----] 67% (v2.0 Phases 13-17 — 6/9 plans executed)
 
 ### Execution Order
 - Wave 1 (parallel): Phase 13 (ViewModel/Model), Phase 14 (SSE/Background), Phase 15 (View Rendering)
@@ -60,8 +60,9 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 13 P01 | 5min | 2 tasks | 1 files |
 | Phase 13 P02 | 16min | 2 tasks | 7 files |
 | Phase 14 P01 | 20min | 2 tasks | 6 files |
-| Phase 15 P02 | 9min | 2 tasks | 5 files |
 | Phase 15 P01 | 7min | 2 tasks | 2 files |
+| Phase 15 P02 | 9min | 2 tasks | 5 files |
+| Phase 15 P03 | 9min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 14-01]: LowPowerModeMonitor @Observable singleton modeled on NetworkMonitor; LPM interval check once at loop start (not per-iteration); SSE watchdog timeout checked once at creation; PollingManager restarts active loops on LPM toggle; no .inactive disconnect in SystemMonitorView
 - [Phase 15-01]: OSAllocatedUnfairLock over actor for SyntaxHighlighter cache (avoids await at synchronous call sites); Task.detached(priority: .userInitiated) for highlighting; lock protects only cache lookup, highlighting runs outside lock
 - [Phase 15-02]: List with .plain style replaces ScrollView+LazyVStack for constant-memory session rendering; ForEach(messages) with Identifiable replaces Array(messages.enumerated()) to eliminate per-body array copies; displayMessages reuses existing messageWindowSize (50) from Phase 13-02
+- [Phase 15-03]: shouldAnimate computed property pattern for three-tier animation gating (reduceMotion + LPM + scenePhase); onReceive NSProcessInfoPowerStateDidChange on all four animation views; onDisappear added to ShimmerModifier and StreamingIndicatorView
 
 ### Phase 18 Entry Checklist
 
@@ -135,7 +137,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 15-02-PLAN.md
+Stopped at: Completed 15-03-PLAN.md (Phase 15 fully complete)
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (original), scratch/audit-findings-resolved.md (resolution trace)
 Phase 23 commit: eca6ca1
@@ -146,3 +148,4 @@ Phase 13-02 commits: 06dacdf, b011a4e
 Phase 14-01 commits: 1f848c9, 77b0207
 Phase 15-01 commits: 1f417f9, 491e0a8
 Phase 15-02 commits: 83a08fe, d693731
+Phase 15-03 commits: aaba0c6, f270c1b
