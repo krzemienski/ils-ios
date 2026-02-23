@@ -56,7 +56,7 @@
 
 - [x] **Phase 11: Launch & Baseline** - Remove artificial delay, defer non-critical init, establish Instruments baselines
 - [x] **Phase 12: Service Layer Optimization** - Request deduplication, cache cost limits, memory pressure handling (completed 2026-02-23)
-- [ ] **Phase 13: ViewModel & Model Optimization** - Parallel data loading, SSE buffer flush, chat message windowing
+- [x] **Phase 13: ViewModel & Model Optimization** - Parallel data loading, SSE buffer flush, chat message windowing (completed 2026-02-23)
 - [ ] **Phase 14: SSE & Background Lifecycle** - Low Power Mode polling, background suspend/resume for SSE and WebSocket
 - [ ] **Phase 15: View Layer Rendering** - 60fps session scrolling, chat virtualization, off-thread syntax highlighting, animation gating
 - [ ] **Phase 16: Cross-Platform Verification** - macOS compilation, full v1.0 REQ regression check
@@ -338,7 +338,7 @@ Plans:
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
 | 11. Launch & Baseline | v2.0 | 2/2 | Complete | 2026-02-22 |
 | 12. Service Layer | 1/1 | Complete    | 2026-02-23 | - |
-| 13. ViewModel & Model | 1/2 | In Progress|  | - |
+| 13. ViewModel & Model | 2/2 | Complete   | 2026-02-23 | - |
 | 14. SSE & Background | v2.0 | 0/? | Not started | - |
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |
 | 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
