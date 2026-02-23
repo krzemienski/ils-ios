@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v3.0 Comprehensive Audit Remediation — Phase 20 VERIFIED, executing Phase 21 (Navigation + Code Block)
+**Current focus:** v3.0 Comprehensive Audit Remediation — Phase 21 VERIFIED, entering Phase 22 planning
 
 ## Current Position
 
-Phase: 21 (planning)
+Phase: 22 (planning)
 Plan: 0 of ? planned
-Status: Phase 20 VERIFIED (18/18 PASS) — entering Phase 21 planning
-Last activity: 2026-02-22 — Phase 20 verified, all builds green
+Status: Phase 21 VERIFIED (10/10 PASS) — entering Phase 22 planning
+Last activity: 2026-02-22 — Phase 21 verified, all builds green
 
-Progress: [████████░░] ~40% (v3.0 — 11 plans executed, 40/165 issues resolved across Phases 18-20)
+Progress: [█████████░] ~45% (v3.0 — 13 plans executed, 50/165 issues resolved across Phases 18-21)
 
 ## Previous Milestone (v1.0 Cross-Platform Audit)
 
@@ -49,6 +49,8 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 20 P03 | 3min | 2 tasks | 5 files |
 | Phase 20 P04 | 3min | 1 tasks | 2 files |
 | Phase 20 P02 | 7min | 2 tasks | 7 files |
+| Phase 21 P01 | 4min | 3 tasks | 9 files |
+| Phase 21 P02 | 6min | 6 tasks | 22 files |
 
 ## Accumulated Context
 
@@ -77,6 +79,8 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 20-04]: Strategy B for session sort: pre-sort at cache time + O(n) early-exit merge at request time; SPERF-06 verified (17/17 keyword rules use Set<String>); Fluent .sort() on DB query
 - [Phase 20]: Used PollingManager.AppPhase enum to decouple service from SwiftUI.ScenePhase (ARCH-08)
 - [Phase 20]: Fire-and-forget ViewModel methods for synchronous Binding setters (ARCH-09)
+- [Phase 21-01]: Removed dead NavigationPath from SidebarRootView; removed NavigationStack from 7 sheet-presented views (SessionInfoView, NewSessionView, PremiumView, SpawnTeammateView, CreateTeamView, AdvancedOptionsSheet, CommandPaletteView); wrapped MacContentView detail in NavigationStack; added hooks route to macOS sidebar
+- [Phase 21-02]: CODBL-01 documented intentional try? in APIClient; .iso8601 dateDecodingStrategy on 4 decoders; do/catch logging in ProjectsController+FleetController; validating init(from:) on 20 String-backed enums across 12 ILSShared files
 
 ### Phase 18 Entry Checklist
 
@@ -111,6 +115,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-22
-Stopped at: Phase 20 VERIFIED (18/18 PASS), entering Phase 21 planning
+Stopped at: Phase 21 VERIFIED (10/10 PASS), entering Phase 22 planning
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (165 issues, full detail)
