@@ -28,7 +28,11 @@ class SSEClient {
     private var lastEventId: String?
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
-    nonisolated private let jsonDecoder = JSONDecoder()
+    nonisolated private let jsonDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
 
     init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL

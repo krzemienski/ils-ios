@@ -98,6 +98,20 @@ public enum SessionStatus: String, Codable, Sendable {
     case cancelled
     /// Session terminated due to an error.
     case error
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized SessionStatus: '\(raw)'. Expected: active, completed, cancelled, error"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Source of the session (ILS-created or discovered from Claude Code).
@@ -106,6 +120,20 @@ public enum SessionSource: String, Codable, Sendable {
     case ils
     /// Session discovered from Claude Code storage.
     case external
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized SessionSource: '\(raw)'. Expected: ils, external"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Permission mode for Claude Code execution.
@@ -122,6 +150,20 @@ public enum PermissionMode: String, Codable, Sendable {
     case delegate = "delegate"
     /// Don't ask for permissions (similar to bypassPermissions).
     case dontAsk = "dontAsk"
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized PermissionMode: '\(raw)'. Expected: default, acceptEdits, plan, bypassPermissions, delegate, dontAsk"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Represents a chat session with Claude Code.

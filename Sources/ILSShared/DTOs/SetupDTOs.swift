@@ -8,6 +8,20 @@ public enum TunnelType: String, Codable, Sendable {
     case cloudflare
     /// SSH local port-forward tunnel.
     case sshPortForward
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized TunnelType: '\(raw)'. Expected: cloudflare, sshPortForward"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Configuration describing an active tunnel connection to the remote backend.
@@ -122,6 +136,20 @@ public struct LifecycleRequest: Codable, Sendable {
         case stop
         /// Restart the backend service.
         case restart
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized LifecycleAction: '\(raw)'. Expected: start, stop, restart"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Creates a new lifecycle request.

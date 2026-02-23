@@ -44,7 +44,11 @@ actor SyncCoordinator {
     /// Reusable encoder/decoder — avoids allocating new instances on every
     /// persistQueue()/loadQueue() call (JSONEncoder/Decoder are expensive to init).
     private let encoder = JSONEncoder()
-    private static let decoder = JSONDecoder()
+    private static let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
 
     private var queue: [QueuedOperation] = []
     private var isDraining = false

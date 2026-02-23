@@ -8,6 +8,20 @@ public enum MessageRole: String, Codable, Sendable {
     case assistant
     /// System-level instruction or context.
     case system
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized MessageRole: '\(raw)'. Expected: user, assistant, system"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Represents a message in a chat session (persisted in database).

@@ -35,6 +35,20 @@ public struct RemoteProcessInfo: Codable, Sendable, Identifiable {
         case swift
         /// No special highlighting; treat as a regular process.
         case none
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized ProcessHighlightType: '\(raw)'. Expected: claude, ils_backend, swift, none"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Creates a new ``RemoteProcessInfo``.
@@ -81,6 +95,20 @@ public struct MetricsSourceResponse: Codable, Sendable {
         case local
         /// Metrics were collected from a remote host via tunnel or proxy.
         case remote
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized MetricsSource: '\(raw)'. Expected: local, remote"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Creates a new ``MetricsSourceResponse``.

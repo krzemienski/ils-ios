@@ -328,6 +328,20 @@ public enum ExportFormat: String, Codable, Sendable {
     case json
     case markdown
     case text
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized ExportFormat: '\(raw)'. Expected: json, markdown, text"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Structured JSON export of a chat session.

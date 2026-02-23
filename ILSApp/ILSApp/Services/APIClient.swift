@@ -329,7 +329,8 @@ actor APIClient {
             if httpResponse.statusCode == 401 {
                 throw APIError.unauthorized
             }
-            // Try to decode structured error from backend
+            // CODBL-01: try? is intentional — error body decode is best-effort fallback when HTTP status != 2xx.
+            // If body doesn't match ServerErrorBody, we fall through to httpError(statusCode:).
             if let data = data,
                let errorBody = try? decoder.decode(ServerErrorBody.self, from: data),
                errorBody.error {

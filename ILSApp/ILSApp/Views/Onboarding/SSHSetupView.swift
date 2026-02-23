@@ -351,6 +351,7 @@ struct SSHSetupView: View {
 
         // Load custom domain settings if configured
         let defaults = UserDefaults.standard
+        // CODBL-03: try? intentional — Keychain read returns nil for missing keys
         let cfToken = try? await KeychainService.shared.getCredential(key: "cfToken")
         let cfTunnelName = defaults.string(forKey: "cfTunnelName")
         let cfDomain = defaults.string(forKey: "cfDomain")

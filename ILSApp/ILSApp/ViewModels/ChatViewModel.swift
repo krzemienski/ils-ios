@@ -82,7 +82,11 @@ class ChatViewModel {
 
     // MARK: - Shared Decoder
     // nonisolated: JSONDecoder is thread-safe for decoding. Isolated to instance lifetime.
-    nonisolated private let jsonDecoder = JSONDecoder()
+    nonisolated private let jsonDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
 
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
