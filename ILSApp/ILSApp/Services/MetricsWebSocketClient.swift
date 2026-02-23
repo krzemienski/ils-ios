@@ -116,10 +116,14 @@ final class MetricsWebSocketClient {
 
     private func startHeartbeat() {
         heartbeatTask?.cancel()
+        // BATT-01: Double heartbeat interval in Low Power Mode (15s -> 30s).
+        let effectiveInterval = LowPowerModeMonitor.shared.isLowPowerModeEnabled
+            ? heartbeatInterval * 2
+            : heartbeatInterval
         heartbeatTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: UInt64(self.heartbeatInterval * 1_000_000_000))
+                try? await Task.sleep(nanoseconds: UInt64(effectiveInterval * 1_000_000_000))
                 guard !Task.isCancelled else { return }
                 guard let wsTask = self.webSocketTask else { return }
                 // Send a ping; if pong is not received the connection is stale
@@ -225,11 +229,15 @@ final class MetricsWebSocketClient {
 
     private func startPolling() {
         pollingTask?.cancel()
+        // BATT-01: Double fallback polling interval in Low Power Mode (30s -> 60s).
+        let pollInterval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
+            ? 60_000_000_000  // 60s in LPM
+            : 30_000_000_000  // 30s normal
         pollingTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
                 await self.pollMetrics()
-                try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                try? await Task.sleep(nanoseconds: pollInterval)
             }
         }
     }

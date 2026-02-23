@@ -148,12 +148,16 @@ class SSEClient {
             // Track last received data or heartbeat for stale connection detection
             let lastActivity = LastActivityTracker()
 
-            // Watchdog: detect stale connections (no data/heartbeat in 45s)
-            let heartbeatWatchdog = Task.detached {
+            // BATT-01: Double watchdog timeout in Low Power Mode (45s -> 90s).
+            // Checked once at watchdog creation -- not re-evaluated mid-stream per research.
+            let watchdogTimeout: TimeInterval = LowPowerModeMonitor.shared.isLowPowerModeEnabled ? 90 : 45
+
+            // Watchdog: detect stale connections (no data/heartbeat in timeout period)
+            let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
-                    if await lastActivity.secondsSinceLastActivity() > 45 {
-                        AppLogger.shared.warning("SSE heartbeat timeout — no activity in 45s", category: "sse")
+                    if await lastActivity.secondsSinceLastActivity() > watchdogTimeout {
+                        AppLogger.shared.warning("SSE heartbeat timeout — no activity in \(Int(watchdogTimeout))s", category: "sse")
                         throw URLError(.timedOut)
                     }
                 }
