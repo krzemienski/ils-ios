@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v2.0 Performance Optimization — Phase 14 COMPLETE, Wave 1 continues (15)
+**Current focus:** v2.0 Performance Optimization — Phase 15 in progress, Wave 1 continues
 
 ## Current Position
 
-Phase: 14-sse-background-lifecycle COMPLETE
-Plan: 1 of 1 (All plans COMPLETE)
-Status: Phase 14 fully complete. Ready for Phase 15 (View Rendering).
-Last activity: 2026-02-23 — Phase 14 Plan 01 executed
+Phase: 15-view-layer-rendering
+Plan: 2 of 3 (Plan 02 COMPLETE)
+Status: Phase 15 Plan 02 complete. Plan 03 remaining.
+Last activity: 2026-02-23 — Phase 15 Plan 02 executed
 
-Progress: [███-------] 33% (v2.0 Phases 13-17 — 3/9 plans executed)
+Progress: [█████-----] 56% (v2.0 Phases 13-17 — 5/9 plans executed)
 
 ### Execution Order
 - Wave 1 (parallel): Phase 13 (ViewModel/Model), Phase 14 (SSE/Background), Phase 15 (View Rendering)
@@ -60,6 +60,7 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 | Phase 13 P01 | 5min | 2 tasks | 1 files |
 | Phase 13 P02 | 16min | 2 tasks | 7 files |
 | Phase 14 P01 | 20min | 2 tasks | 6 files |
+| Phase 15 P02 | 9min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,8 @@ Phase 11 COMPLETE (launch baseline, 838ms cold-start). Phases 12-17 deferred unt
 - [Phase 13-01]: Belt-and-suspenders deinit for SystemMetricsViewModel processRefreshTask; NET-02 verified (maxReconnectAttempts=10); MEM-02 verified (windowWillClose cancels debounceTask)
 - [Phase 13-02]: Two-pass initial load for chat windowing (total count then last 50); TranscriptResult struct for total+items from file endpoints; LazyVStack identity-based scroll preservation on prepend; macOS MacChatView updated alongside iOS ChatView
 - [Phase 14-01]: LowPowerModeMonitor @Observable singleton modeled on NetworkMonitor; LPM interval check once at loop start (not per-iteration); SSE watchdog timeout checked once at creation; PollingManager restarts active loops on LPM toggle; no .inactive disconnect in SystemMonitorView
+- [Phase 15-01]: OSAllocatedUnfairLock over actor for SyntaxHighlighter cache (avoids await at synchronous call sites); Task.detached(priority: .userInitiated) for highlighting; lock protects only cache lookup, highlighting runs outside lock
+- [Phase 15-02]: List with .plain style replaces ScrollView+LazyVStack for constant-memory session rendering; ForEach(messages) with Identifiable replaces Array(messages.enumerated()) to eliminate per-body array copies; displayMessages reuses existing messageWindowSize (50) from Phase 13-02
 
 ### Phase 18 Entry Checklist
 
@@ -131,7 +134,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 14-01-PLAN.md (Phase 14 fully complete)
+Stopped at: Completed 15-02-PLAN.md
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-22.md (original), scratch/audit-findings-resolved.md (resolution trace)
 Phase 23 commit: eca6ca1
@@ -140,3 +143,5 @@ Phase 12-01 commits: 56d80b2, 06d9715
 Phase 13-01 commits: 03909b4
 Phase 13-02 commits: 06dacdf, b011a4e
 Phase 14-01 commits: 1f848c9, 77b0207
+Phase 15-01 commits: 1f417f9, 491e0a8
+Phase 15-02 commits: 83a08fe, d693731
