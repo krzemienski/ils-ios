@@ -333,7 +333,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
 | 11. Launch & Baseline | v2.0 | 2/2 | Complete | 2026-02-22 |
-| 12. Service Layer | 1/1 | Complete   | 2026-02-23 | - |
+| 12. Service Layer | 1/1 | Complete    | 2026-02-23 | - |
 | 13. ViewModel & Model | v2.0 | 0/? | Not started | - |
 | 14. SSE & Background | v2.0 | 0/? | Not started | - |
 | 15. View Layer Rendering | v2.0 | 0/? | Not started | - |
