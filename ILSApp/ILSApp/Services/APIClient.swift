@@ -15,6 +15,10 @@ actor APIClient {
     private let cache = NSCache<NSString, CacheEntryObject>()
     private let defaultCacheTTL: TimeInterval = 30 // 30 seconds
 
+    /// In-flight GET tasks keyed by path. Actor isolation makes this thread-safe.
+    /// Concurrent GET requests to the same path share a single network call.
+    private var inFlightGETs: [String: Task<Any, Error>] = [:]
+
     /// Optional API key for authenticated requests.
     /// When set, all /api/v1 requests include `Authorization: Bearer <key>`.
     private var apiKey: String?
@@ -55,6 +59,7 @@ actor APIClient {
         self.baseURL = baseURL
         // Cap cache to prevent unbounded memory growth
         cache.countLimit = 100
+        cache.totalCostLimit = 10 * 1024 * 1024  // 10MB memory budget
         // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
         if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
             self.apiKey = keychainKey
@@ -140,6 +145,19 @@ actor APIClient {
         return try decoder.decode(HealthResponse.self, from: data)
     }
 
+    // MARK: - Cost Estimation
+
+    /// Approximate memory cost for NSCache eviction priority.
+    /// Uses MemoryLayout.stride as a relative measure -- absolute accuracy
+    /// is unnecessary since NSCache treats cost as a priority signal.
+    private func estimatedCost<T>(for value: T) -> Int {
+        let baseStride = MemoryLayout<T>.stride
+        if let array = value as? any RandomAccessCollection {
+            return max(baseStride, baseStride * array.count)
+        }
+        return baseStride
+    }
+
     // MARK: - Generic Request Methods
     //
     // SP-MED-4: Generic methods (get<T>, post<T,B>, etc.) are NOT manually specialized with
@@ -163,21 +181,49 @@ actor APIClient {
             return cached
         }
 
-        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
-            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        // In-flight coalescing: if a GET for this path is already running, share its result
+        if let existingTask = inFlightGETs[path] {
+            if let result = try await existingTask.value as? T {
+                return result
+            }
+            // Type mismatch — fall through to a new request
         }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        applyAuth(to: &request)
 
-        let (data, response) = try await performWithRetry(request: request)
-        try validateResponse(response, data: data)
+        // Wrap the network call in a Task stored in inFlightGETs so concurrent callers share it
+        let task = Task<Any, Error> { [baseURL, decoder] in
+            defer { self.inFlightGETs[path] = nil }
 
-        let decoded: T = try decoder.decode(T.self, from: data)
-        // Store decoded value; NSCache evicts entries under memory pressure automatically
-        cache.setObject(CacheEntryObject(value: decoded, timestamp: Date()), forKey: cacheKey)
-        return decoded
+            guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+                throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.addValue("application/json", forHTTPHeaderField: "Accept")
+            self.applyAuth(to: &request)
+
+            let (data, response) = try await self.performWithRetry(request: request)
+            try self.validateResponse(response, data: data)
+
+            let decoded: T = try decoder.decode(T.self, from: data)
+            // Store decoded value with estimated cost for memory-bounded eviction
+            let cost = self.estimatedCost(for: decoded)
+            self.cache.setObject(
+                CacheEntryObject(value: decoded, timestamp: Date()),
+                forKey: cacheKey,
+                cost: cost
+            )
+            return decoded as Any
+        }
+        inFlightGETs[path] = task
+
+        let result = try await task.value
+        // Safe downcast — created as T above. Fall through should not happen but handles edge cases.
+        guard let typed = result as? T else {
+            throw APIError.decodingError(
+                DecodingError.typeMismatch(T.self, .init(codingPath: [], debugDescription: "In-flight result type mismatch"))
+            )
+        }
+        return typed
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
@@ -287,13 +333,20 @@ actor APIClient {
 
     /// Invalidate cache entries affected by a mutation (POST/PUT/DELETE).
     /// Removes the exact resource path and its parent list endpoint.
+    /// Also cancels any in-flight GETs for affected paths to prevent stale cache repopulation.
     private func invalidateCacheForMutation(path: String) {
+        // Cancel in-flight GET for exact path to prevent stale data from repopulating cache
+        inFlightGETs[path]?.cancel()
+        inFlightGETs.removeValue(forKey: path)
+
         // Remove exact path (e.g. /sessions/abc-123)
         cache.removeObject(forKey: path as NSString)
-        // Remove list endpoint (e.g. /sessions)
+        // Remove list endpoint (e.g. /sessions) and cancel its in-flight GET
         let components = path.split(separator: "/")
         if components.count >= 1 {
             let listPath = "/\(components[0])"
+            inFlightGETs[listPath]?.cancel()
+            inFlightGETs.removeValue(forKey: listPath)
             cache.removeObject(forKey: listPath as NSString)
         }
     }
