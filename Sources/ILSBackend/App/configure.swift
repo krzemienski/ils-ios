@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 import FluentSQLiteDriver
+import SQLKit
 
 func configure(_ app: Application) async throws {
     // CORS middleware — restrict to configured origins (default: localhost only)
@@ -73,6 +74,18 @@ func configure(_ app: Application) async throws {
 
     // Run migrations
     try await app.autoMigrate()
+
+    #if DEBUG
+    // DB-03: Validate existing data satisfies FK constraints after migration.
+    // PRAGMA foreign_key_check returns rows for any FK violations found in the database.
+    // Runs only in DEBUG builds to catch data integrity issues during development.
+    if let sql = app.db as? SQLDatabase {
+        let violations = try await sql.raw("PRAGMA foreign_key_check").all()
+        if !violations.isEmpty {
+            app.logger.warning("DB-03: FK constraint violations found: \(violations.count) rows affected")
+        }
+    }
+    #endif
 
     // Register routes
     try routes(app)

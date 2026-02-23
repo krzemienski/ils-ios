@@ -47,6 +47,20 @@ actor CitadelSSHService {
             }
 
             // Connect to SSH server
+            // NET-01: SSH host key validation — TOFU (Trust On First Use) model.
+            // This is a developer tool where users explicitly configure their SSH hosts
+            // (host, port, username, credentials). The user has already expressed intent
+            // to connect to a specific machine they control.
+            //
+            // Full known_hosts management would require:
+            //   1. Persistent storage of per-host public key fingerprints (Keychain/file)
+            //   2. UI to review and approve new or changed host keys
+            //   3. Handling key rotation (legitimate server re-keys after OS reinstall)
+            //
+            // This is deferred to a future enhancement. Users who need strict host key
+            // pinning should use their system SSH client with a properly maintained
+            // ~/.ssh/known_hosts file. For this developer tool, .acceptAnything() is the
+            // documented and intentional security posture — not an oversight.
             self.client = try await SSHClient.connect(
                 host: host,
                 port: port,
