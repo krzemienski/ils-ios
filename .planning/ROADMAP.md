@@ -165,10 +165,11 @@ Plans:
   2. XCTest memory baseline using XCTMemoryMetric captures typical session memory and fails if it exceeds 120MB
   3. XCTest CPU baseline using XCTCPUMetric captures scroll/render performance for the sessions list
   4. MetricKit subscriber is integrated and logs MXAppLaunchMetric, MXMemoryMetric payloads for production field analysis
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 17-01: TBD
+- [ ] 17-01-PLAN.md -- XCTest performance baselines: launch (XCTApplicationLaunchMetric), memory (XCTMemoryMetric), scroll/CPU (XCTCPUMetric + XCTOSSignpostMetric), test plan config
+- [ ] 17-02-PLAN.md -- MetricKit integration: PerformanceMonitor subscriber for production field metrics (launch, memory, diagnostics)
 
 ---
 
