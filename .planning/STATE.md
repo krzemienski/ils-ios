@@ -5,16 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-22)
 
 **Core value:** Production-quality code health — eliminate all CRITICAL/HIGH audit findings across concurrency, energy, architecture, performance, navigation, error handling, accessibility, and security
-**Current focus:** v2.0 Service Layer Optimization (Phase 12)
+**Current focus:** v2.0 Performance Optimization — Phases 13-17 PLANNED, ready for execution
 
 ## Current Position
 
-Phase: 12-service-layer-optimization COMPLETE
-Plan: 1 of 1 executed
-Status: Phase 12 Plan 01 DONE — In-flight request coalescing, 10MB NSCache totalCostLimit, iOS memory pressure observer. All 3 builds pass.
-Last activity: 2026-02-23 — Phase 12 Plan 01 executed
+Phase: 13-17 ALL PLANNED
+Plan: 9 plans across 5 phases (13: 2 plans, 14: 1 plan, 15: 3 plans, 16: 1 plan, 17: 2 plans)
+Status: All 9 plans validated (frontmatter + structure). Ready for execution starting Phase 13.
+Last activity: 2026-02-23 — Phases 13-17 planned in parallel
 
-Progress: [████████████] 100% (v2.0 Phase 12 — 1/1 plans executed)
+Progress: [████████████] 100% (v2.0 Phases 13-17 — 9/9 plans created)
+
+### Execution Order
+- Wave 1 (parallel): Phase 13 (ViewModel/Model), Phase 14 (SSE/Background), Phase 15 (View Rendering)
+- Wave 2 (after Wave 1): Phase 16 (Cross-Platform Verification)
+- Wave 3 (after Wave 2): Phase 17 (Regression Test Infrastructure)
 
 ## Previous Milestone (v1.0 Cross-Platform Audit)
 
