@@ -118,10 +118,10 @@ Plans:
   1. With Low Power Mode enabled, PollingManager and MetricsWebSocketClient poll at 2x their normal interval (e.g., 60s becomes 120s)
   2. When the app moves to background, SSE and WebSocket connections disconnect within 5 seconds
   3. When the app returns to foreground, SSE and WebSocket connections resume automatically and data is current
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 14-01: TBD
+- [ ] 14-01-PLAN.md -- LowPowerModeMonitor singleton, adaptive polling intervals (BATT-01), MetricsWebSocketClient background suspend/resume (BATT-02)
 
 ---
 
