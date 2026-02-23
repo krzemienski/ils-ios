@@ -1,6 +1,12 @@
 import Foundation
 
-/// HTTP API client for ILS backend
+/// HTTP API client for the ILS backend.
+///
+/// Thread-safe actor providing type-safe REST methods (`get`, `post`, `put`, `delete`)
+/// with automatic JSON encoding/decoding, response caching (NSCache with per-endpoint TTL),
+/// and request batching for rapid navigation. All paths are automatically prefixed with `/api/v1`.
+///
+/// Supports optional Bearer-token authentication via Keychain-persisted API key.
 actor APIClient {
     let baseURL: String
     private let session: URLSession
@@ -135,6 +141,12 @@ actor APIClient {
     }
 
     // MARK: - Generic Request Methods
+    //
+    // SP-MED-4: Generic methods (get<T>, post<T,B>, etc.) are NOT manually specialized with
+    // @_specialize. The Swift compiler performs generic specialization automatically when
+    // Whole-Module Optimization (WMO) is enabled (Release builds). Debug builds pay a small
+    // witness-table cost (~5ns/call) which is negligible vs. network latency. Manual
+    // @_specialize is reserved for hot-loop generics (>10K calls/sec), not RPC wrappers.
 
     func get<T: Decodable>(_ path: String, cacheTTL: TimeInterval? = nil) async throws -> T {
         let cacheKey = path as NSString

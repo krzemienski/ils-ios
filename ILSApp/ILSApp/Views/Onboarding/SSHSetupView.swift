@@ -211,10 +211,11 @@ struct SSHSetupView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 1) {
-                            ForEach(Array(viewModel.logLines.enumerated()), id: \.offset) { _, line in
-                                Text(line)
+                            // SPERF-MED-6: Use indices for stable ForEach identity.
+                            ForEach(viewModel.logLines.indices, id: \.self) { index in
+                                Text(viewModel.logLines[index])
                                     .font(.system(size: 11, design: theme.fontDesign))
-                                    .foregroundStyle(logLineColor(line))
+                                    .foregroundStyle(logLineColor(viewModel.logLines[index]))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             // Invisible anchor at the bottom for auto-scroll

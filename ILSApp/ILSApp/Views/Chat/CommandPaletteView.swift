@@ -38,9 +38,13 @@ struct CommandPaletteView: View {
     /// Live search text used to filter all three command sections.
     @State private var searchText = ""
     /// Skills loaded from the `/skills` API endpoint.
-    @State private var skills: [Skill] = []
+    @State private var skills: [Skill] = Self.cachedSkills
     /// True while the initial skills API call is in flight.
-    @State private var isLoading = true
+    @State private var isLoading = Self.cachedSkills.isEmpty
+
+    // SPERF-MED-5: Static cache avoids re-fetching skills on every sheet presentation.
+    // Skills rarely change during a session, so caching across presentations is safe.
+    @MainActor private static var cachedSkills: [Skill] = []
     /// Debounced filtered built-in commands.
     @State private var debouncedBuiltInCommands: [CommandItem] = Self.allBuiltInCommands
     /// Debounced filtered skills.
@@ -101,8 +105,13 @@ struct CommandPaletteView: View {
         .toolbarBackground(theme.bgPrimary, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         #endif
+        // SPERF-MED-5: Only fetch skills once — cache across presentations.
         .task {
-            await loadSkills()
+            if skills.isEmpty {
+                await loadSkills()
+            } else {
+                isLoading = false
+            }
         }
         .task(id: searchText) {
             try? await Task.sleep(for: .milliseconds(200))
@@ -150,6 +159,7 @@ struct CommandPaletteView: View {
             let response: APIResponse<ListResponse<Skill>> = try await client.get("/skills")
             if let data = response.data {
                 skills = data.items
+                Self.cachedSkills = data.items
             }
         } catch {
             AppLogger.shared.error("Failed to load skills: \(error)", category: "ui")

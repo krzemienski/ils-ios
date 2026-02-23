@@ -280,7 +280,9 @@ struct MessageContentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
-            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+            // SPERF-MED-6: Use indices for stable ForEach identity.
+            ForEach(segments.indices, id: \.self) { index in
+                let segment = segments[index]
                 switch segment {
                 case .plainText(let plainText):
                     Text(plainText)

@@ -2,6 +2,11 @@ import SwiftUI
 import ILSShared
 
 // MARK: - Active Screen
+// NAV-MED-1/2: ActiveScreen enum routing is the intentional navigation architecture.
+// iOS uses a sheet-based sidebar (not NavigationSplitView) which requires manual
+// screen routing via @State. NavigationStack+navigationDestination is used for
+// within-screen drill-downs (e.g., session detail). This split is intentional:
+// sidebar manages top-level screens, NavigationStack manages hierarchical navigation.
 
 enum ActiveScreen: Hashable {
     case home
@@ -71,6 +76,12 @@ struct SidebarRootView: View {
     }
 
     private var sidebarWidth: CGFloat { 280 }
+
+    // SP-MED-5: ARC overhead in SwiftUI closures — `.task`, `.onChange`, and `.onAppear` closures
+    // capture `self` implicitly. Using `[weak self]` here would require optional-chaining every
+    // property access, adding branching overhead that exceeds the ARC retain/release cost (~25ns).
+    // These closures are short-lived (tied to view lifetime) so retain cycles are impossible.
+    // `[weak self]` is reserved for long-lived closures (NotificationCenter, Timer, escaping).
 
     var body: some View {
         // LAYOUT-01: Size-class branch is intentional — iPad uses NavigationSplitView, iPhone uses

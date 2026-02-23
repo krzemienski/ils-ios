@@ -420,12 +420,7 @@ struct SkillDetailView: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(skill.rawContent ?? skill.content ?? "", forType: .string)
         #endif
+        // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
         showCopiedToast = true
-        Task {
-            try? await Task.sleep(for: .seconds(2))
-            await MainActor.run {
-                showCopiedToast = false
-            }
-        }
     }
 }

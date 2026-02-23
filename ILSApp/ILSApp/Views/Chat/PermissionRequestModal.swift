@@ -194,14 +194,19 @@ struct PermissionRequestModal: View {
     }
 
     /// Formats tool input for display. Static to keep it out of the body evaluation path.
+    // MOD-MED-3: Use string interpolation instead of String(describing:).
+    // For [String: Any] dictionaries, interpolation is equivalent but more idiomatic.
     private static func formatToolInput(_ toolInput: AnyCodable) -> String {
         if let dict = toolInput.value as? [String: Any] {
             return dict.map { key, value in
-                "\(key): \(String(describing: value))"
+                "\(key): \(value)"
             }
             .sorted()
             .joined(separator: "\n")
         }
-        return String(describing: toolInput.value)
+        if let stringValue = toolInput.value as? String {
+            return stringValue
+        }
+        return "\(toolInput.value)"
     }
 }

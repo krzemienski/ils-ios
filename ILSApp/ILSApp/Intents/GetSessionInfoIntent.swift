@@ -41,6 +41,8 @@ struct GetSessionInfoIntent: AppIntent {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
+            // COD-MED-2: try? is intentional — App Intents must always return a result.
+            // Falls back to entity data if detailed response can't be decoded.
             if let json = try? decoder.decode(SessionDetailResponse.self, from: data),
                let detail = json.data {
                 return .result(value: formatDetailedInfo(detail))

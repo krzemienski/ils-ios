@@ -2,12 +2,18 @@ import Foundation
 import os
 import os.log
 
+/// Centralized logging service backed by `os.Logger` and a rolling on-disk log file.
+///
+/// Provides category-based logging at Info/Warning/Error levels with structured output.
+/// Log entries are buffered in memory and flushed to `Library/Application Support/ILS/ils.log`
+/// periodically or on flush calls. File size is capped at 5 MB with automatic truncation.
+/// Also monitors memory usage and logs warnings when the app exceeds 80 MB.
 final class AppLogger: Sendable {
     static let shared = AppLogger()
 
     private let logger: Logger
     private let logFileURL: URL
-    private let maxLogSize: Int = 5_000_000 // 5MB
+    private let maxLogSize = 5_000_000 // 5MB
     private static let iso8601Formatter = ISO8601DateFormatter()
 
     // MARK: - Buffered Writing

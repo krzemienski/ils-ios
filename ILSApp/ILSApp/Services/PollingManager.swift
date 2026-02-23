@@ -16,17 +16,37 @@ class PollingManager {
 
     private var retryTask: Task<Void, Never>?
     private var healthPollTask: Task<Void, Never>?
+    // NET-MED-2: Observer for network restoration to resume polling.
+    private var networkObserver: NSObjectProtocol?
 
     init(connectionManager: ConnectionManager) {
         self.connectionManager = connectionManager
+        // Resume polling when network becomes available again.
+        networkObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.checkConnection()
+            }
+        }
     }
 
     deinit {
         retryTask?.cancel()
         healthPollTask?.cancel()
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     func checkConnection() {
+        // NET-MED-2: Skip network requests when device has no connectivity.
+        guard NetworkMonitor.shared.isConnected else {
+            connectionManager.isConnected = false
+            return
+        }
         Task { [weak self] in
             guard let self else { return }
             let cm = self.connectionManager

@@ -164,7 +164,10 @@ class AppState {
         case "teams":
             navigationIntent = .teams
         default:
-            break
+            // NAV-MED-3: Log unknown deep link routes for debugging.
+            if let host = url.host {
+                AppLogger.shared.warning("Unrecognized deep link route: ils://\(host)", category: "deeplink")
+            }
         }
     }
 

@@ -50,9 +50,10 @@ struct HooksManagementView: View {
 
             ForEach(events, id: \.0) { eventName, icon, groups in
                 if let groups = groups, !groups.isEmpty {
+                    // SPERF-MED-6: Use indices for stable ForEach identity.
                     Section {
-                        ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
-                            hookGroupRow(group)
+                        ForEach(groups.indices, id: \.self) { index in
+                            hookGroupRow(groups[index])
                         }
                     } header: {
                         Label(eventName, systemImage: icon)
@@ -81,8 +82,8 @@ struct HooksManagementView: View {
                 }
             }
             if let hookDefs = group.hooks {
-                ForEach(Array(hookDefs.enumerated()), id: \.offset) { _, hookDef in
-                    hookDefinitionRow(hookDef)
+                ForEach(hookDefs.indices, id: \.self) { index in
+                    hookDefinitionRow(hookDefs[index])
                 }
             }
         }

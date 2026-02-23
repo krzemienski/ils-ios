@@ -18,6 +18,8 @@ struct NewSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
 
+    // SA-MED-2: Dedicated ProjectsViewModel is intentional — NewSessionView needs independent
+    // search/filter state for project selection without affecting the main projects list.
     @State private var projectsViewModel = ProjectsViewModel()
     @State private var sessionViewModel = NewSessionViewModel()
     @State private var selectedMode: NewSessionMode = .project
@@ -786,6 +788,9 @@ struct NewSessionView: View {
         isLoadingSessions = false
     }
 
+    // SA-MED-3: Button-triggered Tasks are correct — these are user-initiated actions,
+    // not lifecycle-bound work. `.task` modifier is for view lifecycle; `Task {}` is
+    // appropriate for fire-and-forget user actions like create/fork/submit.
     private func createSession() {
         Task {
             if let session = await sessionViewModel.createSession(
@@ -833,7 +838,7 @@ struct NewSessionView: View {
         }
     }
 
-    func buildChatOptions() -> ChatOptions {
+    private func buildChatOptions() -> ChatOptions {
         ChatOptions(
             model: selectedModel,
             permissionMode: PermissionMode(rawValue: permissionMode),

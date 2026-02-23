@@ -174,7 +174,7 @@ actor SyncCoordinator {
         do {
             // Build the request directly to avoid MainActor dependency on ConnectionManager.
             // Read the server URL from UserDefaults (same source ConnectionManager uses).
-            let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+            let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? ConnectionDefaults.defaultURL
             let apiClient = APIClient(baseURL: baseURL)
             try await apiClient.rawRequest(
                 method: operation.method,

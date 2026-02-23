@@ -392,7 +392,7 @@ struct SettingsConfigSection: View {
     // MARK: - Reusable Components
 
     @ViewBuilder
-    func sectionLabel(_ text: String) -> some View {
+    private func sectionLabel(_ text: String) -> some View {
         Text(text)
             .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
@@ -401,7 +401,7 @@ struct SettingsConfigSection: View {
     }
 
     @ViewBuilder
-    func settingsRow(_ label: String, value: String) -> some View {
+    private func settingsRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -414,7 +414,7 @@ struct SettingsConfigSection: View {
     }
 
     @ViewBuilder
-    func settingsRow(_ label: String, icon: String, iconColor: Color) -> some View {
+    private func settingsRow(_ label: String, icon: String, iconColor: Color) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -456,7 +456,7 @@ struct SettingsConfigSection: View {
     // MARK: - Setting Annotation
 
     @ViewBuilder
-    func settingAnnotation(isInherited: Bool, tooltip: String) -> some View {
+    private func settingAnnotation(isInherited: Bool, tooltip: String) -> some View {
         HStack(spacing: theme.spacingSM) {
             InheritanceBadge(isInherited: isInherited)
             Spacer()

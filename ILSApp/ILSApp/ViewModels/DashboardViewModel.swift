@@ -66,9 +66,10 @@ class DashboardViewModel {
 
         // Cache the fresh recent sessions
         if !recentSessions.isEmpty {
-            Task.detached { [sessions = self.recentSessions] in
-                await CacheService.shared.cacheSessions(sessions)
-            }
+            // C-MED-5: Use Task instead of Task.detached — only calls CacheService actor,
+            // no need to escape @MainActor isolation.
+            let sessions = self.recentSessions
+            Task { await CacheService.shared.cacheSessions(sessions) }
         }
 
         isLoading = false

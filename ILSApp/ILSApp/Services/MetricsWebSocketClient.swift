@@ -22,10 +22,12 @@ final class MetricsWebSocketClient {
     private var session: URLSession
     private let decoder: JSONDecoder
 
-    private var reconnectAttempts: Int = 0
-    private var wsFailureCount: Int = 0
-    private let maxWSFailures: Int = 3
-    private let maxHistorySize: Int = 60
+    private var reconnectAttempts = 0
+    private var wsFailureCount = 0
+    private let maxWSFailures = 3
+    private let maxHistorySize = 60
+    // NET-MED-1: Cap reconnection attempts to prevent infinite retry loops.
+    private let maxReconnectAttempts = 10
 
     private var reconnectTask: Task<Void, Never>?
     private var pollingTask: Task<Void, Never>?
@@ -36,7 +38,7 @@ final class MetricsWebSocketClient {
     private let wsResetInterval: TimeInterval = 600
     private let heartbeatInterval: TimeInterval = 15 // Send ping every 15 seconds
 
-    init(baseURL: String = "http://localhost:9999") {
+    init(baseURL: String = ConnectionDefaults.defaultURL) {
         self.baseURL = baseURL
         self.session = URLSession(configuration: .default)
         self.decoder = JSONDecoder()
@@ -203,6 +205,13 @@ final class MetricsWebSocketClient {
     private func scheduleReconnect() {
         reconnectTask?.cancel()
         reconnectAttempts += 1
+
+        // NET-MED-1: Stop after maxReconnectAttempts — user can manually retry via UI.
+        guard reconnectAttempts <= maxReconnectAttempts else {
+            isConnected = false
+            return
+        }
+
         let delay = min(Double(1 << reconnectAttempts), 30.0) // 1s, 2s, 4s, ... max 30s
 
         reconnectTask = Task { [weak self] in

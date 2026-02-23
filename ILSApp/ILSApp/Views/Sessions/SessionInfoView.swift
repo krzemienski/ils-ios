@@ -105,11 +105,8 @@ struct SessionInfoView: View {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(session.id.uuidString, forType: .string)
                         #endif
+                        // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
                         showCopiedToast = true
-                        Task {
-                            try? await Task.sleep(for: .seconds(2))
-                            showCopiedToast = false
-                        }
                     } label: {
                         Image(systemName: "doc.on.doc")
                     }

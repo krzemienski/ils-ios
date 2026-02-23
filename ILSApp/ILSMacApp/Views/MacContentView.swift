@@ -46,7 +46,9 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 }
 
 // MARK: - Mac Content View
-
+// NAV-MED-2: macOS uses NavigationSplitView (3-column) — platform-appropriate pattern.
+// Sidebar + list + detail layout matches macOS HIG. ActiveScreen enum shared with iOS
+// enables deep link handling across platforms via the same route definitions.
 struct MacContentView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot

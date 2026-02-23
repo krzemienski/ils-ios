@@ -118,7 +118,9 @@ struct FileBrowserView: View {
     private var breadcrumbBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: theme.spacingXS) {
-                ForEach(Array(pathComponents.enumerated()), id: \.offset) { index, component in
+                // SPERF-MED-6: Use indices for stable ForEach identity.
+                ForEach(pathComponents.indices, id: \.self) { index in
+                    let component = pathComponents[index]
                     if index > 0 {
                         Image(systemName: "chevron.right")
                             .font(.caption2)

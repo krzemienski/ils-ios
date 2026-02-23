@@ -112,8 +112,9 @@ struct CodeBlockView: View {
             ScrollView(.horizontal, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
                     // Line numbers
+                    // SPERF-MED-6: Use indices for stable ForEach identity.
                     VStack(alignment: .trailing, spacing: 0) {
-                        ForEach(Array(cachedDisplayedLines.enumerated()), id: \.offset) { index, _ in
+                        ForEach(cachedDisplayedLines.indices, id: \.self) { index in
                             Text("\(index + 1)")
                                 .font(.system(.caption, design: theme.fontDesign))
                                 .foregroundColor(theme.textTertiary)

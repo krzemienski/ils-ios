@@ -63,13 +63,20 @@ func configure(_ app: Application) async throws {
     let sqliteConfig = SQLiteConfiguration(storage: .file(path: dbPath), enableForeignKeys: true)
     app.databases.use(.sqlite(sqliteConfig), as: .sqlite)
 
-    // Register migrations
+    // DB-MED-2: Migration versioning strategy.
+    // Fluent runs migrations in registration order. Each migration is idempotent
+    // (CREATE TABLE IF NOT EXISTS). Reverts are no-ops (Phase 22 decision).
+    // New migrations MUST be appended — never reorder or insert.
+    //
+    // v1.0 — Core tables
     app.migrations.add(CreateProjects())
     app.migrations.add(CreateSessions())
     app.migrations.add(CreateMessages())
     app.migrations.add(CreateThemes())
     app.migrations.add(CreateCachedResults())
+    // v2.0 — Fleet management
     app.migrations.add(CreateFleetHosts())
+    // v3.0 — Performance indexes
     app.migrations.add(AddDatabaseIndexes())
 
     // Run migrations

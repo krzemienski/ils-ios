@@ -1,6 +1,10 @@
 import SwiftUI
 import ILSShared
 
+// SPERF-MED-1: 50+ @State properties are accepted as inherent complexity.
+// Each maps 1:1 to a theme token: colors (17), typography (13), spacing (10),
+// radius (8), shadow (9). Consolidating into structs would require custom Bindings
+// for every ColorPicker/Slider, adding complexity without reducing re-renders.
 struct ThemeEditorView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(ThemesViewModel.self) var viewModel
