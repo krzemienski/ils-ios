@@ -1,6 +1,27 @@
 import SwiftUI
 import ILSShared
 
+/// Legacy single-message bubble that renders a `ChatMessage` with all its content blocks.
+///
+/// Displays text content, tool calls, tool results, and extended thinking in a vertically
+/// stacked layout. User messages are right-aligned with an accent-tinted background;
+/// assistant messages are left-aligned with the secondary background. A metadata row below
+/// the bubble shows the timestamp (formatted as time-only for today, date+time for older
+/// messages) and API cost when available.
+///
+/// Historical messages receive a subtle border overlay to visually distinguish them from
+/// live streaming messages. A transient "Copied" confirmation badge appears when the user
+/// copies text via the context menu.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``message`` - The `ChatMessage` to render, including text, tool calls, results, and thinking
+///
+/// ### Child Views
+/// - `MessageContentView` - Renders parsed markdown text with code-block support
+/// - `ToolCallView` - Expandable card for each tool invocation in the message
+/// - `ToolResultView` - Expandable card for each tool result in the message
+/// - `ThinkingView` - Expandable card for the extended thinking block, if present
 struct MessageView: View {
     let message: ChatMessage
     @State private var showCopyConfirmation = false
@@ -91,6 +112,16 @@ struct MessageView: View {
     }
 }
 
+/// Expandable card that displays a single tool invocation inside a message bubble.
+///
+/// Shows the tool name and a wrench icon in the collapsed header. When expanded, renders
+/// the optional `inputPreview` string — a human-readable summary of the arguments passed
+/// to the tool — in a monospace-styled text block. Tap anywhere on the header row to
+/// toggle expansion.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``toolCall`` - The `ToolCallDisplay` value providing the tool name and input preview
 struct ToolCallView: View {
     let toolCall: ToolCallDisplay
     @State private var isExpanded = false
@@ -126,6 +157,17 @@ struct ToolCallView: View {
     }
 }
 
+/// Expandable card that displays the output of a tool invocation inside a message bubble.
+///
+/// The collapsed header shows a checkmark (success) or X (error) icon with color-coded
+/// foreground — `theme.success` or `theme.error` — to give an at-a-glance status. When
+/// expanded, the full result text is rendered inside a horizontally scrollable view capped
+/// at 200 pt tall, allowing wide output like file diffs or JSON to be read without
+/// wrapping. Tap the header row to toggle expansion.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``result`` - The `ToolResultDisplay` value providing the content text and error flag
 struct ToolResultView: View {
     let result: ToolResultDisplay
     @State private var isExpanded = false
@@ -164,6 +206,20 @@ struct ToolResultView: View {
     }
 }
 
+/// Expandable card that renders Claude's extended-thinking block inside a message bubble.
+///
+/// Displays a brain icon header with a distinctive `theme.info`-tinted background to visually
+/// separate the model's reasoning from its final response. The thinking text is hidden by
+/// default and revealed when the user taps the header row, keeping the conversation readable
+/// for users who do not need to inspect the reasoning trace.
+///
+/// The view intentionally avoids a pulse animation and reads `accessibilityReduceMotion` so
+/// that any future animation additions are gated behind the system reduce-motion preference,
+/// ensuring the view is safe for users sensitive to motion.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``thinking`` - The raw extended-thinking text emitted by the model
 struct ThinkingView: View {
     let thinking: String
     @State private var isExpanded = false
@@ -253,6 +309,26 @@ struct ThinkingView: View {
 
 // MARK: - Message Content View with Code Block Support
 
+/// Markdown-aware content renderer that splits message text into typed display segments.
+///
+/// Delegates parsing to `MarkdownParser.parse(_:)` which returns an array of
+/// `TextSegment` values — either `.plainText`, `.codeBlock`, or `.inlineCode`. Each
+/// segment type renders differently: plain text uses the body font with a copy context
+/// menu, fenced code blocks delegate to `CodeBlockView` (which adds a language label
+/// and copy button), and inline code renders in a pill-shaped monospace span.
+///
+/// Parsing is triggered via `.task(id: text)` so it runs once per unique `text` value
+/// rather than on every SwiftUI body evaluation. This avoids running the regex on
+/// every streaming tick and keeps the view performant during live message delivery.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``text`` - The raw message string to parse and render
+/// - ``isUser`` - Controls the accessibility identifier applied to plain-text segments
+///
+/// ### Bindings
+/// - ``showCopyConfirmation`` - Toggled to `true` when the user copies a text segment;
+///   the parent ``MessageView`` owns the confirmation badge display logic
 struct MessageContentView: View {
     let text: String
     let isUser: Bool
