@@ -403,6 +403,22 @@
 		786044B7A7C7460C9F6D2163 /* GrammarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C1BA7D562D484C83E126A3 /* GrammarConfig.swift */; };
 		6A9D2F0D5C704B96B9C03327 /* GrammarDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E0C263F72E46E1ACB15FD5 /* GrammarDefinitions.swift */; };
 		CCCCAE4E19EF479BBBB70272 /* GrammarRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C85A90430484B5DBD710158 /* GrammarRegistry.swift */; };
+		D0E1F2A3B4C5D6E7F8A9B0C1 /* ThemeEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* ThemeEditorViewModel.swift */; };
+		E1F2A3B4C5D6E7F8A9B0C1D2 /* ThemeSliderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* ThemeSliderRow.swift */; };
+		F2A3B4C5D6E7F8A9B0C1D2E3 /* ThemeMetadataSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* ThemeMetadataSection.swift */; };
+		A3B4C5D6E7F8A9B0C1D2E3F4 /* ThemeColorTokensSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* ThemeColorTokensSection.swift */; };
+		B4C5D6E7F8A9B0C1D2E3F4A5 /* ThemeTypographySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* ThemeTypographySection.swift */; };
+		C5D6E7F8A9B0C1D2E3F4A5B6 /* ThemeSpacingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ThemeSpacingSection.swift */; };
+		D6E7F8A9B0C1D2E3F4A5B6C7 /* ThemeCornerRadiusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0E1F2A3B4C5D6E7F8 /* ThemeCornerRadiusSection.swift */; };
+		E7F8A9B0C1D2E3F4A5B6C7D8 /* ThemeShadowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C9D0E1F2A3B4C5D6E7F8A9 /* ThemeShadowSection.swift */; };
+		F8A9B0C1D2E3F4A5B6C7D8E9 /* ThemeEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* ThemeEditorViewModel.swift */; };
+		A9B0C1D2E3F4A5B6C7D8E9F0 /* ThemeSliderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* ThemeSliderRow.swift */; };
+		B0C1D2E3F4A5B6C7D8E9F0A1 /* ThemeMetadataSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* ThemeMetadataSection.swift */; };
+		C1D2E3F4A5B6C7D8E9F0A1B2 /* ThemeColorTokensSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* ThemeColorTokensSection.swift */; };
+		D2E3F4A5B6C7D8E9F0A1B2C3 /* ThemeTypographySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* ThemeTypographySection.swift */; };
+		E3F4A5B6C7D8E9F0A1B2C3D4 /* ThemeSpacingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* ThemeSpacingSection.swift */; };
+		F4A5B6C7D8E9F0A1B2C3D4E5 /* ThemeCornerRadiusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0E1F2A3B4C5D6E7F8 /* ThemeCornerRadiusSection.swift */; };
+		A5B6C7D8E9F0A1B2C3D4E5F6 /* ThemeShadowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C9D0E1F2A3B4C5D6E7F8A9 /* ThemeShadowSection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -640,6 +656,14 @@
 		85C1BA7D562D484C83E126A3 /* GrammarConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarConfig.swift; sourceTree = "<group>"; };
 		90E0C263F72E46E1ACB15FD5 /* GrammarDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarDefinitions.swift; sourceTree = "<group>"; };
 		4C85A90430484B5DBD710158 /* GrammarRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarRegistry.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* ThemeEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeEditorViewModel.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* ThemeSliderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSliderRow.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* ThemeMetadataSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMetadataSection.swift; sourceTree = "<group>"; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* ThemeColorTokensSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeColorTokensSection.swift; sourceTree = "<group>"; };
+		E5F6A7B8C9D0E1F2A3B4C5D6 /* ThemeTypographySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTypographySection.swift; sourceTree = "<group>"; };
+		F6A7B8C9D0E1F2A3B4C5D6E7 /* ThemeSpacingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSpacingSection.swift; sourceTree = "<group>"; };
+		A7B8C9D0E1F2A3B4C5D6E7F8 /* ThemeCornerRadiusSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeCornerRadiusSection.swift; sourceTree = "<group>"; };
+		B8C9D0E1F2A3B4C5D6E7F8A9 /* ThemeShadowSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeShadowSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1191,12 +1215,28 @@
 			isa = PBXGroup;
 			children = (
 				05E3DDA4E3B80E90339047E5 /* ThemeEditorView.swift */,
+				C9D0E1F2A3B4C5D6E7F8A9B0 /* Editor */,
 				40AE3C8E1ADD87D38B3BE116 /* ThemeMarketplaceView.swift */,
 				F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */,
 				A0258956E713A6D6A3940159 /* ThemePreviewView.swift */,
 				FA7753C25377A815B2158332 /* ThemesListView.swift */,
 			);
 			path = Themes;
+			sourceTree = "<group>";
+		};
+		C9D0E1F2A3B4C5D6E7F8A9B0 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* ThemeEditorViewModel.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* ThemeSliderRow.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* ThemeMetadataSection.swift */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* ThemeColorTokensSection.swift */,
+				E5F6A7B8C9D0E1F2A3B4C5D6 /* ThemeTypographySection.swift */,
+				F6A7B8C9D0E1F2A3B4C5D6E7 /* ThemeSpacingSection.swift */,
+				A7B8C9D0E1F2A3B4C5D6E7F8 /* ThemeCornerRadiusSection.swift */,
+				B8C9D0E1F2A3B4C5D6E7F8A9 /* ThemeShadowSection.swift */,
+			);
+			path = Editor;
 			sourceTree = "<group>";
 		};
 		EF0E595ED7834EA73544B0C4 /* Products */ = {
@@ -1602,6 +1642,14 @@
 				DBA18F9D1D0027EB921CAF22 /* TeamTaskListView.swift in Sources */,
 				EA50F3DD9DF1DD3671207F86 /* TeamsViewModel.swift in Sources */,
 				40F5BFCA27CF950AED4747DD /* ThemeEditorView.swift in Sources */,
+				D0E1F2A3B4C5D6E7F8A9B0C1 /* ThemeEditorViewModel.swift in Sources */,
+				E1F2A3B4C5D6E7F8A9B0C1D2 /* ThemeSliderRow.swift in Sources */,
+				F2A3B4C5D6E7F8A9B0C1D2E3 /* ThemeMetadataSection.swift in Sources */,
+				A3B4C5D6E7F8A9B0C1D2E3F4 /* ThemeColorTokensSection.swift in Sources */,
+				B4C5D6E7F8A9B0C1D2E3F4A5 /* ThemeTypographySection.swift in Sources */,
+				C5D6E7F8A9B0C1D2E3F4A5B6 /* ThemeSpacingSection.swift in Sources */,
+				D6E7F8A9B0C1D2E3F4A5B6C7 /* ThemeCornerRadiusSection.swift in Sources */,
+				E7F8A9B0C1D2E3F4A5B6C7D8 /* ThemeShadowSection.swift in Sources */,
 				D053AA11000BA5544B72F3C1 /* ThemeManifest.swift in Sources */,
 				4AE7404C5F07C1DD574FD563 /* ThemeMarketplaceView.swift in Sources */,
 				BA28D0297F9A74C6D935C543 /* ThemePickerView.swift in Sources */,
@@ -1791,6 +1839,14 @@
 				065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */,
 				CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */,
 				E9F1870916A648BFA1C77E16 /* ThemeEditorView.swift in Sources */,
+				F8A9B0C1D2E3F4A5B6C7D8E9 /* ThemeEditorViewModel.swift in Sources */,
+				A9B0C1D2E3F4A5B6C7D8E9F0 /* ThemeSliderRow.swift in Sources */,
+				B0C1D2E3F4A5B6C7D8E9F0A1 /* ThemeMetadataSection.swift in Sources */,
+				C1D2E3F4A5B6C7D8E9F0A1B2 /* ThemeColorTokensSection.swift in Sources */,
+				D2E3F4A5B6C7D8E9F0A1B2C3 /* ThemeTypographySection.swift in Sources */,
+				E3F4A5B6C7D8E9F0A1B2C3D4 /* ThemeSpacingSection.swift in Sources */,
+				F4A5B6C7D8E9F0A1B2C3D4E5 /* ThemeCornerRadiusSection.swift in Sources */,
+				A5B6C7D8E9F0A1B2C3D4E5F6 /* ThemeShadowSection.swift in Sources */,
 				FC004FECD43C6609A67992E3 /* ThemeManifest.swift in Sources */,
 				2BB6F13CC784C14F38E47ED8 /* ThemeMarketplaceView.swift in Sources */,
 				5D833104C3510BD26A7AC9E5 /* ThemePickerView.swift in Sources */,
