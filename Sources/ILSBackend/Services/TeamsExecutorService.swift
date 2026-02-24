@@ -94,25 +94,28 @@ actor TeamsExecutorService {
         // Send SIGTERM
         process.terminate()
 
+        // MEM-06: Extract pid and release Process reference. The detached task
+        // only needs the pid for SIGKILL fallback, not the full NSTask object.
         let pid = process.processIdentifier
+        let isStillRunning = process.isRunning
 
-        // Spawn a detached task to send SIGKILL after 5 seconds if still running
-        // Only capture pid (Int32, Sendable) — NOT the non-Sendable Process
+        // Remove from tracking immediately (releases our strong ref to Process)
+        activeProcesses[teamName]?.removeValue(forKey: memberName)
+        if activeProcesses[teamName]?.isEmpty == true {
+            activeProcesses.removeValue(forKey: teamName)
+        }
+
+        // Only spawn SIGKILL fallback if process was still running after SIGTERM
+        guard isStillRunning else { return }
+
+        // MEM-07: Detached task only captures Sendable pid (Int32), not the Process object.
+        // 5s timeout is acceptable — it's a fallback for processes that ignore SIGTERM.
         Task.detached {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
-
-            // Use kill(pid, 0) to check if process is still alive — avoids capturing non-Sendable Process
+            // Check if process is still alive via kill(pid, 0) signal probe
             if kill(pid, 0) == 0 {
                 kill(pid, SIGKILL)
             }
-        }
-
-        // Remove from tracking
-        activeProcesses[teamName]?.removeValue(forKey: memberName)
-
-        // Clean up empty team entry
-        if activeProcesses[teamName]?.isEmpty == true {
-            activeProcesses.removeValue(forKey: teamName)
         }
     }
 
