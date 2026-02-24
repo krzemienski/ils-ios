@@ -1,14 +1,36 @@
 import SwiftUI
 import ILSShared
 
+/// Read-only metadata sheet for a single ``ChatSession``.
+///
+/// Fetches fresh session data from the backend on appearance via `.task`, displaying
+/// name, model, status, cost, timestamps, and configuration fields in a grouped `List`.
+/// While data is loading a `ProgressView` is shown; on failure an error message with a
+/// retry button is presented.
+///
+/// The toolbar exposes two actions:
+/// - **Export** — delegates to ``SessionExportService`` to produce Markdown, then presents
+///   a `ShareSheet` for sharing or saving.
+/// - **Copy ID** — writes the session UUID to the platform clipboard using
+///   `UIPasteboard` on iOS or `NSPasteboard` on macOS, then surfaces a brief confirmation
+///   via `ToastModifier`.
+///
+/// ## Topics
+/// ### State
+/// - ``loadedSession`` - Full session fetched from the API, overlaying the seed value
+/// - ``isLoading`` - Whether the initial or retry fetch is in progress
+/// - ``errorMessage`` - Human-readable description of the last fetch failure
 struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
 
+    /// The fully-loaded session returned by the API, replacing the seed `session` once fetched.
     @State private var loadedSession: ChatSession?
+    /// `true` while the API request is in-flight; drives the `ProgressView` placeholder.
     @State private var isLoading = true
+    /// Set to the localised error description when the fetch fails; clears on retry.
     @State private var errorMessage: String?
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
