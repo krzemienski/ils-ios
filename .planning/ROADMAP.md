@@ -59,7 +59,7 @@
 - [x] **Phase 13: ViewModel & Model Optimization** - Parallel data loading, SSE buffer flush, chat message windowing (completed 2026-02-23)
 - [x] **Phase 14: SSE & Background Lifecycle** - Low Power Mode polling, background suspend/resume for SSE and WebSocket (completed 2026-02-23)
 - [x] **Phase 15: View Layer Rendering** - 60fps session scrolling, chat virtualization, off-thread syntax highlighting, animation gating (completed 2026-02-23)
-- [ ] **Phase 16: Cross-Platform Verification** - macOS compilation, full v1.0 REQ regression check
+- [x] **Phase 16: Cross-Platform Verification** - macOS compilation, full v1.0 REQ regression check (completed 2026-02-23)
 - [ ] **Phase 17: Regression Test Infrastructure** - XCTest performance baselines, MetricKit production metrics
 
 ## Phase Details
@@ -155,7 +155,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 16-01-PLAN.md -- Build all 3 targets (iOS, macOS, Backend), fix macOS compilation errors, re-validate 15 v1.0 REQs, spot-check macOS functionality
+- [x] 16-01-PLAN.md -- Build all 3 targets (iOS, macOS, Backend), fix macOS compilation errors, re-validate 15 v1.0 REQs, spot-check macOS functionality
 
 ---
 
@@ -341,7 +341,7 @@ Plans:
 | 13. ViewModel & Model | 2/2 | Complete    | 2026-02-23 | - |
 | 14. SSE & Background | 1/1 | Complete    | 2026-02-23 | - |
 | 15. View Layer Rendering | 3/3 | Complete    | 2026-02-23 | - |
-| 16. Cross-Platform Verify | v2.0 | 0/? | Not started | - |
+| 16. Cross-Platform Verify | v2.0 | 1/1 | Complete | 2026-02-23 |
 | 17. Regression Tests | v2.0 | 0/? | Not started | - |
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
