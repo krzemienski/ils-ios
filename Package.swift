@@ -37,7 +37,10 @@ let package = Package(
                 .product(name: "Splash", package: "Splash"),
             ],
             path: "Sources/ILSShared",
-            exclude: ["Models/CLAUDE.md"]
+            exclude: ["Models/CLAUDE.md"],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency=targeted")
+            ]
         ),
         // Vapor backend
         .executableTarget(
@@ -50,7 +53,10 @@ let package = Package(
                 .product(name: "Yams", package: "Yams"),
             ],
             path: "Sources/ILSBackend",
-            exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"]
+            exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency=targeted")
+            ]
         ),
         // Tests
         .testTarget(

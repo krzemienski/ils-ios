@@ -24,6 +24,7 @@ struct AddDatabaseIndexes: AsyncMigration {
     }
 
     func revert(on database: Database) async throws {
+        // DB-02: Index drops are safe — indexes are fully reconstructable from data.
         guard let sql = database as? SQLDatabase else { return }
 
         try await sql.raw("DROP INDEX IF EXISTS idx_sessions_last_active").run()

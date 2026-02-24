@@ -191,7 +191,9 @@ struct WidgetDataProvider {
             return []
         }
         do {
-            return try JSONDecoder().decode([WidgetSessionInfo].self, from: data)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([WidgetSessionInfo].self, from: data)
         } catch {
             return []
         }
@@ -229,6 +231,7 @@ struct WidgetDataProvider {
         }
 
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let health = try decoder.decode(WidgetHealthResponse.self, from: data)
 
         // Also fetch session count

@@ -35,7 +35,8 @@ struct ConnectionBanner: View {
                     theme.error.opacity(0.2)
                 }
             }
-            .background(.ultraThinMaterial)
+            // ENRG-01: .regularMaterial avoids continuous blur recomposition over streaming content
+            .background(.regularMaterial)
         )
         .transition(.move(edge: .top).combined(with: .opacity))
         .accessibilityElement(children: .ignore)

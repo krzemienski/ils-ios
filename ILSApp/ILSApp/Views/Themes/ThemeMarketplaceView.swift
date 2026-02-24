@@ -50,6 +50,7 @@ struct ThemeMarketplaceView: View {
 
     @State private var searchText = ""
     @State private var selectedCategory: ThemeCategory = .all
+    @FocusState private var isSearchFocused: Bool
     @State private var showingImporter = false
     @State private var showingExporter = false
     @State private var importError: String?
@@ -184,6 +185,7 @@ struct ThemeMarketplaceView: View {
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 #endif
+                .focused($isSearchFocused)
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
@@ -200,6 +202,7 @@ struct ThemeMarketplaceView: View {
         .padding(.vertical, theme.spacingSM)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
     }
 
     // MARK: - Category Filter
@@ -261,30 +264,46 @@ struct ThemeMarketplaceView: View {
     // MARK: - Import / Export
 
     private func handleImport(result: Result<[URL], Error>) {
+        let fileURL: URL
         do {
-            guard let fileURL = try result.get().first else {
+            guard let url = try result.get().first else {
                 importError = "No file selected"
                 showImportError = true
                 return
             }
-
-            guard fileURL.startAccessingSecurityScopedResource() else {
-                importError = "Unable to access file"
-                showImportError = true
-                return
-            }
-            defer { fileURL.stopAccessingSecurityScopedResource() }
-
-            let jsonData = try Data(contentsOf: fileURL)
-            let manifest = try Self.jsonDecoder.decode(ThemeManifest.self, from: jsonData)
-
-            let imported = ImportedTheme(manifest: manifest)
-            themeManager.registerTheme(imported)
-            themeManager.setTheme(imported.id)
-
+            fileURL = url
         } catch {
             importError = "Failed to import theme: \(error.localizedDescription)"
             showImportError = true
+            return
+        }
+
+        guard fileURL.startAccessingSecurityScopedResource() else {
+            importError = "Unable to access file"
+            showImportError = true
+            return
+        }
+
+        // UIPERF-04: Move file I/O off the main thread into a cooperative Task.
+        // Data(contentsOf:) was previously called synchronously on the main thread,
+        // blocking the UI during large file reads.
+        Task {
+            defer { fileURL.stopAccessingSecurityScopedResource() }
+            do {
+                let jsonData = try Data(contentsOf: fileURL)
+                let manifest = try Self.jsonDecoder.decode(ThemeManifest.self, from: jsonData)
+
+                await MainActor.run {
+                    let imported = ImportedTheme(manifest: manifest)
+                    themeManager.registerTheme(imported)
+                    themeManager.setTheme(imported.id)
+                }
+            } catch {
+                await MainActor.run {
+                    importError = "Failed to import theme: \(error.localizedDescription)"
+                    showImportError = true
+                }
+            }
         }
     }
 

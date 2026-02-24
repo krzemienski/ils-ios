@@ -7,6 +7,11 @@ struct ProcessListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Bindable var viewModel: SystemMetricsViewModel
 
+    /// Pre-computed process classification badges keyed by process name.
+    /// Populated once when filteredProcesses changes, avoiding O(n) string
+    /// matching per row on every SwiftUI body evaluation.
+    @State private var classificationCache: [String: ProcessBadge] = [:]
+
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             // Header
@@ -119,12 +124,29 @@ struct ProcessListView: View {
         }
         .padding(theme.spacingMD)
         .modifier(GlassCard())
+        .task {
+            rebuildClassificationCache()
+        }
+        .onChange(of: viewModel.filteredProcesses.count) { _, _ in
+            rebuildClassificationCache()
+        }
+    }
+
+    /// Rebuild the classification cache from the current visible processes.
+    private func rebuildClassificationCache() {
+        var cache: [String: ProcessBadge] = [:]
+        for process in viewModel.filteredProcesses.prefix(50) {
+            if let badge = classifyProcess(process.name) {
+                cache[process.name] = badge
+            }
+        }
+        classificationCache = cache
     }
 
     private func processRow(_ process: ProcessInfoResponse) -> some View {
         HStack {
-            // Process classification badge
-            if let badge = classifyProcess(process.name) {
+            // Process classification badge (read from pre-computed cache)
+            if let badge = classificationCache[process.name] {
                 Circle()
                     .fill(badge.color)
                     .frame(width: 6, height: 6)

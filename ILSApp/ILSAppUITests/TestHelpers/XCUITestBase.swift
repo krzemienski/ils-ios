@@ -56,7 +56,7 @@ class XCUITestBase: XCTestCase {
                 print("✅ Backend is ready")
                 return
             }
-            Thread.sleep(forTimeInterval: 1)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
         }
         
         throw TestError.backendNotAvailable
@@ -152,8 +152,12 @@ class XCUITestBase: XCTestCase {
         let button = app.buttons[section.rawValue]
         tapElement(button, message: "\(section.rawValue) button should exist in sidebar")
         
-        // Sidebar should auto-close after selection
-        Thread.sleep(forTimeInterval: 0.5)
+        // Wait for sidebar to dismiss after selection
+        let doneButton = app.buttons["Done"]
+        if doneButton.exists {
+            let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: doneButton)
+            _ = XCTWaiter.wait(for: [gone], timeout: 3)
+        }
     }
     
     // MARK: - Assertion Helpers

@@ -149,7 +149,14 @@ struct FleetController: RouteCollection {
                 if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
                     healthStatus = .healthy
                     // Parse version from health response JSON using Codable
-                    if let healthBody = try? JSONDecoder().decode(HealthCheckBody.self, from: data) {
+                    let healthBody: HealthCheckBody?
+                    do {
+                        healthBody = try JSONDecoder().decode(HealthCheckBody.self, from: data)
+                    } catch {
+                        req.logger.debug("Fleet health response not JSON-decodable: \(error)")
+                        healthBody = nil
+                    }
+                    if let healthBody = healthBody {
                         backendVersion = healthBody.version ?? backendVersion
                     }
                     claudeAvailable = true

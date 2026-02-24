@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 // MARK: - Glow Effect
 
@@ -9,8 +10,8 @@ struct GlowEffect: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .shadow(color: color.opacity(opacity), radius: radius)
-            .shadow(color: color.opacity(opacity * 0.5), radius: radius * 2)
+            // ENRG-05: Single shadow pass instead of double — halves GPU blur render cost.
+            .shadow(color: color.opacity(opacity), radius: radius * 1.5)
             .drawingGroup()
     }
 }
@@ -34,29 +35,48 @@ extension View {
 struct PulsingGlow: ViewModifier {
     let color: Color
     @State private var isAnimating = false
+    @State private var isVisible = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .shadow(
-                color: color.opacity(reduceMotion ? 0.4 : (isAnimating ? 0.6 : 0.2)),
-                radius: reduceMotion ? 10 : (isAnimating ? 15 : 5)
+                color: color.opacity((reduceMotion || isLowPowerMode) ? 0.4 : (isAnimating ? 0.6 : 0.2)),
+                radius: (reduceMotion || isLowPowerMode) ? 10 : (isAnimating ? 15 : 5)
             )
             .onAppear {
-                guard !reduceMotion, !isAnimating else { return }
+                isVisible = true
+                guard !reduceMotion, !isLowPowerMode, !isAnimating else { return }
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
+            .onDisappear {
+                isVisible = false
+                withAnimation(.linear(duration: 0.1)) {
+                    isAnimating = false
+                }
+            }
             .onChange(of: scenePhase) { _, newPhase in
-                guard !reduceMotion else { return }
-                if newPhase == .active {
+                guard !reduceMotion, !isLowPowerMode else { return }
+                if newPhase == .active, isVisible {
                     guard !isAnimating else { return }
                     withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                         isAnimating = true
                     }
                 } else {
+                    withAnimation(.linear(duration: 0.1)) {
+                        isAnimating = false
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: Notification.Name.NSProcessInfoPowerStateDidChange
+            )) { _ in
+                isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+                if isLowPowerMode {
                     withAnimation(.linear(duration: 0.1)) {
                         isAnimating = false
                     }
@@ -76,20 +96,27 @@ extension View {
 struct PulsingModifier: ViewModifier {
     let active: Bool
     @State private var isAnimating = false
+    @State private var isVisible = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .opacity(reduceMotion ? 1.0 : (active && isAnimating ? 0.5 : 1.0))
+            .opacity((reduceMotion || isLowPowerMode) ? 1.0 : (active && isAnimating ? 0.5 : 1.0))
             .onAppear {
-                guard active, !isAnimating, !reduceMotion else { return }
+                isVisible = true
+                guard active, !isAnimating, !reduceMotion, !isLowPowerMode else { return }
                 withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
+            .onDisappear {
+                isVisible = false
+                isAnimating = false
+            }
             .onChange(of: active) { oldValue, newValue in
-                guard !reduceMotion else { return }
+                guard !reduceMotion, !isLowPowerMode else { return }
                 if newValue {
                     guard !isAnimating else { return }
                     isAnimating = false // reset before re-arming
@@ -101,8 +128,8 @@ struct PulsingModifier: ViewModifier {
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
-                guard active, !reduceMotion else { return }
-                if newPhase == .active {
+                guard active, !reduceMotion, !isLowPowerMode else { return }
+                if newPhase == .active, isVisible {
                     guard !isAnimating else { return }
                     isAnimating = false // reset before re-arming
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
@@ -112,6 +139,14 @@ struct PulsingModifier: ViewModifier {
                     withAnimation(.linear(duration: 0.1)) {
                         isAnimating = false
                     }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: Notification.Name.NSProcessInfoPowerStateDidChange
+            )) { _ in
+                isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+                if isLowPowerMode {
+                    isAnimating = false
                 }
             }
     }
@@ -125,21 +160,54 @@ extension View {
 
 // MARK: - Scanline Overlay
 
+/// Module-level cache keyed by "lineSpacing_opacity" — avoids re-creating the tile on every layout pass.
+nonisolated(unsafe) private var scanlineTileCache: [String: Image] = [:]
+
+private func makeScanlineTile(lineSpacing: CGFloat, opacity: Double) -> Image {
+    let key = "\(lineSpacing)_\(opacity)"
+    if let cached = scanlineTileCache[key] {
+        return cached
+    }
+
+    let height = max(1, Int(lineSpacing))
+    guard let context = CGContext(
+        data: nil,
+        width: 1,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        return Image(systemName: "square")
+    }
+
+    context.clear(CGRect(x: 0, y: 0, width: 1, height: height))
+    context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: opacity))
+    context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+
+    guard let cgImage = context.makeImage() else {
+        return Image(systemName: "square")
+    }
+
+    #if canImport(UIKit)
+    let image = Image(uiImage: UIImage(cgImage: cgImage))
+    #elseif canImport(AppKit)
+    let image = Image(nsImage: NSImage(cgImage: cgImage, size: NSSize(width: 1, height: height)))
+    #endif
+
+    scanlineTileCache[key] = image
+    return image
+}
+
 struct ScanlineOverlay: View {
     var lineSpacing: CGFloat = 4
     var opacity: Double = 0.03
 
     var body: some View {
-        Canvas { context, size in
-            var y: CGFloat = 0
-            while y < size.height {
-                let rect = CGRect(x: 0, y: y, width: size.width, height: 1)
-                context.fill(Path(rect), with: .color(.black.opacity(opacity)))
-                y += lineSpacing
-            }
-        }
-        .drawingGroup()
-        .allowsHitTesting(false)
+        makeScanlineTile(lineSpacing: lineSpacing, opacity: opacity)
+            .resizable(resizingMode: .tile)
+            .allowsHitTesting(false)
     }
 }
 

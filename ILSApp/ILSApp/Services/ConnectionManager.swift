@@ -2,6 +2,16 @@ import Foundation
 import Observation
 import ILSShared
 
+// SEC-MED-1: Centralized connection defaults — avoids scattered localhost hardcoding.
+enum ConnectionDefaults {
+    static let host = "localhost"
+    static let port = 9999
+    static let scheme = "http"
+
+    /// Build default URL from components.
+    static var defaultURL: String { "\(scheme)://\(host):\(port)" }
+}
+
 /// Manages server connection state, URL persistence, and client lifecycle.
 @MainActor
 @Observable
@@ -21,10 +31,10 @@ class ConnectionManager {
         if let savedURL = UserDefaults.standard.string(forKey: "serverURL"), !savedURL.isEmpty {
             url = savedURL
         } else {
-            let host = UserDefaults.standard.string(forKey: "serverHost") ?? "localhost"
+            let host = UserDefaults.standard.string(forKey: "serverHost") ?? ConnectionDefaults.host
             let port = UserDefaults.standard.integer(forKey: "serverPort")
-            let actualPort = port > 0 ? port : 9999
-            url = "http://\(host):\(actualPort)"
+            let actualPort = port > 0 ? port : ConnectionDefaults.port
+            url = "\(ConnectionDefaults.scheme)://\(host):\(actualPort)"
         }
 
         self.apiClient = APIClient(baseURL: url)

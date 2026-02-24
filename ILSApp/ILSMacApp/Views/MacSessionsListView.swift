@@ -2,6 +2,9 @@ import SwiftUI
 import ILSShared
 
 /// macOS-optimized sessions list view with search, grouping, and keyboard navigation
+/// SPERF-MED-4: This view is unused (MacContentView manages sessions inline).
+/// Retained for potential future macOS-specific sessions UI. Duplicate SessionsViewModel
+/// is a non-issue since this view is never instantiated outside previews.
 struct MacSessionsListView: View {
     @State private var viewModel = SessionsViewModel()
     @Environment(AppState.self) var appState
@@ -17,6 +20,7 @@ struct MacSessionsListView: View {
     @State private var searchText: String = ""
     @State private var expandedProjects: Set<String> = []
     @State private var selectedSessionId: UUID?
+    @State private var cachedFilteredGroups: [ProjectGroupInfo] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -38,6 +42,13 @@ struct MacSessionsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadProjectGroups()
+            updateFilteredGroups()
+        }
+        .onChange(of: searchText) { _, _ in
+            updateFilteredGroups()
+        }
+        .onChange(of: viewModel.projectGroups.count) { _, _ in
+            updateFilteredGroups()
         }
     }
 
@@ -94,10 +105,10 @@ struct MacSessionsListView: View {
         List(selection: $selectedSessionId) {
             if viewModel.isLoading && viewModel.projectGroups.isEmpty {
                 loadingView
-            } else if filteredProjectGroups.isEmpty {
+            } else if cachedFilteredGroups.isEmpty {
                 emptyView
             } else {
-                ForEach(filteredProjectGroups) { group in
+                ForEach(cachedFilteredGroups) { group in
                     projectGroup(group: group)
                 }
             }
@@ -314,10 +325,13 @@ struct MacSessionsListView: View {
 
     // MARK: - Helpers
 
-    private var filteredProjectGroups: [ProjectGroupInfo] {
-        guard !searchText.isEmpty else { return viewModel.projectGroups }
+    private func updateFilteredGroups() {
+        guard !searchText.isEmpty else {
+            cachedFilteredGroups = viewModel.projectGroups
+            return
+        }
         let query = searchText.lowercased()
-        return viewModel.projectGroups.filter { group in
+        cachedFilteredGroups = viewModel.projectGroups.filter { group in
             group.name.lowercased().contains(query)
         }
     }

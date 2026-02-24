@@ -196,6 +196,12 @@ struct SessionFileService {
 
     // MARK: - Transcript Reading
 
+    /// Result of reading a transcript, containing the paginated messages and the total count before pagination.
+    struct TranscriptResult {
+        let messages: [Message]
+        let total: Int
+    }
+
     /// Read messages from a session's JSONL transcript file.
     ///
     /// Parses `~/.claude/projects/{encodedProjectPath}/{sessionId}.jsonl` and extracts
@@ -206,8 +212,8 @@ struct SessionFileService {
     ///   - sessionId: Session UUID
     ///   - limit: Maximum number of messages to return (default: 100)
     ///   - offset: Number of messages to skip (default: 0)
-    /// - Returns: Array of Message objects
-    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
+    /// - Returns: TranscriptResult containing paginated messages and total count
+    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> TranscriptResult {
         // Sanitize path components to prevent directory traversal
         try PathSanitizer.validateComponent(encodedProjectPath)
         try PathSanitizer.validateComponent(sessionId)
@@ -317,7 +323,7 @@ struct SessionFileService {
         let total = messages.count
         let start = min(offset, total)
         let end = min(start + limit, total)
-        return Array(messages[start..<end])
+        return TranscriptResult(messages: Array(messages[start..<end]), total: total)
     }
 }
 

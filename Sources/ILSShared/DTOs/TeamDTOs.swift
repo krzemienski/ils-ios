@@ -52,6 +52,20 @@ public enum TeamMemberStatus: String, Codable, Sendable {
     case idle
     case active
     case shutdown
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized TeamMemberStatus: '\(raw)'. Expected: idle, active, shutdown"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 // MARK: - Team Tasks
@@ -87,6 +101,20 @@ public enum TeamTaskStatus: String, Codable, Sendable {
     case inProgress = "in_progress"
     case completed
     case deleted
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized TeamTaskStatus: '\(raw)'. Expected: pending, in_progress, completed, deleted"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 // MARK: - Team Messages

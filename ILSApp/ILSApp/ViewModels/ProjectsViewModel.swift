@@ -63,8 +63,8 @@ class ProjectsViewModel {
             if let data = response.data {
                 if currentOffset == 0 {
                     projects = data.items
-                    // Update cache with fresh data in background
-                    Task.detached {
+                    // CONC-03: Use Task instead of Task.detached — CacheService actor handles isolation.
+                    Task {
                         await CacheService.shared.cacheProjects(data.items)
                     }
                 } else {

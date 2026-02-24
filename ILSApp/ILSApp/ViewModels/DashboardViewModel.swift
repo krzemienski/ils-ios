@@ -55,15 +55,21 @@ class DashboardViewModel {
             }
         }
 
-        await loadStats()
-        await loadRecentActivity()
+        // SPERF-04: Run loadStats and loadRecentActivity in parallel.
+        // Both write to different @Observable properties (stats vs recentSessions).
+        // The actual network calls run on the APIClient actor, so async let allows
+        // both requests to be in-flight simultaneously rather than waiting sequentially.
+        async let statsResult: Void = loadStats()
+        async let recentResult: Void = loadRecentActivity()
+        _ = await (statsResult, recentResult)
         computeTotalCost()
 
         // Cache the fresh recent sessions
         if !recentSessions.isEmpty {
-            Task.detached { [sessions = self.recentSessions] in
-                await CacheService.shared.cacheSessions(sessions)
-            }
+            // C-MED-5: Use Task instead of Task.detached — only calls CacheService actor,
+            // no need to escape @MainActor isolation.
+            let sessions = self.recentSessions
+            Task { await CacheService.shared.cacheSessions(sessions) }
         }
 
         isLoading = false

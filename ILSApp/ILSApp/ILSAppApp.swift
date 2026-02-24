@@ -2,6 +2,9 @@ import SwiftUI
 import Observation
 import ILSShared
 import TipKit
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @main
 struct ILSAppApp: App {
@@ -31,27 +34,41 @@ struct ILSAppApp: App {
                     .onOpenURL { url in
                         appState.handleURL(url)
                     }
+                    .task {
+                        withAnimation(.easeOut(duration: 0.4)) {
+                            showLaunchScreen = false
+                        }
+                        Task.detached(priority: .background) {
+                            try? Tips.configure([
+                                .displayFrequency(.daily),
+                                .datastoreLocation(.applicationDefault)
+                            ])
+                            await CacheService.shared.initialize()
+                        }
+                        #if os(iOS)
+                        // MEM-01 + H-M1: Proactive cache eviction under memory pressure.
+                        // Observer targets a singleton (CacheService.shared) so no retain cycle,
+                        // but NotificationCenter holds the token forever. Acceptable for app-lifetime
+                        // observer registered once in the root @main struct.
+                        NotificationCenter.default.addObserver(
+                            forName: UIApplication.didReceiveMemoryWarningNotification,
+                            object: nil,
+                            queue: .main
+                        ) { _ in
+                            Task {
+                                await CacheService.shared.cleanupExpired()
+                                AppLogger.shared.warning("Memory pressure: caches evicted", category: "memory")
+                            }
+                        }
+                        PerformanceMonitor.shared.start()
+                        #endif
+                    }
 
                 if showLaunchScreen {
                     LaunchScreenView()
                         .environment(\.theme, themeManager.currentSnapshot)
                         .transition(.opacity)
                         .zIndex(1)
-                }
-            }
-            .task {
-                // Configure TipKit onboarding system
-                try? Tips.configure([
-                    .displayFrequency(.daily),
-                    .datastoreLocation(.applicationDefault)
-                ])
-
-                // Initialize local cache database
-                await CacheService.shared.initialize()
-
-                try? await Task.sleep(for: .seconds(2.2))
-                withAnimation(.easeOut(duration: 0.5)) {
-                    showLaunchScreen = false
                 }
             }
         }
@@ -116,7 +133,14 @@ class AppState {
     }
 
     func handleScenePhase(_ phase: ScenePhase) {
-        pollingManager.handleScenePhase(phase)
+        let appPhase: PollingManager.AppPhase
+        switch phase {
+        case .active: appPhase = .active
+        case .inactive: appPhase = .inactive
+        case .background: appPhase = .background
+        @unknown default: appPhase = .inactive
+        }
+        pollingManager.handleScenePhase(appPhase)
     }
 
     func updateLastSessionId(_ id: UUID?) {
@@ -160,25 +184,28 @@ class AppState {
         case "teams":
             navigationIntent = .teams
         default:
-            break
+            // NAV-MED-3: Log unknown deep link routes for debugging.
+            if let host = url.host {
+                AppLogger.shared.warning("Unrecognized deep link route: ils://\(host)", category: "deeplink")
+            }
         }
     }
 
+    // H-C4: Use [weak self] to prevent retain cycle if AppState is deallocated during fetch.
     private func navigateToSession(id: UUID) {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
-                let response: APIResponse<ChatSession> = try await apiClient.get("/sessions/\(id.uuidString)")
+                let response: APIResponse<ChatSession> = try await self.apiClient.get("/sessions/\(id.uuidString)")
                 if let session = response.data {
-                    navigationIntent = .chat(session)
+                    self.navigationIntent = .chat(session)
                 } else {
-                    // API returned no data — open a minimal session
                     let session = ChatSession(id: id, name: "Session")
-                    navigationIntent = .chat(session)
+                    self.navigationIntent = .chat(session)
                 }
             } catch {
-                // Session not found in DB (may be external) — open with minimal info
                 let session = ChatSession(id: id, name: "Session")
-                navigationIntent = .chat(session)
+                self.navigationIntent = .chat(session)
             }
         }
     }

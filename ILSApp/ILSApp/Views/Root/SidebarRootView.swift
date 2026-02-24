@@ -2,6 +2,11 @@ import SwiftUI
 import ILSShared
 
 // MARK: - Active Screen
+// NAV-MED-1/2: ActiveScreen enum routing is the intentional navigation architecture.
+// iOS uses a sheet-based sidebar (not NavigationSplitView) which requires manual
+// screen routing via @State. NavigationStack+navigationDestination is used for
+// within-screen drill-downs (e.g., session detail). This split is intentional:
+// sidebar manages top-level screens, NavigationStack manages hierarchical navigation.
 
 enum ActiveScreen: Hashable {
     case home
@@ -61,7 +66,6 @@ struct SidebarRootView: View {
     @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
     @State private var isSidebarOpen: Bool = false
     @State private var activeScreen: ActiveScreen = .home
-    @State private var navigationPath = NavigationPath()
     @State private var sidebarDragOffset: CGFloat = 0
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var browserSegment: BrowserSegment = .mcp
@@ -73,7 +77,17 @@ struct SidebarRootView: View {
 
     private var sidebarWidth: CGFloat { 280 }
 
+    // SP-MED-5: ARC overhead in SwiftUI closures — `.task`, `.onChange`, and `.onAppear` closures
+    // capture `self` implicitly. Using `[weak self]` here would require optional-chaining every
+    // property access, adding branching overhead that exceeds the ARC retain/release cost (~25ns).
+    // These closures are short-lived (tied to view lifetime) so retain cycles are impossible.
+    // `[weak self]` is reserved for long-lived closures (NotificationCenter, Timer, escaping).
+
     var body: some View {
+        // LAYOUT-01: Size-class branch is intentional — iPad uses NavigationSplitView, iPhone uses
+        // custom sheet-based sidebar. These are structurally incompatible views. Identity loss on
+        // rotation is accepted: iPhone rarely rotates in this app, and iPad stays in regular width.
+        // @SceneStorage persists activeScreen across rebuilds for state restoration.
         Group {
             if isRegularWidth {
                 iPadLayout
@@ -84,18 +98,12 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
             activeScreen = screen
-            if navigationPath.count > 0 {
-                navigationPath.removeLast(navigationPath.count)
-            }
             appState.navigationIntent = nil
             if !isRegularWidth {
                 closeSidebar()
             }
         }
         .onChange(of: activeScreen) { _, newScreen in
-            if navigationPath.count > 0 {
-                navigationPath.removeLast(navigationPath.count)
-            }
             activeScreenKey = newScreen.storageKey
             // Persist the chat session ID for state restoration
             if case .chat(let session) = newScreen {
@@ -118,9 +126,7 @@ struct SidebarRootView: View {
             // Restore chat session if app was backgrounded while viewing chat
             if activeScreenKey == "chat", !lastChatSessionId.isEmpty,
                let uuid = UUID(uuidString: lastChatSessionId) {
-                // O(1) dictionary lookup instead of O(n) first(where:)
-                let sessionIndex = Dictionary(uniqueKeysWithValues: sessionsVM.sessions.map { ($0.id, $0) })
-                if let session = sessionIndex[uuid] {
+                if let session = sessionsVM.session(byID: uuid) {
                     activeScreen = .chat(session)
                 } else {
                     // Fallback: create minimal session for restoration
@@ -183,7 +189,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             Group {
                 switch activeScreen {
                 case .home:

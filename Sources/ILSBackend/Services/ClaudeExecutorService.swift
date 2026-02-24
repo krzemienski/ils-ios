@@ -52,13 +52,17 @@ actor ClaudeExecutorService {
     /// Active stdin handles keyed by session ID for permission response forwarding
     private var activeStdinHandles: [String: FileHandle] = [:]
 
-    /// GCD queue for blocking stdout reads (avoids RunLoop dependency)
+    /// GCD queue for blocking stdout reads (avoids RunLoop dependency).
+    /// `let` property — nonisolated by default on actors, safe to access from nonisolated methods.
     private let readQueue = DispatchQueue(label: "ils.claude-stdout-reader", qos: .userInitiated)
 
     /// When true, uses the Agent SDK (via Node.js wrapper) instead of `claude -p`.
     /// The SDK calls the Anthropic API directly, avoiding the subprocess hang issue.
     /// Set to false to fall back to `claude -p` when running outside Claude Code.
-    static var useAgentSDK: Bool = true
+    ///
+    /// SWIFT6-01: `static let` — no runtime mutation exists in the codebase.
+    /// Previously `nonisolated(unsafe) static var` but grep confirms zero write sites.
+    static let useAgentSDK: Bool = true
 
     // MARK: - Public API
 

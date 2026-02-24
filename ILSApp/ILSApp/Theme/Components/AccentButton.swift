@@ -49,9 +49,9 @@ struct AccentButton: View {
             .background(theme.accent.opacity(isEnabled ? 1.0 : 0.4))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             .scaleEffect(isPressed ? 0.85 : 1.0)
+            .opacity(isPressed ? 0.8 : 1.0)
             .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
         }
-        .opacity(isEnabled ? 1.0 : 0.6)
         .accessibilityLabel(title)
         .opacity(isEnabled ? 1.0 : 0.5)
         .saturation(isEnabled ? 1.0 : 0.3)

@@ -180,6 +180,12 @@ class ThemeManager {
 
     private static let themeIDKey = "selectedThemeID"
 
+    // SPERF-02: `any AppTheme` here is by design -- the theme registry stores heterogeneous
+    // theme types (built-in + imported). The hot path (view body reads) uses ThemeSnapshot
+    // (concrete value type) via @Environment(\.theme), eliminating existential boxing in
+    // render paths. The remaining `any AppTheme` usage in ThemeManager is limited to
+    // theme selection/registration, which runs infrequently (user-initiated).
+
     /// All available themes.
     private(set) var availableThemes: [any AppTheme] = []
 

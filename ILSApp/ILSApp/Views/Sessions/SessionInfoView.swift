@@ -20,113 +20,108 @@ struct SessionInfoView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if isLoading {
-                    ProgressView("Loading session details...")
-                } else if let error = errorMessage {
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.largeTitle)
-                            .foregroundColor(theme.warning)
-                        Text("Failed to load session details")
-                            .font(.headline)
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(theme.textSecondary)
-                        Button("Retry") {
-                            Task { await loadSession() }
-                        }
+        Group {
+            if isLoading {
+                ProgressView("Loading session details...")
+            } else if let error = errorMessage {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(theme.warning)
+                    Text("Failed to load session details")
+                        .font(.headline)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(theme.textSecondary)
+                    Button("Retry") {
+                        Task { await loadSession() }
                     }
-                    .padding()
-                } else {
-                    List {
-                        Section("Session Details") {
-                            LabeledContent("Name", value: displaySession.name ?? "Unnamed")
-                            LabeledContent("Model", value: displaySession.model.capitalized)
-                            LabeledContent("Status", value: displaySession.status.rawValue.capitalized)
-                            LabeledContent("Messages", value: "\(displaySession.messageCount)")
-                        }
-
-                        Section("Cost & Usage") {
-                            if let cost = displaySession.totalCostUSD {
-                                LabeledContent("Total Cost", value: String(format: "$%.4f", cost))
-                            } else {
-                                LabeledContent("Total Cost", value: "N/A")
-                            }
-                        }
-
-                        Section("Timestamps") {
-                            LabeledContent("Created", value: displaySession.createdAt.formatted())
-                            LabeledContent("Last Active", value: displaySession.lastActiveAt.formatted())
-                        }
-
-                        Section("Configuration") {
-                            LabeledContent("Permission Mode", value: displaySession.permissionMode.rawValue)
-                            LabeledContent("Source", value: displaySession.source.rawValue)
-                            if let projectName = displaySession.projectName {
-                                LabeledContent("Project", value: projectName)
-                            }
-                        }
-
-                        if let claudeId = displaySession.claudeSessionId {
-                            Section("Internal") {
-                                LabeledContent("Claude Session ID", value: claudeId)
-                                    .font(.caption)
-                            }
-                        }
-                    }
-                    .scrollContentBackground(.hidden)
                 }
-            }
-            .background(theme.bgPrimary)
-            .navigationTitle("Session Info")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    HStack(spacing: 12) {
-                        Button {
-                            Task { await exportSession() }
-                        } label: {
-                            if isExporting {
-                                ProgressView()
-                                    .controlSize(.small)
-                            } else {
-                                Image(systemName: "square.and.arrow.up")
-                            }
-                        }
-                        .disabled(isExporting)
+                .padding()
+            } else {
+                List {
+                    Section("Session Details") {
+                        LabeledContent("Name", value: displaySession.name ?? "Unnamed")
+                        LabeledContent("Model", value: displaySession.model.capitalized)
+                        LabeledContent("Status", value: displaySession.status.rawValue.capitalized)
+                        LabeledContent("Messages", value: "\(displaySession.messageCount)")
+                    }
 
-                        Button {
-                            #if os(iOS)
-                            UIPasteboard.general.string = session.id.uuidString
-                            #else
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(session.id.uuidString, forType: .string)
-                            #endif
-                            showCopiedToast = true
-                            Task {
-                                try? await Task.sleep(for: .seconds(2))
-                                showCopiedToast = false
-                            }
-                        } label: {
-                            Image(systemName: "doc.on.doc")
+                    Section("Cost & Usage") {
+                        if let cost = displaySession.totalCostUSD {
+                            LabeledContent("Total Cost", value: String(format: "$%.4f", cost))
+                        } else {
+                            LabeledContent("Total Cost", value: "N/A")
+                        }
+                    }
+
+                    Section("Timestamps") {
+                        LabeledContent("Created", value: displaySession.createdAt.formatted())
+                        LabeledContent("Last Active", value: displaySession.lastActiveAt.formatted())
+                    }
+
+                    Section("Configuration") {
+                        LabeledContent("Permission Mode", value: displaySession.permissionMode.rawValue)
+                        LabeledContent("Source", value: displaySession.source.rawValue)
+                        if let projectName = displaySession.projectName {
+                            LabeledContent("Project", value: projectName)
+                        }
+                    }
+
+                    if let claudeId = displaySession.claudeSessionId {
+                        Section("Internal") {
+                            LabeledContent("Claude Session ID", value: claudeId)
+                                .font(.caption)
                         }
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                .scrollContentBackground(.hidden)
+            }
+        }
+        .background(theme.bgPrimary)
+        .navigationTitle("Session Info")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: 12) {
+                    Button {
+                        Task { await exportSession() }
+                    } label: {
+                        if isExporting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                    .disabled(isExporting)
+
+                    Button {
+                        #if os(iOS)
+                        UIPasteboard.general.string = session.id.uuidString
+                        #else
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(session.id.uuidString, forType: .string)
+                        #endif
+                        // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
+                        showCopiedToast = true
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
                 }
             }
-            .sheet(isPresented: $showExportSheet) {
-                ShareSheet(text: exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }
             }
-            .toast(isPresented: $showCopiedToast, message: "Session ID copied")
-            .task {
-                await loadSession()
-            }
+        }
+        .sheet(isPresented: $showExportSheet) {
+            ShareSheet(text: exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
+        }
+        .toast(isPresented: $showCopiedToast, message: "Session ID copied")
+        .task {
+            await loadSession()
         }
     }
 

@@ -84,6 +84,11 @@ struct ThemePickerView: View {
         themeManager.availableThemes.filter { $0.id.hasPrefix("custom-") }
     }
 
+    /// Pre-computed set of available theme IDs for O(1) lookup in themeCard()
+    private var availableThemeIDs: Set<String> {
+        Set(themeManager.availableThemes.map(\.id))
+    }
+
     // MARK: - Section Label
 
     private func sectionLabel(_ text: String) -> some View {
@@ -200,7 +205,7 @@ struct ThemePickerView: View {
     @ViewBuilder
     private func themeCard(_ preview: ThemePreview) -> some View {
         let isActive = themeManager.currentTheme.id == preview.id
-        let isAvailable = themeManager.availableThemes.contains(where: { $0.id == preview.id })
+        let isAvailable = availableThemeIDs.contains(preview.id)
 
         Button {
             if isAvailable {

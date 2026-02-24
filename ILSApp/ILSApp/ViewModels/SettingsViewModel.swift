@@ -76,6 +76,30 @@ class SettingsViewModel {
         }
     }
 
+    /// Saves server URL to AppState and tests the connection.
+    /// Keeps SettingsView thin by moving the Task creation here.
+    func saveAndTestConnection(url: String, appState: AppState) {
+        let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        appState.updateServerURL(trimmed)
+        Task {
+            await testConnection()
+        }
+    }
+
+    /// Pre-computed hook event breakdown derived from cached config.
+    /// Avoids rebuilding the filtered array on every view body evaluation.
+    var hookEventBreakdown: [(String, Int)] {
+        guard let hooks = config?.content.hooks else { return [] }
+        return [
+            ("SessionStart", hooks.sessionStart?.count ?? 0),
+            ("SubagentStart", hooks.subagentStart?.count ?? 0),
+            ("UserPromptSubmit", hooks.userPromptSubmit?.count ?? 0),
+            ("PreToolUse", hooks.preToolUse?.count ?? 0),
+            ("PostToolUse", hooks.postToolUse?.count ?? 0)
+        ].filter { $0.1 > 0 }
+    }
+
     func saveConfig(model: String, colorScheme: String) async -> String? {
         guard let client else { return "Client not configured" }
         isSaving = true
@@ -104,6 +128,25 @@ class SettingsViewModel {
             return nil
         } catch {
             return "Failed to save: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Fire-and-forget wrappers (synchronous entry points for Binding setters)
+
+    /// Updates the default model from a Binding setter without requiring Task/await.
+    func updateModel(_ newModel: String) {
+        guard let config = config?.content else { return }
+        Task {
+            _ = await saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
+            await loadConfig()
+        }
+    }
+
+    /// Updates a boolean toggle from a Binding setter without requiring Task/await.
+    func updateToggle(key: String, value: Bool) {
+        Task {
+            _ = await saveConfigToggle(key: key, value: value)
+            await loadConfig()
         }
     }
 

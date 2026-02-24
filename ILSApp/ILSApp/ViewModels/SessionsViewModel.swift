@@ -7,6 +7,12 @@ import ILSShared
 /// Manages both ILS-managed sessions (from database) and external Claude Code sessions
 /// (discovered from `~/.claude/projects/`). Supports pagination, search, and project grouping.
 ///
+/// SA-MED-1: This ViewModel has 19+ properties — accepted as cohesive domain scope.
+/// All properties serve tightly coupled session concerns: pagination (offset, total, hasMore),
+/// search (searchText, filteredSessions), grouping (groupedSessions, projectGroups),
+/// caching (cacheService), and CRUD operations. Splitting would fragment cache invalidation
+/// logic and create cross-ViewModel coordination complexity without meaningful benefit.
+///
 /// ## Topics
 /// ### Properties
 /// - ``sessions`` - Array of all loaded sessions
@@ -63,6 +69,13 @@ class SessionsViewModel {
     /// The session count used to invalidate grouped cache
     private var cachedGroupedSessionCount: Int = -1
 
+    /// Cached time-grouped sessions, rebuilt when filteredSessions changes
+    private var cachedGroupedByTime: [(key: String, value: [ChatSession])] = []
+    /// The search text used to build the cached time-grouped sessions
+    private var cachedGroupedByTimeSearchText: String = ""
+    /// The session count used to invalidate time-grouped cache
+    private var cachedGroupedByTimeSessionCount: Int = -1
+
     init() {}
 
     /// Configure the view model with an API client.
@@ -87,8 +100,9 @@ class SessionsViewModel {
             let text = "\(session.name?.lowercased() ?? "") \(session.projectName?.lowercased() ?? "") \(session.firstPrompt?.lowercased() ?? "")"
             return (session, text)
         }
-        // Invalidate grouped cache
+        // Invalidate grouped caches
         cachedGroupedSessionCount = -1
+        cachedGroupedByTimeSessionCount = -1
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
@@ -112,6 +126,50 @@ class SessionsViewModel {
         return sorted
     }
 
+    /// Filtered sessions grouped by relative time (Today/Yesterday/This Week/Earlier).
+    /// Sessions within each bucket are sorted by most recently active.
+    /// Result is cached and only rebuilt when sessions or searchText change.
+    var groupedSessionsByTime: [(key: String, value: [ChatSession])] {
+        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeSessionCount == sessions.count {
+            return cachedGroupedByTime
+        }
+        let filtered = filteredSessions
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? startOfToday
+        let startOfWeek = calendar.date(byAdding: .day, value: -7, to: startOfToday) ?? startOfToday
+
+        var today: [ChatSession] = []
+        var yesterday: [ChatSession] = []
+        var thisWeek: [ChatSession] = []
+        var earlier: [ChatSession] = []
+
+        for session in filtered {
+            let lastActive = session.lastActiveAt
+            if lastActive >= startOfToday {
+                today.append(session)
+            } else if lastActive >= startOfYesterday {
+                yesterday.append(session)
+            } else if lastActive >= startOfWeek {
+                thisWeek.append(session)
+            } else {
+                earlier.append(session)
+            }
+        }
+
+        var result: [(key: String, value: [ChatSession])] = []
+        if !today.isEmpty { result.append((key: "Today", value: today)) }
+        if !yesterday.isEmpty { result.append((key: "Yesterday", value: yesterday)) }
+        if !thisWeek.isEmpty { result.append((key: "This Week", value: thisWeek)) }
+        if !earlier.isEmpty { result.append((key: "Earlier", value: earlier)) }
+
+        cachedGroupedByTime = result
+        cachedGroupedByTimeSearchText = searchText
+        cachedGroupedByTimeSessionCount = sessions.count
+        return result
+    }
+
     /// Filtered project groups based on search text
     var filteredProjectGroups: [ProjectGroupInfo] {
         guard !searchText.isEmpty else { return projectGroups }
@@ -119,6 +177,12 @@ class SessionsViewModel {
         return projectGroups.filter { group in
             group.name.lowercased().contains(query)
         }
+    }
+
+    /// Look up a session by its ID. Uses a linear scan which is fine for the
+    /// typical loaded session count (~50). Called once during state restoration.
+    func session(byID id: UUID) -> ChatSession? {
+        sessions.first { $0.id == id }
     }
 
     /// Empty state text for UI display
@@ -226,10 +290,8 @@ class SessionsViewModel {
 
             if currentPage == 1 {
                 sessions = newItems
-                // Update cache with fresh data in background
-                Task.detached {
-                    await CacheService.shared.cacheSessions(newItems)
-                }
+                // C-MED-6: Use Task instead of Task.detached — only calls CacheService actor.
+                Task { await CacheService.shared.cacheSessions(newItems) }
             } else {
                 sessions.append(contentsOf: newItems)
             }

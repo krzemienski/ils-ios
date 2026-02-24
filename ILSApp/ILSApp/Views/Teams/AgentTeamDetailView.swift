@@ -21,7 +21,10 @@ struct AgentTeamDetailView: View {
             }
 
             HStack(spacing: 0) {
-                ForEach(Array(["Members", "Tasks", "Messages"].enumerated()), id: \.offset) { index, label in
+                // SPERF-MED-6: Use stable string IDs for static tabs.
+                let tabs = ["Members", "Tasks", "Messages"]
+                ForEach(tabs.indices, id: \.self) { index in
+                    let label = tabs[index]
                     Button {
                         selectedTab = index
                     } label: {

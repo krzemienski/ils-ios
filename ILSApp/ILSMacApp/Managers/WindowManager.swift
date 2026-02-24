@@ -217,18 +217,27 @@ class WindowManager {
 
 // MARK: - Window Frame Delegate
 
+/// MEM-02: No retain cycle exists. WindowManager -> WindowFrameDelegate (strong via windowDelegates dict).
+/// WindowFrameDelegate -> WindowManager (weak). NSWindow -> delegate (weak, per AppKit convention).
+/// Delegate is deallocated when unregisterWindow removes it from windowDelegates.
+///
 /// NSWindowDelegate to track and save window frame changes.
-/// Uses a 500ms debounce to avoid flooding UserDefaults during resize/move drags.
+/// Uses a 500ms Task-based debounce to avoid flooding UserDefaults during resize/move drags.
+/// Implements windowWillClose to cancel pending saves when the OS closes the window directly.
 @MainActor
 class WindowFrameDelegate: NSObject, NSWindowDelegate {
     let sessionId: UUID
     weak var windowManager: WindowManager?
-    private var saveWorkItem: DispatchWorkItem?
+    private var debounceTask: Task<Void, Never>?
 
     init(sessionId: UUID, windowManager: WindowManager) {
         self.sessionId = sessionId
         self.windowManager = windowManager
         super.init()
+    }
+
+    deinit {
+        debounceTask?.cancel()
     }
 
     func windowDidResize(_ notification: Notification) {
@@ -241,14 +250,22 @@ class WindowFrameDelegate: NSObject, NSWindowDelegate {
         debounceSave(window: window)
     }
 
+    /// Cancel pending debounced save when window closes to prevent writing to deallocated state.
+    func windowWillClose(_ notification: Notification) {
+        debounceTask?.cancel()
+        debounceTask = nil
+    }
+
+    /// ENRG-06: Debounces UserDefaults writes with a 500ms quiet period to avoid
+    /// flooding disk I/O during continuous window resize/move drags.
     private func debounceSave(window: NSWindow) {
-        saveWorkItem?.cancel()
+        debounceTask?.cancel()
         let sessionId = self.sessionId
         let manager = self.windowManager
-        let workItem = DispatchWorkItem { [weak manager] in
+        debounceTask = Task { @MainActor [weak manager] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
             manager?.saveWindowFrame(window: window, sessionId: sessionId)
         }
-        saveWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
     }
 }

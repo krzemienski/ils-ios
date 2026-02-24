@@ -1,6 +1,9 @@
 import Foundation
 import Observation
 import ILSShared
+#if os(iOS)
+import UIKit
+#endif
 
 /// Server-Sent Events client for streaming chat responses
 @MainActor
@@ -26,9 +29,16 @@ class SSEClient {
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
     private var lastEventId: String?
+    #if os(iOS)
+    private var backgroundObserver: NSObjectProtocol?
+    #endif
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
-    nonisolated private let jsonDecoder = JSONDecoder()
+    nonisolated private let jsonDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
 
     init(baseURL: String = "http://localhost:9999") {
         self.baseURL = baseURL
@@ -38,14 +48,38 @@ class SSEClient {
         config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
         config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
         config.allowsExpensiveNetworkAccess = true
-        config.allowsConstrainedNetworkAccess = false // Disable SSE in Low Data Mode
+        // ENRG-02: Intentionally false — SSE streaming should not consume metered data in Low Data Mode.
+        // Users can still use the app with cached data; streaming resumes when Low Data Mode is disabled.
+        config.allowsConstrainedNetworkAccess = false
         self.session = URLSession(configuration: config)
+
+        // ENRG-05: Cancel active SSE stream on background to save battery radio.
+        // NotificationCenter observer is registered on main queue to match @MainActor isolation.
+        #if os(iOS)
+        backgroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.isStreaming else { return }
+                self.cancel()
+            }
+        }
+        #endif
     }
 
     /// Tear down session and cancel in-flight tasks.
     /// Call from view's onDisappear; replaces deinit-based cleanup
     /// which cannot safely access @MainActor state.
     func cleanup() {
+        // MEM-05: Remove background observer to prevent retain cycle / stale notifications.
+        #if os(iOS)
+        if let observer = backgroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+            backgroundObserver = nil
+        }
+        #endif
         cancel()
         session.invalidateAndCancel()
     }
@@ -97,10 +131,12 @@ class SSEClient {
 
         do {
             // Race connection against 60s timeout
+            // H-C3: Capture session locally to avoid implicit strong self in TaskGroup.addTask.
+            let urlSession = self.session
             let (asyncBytes, response) = try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
                 // Connection task
                 group.addTask {
-                    try await self.session.bytes(for: urlRequest)
+                    try await urlSession.bytes(for: urlRequest)
                 }
 
                 // Timeout task
@@ -126,16 +162,18 @@ class SSEClient {
             // Track last received data or heartbeat for stale connection detection
             let lastActivity = LastActivityTracker()
 
-            // Watchdog: detect stale connections (no data/heartbeat in 45s)
-            let heartbeatWatchdog = Task.detached { [weak self] in
+            // BATT-01: Double watchdog timeout in Low Power Mode (45s -> 90s).
+            // Checked once at watchdog creation -- not re-evaluated mid-stream per research.
+            let watchdogTimeout: TimeInterval = LowPowerModeMonitor.shared.isLowPowerModeEnabled ? 90 : 45
+
+            // Watchdog: detect stale connections (no data/heartbeat in timeout period)
+            let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
-                    if await lastActivity.secondsSinceLastActivity() > 45 {
-                        AppLogger.shared.warning("SSE heartbeat timeout — no activity in 45s", category: "sse")
+                    if await lastActivity.secondsSinceLastActivity() > watchdogTimeout {
+                        AppLogger.shared.warning("SSE heartbeat timeout — no activity in \(Int(watchdogTimeout))s", category: "sse")
                         throw URLError(.timedOut)
                     }
-                    // Verify self still exists
-                    guard self != nil else { return }
                 }
             }
             defer { heartbeatWatchdog.cancel() }

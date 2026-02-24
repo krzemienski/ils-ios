@@ -36,7 +36,7 @@ class SkillsViewModel {
     }
 
     private var client: APIClient?
-    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
+    @ObservationIgnored private var searchTask: Task<Void, Never>?
     /// Precomputed lowercase search strings keyed by skill index, rebuilt when skills change
     private var searchCache: [(skill: Skill, searchText: String)] = []
 

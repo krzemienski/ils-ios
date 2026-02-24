@@ -179,10 +179,10 @@ private struct StreamingDotsView: View {
             .foregroundStyle(LiveActivityColors.success)
             .frame(width: 20, alignment: .leading)
             .onAppear {
-                timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                     dotCount += 1
                 }
-                timer?.tolerance = 0.1  // Enable timer coalescing for energy efficiency
+                timer?.tolerance = 0.3  // Enable timer coalescing for energy efficiency
             }
             .onDisappear {
                 timer?.invalidate()

@@ -64,54 +64,76 @@ struct SessionsController: RouteCollection {
         let search = req.query[String.self, at: "search"]
         let refresh = req.query[String.self, at: "refresh"] == "true"
 
-        // 1. Load all DB sessions (small set, ~51)
-        var dbQuery = SessionModel.query(on: req.db).with(\.$project)
+        // 1. Load all DB sessions (small set, ~51), pre-sorted by lastActiveAt descending
+        var dbQuery = SessionModel.query(on: req.db)
+            .with(\.$project)
+            .sort(\.$lastActiveAt, .descending)
         if let projectId = projectId {
             dbQuery = dbQuery.filter(\.$project.$id == projectId)
         }
         let dbSessions = try await dbQuery.all()
-        var merged: [ChatSession] = dbSessions.map { $0.toShared(projectName: $0.project?.name) }
+        let dbConverted: [ChatSession] = dbSessions.map { $0.toShared(projectName: $0.project?.name) }
 
-        // 2. Load external sessions (cached, ~22K) — skip if filtering by projectId
+        // 2. Load external sessions (cached, ~22K, pre-sorted) — skip if filtering by projectId
+        var uniqueExternal: [ChatSession] = []
         if projectId == nil {
             let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions(bypassCache: refresh)
 
             // 3. Dedup: build set of DB claudeSessionIds, exclude external dupes
             let dbClaudeIds = Set(dbSessions.compactMap(\.claudeSessionId))
-            let uniqueExternal = externalSessions.filter { ext in
+            uniqueExternal = externalSessions.filter { ext in
                 guard let claudeId = ext.claudeSessionId else { return true }
                 return !dbClaudeIds.contains(claudeId)
             }
-            merged.append(contentsOf: uniqueExternal)
         }
 
         // 3b. Filter by projectName if provided
+        var filteredDB = dbConverted
         if let projectName = projectName, !projectName.isEmpty {
             let target = projectName == "Ungrouped" ? nil as String? : projectName
-            merged = merged.filter { session in
+            let nameFilter: (ChatSession) -> Bool = { session in
                 if target == nil {
                     return session.projectName == nil || session.projectName?.isEmpty == true
                 }
                 return session.projectName == target
             }
+            filteredDB = filteredDB.filter(nameFilter)
+            uniqueExternal = uniqueExternal.filter(nameFilter)
         }
 
         // 4. Search filter (case-insensitive across name, projectName, firstPrompt)
         if let search = search, !search.isEmpty {
-            merged = merged.filter { session in
+            let searchFilter: (ChatSession) -> Bool = { session in
                 (session.name?.localizedCaseInsensitiveContains(search) ?? false)
                     || (session.projectName?.localizedCaseInsensitiveContains(search) ?? false)
                     || (session.firstPrompt?.localizedCaseInsensitiveContains(search) ?? false)
             }
+            filteredDB = filteredDB.filter(searchFilter)
+            uniqueExternal = uniqueExternal.filter(searchFilter)
         }
 
-        // 5. Sort by lastActiveAt descending
-        merged.sort { $0.lastActiveAt > $1.lastActiveAt }
+        // 5. Merge two pre-sorted arrays (both sorted by lastActiveAt descending).
+        //    Early exit: only merge up to (offset + limit) items for pagination.
+        let total = filteredDB.count + uniqueExternal.count
+        let needed = min(offset + limit, total)
+        var merged: [ChatSession] = []
+        merged.reserveCapacity(needed)
+        var i = 0, j = 0
+        while merged.count < needed && (i < filteredDB.count || j < uniqueExternal.count) {
+            if i >= filteredDB.count {
+                merged.append(uniqueExternal[j]); j += 1
+            } else if j >= uniqueExternal.count {
+                merged.append(filteredDB[i]); i += 1
+            } else if filteredDB[i].lastActiveAt >= uniqueExternal[j].lastActiveAt {
+                merged.append(filteredDB[i]); i += 1
+            } else {
+                merged.append(uniqueExternal[j]); j += 1
+            }
+        }
 
-        // 6. Paginate
-        let total = merged.count
-        let start = min(offset, total)
-        let end = min(start + limit, total)
+        // 6. Paginate from merged result
+        let start = min(offset, merged.count)
+        let end = min(start + limit, merged.count)
         let page_items = Array(merged[start..<end])
 
         return APIResponse(
@@ -439,7 +461,7 @@ struct SessionsController: RouteCollection {
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 200, 1), 1000)
         let offset = max(req.query[Int.self, at: "offset"] ?? 0, 0)
 
-        let messages = try fileSystem.readTranscriptMessages(
+        let result = try fileSystem.readTranscriptMessages(
             encodedProjectPath: encodedProjectPath,
             sessionId: sessionId,
             limit: limit,
@@ -448,7 +470,7 @@ struct SessionsController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: ListResponse(items: messages)
+            data: ListResponse(items: result.messages, total: result.total)
         )
     }
 

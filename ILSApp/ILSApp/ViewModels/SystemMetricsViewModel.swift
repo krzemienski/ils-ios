@@ -31,8 +31,11 @@ final class SystemMetricsViewModel {
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
-    nonisolated(unsafe) private var processRefreshTask: Task<Void, Never>?
-    private let processRefreshInterval: TimeInterval = 15 // seconds (balanced CPU vs freshness)
+    @ObservationIgnored private var processRefreshTask: Task<Void, Never>?
+    // CRIT-E1: Double interval in Low Power Mode to reduce battery drain.
+    private var processRefreshInterval: TimeInterval {
+        LowPowerModeMonitor.shared.isLowPowerModeEnabled ? 30 : 15
+    }
 
     enum ProcessSortOption: String, CaseIterable {
         case cpu = "CPU"
@@ -47,6 +50,12 @@ final class SystemMetricsViewModel {
         self.session = URLSession(configuration: configuration)
         self.decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
+    }
+
+    deinit {
+        // Safety net: Task.cancel() is safe from nonisolated deinit.
+        // Primary cleanup remains disconnect() called from SystemMonitorView.onDisappear.
+        processRefreshTask?.cancel()
     }
 
     // MARK: - Computed Properties

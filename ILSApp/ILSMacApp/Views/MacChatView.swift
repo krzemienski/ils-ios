@@ -73,7 +73,11 @@ struct MacChatView: View {
                 TextField("Session name", text: $renameText)
                 Button("Rename") {
                     Task {
-                        let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                        do {
+                            let _: APIResponse<ChatSession> = try await appState.apiClient.renameSession(id: session.id, name: renameText)
+                        } catch {
+                            AppLogger.shared.error("Failed to rename session: \(error.localizedDescription)", category: "macChat")
+                        }
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -83,8 +87,12 @@ struct MacChatView: View {
             .alert("Delete Session", isPresented: $showDeleteSessionConfirmation) {
                 Button("Delete", role: .destructive) {
                     Task {
-                        let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
-                        dismiss()
+                        do {
+                            let _: APIResponse<String> = try await appState.apiClient.delete("/sessions/\(session.id.uuidString)")
+                            dismiss()
+                        } catch {
+                            AppLogger.shared.error("Failed to delete session: \(error.localizedDescription)", category: "macChat")
+                        }
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -243,7 +251,7 @@ struct MacChatView: View {
 
     private var messageList: some View {
         ChatMessageList(
-            messages: viewModel.messages,
+            messages: viewModel.displayMessages,
             isStreaming: viewModel.isStreaming,
             isLoadingHistory: viewModel.isLoadingHistory,
             statusText: viewModel.statusText,
@@ -256,6 +264,11 @@ struct MacChatView: View {
             },
             onRetryMessage: { msg in
                 viewModel.retryMessage(msg, projectId: session.projectId)
+            },
+            canLoadMore: viewModel.canLoadOlderMessages,
+            isLoadingMore: viewModel.isLoadingOlderMessages,
+            onLoadMore: {
+                Task { await viewModel.loadOlderMessages() }
             },
             sessionProjectId: session.projectId?.uuidString
         )

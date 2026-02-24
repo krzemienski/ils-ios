@@ -17,6 +17,14 @@ import SwiftUI
 /// // After (zero-cost struct access):
 /// @Environment(\.theme) private var theme: ThemeSnapshot
 /// ```
+///
+/// ## Accessibility Notes
+/// - ACC-MED-2: Contrast ratios are not validated at compile time. Theme authors should verify
+///   WCAG AA (4.5:1 body text, 3:1 large text) using the Xcode Accessibility Inspector.
+///   Future: add a `contrastRatio(_:on:)` helper and flag violations in ThemeEditorView.
+/// - ACC-MED-5: Font sizes use theme tokens (`fontBody`, `fontCaption`, etc.) which scale with
+///   Dynamic Type via `.dynamicTypeSize(...)` modifiers. Full Dynamic Type audit (all screens)
+///   is tracked as future work.
 struct ThemeSnapshot: Sendable {
     // MARK: - Identity
 

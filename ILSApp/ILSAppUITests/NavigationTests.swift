@@ -1,11 +1,16 @@
 import XCTest
 
 final class NavigationTests: XCTestCase {
-    let app = XCUIApplication()
+    var app: XCUIApplication!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        app = XCUIApplication()
         app.launch()
+    }
+
+    override func tearDownWithError() throws {
+        app = nil
     }
 
     func testSessionNavigation() throws {

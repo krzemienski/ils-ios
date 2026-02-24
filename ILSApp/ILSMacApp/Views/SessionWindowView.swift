@@ -98,7 +98,9 @@ struct WindowAccessor: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
-        DispatchQueue.main.async {
+        let sessionId = self.sessionId
+        let windowManager = self.windowManager
+        Task { @MainActor in
             if let window = view.window {
                 let windowId = "session-\(sessionId.uuidString)"
                 windowManager.registerWindow(for: sessionId, windowId: windowId, window: window)

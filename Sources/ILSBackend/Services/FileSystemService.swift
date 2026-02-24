@@ -19,6 +19,7 @@ actor FileSystemCache {
     private var skillsCache: CacheEntry<[Skill]>?
     private var mcpServersCache: CacheEntry<[MCPServer]>?
     private var externalSessionsCache: CacheEntry<[ChatSession]>?
+    private var pluginsCache: CacheEntry<[Plugin]>?
 
     /// Default TTL: 30 seconds
     private let defaultTTL: TimeInterval = 30
@@ -63,10 +64,26 @@ actor FileSystemCache {
         externalSessionsCache = nil
     }
 
+    func getCachedPlugins(ttl: TimeInterval? = nil) -> [Plugin]? {
+        guard let cache = pluginsCache, cache.isValid(ttl: ttl ?? defaultTTL) else {
+            return nil
+        }
+        return cache.value
+    }
+
+    func setCachedPlugins(_ plugins: [Plugin]) {
+        pluginsCache = CacheEntry(value: plugins, timestamp: Date())
+    }
+
+    func invalidatePlugins() {
+        pluginsCache = nil
+    }
+
     func invalidateAll() {
         skillsCache = nil
         mcpServersCache = nil
         externalSessionsCache = nil
+        pluginsCache = nil
     }
 
     func invalidateSkills() {
@@ -109,7 +126,7 @@ struct FileSystemService {
 
     // MARK: - Path Properties (exposed for backward compatibility)
 
-    /// User's home directory path (e.g., `/Users/username`)
+    /// User's home directory path (resolves `~` to absolute path)
     var homeDirectory: String {
         config.homeDirectory
     }
@@ -266,13 +283,137 @@ struct FileSystemService {
             return cached
         }
         let converted = try sessions.scanExternalSessionsAsChatSessions()
-        await FileSystemCache.shared.setCachedExternalSessions(converted)
-        return converted
+        // Pre-sort at cache time (once) so callers can merge without re-sorting 22K+ items per request
+        let sorted = converted.sorted { $0.lastActiveAt > $1.lastActiveAt }
+        await FileSystemCache.shared.setCachedExternalSessions(sorted)
+        return sorted
     }
 
     /// Invalidate the external sessions cache.
     func invalidateExternalSessionsCache() async {
         await FileSystemCache.shared.invalidateExternalSessions()
+    }
+
+    // MARK: - Plugins Management
+
+    /// List all installed plugins from `~/.claude/plugins/installed_plugins.json`, with optional caching.
+    ///
+    /// Reads installed plugin entries and augments each with enabled status from
+    /// `~/.claude/settings.json`, manifest description, and discovered commands/agents.
+    ///
+    /// - Parameter bypassCache: If true, forces a fresh scan from disk
+    /// - Returns: Array of Plugin objects sorted by name
+    func listPlugins(bypassCache: Bool = false) async throws -> [Plugin] {
+        if !bypassCache, let cached = await FileSystemCache.shared.getCachedPlugins() {
+            return cached
+        }
+
+        let plugins = try scanPlugins()
+        await FileSystemCache.shared.setCachedPlugins(plugins)
+        return plugins
+    }
+
+    /// Scan all installed plugins from disk without using cache.
+    /// - Returns: Array of Plugin objects sorted by name
+    func scanPlugins() throws -> [Plugin] {
+        let fm = FileManager.default
+        let installedPluginsPath = "\(claudeDirectory)/plugins/installed_plugins.json"
+        let settingsPath = userSettingsPath
+
+        var plugins: [Plugin] = []
+
+        // Read enabled status from settings.json
+        var enabledPlugins: [String: Bool] = [:]
+        if fm.fileExists(atPath: settingsPath),
+           let settingsData = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
+           let settingsJson = try? JSONSerialization.jsonObject(with: settingsData) as? [String: Any],
+           let enabled = settingsJson["enabledPlugins"] as? [String: Bool] {
+            enabledPlugins = enabled
+        }
+
+        // Read installed plugins from installed_plugins.json
+        guard fm.fileExists(atPath: installedPluginsPath),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: installedPluginsPath)),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let pluginsDict = json["plugins"] as? [String: Any] else {
+            return plugins
+        }
+
+        // Parse each plugin entry
+        for (pluginKey, value) in pluginsDict {
+            // pluginKey format: "plugin-name@marketplace"
+            guard let installsArray = value as? [[String: Any]],
+                  let latestInstall = installsArray.first else {
+                continue
+            }
+
+            // Parse plugin key to get name and marketplace
+            let parts = pluginKey.split(separator: "@", maxSplits: 1)
+            let pluginName = String(parts.first ?? Substring(pluginKey))
+            let marketplace = parts.count > 1 ? String(parts[1]) : nil
+
+            // Extract install info
+            let installPath = latestInstall["installPath"] as? String
+            let version = latestInstall["version"] as? String
+
+            // Check enabled status (default to true if not specified)
+            let isEnabled = enabledPlugins[pluginKey] ?? true
+
+            // Try to read plugin manifest for description, commands, agents
+            var description: String?
+            var commands: [String] = []
+            var agents: [String] = []
+
+            if let path = installPath {
+                // Try to read plugin.json or manifest
+                let manifestPath = "\(path)/.claude-plugin/plugin.json"
+                let altManifestPath = "\(path)/plugin.json"
+
+                if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
+                   let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
+                          let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
+                    description = manifest["description"] as? String
+                }
+
+                // Check for commands directory
+                let commandsPath = "\(path)/commands"
+                if let cmdContents = try? fm.contentsOfDirectory(atPath: commandsPath) {
+                    commands = cmdContents.filter { $0.hasSuffix(".md") }
+                        .map { "/\(pluginName):\($0.replacingOccurrences(of: ".md", with: ""))" }
+                }
+
+                // Check for agents directory
+                let agentsPath = "\(path)/agents"
+                if let agentContents = try? fm.contentsOfDirectory(atPath: agentsPath) {
+                    agents = agentContents.filter { $0.hasSuffix(".md") }
+                        .map { $0.replacingOccurrences(of: ".md", with: "") }
+                }
+            }
+
+            plugins.append(Plugin(
+                name: pluginName,
+                description: description,
+                marketplace: marketplace,
+                isInstalled: true,
+                isEnabled: isEnabled,
+                version: version,
+                commands: commands.isEmpty ? nil : commands,
+                agents: agents.isEmpty ? nil : agents,
+                path: installPath
+            ))
+        }
+
+        // Sort by name for consistent ordering
+        plugins.sort { $0.name.lowercased() < $1.name.lowercased() }
+
+        return plugins
+    }
+
+    /// Invalidate the plugins cache, forcing next read to scan from disk.
+    func invalidatePluginsCache() async {
+        await FileSystemCache.shared.invalidatePlugins()
     }
 
     /// Read messages from a session's JSONL transcript file.
@@ -281,8 +422,8 @@ struct FileSystemService {
     ///   - sessionId: Session UUID
     ///   - limit: Maximum number of messages to return
     ///   - offset: Number of messages to skip
-    /// - Returns: Array of Message objects
-    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
+    /// - Returns: TranscriptResult containing paginated messages and total count
+    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> SessionFileService.TranscriptResult {
         try sessions.readTranscriptMessages(encodedProjectPath: encodedProjectPath, sessionId: sessionId, limit: limit, offset: offset)
     }
 }

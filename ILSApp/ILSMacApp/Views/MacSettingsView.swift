@@ -29,10 +29,10 @@ struct MacSettingsView: View {
     @Environment(AppState.self) var appState
     @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) var theme: ThemeSnapshot
-    @State var viewModel = SettingsViewModel()
+    @State private var viewModel = SettingsViewModel()
 
     @State private var selectedTab: SettingsTab = .general
-    @State var serverURL: String = ""
+    @State private var serverURL: String = ""
     @AppStorage("colorScheme") var colorSchemePreference: String = "dark"
     @AppStorage("defaultModel") var defaultModel: String = "claude-sonnet-4-20250514"
     @AppStorage("enableAgentTeams") var enableAgentTeams: Bool = false
@@ -111,7 +111,7 @@ struct MacSettingsView: View {
                 settingRow(label: "Default Model") {
                     Picker("Default Model", selection: $defaultModel) {
                         ForEach(availableModels, id: \.self) { model in
-                            Text(formatModelName(model)).tag(model)
+                            Text(ClaudeModel.displayNameForID(model)).tag(model)
                         }
                     }
                     .pickerStyle(.menu)
@@ -476,12 +476,6 @@ struct MacSettingsView: View {
         themeManager.setTheme("obsidian")
     }
 
-    func formatModelName(_ model: String) -> String {
-        if model.contains("sonnet") { return "Claude Sonnet" }
-        if model.contains("opus") { return "Claude Opus" }
-        if model.contains("haiku") { return "Claude Haiku" }
-        return model
-    }
 }
 
 #Preview {

@@ -23,6 +23,8 @@ import ILSShared
 /// - ``timeGroup(label:sessions:)`` - Section header and rows for sessions in a time period
 /// - ``loadingView`` - Skeleton placeholder shown while sessions are loading
 /// - ``emptyView`` - Empty state shown when no sessions match the current search
+///
+/// Time groups are ordered: Today → Yesterday → This Week → Earlier.
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -38,7 +40,7 @@ struct SidebarView: View {
     /// Called when the user selects a session from the list.
     var onSessionSelected: (ChatSession) -> Void
 
-    @State private var expandedProjects: Set<String> = []
+    @FocusState private var isSearchFocused: Bool
     /// The session currently being renamed, if any.
     @State private var sessionToRename: ChatSession?
     @State private var showRenameAlert = false
@@ -182,6 +184,7 @@ struct SidebarView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .accessibilityLabel("Search sessions")
+                    .focused($isSearchFocused)
                 if !sessionsViewModel.searchText.isEmpty {
                     Button {
                         sessionsViewModel.searchText = ""
@@ -199,46 +202,43 @@ struct SidebarView: View {
             .padding(.vertical, theme.spacingXS + 2)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 
-            // Session list
-            ScrollView {
-                LazyVStack(spacing: 2) {
-                    if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
-                        loadingView
-                    } else if sessionsViewModel.filteredSessions.isEmpty {
-                        emptyView
-                    } else {
-                        ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
-                            projectGroup(name: project, sessions: sessions)
-                        }
+            // Session list — List provides view recycling (UICollectionView-backed)
+            // Section headers inside List are automatically pinned (sticky).
+            List {
+                if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
+                    loadingView
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
+                } else if sessionsViewModel.filteredSessions.isEmpty {
+                    emptyView
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
+                } else {
+                    ForEach(sessionsViewModel.groupedSessionsByTime, id: \.key) { label, sessions in
+                        timeGroup(label: label, sessions: sessions)
                     }
                 }
-                .padding(.horizontal, theme.spacingSM)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(theme.bgSidebar)
             .refreshable {
                 await sessionsViewModel.loadSessions(refresh: true)
             }
         }
     }
 
-    // MARK: - Project Group
+    // MARK: - Time Group
 
     @ViewBuilder
-    private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
-        DisclosureGroup(
-            isExpanded: Binding(
-                get: { expandedProjects.contains(name) },
-                set: { isExpanded in
-                    if isExpanded {
-                        expandedProjects.insert(name)
-                    } else {
-                        expandedProjects.remove(name)
-                    }
-                }
-            )
-        ) {
+    private func timeGroup(label: String, sessions: [ChatSession]) -> some View {
+        Section {
             ForEach(sessions) { session in
                 SidebarSessionRow(
                     session: session,
@@ -284,24 +284,24 @@ struct SidebarView: View {
                     }
                     .tint(.blue)
                 }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
             }
-        } label: {
+        } header: {
             HStack(spacing: theme.spacingSM) {
-                Image(systemName: "folder.fill")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.entityProject)
-                Text(name)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-                Spacer()
-                Text("\(sessions.count)")
+                Image(systemName: "calendar")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
+                Text(label.uppercased())
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
             }
+            .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS)
+            .background(theme.bgSidebar)
         }
-        .tint(theme.textSecondary)
     }
 
     // MARK: - Loading & Empty States

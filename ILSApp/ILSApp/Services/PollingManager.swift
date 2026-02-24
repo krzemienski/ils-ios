@@ -1,26 +1,82 @@
-import SwiftUI
+import Foundation
 
 /// Manages connection health polling and retry logic.
+// CONC-17: Intentionally NOT @Observable. PollingManager is an internal service
+// owned by ConnectionManager, not a SwiftUI view model. It manages Task lifecycle
+// and delegates state changes to ConnectionManager (which IS @Observable via its
+// own properties). Adding @Observable would add unnecessary overhead.
 @MainActor
 class PollingManager {
-    /// Unowned is safe: ConnectionManager creates and owns PollingManager,
-    /// so ConnectionManager always outlives this instance. Avoids atomic
-    /// weak-reference overhead on every health poll cycle.
+    /// Scene lifecycle phase mirroring SwiftUI.ScenePhase
+    /// so PollingManager has no SwiftUI dependency.
+    enum AppPhase {
+        case active, inactive, background
+    }
+
+    /// MEM-01: `unowned` is safe here because ConnectionManager creates and owns
+    /// PollingManager in its own init, and PollingManager is stored as a property of
+    /// ConnectionManager. Therefore ConnectionManager always outlives PollingManager.
+    /// If this ownership invariant ever changes (e.g., PollingManager stored elsewhere),
+    /// switch to `weak` with guard-let. The `unowned` avoids atomic weak-reference
+    /// overhead on every health poll cycle (~60s). (Also: CONC-05 verified 2026-02-24.)
     unowned let connectionManager: ConnectionManager
 
     private var retryTask: Task<Void, Never>?
     private var healthPollTask: Task<Void, Never>?
+    // NET-MED-2: Observer for network restoration to resume polling.
+    private var networkObserver: NSObjectProtocol?
+    // BATT-01: Observer for Low Power Mode changes to restart polling with adapted intervals.
+    private var lpmObserver: NSObjectProtocol?
 
     init(connectionManager: ConnectionManager) {
         self.connectionManager = connectionManager
+        // Resume polling when network becomes available again.
+        networkObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.checkConnection()
+            }
+        }
+        // BATT-01: Restart active polling loops when LPM toggles to apply new intervals.
+        lpmObserver = NotificationCenter.default.addObserver(
+            forName: .NSProcessInfoPowerStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if self.healthPollTask != nil {
+                    self.stopHealthPolling()
+                    self.startHealthPolling()
+                }
+                if self.retryTask != nil {
+                    self.stopRetryPolling()
+                    self.startRetryPolling()
+                }
+            }
+        }
     }
 
     deinit {
         retryTask?.cancel()
         healthPollTask?.cancel()
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = lpmObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     func checkConnection() {
+        // NET-MED-2: Skip network requests when device has no connectivity.
+        guard NetworkMonitor.shared.isConnected else {
+            connectionManager.isConnected = false
+            return
+        }
         Task { [weak self] in
             guard let self else { return }
             let cm = self.connectionManager
@@ -49,9 +105,12 @@ class PollingManager {
 
     func startRetryPolling() {
         guard retryTask == nil else { return }
-        AppLogger.shared.info("Starting retry polling (exponential backoff: 5s-60s)", category: "app")
+        // BATT-01: Double initial retry delay in Low Power Mode.
+        let isLPM = LowPowerModeMonitor.shared.isLowPowerModeEnabled
+        let initialDelay: UInt64 = isLPM ? 10_000_000_000 : 5_000_000_000
+        AppLogger.shared.info("Starting retry polling (exponential backoff: \(isLPM ? "10s" : "5s")-60s)", category: "app")
         retryTask = Task { [weak self] in
-            var delay: UInt64 = 5_000_000_000 // Start at 5 seconds
+            var delay: UInt64 = initialDelay
             let maxDelay: UInt64 = 60_000_000_000 // Cap at 60 seconds
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: delay)
@@ -83,9 +142,13 @@ class PollingManager {
 
     func startHealthPolling() {
         guard healthPollTask == nil else { return }
+        // BATT-01: Double health poll interval in Low Power Mode.
+        let healthInterval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
+            ? 120_000_000_000  // 120s in LPM
+            : 60_000_000_000   // 60s normal
         healthPollTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 60_000_000_000) // 60s health check
+                try? await Task.sleep(nanoseconds: healthInterval)
                 guard !Task.isCancelled else { break }
                 guard let self else { break }
                 let cm = self.connectionManager
@@ -106,7 +169,7 @@ class PollingManager {
         healthPollTask = nil
     }
 
-    func handleScenePhase(_ phase: ScenePhase) {
+    func handleScenePhase(_ phase: AppPhase) {
         switch phase {
         case .active:
             checkConnection()
@@ -114,8 +177,6 @@ class PollingManager {
             stopHealthPolling()
             stopRetryPolling()
         case .inactive:
-            break
-        @unknown default:
             break
         }
     }

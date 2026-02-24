@@ -26,6 +26,14 @@ struct SidebarSessionRow: View {
                         .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
                         .lineLimit(1)
 
+                    // Project name (secondary context)
+                    if let projectName = session.projectName, !projectName.isEmpty {
+                        Text(projectName)
+                            .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(1)
+                    }
+
                     // Relative time + message count
                     HStack(spacing: theme.spacingXS) {
                         Text(relativeTime)
@@ -57,7 +65,7 @@ struct SidebarSessionRow: View {
             .background(isActive ? theme.accent.opacity(0.1) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
-        .accessibilityLabel("\(sessionDisplayName), \(relativeTime)")
+        .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? ""), \(relativeTime)")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }

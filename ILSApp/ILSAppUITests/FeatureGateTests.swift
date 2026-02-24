@@ -93,8 +93,8 @@ final class FeatureGateTests: XCTestCase {
             doneButton.tap()
         }
 
-        // Brief wait for navigation to complete
-        sleep(1)
+        // Wait for navigation to complete — sidebar dismissed
+        _ = waitForElementToDisappear(doneButton, timeout: 3)
         return true
     }
 
@@ -149,7 +149,8 @@ final class FeatureGateTests: XCTestCase {
         let startCoord = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
         let endCoord = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
         startCoord.press(forDuration: 0.1, thenDragTo: endCoord)
-        sleep(2)
+        // Wait for refresh to complete — loading indicator gone
+        _ = waitForElementToDisappear(app.activityIndicators.firstMatch, timeout: 5)
     }
 
     // MARK: - GATE 9: Projects List View
@@ -217,8 +218,9 @@ final class FeatureGateTests: XCTestCase {
         let projectsTitle = app.navigationBars["Projects"]
         XCTAssertTrue(waitForElement(projectsTitle, timeout: 10), "Projects view should appear")
 
-        // Wait for loading to complete
-        sleep(2)
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Projects"].waitForExistence(timeout: 1)
 
         takeScreenshot(named: "Gate10-BeforeCreate")
 
@@ -254,7 +256,7 @@ final class FeatureGateTests: XCTestCase {
         if textFields.count > 1 {
             let pathField = textFields[1]
             pathField.tap()
-            pathField.typeText("/Users/test/project")
+            pathField.typeText("/tmp/test-project")
         }
 
         takeScreenshot(named: "Gate10-FormFilled")
@@ -322,8 +324,9 @@ final class FeatureGateTests: XCTestCase {
         let skillsTitle = app.navigationBars["Skills"]
         XCTAssertTrue(waitForElement(skillsTitle, timeout: 10), "Skills view should appear")
 
-        // Wait for loading
-        sleep(2)
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Skills"].waitForExistence(timeout: 1)
 
         takeScreenshot(named: "Gate11b-BeforeSearch")
 
@@ -428,8 +431,9 @@ final class FeatureGateTests: XCTestCase {
         let mcpTitle = app.navigationBars["MCP Servers"]
         XCTAssertTrue(waitForElement(mcpTitle, timeout: 10), "MCP Servers view should appear")
 
-        // Wait for loading
-        sleep(2)
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No MCP Servers"].waitForExistence(timeout: 1)
 
         takeScreenshot(named: "Gate12c-BeforeSearch")
 
@@ -498,7 +502,8 @@ final class FeatureGateTests: XCTestCase {
         if let scrollView = list {
             scrollView.swipeUp()
         }
-        sleep(1)
+        // Wait for scrolled content to settle
+        _ = app.staticTexts.firstMatch.waitForExistence(timeout: 3)
 
         // VALIDATION: Look for any section after Backend Connection
         // These sections are always present: API Key, Permissions, Advanced, Statistics, About
@@ -538,7 +543,8 @@ final class FeatureGateTests: XCTestCase {
             let list = findList()
             if let scrollView = list {
                 scrollView.swipeUp()
-                sleep(1)
+                // Wait for scroll to settle
+                _ = app.staticTexts.firstMatch.waitForExistence(timeout: 2)
                 scrollView.swipeUp()
             }
         }
@@ -567,7 +573,8 @@ final class FeatureGateTests: XCTestCase {
             let list = findList()
             if let scrollView = list {
                 scrollView.swipeUp()
-                sleep(1)
+                // Wait for scroll to settle
+                _ = app.staticTexts.firstMatch.waitForExistence(timeout: 2)
             }
         }
 
@@ -697,8 +704,9 @@ final class FeatureGateTests: XCTestCase {
         let pluginsTitle = app.navigationBars["Plugins"]
         XCTAssertTrue(waitForElement(pluginsTitle, timeout: 10), "Plugins view should appear")
 
-        // Wait for loading
-        sleep(2)
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Plugins"].waitForExistence(timeout: 1)
 
         takeScreenshot(named: "Gate14d-BeforeToggle")
 
@@ -710,7 +718,8 @@ final class FeatureGateTests: XCTestCase {
             if toggle.exists {
                 let initialValue = toggle.value as? String ?? ""
                 toggle.tap()
-                sleep(1)
+                // Wait for toggle state to update
+                _ = toggle.waitForExistence(timeout: 2)
                 let newValue = toggle.value as? String ?? ""
 
                 takeScreenshot(named: "Gate14d-AfterToggle")

@@ -18,7 +18,10 @@ struct NewSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
 
+    // SA-MED-2: Dedicated ProjectsViewModel is intentional — NewSessionView needs independent
+    // search/filter state for project selection without affecting the main projects list.
     @State private var projectsViewModel = ProjectsViewModel()
+    @State private var sessionViewModel = NewSessionViewModel()
     @State private var selectedMode: NewSessionMode = .project
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"
@@ -27,7 +30,6 @@ struct NewSessionView: View {
     @State private var maxBudget = ""
     @State private var maxTurns = ""
     @State private var sessionName = ""
-    @State private var isCreating = false
     @State private var showConfig = false
 
     // Fork mode state
@@ -43,6 +45,7 @@ struct NewSessionView: View {
 
     private enum FocusedField: Hashable {
         case sessionName, systemPrompt, maxBudget, maxTurns
+        case projectSearch, forkSearch, newProjectName, newProjectPath
     }
     @FocusState private var focusedField: FocusedField?
 
@@ -54,59 +57,67 @@ struct NewSessionView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                modePicker
-                    .padding(.horizontal, theme.spacingMD)
-                    .padding(.top, theme.spacingSM)
-                    .padding(.bottom, theme.spacingSM)
+        VStack(spacing: 0) {
+            modePicker
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.top, theme.spacingSM)
+                .padding(.bottom, theme.spacingSM)
 
-                Divider().overlay(theme.divider)
+            Divider().overlay(theme.divider)
 
-                ScrollView {
-                    VStack(spacing: theme.spacingMD) {
-                        switch selectedMode {
-                        case .project:
-                            projectPickerSection
-                        case .fork:
-                            forkSessionSection
-                        case .newProject:
-                            createProjectSection
-                        }
-
-                        if canShowConfig {
-                            configurationSection
-                        }
-
-                        actionButton
+            ScrollView {
+                VStack(spacing: theme.spacingMD) {
+                    switch selectedMode {
+                    case .project:
+                        projectPickerSection
+                    case .fork:
+                        forkSessionSection
+                    case .newProject:
+                        createProjectSection
                     }
-                    .padding(.horizontal, theme.spacingMD)
-                    .padding(.vertical, theme.spacingSM)
+
+                    if canShowConfig {
+                        configurationSection
+                    }
+
+                    actionButton
                 }
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM)
             }
-            .background(theme.bgPrimary)
-            .navigationTitle("New Session")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(theme.textSecondary)
-                }
+        }
+        .background(theme.bgPrimary)
+        .navigationTitle("New Session")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+                    .foregroundStyle(theme.textSecondary)
             }
-            .task {
-                projectsViewModel.configure(client: appState.apiClient)
-                await projectsViewModel.loadProjects()
-            }
-            .task {
-                await loadRecentSessions()
+        }
+        .task {
+            projectsViewModel.configure(client: appState.apiClient)
+            sessionViewModel.configure(client: appState.apiClient)
+            await projectsViewModel.loadProjects()
+        }
+        .task {
+            await loadRecentSessions()
+            debouncedForkResults = recentSessions
+        }
+        .task(id: forkSearchText) {
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled else { return }
+            if forkSearchText.isEmpty {
                 debouncedForkResults = recentSessions
-            }
-            .task(id: forkSearchText) {
-                try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { return }
-                debouncedForkResults = filteredRecentSessions
+            } else {
+                let query = forkSearchText.lowercased()
+                debouncedForkResults = recentSessions.filter {
+                    ($0.name ?? "").lowercased().contains(query)
+                        || ($0.projectName ?? "").lowercased().contains(query)
+                        || $0.model.lowercased().contains(query)
+                }
             }
         }
         #if os(iOS)
@@ -191,6 +202,7 @@ struct NewSessionView: View {
             TextField("Search projects...", text: $projectsViewModel.searchText)
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
+                .focused($focusedField, equals: .projectSearch)
             if !projectsViewModel.searchText.isEmpty {
                 Button {
                     projectsViewModel.searchText = ""
@@ -207,6 +219,7 @@ struct NewSessionView: View {
         .padding(.vertical, theme.spacingXS + 2)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: focusedField == .projectSearch, cornerRadius: theme.cornerRadiusSmall)
     }
 
     @ViewBuilder
@@ -331,6 +344,7 @@ struct NewSessionView: View {
             TextField("Search sessions...", text: $forkSearchText)
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
+                .focused($focusedField, equals: .forkSearch)
             if !forkSearchText.isEmpty {
                 Button {
                     forkSearchText = ""
@@ -347,16 +361,7 @@ struct NewSessionView: View {
         .padding(.vertical, theme.spacingXS + 2)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-    }
-
-    private var filteredRecentSessions: [ChatSession] {
-        guard !forkSearchText.isEmpty else { return recentSessions }
-        let query = forkSearchText.lowercased()
-        return recentSessions.filter {
-            ($0.name ?? "").lowercased().contains(query)
-                || ($0.projectName ?? "").lowercased().contains(query)
-                || $0.model.lowercased().contains(query)
-        }
+        .focusRing(isFocused: focusedField == .forkSearch, cornerRadius: theme.cornerRadiusSmall)
     }
 
     @ViewBuilder
@@ -425,6 +430,8 @@ struct NewSessionView: View {
                 .background(theme.bgSecondary)
                 .foregroundStyle(theme.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .newProjectName, cornerRadius: theme.cornerRadiusSmall)
+                .focused($focusedField, equals: .newProjectName)
                 .accessibilityIdentifier("new-project-name")
 
             HStack(spacing: theme.spacingSM) {
@@ -433,10 +440,12 @@ struct NewSessionView: View {
                 TextField("Directory Path (e.g. ~/projects/my-app)", text: $newProjectPath)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
+                    .focused($focusedField, equals: .newProjectPath)
             }
             .padding(theme.spacingSM)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: focusedField == .newProjectPath, cornerRadius: theme.cornerRadiusSmall)
             .accessibilityIdentifier("new-project-path")
 
             Text("Enter the full path to your project directory on the server.")
@@ -621,14 +630,14 @@ struct NewSessionView: View {
             performAction()
         } label: {
             HStack(spacing: theme.spacingSM) {
-                if isCreating {
+                if sessionViewModel.isCreating {
                     ProgressView()
                         .tint(theme.textOnAccent)
                         .controlSize(.small)
                 } else {
                     Image(systemName: actionButtonIcon)
                 }
-                Text(isCreating ? "Creating..." : actionButtonTitle)
+                Text(sessionViewModel.isCreating ? "Creating..." : actionButtonTitle)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundStyle(theme.textOnAccent)
@@ -637,8 +646,8 @@ struct NewSessionView: View {
             .background(actionButtonEnabled ? theme.accent : theme.accent.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
-        .disabled(isCreating || !actionButtonEnabled)
-        .opacity(isCreating ? 0.7 : 1.0)
+        .disabled(sessionViewModel.isCreating || !actionButtonEnabled)
+        .opacity(sessionViewModel.isCreating ? 0.7 : 1.0)
         .padding(.top, theme.spacingSM)
         .accessibilityIdentifier("start-session-button")
     }
@@ -788,107 +797,57 @@ struct NewSessionView: View {
         isLoadingSessions = false
     }
 
+    // SA-MED-3: Button-triggered Tasks are correct — these are user-initiated actions,
+    // not lifecycle-bound work. `.task` modifier is for view lifecycle; `Task {}` is
+    // appropriate for fire-and-forget user actions like create/fork/submit.
     private func createSession() {
-        isCreating = true
-
         Task {
-            let request = CreateSessionRequest(
+            if let session = await sessionViewModel.createSession(
                 projectId: selectedProject?.id,
                 name: sessionName.isEmpty ? nil : sessionName,
                 model: selectedModel,
-                permissionMode: PermissionMode(rawValue: permissionMode),
+                permissionMode: permissionMode,
                 systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
-                maxBudgetUSD: Double(maxBudget),
-                maxTurns: Int(maxTurns)
-            )
-
-            do {
-                let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
-                if let session = response.data {
-                    await MainActor.run {
-                        HapticManager.notification(.success)
-                        onCreated(session)
-                        dismiss()
-                    }
-                }
-            } catch {
-                HapticManager.notification(.error)
-                AppLogger.shared.error("Failed to create session: \(error)", category: "ui")
+                maxBudget: maxBudget,
+                maxTurns: maxTurns
+            ) {
+                onCreated(session)
+                dismiss()
             }
-
-            isCreating = false
         }
     }
 
     private func forkSession() {
         guard let sourceSession = selectedSession else { return }
-        isCreating = true
-
         Task {
-            do {
-                let response: APIResponse<ChatSession> = try await appState.apiClient.post(
-                    "/sessions/\(sourceSession.id)/fork",
-                    body: EmptyBody()
-                )
-                if let forkedSession = response.data {
-                    await MainActor.run {
-                        HapticManager.notification(.success)
-                        onCreated(forkedSession)
-                        dismiss()
-                    }
-                }
-            } catch {
-                HapticManager.notification(.error)
-                AppLogger.shared.error("Failed to fork session: \(error)", category: "ui")
+            if let forkedSession = await sessionViewModel.forkSession(sourceSessionId: sourceSession.id) {
+                onCreated(forkedSession)
+                dismiss()
             }
-
-            isCreating = false
         }
     }
 
     private func createProjectAndSession() {
         guard !newProjectName.isEmpty, !newProjectPath.isEmpty else { return }
-        isCreating = true
-
         Task {
-            if let project = await projectsViewModel.createProject(
-                name: newProjectName,
-                path: newProjectPath,
-                defaultModel: selectedModel,
-                description: nil
+            if let session = await sessionViewModel.createProjectAndSession(
+                projectName: newProjectName,
+                projectPath: newProjectPath,
+                sessionName: sessionName.isEmpty ? nil : sessionName,
+                model: selectedModel,
+                permissionMode: permissionMode,
+                systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
+                maxBudget: maxBudget,
+                maxTurns: maxTurns,
+                projectsViewModel: projectsViewModel
             ) {
-                let request = CreateSessionRequest(
-                    projectId: project.id,
-                    name: sessionName.isEmpty ? nil : sessionName,
-                    model: selectedModel,
-                    permissionMode: PermissionMode(rawValue: permissionMode),
-                    systemPrompt: systemPrompt.isEmpty ? nil : systemPrompt,
-                    maxBudgetUSD: Double(maxBudget),
-                    maxTurns: Int(maxTurns)
-                )
-
-                do {
-                    let response: APIResponse<ChatSession> = try await appState.apiClient.post("/sessions", body: request)
-                    if let session = response.data {
-                        await MainActor.run {
-                            HapticManager.notification(.success)
-                            onCreated(session)
-                            dismiss()
-                        }
-                    }
-                } catch {
-                    HapticManager.notification(.error)
-                    AppLogger.shared.error("Failed to create session for new project: \(error)", category: "ui")
-                }
-            } else {
-                HapticManager.notification(.error)
+                onCreated(session)
+                dismiss()
             }
-
-            isCreating = false
         }
     }
 
-    func buildChatOptions() -> ChatOptions {
+    private func buildChatOptions() -> ChatOptions {
         ChatOptions(
             model: selectedModel,
             permissionMode: PermissionMode(rawValue: permissionMode),
@@ -898,10 +857,6 @@ struct NewSessionView: View {
         )
     }
 }
-
-// MARK: - Empty Body for POST requests without body
-
-private struct EmptyBody: Codable {}
 
 #Preview {
     NewSessionView { _ in }

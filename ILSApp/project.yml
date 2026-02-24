@@ -44,6 +44,7 @@ targets:
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: targeted
         DEVELOPMENT_TEAM: HC36V7B67Z
         INFOPLIST_FILE: ILSApp/Info.plist
         CODE_SIGN_ENTITLEMENTS: ILSApp/ILSApp.entitlements
@@ -61,6 +62,8 @@ targets:
           SWIFT_COMPILATION_MODE: singlefile
           ONLY_ACTIVE_ARCH: "YES"
           ENABLE_PREVIEWS: "YES"
+          # BUILD-MED-1: Warn on expressions that take >200ms to type-check.
+          OTHER_SWIFT_FLAGS: ["-Xfrontend", "-warn-long-expression-type-checking=200"]
         Release:
           SWIFT_OPTIMIZATION_LEVEL: "-O"
           SWIFT_COMPILATION_MODE: wholemodule
@@ -106,6 +109,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ils.app.uitests
         SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: targeted
         DEVELOPMENT_TEAM: HC36V7B67Z
         GENERATE_INFOPLIST_FILE: "YES"
         TEST_HOST: ""
@@ -146,6 +150,7 @@ targets:
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: targeted
         DEVELOPMENT_TEAM: HC36V7B67Z
         INFOPLIST_FILE: ILSMacApp/Info.plist
         CODE_SIGN_ENTITLEMENTS: ILSMacApp/ILSMacApp.entitlements

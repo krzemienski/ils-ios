@@ -1,5 +1,28 @@
 import SwiftUI
 
+// UIPERF-04: Pre-computed tool category — classified once in init, used by toolIcon/toolColor
+// via O(1) switch instead of per-frame .contains() chains.
+private enum ToolCategory {
+    case read, write, edit, bash, grep, glob
+    case webSearch, webFetch, task, skill, list, other
+
+    static func classify(_ name: String) -> ToolCategory {
+        let lowered = name.lowercased()
+        if lowered.contains("read") { return .read }
+        if lowered.contains("write") { return .write }
+        if lowered.contains("edit") { return .edit }
+        if lowered.contains("bash") { return .bash }
+        if lowered.contains("grep") { return .grep }
+        if lowered.contains("glob") { return .glob }
+        if lowered.contains("websearch") || lowered == "web_search" { return .webSearch }
+        if lowered.contains("webfetch") || lowered == "web_fetch" { return .webFetch }
+        if lowered.contains("task") { return .task }
+        if lowered.contains("skill") { return .skill }
+        if lowered.contains("list") { return .list }
+        return .other
+    }
+}
+
 /// Expandable accordion for displaying tool call details in chat messages.
 /// Shows tool name with type-specific SF Symbol icon as header; expands to reveal input and output.
 /// All colors from theme tokens via @Environment(\.theme).
@@ -10,6 +33,9 @@ struct ToolCallAccordion: View {
     let output: String?
     let isError: Bool
     var expandAll: Binding<Bool?>?
+
+    // UIPERF-04: Category computed once at init — zero String ops per body evaluation.
+    private let toolCategory: ToolCategory
 
     @State private var isExpanded = false
     @State private var showFullOutput = false
@@ -24,6 +50,7 @@ struct ToolCallAccordion: View {
         self.output = output
         self.isError = isError
         self.expandAll = expandAll
+        self.toolCategory = ToolCategory.classify(toolName)
     }
 
     var body: some View {
@@ -196,45 +223,35 @@ struct ToolCallAccordion: View {
                 .kerning(1)
     }
 
-    /// Maps tool names to SF Symbol icons for all 10 Claude tool types.
+    /// Maps tool category to SF Symbol icon — O(1) switch, no String ops per frame.
     private var toolIcon: String {
-        let name = toolName.lowercased()
-        if name.contains("read") { return "doc.text" }
-        if name.contains("write") { return "doc.badge.plus" }
-        if name.contains("edit") { return "pencil.line" }
-        if name.contains("bash") { return "terminal" }
-        if name.contains("grep") { return "magnifyingglass" }
-        if name.contains("glob") { return "folder.badge.questionmark" }
-        if name.contains("websearch") || name == "web_search" { return "globe" }
-        if name.contains("webfetch") || name == "web_fetch" { return "arrow.down.doc" }
-        if name.contains("task") { return "person.2" }
-        if name.contains("skill") { return "sparkles" }
-        if name.contains("list") { return "list.bullet" }
-        return "wrench.and.screwdriver"
+        switch toolCategory {
+        case .read:      return "doc.text"
+        case .write:     return "doc.badge.plus"
+        case .edit:      return "pencil.line"
+        case .bash:      return "terminal"
+        case .grep:      return "magnifyingglass"
+        case .glob:      return "folder.badge.questionmark"
+        case .webSearch: return "globe"
+        case .webFetch:  return "arrow.down.doc"
+        case .task:      return "person.2"
+        case .skill:     return "sparkles"
+        case .list:      return "list.bullet"
+        case .other:     return "wrench.and.screwdriver"
+        }
     }
 
-    /// Maps tool names to entity-derived colors for visual distinction.
+    /// Maps tool category to entity-derived color — O(1) switch, no String ops per frame.
     private var toolColor: Color {
-        let name = toolName.lowercased()
-        if name.contains("read") || name.contains("write") || name.contains("edit") {
-            return theme.entitySkill
+        switch toolCategory {
+        case .read, .write, .edit: return theme.entitySkill
+        case .bash:                return theme.entitySystem
+        case .grep, .glob:         return theme.entityMCP
+        case .webSearch, .webFetch: return theme.info
+        case .task:                return theme.entitySession
+        case .skill:               return theme.entityPlugin
+        case .list, .other:        return theme.accent
         }
-        if name.contains("bash") {
-            return theme.entitySystem
-        }
-        if name.contains("grep") || name.contains("glob") {
-            return theme.entityMCP
-        }
-        if name.contains("web") {
-            return theme.info
-        }
-        if name.contains("task") {
-            return theme.entitySession
-        }
-        if name.contains("skill") {
-            return theme.entityPlugin
-        }
-        return theme.accent
     }
 }
 
