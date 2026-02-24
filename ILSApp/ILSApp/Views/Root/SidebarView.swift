@@ -296,6 +296,9 @@ struct SidebarView: View {
                     }
                     .tint(.blue)
                 }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
             }
         } label: {
             HStack(spacing: theme.spacingSM) {
