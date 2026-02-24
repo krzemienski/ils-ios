@@ -23,6 +23,8 @@ import ILSShared
 /// - ``timeGroup(label:sessions:)`` - Section header and rows for sessions in a time period
 /// - ``loadingView`` - Skeleton placeholder shown while sessions are loading
 /// - ``emptyView`` - Empty state shown when no sessions match the current search
+///
+/// Time groups are ordered: Today → Yesterday → This Week → Earlier.
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -39,7 +41,6 @@ struct SidebarView: View {
     var onSessionSelected: (ChatSession) -> Void
 
     @FocusState private var isSearchFocused: Bool
-    @State private var expandedProjects: Set<String> = []
     /// The session currently being renamed, if any.
     @State private var sessionToRename: ChatSession?
     @State private var showRenameAlert = false
@@ -206,6 +207,7 @@ struct SidebarView: View {
             .padding(.bottom, theme.spacingSM)
 
             // Session list — List provides view recycling (UICollectionView-backed)
+            // Section headers inside List are automatically pinned (sticky).
             List {
                 if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
                     loadingView
@@ -218,12 +220,9 @@ struct SidebarView: View {
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
                 } else {
-                    ForEach(sessionsViewModel.groupedSessions, id: \.key) { project, sessions in
-                        projectGroup(name: project, sessions: sessions)
+                    ForEach(sessionsViewModel.groupedSessionsByTime, id: \.key) { label, sessions in
+                        timeGroup(label: label, sessions: sessions)
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
                 }
             }
             .listStyle(.plain)
@@ -235,22 +234,11 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: - Project Group
+    // MARK: - Time Group
 
     @ViewBuilder
-    private func projectGroup(name: String, sessions: [ChatSession]) -> some View {
-        DisclosureGroup(
-            isExpanded: Binding(
-                get: { expandedProjects.contains(name) },
-                set: { isExpanded in
-                    if isExpanded {
-                        expandedProjects.insert(name)
-                    } else {
-                        expandedProjects.remove(name)
-                    }
-                }
-            )
-        ) {
+    private func timeGroup(label: String, sessions: [ChatSession]) -> some View {
+        Section {
             ForEach(sessions) { session in
                 SidebarSessionRow(
                     session: session,
@@ -300,23 +288,20 @@ struct SidebarView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
             }
-        } label: {
+        } header: {
             HStack(spacing: theme.spacingSM) {
-                Image(systemName: "folder.fill")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.entityProject)
-                Text(name)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-                Spacer()
-                Text("\(sessions.count)")
+                Image(systemName: "calendar")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
+                Text(label.uppercased())
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
             }
+            .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS)
+            .background(theme.bgSidebar)
         }
-        .tint(theme.textSecondary)
     }
 
     // MARK: - Loading & Empty States

@@ -69,6 +69,13 @@ class SessionsViewModel {
     /// The session count used to invalidate grouped cache
     private var cachedGroupedSessionCount: Int = -1
 
+    /// Cached time-grouped sessions, rebuilt when filteredSessions changes
+    private var cachedGroupedByTime: [(key: String, value: [ChatSession])] = []
+    /// The search text used to build the cached time-grouped sessions
+    private var cachedGroupedByTimeSearchText: String = ""
+    /// The session count used to invalidate time-grouped cache
+    private var cachedGroupedByTimeSessionCount: Int = -1
+
     init() {}
 
     /// Configure the view model with an API client.
@@ -93,8 +100,9 @@ class SessionsViewModel {
             let text = "\(session.name?.lowercased() ?? "") \(session.projectName?.lowercased() ?? "") \(session.firstPrompt?.lowercased() ?? "")"
             return (session, text)
         }
-        // Invalidate grouped cache
+        // Invalidate grouped caches
         cachedGroupedSessionCount = -1
+        cachedGroupedByTimeSessionCount = -1
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
@@ -116,6 +124,50 @@ class SessionsViewModel {
         cachedGroupedSearchText = searchText
         cachedGroupedSessionCount = sessions.count
         return sorted
+    }
+
+    /// Filtered sessions grouped by relative time (Today/Yesterday/This Week/Earlier).
+    /// Sessions within each bucket are sorted by most recently active.
+    /// Result is cached and only rebuilt when sessions or searchText change.
+    var groupedSessionsByTime: [(key: String, value: [ChatSession])] {
+        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeSessionCount == sessions.count {
+            return cachedGroupedByTime
+        }
+        let filtered = filteredSessions
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfToday = calendar.startOfDay(for: now)
+        let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? startOfToday
+        let startOfWeek = calendar.date(byAdding: .day, value: -7, to: startOfToday) ?? startOfToday
+
+        var today: [ChatSession] = []
+        var yesterday: [ChatSession] = []
+        var thisWeek: [ChatSession] = []
+        var earlier: [ChatSession] = []
+
+        for session in filtered {
+            let lastActive = session.lastActiveAt
+            if lastActive >= startOfToday {
+                today.append(session)
+            } else if lastActive >= startOfYesterday {
+                yesterday.append(session)
+            } else if lastActive >= startOfWeek {
+                thisWeek.append(session)
+            } else {
+                earlier.append(session)
+            }
+        }
+
+        var result: [(key: String, value: [ChatSession])] = []
+        if !today.isEmpty { result.append((key: "Today", value: today)) }
+        if !yesterday.isEmpty { result.append((key: "Yesterday", value: yesterday)) }
+        if !thisWeek.isEmpty { result.append((key: "This Week", value: thisWeek)) }
+        if !earlier.isEmpty { result.append((key: "Earlier", value: earlier)) }
+
+        cachedGroupedByTime = result
+        cachedGroupedByTimeSearchText = searchText
+        cachedGroupedByTimeSessionCount = sessions.count
+        return result
     }
 
     /// Filtered project groups based on search text
