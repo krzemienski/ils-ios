@@ -413,7 +413,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 28-01-PLAN.md — iOS: off-thread QR generation, ToolCallAccordion Set-based classification, BrowserView LazyVStack verification
+- [x] 28-01-PLAN.md — iOS: off-thread QR generation, ToolCallAccordion Set-based classification, BrowserView LazyVStack verification (completed 2026-02-24)
 - [ ] 28-02-PLAN.md — macOS: cached filter vars in MacSessionsListView/MacProjectsListView, formatModelName consolidation
 
 ---
@@ -520,7 +520,7 @@ Plans:
 | 25. Concurrency HIGH + Swift 6 Blockers | 2/2 | Complete    | 2026-02-24 | - |
 | 26. Concurrency MEDIUM + LOW | 2/2 | Complete    | 2026-02-24 | - |
 | 27. Energy + Memory | 3/3 | Complete    | 2026-02-24 | - |
-| 28. SwiftUI Performance | v1.5 | 0/? | Planned | - |
+| 28. SwiftUI Performance | v1.5 | 1/2 | In Progress | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | 0/? | Planned | - |
 | 30. Testing Infrastructure | v1.5 | 0/2 | Planned | - |
 | 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |

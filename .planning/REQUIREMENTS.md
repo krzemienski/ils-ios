@@ -65,11 +65,11 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 ### SwiftUI Performance
 
-- [ ] **UIPERF-01**: TunnelSettingsView CIFilter QR generation verified off-thread (H-SP2)
+- [x] **UIPERF-01**: TunnelSettingsView CIFilter QR generation verified off-thread (H-SP2)
 - [ ] **UIPERF-02**: MacSessionsListView local computed filter cached (MED-SP1)
 - [ ] **UIPERF-03**: MacProjectsListView local computed filter cached (MED-SP2)
-- [ ] **UIPERF-04**: ToolCallAccordion repeated .contains() per tick replaced (MED-SP3)
-- [ ] **UIPERF-05**: BrowserView non-lazy VStack converted to lazy (MED-SP4)
+- [x] **UIPERF-04**: ToolCallAccordion repeated .contains() per tick replaced (MED-SP3)
+- [x] **UIPERF-05**: BrowserView non-lazy VStack converted to lazy (MED-SP4)
 - [ ] **UIPERF-06**: Duplicate formatModelName() uses shared ClaudeModel.displayName (LOW-SP1)
 
 ### Swift 6 Preparation
