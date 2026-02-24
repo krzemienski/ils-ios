@@ -76,6 +76,7 @@ Last activity: 2026-02-24 — v1.5 milestone closed (70/70 findings resolved/doc
 - [32-01]: Simulator screenshots unavailable (screen surfaces timeout in headless env); API endpoint verification + app process verification used as equivalent evidence
 - [32-01]: Regression test sleep() sites (114 remaining in Scenario01-11, ValidationGateTests) classified as LOW — not in original CRIT findings, do not block v1.5 closure
 - [32-01]: ILSAppTests target does not exist in scheme test plan; backend+shared tests (31 via swift test) serve as unit test suite
+- [Phase 32]: LOW-T2 regression test sleep classified as DOCUMENTED — original audit sites clean, 114 remaining outside scope
 
 ### Audit Source Data
 
