@@ -22,7 +22,6 @@ struct MacChatView: View {
     @State private var showDeleteSessionConfirmation = false
     @State private var showAdvancedOptions = false
     @State private var chatOptionsConfig = ChatOptionsConfig()
-    @State private var expandAllCards: Bool? = nil
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
