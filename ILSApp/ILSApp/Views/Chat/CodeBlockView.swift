@@ -131,6 +131,7 @@ struct CodeBlockView: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("code-block-copy-button")
                 .accessibilityLabel("Copy code")
+                .accessibilityHint("Copies the code to your clipboard")
 
                 // Share button
                 Button(action: {
