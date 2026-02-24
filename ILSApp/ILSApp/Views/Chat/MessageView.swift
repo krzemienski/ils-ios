@@ -36,22 +36,6 @@ struct MessageView: View {
                     if let thinking = message.thinking {
                         ThinkingView(thinking: thinking)
                     }
-
-                    // Copy confirmation overlay
-                    if showCopyConfirmation {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(theme.success)
-                            Text("Copied")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundColor(theme.success)
-                        }
-                        .padding(.horizontal, theme.spacingSM)
-                        .padding(.vertical, theme.spacingXS)
-                        .background(theme.success.opacity(0.1))
-                        .cornerRadius(theme.cornerRadiusSmall)
-                        .transition(.scale.combined(with: .opacity))
-                    }
                 }
                 .padding()
                 .background(message.isUser ? theme.accent.opacity(0.15) : theme.bgSecondary)
@@ -94,6 +78,7 @@ struct MessageView: View {
                 if !message.isUser { Spacer() }
             }
         }
+        .toast(isPresented: $showCopyConfirmation, message: "Copied")
     }
 
     /// Format timestamp based on whether it's from today or an earlier date
@@ -300,11 +285,6 @@ struct MessageContentView: View {
                                 NSPasteboard.general.setString(plainText, forType: .string)
                                 #endif
                                 showCopyConfirmation = true
-                                // Hide confirmation after 2 seconds
-                                Task { @MainActor in
-                                    try? await Task.sleep(for: .seconds(2))
-                                    showCopyConfirmation = false
-                                }
                             }) {
                                 Label("Copy Text", systemImage: "doc.on.doc")
                                     .accessibilityHint("Copies this text segment to clipboard")
