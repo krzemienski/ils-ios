@@ -93,8 +93,8 @@ final class ErrorHandlingTests: XCTestCase {
             doneButton.tap()
         }
 
-        // Brief wait for navigation to complete
-        sleep(1)
+        // Wait for navigation to complete — sidebar dismissed
+        _ = waitForElementToDisappear(doneButton, timeout: 3)
         return true
     }
 
@@ -211,7 +211,9 @@ final class ErrorHandlingTests: XCTestCase {
         let projectsTitle = app.navigationBars["Projects"]
         XCTAssertTrue(waitForElement(projectsTitle, timeout: 10), "Projects view should appear")
 
-        sleep(2) // Wait for loading
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Projects"].waitForExistence(timeout: 1)
 
         let projectsEmptyState = app.staticTexts["No Projects"]
         let hasProjectsContent = app.cells.count > 0 || projectsEmptyState.exists
@@ -224,7 +226,9 @@ final class ErrorHandlingTests: XCTestCase {
         let skillsTitle = app.navigationBars["Skills"]
         XCTAssertTrue(waitForElement(skillsTitle, timeout: 10), "Skills view should appear")
 
-        sleep(2) // Wait for loading
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Skills"].waitForExistence(timeout: 1)
 
         let skillsEmptyState = app.staticTexts["No Skills"]
         let hasSkillsContent = app.cells.count > 0 || skillsEmptyState.exists
@@ -237,7 +241,9 @@ final class ErrorHandlingTests: XCTestCase {
         let mcpTitle = app.navigationBars["MCP Servers"]
         XCTAssertTrue(waitForElement(mcpTitle, timeout: 10), "MCP Servers view should appear")
 
-        sleep(2) // Wait for loading
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No MCP Servers"].waitForExistence(timeout: 1)
 
         let mcpEmptyState = app.staticTexts["No MCP Servers"]
         let hasMCPContent = app.cells.count > 0 || mcpEmptyState.exists
@@ -250,7 +256,9 @@ final class ErrorHandlingTests: XCTestCase {
         let pluginsTitle = app.navigationBars["Plugins"]
         XCTAssertTrue(waitForElement(pluginsTitle, timeout: 10), "Plugins view should appear")
 
-        sleep(2) // Wait for loading
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Plugins"].waitForExistence(timeout: 1)
 
         let pluginsEmptyState = app.staticTexts["No Plugins"]
         let hasPluginsContent = app.cells.count > 0 || pluginsEmptyState.exists
@@ -294,7 +302,8 @@ final class ErrorHandlingTests: XCTestCase {
         let projectsLoading = app.staticTexts["Loading projects..."]
         takeScreenshot(named: "Loading-ProjectsView")
 
-        sleep(2) // Give loading time to complete
+        // Wait for loading to complete — content cells or loading indicator gone
+        _ = waitForElementToDisappear(app.activityIndicators.firstMatch, timeout: 5)
 
         // Test loading on refresh
         XCTAssertTrue(navigateToSidebarItem("skills"), "Should navigate to Skills")
@@ -302,7 +311,8 @@ final class ErrorHandlingTests: XCTestCase {
         let skillsTitle = app.navigationBars["Skills"]
         XCTAssertTrue(waitForElement(skillsTitle, timeout: 10), "Skills view should appear")
 
-        sleep(1)
+        // Wait for skills content to be ready
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5)
         takeScreenshot(named: "Loading-BeforeRefresh")
 
         // Perform pull to refresh
@@ -313,7 +323,8 @@ final class ErrorHandlingTests: XCTestCase {
         // Loading indicator should appear briefly during refresh
         takeScreenshot(named: "Loading-DuringRefresh")
 
-        sleep(2) // Wait for refresh to complete
+        // Wait for refresh to complete — loading indicator gone
+        _ = waitForElementToDisappear(app.activityIndicators.firstMatch, timeout: 5)
 
         takeScreenshot(named: "Loading-AfterRefresh")
 
@@ -362,7 +373,8 @@ final class ErrorHandlingTests: XCTestCase {
         let endCoord = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
         startCoord.press(forDuration: 0.1, thenDragTo: endCoord)
 
-        sleep(2)
+        // Wait for refresh to complete — loading indicator gone
+        _ = waitForElementToDisappear(app.activityIndicators.firstMatch, timeout: 5)
 
         takeScreenshot(named: "BackendUnavailable-AfterRetry")
 
@@ -384,7 +396,8 @@ final class ErrorHandlingTests: XCTestCase {
             _ = waitForElementToDisappear(loadingIndicator, timeout: 15)
         }
 
-        sleep(1)
+        // Wait for sessions view to be ready
+        _ = app.navigationBars.firstMatch.waitForExistence(timeout: 3)
 
         takeScreenshot(named: "InvalidInput-Initial")
 
@@ -406,7 +419,9 @@ final class ErrorHandlingTests: XCTestCase {
         if createButton.isEnabled {
             // If enabled, try tapping and verify form doesn't dismiss or shows error
             createButton.tap()
-            sleep(1)
+
+            // Wait for sheet to either dismiss or remain — check it's still visible
+            _ = app.navigationBars["New Session"].waitForExistence(timeout: 3)
 
             // Sheet should still be visible (creation failed)
             let sheetStillVisible = app.navigationBars["New Session"].exists
@@ -430,7 +445,8 @@ final class ErrorHandlingTests: XCTestCase {
             }
         }
 
-        sleep(1)
+        // Wait for sheet to dismiss
+        _ = waitForElementToDisappear(app.navigationBars["New Session"], timeout: 3)
 
         // Test 2: Create project with empty name
         XCTAssertTrue(navigateToSidebarItem("projects"), "Should navigate to Projects")
@@ -438,7 +454,9 @@ final class ErrorHandlingTests: XCTestCase {
         let projectsTitle = app.navigationBars["Projects"]
         XCTAssertTrue(waitForElement(projectsTitle, timeout: 10), "Projects view should appear")
 
-        sleep(2)
+        // Wait for loading to complete — content or empty state
+        _ = app.cells.firstMatch.waitForExistence(timeout: 5) ||
+            app.staticTexts["No Projects"].waitForExistence(timeout: 1)
 
         takeScreenshot(named: "InvalidInput-ProjectsView")
 
@@ -464,7 +482,9 @@ final class ErrorHandlingTests: XCTestCase {
             // Validation: Create button should be disabled with empty fields
             if createProjectButton.isEnabled {
                 createProjectButton.tap()
-                sleep(1)
+
+                // Wait for sheet to either dismiss or remain
+                _ = newProjectTitle.waitForExistence(timeout: 3)
 
                 // Sheet should still be visible or show validation error
                 let sheetStillVisible = newProjectTitle.exists
@@ -490,7 +510,9 @@ final class ErrorHandlingTests: XCTestCase {
                 // Try to create
                 if createProjectButton.isEnabled {
                     createProjectButton.tap()
-                    sleep(2)
+
+                    // Wait for validation response — error message or sheet remains
+                    _ = newProjectTitle.waitForExistence(timeout: 5)
 
                     // Should show error or remain on sheet
                     let errorExists = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'error' OR label CONTAINS[c] 'invalid' OR label CONTAINS[c] 'not found'")).firstMatch.exists
