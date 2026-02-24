@@ -1,6 +1,19 @@
 import SwiftUI
 import ILSShared
 
+/// Modal form for adding a new AI teammate to an existing team.
+///
+/// Collects a teammate name, agent type (e.g. researcher, executor), AI model selection,
+/// and an optional initial prompt, then delegates spawning to ``TeamsViewModel``.
+/// Dismisses automatically once the spawn request completes.
+///
+/// ## Key State
+/// - ``teamName`` - The team this teammate will join
+/// - ``name`` - Unique identifier for the new teammate
+/// - ``agentType`` - Role descriptor for the teammate (e.g. "researcher")
+/// - ``selectedModel`` - Chosen Claude model tier: haiku, sonnet, or opus
+/// - ``prompt`` - Optional initial instructions sent when the teammate is created
+/// - ``isSpawning`` - Disables the Spawn button while the async request is in flight
 struct SpawnTeammateView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot

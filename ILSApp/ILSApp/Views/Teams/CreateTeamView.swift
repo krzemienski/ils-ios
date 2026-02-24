@@ -1,6 +1,16 @@
 import SwiftUI
 import ILSShared
 
+/// Modal form for creating a new team.
+///
+/// Presents name and description fields, validates the team name against an
+/// alphanumeric-plus-hyphen pattern, and delegates creation to ``TeamsViewModel``.
+/// Dismisses automatically on success.
+///
+/// ## Key State
+/// - ``name`` - Required team name (alphanumeric and hyphens only)
+/// - ``description`` - Optional human-readable description
+/// - ``isCreating`` - Disables the Create button while the async request is in flight
 struct CreateTeamView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot

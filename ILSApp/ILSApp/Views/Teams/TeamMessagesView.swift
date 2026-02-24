@@ -1,6 +1,17 @@
 import SwiftUI
 import ILSShared
 
+/// Chat-style interface for reading and sending messages within a team.
+///
+/// Displays the team's message history as directional bubbles (lead messages
+/// appear on the right, teammate messages on the left), and provides an input bar
+/// for composing new messages. Messages are loaded on appearance and sent via
+/// ``TeamsViewModel``.
+///
+/// ## Key State
+/// - ``teamName`` - Identifies which team's message thread to display
+/// - ``messageText`` - Current contents of the message compose field
+/// - ``recipient`` - Optional targeted recipient name; empty means broadcast to all
 struct TeamMessagesView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     var viewModel: TeamsViewModel
