@@ -39,6 +39,7 @@ struct ThemesListView: View {
         .scrollContentBackground(.hidden)
         .navigationTitle("Custom Themes")
         .refreshable {
+            HapticManager.impact(.medium)
             await viewModel.loadThemes()
         }
         .toolbar {

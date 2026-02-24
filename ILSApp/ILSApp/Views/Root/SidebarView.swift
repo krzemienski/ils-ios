@@ -232,6 +232,7 @@ struct SidebarView: View {
             .scrollContentBackground(.hidden)
             .background(theme.bgSidebar)
             .refreshable {
+                HapticManager.impact(.medium)
                 await sessionsViewModel.loadSessions(refresh: true)
             }
         }
