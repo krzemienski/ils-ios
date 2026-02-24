@@ -342,7 +342,7 @@ Plans:
 | 14. SSE & Background | 1/1 | Complete    | 2026-02-23 | - |
 | 15. View Layer Rendering | 3/3 | Complete    | 2026-02-23 | - |
 | 16. Cross-Platform Verify | v2.0 | Complete    | 2026-02-24 | 2026-02-23 |
-| 17. Regression Tests | v2.0 | 0/? | Not started | - |
+| 17. Regression Tests | 1/2 | In Progress|  | - |
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
 | 20. Architecture + Performance HIGH | 4/4 | Complete   | 2026-02-22 | - |
