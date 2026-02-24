@@ -3,9 +3,17 @@ import ILSShared
 
 // MARK: - Entry Mode
 
+/// Determines which session creation flow is active in ``NewSessionView``.
+///
+/// The selected mode controls which picker or form section is shown and which
+/// API action (`POST /sessions`, `POST /sessions/:id/fork`, or create-project
+/// followed by `POST /sessions`) is triggered when the user taps the action button.
 enum NewSessionMode: String, CaseIterable, Identifiable {
+    /// Start a session inside an existing project (or the home directory).
     case project = "Project"
+    /// Duplicate a past session's conversation history as a new starting point.
     case fork = "Fork"
+    /// Create a brand-new project directory entry, then immediately start a session in it.
     case newProject = "New Project"
 
     var id: String { rawValue }
@@ -13,6 +21,53 @@ enum NewSessionMode: String, CaseIterable, Identifiable {
 
 // MARK: - NewSessionView
 
+/// Sheet for creating a new Claude Code session with three distinct creation modes.
+///
+/// Presents a segmented mode picker that drives a state machine controlling which
+/// form section is shown and which API action is executed on submit:
+/// - `.project` — pick an existing project (or no project) and start a session
+/// - `.fork` — duplicate a past session's conversation as a new starting point
+/// - `.newProject` — create a new project directory entry, then start a session in it
+///
+/// The fork search field is debounced by 200 ms using a `.task(id: forkSearchText)`
+/// modifier: the SwiftUI task is cancelled on each keystroke and the filter is only
+/// applied after typing pauses, keeping the UI responsive without per-character filtering.
+/// Keyboard focus across four text inputs (session name, system prompt, max budget,
+/// max turns) is managed via a `FocusedField` enum and `@FocusState` so fields can
+/// be programmatically activated and traversed without additional taps.
+///
+/// ## Topics
+/// ### Mode
+/// - ``NewSessionMode``
+/// - ``selectedMode``
+/// - ``modePicker``
+/// - ``canShowConfig``
+///
+/// ### State
+/// - ``projectsViewModel``
+/// - ``selectedProject``
+/// - ``selectedSession``
+/// - ``recentSessions``
+/// - ``isLoadingSessions``
+/// - ``isCreating``
+/// - ``forkSearchText``
+/// - ``debouncedForkResults``
+///
+/// ### Configuration
+/// - ``selectedModel``
+/// - ``permissionMode``
+/// - ``systemPrompt``
+/// - ``maxBudget``
+/// - ``maxTurns``
+/// - ``sessionName``
+/// - ``showConfig``
+/// - ``configurationSection``
+///
+/// ### Actions
+/// - ``createSession()``
+/// - ``forkSession()``
+/// - ``createProjectAndSession()``
+/// - ``buildChatOptions()``
 struct NewSessionView: View {
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) private var dismiss
@@ -20,33 +75,55 @@ struct NewSessionView: View {
 
     // SA-MED-2: Dedicated ProjectsViewModel is intentional — NewSessionView needs independent
     // search/filter state for project selection without affecting the main projects list.
+    /// View model managing project list loading, filtering, and project creation.
     @State private var projectsViewModel = ProjectsViewModel()
+    /// View model managing session creation API calls and tracking in-flight state.
     @State private var sessionViewModel = NewSessionViewModel()
+    /// The currently active creation mode; drives which form section is rendered.
     @State private var selectedMode: NewSessionMode = .project
+    /// The project selected in `.project` mode; `nil` means the home directory.
     @State private var selectedProject: Project?
+    /// The Claude model identifier to use for the new session (e.g. "sonnet", "opus").
     @State private var selectedModel = "sonnet"
+    /// The permission mode controlling whether Claude asks before executing tools.
     @State private var permissionMode = "default"
+    /// Optional custom system prompt prepended to every message in the new session.
     @State private var systemPrompt = ""
+    /// Optional maximum spend limit in USD; parsed to `Double` before submission.
     @State private var maxBudget = ""
+    /// Optional maximum number of agentic turns; parsed to `Int` before submission.
     @State private var maxTurns = ""
+    /// Optional display name for the new session; omitted from the request when empty.
     @State private var sessionName = ""
+    /// Controls whether the collapsible `configurationSection` disclosure group is expanded.
     @State private var showConfig = false
 
-    // Fork mode state
+    // MARK: - Fork Mode State
+
+    /// The 30 most recently active sessions fetched for fork selection.
     @State private var recentSessions: [ChatSession] = []
+    /// `true` while the initial recent-sessions fetch is in progress.
     @State private var isLoadingSessions = false
+    /// The session chosen as the fork source in `.fork` mode.
     @State private var selectedSession: ChatSession?
+    /// Raw text entered into the fork search bar; drives the debounced filter task.
     @State private var forkSearchText = ""
+    /// The filtered session list that is actually rendered; updated after the 200 ms debounce.
     @State private var debouncedForkResults: [ChatSession] = []
 
-    // New Project mode state
+    // MARK: - New Project Mode State
+
+    /// Display name for the new project to be created in `.newProject` mode.
     @State private var newProjectName = ""
+    /// Absolute filesystem path on the server for the new project directory.
     @State private var newProjectPath = ""
 
+    /// Identifies the four text inputs that participate in `@FocusState` management.
     private enum FocusedField: Hashable {
         case sessionName, systemPrompt, maxBudget, maxTurns
         case projectSearch, forkSearch, newProjectName, newProjectPath
     }
+    /// Tracks which configuration field currently holds keyboard focus.
     @FocusState private var focusedField: FocusedField?
 
     let onCreated: (ChatSession) -> Void
@@ -128,6 +205,11 @@ struct NewSessionView: View {
 
     // MARK: - Can Show Config
 
+    /// `true` when enough information has been provided to show the configuration section.
+    ///
+    /// In `.project` mode the configuration is always available. In `.fork` mode a source
+    /// session must be selected. In `.newProject` mode both a project name and path are
+    /// required before the configuration section is revealed.
     private var canShowConfig: Bool {
         switch selectedMode {
         case .project:
@@ -141,6 +223,10 @@ struct NewSessionView: View {
 
     // MARK: - Mode Picker
 
+    /// Segmented pill control for switching between the three session creation modes.
+    ///
+    /// Tapping a segment animates ``selectedMode`` to the chosen value, which in turn
+    /// replaces the main form section in the scroll view.
     @ViewBuilder
     private var modePicker: some View {
         HStack(spacing: 0) {
@@ -169,6 +255,11 @@ struct NewSessionView: View {
 
     // MARK: - Project Picker Section
 
+    /// Form section for `.project` mode: search bar, "no project" row, and a filtered list of projects.
+    ///
+    /// Filtering is handled by ``ProjectsViewModel/filteredProjects`` which is driven by
+    /// `projectsViewModel.searchText`. Skeleton shimmer rows are shown while the initial
+    /// project list loads.
     @ViewBuilder
     private var projectPickerSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -309,6 +400,11 @@ struct NewSessionView: View {
 
     // MARK: - Fork Session Section
 
+    /// Form section for `.fork` mode: description, search bar, and a debounced list of recent sessions.
+    ///
+    /// The displayed list is ``debouncedForkResults``, which is updated 200 ms after the user
+    /// stops typing in the fork search bar. Skeleton shimmer rows are shown during the initial
+    /// session fetch.
     @ViewBuilder
     private var forkSessionSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -419,6 +515,11 @@ struct NewSessionView: View {
 
     // MARK: - Create Project Section
 
+    /// Form section for `.newProject` mode: project name and filesystem path inputs.
+    ///
+    /// Both fields must be non-empty before ``canShowConfig`` becomes `true` and the
+    /// configuration section is revealed. On submit, a project is created via
+    /// ``createProjectAndSession()`` before the session `POST` is dispatched.
     @ViewBuilder
     private var createProjectSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -457,6 +558,12 @@ struct NewSessionView: View {
 
     // MARK: - Configuration Section
 
+    /// Collapsible disclosure group containing all optional session parameters.
+    ///
+    /// Includes session name, model selection, permission mode, system prompt, and
+    /// budget/turn limits. The section is only rendered when ``canShowConfig`` is `true`.
+    /// Focus ring decorations are applied via `focusRing(isFocused:cornerRadius:)` on
+    /// each text input, using ``focusedField`` to track the active field.
     @ViewBuilder
     private var configurationSection: some View {
         DisclosureGroup("Configuration", isExpanded: $showConfig) {
@@ -624,6 +731,11 @@ struct NewSessionView: View {
 
     // MARK: - Action Button
 
+    /// Full-width primary action button whose title, icon, and enabled state adapt to ``selectedMode``.
+    ///
+    /// Shows a `ProgressView` spinner and "Creating…" label while ``isCreating`` is `true`.
+    /// Dispatches ``performAction()`` which routes to ``createSession()``, ``forkSession()``,
+    /// or ``createProjectAndSession()`` based on the active mode.
     @ViewBuilder
     private var actionButton: some View {
         Button {
