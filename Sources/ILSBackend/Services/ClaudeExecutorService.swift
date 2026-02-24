@@ -60,9 +60,9 @@ actor ClaudeExecutorService {
     /// The SDK calls the Anthropic API directly, avoiding the subprocess hang issue.
     /// Set to false to fall back to `claude -p` when running outside Claude Code.
     ///
-    /// `nonisolated(unsafe)` is safe here: this flag is set once during app configuration
-    /// (before any concurrent access) and read many times. No concurrent writes occur.
-    nonisolated(unsafe) static var useAgentSDK: Bool = true
+    /// SWIFT6-01: `static let` — no runtime mutation exists in the codebase.
+    /// Previously `nonisolated(unsafe) static var` but grep confirms zero write sites.
+    static let useAgentSDK: Bool = true
 
     // MARK: - Public API
 
