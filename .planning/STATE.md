@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 25-concurrency-high-swift6-blockers
-Plan: 2 of 2 complete
-Status: Phase 25 COMPLETE — all 4 HIGH concurrency defects + 2 Swift 6 blockers resolved
-Last activity: 2026-02-24 — Completed 25-02 (WebSocket Task capture + ClaudeExecutorService static var)
+Phase: 26-concurrency-medium-low
+Plan: 1 of 2 complete
+Status: Plan 26-01 COMPLETE — 4 MEDIUM concurrency fixes (Task.detached, init deferral, nonisolated(unsafe) removal)
+Last activity: 2026-02-24 — Completed 26-01 (ProjectsViewModel, SubscriptionManager, LowPowerModeMonitor, AppLogger)
 
 ## Previous Milestones
 
@@ -33,6 +33,10 @@ Last activity: 2026-02-24 — Completed 25-02 (WebSocket Task capture + ClaudeEx
 - [25-01]: hasResumed boolean guard pattern for continuation double-resume safety (3 resume sites)
 - [25-02]: Used [weak self] on inner Task closures (not just outer closure) in WebSocket handlers
 - [25-02]: Used nonisolated(unsafe) for useAgentSDK static var -- set-once-read-many pattern, eliminates Swift 6 blocker
+- [26-01]: Plain Task over Task.detached when target actor handles isolation (matches DashboardViewModel/SessionsViewModel pattern)
+- [26-01]: SubscriptionManager startListening() called at end of init to preserve singleton behavior
+- [26-01]: LowPowerModeMonitor deinit removed -- singleton never deallocates, observer cleaned at process exit
+- [26-01]: AppLogger recentLogs file read inlined -- already non-isolated async context
 
 ### Audit Source Data
 
@@ -52,7 +56,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed Phase 25 (all plans) — ready for Phase 26
+Stopped at: Completed 26-01-PLAN.md — ready for 26-02
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
-Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01)
+Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13)
