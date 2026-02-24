@@ -1,9 +1,6 @@
-import XCTest
+import Testing
 @testable import ILSShared
 
-final class ILSSharedTests: XCTestCase {
-    func testPlaceholder() throws {
-        // Placeholder test to satisfy SPM requirement for non-empty test target
-        XCTAssertTrue(true)
-    }
-}
+// ILSShared tests have been migrated to Swift Testing framework.
+// See: SessionTests.swift, MessageTests.swift, ProjectTests.swift, CodableTests.swift
+// Test data factories: TestDataFactories.swift
