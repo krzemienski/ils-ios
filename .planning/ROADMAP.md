@@ -333,7 +333,7 @@ Plans:
 - [x] **Phase 27: Energy + Memory** — 16 issues: material overhead, constrained network, LPM polling, flush timers, GPU passes, delegate cycles, observer cleanup (completed 2026-02-24)
 - [x] **Phase 28: SwiftUI Performance** — 6 issues: CIFilter verification, computed filter caching, .contains() per tick, lazy VStack, duplicate formatModelName (completed 2026-02-24)
 - [x] **Phase 29: Testing CRITICAL — Sleep Replacement** — 4 requirement groups covering 18 sleep() instances across 3 test files (completed 2026-02-24)
-- [ ] **Phase 30: Testing Infrastructure** — 7 issues: UI test startup, placeholder tests, Swift Testing migration, test data factories, parallelization
+- [x] **Phase 30: Testing Infrastructure** — 7 issues: UI test startup, placeholder tests, Swift Testing migration, test data factories, parallelization (completed 2026-02-24)
 - [ ] **Phase 31: Swift 6 Preparation** — 3 requirements: resolve 2 compile-error blockers, verify -strict-concurrency=targeted
 - [ ] **Phase 32: Final Validation** — Cross-cutting build verification, functional validation, audit re-run confirming zero open issues
 
@@ -522,6 +522,6 @@ Plans:
 | 27. Energy + Memory | 3/3 | Complete    | 2026-02-24 | - |
 | 28. SwiftUI Performance | 2/2 | Complete    | 2026-02-24 | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | Complete    | 2026-02-24 | 2026-02-24 |
-| 30. Testing Infrastructure | v1.5 | 2/2 | Complete | 2026-02-24 |
+| 30. Testing Infrastructure | v1.5 | Complete    | 2026-02-24 | 2026-02-24 |
 | 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
 | 32. Final Validation | v1.5 | 0/? | Planned | - |
