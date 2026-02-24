@@ -160,21 +160,54 @@ extension View {
 
 // MARK: - Scanline Overlay
 
+/// Module-level cache keyed by "lineSpacing_opacity" — avoids re-creating the tile on every layout pass.
+nonisolated(unsafe) private var scanlineTileCache: [String: Image] = [:]
+
+private func makeScanlineTile(lineSpacing: CGFloat, opacity: Double) -> Image {
+    let key = "\(lineSpacing)_\(opacity)"
+    if let cached = scanlineTileCache[key] {
+        return cached
+    }
+
+    let height = max(1, Int(lineSpacing))
+    guard let context = CGContext(
+        data: nil,
+        width: 1,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        return Image(systemName: "square")
+    }
+
+    context.clear(CGRect(x: 0, y: 0, width: 1, height: height))
+    context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: opacity))
+    context.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+
+    guard let cgImage = context.makeImage() else {
+        return Image(systemName: "square")
+    }
+
+    #if canImport(UIKit)
+    let image = Image(uiImage: UIImage(cgImage: cgImage))
+    #elseif canImport(AppKit)
+    let image = Image(nsImage: NSImage(cgImage: cgImage, size: NSSize(width: 1, height: height)))
+    #endif
+
+    scanlineTileCache[key] = image
+    return image
+}
+
 struct ScanlineOverlay: View {
     var lineSpacing: CGFloat = 4
     var opacity: Double = 0.03
 
     var body: some View {
-        Canvas { context, size in
-            var y: CGFloat = 0
-            while y < size.height {
-                let rect = CGRect(x: 0, y: y, width: size.width, height: 1)
-                context.fill(Path(rect), with: .color(.black.opacity(opacity)))
-                y += lineSpacing
-            }
-        }
-        .drawingGroup()
-        .allowsHitTesting(false)
+        makeScanlineTile(lineSpacing: lineSpacing, opacity: opacity)
+            .resizable(resizingMode: .tile)
+            .allowsHitTesting(false)
     }
 }
 
