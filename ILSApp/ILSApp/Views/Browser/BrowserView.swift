@@ -42,6 +42,7 @@ struct BrowserView: View {
 
             // Content
             ScrollView {
+                // UIPERF-05: Verified — LazyVStack used for efficient browser content rendering.
                 LazyVStack(spacing: theme.spacingSM) {
                     switch segment {
                     case .mcp:

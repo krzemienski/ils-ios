@@ -88,7 +88,12 @@ struct TunnelSettingsView: View {
         }
         .onChange(of: tunnelURL) { _, newURL in
             if let url = newURL {
-                qrImage = Self.generateQRCode(from: url)
+                // UIPERF-01: Off-thread QR generation — CIFilter must not block main thread.
+                let urlCopy = url
+                Task.detached(priority: .userInitiated) {
+                    let image = TunnelSettingsView.generateQRCode(from: urlCopy)
+                    await MainActor.run { qrImage = image }
+                }
             } else {
                 qrImage = nil
             }
@@ -485,7 +490,12 @@ struct TunnelSettingsView: View {
             notInstalled = false
             errorMessage = nil
             if let url = status.url {
-                qrImage = Self.generateQRCode(from: url)
+                // UIPERF-01: Off-thread QR generation — CIFilter must not block main thread.
+                let urlCopy = url
+                Task.detached(priority: .userInitiated) {
+                    let image = TunnelSettingsView.generateQRCode(from: urlCopy)
+                    await MainActor.run { qrImage = image }
+                }
             }
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
@@ -508,7 +518,12 @@ struct TunnelSettingsView: View {
             tunnelURL = response.url
             isRunning = true
             notInstalled = false
-            qrImage = Self.generateQRCode(from: response.url)
+            // UIPERF-01: Off-thread QR generation — CIFilter must not block main thread.
+            let urlCopy = response.url
+            Task.detached(priority: .userInitiated) {
+                let image = TunnelSettingsView.generateQRCode(from: urlCopy)
+                await MainActor.run { qrImage = image }
+            }
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
                 notInstalled = true
@@ -562,7 +577,12 @@ struct TunnelSettingsView: View {
             tunnelURL = response.url
             isRunning = true
             notInstalled = false
-            qrImage = Self.generateQRCode(from: response.url)
+            // UIPERF-01: Off-thread QR generation — CIFilter must not block main thread.
+            let urlCopy = response.url
+            Task.detached(priority: .userInitiated) {
+                let image = TunnelSettingsView.generateQRCode(from: urlCopy)
+                await MainActor.run { qrImage = image }
+            }
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
                 notInstalled = true
@@ -603,9 +623,11 @@ struct TunnelSettingsView: View {
 
     // MARK: - QR Code Generation
 
-    private static let ciContext = CIContext()
+    // UIPERF-01: nonisolated to allow safe calls from Task.detached without Swift 6 warnings.
+    private nonisolated static let ciContext = CIContext()
 
-    private static func generateQRCode(from string: String) -> PlatformImage? {
+    // UIPERF-01: nonisolated static — CIFilter/CIContext are thread-safe, called from detached tasks.
+    private nonisolated static func generateQRCode(from string: String) -> PlatformImage? {
         let filter = CIFilter.qrCodeGenerator()
 
         guard let data = string.data(using: .ascii) else { return nil }
