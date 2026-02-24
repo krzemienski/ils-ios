@@ -43,6 +43,12 @@ extension APIResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension APIResponse: Content where T: Content {}
+// CONC-15: @unchecked Sendable extensions are required for Vapor Content protocol
+// conformance. Vapor's Content protocol inherits from Sendable, but generic wrapper
+// types (APIResponse<T>, ListResponse<T>, PaginatedResponse<T>) cannot automatically
+// satisfy Sendable when T is constrained to Sendable. The @unchecked annotation is
+// the standard Vapor pattern. These types are value types (structs) defined in ILSShared
+// with all-Sendable stored properties, so the assertion is correct. Reviewed 2026-02-24.
 extension APIResponse: @unchecked Sendable where T: Sendable {}
 
 // ListResponse conformances
