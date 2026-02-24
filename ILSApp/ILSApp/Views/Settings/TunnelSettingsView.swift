@@ -10,27 +10,105 @@ import AppKit
 typealias PlatformImage = NSImage
 #endif
 
-/// Settings screen for managing Cloudflare tunnel remote access.
+/// Settings screen for configuring and managing Cloudflare tunnel remote access.
+///
+/// Allows users to expose the local ILS backend through a Cloudflare tunnel so it can be
+/// reached from any device without port-forwarding or VPN configuration. Supports two tunnel
+/// modes: a **quick tunnel** (temporary random `trycloudflare.com` URL, no account required)
+/// and a **named tunnel** (stable custom domain backed by a Cloudflare account and API token).
+///
+/// On load the view fetches the current tunnel status from the backend and restores any
+/// previously saved custom-domain credentials. The Cloudflare API token is persisted securely
+/// in the system Keychain via `KeychainService`; the tunnel name and custom domain are stored
+/// in `UserDefaults`. A legacy migration path promotes tokens found in `UserDefaults` to the
+/// Keychain on first use.
+///
+/// A QR code for the active tunnel URL is generated with `CIQRCodeGenerator` and shown inline,
+/// making it easy to open the backend on a phone or tablet. A copy-to-clipboard button with a
+/// timed toast provides a quick way to share the URL.
+///
+/// ## Topics
+/// ### State — Connection
+/// - ``isRunning`` - Whether a tunnel is currently active
+/// - ``tunnelURL`` - The public URL assigned by Cloudflare
+/// - ``uptime`` - Tunnel uptime in seconds
+/// - ``tunnelMode`` - Active tunnel mode ("quick" or "named")
+///
+/// ### State — UI
+/// - ``isLoading`` - Global loading flag for status fetch
+/// - ``isToggling`` - In-progress flag while starting or stopping the tunnel
+/// - ``errorMessage`` - Human-readable error shown in the quick tunnel card
+/// - ``notInstalled`` - Whether `cloudflared` CLI is missing on the host Mac
+/// - ``installURL`` - Deep link to the Cloudflare download page when not installed
+/// - ``showCopiedToast`` - Controls clipboard-copy toast visibility
+/// - ``qrImage`` - Platform-appropriate QR code image for the active tunnel URL
+///
+/// ### State — Custom Domain Credentials
+/// - ``cfToken`` - Cloudflare API token (persisted to Keychain)
+/// - ``cfTunnelName`` - Named tunnel identifier (persisted to UserDefaults)
+/// - ``cfDomain`` - Custom domain hostname (persisted to UserDefaults)
+///
+/// ### View Sections
+/// - ``quickTunnelSection`` - Toggle card for starting/stopping the quick tunnel
+/// - ``tunnelInfoSection(url:)`` - Connection info card with URL, mode badge, uptime, copy button, and QR code
+/// - ``installSection`` - Installation prompt shown when `cloudflared` is missing
+/// - ``customDomainSection`` - Collapsible advanced panel for named tunnel credentials
+/// - ``howItWorksSection`` - Numbered explainer of the tunnel flow
+///
+/// ### Reusable Components
+/// - ``sectionLabel(_:)`` - Uppercased, letter-spaced section header label
+/// - ``fieldGroup(label:content:)`` - Labeled input field wrapper
+/// - ``infoRow(icon:text:)`` - Icon + text row used in the how-it-works list
+///
+/// ### Actions
+/// - ``fetchStatus()`` - Loads current tunnel state from the backend on appear
+/// - ``startTunnel()`` - Starts a quick (anonymous) Cloudflare tunnel
+/// - ``stopTunnel()`` - Stops the active tunnel
+/// - ``startNamedTunnel()`` - Persists credentials and starts a named tunnel with a custom domain
+/// - ``loadCustomDomainSettings()`` - Restores saved credentials from Keychain and UserDefaults
+/// - ``generateQRCode(from:)`` - Renders a `CIQRCodeGenerator` image scaled for display
+/// - ``formatUptime(_:)`` - Formats a raw seconds value as "Xh Ym" or "Xm Ys"
 struct TunnelSettingsView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+
+    // MARK: - Connection State
+
+    /// Whether a Cloudflare tunnel is currently running.
     @State private var isRunning = false
+    /// The public URL assigned by Cloudflare for the active tunnel.
     @State private var tunnelURL: String?
+    /// How long the tunnel has been running, in seconds.
     @State private var uptime: Int?
+    /// The active tunnel mode reported by the backend — `"quick"` or `"named"`.
     @State private var tunnelMode: String?
+
+    // MARK: - UI State
+
+    /// Whether the initial status fetch is in progress.
     @State private var isLoading = false
+    /// Whether a start or stop tunnel request is in flight; disables the toggle and shows a spinner.
     @State private var isToggling = false
+    /// Human-readable error message displayed inside the quick tunnel card.
     @State private var errorMessage: String?
+    /// `true` when `cloudflared` is not installed on the host Mac; shows the installation section.
     @State private var notInstalled = false
+    /// URL to the Cloudflare `cloudflared` download page, populated when ``notInstalled`` is `true`.
     @State private var installURL: String?
+    /// Controls visibility of the "URL copied" toast shown after the user taps Copy.
     @State private var showCopiedToast = false
+    /// QR code image derived from ``tunnelURL``, regenerated whenever the URL changes.
     @State private var qrImage: PlatformImage?
     // SEC-MED-2: Surface Keychain migration failures to user.
     @State private var keychainMigrationError: String?
 
-    // Custom domain fields
+    // MARK: - Custom Domain Credentials
+
+    /// Cloudflare API token used to authenticate named tunnel creation; stored in the Keychain.
     @State private var cfToken = ""
+    /// Identifier for the named tunnel within the user's Cloudflare account; stored in UserDefaults.
     @State private var cfTunnelName = ""
+    /// Custom hostname to route the tunnel to (e.g. `ils.example.com`); stored in UserDefaults.
     @State private var cfDomain = ""
 
     private enum FocusedField: Hashable {
@@ -103,6 +181,10 @@ struct TunnelSettingsView: View {
 
     // MARK: - Quick Tunnel Section
 
+    /// Card section containing the toggle that starts or stops a temporary Cloudflare quick tunnel.
+    ///
+    /// Shows a progress spinner in place of the toggle while a start/stop request is in flight,
+    /// and surfaces ``errorMessage`` below the toggle row when a failure occurs.
     @ViewBuilder
     private var quickTunnelSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -166,6 +248,13 @@ struct TunnelSettingsView: View {
 
     // MARK: - Tunnel Info Section
 
+    /// Card section showing live connection information when a tunnel is active.
+    ///
+    /// Displays a green status indicator, the tunnel mode badge, formatted uptime, the public URL
+    /// (selectable), a copy-to-clipboard button that triggers a toast, and a QR code image for
+    /// quick scanning on another device.
+    ///
+    /// - Parameter url: The active Cloudflare tunnel URL to display and encode into a QR code.
     @ViewBuilder
     private func tunnelInfoSection(url: String) -> some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -260,6 +349,10 @@ struct TunnelSettingsView: View {
 
     // MARK: - Install Section
 
+    /// Card section shown when the backend reports that `cloudflared` is not installed on the host Mac.
+    ///
+    /// Provides a deep link to the Cloudflare download page and an inline Homebrew install command
+    /// for convenience.
     @ViewBuilder
     private var installSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -311,6 +404,12 @@ struct TunnelSettingsView: View {
 
     // MARK: - Custom Domain Section
 
+    /// Collapsible advanced section for configuring a named Cloudflare tunnel with a custom domain.
+    ///
+    /// Exposes three secured input fields — API token (`SecureField`), tunnel name, and custom
+    /// hostname — along with a "Save & Start" button that persists credentials to Keychain /
+    /// UserDefaults and launches the named tunnel. The button is disabled until all three fields
+    /// contain non-empty trimmed values (see ``isCustomDomainValid``).
     @ViewBuilder
     private var customDomainSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -417,6 +516,7 @@ struct TunnelSettingsView: View {
 
     // MARK: - How It Works Section
 
+    /// Informational card explaining the four steps of the Cloudflare tunnel flow to the user.
     @ViewBuilder
     private var howItWorksSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -439,6 +539,9 @@ struct TunnelSettingsView: View {
 
     // MARK: - Reusable Components
 
+    /// Renders an uppercased, letter-spaced section header in the tertiary text colour.
+    ///
+    /// - Parameter text: The label string to display.
     @ViewBuilder
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
@@ -448,6 +551,11 @@ struct TunnelSettingsView: View {
                 .kerning(1)
     }
 
+    /// Wraps an input field with a small label placed above it.
+    ///
+    /// - Parameters:
+    ///   - label: Caption text displayed above the field.
+    ///   - content: The input field or other view to render below the label.
     @ViewBuilder
     private func fieldGroup<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -458,6 +566,11 @@ struct TunnelSettingsView: View {
         }
     }
 
+    /// Renders a numbered step row with an SF Symbol icon and a description string.
+    ///
+    /// - Parameters:
+    ///   - icon: SF Symbol name for the leading icon (e.g. `"1.circle.fill"`).
+    ///   - text: The step description displayed beside the icon.
     private func infoRow(icon: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
@@ -472,6 +585,8 @@ struct TunnelSettingsView: View {
 
     // MARK: - Computed Properties
 
+    /// `true` when all three custom-domain credential fields contain non-empty trimmed values,
+    /// enabling the "Save & Start Named Tunnel" button.
     private var isCustomDomainValid: Bool {
         !cfToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !cfTunnelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -480,6 +595,10 @@ struct TunnelSettingsView: View {
 
     // MARK: - Actions
 
+    /// Fetches the current tunnel status from the backend and updates all relevant state.
+    ///
+    /// Handles `404` responses as a signal that `cloudflared` is not installed, populating
+    /// ``notInstalled`` and ``installURL`` so the installation section is shown.
     private func fetchStatus() async {
         do {
             let status: TunnelStatusResponse = try await appState.apiClient.get("/tunnel/status")
@@ -507,6 +626,11 @@ struct TunnelSettingsView: View {
         }
     }
 
+    /// Starts an anonymous Cloudflare quick tunnel and stores the assigned public URL.
+    ///
+    /// Sets ``isToggling`` while the request is in flight and populates ``tunnelURL`` and
+    /// ``qrImage`` on success. On failure, surfaces a user-facing error via ``errorMessage``
+    /// or sets ``notInstalled`` if `cloudflared` is missing.
     private func startTunnel() async {
         isToggling = true
         errorMessage = nil
@@ -536,6 +660,10 @@ struct TunnelSettingsView: View {
         }
     }
 
+    /// Stops the currently active tunnel and clears all connection state.
+    ///
+    /// Sets ``isToggling`` while the request is in flight. On success, clears ``tunnelURL``,
+    /// ``uptime``, and sets ``isRunning`` to `false`. Surfaces any error via ``errorMessage``.
     private func stopTunnel() async {
         isToggling = true
         errorMessage = nil
@@ -552,6 +680,12 @@ struct TunnelSettingsView: View {
         }
     }
 
+    /// Persists custom-domain credentials and starts a named Cloudflare tunnel.
+    ///
+    /// Saves ``cfToken`` to the Keychain and ``cfTunnelName`` / ``cfDomain`` to `UserDefaults`
+    /// before POSTing `TunnelStartRequest` with all three values. On success populates
+    /// ``tunnelURL`` and regenerates ``qrImage``. Errors are handled identically to
+    /// ``startTunnel()``.
     private func startNamedTunnel() async {
         isToggling = true
         errorMessage = nil
@@ -595,6 +729,12 @@ struct TunnelSettingsView: View {
         }
     }
 
+    /// Restores previously saved custom-domain credentials from Keychain and UserDefaults.
+    ///
+    /// Reads ``cfToken`` from the Keychain asynchronously. If no Keychain entry exists but a
+    /// legacy `UserDefaults` token is found, it is migrated to the Keychain and removed from
+    /// `UserDefaults`. ``cfTunnelName`` and ``cfDomain`` are read synchronously from
+    /// `UserDefaults`.
     private func loadCustomDomainSettings() {
         let defaults = UserDefaults.standard
         // Load token from Keychain (migrate from UserDefaults if present)
@@ -624,9 +764,17 @@ struct TunnelSettingsView: View {
     // MARK: - QR Code Generation
 
     // UIPERF-01: nonisolated to allow safe calls from Task.detached without Swift 6 warnings.
+    /// Shared `CIContext` reused across QR code renders to avoid repeated GPU context creation.
     private nonisolated static let ciContext = CIContext()
 
     // UIPERF-01: nonisolated static — CIFilter/CIContext are thread-safe, called from detached tasks.
+    /// Generates a QR code image for the given string using `CIQRCodeGenerator`.
+    ///
+    /// The raw `CIImage` output is scaled by 10× to produce a crisp 200 pt image. Returns
+    /// a `UIImage` on iOS and an `NSImage` on macOS, or `nil` if encoding or rendering fails.
+    ///
+    /// - Parameter string: The URL or text to encode into the QR code.
+    /// - Returns: A platform-appropriate image, or `nil` on failure.
     private nonisolated static func generateQRCode(from string: String) -> PlatformImage? {
         let filter = CIFilter.qrCodeGenerator()
 
@@ -652,6 +800,13 @@ struct TunnelSettingsView: View {
 
     // MARK: - Helpers
 
+    /// Formats a raw uptime value in seconds into a compact human-readable string.
+    ///
+    /// Returns `"Xh Ym"` when the duration exceeds one hour, `"Xm Ys"` for durations under
+    /// an hour but over a minute, and `"Xs"` for durations under one minute.
+    ///
+    /// - Parameter seconds: Uptime duration in seconds.
+    /// - Returns: A formatted uptime string.
     private func formatUptime(_ seconds: Int) -> String {
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
