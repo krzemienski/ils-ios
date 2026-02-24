@@ -1,6 +1,26 @@
 import SwiftUI
 import ILSShared
 
+/// SSH-based setup wizard for deploying ILSBackend on a remote server.
+///
+/// Guides the user through entering SSH credentials — host, port, username,
+/// password or key path, and backend port — then connects via SSH and runs
+/// the ILS bootstrap script. Per-step status is reflected in ``setupProgressView``
+/// while raw script output is available in the collapsible ``logConsoleSection``.
+/// After a successful bootstrap the view automatically connects to the newly
+/// provisioned backend (with Cloudflare-tunnel retry logic) and dismisses itself.
+///
+/// ## Topics
+/// ### Credential Input
+/// - ``credentialForm`` - SSH host, port, username, auth method, and backend port fields
+///
+/// ### Progress & Logs
+/// - ``setupProgressView`` - Step-by-step status icons driven by ``SetupViewModel``
+/// - ``logConsoleSection`` - Collapsible terminal console showing raw script output
+///
+/// ### Post-Setup Connection
+/// - ``connectAfterSetup()`` - Retries reaching the newly provisioned server URL
+/// - ``retryConnection()`` - Manual retry entry point surfaced after a failed connect
 struct SSHSetupView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot

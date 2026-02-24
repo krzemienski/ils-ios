@@ -1,9 +1,27 @@
 import SwiftUI
 import ILSShared
 
-/// Quick Connect view for connecting to an existing backend server.
-/// Extracted from the original ServerSetupSheet with connection mode picker,
-/// URL entry, connection steps, health check, and recent connections.
+/// Quick connect view for joining an existing backend server without SSH setup.
+///
+/// Presents a segmented mode picker (Local / Remote / Tunnel) and renders
+/// the appropriate input fields for each connection type. On connect it runs
+/// a health-check via ``QuickConnectViewModel`` and shows step-by-step progress,
+/// a success banner, or an error label. Recent connections are persisted and
+/// listed below the form for one-tap reuse.
+///
+/// ## Topics
+/// ### Connection Modes
+/// - ``modePicker`` - Segmented control switching between Local, Remote, and Tunnel
+/// - ``modeContent`` - Input fields rendered for the active ``ConnectionMode``
+///
+/// ### Feedback
+/// - ``connectionStepsView`` - Live progress steps during the health check
+/// - ``resultBanner(_:)`` - Success or failure banner shown after the attempt
+/// - ``backendInfoCard(_:)`` - Connected-state card displaying backend metadata
+///
+/// ### Actions
+/// - ``connectButton`` - Triggers the connection attempt via the view model
+/// - ``recentSection`` - Scrollable list of recently used server URLs
 struct QuickConnectView: View {
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) private var dismiss
