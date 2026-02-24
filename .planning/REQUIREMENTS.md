@@ -155,8 +155,10 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 **Coverage:**
 - v1.5 requirements: 50 total (+ 2 shared: SWIFT6-01/02 in Phase 25 and 31)
 - Mapped to phases: 50/50 (100%)
-- Unmapped: 0
+- Complete: 50
+- Documented: 0
+- Open: 0
 
 ---
 *Requirements defined: 2026-02-24*
-*Last updated: 2026-02-24 — all requirements mapped to phases 25-32*
+*Last updated: 2026-02-24 — v1.5 milestone closed, all 50 requirements complete*

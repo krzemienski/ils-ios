@@ -5,20 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-02-24)
 
 **Core value:** Ship-ready code quality — every audit finding resolved, tests reliable and meaningful, Swift 6 concurrency on a clear migration path
-**Current focus:** v1.5 All Audit Fixes — defining requirements
+**Current focus:** v1.5 All Audit Fixes — COMPLETE
 
 ## Current Position
 
-Phase: 32-final-validation
-Plan: 1 of 2 complete
-Status: IN PROGRESS — 32-01 complete (all 3 builds pass, 5 audits zero CRIT/HIGH, 31 tests pass, 15/15 v1.0 REQs PASS)
-Last activity: 2026-02-24 — Completed 32-01 (build verification, test suite, 5 Axiom audit re-runs, v1.0 REQ spot-check)
+Phase: 32-final-validation — COMPLETE
+Plan: 2 of 2 complete
+Status: Complete
+Last activity: 2026-02-24 — v1.5 milestone closed (70/70 findings resolved/documented, all builds pass, 31 tests pass, 15/15 v1.0 REQs PASS)
 
 ## Previous Milestones
 
 - v1.0 (Phases 1-10): Cross-Platform Audit — SHIPPED 2026-02-21 | 15/15 REQs PASS | 0 crashes
 - v2.0 (Phases 11-17): Performance Optimization Suite — COMPLETE 2026-02-24 | 838ms cold-start, regression tests
 - v3.0 (Phases 18-24): Comprehensive Audit Remediation — COMPLETE 2026-02-23 | 165/165 issues resolved
+- v1.5 (Phases 25-32): All Audit Fixes — SHIPPED 2026-02-24 | 50 REQs | 70/70 findings resolved/documented
 
 ## Accumulated Context
 
@@ -88,13 +89,14 @@ None yet.
 
 ### Blockers/Concerns
 
-- Swift 6 strict-concurrency=targeted clean across all targets. Path to =complete documented in SWIFT6-MIGRATION.md (212 warnings, ~3.5hrs, 9 categories). Blocked partially by upstream Vapor 5 / Citadel Sendable support.
-- Testing overhaul is the highest-effort category (~8-12 hrs estimated)
+None — v1.5 milestone complete. Future considerations:
+- Swift 6 -strict-concurrency=complete requires upstream Vapor 5 / Citadel Sendable support (documented in SWIFT6-MIGRATION.md)
+- 114 regression test sleep() calls remain in Scenario01-11 and ValidationGateTests (LOW priority, outside original audit scope)
 
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 32-01-PLAN.md (build verification + 5 audit re-runs + v1.0 REQ spot-check — all evidence in /tmp/v1.5-final-validation/)
+Stopped at: Completed 32-02-PLAN.md — v1.5 milestone closed
 Resume file: None
-Audit data: scratch/audit-findings-2026-02-24.md
+Audit data: scratch/audit-findings-2026-02-24.md (updated with resolution status for all 70 issues)
 Prior commits: a161a27 (TEST-02/TEST-03 sleep replacement), c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07), eb94c53 (UIPERF-01/UIPERF-04/UIPERF-05), 29c6c50 (UIPERF-02/UIPERF-03/UIPERF-06)
