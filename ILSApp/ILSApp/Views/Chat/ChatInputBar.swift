@@ -86,10 +86,11 @@ struct ChatInputBar: View {
     private var commandPaletteButton: some View {
         Button(action: onCommandPalette) {
             Image(systemName: "command")
+                .font(.system(size: 20))
                 .foregroundStyle(isDisabled ? theme.textTertiary : theme.accent)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
@@ -98,10 +99,11 @@ struct ChatInputBar: View {
     private var optionsButton: some View {
         Button(action: onAdvancedOptions) {
             Image(systemName: hasCustomOptions ? "slider.horizontal.2.gobackward" : "slider.horizontal.3")
+                .font(.system(size: 20))
                 .foregroundStyle(hasCustomOptions ? theme.accent : (isDisabled ? theme.textTertiary : theme.textSecondary))
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
@@ -113,8 +115,8 @@ struct ChatInputBar: View {
             .lineLimit(1...5)
             .disabled(isDisabled)
             .focused($isInputFocused)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, inputPaddingH)
+            .padding(.vertical, inputPaddingV)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
@@ -127,10 +129,11 @@ struct ChatInputBar: View {
     private var cancelButton: some View {
         Button(action: onCancel) {
             Image(systemName: "stop.circle.fill")
+                .font(.system(size: 20))
                 .foregroundStyle(theme.error)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .accessibilityIdentifier("cancel-button")
         .accessibilityLabel("Stop streaming")
         .accessibilityHint("Cancels the current response from Claude")
@@ -155,12 +158,13 @@ struct ChatInputBar: View {
             }
         } label: {
             Image(systemName: "arrow.up.circle.fill")
+                .font(.system(size: 20))
                 .foregroundStyle(text.isEmpty || isDisabled ? theme.textTertiary : theme.accent)
                 .scaleEffect(sendButtonPressed ? 0.85 : 1.0)
                 .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: sendButtonPressed)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
         }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
         .disabled(text.isEmpty || isDisabled)
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
