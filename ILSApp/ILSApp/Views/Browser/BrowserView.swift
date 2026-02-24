@@ -11,21 +11,73 @@ enum BrowserSegment: String, CaseIterable {
 
 // MARK: - Browser View
 
+/// Tabbed browsing view presenting MCP servers, Skills, and Plugins in a single scrollable interface.
+///
+/// `BrowserView` renders a three-segment control at the top (MCP / Skills / Plugins) and a
+/// shared search bar whose text is forwarded to each tab's view-model. Switching segments
+/// swaps the content area between ``mcpContent``, ``skillsContent``, and ``pluginsContent``
+/// without reloading already-fetched data.
+///
+/// On first appearance all three tabs are loaded concurrently via ``loadAll()``, which fans
+/// out to `MCPViewModel.loadServers()`, `SkillsViewModel.loadSkills()`, and
+/// `PluginsViewModel.loadPlugins()` using Swift structured concurrency. The view re-loads
+/// whenever `AppState.isConnected` transitions to `true` (e.g. after a reconnect).
+/// Pull-to-refresh on the scroll view calls ``refreshCurrentSegment()`` to reload only the
+/// visible tab.
+///
+/// Each content section handles three display states:
+/// - **Loading** — skeleton placeholder rows shown while the view-model's `isLoading` flag is set and the item list is empty.
+/// - **Empty** — a centred icon/title/subtitle via ``emptyState(icon:title:subtitle:)`` when loading completes with no items.
+/// - **Populated** — `NavigationLink` rows using the shared ``browserRow(name:subtitle:status:statusColor:entityColor:badge:)`` helper.
+///
+/// The MCP tab adds a second scope filter (all / user / project / local) that re-fetches
+/// servers through `MCPViewModel.loadServers(scope:)` when changed.
+///
+/// The Skills tab appends a GitHub search section (``githubBrowseSection``) below the local
+/// list, enabling one-tap install of remote skills via `SkillsViewModel.installFromGitHub(result:)`.
+///
+/// The Plugins tab shows horizontal category-filter chips derived from
+/// `PluginsViewModel.pluginCategories` and renders richer ``pluginRow(_:)`` cards with
+/// version / source / stars badges.
+///
+/// ## Topics
+/// ### Configuration
+/// - ``initialSegment`` - The tab displayed when the view first appears
+///
+/// ### State
+/// - ``mcpVM`` - Observable view-model managing MCP server data and search
+/// - ``skillsVM`` - Observable view-model managing skills data, search, and GitHub browsing
+/// - ``pluginsVM`` - Observable view-model managing plugins data, search, and category filtering
+/// - ``segment`` - The currently active ``BrowserSegment`` tab
+/// - ``searchText`` - Live search query forwarded to all three view-models
+/// - ``mcpScope`` - Active MCP scope filter: `"all"`, `"user"`, `"project"`, or `"local"`
+/// - ``isSearchFocused`` - Focus state that drives the search bar focus ring
+///
+/// ### Async Loading
+/// - ``loadAll()`` - Concurrently loads all three tabs on first appearance
+/// - ``refreshCurrentSegment()`` - Refreshes only the currently visible tab (pull-to-refresh)
 struct BrowserView: View {
-    /// Optional initial segment to show when the view first appears.
+    /// The tab that is selected when the view first appears; defaults to `.mcp`.
     var initialSegment: BrowserSegment = .mcp
 
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Observable view-model that owns MCP server list, filtered results, and loading state.
     @State private var mcpVM = MCPViewModel()
+    /// Observable view-model that owns skills list, filtered results, GitHub search, and loading state.
     @State private var skillsVM = SkillsViewModel()
+    /// Observable view-model that owns plugins list, category filtering, and loading state.
     @State private var pluginsVM = PluginsViewModel()
 
+    /// The currently visible tab; animated transitions unless `reduceMotion` is enabled.
     @State private var segment: BrowserSegment = .mcp
+    /// Shared search query applied to all three tabs simultaneously via each view-model's `searchText`.
     @State private var searchText = ""
+    /// Active scope filter for the MCP tab (`"all"`, `"user"`, `"project"`, or `"local"`).
     @State private var mcpScope: String = "all"
+    /// Tracks keyboard focus on the search bar to render the themed focus ring.
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
