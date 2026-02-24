@@ -86,6 +86,9 @@ struct BrowserView: View {
                 .padding(.bottom, theme.spacingLG)
             }
             .refreshable {
+                #if os(iOS)
+                HapticManager.impact(.light)
+                #endif
                 await refreshCurrentSegment()
             }
         }

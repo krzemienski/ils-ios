@@ -286,7 +286,9 @@ struct SidebarView: View {
             .scrollContentBackground(.hidden)
             .background(theme.bgSidebar)
             .refreshable {
-                HapticManager.impact(.medium)
+                #if os(iOS)
+                HapticManager.impact(.light)
+                #endif
                 await sessionsViewModel.loadProjectGroups()
             }
         }
