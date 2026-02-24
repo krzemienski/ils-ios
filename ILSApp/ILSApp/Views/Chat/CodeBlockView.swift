@@ -30,21 +30,39 @@ struct CodeBlockView: View {
     @State private var showCopyConfirmation = false
     @State private var isExpanded = true
     @State private var showShareSheet = false
-    @State private var highlightedCode: AttributedString?
-    /// Cached lines split from `code` — populated via `.task(id: code)`.
-    @State private var cachedCodeLines: [String] = []
-    /// Whether the code block should show expand/collapse — cached via `.task(id: code)`.
-    @State private var cachedShouldBeCollapsible: Bool = false
-    /// Lines currently visible (respects collapse state) — cached via `.task(id: code)` and `.onChange(of: isExpanded)`.
-    @State private var cachedDisplayedLines: [String] = []
+    @State private var highlightedCode: AttributedString
     @State private var contentWidth: CGFloat = 0
     @State private var viewWidth: CGFloat = 0
     @State private var scrollOffset: CGFloat = 0
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    init(code: String, language: String?) {
+        self.code = code
+        self.language = language
+        _highlightedCode = State(initialValue: SyntaxHighlighter.highlight(code: code, language: language))
+    }
+
     /// Maximum number of lines to show when collapsed
     private let collapsedLineLimit = 3
+
+    /// Split code into lines for line numbering
+    private var codeLines: [String] {
+        code.components(separatedBy: .newlines)
+    }
+
+    /// Whether the code block should be collapsible (more than 10 lines)
+    private var shouldBeCollapsible: Bool {
+        codeLines.count > 10
+    }
+
+    /// Lines to display based on expanded state
+    private var displayedLines: [String] {
+        if shouldBeCollapsible && !isExpanded {
+            return Array(codeLines.prefix(collapsedLineLimit))
+        }
+        return codeLines
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -66,7 +84,7 @@ struct CodeBlockView: View {
                 Spacer()
 
                 // Expand/Collapse button (only if collapsible)
-                if cachedShouldBeCollapsible {
+                if shouldBeCollapsible {
                     Button(action: {
                         if reduceMotion {
                             isExpanded.toggle()
@@ -138,9 +156,8 @@ struct CodeBlockView: View {
             ScrollView(.horizontal, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
                     // Line numbers
-                    // SPERF-MED-6: Use indices for stable ForEach identity.
                     VStack(alignment: .trailing, spacing: 0) {
-                        ForEach(cachedDisplayedLines.indices, id: \.self) { index in
+                        ForEach(Array(displayedLines.enumerated()), id: \.offset) { index, _ in
                             Text("\(index + 1)")
                                 .font(.system(.caption, design: theme.fontDesign))
                                 .foregroundColor(theme.textTertiary)
@@ -149,7 +166,7 @@ struct CodeBlockView: View {
                         }
 
                         // Ellipsis indicator when collapsed
-                        if cachedShouldBeCollapsible && !isExpanded {
+                        if shouldBeCollapsible && !isExpanded {
                             Text("\u{22EE}")
                                 .font(.system(.caption, design: theme.fontDesign))
                                 .foregroundColor(theme.textTertiary)
@@ -167,9 +184,10 @@ struct CodeBlockView: View {
                         .frame(width: 1)
                         .accessibilityHidden(true)
 
-                    // Code text with syntax highlighting (cached via @State + .task(id:))
+                    // Code text with syntax highlighting (cached — only recomputed when code/language changes)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(highlightedCode ?? AttributedString(cachedDisplayedLines.joined(separator: "\n")))
+                        Text(highlightedCode)
+                            .lineLimit(shouldBeCollapsible && !isExpanded ? collapsedLineLimit : nil)
                             .textSelection(.enabled)
                             .padding(.leading, theme.spacingSM)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -208,38 +226,11 @@ struct CodeBlockView: View {
                 .strokeBorder(theme.textTertiary.opacity(0.2), lineWidth: 1)
         )
         .accessibilityIdentifier("code-block-container")
+        .task(id: "\(code.hashValue)-\(language ?? "")") {
+            highlightedCode = SyntaxHighlighter.highlight(code: code, language: language)
+        }
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [code])
-        }
-        .task(id: code) {
-            let lines = code.components(separatedBy: .newlines)
-            cachedCodeLines = lines
-            cachedShouldBeCollapsible = lines.count > 10
-            if cachedShouldBeCollapsible && !isExpanded {
-                cachedDisplayedLines = Array(lines.prefix(collapsedLineLimit))
-            } else {
-                cachedDisplayedLines = lines
-            }
-            // Move highlighting off main thread
-            let codeToHighlight = cachedDisplayedLines.joined(separator: "\n")
-            let lang = language
-            highlightedCode = await Task.detached(priority: .userInitiated) {
-                SyntaxHighlighter.highlight(code: codeToHighlight, language: lang)
-            }.value
-        }
-        .onChange(of: isExpanded) { _, expanded in
-            if cachedShouldBeCollapsible && !expanded {
-                cachedDisplayedLines = Array(cachedCodeLines.prefix(collapsedLineLimit))
-            } else {
-                cachedDisplayedLines = cachedCodeLines
-            }
-            let codeToHighlight = cachedDisplayedLines.joined(separator: "\n")
-            let lang = language
-            Task {
-                highlightedCode = await Task.detached(priority: .userInitiated) {
-                    SyntaxHighlighter.highlight(code: codeToHighlight, language: lang)
-                }.value
-            }
         }
     }
 
@@ -270,8 +261,8 @@ struct CodeBlockView: View {
         if let language = language {
             label += " in \(language)"
         }
-        label += ", \(cachedCodeLines.count) lines"
-        if cachedShouldBeCollapsible && !isExpanded {
+        label += ", \(codeLines.count) lines"
+        if shouldBeCollapsible && !isExpanded {
             label += ", showing first \(collapsedLineLimit) lines"
         }
         return label
