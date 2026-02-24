@@ -18,9 +18,22 @@ struct MacSessionsListView: View {
 
     // State
     @State private var searchText: String = ""
-    @State private var expandedProjects: Set<String> = []
     @State private var selectedSessionId: UUID?
     @State private var cachedFilteredGroups: [ProjectGroupInfo] = []
+
+    /// Comma-separated project names whose DisclosureGroups are expanded, persisted across app launches.
+    @AppStorage("macExpandedProjects") private var expandedProjectsStorage: String = ""
+
+    /// Computed Set<String> backed by @AppStorage for persistence across app launches.
+    private var expandedProjects: Set<String> {
+        get {
+            guard !expandedProjectsStorage.isEmpty else { return [] }
+            return Set(expandedProjectsStorage.components(separatedBy: ",").filter { !$0.isEmpty })
+        }
+        nonmutating set {
+            expandedProjectsStorage = newValue.sorted().joined(separator: ",")
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
