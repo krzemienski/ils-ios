@@ -97,11 +97,12 @@ actor TeamsExecutorService {
         let pid = process.processIdentifier
 
         // Spawn a detached task to send SIGKILL after 5 seconds if still running
+        // Only capture pid (Int32, Sendable) — NOT the non-Sendable Process
         Task.detached {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
 
-            // Check if process is still running
-            if process.isRunning {
+            // Use kill(pid, 0) to check if process is still alive — avoids capturing non-Sendable Process
+            if kill(pid, 0) == 0 {
                 kill(pid, SIGKILL)
             }
         }
