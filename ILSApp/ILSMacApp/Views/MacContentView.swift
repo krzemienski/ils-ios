@@ -119,9 +119,17 @@ struct MacContentView: View {
                 await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
             }
         }
+        .onChange(of: activeScreen) { _, newScreen in
+            switch newScreen {
+            case .home, .chat:
+                columnVisibility = .all
+            default:
+                columnVisibility = .doubleColumn
+            }
+        }
         // Observe menu bar command notifications
         .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
             activeScreen = .chat(newSession)
         }
         .onReceive(NotificationCenter.default.publisher(for: .ilsNavigateTo)) { notification in
@@ -163,11 +171,26 @@ struct MacContentView: View {
                 }
             }
         }
+        // A4: Handle notification tap from NotificationManager — navigate to the session
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenSessionFromNotification"))) { notification in
+            guard let sessionId = notification.object as? UUID else { return }
+            Task {
+                do {
+                    let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString)")
+                    if let session = response.data {
+                        activeScreen = .chat(session)
+                        selectedSection = .home
+                    }
+                } catch {
+                    // Session not found or network error — ignore and let app stay on current screen
+                }
+            }
+        }
         .onKeyPress(.init("/")) {
             isSearchFocused = true
             return .handled
         }
-        .sheet(isPresented: Bindable(appState).showOnboarding) {
+        .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)
@@ -329,7 +352,7 @@ struct MacContentView: View {
 
             // New Session button
             Button {
-                let newSession = ChatSession(name: "New Session", model: "sonnet")
+                let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
                 activeScreen = .chat(newSession)
             } label: {
                 HStack(spacing: theme.spacingSM) {
@@ -366,11 +389,11 @@ struct MacContentView: View {
                 }
             )
         case .chat(let session):
-            ChatView(session: session)
+            MacChatView(session: session)
         case .system:
             SystemMonitorView()
         case .settings:
-            SettingsView()
+            MacSettingsView()
         case .browser:
             BrowserView(initialSegment: browserSegment)
                 .id(browserSegment)
@@ -570,8 +593,15 @@ struct MacContentView: View {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 encoder.dateEncodingStrategy = .iso8601
-                if let data = try? encoder.encode(session) {
-                    try? data.write(to: url)
+                do {
+                    let data = try encoder.encode(session)
+                    try data.write(to: url)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save JSON: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
                 }
             }
         }
@@ -599,7 +629,15 @@ struct MacContentView: View {
                     md += "- **Project:** \(projectName)\n"
                 }
                 md += "\n---\n"
-                try? md.write(to: url, atomically: true, encoding: .utf8)
+                do {
+                    try md.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save Markdown: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
+                }
             }
         }
     }
@@ -659,6 +697,7 @@ struct MacSessionRow: View {
         }
         .padding(.vertical, theme.spacingXS)
     }
+
 }
 
 #Preview {

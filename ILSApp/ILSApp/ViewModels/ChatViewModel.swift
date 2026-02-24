@@ -44,6 +44,16 @@ class ChatViewModel {
     /// Internal access for Live Activity extension.
     var streamStartTime: Date?
 
+    // MARK: - Search State
+    /// Whether in-session message search is active.
+    var isSearchActive = false
+    /// Current search query text.
+    var searchQuery: String = ""
+    /// Search results from the backend.
+    var searchResults: [MessageSearchResult] = []
+    /// Whether a search request is in flight.
+    var isSearchLoading = false
+
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
         guard isStreaming, let lastMessage = messages.last, !lastMessage.isUser else {
@@ -682,6 +692,43 @@ class ChatViewModel {
             AppLogger.shared.error("Failed to fork session: \(error)", category: "chat")
             return nil
         }
+    }
+
+    // MARK: - Search
+
+    /// Search messages in the current session matching the given query.
+    ///
+    /// Calls `GET /sessions/:id/messages/search?q=` and populates ``searchResults``.
+    /// Does nothing if no session ID is set or the query is empty.
+    func searchMessages(query: String) async {
+        guard let apiClient, let sessionId else { return }
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            searchResults = []
+            return
+        }
+
+        isSearchLoading = true
+
+        do {
+            let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed
+            let path = "/sessions/\(sessionId.uuidString)/messages/search?q=\(encoded)"
+            let response: APIResponse<ListResponse<MessageSearchResult>> = try await apiClient.get(path)
+            searchResults = response.data?.items ?? []
+        } catch {
+            AppLogger.shared.error("Failed to search messages: \(error.localizedDescription)", category: "chat")
+            searchResults = []
+        }
+
+        isSearchLoading = false
+    }
+
+    /// Cancel the current search and reset all search state.
+    func cancelSearch() {
+        isSearchActive = false
+        searchQuery = ""
+        searchResults = []
+        isSearchLoading = false
     }
 
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
