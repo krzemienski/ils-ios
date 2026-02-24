@@ -2,9 +2,33 @@ import SwiftUI
 import ILSShared
 import UniformTypeIdentifiers
 
+/// Navigation root for browsing, creating, importing, and deleting custom themes.
+///
+/// Displays all user-created themes in a swipe-to-delete `List`, with each row rendered
+/// by ``ThemeRowView``. Tapping a row opens ``ThemeEditorView`` as a sheet pre-populated
+/// with that theme's tokens; the toolbar "+" button opens a blank editor for creating a
+/// new theme; and the "Import" button launches a `fileImporter` that decodes a JSON file
+/// into a ``CustomTheme`` and persists it via the API.
+///
+/// State is managed by ``ThemesViewModel``, which is configured with the shared
+/// `APIClient` on first appearance. Loading, empty-state, and error states are all
+/// handled via ``ProgressView``, ``EmptyStateView``, and ``ErrorStateView`` overlays
+/// respectively.
+///
+/// ## Topics
+/// ### State
+/// - ``viewModel`` - View model owning theme list, loading, and error state
+/// - ``showingNewTheme`` - Controls the new-theme editor sheet
+/// - ``selectedTheme`` - The theme currently open in the editor sheet
+/// - ``showingImporter`` - Controls the JSON file-importer sheet
+///
+/// ### Actions
+/// - ``deleteTheme(at:)`` - Deletes themes at the given index-set offsets
+/// - ``handleImport(result:)`` - Parses and persists a theme from an imported JSON file
 struct ThemesListView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    /// View model managing the theme list, loading state, and API interactions.
     @State private var viewModel = ThemesViewModel()
 
     private static let jsonDecoder: JSONDecoder = {
@@ -176,6 +200,15 @@ struct ThemesListView: View {
     }
 }
 
+/// A single row in the themes list that summarises a ``CustomTheme``'s metadata.
+///
+/// Displays the theme name (bold), optional version badge, description (up to 2 lines),
+/// author attribution, a set of capability icons indicating which token categories the
+/// theme defines (colors, typography, spacing), and a relative timestamp for the last
+/// update.
+///
+/// Used exclusively as a list cell inside ``ThemesListView``; interaction (tap-to-edit,
+/// swipe-to-delete) is handled by the parent view.
 struct ThemeRowView: View {
     let theme: CustomTheme
     @Environment(\.theme) private var appTheme: ThemeSnapshot
