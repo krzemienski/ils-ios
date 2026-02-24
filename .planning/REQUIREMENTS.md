@@ -43,25 +43,25 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 ### Energy
 
-- [ ] **ENRG-01**: ConnectionBanner .ultraThinMaterial over streaming content optimized (H-E3)
-- [ ] **ENRG-02**: SSEClient allowsConstrainedNetworkAccess properly configured (H-E4)
-- [ ] **ENRG-03**: Fleet health polling adds LPM interval doubling (MED-E1)
-- [ ] **ENRG-04**: AppLogger flush timer increased to 10s (MED-E2)
-- [ ] **ENRG-05**: GlowEffect double-shadow GPU passes reduced (MED-E3)
+- [x] **ENRG-01**: ConnectionBanner .ultraThinMaterial over streaming content optimized (H-E3)
+- [x] **ENRG-02**: SSEClient allowsConstrainedNetworkAccess properly configured (H-E4)
+- [x] **ENRG-03**: Fleet health polling adds LPM interval doubling (MED-E1)
+- [x] **ENRG-04**: AppLogger flush timer increased to 10s (MED-E2)
+- [x] **ENRG-05**: GlowEffect double-shadow GPU passes reduced (MED-E3)
 - [x] **ENRG-06**: macOS WindowManager UserDefaults throttled (MED-E4)
-- [ ] **ENRG-07**: AppLogger synchronous disk write path addressed (LOW-E1)
-- [ ] **ENRG-08**: SyncCoordinator debounce increased to 500ms (LOW-E2)
+- [x] **ENRG-07**: AppLogger synchronous disk write path addressed (LOW-E1)
+- [x] **ENRG-08**: SyncCoordinator debounce increased to 500ms (LOW-E2)
 
 ### Memory
 
-- [ ] **MEM-01**: PollingManager unowned reference crash risk resolved (H-M2)
+- [x] **MEM-01**: PollingManager unowned reference crash risk resolved (H-M2)
 - [x] **MEM-02**: NSWindow delegate cycle in WindowManager broken (MED-M1)
 - [x] **MEM-03**: NotificationManager UNUserNotificationCenter delegate lifecycle (MED-M2)
-- [ ] **MEM-04**: SyncCoordinator observer singleton cleanup (MED-M3)
-- [ ] **MEM-05**: SSEClient observer removal in cleanup() (MED-M4)
+- [x] **MEM-04**: SyncCoordinator observer singleton cleanup (MED-M3)
+- [x] **MEM-05**: SSEClient observer removal in cleanup() (MED-M4)
 - [x] **MEM-06**: TeamsExecutorService NSTask held 5s post-termination (LOW-M1)
 - [x] **MEM-07**: DispatchWorkItem timeout NSTask/Pipe 300s without cancel (LOW-M2)
-- [ ] **MEM-08**: AppLogger flush timer false positive documented (LOW-M3)
+- [x] **MEM-08**: AppLogger flush timer false positive documented (LOW-M3)
 
 ### SwiftUI Performance
 
@@ -98,59 +98,59 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONC-01 | 25 | Planned |
-| CONC-02 | 25 | Planned |
-| CONC-07 | 25 | Planned |
-| CONC-10 | 25 | Planned |
-| SWIFT6-01 | 25, 31 | Planned |
-| SWIFT6-02 | 25, 31 | Planned |
-| CONC-03 | 26 | Planned |
-| CONC-04 | 26 | Planned |
-| CONC-05 | 26 | Planned |
-| CONC-06 | 26 | Planned |
-| CONC-08 | 26 | Planned |
-| CONC-09 | 26 | Planned |
-| CONC-11 | 26 | Planned |
-| CONC-12 | 26 | Planned |
-| CONC-13 | 26 | Planned |
-| CONC-14 | 26 | Planned |
-| CONC-15 | 26 | Planned |
-| CONC-16 | 26 | Planned |
-| CONC-17 | 26 | Planned |
-| ENRG-01 | 27 | Planned |
-| ENRG-02 | 27 | Planned |
-| ENRG-03 | 27 | Planned |
-| ENRG-04 | 27 | Planned |
-| ENRG-05 | 27 | Planned |
-| ENRG-06 | 27 | Planned |
-| ENRG-07 | 27 | Planned |
-| ENRG-08 | 27 | Planned |
-| MEM-01 | 27 | Planned |
-| MEM-02 | 27 | Planned |
-| MEM-03 | 27 | Planned |
-| MEM-04 | 27 | Planned |
-| MEM-05 | 27 | Planned |
-| MEM-06 | 27 | Planned |
-| MEM-07 | 27 | Planned |
-| MEM-08 | 27 | Planned |
-| UIPERF-01 | 28 | Planned |
-| UIPERF-02 | 28 | Planned |
-| UIPERF-03 | 28 | Planned |
-| UIPERF-04 | 28 | Planned |
-| UIPERF-05 | 28 | Planned |
-| UIPERF-06 | 28 | Planned |
-| TEST-01 | 29 | Planned |
-| TEST-02 | 29 | Planned |
-| TEST-03 | 29 | Planned |
-| TEST-04 | 29 | Planned |
-| TEST-05 | 30 | Planned |
+| CONC-01 | 25 | Complete |
+| CONC-02 | 25 | Complete |
+| CONC-07 | 25 | Complete |
+| CONC-10 | 25 | Complete |
+| SWIFT6-01 | 25, 31 | Complete |
+| SWIFT6-02 | 25, 31 | Complete |
+| CONC-03 | 26 | Complete |
+| CONC-04 | 26 | Complete |
+| CONC-05 | 26 | Complete |
+| CONC-06 | 26 | Complete |
+| CONC-08 | 26 | Complete |
+| CONC-09 | 26 | Complete |
+| CONC-11 | 26 | Complete |
+| CONC-12 | 26 | Complete |
+| CONC-13 | 26 | Complete |
+| CONC-14 | 26 | Complete |
+| CONC-15 | 26 | Complete |
+| CONC-16 | 26 | Complete |
+| CONC-17 | 26 | Complete |
+| ENRG-01 | 27 | Complete |
+| ENRG-02 | 27 | Complete |
+| ENRG-03 | 27 | Complete |
+| ENRG-04 | 27 | Complete |
+| ENRG-05 | 27 | Complete |
+| ENRG-06 | 27 | Complete |
+| ENRG-07 | 27 | Complete |
+| ENRG-08 | 27 | Complete |
+| MEM-01 | 27 | Complete |
+| MEM-02 | 27 | Complete |
+| MEM-03 | 27 | Complete |
+| MEM-04 | 27 | Complete |
+| MEM-05 | 27 | Complete |
+| MEM-06 | 27 | Complete |
+| MEM-07 | 27 | Complete |
+| MEM-08 | 27 | Complete |
+| UIPERF-01 | 28 | Complete |
+| UIPERF-02 | 28 | Complete |
+| UIPERF-03 | 28 | Complete |
+| UIPERF-04 | 28 | Complete |
+| UIPERF-05 | 28 | Complete |
+| UIPERF-06 | 28 | Complete |
+| TEST-01 | 29 | Complete |
+| TEST-02 | 29 | Complete |
+| TEST-03 | 29 | Complete |
+| TEST-04 | 29 | Complete |
+| TEST-05 | 30 | Complete |
 | TEST-06 | 30 | Complete |
 | TEST-07 | 30 | Complete |
 | TEST-08 | 30 | Complete |
-| TEST-09 | 30 | Planned |
+| TEST-09 | 30 | Complete |
 | TEST-10 | 30 | Complete |
-| TEST-11 | 30 | Planned |
-| SWIFT6-03 | 31 | Planned |
+| TEST-11 | 30 | Complete |
+| SWIFT6-03 | 31 | Complete |
 
 **Coverage:**
 - v1.5 requirements: 50 total (+ 2 shared: SWIFT6-01/02 in Phase 25 and 31)
