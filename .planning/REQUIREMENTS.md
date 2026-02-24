@@ -14,11 +14,11 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 - [x] **TEST-03**: FeatureGateTests sleep instances (10 sites) replaced with condition-based waiting
 - [x] **TEST-04**: Scenario03_StreamingAndCancellation sleep instances (6 sites) replaced with async expectations
 - [x] **TEST-05**: UI test startup time reduced (shared XCUIApplication or test grouping to avoid 15-45s per test)
-- [ ] **TEST-06**: ILSBackendTests placeholder replaced with meaningful Swift Testing tests
-- [ ] **TEST-07**: ILSSharedTests placeholder replaced with meaningful Swift Testing tests
-- [ ] **TEST-08**: Swift Testing framework adopted for new test files (`import Testing`, `@Test`, `#expect`)
+- [x] **TEST-06**: ILSBackendTests placeholder replaced with meaningful Swift Testing tests
+- [x] **TEST-07**: ILSSharedTests placeholder replaced with meaningful Swift Testing tests
+- [x] **TEST-08**: Swift Testing framework adopted for new test files (`import Testing`, `@Test`, `#expect`)
 - [x] **TEST-09**: NavigationTests.swift instance var `app` moved to setUp
-- [ ] **TEST-10**: Test data factories/builders created for common test objects
+- [x] **TEST-10**: Test data factories/builders created for common test objects
 - [x] **TEST-11**: Test parallelization configured in test plan
 
 ### Concurrency
@@ -144,11 +144,11 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 | TEST-03 | 29 | Planned |
 | TEST-04 | 29 | Planned |
 | TEST-05 | 30 | Planned |
-| TEST-06 | 30 | Planned |
-| TEST-07 | 30 | Planned |
-| TEST-08 | 30 | Planned |
+| TEST-06 | 30 | Complete |
+| TEST-07 | 30 | Complete |
+| TEST-08 | 30 | Complete |
 | TEST-09 | 30 | Planned |
-| TEST-10 | 30 | Planned |
+| TEST-10 | 30 | Complete |
 | TEST-11 | 30 | Planned |
 | SWIFT6-03 | 31 | Planned |
 
