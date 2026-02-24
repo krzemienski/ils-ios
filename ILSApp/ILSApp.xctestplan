@@ -55,6 +55,33 @@
       }
     },
     {
+      "id" : "PERF-BASE-0001-0002-0003-0004-000000000001",
+      "name" : "Performance Baselines",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "testExecutionOrdering" : "sequential",
+        "uiTestingScreenshotsLifetime" : "deleteOnSuccess",
+        "videoRecordingMode" : "recordOnFailure",
+        "maximumTestRepetitions" : 2,
+        "testRepetitionMode" : "retryOnFailure"
+      },
+      "testTargets" : [
+        {
+          "target" : {
+            "containerPath" : "container:ILSApp.xcodeproj",
+            "identifier" : "ILSAppUITests",
+            "name" : "ILSAppUITests"
+          },
+          "selectedTests" : [
+            "LaunchPerformanceTests",
+            "MemoryPerformanceTests",
+            "ScrollPerformanceTests"
+          ]
+        }
+      ]
+    },
+    {
       "id" : "4L6M8N0O-1P2Q-3R4S-5T6U-7V8W9X0Y1Z2A",
       "name" : "Localization Testing - German",
       "options" : {
