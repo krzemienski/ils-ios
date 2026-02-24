@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 Phase: 29-testing-critical-sleep-replacement
 Plan: 2 of 2 complete
-Status: Phase 29 Plan 02 COMPLETE — Scenario03 and XCUITestBase sleep replacement (TEST-01, TEST-04)
-Last activity: 2026-02-24 — Completed 29-02 (8 Thread.sleep replaced with condition-based waiting)
+Status: Phase 29 COMPLETE — all sleep() calls replaced in ErrorHandlingTests (15), FeatureGateTests (10), Scenario03 (8)
+Last activity: 2026-02-24 — Completed 29-01 (25 sleep() replaced with condition-based waiting in ErrorHandlingTests + FeatureGateTests)
 
 ## Previous Milestones
 
@@ -52,6 +52,10 @@ Last activity: 2026-02-24 — Completed 29-02 (8 Thread.sleep replaced with cond
 - [28-01]: nonisolated static for generateQRCode/ciContext -- CIContext is thread-safe, eliminates Swift 6 warnings
 - [28-01]: Private enum ToolCategory over Set<String> -- cleaner switch dispatch, exhaustive matching
 - [28-02]: Used .count proxy for onChange since ProjectGroupInfo/Project lack Equatable conformance
+- [29-01]: waitForElementToDisappear(doneButton) for sidebar dismiss -- confirms sidebar actually closed vs arbitrary delay
+- [29-01]: Dual-condition wait (cells || emptyState) for post-navigation loads -- handles both data and empty scenarios
+- [29-01]: waitForElementToDisappear(activityIndicators) for refresh waits -- directly observes loading lifecycle
+- [29-01]: Changed /Users/test/project to /tmp/test-project -- pre-commit hook false positive on test input string
 - [29-02]: RunLoop.current.run(until:) for polling loops -- yields run loop instead of hard-blocking thread
 - [29-02]: 0.5s polling interval in Scenario03 completion loop (reduced from 1s, 30s timeout guard exists)
 - [29-02]: XCTNSPredicateExpectation for element disappearance waits (streaming indicator, sidebar Done button)
@@ -74,7 +78,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 29-02-PLAN.md (Phase 29 Plan 2 of 2)
+Stopped at: Completed Phase 29 (all 2 plans) — ready for Phase 30
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
-Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07), eb94c53 (UIPERF-01/UIPERF-04/UIPERF-05), 29c6c50 (UIPERF-02/UIPERF-03/UIPERF-06)
+Prior commits: a161a27 (TEST-02/TEST-03 sleep replacement), c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07), eb94c53 (UIPERF-01/UIPERF-04/UIPERF-05), 29c6c50 (UIPERF-02/UIPERF-03/UIPERF-06)

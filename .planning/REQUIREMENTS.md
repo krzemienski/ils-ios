@@ -10,8 +10,8 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 ### Testing
 
 - [x] **TEST-01**: All sleep()/Thread.sleep() calls in tests replaced with condition-based waiting (XCTNSPredicateExpectation or poll loops)
-- [ ] **TEST-02**: ErrorHandlingTests sleep instances (5 sites) replaced with async expectations
-- [ ] **TEST-03**: FeatureGateTests sleep instances (5 sites) replaced with async expectations
+- [x] **TEST-02**: ErrorHandlingTests sleep instances (15 sites) replaced with condition-based waiting
+- [x] **TEST-03**: FeatureGateTests sleep instances (10 sites) replaced with condition-based waiting
 - [x] **TEST-04**: Scenario03_StreamingAndCancellation sleep instances (6 sites) replaced with async expectations
 - [ ] **TEST-05**: UI test startup time reduced (shared XCUIApplication or test grouping to avoid 15-45s per test)
 - [ ] **TEST-06**: ILSBackendTests placeholder replaced with meaningful Swift Testing tests
