@@ -14,9 +14,8 @@ final class LowPowerModeMonitor {
 
     private(set) var isLowPowerModeEnabled: Bool
 
-    // @ObservationIgnored: not observed by UI. nonisolated(unsafe): accessed in deinit.
-    // Safe because singleton lifetime means deinit only runs at process exit.
-    @ObservationIgnored nonisolated(unsafe) private var observer: NSObjectProtocol?
+    // CONC-12: No deinit needed — singleton lives for process lifetime. Observer removed automatically at exit.
+    @ObservationIgnored private var observer: NSObjectProtocol?
 
     private init() {
         isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
@@ -43,9 +42,4 @@ final class LowPowerModeMonitor {
         )
     }
 
-    deinit {
-        if let observer {
-            NotificationCenter.default.removeObserver(observer)
-        }
-    }
 }

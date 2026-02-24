@@ -74,6 +74,12 @@ final class SubscriptionManager {
     // MARK: - Init
 
     private init() {
+        // CONC-06: Tasks deferred to startListening() to ensure full initialization first.
+        startListening()
+    }
+
+    /// Spawns async listeners after all stored properties are initialized.
+    private func startListening() {
         transactionListenerTask = Task { [weak self] in
             await self?.listenForTransactions()
         }

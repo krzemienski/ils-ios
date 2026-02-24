@@ -35,8 +35,8 @@ final class AppLogger: Sendable {
         let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         logFileURL = docs.appendingPathComponent("ils-app.log")
 
-        // Start periodic flush timer
-        let timerTask = Task.detached(priority: .utility) { [weak self] in
+        // CONC-13: Plain Task — AppLogger is Sendable, no actor isolation to escape.
+        let timerTask = Task(priority: .utility) { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(self?.flushInterval ?? 2.0))
                 guard !Task.isCancelled else { break }
@@ -165,11 +165,10 @@ final class AppLogger: Sendable {
             writeEntriesToDisk(entries)
         }
 
-        return await Task.detached(priority: .userInitiated) {
-            guard let content = try? String(contentsOf: url, encoding: .utf8) else { return [String]() }
-            let allLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
-            return Array(allLines.suffix(lines))
-        }.value
+        // CONC-13: Inline file read — already in non-isolated async context, no actor to block.
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        let allLines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        return Array(allLines.suffix(lines))
     }
 
     var analyticsOptedIn: Bool {
