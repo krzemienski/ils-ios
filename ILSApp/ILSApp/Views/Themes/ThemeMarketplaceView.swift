@@ -50,6 +50,7 @@ struct ThemeMarketplaceView: View {
 
     @State private var searchText = ""
     @State private var selectedCategory: ThemeCategory = .all
+    @FocusState private var isSearchFocused: Bool
     @State private var showingImporter = false
     @State private var showingExporter = false
     @State private var importError: String?
@@ -184,6 +185,7 @@ struct ThemeMarketplaceView: View {
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 #endif
+                .focused($isSearchFocused)
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
@@ -200,6 +202,7 @@ struct ThemeMarketplaceView: View {
         .padding(.vertical, theme.spacingSM)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
     }
 
     // MARK: - Category Filter

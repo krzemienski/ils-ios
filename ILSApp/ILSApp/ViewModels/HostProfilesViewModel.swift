@@ -70,9 +70,11 @@ final class HostProfilesViewModel {
 
     func startHealthPolling(interval: TimeInterval = 30) {
         healthTask?.cancel()
+        // ENRG-03: Double fleet health poll interval in Low Power Mode to reduce energy.
+        let effectiveInterval = LowPowerModeMonitor.shared.isLowPowerModeEnabled ? interval * 2 : interval
         healthTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(interval))
+                try? await Task.sleep(for: .seconds(effectiveInterval))
                 guard let self, !Task.isCancelled else { break }
                 await self.refreshAllHealth()
             }

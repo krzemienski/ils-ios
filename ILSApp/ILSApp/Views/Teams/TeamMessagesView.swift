@@ -7,6 +7,7 @@ struct TeamMessagesView: View {
     let teamName: String
     @State private var messageText = ""
     @State private var recipient = ""
+    @FocusState private var isMessageFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -62,9 +63,11 @@ struct TeamMessagesView: View {
     private var inputBar: some View {
         HStack(spacing: theme.spacingSM) {
             TextField("Message...", text: $messageText)
+                .focused($isMessageFocused)
                 .padding(theme.spacingSM)
                 .background(theme.bgSecondary)
-                .cornerRadius(theme.cornerRadius)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                .focusRing(isFocused: isMessageFocused, cornerRadius: theme.cornerRadius)
 
             Button {
                 sendMessage()

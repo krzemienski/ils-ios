@@ -6,16 +6,16 @@ struct HooksManagementView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var viewModel = HooksViewModel()
+    @State private var viewModel = SettingsViewModel()
 
     var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.hooks.isEmpty {
+            if viewModel.isLoadingConfig {
                 loadingState
-            } else if viewModel.hooks.isEmpty {
-                emptyState
+            } else if let hooks = viewModel.config?.content.hooks, hasAnyHooks(hooks) {
+                hooksList(hooks)
             } else {
-                hooksList
+                emptyState
             }
         }
         .background(theme.bgPrimary)
@@ -24,25 +24,39 @@ struct HooksManagementView: View {
         .inlineNavigationBarTitle()
         #endif
         .refreshable {
-            await viewModel.refreshHooks()
+            await viewModel.loadConfig()
         }
         .task {
             viewModel.configure(client: appState.apiClient)
-            await viewModel.loadHooks()
+            await viewModel.loadConfig()
         }
+    }
+
+    // MARK: - Helpers
+
+    private func hasAnyHooks(_ hooks: HooksConfig) -> Bool {
+        countTotalHooks(hooks) > 0
+    }
+
+    private func eventSections(_ hooks: HooksConfig) -> [(String, [HookGroup])] {
+        [
+            ("PreToolUse", hooks.preToolUse ?? []),
+            ("PostToolUse", hooks.postToolUse ?? []),
+            ("UserPromptSubmit", hooks.userPromptSubmit ?? []),
+            ("SessionStart", hooks.sessionStart ?? []),
+            ("SubagentStart", hooks.subagentStart ?? [])
+        ].filter { !$0.1.isEmpty }
     }
 
     // MARK: - Hooks List
 
-    private var hooksList: some View {
+    private func hooksList(_ hooks: HooksConfig) -> some View {
         ScrollView {
             LazyVStack(spacing: theme.spacingMD) {
-                // Summary header
-                summaryHeader
+                summaryHeader(hooks)
 
-                // Hooks grouped by event type
-                ForEach(viewModel.eventTypes, id: \.self) { eventType in
-                    hookEventSection(eventType)
+                ForEach(eventSections(hooks), id: \.0) { eventType, groups in
+                    hookEventSection(eventType: eventType, groups: groups)
                 }
             }
             .padding(.horizontal, theme.spacingMD)
@@ -52,10 +66,24 @@ struct HooksManagementView: View {
 
     // MARK: - Summary Header
 
-    private var summaryHeader: some View {
+    private func countTotalHooks(_ hooks: HooksConfig) -> Int {
+        var count = 0
+        count += hooks.sessionStart?.count ?? 0
+        count += hooks.subagentStart?.count ?? 0
+        count += hooks.userPromptSubmit?.count ?? 0
+        count += hooks.preToolUse?.count ?? 0
+        count += hooks.postToolUse?.count ?? 0
+        return count
+    }
+
+    @ViewBuilder
+    private func summaryHeader(_ hooks: HooksConfig) -> some View {
+        let totalHooks = countTotalHooks(hooks)
+        let eventCount = eventSections(hooks).count
+
         HStack(spacing: theme.spacingMD) {
             VStack(spacing: 2) {
-                Text("\(viewModel.totalHookCount)")
+                Text("\(totalHooks)")
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                 Text("Total Hooks")
@@ -68,7 +96,7 @@ struct HooksManagementView: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
             VStack(spacing: 2) {
-                Text("\(viewModel.eventTypes.count)")
+                Text("\(eventCount)")
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.info)
                 Text("Event Types")
@@ -84,27 +112,26 @@ struct HooksManagementView: View {
 
     // MARK: - Hook Event Section
 
-    private func hookEventSection(_ eventType: String) -> some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            // Section header
+    private func countGroupHooks(_ groups: [HookGroup]) -> Int {
+        groups.reduce(0) { $0 + ($1.hooks?.count ?? 0) }
+    }
+
+    private func hookEventSection(eventType: String, groups: [HookGroup]) -> some View {
+        let hookCount = countGroupHooks(groups)
+        return VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack(spacing: theme.spacingSM) {
-                Image(systemName: viewModel.iconForEventType(eventType))
+                Image(systemName: iconForEventType(eventType))
                     .foregroundStyle(theme.accent)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(viewModel.labelForEventType(eventType))
-                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                    Text(viewModel.descriptionForEventType(eventType))
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textSecondary)
-                }
+                Text(eventType)
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
 
                 Spacer()
 
-                Text("\(viewModel.countForEventType(eventType))")
+                Text("\(hookCount)")
                     .font(.system(size: theme.fontCaption, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                     .padding(.horizontal, 8)
@@ -114,17 +141,17 @@ struct HooksManagementView: View {
             }
             .padding(.top, theme.spacingSM)
 
-            // Hook items for this event type
-            let items = viewModel.hooksByEventType[eventType] ?? []
-            ForEach(items) { item in
-                hookRow(item)
+            ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
+                ForEach(group.hooks ?? [], id: \.command) { hookDef in
+                    hookRow(hookDef: hookDef, matcher: group.matcher, eventType: eventType)
+                }
             }
         }
     }
 
     // MARK: - Hook Row
 
-    private func hookRow(_ item: HookDisplayItem) -> some View {
+    private func hookRow(hookDef: HookDefinition, matcher: String?, eventType: String) -> some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             // Command line
             HStack(spacing: theme.spacingSM) {
@@ -133,7 +160,7 @@ struct HooksManagementView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .accessibilityHidden(true)
 
-                Text(item.command ?? "No command")
+                Text(hookDef.command ?? "No command")
                     .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(2)
@@ -144,7 +171,7 @@ struct HooksManagementView: View {
             // Metadata row
             HStack(spacing: theme.spacingSM) {
                 // Hook type badge
-                if let hookType = item.hookType {
+                if let hookType = hookDef.type {
                     Text(hookType)
                         .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
@@ -155,7 +182,7 @@ struct HooksManagementView: View {
                 }
 
                 // Matcher badge
-                if let matcher = item.matcher, !matcher.isEmpty {
+                if let matcher, !matcher.isEmpty {
                     HStack(spacing: 2) {
                         Image(systemName: "line.3.horizontal.decrease")
                             .accessibilityHidden(true)
@@ -176,7 +203,18 @@ struct HooksManagementView: View {
         .padding(theme.spacingMD)
         .modifier(GlassCard())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.eventType) hook, \(item.command ?? "no command")")
+        .accessibilityLabel("\(eventType) hook, \(hookDef.command ?? "no command")")
+    }
+
+    private func iconForEventType(_ eventType: String) -> String {
+        switch eventType {
+        case "PreToolUse": return "wrench.and.screwdriver"
+        case "PostToolUse": return "checkmark.circle"
+        case "UserPromptSubmit": return "arrow.up.circle"
+        case "SessionStart": return "play.circle"
+        case "SubagentStart": return "person.fill.badge.plus"
+        default: return "bolt"
+        }
     }
 
     // MARK: - Empty State

@@ -22,6 +22,8 @@ extension Application {
     }
 }
 
+// @unchecked Sendable required for Fluent Model — Fluent's property wrappers
+// (@ID, @Field) use internal mutation patterns incompatible with strict Sendable.
 /// Fluent model for cached search results
 final class CachedResult: Model, @unchecked Sendable {
     static let schema = "cached_results"
@@ -52,6 +54,11 @@ final class CachedResult: Model, @unchecked Sendable {
     }
 }
 
+// CONC-16: IndexingService declares Sendable conformance. This is valid because:
+// - The only stored property is `let database: Database` (immutable)
+// - Database (Fluent protocol) is used only via async methods
+// - The class is final, preventing subclass mutations
+// Compiler-verified: builds pass with this conformance under current concurrency settings.
 /// Service for caching search results in SQLite
 final class IndexingService: Sendable {
     let database: Database

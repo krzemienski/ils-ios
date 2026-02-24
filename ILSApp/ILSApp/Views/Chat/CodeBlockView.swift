@@ -1,10 +1,25 @@
 import SwiftUI
 
-// Preference key for measuring HStack content width inside the horizontal ScrollView
-private struct HorizontalContentWidthKey: PreferenceKey {
+// MARK: - PreferenceKeys
+
+private struct CBContentWidthKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
+        value = nextValue()
+    }
+}
+
+private struct CBViewWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CBScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
@@ -22,18 +37,14 @@ struct CodeBlockView: View {
     @State private var cachedShouldBeCollapsible: Bool = false
     /// Lines currently visible (respects collapse state) — cached via `.task(id: code)` and `.onChange(of: isExpanded)`.
     @State private var cachedDisplayedLines: [String] = []
-    @State private var codeContentWidth: CGFloat = 0
-    @State private var scrollContainerWidth: CGFloat = 0
+    @State private var contentWidth: CGFloat = 0
+    @State private var viewWidth: CGFloat = 0
+    @State private var scrollOffset: CGFloat = 0
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Maximum number of lines to show when collapsed
     private let collapsedLineLimit = 3
-
-    /// Whether the code content exceeds the visible scroll container width
-    private var hasHorizontalOverflow: Bool {
-        codeContentWidth > scrollContainerWidth + 1 && scrollContainerWidth > 0
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -124,7 +135,7 @@ struct CodeBlockView: View {
             Divider()
 
             // Code content with line numbers
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
                     // Line numbers
                     // SPERF-MED-6: Use indices for stable ForEach identity.
@@ -169,31 +180,26 @@ struct CodeBlockView: View {
                 .padding(.vertical, theme.spacingSM)
                 .background(
                     GeometryReader { geo in
-                        Color.clear.preference(
-                            key: HorizontalContentWidthKey.self,
-                            value: geo.size.width
-                        )
+                        Color.clear
+                            .preference(key: CBContentWidthKey.self, value: geo.size.width)
+                            .preference(key: CBScrollOffsetKey.self,
+                                        value: geo.frame(in: .named("hCodeScrollCB")).minX)
                     }
                 )
             }
-            .onPreferenceChange(HorizontalContentWidthKey.self) { codeContentWidth = $0 }
-            .background(theme.bgTertiary)
-            .overlay(
+            .coordinateSpace(name: "hCodeScrollCB")
+            .background(
                 GeometryReader { geo in
-                    Color.clear.onAppear { scrollContainerWidth = geo.size.width }
+                    Color.clear
+                        .preference(key: CBViewWidthKey.self, value: geo.size.width)
                 }
             )
+            .onPreferenceChange(CBContentWidthKey.self) { contentWidth = $0 }
+            .onPreferenceChange(CBViewWidthKey.self) { viewWidth = $0 }
+            .onPreferenceChange(CBScrollOffsetKey.self) { scrollOffset = -$0 }
+            .background(theme.bgTertiary)
             .overlay(alignment: .trailing) {
-                if hasHorizontalOverflow {
-                    LinearGradient(
-                        colors: [theme.bgTertiary.opacity(0), theme.bgTertiary],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: 40)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-                }
+                scrollGradientOverlay
             }
         }
         .cornerRadius(theme.cornerRadius)
@@ -235,6 +241,27 @@ struct CodeBlockView: View {
                 }.value
             }
         }
+    }
+
+    // MARK: - Scroll Gradient Overlay
+
+    @ViewBuilder
+    private var scrollGradientOverlay: some View {
+        if shouldShowScrollIndicator {
+            LinearGradient(
+                colors: [theme.bgTertiary.opacity(0), theme.bgTertiary.opacity(0.85)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(width: 32)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var shouldShowScrollIndicator: Bool {
+        guard contentWidth > viewWidth else { return false }
+        let remainingScroll = contentWidth - viewWidth - scrollOffset
+        return remainingScroll > 1
     }
 
     /// Accessibility label for the code content

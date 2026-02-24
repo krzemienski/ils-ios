@@ -1,11 +1,26 @@
 import SwiftUI
 import HighlightSwift
 
-// Preference key for measuring content width inside the horizontal ScrollView
-private struct HorizontalContentWidthKey: PreferenceKey {
+// MARK: - PreferenceKeys
+
+private struct CodeContentWidthKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
+        value = nextValue()
+    }
+}
+
+private struct CodeViewWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CodeScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
@@ -18,16 +33,12 @@ struct ThemedCodeBlockView: View {
     @State private var highlightedCode: AttributedString?
     @State private var detectedLanguage: String?
     @State private var isExpanded = false
-    @State private var codeContentWidth: CGFloat = 0
-    @State private var scrollContainerWidth: CGFloat = 0
+    @State private var contentWidth: CGFloat = 0
+    @State private var viewWidth: CGFloat = 0
+    @State private var scrollOffset: CGFloat = 0
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    /// Whether the code content exceeds the visible scroll container width
-    private var hasHorizontalOverflow: Bool {
-        codeContentWidth > scrollContainerWidth + 1 && scrollContainerWidth > 0
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -80,31 +91,27 @@ struct ThemedCodeBlockView: View {
             codeText
                 .background(
                     GeometryReader { geo in
-                        Color.clear.preference(
-                            key: HorizontalContentWidthKey.self,
-                            value: geo.size.width
-                        )
+                        Color.clear
+                            .preference(key: CodeContentWidthKey.self, value: geo.size.width)
+                            .preference(key: CodeScrollOffsetKey.self,
+                                        value: geo.frame(in: .named("hCodeScroll")).minX)
                     }
                 )
         }
-        .onPreferenceChange(HorizontalContentWidthKey.self) { codeContentWidth = $0 }
-        .frame(maxHeight: isExpanded ? .infinity : 300)
-        .background(theme.bgTertiary)
-        .overlay(
+        .coordinateSpace(name: "hCodeScroll")
+        .background(
             GeometryReader { geo in
-                Color.clear.onAppear { scrollContainerWidth = geo.size.width }
+                Color.clear
+                    .preference(key: CodeViewWidthKey.self, value: geo.size.width)
             }
         )
+        .onPreferenceChange(CodeContentWidthKey.self) { contentWidth = $0 }
+        .onPreferenceChange(CodeViewWidthKey.self) { viewWidth = $0 }
+        .onPreferenceChange(CodeScrollOffsetKey.self) { scrollOffset = -$0 }
+        .frame(maxHeight: isExpanded ? .infinity : 300)
+        .background(theme.bgTertiary)
         .overlay(alignment: .trailing) {
-            if hasHorizontalOverflow {
-                LinearGradient(
-                    colors: [theme.bgTertiary.opacity(0), theme.bgTertiary],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(width: 32)
-                .allowsHitTesting(false)
-            }
+            scrollGradientOverlay
         }
         .overlay(alignment: .bottom) {
             if !isExpanded && lineCount > 15 {
@@ -133,6 +140,29 @@ struct ThemedCodeBlockView: View {
             }
         }
     }
+
+    // MARK: - Scroll Gradient Overlay
+
+    @ViewBuilder
+    private var scrollGradientOverlay: some View {
+        if shouldShowScrollIndicator {
+            LinearGradient(
+                colors: [theme.bgTertiary.opacity(0), theme.bgTertiary.opacity(0.85)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(width: 32)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var shouldShowScrollIndicator: Bool {
+        guard contentWidth > viewWidth else { return false }
+        let remainingScroll = contentWidth - viewWidth - scrollOffset
+        return remainingScroll > 1
+    }
+
+    // MARK: - Code Text
 
     private var codeText: some View {
         Group {

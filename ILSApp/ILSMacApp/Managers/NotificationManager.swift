@@ -19,6 +19,8 @@ class NotificationManager: NSObject {
 
     private override init() {
         super.init()
+        // MEM-03: UNUserNotificationCenter.delegate is weak (per Apple docs), so no retain cycle.
+        // NotificationManager is a singleton — delegate assignment persists for app lifetime.
         center.delegate = self
         checkAuthorizationStatus()
     }
@@ -82,7 +84,7 @@ class NotificationManager: NSObject {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to post notification: \(error)")
+            AppLogger.shared.error("Failed to post notification: \(error)", category: "notifications")
         }
     }
 
@@ -121,7 +123,7 @@ class NotificationManager: NSObject {
         do {
             try await center.add(request)
         } catch {
-            print("Failed to post streaming complete notification: \(error)")
+            AppLogger.shared.error("Failed to post streaming notification: \(error)", category: "notifications")
         }
     }
 

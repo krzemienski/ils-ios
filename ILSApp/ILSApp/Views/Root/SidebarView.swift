@@ -38,6 +38,7 @@ struct SidebarView: View {
     /// Called when the user selects a session from the list.
     var onSessionSelected: (ChatSession) -> Void
 
+    @FocusState private var isSearchFocused: Bool
     @State private var expandedProjects: Set<String> = []
     /// The session currently being renamed, if any.
     @State private var sessionToRename: ChatSession?
@@ -182,6 +183,7 @@ struct SidebarView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .accessibilityLabel("Search sessions")
+                    .focused($isSearchFocused)
                 if !sessionsViewModel.searchText.isEmpty {
                     Button {
                         sessionsViewModel.searchText = ""
@@ -199,6 +201,7 @@ struct SidebarView: View {
             .padding(.vertical, theme.spacingXS + 2)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 

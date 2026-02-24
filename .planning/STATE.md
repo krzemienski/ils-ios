@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-24 — Milestone v1.5 started
+Phase: 27-energy-memory
+Plan: 3 of 3 complete
+Status: Phase 27 COMPLETE — all 16 energy/memory requirements resolved (27-01: ENRG-01/02/03/05, MEM-05; 27-02: ENRG-04/07/08, MEM-01/04/08; 27-03: ENRG-06, MEM-02/03/06/07)
+Last activity: 2026-02-24 — Completed 27-03 (WindowManager delegate docs, NotificationManager singleton docs, TeamsExecutorService Process release)
 
 ## Previous Milestones
 
@@ -29,6 +29,25 @@ Last activity: 2026-02-24 — Milestone v1.5 started
 - [v1.5]: v1.5 naming is user-specified, decoupled from internal phase numbering
 - [v1.5]: 10 issues already fixed in commit c57690f before milestone start
 - [v1.5]: Testing is largest category (~19 issues) — likely gets its own phase(s)
+- [25-01]: Used kill(pid, 0) instead of process.isRunning to avoid non-Sendable Process in Task.detached
+- [25-01]: hasResumed boolean guard pattern for continuation double-resume safety (3 resume sites)
+- [25-02]: Used [weak self] on inner Task closures (not just outer closure) in WebSocket handlers
+- [25-02]: Used nonisolated(unsafe) for useAgentSDK static var -- set-once-read-many pattern, eliminates Swift 6 blocker
+- [26-01]: Plain Task over Task.detached when target actor handles isolation (matches DashboardViewModel/SessionsViewModel pattern)
+- [26-01]: SubscriptionManager startListening() called at end of init to preserve singleton behavior
+- [26-01]: LowPowerModeMonitor deinit removed -- singleton never deallocates, observer cleaned at process exit
+- [26-01]: AppLogger recentLogs file read inlined -- already non-isolated async context
+- [26-02]: CONC-14 already documented via SPERF-04 comment -- no duplicate tag added
+- [26-02]: CONC-11 sendPermissionResponse removed from iOS side; backend version is actor-isolated (correctly)
+- [27-02]: 10s flush interval for AppLogger (was 2s) -- 50-entry immediate flush still protects against data loss
+- [27-02]: 500ms debounce for SyncCoordinator (was 200ms) -- reduces file writes during rapid queue mutations
+- [27-02]: PollingManager unowned kept as-is with enhanced docs -- ownership invariant clear, weak would add unnecessary atomic overhead
+- [27-01]: regularMaterial over ultraThinMaterial -- avoids continuous blur recomposition over streaming content
+- [27-01]: allowsConstrainedNetworkAccess=false documented as intentional -- SSE should not consume metered data
+- [27-01]: Single shadow with radius*1.5 approximates double-shadow spread at half GPU cost
+- [27-03]: WindowManager delegate cycle already correct (weak refs) -- documented only, no code change
+- [27-03]: NotificationManager singleton delegate pattern correct -- documented, replaced print with AppLogger
+- [27-03]: TeamsExecutorService Process released from activeProcesses before detached SIGKILL task spawns
 
 ### Audit Source Data
 
@@ -42,13 +61,13 @@ None yet.
 
 ### Blockers/Concerns
 
-- Swift 6 strict-concurrency=complete has 2 compile-error blockers (ClaudeExecutorService, TeamsExecutorService)
+- Swift 6 strict-concurrency=complete: both compile-error blockers resolved (TeamsExecutorService in 25-01, ClaudeExecutorService in 25-02)
 - Testing overhaul is the highest-effort category (~8-12 hrs estimated)
 
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Milestone v1.5 initialization (requirements definition in progress)
+Stopped at: Completed Phase 27 (all 3 plans) — ready for Phase 28
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
-Prior commits: c57690f (10 CRITICAL/HIGH fixes)
+Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07)

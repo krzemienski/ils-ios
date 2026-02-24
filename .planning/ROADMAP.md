@@ -261,8 +261,6 @@ Plans:
   3. APIClient, CacheService, and AuthService have zero try? at JSON decode and Keychain operation sites — all failures are caught and logged with the specific error
   4. All JSONDecoders in the app have an explicit dateDecodingStrategy set; backend controllers that build JSON manually are replaced with Codable-conforming response types
   5. String-backed enum types in DTOs validate input on decode and throw a meaningful DecodingError for unrecognized values
-**Plans**: TBD
-
 Plans:
 - [x] 21-01-PLAN.md -- Navigation: dead NavigationPath, nested NavigationStack in sheets, macOS detail NavigationStack, hooks route
 - [x] 21-02-PLAN.md -- Codable: APIClient try? documentation, .iso8601 dateDecodingStrategy, backend do/catch logging, 20 enum validating init(from:)
@@ -279,8 +277,6 @@ Plans:
   3. PremiumView, LaunchScreenView, and ScreenshotView use Dynamic Type text styles or font(_:) with a TextStyle argument — zero hardcoded point sizes remain in those files
   4. CitadelSSHService uses known_hosts or a user-presented fingerprint confirmation instead of .acceptAnything()
   5. All migration revert() functions use IF EXISTS table drops or are empty stubs — no DROP TABLE that destroys production data on accidental revert; FK constraint data validation is added to at least one migration; SidebarRootView uses a single stable root view with conditional content rather than branching between two NavigationStack instances
-**Plans**: TBD
-
 Plans:
 - [x] 22-01-PLAN.md -- Energy: PulsingGlow/PulsingModifier animation lifecycle (ENRG-04), SSE background disconnect (ENRG-05), request batching docs (ENRG-06)
 - [x] 22-02-PLAN.md -- Build+A11Y+Layout: BUILD-01/02 verified correct, PremiumView Dynamic Type (A11Y-01), LaunchScreenView Dynamic Type (A11Y-02), A11Y-03 resolved-by-absence, LAYOUT-01 documentation
@@ -298,8 +294,6 @@ Plans:
   3. All architecture MEDIUM patterns are resolved: SessionsViewModel split consideration is documented, redundant ProjectsViewModel removed from NewSessionView, fire-and-forget Tasks converted to .task modifier where applicable, toast timer deduplication extracted to shared modifier, view helper functions marked private
   4. All navigation, Codable, build, accessibility, database, networking, security, memory, layout, and modernization MEDIUM and LOW items are either fixed or have a documented acceptance note in the code — zero silent deferrals
   5. Both iOS and macOS build successfully with zero warnings introduced by the MEDIUM/LOW fixes
-**Plans**: TBD
-
 Plans:
 - [x] 23-01-PLAN.md -- Concurrency + Energy remaining MEDIUM (6 issues: readQueue, Task.detached, WebSocket visibility, health check docs, adaptive polling docs)
 - [x] 23-02-PLAN.md -- SwiftUI Architecture MEDIUM (5 issues: ProjectsViewModel removal, toast dedup modifier, private helpers, SessionsViewModel docs)
@@ -320,10 +314,181 @@ Plans:
   2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS on the simulator: sidebar navigation, settings inheritance, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP servers, backend API, zero visual regressions, session consistency
   3. A re-run of the 15 Axiom audits (or a representative subset of CRITICAL/HIGH checks) confirms zero CRITICAL findings remain open
   4. scratch/audit-findings-2026-02-22.md is updated with a resolution column showing the phase and commit that addressed each finding
-**Plans**: TBD
-
 Plans:
 - [x] 24-01-PLAN.md -- Build verification (3 targets), Axiom audit re-run (6 audits), resolution document, state updates
+
+---
+
+---
+
+## v1.5 All Audit Fixes
+
+**Milestone Goal:** Resolve all 60 remaining audit findings from the 2026-02-24 fresh audit (70 total minus 10 already fixed in c57690f). Focus areas: concurrency safety, energy/memory lifecycle, SwiftUI performance, test infrastructure modernization, and Swift 6 preparation. No new features — code health only.
+
+**Source Data:** `scratch/audit-findings-2026-02-24.md` (70 issues from 16 parallel agents)
+**Prior Fixes:** commit c57690f (10 CRITICAL/HIGH issues across 9 files)
+
+- [x] **Phase 25: Concurrency HIGH + Swift 6 Blockers** — 4 dangerous concurrency defects: non-Sendable Process, WebSocket capture, continuation double-resume, mutable static var (completed 2026-02-24)
+- [x] **Phase 26: Concurrency MEDIUM + LOW** — 15 remaining concurrency issues: Task.detached patterns, completion-to-async, nonisolated(unsafe), isolation verification (completed 2026-02-24)
+- [x] **Phase 27: Energy + Memory** — 16 issues: material overhead, constrained network, LPM polling, flush timers, GPU passes, delegate cycles, observer cleanup (completed 2026-02-24)
+- [ ] **Phase 28: SwiftUI Performance** — 6 issues: CIFilter verification, computed filter caching, .contains() per tick, lazy VStack, duplicate formatModelName
+- [ ] **Phase 29: Testing CRITICAL — Sleep Replacement** — 4 requirement groups covering 18 sleep() instances across 3 test files
+- [ ] **Phase 30: Testing Infrastructure** — 7 issues: UI test startup, placeholder tests, Swift Testing migration, test data factories, parallelization
+- [ ] **Phase 31: Swift 6 Preparation** — 3 requirements: resolve 2 compile-error blockers, verify -strict-concurrency=targeted
+- [ ] **Phase 32: Final Validation** — Cross-cutting build verification, functional validation, audit re-run confirming zero open issues
+
+### Phase 25: Concurrency HIGH + Swift 6 Blockers
+**Goal**: The 4 most dangerous concurrency defects are eliminated — non-Sendable Process no longer crosses actor boundary, WebSocket captures use [weak self], continuation cannot double-resume, and the mutable static var blocker for Swift 6 is resolved
+**Depends on**: Nothing (first phase of v1.5; 10 CRITICAL/HIGH already fixed in c57690f)
+**Requirements**: CONC-01, CONC-02, CONC-07, CONC-10, SWIFT6-01, SWIFT6-02
+**Success Criteria** (what must be TRUE):
+  1. `TeamsExecutorService.shutdownTeammate` no longer passes non-Sendable `Process` into `Task.detached` — either extracts Sendable values before the boundary or uses a Sendable wrapper
+  2. `WebSocketService.ws.onText` Task closure uses `[weak self]` or captures only Sendable values
+  3. `SystemMetricsService` continuation double-resume risk is eliminated with a guard or `CheckedContinuation`
+  4. `ClaudeExecutorService.useAgentSDK` mutable static var is resolved for strict concurrency (nonisolated static let, actor-isolated access, or @TaskLocal)
+  5. Both iOS and macOS build with zero errors after all changes
+**Plans**: 2 plan(s)
+
+Plans:
+- [ ] 25-01-PLAN.md -- TeamsExecutorService non-Sendable Process + SystemMetricsService continuation safety
+- [ ] 25-02-PLAN.md -- WebSocket Task capture + ClaudeExecutorService mutable static var
+
+---
+
+### Phase 26: Concurrency MEDIUM + LOW
+**Goal**: All remaining concurrency patterns are corrected or documented — Task.detached replaced where unnecessary, completion handlers converted to async/await, nonisolated(unsafe) eliminated where possible, and informational patterns documented
+**Depends on**: Phase 25 (Swift 6 blockers resolved first)
+**Requirements**: CONC-03, CONC-04, CONC-05, CONC-06, CONC-08, CONC-09, CONC-11, CONC-12, CONC-13, CONC-14, CONC-15, CONC-16, CONC-17
+**Success Criteria** (what must be TRUE):
+  1. `ProjectsViewModel` no longer uses `Task.detached` — replaced with plain `Task` with correct isolation
+  2. `SpotlightIndexer` completion handler pattern converted to async/await
+  3. `SubscriptionManager.init` defers Task spawning until after full initialization
+  4. `LowPowerModeMonitor` nonisolated(unsafe) replaced with actor-safe alternative
+  5. `AppLogger.recentLogs` Task.detached pattern corrected; all LOW concurrency items documented or fixed
+  6. Both iOS and macOS build with zero errors
+**Plans**: 2 plans
+
+Plans:
+- [ ] 26-01-PLAN.md — Fix concurrency patterns: Task.detached, SubscriptionManager init, nonisolated(unsafe), AppLogger timer
+- [ ] 26-02-PLAN.md — Document resolved/intentional concurrency patterns (deleted files, Vapor Sendable, PollingManager design)
+
+
+
+
+
+---
+
+### Phase 27: Energy + Memory
+**Goal**: All energy waste patterns are eliminated and all memory lifecycle issues are resolved — material overhead reduced, constrained network properly configured, LPM-aware polling added, flush timers optimized, GPU double-shadow eliminated, delegate cycles broken, observer cleanup completed
+**Depends on**: Phase 26 (concurrency patterns must be correct before touching lifecycle code)
+**Requirements**: ENRG-01, ENRG-02, ENRG-03, ENRG-04, ENRG-05, ENRG-06, ENRG-07, ENRG-08, MEM-01, MEM-02, MEM-03, MEM-04, MEM-05, MEM-06, MEM-07, MEM-08
+**Success Criteria** (what must be TRUE):
+  1. `ConnectionBanner` .ultraThinMaterial is replaced or documented as acceptable; `SSEClient` allowsConstrainedNetworkAccess is correctly configured
+  2. Fleet health polling doubles interval in Low Power Mode; `AppLogger` flush timer increased to 10s
+  3. `GlowEffect` double-shadow GPU passes reduced to single pass; macOS `WindowManager` UserDefaults writes throttled
+  4. `PollingManager` unowned crash risk resolved; `NSWindow` delegate cycle in `WindowManager` broken
+  5. `NotificationManager` UNUserNotificationCenter delegate lifecycle correct; `SSEClient` observer removed in cleanup()
+  6. All LOW memory items (NSTask hold, DispatchWorkItem timeout, flush timer false positive) resolved or documented
+  7. Both iOS and macOS build with zero errors
+**Plans**: 3 plans
+
+Plans:
+- [ ] 27-01-PLAN.md -- Energy: UI + Network (ConnectionBanner material, SSEClient config/cleanup, Fleet LPM polling, GlowEffect single-shadow)
+- [x] 27-02-PLAN.md -- Energy + Memory: Services (AppLogger flush timer, SyncCoordinator debounce/observer, PollingManager docs)
+- [ ] 27-03-PLAN.md -- macOS + Backend Memory (WindowManager delegate cycle, NotificationManager lifecycle, TeamsExecutorService NSTask cleanup)
+
+---
+
+### Phase 28: SwiftUI Performance
+**Goal**: All SwiftUI performance anti-patterns are eliminated — off-thread CIFilter verified, computed filter vars cached, per-tick .contains() replaced, non-lazy VStack converted, duplicate utility functions consolidated
+**Depends on**: Phase 27 (energy/memory lifecycle must be stable before view layer optimization)
+**Requirements**: UIPERF-01, UIPERF-02, UIPERF-03, UIPERF-04, UIPERF-05, UIPERF-06
+**Success Criteria** (what must be TRUE):
+  1. `TunnelSettingsView` CIFilter QR generation is verified running off main thread (or moved off if not)
+  2. `MacSessionsListView` and `MacProjectsListView` computed filter vars are cached in @State or ViewModel
+  3. `ToolCallAccordion` per-tick .contains() replaced with pre-computed Set
+  4. `BrowserView` non-lazy VStack converted to LazyVStack where appropriate
+  5. Duplicate `formatModelName()` consolidated to use shared `ClaudeModel.displayName`
+  6. Both iOS and macOS build with zero errors
+**Plans**: 2 plans
+
+Plans:
+- [ ] 28-01-PLAN.md — iOS: off-thread QR generation, ToolCallAccordion Set-based classification, BrowserView LazyVStack verification
+- [ ] 28-02-PLAN.md — macOS: cached filter vars in MacSessionsListView/MacProjectsListView, formatModelName consolidation
+
+---
+
+### Phase 29: Testing CRITICAL — Sleep Replacement
+**Goal**: All 18 sleep()/Thread.sleep() instances across 3 test files are replaced with condition-based waiting, eliminating the primary source of test flakiness
+**Depends on**: Phase 28 (all production code fixes must be stable before touching test infrastructure)
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04
+**Success Criteria** (what must be TRUE):
+  1. `ErrorHandlingTests.swift` — all 5 sleep sites replaced with XCTNSPredicateExpectation or async poll loops
+  2. `FeatureGateTests.swift` — all 5 sleep sites replaced with condition-based waiting
+  3. `Scenario03_StreamingAndCancellation.swift` — all 6 sleep sites replaced with condition-based waiting
+  4. Zero `sleep()` or `Thread.sleep()` calls remain in any test file
+  5. All replaced tests pass when run via `xcodebuild test`
+**Plans**: 2 plan(s)
+
+Plans:
+- [ ] 29-01-PLAN.md -- ErrorHandlingTests + FeatureGateTests sleep replacement
+- [ ] 29-02-PLAN.md -- Scenario03_StreamingAndCancellation sleep replacement + zero-sleep verification
+
+---
+
+### Phase 30: Testing Infrastructure
+**Goal**: Test infrastructure is modernized — UI test startup optimized, placeholder tests replaced with meaningful Swift Testing tests, test data factories created, and test parallelization configured
+**Depends on**: Phase 29 (sleep replacement must be done before broader test infrastructure changes)
+**Requirements**: TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11
+**Success Criteria** (what must be TRUE):
+  1. UI test startup time reduced via shared XCUIApplication or test grouping
+  2. `ILSBackendTests.swift` placeholder replaced with meaningful Swift Testing tests (`import Testing`, `@Test`, `#expect`)
+  3. `ILSSharedTests.swift` placeholder replaced with meaningful Swift Testing tests
+  4. `NavigationTests.swift` instance var `app` moved to setUp method
+  5. Test data factories/builders exist for common test objects (Session, Project, Message)
+  6. Test parallelization configured in test plan
+  7. All tests pass when run via `xcodebuild test`
+**Plans**: 2 plans
+Plans:
+
+- [ ] 30-01-PLAN.md -- Swift Testing migration: ILSSharedTests + ILSBackendTests placeholders replaced, test data factories, Codable/enum tests
+- [ ] 30-02-PLAN.md -- UI test infrastructure: NavigationTests setUp fix, test parallelization config, startup optimization
+
+---
+
+### Phase 31: Swift 6 Preparation
+**Goal**: The codebase compiles cleanly with -strict-concurrency=targeted and the path to Swift 6 complete mode is documented with remaining blockers identified
+**Depends on**: Phase 26 (concurrency fixes in Phase 25-26 resolve the 2 compile-error blockers)
+**Requirements**: SWIFT6-01, SWIFT6-02, SWIFT6-03
+**Success Criteria** (what must be TRUE):
+  1. `ClaudeExecutorService.useAgentSDK` mutable static var resolved (validated in Phase 25, confirmed here)
+  2. `TeamsExecutorService.shutdownTeammate` non-Sendable Process resolved (validated in Phase 25, confirmed here)
+  3. `xcodebuild` with `-strict-concurrency=targeted` produces zero new warnings beyond baseline
+  4. Remaining blockers for `-strict-concurrency=complete` are documented with migration path
+  5. Both iOS and macOS build with zero errors
+**Plans**: 2 plans
+
+Plans:
+- [x] 31-01-PLAN.md -- Verify Phase 25 Swift 6 blocker fixes, enable -strict-concurrency=targeted across all targets, fix new warnings (completed 2026-02-24)
+- [ ] 31-02-PLAN.md -- Document remaining -strict-concurrency=complete blockers with migration path, final cross-platform verification
+
+---
+
+### Phase 32: Final Validation
+**Goal**: The full codebase builds cleanly on all three targets, a fresh audit confirms zero open CRITICAL/HIGH issues, and the v1.5 milestone is ready for closure
+**Depends on**: Phases 25-31 (all fixes must be complete before final validation)
+**Requirements**: (validates all 50 REQ-IDs from Phases 25-31 — no new requirement IDs)
+**Success Criteria** (what must be TRUE):
+  1. `xcodebuild` for ILSApp scheme and ILSMacApp scheme both exit 0 with zero errors; `swift build` for ILSBackend exits 0 with zero errors
+  2. A fresh run of the 5 primary Axiom audits (concurrency, memory, energy, swiftui-performance, testing) confirms zero CRITICAL and zero HIGH findings remain
+  3. All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
+  4. `scratch/audit-findings-2026-02-24.md` is updated with resolution status for all 70 issues
+  5. All tests pass when run via `xcodebuild test`
+**Plans**: 1 plan(s)
+
+Plans:
+- [ ] 32-01-PLAN.md -- Build verification, test suite, 5 Axiom audits, v1.0 REQ spot-check
+- [ ] 32-02-PLAN.md -- Audit findings resolution update, milestone closure
 
 ---
 
@@ -333,20 +498,30 @@ Plans:
 
 **v3.0 Execution Order:** Phase 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24
 
+**v1.5 Execution Order:** Phase 25 -> 26 -> 27 -> 28 -> 29 -> 30 -> 31 -> 32
+
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-10 | v1.0 | 10/10 | Complete | 2026-02-21 |
 | 11. Launch & Baseline | v2.0 | 2/2 | Complete | 2026-02-22 |
-| 12. Service Layer | 1/1 | Complete    | 2026-02-23 | - |
-| 13. ViewModel & Model | 2/2 | Complete    | 2026-02-23 | - |
-| 14. SSE & Background | 1/1 | Complete    | 2026-02-23 | - |
-| 15. View Layer Rendering | 3/3 | Complete    | 2026-02-23 | - |
-| 16. Cross-Platform Verify | v2.0 | Complete    | 2026-02-24 | 2026-02-23 |
-| 17. Regression Tests | 2/2 | Complete    | 2026-02-24 | - |
-| 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
-| 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
-| 20. Architecture + Performance HIGH | 4/4 | Complete   | 2026-02-22 | - |
+| 12. Service Layer | v2.0 | 1/1 | Complete | 2026-02-23 |
+| 13. ViewModel & Model | v2.0 | 2/2 | Complete | 2026-02-23 |
+| 14. SSE & Background | v2.0 | 1/1 | Complete | 2026-02-23 |
+| 15. View Layer Rendering | v2.0 | 3/3 | Complete | 2026-02-23 |
+| 16. Cross-Platform Verify | v2.0 | 1/1 | Complete | 2026-02-23 |
+| 17. Regression Tests | v2.0 | 2/2 | Complete | 2026-02-24 |
+| 18. CRITICAL Fixes | v3.0 | 4/4 | Complete | 2026-02-22 |
+| 19. Concurrency + Memory HIGH | v3.0 | 3/3 | Complete | 2026-02-22 |
+| 20. Architecture + Performance HIGH | v3.0 | 4/4 | Complete | 2026-02-22 |
 | 21. Navigation + Codable HIGH | v3.0 | 2/2 | Complete | 2026-02-22 |
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 3/3 | Complete | 2026-02-22 |
 | 23. All MEDIUM + LOW Issues | v3.0 | 7/7 | Complete | 2026-02-22 |
 | 24. Validation + Documentation | v3.0 | 1/1 | Complete | 2026-02-23 |
+| 25. Concurrency HIGH + Swift 6 Blockers | 2/2 | Complete    | 2026-02-24 | - |
+| 26. Concurrency MEDIUM + LOW | 2/2 | Complete    | 2026-02-24 | - |
+| 27. Energy + Memory | 3/3 | Complete   | 2026-02-24 | - |
+| 28. SwiftUI Performance | v1.5 | 0/? | Planned | - |
+| 29. Testing CRITICAL — Sleep Replacement | v1.5 | 0/? | Planned | - |
+| 30. Testing Infrastructure | v1.5 | 0/2 | Planned | - |
+| 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
+| 32. Final Validation | v1.5 | 0/? | Planned | - |

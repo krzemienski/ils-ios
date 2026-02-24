@@ -83,6 +83,9 @@ actor SystemMetricsService {
     func getProcesses() async -> [SystemProcessInfo] {
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
+                // Guard against double-resume: timeout and normal path can race
+                var hasResumed = false
+
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: "/bin/ps")
                 process.arguments = ["aux"]
@@ -92,9 +95,13 @@ actor SystemMetricsService {
                 process.standardOutput = outPipe
                 process.standardError = errPipe
 
-                // 5-second timeout: terminate the process if it hangs
+                // 5-second timeout: terminate the process and resume if it hangs
                 let timeoutItem = DispatchWorkItem {
                     process.terminate()
+                    if !hasResumed {
+                        hasResumed = true
+                        continuation.resume(returning: [])
+                    }
                 }
                 DispatchQueue.global().asyncAfter(deadline: .now() + 5, execute: timeoutItem)
 
@@ -111,6 +118,9 @@ actor SystemMetricsService {
                     process.waitUntilExit()
                     timeoutItem.cancel()
 
+                    guard !hasResumed else { return }
+                    hasResumed = true
+
                     guard let output = String(data: data, encoding: .utf8) else {
                         continuation.resume(returning: [])
                         return
@@ -120,6 +130,8 @@ actor SystemMetricsService {
                     continuation.resume(returning: results)
                 } catch {
                     timeoutItem.cancel()
+                    guard !hasResumed else { return }
+                    hasResumed = true
                     continuation.resume(returning: [])
                 }
             }

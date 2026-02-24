@@ -1,6 +1,10 @@
 import Foundation
 
 /// Manages connection health polling and retry logic.
+// CONC-17: Intentionally NOT @Observable. PollingManager is an internal service
+// owned by ConnectionManager, not a SwiftUI view model. It manages Task lifecycle
+// and delegates state changes to ConnectionManager (which IS @Observable via its
+// own properties). Adding @Observable would add unnecessary overhead.
 @MainActor
 class PollingManager {
     /// Scene lifecycle phase mirroring SwiftUI.ScenePhase
@@ -9,9 +13,12 @@ class PollingManager {
         case active, inactive, background
     }
 
-    /// Unowned is safe: ConnectionManager creates and owns PollingManager,
-    /// so ConnectionManager always outlives this instance. Avoids atomic
-    /// weak-reference overhead on every health poll cycle.
+    /// MEM-01: `unowned` is safe here because ConnectionManager creates and owns
+    /// PollingManager in its own init, and PollingManager is stored as a property of
+    /// ConnectionManager. Therefore ConnectionManager always outlives PollingManager.
+    /// If this ownership invariant ever changes (e.g., PollingManager stored elsewhere),
+    /// switch to `weak` with guard-let. The `unowned` avoids atomic weak-reference
+    /// overhead on every health poll cycle (~60s). (Also: CONC-05 verified 2026-02-24.)
     unowned let connectionManager: ConnectionManager
 
     private var retryTask: Task<Void, Never>?
