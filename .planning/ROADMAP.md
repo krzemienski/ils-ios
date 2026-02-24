@@ -393,8 +393,12 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+- [ ] 26-01-PLAN.md — Fix concurrency patterns: Task.detached, SubscriptionManager init, nonisolated(unsafe), AppLogger timer
+- [ ] 26-02-PLAN.md — Document resolved/intentional concurrency patterns (deleted files, Vapor Sendable, PollingManager design)
+
+
+
+
 
 ---
 
@@ -432,8 +436,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+- [ ] 28-01-PLAN.md — iOS: off-thread QR generation, ToolCallAccordion Set-based classification, BrowserView LazyVStack verification
+- [ ] 28-02-PLAN.md — macOS: cached filter vars in MacSessionsListView/MacProjectsListView, formatModelName consolidation
 
 ---
 
