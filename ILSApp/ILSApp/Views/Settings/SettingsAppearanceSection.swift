@@ -3,6 +3,11 @@ import ILSShared
 
 // MARK: - Appearance Section
 
+/// Appearance settings section for the Settings screen.
+///
+/// Provides a single navigation link to ``ThemePickerView`` for selecting the
+/// app-wide color theme. Displays the currently active theme name as a subtitle,
+/// sourced from ``ThemeManager``.
 struct SettingsAppearanceSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(ThemeManager.self) var themeManager

@@ -1,5 +1,14 @@
 import SwiftUI
 
+/// Full-screen log viewer showing recent application log entries.
+///
+/// Fetches log lines from ``AppLogger/recentLogs()`` on appear and displays them
+/// in a `LazyVStack`. Lines are colour-coded by severity:
+/// - `[ERROR]` entries are rendered in the error colour.
+/// - `[WARN]` entries are rendered in the warning colour.
+/// - All other lines use the secondary text colour.
+///
+/// A toolbar refresh button reloads the log list on demand.
 struct LogViewerView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var logs: [String] = []
