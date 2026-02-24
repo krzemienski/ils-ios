@@ -3,12 +3,35 @@ import ILSShared
 
 // MARK: - MCP Server Detail View (extracted from MCPServerListView.swift, migrated to theme)
 
+/// Detail view for a single MCP (Model Context Protocol) server configuration.
+///
+/// Displays the server's command, arguments, environment variables, connection status,
+/// and configuration scope. Sensitive environment variable values (API keys, tokens,
+/// secrets) are automatically detected and masked, with a timed reveal toggle so users
+/// can inspect them without leaving credentials permanently visible.
+///
+/// ## Topics
+/// ### State
+/// - ``server`` - The MCP server whose details are being displayed
+/// - ``showCopiedToast`` - Whether the "Copied to clipboard" toast is visible
+/// - ``revealedKeys`` - Set of environment variable keys currently shown unmasked
+/// - ``autoHideTasks`` - Background tasks that auto-hide revealed sensitive values
+///
+/// ### View Sections
+/// - Command — executable path and argument list
+/// - Environment Variables — masked/revealed key-value pairs with sensitivity detection
+/// - Configuration — scope, connection status indicator, and optional config path
+/// - Full Command — complete shell-ready command string with copy toolbar button
 struct MCPServerDetailView: View {
+    /// The MCP server whose configuration and status this view presents.
     let server: MCPServer
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Whether the "Copied to clipboard" confirmation toast is currently visible.
     @State private var showCopiedToast = false
+    /// Set of environment variable keys whose values are currently revealed in plain text.
     @State private var revealedKeys: Set<String> = []
+    /// Auto-hide tasks keyed by environment variable name; each cancels after 5 seconds to re-mask the value.
     @State private var autoHideTasks: [String: Task<Void, Never>] = [:]
 
     /// Patterns that indicate a value is sensitive and should be masked.

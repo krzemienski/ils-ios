@@ -31,6 +31,26 @@ private struct ThemePreview: Identifiable {
 
 // MARK: - Theme Picker View
 
+/// Theme selection screen for choosing the app-wide visual style.
+///
+/// Presents all available themes in a two-column `LazyVGrid`. Each card shows a
+/// miniature preview of the theme's colour palette alongside four colour swatches
+/// (background, accent, text, and secondary background). Tapping a card applies
+/// the theme immediately via ``ThemeManager/setTheme(_:)`` with an optional
+/// animation that respects the system's reduce-motion accessibility setting.
+///
+/// Built-in themes are defined as ``ThemePreview`` metadata entries. Any theme
+/// registered externally via `CustomThemeAdapter` (identified by an `id` prefixed
+/// with `"custom-"`) is listed in a separate **Custom** section below.
+///
+/// ## Topics
+/// ### View Components
+/// - ``themeCard(_:)`` - Card for built-in themes rendered from ``ThemePreview`` metadata
+/// - ``customThemeCard(_:)`` - Card for custom themes rendered from a live ``AppTheme``
+/// - ``swatchCircle(_:border:)`` - Small colour indicator circle used inside each card
+///
+/// ### Helpers
+/// - ``customThemes`` - Filtered list of custom-prefixed themes from ``ThemeManager``
 struct ThemePickerView: View {
     @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot

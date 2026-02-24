@@ -3,14 +3,44 @@ import ILSShared
 
 // MARK: - Config Section
 
+/// Configuration editing section for the Settings screen.
+///
+/// Renders four sub-sections — General, API Key, Permissions, and Advanced — that
+/// allow users to inspect and modify their Claude Code configuration. Settings are
+/// loaded from the host CLI via ``SettingsViewModel`` and saved back asynchronously
+/// using ``SettingsViewModel/saveConfig(model:colorScheme:)`` and
+/// ``SettingsViewModel/saveConfigToggle(key:value:)``. Each save is immediately
+/// followed by a ``SettingsViewModel/loadConfig()`` reload to keep the UI in sync.
+///
+/// Inherited settings (pulled from the host CLI config) are distinguished from
+/// user-customised values with an ``InheritanceBadge`` indicator.
+///
+/// ## Topics
+/// ### Properties
+/// - ``viewModel`` - The shared settings view model providing config and stats
+/// - ``colorSchemePreference`` - Binding to the persisted color-scheme selection
+/// - ``availableModels`` - List of Claude model identifiers shown in the model picker
+/// - ``formatModelName`` - Closure that converts a raw model ID to a display name
+///
+/// ### View Sections
+/// - ``generalSettingsSection`` - Model, color scheme, updates channel, and feature toggles
+/// - ``apiKeySection`` - API key status and masked key display (read-only)
+/// - ``permissionsSection`` - Default permission mode plus allow/deny rule lists
+/// - ``advancedSection`` - Hooks, plugins, raw JSON editors, and experimental flags
 struct SettingsConfigSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
+    /// The shared settings view model providing config, stats, and save/load operations.
     var viewModel: SettingsViewModel
+    /// Binding to the user's persisted color-scheme preference ("system", "light", or "dark").
     @Binding var colorSchemePreference: String
+    /// Whether the experimental Agent Teams feature is enabled, persisted via AppStorage.
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
+    /// The list of available Claude model identifiers to present in the model picker.
     let availableModels: [String]
+    /// The list of valid color scheme options (e.g. "system", "light", "dark").
     let availableColorSchemes: [String]
+    /// Closure that converts a raw model identifier string into a human-readable display name.
     let formatModelName: (String) -> String
 
     var body: some View {
@@ -467,6 +497,11 @@ struct SettingsConfigSection: View {
 
 // MARK: - Inheritance Badge
 
+/// Badge indicating whether a setting value is inherited from the host CLI or
+/// has been explicitly overridden by the user.
+///
+/// Displays a "Host Default" label with a link icon when the value is inherited,
+/// or a "Custom" label with a pencil icon when the value has been set locally.
 struct InheritanceBadge: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     let isInherited: Bool
@@ -489,6 +524,10 @@ struct InheritanceBadge: View {
 
 // MARK: - Settings Info Button
 
+/// Tappable info icon that reveals a tooltip popover explaining a setting.
+///
+/// Tapping the `info.circle` button toggles a popover containing a plain-text
+/// description of the adjacent setting's purpose and valid values.
 struct SettingsInfoButton: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     let text: String

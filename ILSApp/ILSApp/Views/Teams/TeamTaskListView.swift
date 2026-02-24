@@ -1,6 +1,17 @@
 import SwiftUI
 import ILSShared
 
+/// Scrollable list of tasks belonging to a team, with inline status cycling and task creation.
+///
+/// Renders each ``TeamTask`` as a tappable card; tapping a card advances its status through
+/// the pending → inProgress → completed cycle. A floating action button opens an alert
+/// for creating new tasks. Tasks are loaded on appearance via ``TeamsViewModel``.
+///
+/// ## Key State
+/// - ``teamName`` - Identifies which team's tasks to load and manage
+/// - ``showCreateTask`` - Controls visibility of the create-task alert
+/// - ``newTaskSubject`` - Subject field bound to the create-task alert's text input
+/// - ``newTaskDescription`` - Description field bound to the create-task alert's text input
 struct TeamTaskListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     var viewModel: TeamsViewModel

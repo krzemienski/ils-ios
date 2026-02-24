@@ -1,10 +1,26 @@
 import SwiftUI
 import ILSShared
 
+/// List view displaying all agent teams with navigation to team details.
+///
+/// Shows team cards in a scrollable list when teams exist, or an empty-state prompt
+/// when none have been created. A toolbar button opens the ``CreateTeamView`` sheet.
+/// Coordinates with ``TeamsViewModel`` to fetch and manage team data on appear.
+///
+/// ## Topics
+/// ### State
+/// - ``viewModel`` - View model managing team data and API interactions
+/// - ``showCreateSheet`` - Controls presentation of the create-team sheet
+///
+/// ### View Components
+/// - ``emptyState`` - Placeholder shown when no teams exist
+/// - ``teamCard(_:)`` - Card row for an individual team with member count
 struct AgentTeamsListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
+    /// View model managing team list loading and mutations.
     @State private var viewModel: TeamsViewModel
+    /// Whether the create-team sheet is currently presented.
     @State private var showCreateSheet = false
 
     init(apiClient: APIClient) {

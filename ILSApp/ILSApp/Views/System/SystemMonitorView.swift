@@ -2,11 +2,37 @@ import SwiftUI
 import Charts
 import ILSShared
 
+/// Real-time system resource monitor backed by a persistent WebSocket connection.
+///
+/// Renders live Charts framework graphs for CPU usage, dual-series network throughput
+/// (in/out as separate ``LineMark`` series), plus ``ProgressRing`` widgets for Memory and Disk.
+/// A load-average row (1m / 5m / 15m) and a ``ProcessListView`` complete the dashboard.
+///
+/// ## WebSocket Lifecycle
+/// The connection to ``MetricsWebSocketClient`` is opened in `onAppear` and closed in
+/// `onDisappear`, keeping metrics streaming only while the view is visible.  If the server
+/// URL has changed since the last appearance the old client is replaced before reconnecting.
+/// Scene-phase transitions (`active` → background/inactive) pause the pulsing live indicator
+/// without dropping the underlying socket.
+///
+/// ## Topics
+/// ### State
+/// - ``viewModel`` - Observable view model that owns the WebSocket client and metric history
+/// - ``livePulse`` - Drives the pulsing animation on the live indicator dot
+///
+/// ### View Components
+/// - ``networkChart`` - Dual-series Charts view showing bytes-in and bytes-out over time
+/// - ``liveIndicator`` - Toolbar dot that pulses when connected; respects Reduce Motion
+///
+/// ### Helpers
+/// - ``formatBytes(_:)`` - Converts a raw `UInt64` byte count to a human-readable string (B / KB / MB / GB)
 struct SystemMonitorView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    /// Used by ``liveIndicator`` to disable the repeating pulse animation for users who prefer reduced motion.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    /// View model that manages the ``MetricsWebSocketClient`` and exposes aggregated metric values.
     @State private var viewModel = SystemMetricsViewModel()
 
     var body: some View {
@@ -154,6 +180,12 @@ struct SystemMonitorView: View {
 
     // MARK: - Network Chart
 
+    /// Dual-series line chart displaying inbound and outbound network throughput over time.
+    ///
+    /// Renders two ``LineMark`` series drawn from ``MetricsWebSocketClient/networkInHistory``
+    /// and ``MetricsWebSocketClient/networkOutHistory``.  When both histories are empty a
+    /// placeholder rectangle is shown while the WebSocket connection delivers the first sample.
+    /// The chart is exposed to VoiceOver as a single accessibility element with a combined label.
     private var networkChart: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
@@ -228,8 +260,15 @@ struct SystemMonitorView: View {
 
     // MARK: - Live Indicator
 
+    /// Controls the repeating scale animation on the connection-status dot in the toolbar.
+    /// Set to `true` on `onAppear` and reset to `false` when the scene moves out of the active phase.
     @State private var livePulse = false
 
+    /// Toolbar badge showing the current WebSocket connection status.
+    ///
+    /// Displays a green pulsing dot labeled "Live" when connected, or a static red dot
+    /// labeled "Offline" when disconnected.  The repeating scale animation is suppressed when
+    /// `accessibilityReduceMotion` is enabled, replacing it with a `.default` (instant) animation.
     private var liveIndicator: some View {
         HStack(spacing: 6) {
             Circle()
@@ -252,6 +291,13 @@ struct SystemMonitorView: View {
 
     // MARK: - Helpers
 
+    /// Converts a raw byte count into a human-readable string with the appropriate unit.
+    ///
+    /// Returns values in B, KB, MB, or GB depending on magnitude, using one decimal place
+    /// for MB and GB and no decimal for KB.
+    ///
+    /// - Parameter bytes: The number of bytes to format.
+    /// - Returns: A localized string such as `"1.4 MB"` or `"512 KB"`.
     private func formatBytes(_ bytes: UInt64) -> String {
         let kb = Double(bytes) / 1024
         let mb = kb / 1024

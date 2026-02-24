@@ -1,9 +1,28 @@
 import SwiftUI
 
-/// Compact right-aligned user message pill on pure black background.
-/// Max-width 80%, dark surface with no border stroke.
+/// Compact right-aligned bubble displaying a user-authored message with an inline delete action.
+///
+/// Renders the message text left-aligned within a right-floated pill that uses `theme.borderSubtle`
+/// as its surface color. A "You" label (accent-colored, semibold) and a formatted timestamp appear
+/// below the text at caption size. The containing `HStack` pushes the card to the trailing edge via
+/// a leading `Spacer`; visual width is bounded by the parent caller's horizontal padding.
+///
+/// A long-press context menu exposes Copy and (when `onDelete` is provided) a destructive Delete
+/// action. Copying writes to the platform clipboard and triggers a transient "Copied" overlay that
+/// auto-dismisses after two seconds, rendered with a `.scale.combined(with: .opacity)` transition.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``message`` - The user `ChatMessage` whose text and timestamp are displayed
+///
+/// ### Callbacks
+/// - ``onDelete`` - Optional closure called with the message when the user selects "Delete"
+///   from the context menu; omit to hide the delete option
 struct UserMessageCard: View {
+    /// The user message to display, including its text, optional timestamp, and identity.
     let message: ChatMessage
+    /// Called with the message when the user selects "Delete" from the context menu.
+    /// When `nil`, the delete option is omitted from the menu.
     var onDelete: ((ChatMessage) -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot

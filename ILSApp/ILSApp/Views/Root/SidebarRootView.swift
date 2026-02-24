@@ -55,6 +55,34 @@ enum ActiveScreen: Hashable {
 
 // MARK: - Sidebar Root View
 
+/// Root container view providing adaptive navigation for the ILS iOS/macOS app.
+///
+/// Renders a ``NavigationSplitView`` with a persistent sidebar column on iPad (regular-width
+/// size class) and a ZStack overlay sidebar on iPhone (compact-width size class). Routing
+/// between app screens is driven by the ``ActiveScreen`` enum; the active destination is
+/// persisted across launches via `@SceneStorage` and restored on first appearance.
+/// App-wide navigation requests are consumed from ``AppState/navigationIntent`` and forwarded
+/// to ``activeScreen``. On iPhone an edge-swipe gesture from the leading edge opens or closes
+/// the sidebar panel.
+///
+/// ## Topics
+/// ### Layout
+/// - ``iPadLayout`` - NavigationSplitView with a persistent sidebar column (regular width)
+/// - ``iPhoneLayout`` - ZStack overlay sidebar with a backdrop dimmer (compact width)
+///
+/// ### Navigation
+/// - ``activeScreen`` - Currently displayed screen, driven by ``ActiveScreen`` routing
+/// - ``navigationPath`` - NavigationStack path for push-navigation within the active screen
+///
+/// ### State
+/// - ``activeScreenKey`` - SceneStorage key persisting the active screen identifier across launches
+/// - ``lastChatSessionId`` - SceneStorage UUID string for restoring the last open chat session
+/// - ``sessionsVM`` - Shared sessions view model passed down to the sidebar and home screen
+///
+/// ### Gestures
+/// - ``edgeSwipeGesture`` - DragGesture that opens the sidebar from the leading edge on iPhone
+/// - ``sidebarDragOffset`` - Live horizontal translation applied to the sidebar while dragging
+/// - ``isSidebarOpen`` - Whether the sidebar overlay panel is currently visible
 struct SidebarRootView: View {
     @Environment(AppState.self) var appState
     @Environment(ThemeManager.self) var themeManager
@@ -62,13 +90,27 @@ struct SidebarRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
+    /// Persisted string key identifying the active screen, used to restore navigation state
+    /// across app launches. Excludes `.chat` (which requires an async session fetch).
     @SceneStorage("activeScreenKey") private var activeScreenKey: String = "home"
+    /// UUID string of the last open chat session. When `activeScreenKey` is `"chat"` on launch,
+    /// this value is used to look up and restore the corresponding ``ChatSession``.
     @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
+    /// Whether the sidebar overlay panel is currently visible. Only meaningful on iPhone;
+    /// on iPad the sidebar is always present inside the NavigationSplitView.
     @State private var isSidebarOpen: Bool = false
+    /// The currently displayed app screen, switched by selecting items in the sidebar or via
+    /// ``AppState/navigationIntent``.
     @State private var activeScreen: ActiveScreen = .home
     @State private var sidebarDragOffset: CGFloat = 0
+    /// Controls NavigationSplitView column visibility on iPad, allowing the sidebar column
+    /// to be shown or hidden programmatically.
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    /// Initial segment selection forwarded to ``BrowserView`` when navigation is triggered
+    /// via `onNavigateToBrowser` from the home screen.
     @State private var browserSegment: BrowserSegment = .mcp
+    /// Shared sessions view model owned by this root view and passed to ``SidebarView`` and
+    /// ``HomeView``, ensuring sessions are fetched once and reused across both consumers.
     @State private var sessionsVM = SessionsViewModel()
 
     private var isRegularWidth: Bool {

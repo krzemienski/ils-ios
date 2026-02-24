@@ -1,6 +1,22 @@
 import SwiftUI
 import ILSShared
 
+/// First-launch screen presenting the two server-setup paths available to the user.
+///
+/// Displays an ILS branding header followed by two tappable path cards:
+/// **Quick Connect** (navigates to ``QuickConnectView``) for users who already
+/// have a backend running, and **Set Up New Server** (navigates to ``SSHSetupView``)
+/// for users who want to deploy ILSBackend via SSH. Navigation destinations are
+/// registered on the ``NavigationStack`` provided by ``ServerSetupSheet``.
+///
+/// ## Topics
+/// ### Navigation Paths
+/// - ``OnboardingPath`` - Enum of the two available setup routes
+/// - ``selectedPath`` - Currently selected navigation destination
+///
+/// ### View Components
+/// - ``brandingHeader`` - ILS logo, title, and tagline banner at the top of the screen
+/// - ``pathCard(title:subtitle:icon:path:)`` - Tappable card that pushes a setup path
 struct OnboardingView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot

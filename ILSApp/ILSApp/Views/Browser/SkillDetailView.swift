@@ -4,6 +4,53 @@ import ILSShared
 
 // MARK: - Skill Detail View
 
+/// Detail view for inspecting and editing a single skill.
+///
+/// Displays the full skill record across five sections: a **Header** showing the source badge,
+/// active status, description, and GitHub author/stars; a **Tags** strip with horizontally
+/// scrollable capsule chips; a **Metadata** panel listing version, path, and last-updated date;
+/// a **Content** section that toggles between a `MarkdownUI` renderer and a live `TextEditor`
+/// when editing; and a **Markdown Theme** configuration that maps the app's ``ThemeSnapshot``
+/// onto `MarkdownUI.Theme` styles.
+///
+/// The toolbar exposes an edit/save toggle and a delete button for `.local` and `.github` skills.
+/// Both buttons show an inline `ProgressView` spinner while their respective async operations are
+/// in flight and disable themselves to prevent double-submission.  Deletion dismisses the view on
+/// completion via ``deleteSkill()``.
+///
+/// Source badge colour is determined by ``sourceColor``:
+/// - `.local` → `theme.info` (blue)
+/// - `.plugin` → `theme.entityPlugin` (purple)
+/// - `.builtin` → `theme.accent` (primary accent)
+/// - `.github` → `theme.warning` (amber)
+///
+/// A transient "Copied to clipboard" toast slides in from the bottom after ``copyContent()`` is
+/// called and auto-dismisses after two seconds.  The toast animation respects the system
+/// `accessibilityReduceMotion` preference.  Clipboard writes are platform-aware:
+/// `UIPasteboard` on iOS, `NSPasteboard` on macOS.
+///
+/// ## Topics
+/// ### State
+/// - ``viewModel`` - Skills view model that performs network CRUD operations
+/// - ``isEditing`` - Whether the content section is in edit mode
+/// - ``editedContent`` - Live buffer for the TextEditor while editing
+/// - ``showDeleteAlert`` - Controls the destructive-delete confirmation alert
+/// - ``showCopiedToast`` - Drives the clipboard toast overlay visibility
+/// - ``isSaving`` - True while an async save operation is in flight
+/// - ``isDeleting`` - True while an async delete operation is in flight
+///
+/// ### View Components
+/// - ``headerSection`` - Source badge, active status, description, and GitHub author row
+/// - ``tagsSection`` - Horizontally scrollable tag chip strip
+/// - ``metadataSection`` - Version, path, and last-updated metadata rows
+/// - ``contentSection`` - Markdown renderer or TextEditor depending on edit mode
+/// - ``markdownTheme`` - MarkdownUI theme derived from the current ThemeSnapshot
+///
+/// ### Actions
+/// - ``startEditing()`` - Enters edit mode and seeds the editor buffer
+/// - ``saveEdit()`` - Persists edited content via the view model and exits edit mode
+/// - ``deleteSkill()`` - Deletes the skill via the view model and dismisses the view
+/// - ``copyContent()`` - Copies raw skill content to the platform clipboard and shows the toast
 struct SkillDetailView: View {
     let skill: Skill
 
@@ -12,12 +59,19 @@ struct SkillDetailView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
 
+    /// View model that performs network-backed CRUD operations for skills.
     @State private var viewModel = SkillsViewModel()
+    /// Whether the content section is currently in edit mode.
     @State private var isEditing = false
+    /// Live text buffer bound to the `TextEditor` while the user is editing the skill content.
     @State private var editedContent = ""
+    /// Controls visibility of the destructive-delete confirmation alert.
     @State private var showDeleteAlert = false
+    /// Controls visibility of the "Copied to clipboard" toast overlay.
     @State private var showCopiedToast = false
+    /// True while the async save operation is in flight; disables toolbar buttons and shows a spinner.
     @State private var isSaving = false
+    /// True while the async delete operation is in flight; disables toolbar buttons and shows a spinner.
     @State private var isDeleting = false
 
     /// Cached MarkdownUI theme — only rebuilt when the app theme changes.

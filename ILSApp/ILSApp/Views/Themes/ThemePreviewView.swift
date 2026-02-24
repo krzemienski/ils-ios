@@ -1,7 +1,33 @@
 import SwiftUI
 import ILSShared
 
+/// A live preview canvas that renders all visual tokens of a ``CustomTheme`` side-by-side.
+///
+/// Accepts a binding to a `CustomTheme` so that edits made in ``ThemeEditorView`` are
+/// reflected immediately without requiring a full reload. Each design-token category is
+/// presented in a labelled card built by ``previewSection(title:content:)``:
+/// message bubbles, typography, buttons, status indicators, cards, borders, overlays, and
+/// the spacing scale.
+///
+/// Token values are read through ``color(_:)``, ``spacing(_:)``, and ``cornerRadius(_:)``,
+/// each of which falls back to the app's default ``ILSTheme`` constants when a token is
+/// absent from the theme.
+///
+/// ## Topics
+/// ### Theme Input
+/// - ``theme`` - The custom theme whose tokens are rendered live
+///
+/// ### Section Helpers
+/// - ``previewSection(title:content:)`` - Labelled card wrapper used by every preview section
+/// - ``statusIndicator(label:color:icon:)`` - Status badge row for success / warning / error / info
+/// - ``spacingExample(label:value:)`` - Visual bar representing a spacing token value
+///
+/// ### Theme Accessors
+/// - ``color(_:)`` - Resolves a colour token, falling back to ``ILSTheme`` defaults
+/// - ``spacing(_:)`` - Resolves a spacing token, falling back to ``ILSTheme`` defaults
+/// - ``cornerRadius(_:)`` - Resolves a corner-radius token, falling back to ``ILSTheme`` defaults
 struct ThemePreviewView: View {
+    /// The custom theme being previewed; all token reads react to changes via this binding.
     @Binding var theme: CustomTheme
 
     var body: some View {

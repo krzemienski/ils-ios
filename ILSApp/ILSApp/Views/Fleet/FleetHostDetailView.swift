@@ -1,12 +1,39 @@
 import SwiftUI
 import ILSShared
 
+/// Detail view for an individual fleet host, presenting a four-section scrollable layout.
+///
+/// Displays comprehensive information about a remote ``FleetHost`` including connection details,
+/// live health status, lifecycle controls, and a scrollable log viewer. Lifecycle operations
+/// (start, stop, restart) are dispatched as async POST requests to the fleet API. Log lines
+/// are fetched on appearance and can be manually refreshed via the refresh button in the log
+/// section header. Optional fields — SSH username, platform, and auth method — are shown
+/// conditionally when present on the host model.
+///
+/// ## Topics
+/// ### State
+/// - ``host`` - The fleet host being presented
+/// - ``logs`` - Log lines fetched from the remote host
+/// - ``isLoadingLogs`` - Whether a log fetch is in progress
+///
+/// ### View Sections
+/// - ``hostInfoSection`` - Address, backend port, and optional SSH username/platform/auth
+/// - ``healthSection`` - Color-coded health status with last-check timestamp
+/// - ``lifecycleSection`` - Start, stop, and restart buttons wired to async API calls
+/// - ``logSection`` - Scrollable log viewer with inline refresh control
+///
+/// ### Actions
+/// - ``performLifecycle(_:)`` - POSTs a ``LifecycleRequest`` to `/fleet/{id}/lifecycle`
+/// - ``loadLogs()`` - GETs log lines from `/fleet/{id}/logs` and populates ``logs``
 struct FleetHostDetailView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    /// The fleet host whose details this view presents.
     let host: FleetHost
 
+    /// Log lines fetched from the remote host's log endpoint.
     @State private var logs: [String] = []
+    /// Whether a log fetch request is currently in flight.
     @State private var isLoadingLogs = false
 
     var body: some View {

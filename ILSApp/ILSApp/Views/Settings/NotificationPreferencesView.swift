@@ -2,6 +2,26 @@ import SwiftUI
 
 // MARK: - Spec 013: Push Notifications for MCP Status
 
+/// Notification preferences screen for configuring push alert behaviour.
+///
+/// Manages three categories of notification settings persisted via `@AppStorage`:
+///
+/// - **MCP Server Alerts** — opt in to alerts when a server goes offline or comes back online.
+/// - **Session Alerts** — opt in to an alert when a Claude session completes.
+/// - **Quiet Hours** — define a time window during which all notifications are suppressed.
+///
+/// Quiet-hour start and end times are stored as integer hours and surfaced as `Date`
+/// bindings for use with `DatePicker`. All toggle changes trigger a haptic selection
+/// response via ``HapticManager``.
+///
+/// ## Topics
+/// ### Persisted State
+/// - ``mcpOfflineAlerts`` - Alert when an MCP server goes offline
+/// - ``mcpOnlineAlerts`` - Alert when an MCP server comes back online
+/// - ``sessionCompleteAlerts`` - Alert when a Claude session finishes
+/// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
+/// - ``quietStartHour`` - Start hour (0–23) for the quiet window
+/// - ``quietEndHour`` - End hour (0–23) for the quiet window
 struct NotificationPreferencesView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true

@@ -1,9 +1,36 @@
 import SwiftUI
 import ILSShared
 
+/// List view for managing fleet backend profiles with live health monitoring.
+///
+/// Displays all registered ``FleetHost`` entries as tappable rows that navigate to
+/// ``FleetHostDetailView``. Each row shows a color-coded health badge that reflects
+/// the host's current reachability status. Health polling starts automatically on
+/// `onAppear` and stops on `onDisappear` to avoid unnecessary background network
+/// activity when the view is not visible.
+///
+/// ## Topics
+/// ### State
+/// - ``viewModel`` - View model managing the host list, active host, and health polling
+///
+/// ### View Components
+/// - ``fleetHostRow(_:)`` - Card row showing host name, address, platform, health badge, and context menu
+/// - ``healthBadge(_:)`` - Filled circle indicator colored by health status
+/// - ``healthColor(_:)`` - Maps ``FleetHost/HealthStatus`` cases to theme colors
+///
+/// ### Health Status Colors
+/// - `.healthy` → `theme.success` (green)
+/// - `.degraded` → `theme.warning` (yellow)
+/// - `.unreachable` → `theme.error` (red)
+/// - `.unknown` → `theme.textTertiary` (gray)
+///
+/// ### Context Menu Actions
+/// - **Activate** — sets the host as the active backend (hidden when already active)
+/// - **Remove** — permanently deletes the host profile (destructive)
 struct FleetManagementView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    /// View model driving host list data, active host selection, and periodic health polling.
     @State private var viewModel = FleetViewModel()
 
     var body: some View {
@@ -83,6 +110,8 @@ struct FleetManagementView: View {
 
     // MARK: - Host Row
 
+    /// Card row for a single fleet host showing its health badge, name, address, platform,
+    /// active indicator, and a context menu with activate/remove actions.
     @ViewBuilder
     private func fleetHostRow(_ host: FleetHost) -> some View {
         HStack(spacing: theme.spacingMD) {
@@ -134,6 +163,7 @@ struct FleetManagementView: View {
         .accessibilityLabel("\(host.name), \(host.healthStatus.rawValue)")
     }
 
+    /// Small filled circle indicator whose color reflects the host's current health status.
     @ViewBuilder
     private func healthBadge(_ status: FleetHost.HealthStatus) -> some View {
         Circle()
@@ -141,6 +171,12 @@ struct FleetManagementView: View {
             .frame(width: 12, height: 12)
     }
 
+    /// Maps a ``FleetHost/HealthStatus`` value to its corresponding theme color.
+    ///
+    /// - `.healthy` → `theme.success`
+    /// - `.degraded` → `theme.warning`
+    /// - `.unreachable` → `theme.error`
+    /// - `.unknown` → `theme.textTertiary`
     private func healthColor(_ status: FleetHost.HealthStatus) -> Color {
         switch status {
         case .healthy: return theme.success

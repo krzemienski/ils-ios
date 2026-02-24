@@ -2,12 +2,44 @@ import SwiftUI
 import ILSShared
 import TipKit
 
+/// The primary home dashboard displayed when the app launches or no session is active.
+///
+/// Renders six stacked sections — Welcome, Refreshing Banner, Connection Banner, Quick Actions,
+/// Recent Sessions, and Overview Stats — inside a vertically scrolling container. Quick-action
+/// cards are laid out with a two-column ``LazyVGrid``. While the sessions list is loading, the
+/// Recent Sessions section shows skeleton rows animated with a shimmer effect. A ``TipKit``
+/// tip guides new users toward creating their first session. Pull-to-refresh triggers a
+/// simultaneous reload of ``DashboardViewModel`` and the shared ``SessionsViewModel``,
+/// which is owned by the parent `SidebarRootView` so that sidebar and home stay in sync.
+/// Sparkline data for each entity type is sourced from ``DashboardViewModel`` and passed to
+/// individual ``StatCard`` views in the Overview section.
+///
+/// ## Topics
+/// ### Sections
+/// - ``welcomeSection`` - Greeting header showing the connected server URL
+/// - ``refreshingBanner`` - Transient animated banner shown during pull-to-refresh
+/// - ``connectionBanner`` - Warning banner with a Setup CTA when the server is unreachable
+/// - ``quickActionsGrid`` - Two-column ``LazyVGrid`` of tappable shortcut cards
+/// - ``recentSessionsSection`` - Up to five most-recent sessions with skeleton loading fallback
+/// - ``statsSection`` - Overview stat cards with sparklines and secondary health indicators
+///
+/// ### Actions
+/// - ``onSessionSelected`` - Callback invoked when the user taps a recent session row
+/// - ``onNavigate`` - Callback to push a named ``ActiveScreen`` onto the navigation stack
+/// - ``onNavigateToBrowser`` - Callback to deep-link to a specific ``BrowserSegment``
+///
+/// ### Loading
+/// - ``skeletonSessionRow`` - Placeholder row rendered with shimmer while sessions load
+/// - ``isRefreshing`` - Drives the refreshing banner visibility and shimmer on stat cards
 struct HomeView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
+    /// View model that loads dashboard statistics, sparkline data, and entity counts.
     @State private var dashboardVM = DashboardViewModel()
+    /// Whether a pull-to-refresh reload is currently in flight.
     @State private var isRefreshing = false
+    /// Controls presentation of the New Session sheet.
     @State private var showNewSessionSheet = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -16,8 +48,11 @@ struct HomeView: View {
 
     /// Shared sessions view model owned by SidebarRootView.
     var sessionsVM: SessionsViewModel
+    /// Called when the user selects a recent session row; passes the chosen ``ChatSession``.
     var onSessionSelected: ((ChatSession) -> Void)?
+    /// Called to navigate to a top-level ``ActiveScreen`` from a quick-action card.
     var onNavigate: ((ActiveScreen) -> Void)?
+    /// Called to navigate directly to a specific ``BrowserSegment`` (Skills, MCP, Plugins).
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
 
     var body: some View {

@@ -3,6 +3,18 @@ import ILSShared
 
 // MARK: - About Section
 
+/// About and diagnostics section for the Settings screen.
+///
+/// Displays two groups of settings: a **Diagnostics** group containing the
+/// analytics opt-in toggle, a link to ``LogViewerView``, and a link to
+/// ``NotificationPreferencesView``; and an **About** group showing app version,
+/// build number, Claude CLI version, backend URL, and external links to
+/// documentation, privacy policy, and support.
+///
+/// ## Topics
+/// ### View Sections
+/// - ``diagnosticsSection`` - Analytics toggle and navigation links for logs and notifications
+/// - ``aboutSection`` - App metadata and external resource links
 struct SettingsAboutSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     var viewModel: SettingsViewModel
