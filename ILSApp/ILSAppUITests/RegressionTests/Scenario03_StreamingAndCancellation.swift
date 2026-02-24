@@ -29,33 +29,32 @@ final class Scenario03_StreamingAndCancellation: XCUITestBase {
         takeScreenshot(named: "S03_03_long_message_sent")
         
         // Wait for streaming to start
-        Thread.sleep(forTimeInterval: 2)
         assertTextExists("Claude is responding", timeout: 10)
         takeScreenshot(named: "S03_04_streaming_started")
         
         // Test 2: Cancel mid-stream
-        Thread.sleep(forTimeInterval: 3)
-        
         let cancelButton = app.buttons["cancelButton"]
+        _ = cancelButton.waitForExistence(timeout: 10)
         if cancelButton.exists {
             tapElement(cancelButton)
             takeScreenshot(named: "S03_05_cancelled")
             
             // Verify streaming stopped
-            Thread.sleep(forTimeInterval: 2)
+            let streamingStopped = NSPredicate(format: "exists == false")
+            let streamingGone = XCTNSPredicateExpectation(predicate: streamingStopped, object: app.staticTexts["Claude is responding..."])
+            _ = XCTWaiter.wait(for: [streamingGone], timeout: 10)
             XCTAssertFalse(app.staticTexts["Claude is responding..."].exists,
                           "Streaming should stop after cancel")
             takeScreenshot(named: "S03_06_cancel_confirmed")
         }
         
         // Test 3: Send another message after cancel
-        Thread.sleep(forTimeInterval: 1)
+        _ = inputField.waitForExistence(timeout: 5)
         typeText("What is 5+5?", into: inputField)
         tapElement(sendButton)
         takeScreenshot(named: "S03_07_new_message_sent")
         
         // Wait for response
-        Thread.sleep(forTimeInterval: 2)
         assertTextExists("Claude is responding", timeout: 10)
         takeScreenshot(named: "S03_08_new_stream_started")
         
@@ -69,7 +68,7 @@ final class Scenario03_StreamingAndCancellation: XCUITestBase {
                 completed = true
                 break
             }
-            Thread.sleep(forTimeInterval: 1)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
         }
         
         XCTAssertTrue(completed, "Stream should complete")
