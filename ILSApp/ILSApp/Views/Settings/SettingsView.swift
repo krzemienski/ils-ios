@@ -36,6 +36,7 @@ struct SettingsView: View {
         .inlineNavigationBarTitle()
         .screenshotProtected()
         .refreshable {
+            HapticManager.impact(.medium)
             await viewModel.loadAll()
         }
         .task {
