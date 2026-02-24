@@ -53,6 +53,10 @@ actor SyncCoordinator {
     private var queue: [QueuedOperation] = []
     private var isDraining = false
     private var persistTask: Task<Void, Never>?
+    /// Network restoration observer. Stored for cleanup in deinit, though as a singleton
+    /// this instance is never deallocated. The observer closure creates a new Task that
+    /// accesses SyncCoordinator.shared (not capturing self), so no retain cycle exists.
+    /// MEM-04: Verified — observer lifecycle is correct for singleton pattern.
     private nonisolated let notificationObserver: NSObjectProtocol
 
     private init() {
@@ -202,11 +206,12 @@ actor SyncCoordinator {
     }
 
     /// Debounced persist: coalesces rapid queue mutations into a single
-    /// file write after a 200ms quiet period.
+    /// file write after a 500ms quiet period.
     private func persistQueue() {
         persistTask?.cancel()
         persistTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms debounce
+            // ENRG-08: 500ms debounce reduces file write frequency during rapid queue mutations.
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms debounce
             guard !Task.isCancelled, let self else { return }
             await self.flushQueueToDisk()
         }

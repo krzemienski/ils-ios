@@ -13,9 +13,12 @@ class PollingManager {
         case active, inactive, background
     }
 
-    // CONC-05: unowned is safe — ConnectionManager creates and owns PollingManager,
-    // so ConnectionManager always outlives this instance. Avoids atomic
-    // weak-reference overhead on every health poll cycle. Verified 2026-02-24.
+    /// MEM-01: `unowned` is safe here because ConnectionManager creates and owns
+    /// PollingManager in its own init, and PollingManager is stored as a property of
+    /// ConnectionManager. Therefore ConnectionManager always outlives PollingManager.
+    /// If this ownership invariant ever changes (e.g., PollingManager stored elsewhere),
+    /// switch to `weak` with guard-let. The `unowned` avoids atomic weak-reference
+    /// overhead on every health poll cycle (~60s). (Also: CONC-05 verified 2026-02-24.)
     unowned let connectionManager: ConnectionManager
 
     private var retryTask: Task<Void, Never>?
