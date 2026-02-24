@@ -10,8 +10,8 @@ struct GlowEffect: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .shadow(color: color.opacity(opacity), radius: radius)
-            .shadow(color: color.opacity(opacity * 0.5), radius: radius * 2)
+            // ENRG-05: Single shadow pass instead of double — halves GPU blur render cost.
+            .shadow(color: color.opacity(opacity), radius: radius * 1.5)
             .drawingGroup()
     }
 }
