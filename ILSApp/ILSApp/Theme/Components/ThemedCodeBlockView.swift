@@ -1,6 +1,29 @@
 import SwiftUI
 import HighlightSwift
 
+// MARK: - PreferenceKeys
+
+private struct CodeContentWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CodeViewWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct CodeScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 /// Renders a fenced code block with language header, grammar-aware syntax highlighting,
 /// optional line numbers, and copy button. All colors from theme tokens.
 struct ThemedCodeBlockView: View {
@@ -10,6 +33,9 @@ struct ThemedCodeBlockView: View {
     @State private var highlightedCode: AttributedString?
     @State private var detectedLanguage: String?
     @State private var isExpanded = false
+    @State private var contentWidth: CGFloat = 0
+    @State private var viewWidth: CGFloat = 0
+    @State private var scrollOffset: CGFloat = 0
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -63,9 +89,30 @@ struct ThemedCodeBlockView: View {
     private var codeContent: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             codeText
+                .background(
+                    GeometryReader { geo in
+                        Color.clear
+                            .preference(key: CodeContentWidthKey.self, value: geo.size.width)
+                            .preference(key: CodeScrollOffsetKey.self,
+                                        value: geo.frame(in: .named("hCodeScroll")).minX)
+                    }
+                )
         }
+        .coordinateSpace(name: "hCodeScroll")
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .preference(key: CodeViewWidthKey.self, value: geo.size.width)
+            }
+        )
+        .onPreferenceChange(CodeContentWidthKey.self) { contentWidth = $0 }
+        .onPreferenceChange(CodeViewWidthKey.self) { viewWidth = $0 }
+        .onPreferenceChange(CodeScrollOffsetKey.self) { scrollOffset = -$0 }
         .frame(maxHeight: isExpanded ? .infinity : 300)
         .background(theme.bgTertiary)
+        .overlay(alignment: .trailing) {
+            scrollGradientOverlay
+        }
         .overlay(alignment: .bottom) {
             if !isExpanded && lineCount > 15 {
                 Button {
@@ -93,6 +140,29 @@ struct ThemedCodeBlockView: View {
             }
         }
     }
+
+    // MARK: - Scroll Gradient Overlay
+
+    @ViewBuilder
+    private var scrollGradientOverlay: some View {
+        if shouldShowScrollIndicator {
+            LinearGradient(
+                colors: [theme.bgTertiary.opacity(0), theme.bgTertiary.opacity(0.85)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+            .frame(width: 32)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var shouldShowScrollIndicator: Bool {
+        guard contentWidth > viewWidth else { return false }
+        let remainingScroll = contentWidth - viewWidth - scrollOffset
+        return remainingScroll > 1
+    }
+
+    // MARK: - Code Text
 
     private var codeText: some View {
         Group {
