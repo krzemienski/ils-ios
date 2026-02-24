@@ -1,114 +1,77 @@
-# ILS iOS/macOS — Performance Optimization Suite
+# ILS iOS/macOS
 
 ## What This Is
 
-A native Swift iOS/macOS client for Claude Code (ILS). After completing a comprehensive cross-platform audit (v1.0 — 10 phases, 15/15 REQs PASS, 0 crashes), the app is functionally correct across all Apple platforms. This milestone focuses on making it *fast* — optimizing launch time, memory usage, network efficiency, rendering performance, and battery impact.
+A native Swift iOS/macOS client for Claude Code (ILS). The app is functionally complete (v1.0), performance-optimized (v2.0), and has passed comprehensive audit remediation (v3.0). This milestone addresses remaining code quality issues found during a full re-audit on 2026-02-24.
 
 ## Core Value
 
-The app must feel instant and lightweight — launch in under 1 second, use under 100MB memory, maintain 60fps scrolling, and achieve "Low" battery rating. Native SwiftUI is our competitive advantage over Electron-based alternatives; this milestone ensures we capitalize on it.
+Ship-ready code quality — every audit finding resolved, tests reliable and meaningful, Swift 6 concurrency on a clear migration path. Native SwiftUI is our competitive advantage; this milestone ensures the codebase is maintainable and safe for ongoing development.
 
-## Current Milestone: v3.0 Comprehensive Audit Remediation
+## Current Milestone: v1.5 All Audit Fixes
 
-**Goal:** Fix all 165 issues (13 CRITICAL, 49 HIGH, 73 MEDIUM, 30 LOW) found across 15 Axiom audits to achieve production-quality code health across concurrency safety, energy efficiency, architecture, performance, navigation, error handling, accessibility, and security.
+**Goal:** Fix the remaining ~60 issues from the 2026-02-24 full codebase re-audit (70 total, 10 already fixed in commit c57690f) — covering testing infrastructure overhaul, concurrency hardening, energy/memory cleanup, and SwiftUI performance improvements.
 
 **Target features:**
-- Concurrency safety (Swift 6 readiness — data race elimination, actor adoption)
-- Energy efficiency (polling optimization, animation lifecycle, background suspension)
-- SwiftUI architecture (business logic extraction from views, ViewModel routing)
-- Swift + SwiftUI performance (cached syntax highlighting, Set-based lookups, lazy evaluation)
-- Navigation correctness (dead path cleanup, macOS parity)
-- Error handling (try? → do/catch, Codable best practices)
-- Accessibility compliance (Dynamic Type, reduce motion, WCAG)
-- Database safety (PRAGMA foreign_keys, migration correctness)
-- Build optimization (dSYM, ONLY_ACTIVE_ARCH)
-- Networking safety (SSH host validation, reconnection handling)
-- Memory lifecycle (Timer → Task migration, cleanup on window close)
+- Testing infrastructure overhaul (replace sleep() with condition-based waiting, meaningful unit tests, Swift Testing migration)
+- Concurrency hardening (remaining HIGH/MEDIUM: Task captures, Sendable compliance, continuation safety)
+- Energy/memory cleanup (animation lifecycle, polling tuning, observer cleanup, NSTask lifecycle)
+- SwiftUI performance (computed property caching, filter memoization, lazy container adoption)
+- Swift 6 preparation (address the two compile-error blockers, move toward strict-concurrency=targeted)
 
-**Previous Milestone: v2.0 Performance Optimization Suite**
-- Phase 11 complete (launch baseline)
-- Phases 12-17 remain (will resume after v3.0 or be absorbed where overlapping)
+**Previous Milestones:**
+- v1.0 (Phases 1-10): Cross-Platform Audit — SHIPPED 2026-02-21
+- v2.0 (Phases 11-17): Performance Optimization Suite — COMPLETE 2026-02-24
+- v3.0 (Phases 18-24): Comprehensive Audit Remediation — COMPLETE 2026-02-23
 
 ## Requirements
 
-### Validated (from v1.0 Cross-Platform Audit)
+### Validated
 
-- REQ-01 through REQ-15: All PASS — sidebar navigation, settings inheritance, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP servers, backend API, zero visual regressions, session consistency
+- v1.0: REQ-01 through REQ-15 — All PASS (sidebar nav, settings, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP, backend API, visual consistency, sessions)
+- v2.0: LAUNCH-01/02, NET-01/02/03, MEM-01/02/03, BATT-01/02, RENDER-01/02/03, BATT-03, COMPAT-01/02, TEST-01/02/03/04 — Performance optimization complete
+- v3.0: 165 audit issues remediated across Phases 18-24 (concurrency, energy, architecture, performance, navigation, Codable, build, accessibility, database, networking, security, memory, layout, modernization)
+- v1.5-partial: 10 issues fixed in commit c57690f (CRIT-C1, CRIT-E1, CRIT-SP1, H-SP1, H-E1, H-E2, H-E5, H-C3, H-C4, H-M1)
 
-### Active (v3.0 Audit Remediation)
+### Active (v1.5 All Audit Fixes)
 
-- [ ] CONC-01: All data races eliminated (AppLogger actor, SyntaxHighlighter @MainActor)
-- [ ] CONC-02: nonisolated(unsafe) Task patterns fixed across all ViewModels
-- [ ] CONC-03: GCD→Task migration for @MainActor boundary crossings
-- [ ] ENRG-01: Polling optimized (MCP lightweight health, Teams exponential backoff)
-- [ ] ENRG-02: Animation lifecycle managed (Low Power Mode, background suspend)
-- [ ] ENRG-03: Live Activity timer reduced to 1.0s interval
-- [ ] ARCH-01: MacChatView API calls routed through ViewModel
-- [ ] ARCH-02: NewSessionView business logic extracted to ViewModel
-- [ ] ARCH-03: Logic-in-view extracted across 6+ views
-- [ ] ARCH-04: Binding setter async patterns fixed
-- [ ] PERF-S1: SyntaxHighlighter cached with .task(id:), keywords → Set
-- [ ] PERF-S2: CodeBlockView computed properties cached
-- [ ] PERF-S3: ThemePickerView Set-based availability check
-- [ ] PERF-S4: classifyProcess pre-computed in ViewModel
-- [ ] NAV-01: Dead NavigationPath removed, nested NavigationStack fixed
-- [ ] NAV-02: macOS navigation completeness (hooks, detail column)
-- [ ] CODBL-01: try? → do/catch conversions across APIClient, CacheService, AuthService
-- [ ] CODBL-02: Codable best practices (dateDecodingStrategy, CodingKeys)
-- [ ] DB-01: PRAGMA foreign_keys set via pool configuration callback
-- [ ] DB-02: DROP TABLE removed from revert() functions
-- [ ] A11Y-01: Fixed font sizes replaced with Dynamic Type in 3 views
-- [ ] A11Y-02: Reduce motion checks added to animations
-- [ ] BUILD-01: dSYM format and ONLY_ACTIVE_ARCH optimized for debug
-- [ ] NET-01: SSH host key validation implemented properly
-- [ ] NET-02: WebSocket/polling reconnection with timeouts
-- [ ] MEM-01: HostProfilesViewModel Timer → Task migration
-- [ ] MEM-02: WindowFrameDelegate cleanup on OS window close
-- [ ] LAYOUT-01: Size class identity loss fixed
-- [ ] SEC-01: Localhost hardcoding reviewed
-- [ ] MOD-01: Minor API deprecation cleanups
-
-### Deferred (v2.0 Performance — resume after v3.0)
-
-- [ ] PERF-01: App launches in under 1 second (cold start) — Phase 11 DONE
-- [ ] PERF-02: Memory usage stays under 100MB for typical sessions
-- [ ] PERF-03: Network requests are batched and deduplicated
-- [ ] PERF-04: Large lists (500+ sessions) scroll at 60fps
-- [ ] PERF-05: Chat with 200+ messages renders without jank
-- [ ] PERF-06: Battery impact rated "Low" by iOS Energy Organizer
-- [ ] PERF-07: Performance regression tests prevent future degradation
+*See `.planning/REQUIREMENTS.md` for full scoped requirements with REQ-IDs.*
 
 ### Out of Scope
 
-- New feature development
+- New feature development — code health only
 - App Store submission (separate milestone)
 - Android/web platform support
-- Full Swift 6 migration (address data races, but don't enable strict mode yet)
-- v2.0 phases 12-17 (deferred, some overlap will be absorbed)
+- Full Swift 6 strict mode (`-strict-concurrency=complete`) — address blockers, target `targeted` level
+- Features from deferred v2.0 performance metrics (100MB memory, "Low" battery rating)
 
 ## Context
 
 - **Codebase**: 149+ Swift files (iOS), 14 (macOS), 52 (backend), 26 (shared)
-- **Previous work**: v1.0 audit complete — 216 issues remediated, 30 bugs found/7 fixed, zero crashes
-- **Known perf issues**: Artificial launch delay existed (2.2s), fixed font sizes, no lazy loading for large message lists, no request batching, animations run in Low Power Mode
-- **Competitive edge**: Native SwiftUI vs Cursor/Cline/Windsurf (Electron). Performance is the differentiator.
-- **Backend**: Vapor 4, SQLite, port 9999 — already fast for read operations
+- **Previous work**: v1.0 (216 issues), v2.0 (performance baselines), v3.0 (165 audit issues) — all complete
+- **2026-02-24 re-audit**: 70 new issues found by 16 parallel specialist agents; 10 already fixed
+- **Testing gap**: Biggest category (19 issues) — tests use sleep(), placeholders, no Swift Testing
+- **Swift 6 blockers**: 2 compile-error issues blocking `-strict-concurrency=complete`
+- **Backend**: Vapor 4, SQLite, port 9999 — no backend issues in this audit
 
 ## Constraints
 
 - **Platform**: iOS 17+, macOS 14+, Swift 5.10+, SwiftUI
 - **Simulator**: UDID 50523130-57AA-48B0-ABD0-4D59CE455F14 (iPhone 16 Pro Max)
 - **No mocks**: Functional validation only — real system, real measurements
-- **Backward compat**: All v1.0 audit REQs must remain PASS after optimization
+- **Backward compat**: All v1.0 audit REQs must remain PASS
 - **Build system**: Auto-build hook fires on every .swift edit
+- **Phase numbering**: Continues from 25 (v3.0 ended at Phase 24)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| All 5 perf dimensions in scope | User wants comprehensive optimization, not incremental | — Pending |
-| Research before planning | Analyze current bottlenecks before designing solutions | — Pending |
-| Regression tests included | Prevent future perf degradation with XCTest metrics | — Pending |
+| All 5 perf dimensions in scope (v2.0) | Comprehensive optimization | ✓ Good |
+| Research before planning (v2.0) | Analyzed bottlenecks first | ✓ Good |
+| Regression tests included (v2.0) | XCTest metrics in Phase 17 | ✓ Good |
+| Skip research for v1.5 | Audit reports serve as requirements — no new features | — Pending |
+| v1.5 naming (user-specified) | Decoupled from internal phase numbering (Phase 25+) | — Pending |
 
 ---
-*Last updated: 2026-02-22 after v3.0 milestone start (Comprehensive Audit Remediation)*
+*Last updated: 2026-02-24 after v1.5 milestone start (All Audit Fixes)*
