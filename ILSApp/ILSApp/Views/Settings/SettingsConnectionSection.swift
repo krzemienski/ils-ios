@@ -12,6 +12,8 @@ struct SettingsConnectionSection: View {
 
     private let serverSetupTip = ServerSetupTip()
 
+    @FocusState private var isServerURLFocused: Bool
+
     let onTestConnection: () -> Void
     let onSaveServerSettings: () -> Void
 
@@ -41,6 +43,8 @@ struct SettingsConnectionSection: View {
                         .padding(theme.spacingSM)
                         .background(theme.bgSecondary)
                         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        .focusRing(isFocused: isServerURLFocused, cornerRadius: theme.cornerRadiusSmall)
+                        .focused($isServerURLFocused)
                         .accessibilityLabel("Server URL")
                         .onSubmit { onSaveServerSettings() }
                 }
