@@ -26,14 +26,15 @@ actor WebSocketService {
         connections[sessionId] = ws
 
         ws.onText { [weak self] ws, text in
-            guard let self = self else { return }
-            Task {
+            guard let self else { return }
+            Task { [weak self] in
+                guard let self else { return }
                 await self.handleMessage(text, sessionId: sessionId, projectPath: projectPath, ws: ws)
             }
         }
 
         ws.onClose.whenComplete { [weak self] _ in
-            Task {
+            Task { [weak self] in
                 await self?.removeConnection(sessionId)
             }
         }

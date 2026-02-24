@@ -59,7 +59,10 @@ actor ClaudeExecutorService {
     /// When true, uses the Agent SDK (via Node.js wrapper) instead of `claude -p`.
     /// The SDK calls the Anthropic API directly, avoiding the subprocess hang issue.
     /// Set to false to fall back to `claude -p` when running outside Claude Code.
-    static var useAgentSDK: Bool = true
+    ///
+    /// `nonisolated(unsafe)` is safe here: this flag is set once during app configuration
+    /// (before any concurrent access) and read many times. No concurrent writes occur.
+    nonisolated(unsafe) static var useAgentSDK: Bool = true
 
     // MARK: - Public API
 
