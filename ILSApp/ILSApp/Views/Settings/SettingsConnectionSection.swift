@@ -4,43 +4,17 @@ import TipKit
 
 // MARK: - Connection Section
 
-/// Settings section that manages backend server URL configuration and connection testing.
-///
-/// Renders the "Backend Connection" group, including a URL text field bound to ``serverURL``,
-/// a live connection-status indicator driven by `AppState.isConnected`, and a "Test Connection"
-/// button that delegates to ``onTestConnection``. When the app is not connected a TipKit
-/// ``ServerSetupTip`` tip card is shown above the controls to guide first-time setup.
-///
-/// A companion ``remoteAccessSection`` computed property renders a separate "Remote Access"
-/// group containing a `NavigationLink` that pushes `TunnelSettingsView` for Cloudflare
-/// Tunnel configuration.
-///
-/// ## Topics
-/// ### Bindings
-/// - ``serverURL`` - Two-way binding to the backend server URL string
-///
-/// ### Input Properties
-/// - ``viewModel`` - Provides `isTestingConnection` state for the test button
-///
-/// ### Callbacks
-/// - ``onTestConnection`` - Invoked when the user taps "Test Connection"
-/// - ``onSaveServerSettings`` - Invoked when the URL text field is submitted
 struct SettingsConnectionSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
-    /// View model supplying connection-testing state (e.g. `isTestingConnection`).
     var viewModel: SettingsViewModel
-    /// Two-way binding to the backend server URL being edited.
     @Binding var serverURL: String
 
-    /// TipKit tip shown when the app is not yet connected to guide initial server setup.
     private let serverSetupTip = ServerSetupTip()
 
     @FocusState private var isServerURLFocused: Bool
 
-    /// Called when the user taps the "Test Connection" button.
     let onTestConnection: () -> Void
-    /// Called when the URL text field's return key is pressed to persist the entered URL.
     let onSaveServerSettings: () -> Void
 
     var body: some View {
@@ -92,27 +66,9 @@ struct SettingsConnectionSection: View {
                     .accessibilityLabel("Connection status: \(appState.isConnected ? "Connected" : "Disconnected")")
                 }
 
-                Button {
+                AccentButton("Test Connection", isLoading: viewModel.isTestingConnection) {
                     onTestConnection()
-                } label: {
-                    HStack(spacing: theme.spacingSM) {
-                        if viewModel.isTestingConnection {
-                            ProgressView()
-                                .tint(theme.textOnAccent)
-                                .controlSize(.small)
-                        }
-                        Text(viewModel.isTestingConnection ? "Testing..." : "Test Connection")
-                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                    }
-                    .foregroundStyle(theme.textOnAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingSM)
-                    .background(theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                 }
-                .disabled(viewModel.isTestingConnection)
-                .opacity(viewModel.isTestingConnection ? 0.7 : 1.0)
-                .accessibilityLabel("Test connection to backend server")
             }
             .padding(theme.spacingMD)
             .modifier(GlassCard())

@@ -6,19 +6,22 @@ struct AccentButton: View {
     @Environment(\.isEnabled) private var isEnabled
     let title: String
     let icon: String?
+    let isLoading: Bool
     let action: () -> Void
 
     @State private var isPressed = false
     @State private var resetTask: Task<Void, Never>?
 
-    init(_ title: String, icon: String? = nil, action: @escaping () -> Void) {
+    init(_ title: String, icon: String? = nil, isLoading: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.icon = icon
+        self.isLoading = isLoading
         self.action = action
     }
 
     var body: some View {
         Button {
+            guard !isLoading else { return }
             HapticManager.impact(.medium)
 
             if !reduceMotion {
@@ -36,7 +39,11 @@ struct AccentButton: View {
             }
         } label: {
             HStack(spacing: theme.spacingSM) {
-                if let icon {
+                if isLoading {
+                    ProgressView()
+                        .tint(theme.textOnAccent)
+                        .controlSize(.small)
+                } else if let icon {
                     Image(systemName: icon)
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 }
@@ -52,9 +59,11 @@ struct AccentButton: View {
             .opacity(isPressed ? 0.8 : 1.0)
             .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
         }
-        .accessibilityLabel(title)
-        .opacity(isEnabled ? 1.0 : 0.5)
+        .disabled(isLoading)
+        .opacity(isLoading ? 0.7 : (isEnabled ? 1.0 : 0.5))
         .saturation(isEnabled ? 1.0 : 0.3)
+        .accessibilityLabel(isLoading ? "\(title), loading" : title)
+        .accessibilityAddTraits(isLoading ? .updatesFrequently : [])
         .onDisappear { resetTask?.cancel() }
     }
 }
