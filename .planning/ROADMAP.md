@@ -469,7 +469,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 31-01-PLAN.md -- Verify Phase 25 Swift 6 blocker fixes, enable -strict-concurrency=targeted across all targets, fix new warnings
+- [x] 31-01-PLAN.md -- Verify Phase 25 Swift 6 blocker fixes, enable -strict-concurrency=targeted across all targets, fix new warnings (completed 2026-02-24)
 - [ ] 31-02-PLAN.md -- Document remaining -strict-concurrency=complete blockers with migration path, final cross-platform verification
 
 ---
