@@ -56,6 +56,38 @@ struct NewSessionView: View {
         "default", "acceptEdits", "plan", "bypassPermissions", "delegate", "dontAsk"
     ]
 
+    // MARK: - Validation
+
+    private var isMaxBudgetValid: Bool {
+        if maxBudget.isEmpty { return true }
+        guard let value = Double(maxBudget) else { return false }
+        return value > 0
+    }
+
+    private var isMaxTurnsValid: Bool {
+        if maxTurns.isEmpty { return true }
+        guard let value = Int(maxTurns) else { return false }
+        return value >= 1
+    }
+
+    private var maxBudgetError: String? {
+        if maxBudget.isEmpty { return nil }
+        guard let value = Double(maxBudget) else {
+            return "Enter a valid number (e.g. 5.00)"
+        }
+        if value <= 0 { return "Budget must be greater than zero" }
+        return nil
+    }
+
+    private var maxTurnsError: String? {
+        if maxTurns.isEmpty { return nil }
+        guard let value = Int(maxTurns) else {
+            return "Enter a whole number (e.g. 10)"
+        }
+        if value < 1 { return "Turns must be at least 1" }
+        return nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             modePicker
@@ -580,45 +612,61 @@ struct NewSessionView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Limits")
 
-            HStack {
-                Text("Max Budget (USD)")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                TextField("No limit", text: $maxBudget)
-                    #if os(iOS)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .frame(width: 100)
-                    .focused($focusedField, equals: .maxBudget)
-            }
-            .padding(theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            .focusRing(isFocused: focusedField == .maxBudget, cornerRadius: theme.cornerRadiusSmall)
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
+                HStack {
+                    Text("Max Budget (USD)")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    TextField("No limit", text: $maxBudget)
+                        #if os(iOS)
+                        .keyboardType(.decimalPad)
+                        #endif
+                        .multilineTextAlignment(.trailing)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .frame(width: 100)
+                        .focused($focusedField, equals: .maxBudget)
+                }
+                .padding(theme.spacingSM)
+                .background(theme.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .maxBudget, cornerRadius: theme.cornerRadiusSmall)
 
-            HStack {
-                Text("Max Turns")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                TextField("1", text: $maxTurns)
-                    #if os(iOS)
-                    .keyboardType(.numberPad)
-                    #endif
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .frame(width: 100)
-                    .focused($focusedField, equals: .maxTurns)
+                if let error = maxBudgetError {
+                    Text(error)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.error)
+                }
             }
-            .padding(theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            .focusRing(isFocused: focusedField == .maxTurns, cornerRadius: theme.cornerRadiusSmall)
+
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
+                HStack {
+                    Text("Max Turns")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    TextField("1", text: $maxTurns)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .multilineTextAlignment(.trailing)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .frame(width: 100)
+                        .focused($focusedField, equals: .maxTurns)
+                }
+                .padding(theme.spacingSM)
+                .background(theme.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .maxTurns, cornerRadius: theme.cornerRadiusSmall)
+
+                if let error = maxTurnsError {
+                    Text(error)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.error)
+                }
+            }
         }
     }
 
@@ -652,6 +700,7 @@ struct NewSessionView: View {
     }
 
     private var actionButtonEnabled: Bool {
+        guard isMaxBudgetValid && isMaxTurnsValid else { return false }
         switch selectedMode {
         case .project:
             return true
