@@ -119,12 +119,3 @@ private struct AttributedStringOutputFormat: OutputFormat {
     }
 }
 
-// MARK: - Segment Helpers
-
-/// Base helper functions for creating syntax rules
-private extension Splash.Segment {
-    func isNumber() -> Bool {
-        let token = tokens.current.trimmingCharacters(in: .whitespaces)
-        return !token.isEmpty && token.allSatisfy { $0.isNumber || $0 == "." || $0 == "_" }
-    }
-}
