@@ -57,7 +57,21 @@ struct MacContentView: View {
 
     @State private var selectedSection: SidebarSection? = .home
     @State private var activeScreen: ActiveScreen = .home
-    @State private var expandedProjects: Set<String> = []
+
+    /// Comma-separated project names whose DisclosureGroups are expanded, persisted across app launches.
+    @AppStorage("macExpandedProjects") private var expandedProjectsStorage: String = ""
+
+    /// Computed Set<String> backed by @AppStorage for persistence across navigation and restarts.
+    private var expandedProjects: Set<String> {
+        get {
+            guard !expandedProjectsStorage.isEmpty else { return [] }
+            return Set(expandedProjectsStorage.components(separatedBy: ",").filter { !$0.isEmpty })
+        }
+        nonmutating set {
+            expandedProjectsStorage = newValue.sorted().joined(separator: ",")
+        }
+    }
+
     @State private var sessionToRename: ChatSession?
     @State private var renameText: String = ""
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
