@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 28-swiftui-performance
-Plan: 1 of 2 complete
-Status: 28-01 COMPLETE — UIPERF-01/04/05 resolved (off-thread QR, ToolCategory enum, LazyVStack verified)
-Last activity: 2026-02-24 — Completed 28-01 (Task.detached QR generation, ToolCategory pre-computed classification, BrowserView LazyVStack audit)
+Plan: 2 of 2 complete
+Status: Phase 28 COMPLETE — all 6 UIPERF requirements resolved (28-01: UIPERF-01/04/05; 28-02: UIPERF-02/03/06)
+Last activity: 2026-02-24 — Completed 28-02 (cached macOS list filters, consolidated formatModelName)
 
 ## Previous Milestones
 
@@ -51,6 +51,7 @@ Last activity: 2026-02-24 — Completed 28-01 (Task.detached QR generation, Tool
 - [28-01]: Task.detached over plain Task for CIFilter -- ensures off-main-actor, not just deferred
 - [28-01]: nonisolated static for generateQRCode/ciContext -- CIContext is thread-safe, eliminates Swift 6 warnings
 - [28-01]: Private enum ToolCategory over Set<String> -- cleaner switch dispatch, exhaustive matching
+- [28-02]: Used .count proxy for onChange since ProjectGroupInfo/Project lack Equatable conformance
 
 ### Audit Source Data
 
@@ -70,7 +71,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 28-01-PLAN.md — ready for 28-02
+Stopped at: Completed Phase 28 (all 2 plans) — ready for Phase 29
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
-Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07), eb94c53 (UIPERF-01/UIPERF-04/UIPERF-05)
+Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07), eb94c53 (UIPERF-01/UIPERF-04/UIPERF-05), 29c6c50 (UIPERF-02/UIPERF-03/UIPERF-06)
