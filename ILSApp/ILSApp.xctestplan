@@ -5,6 +5,7 @@
       "name" : "Default Configuration",
       "options" : {
         "language" : "en",
+        "parallelizable" : true,
         "region" : "US",
         "screenCaptureFormat" : "screenshots",
         "testExecutionOrdering" : "random",
@@ -45,8 +46,9 @@
       "name" : "Full Regression",
       "options" : {
         "language" : "en",
-        "region" : "US",
         "maximumTestRepetitions" : 3,
+        "parallelizable" : true,
+        "region" : "US",
         "screenCaptureFormat" : "screenshots",
         "testExecutionOrdering" : "random",
         "testRepetitionMode" : "retryOnFailure",
