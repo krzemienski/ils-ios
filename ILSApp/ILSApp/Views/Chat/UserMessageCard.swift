@@ -38,7 +38,7 @@ struct UserMessageCard: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(theme.borderSubtle)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
         .contextMenu {
             Button {
