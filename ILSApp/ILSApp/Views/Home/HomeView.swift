@@ -187,6 +187,7 @@ struct HomeView: View {
                         recentSessionRow(session)
                     }
                     .buttonStyle(.plain)
+                    .shimmerIfActive(isRefreshing)
                 }
             }
         } else if !appState.isConnected {
@@ -422,6 +423,7 @@ struct HomeView: View {
                         color: stats.mcpServers.healthy == stats.mcpServers.total ? theme.success : theme.warning
                     )
                 }
+                .shimmerIfActive(isRefreshing)
             }
         }
     }
