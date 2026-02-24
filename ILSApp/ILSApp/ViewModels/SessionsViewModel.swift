@@ -66,8 +66,11 @@ class SessionsViewModel {
     private var cachedGroupedSessions: [(key: String, value: [ChatSession])] = []
     /// The search text used to build the cached grouped sessions
     private var cachedGroupedSearchText: String = ""
-    /// The session count used to invalidate grouped cache
-    private var cachedGroupedSessionCount: Int = -1
+    /// Monotonically increasing counter incremented on every sessions mutation.
+    /// Replaces the flawed count-based check (same count ≠ same content).
+    private var sessionsMutationVersion: Int = 0
+    /// The mutation version at which groupedSessions cache was last built
+    private var cachedGroupedVersion: Int = -1
 
     /// Cached time-grouped sessions, rebuilt when filteredSessions changes
     private var cachedGroupedByTime: [(key: String, value: [ChatSession])] = []
@@ -93,22 +96,27 @@ class SessionsViewModel {
             .map(\.session)
     }
 
+    /// Build a single search-cache entry for a session.
+    /// Centralises the lowercasing logic so callers can do O(1) inserts.
+    private func makeSearchEntry(for session: ChatSession) -> (session: ChatSession, searchText: String) {
+        // String interpolation avoids intermediate Array<String> + .joined() allocation
+        let text = "\(session.name?.lowercased() ?? "") \(session.projectName?.lowercased() ?? "") \(session.firstPrompt?.lowercased() ?? "")"
+        return (session, text)
+    }
+
     /// Rebuild the lowercase search cache when sessions array changes
     private func rebuildSearchCache() {
-        searchCache = sessions.map { session in
-            // String interpolation avoids intermediate Array<String> + .joined() allocation
-            let text = "\(session.name?.lowercased() ?? "") \(session.projectName?.lowercased() ?? "") \(session.firstPrompt?.lowercased() ?? "")"
-            return (session, text)
-        }
-        // Invalidate grouped caches
-        cachedGroupedSessionCount = -1
+        searchCache = sessions.map { makeSearchEntry(for: $0) }
+        // Increment version to invalidate grouped cache
+        sessionsMutationVersion += 1
+        // Invalidate time-grouped cache
         cachedGroupedByTimeSessionCount = -1
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
     /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessions: [(key: String, value: [ChatSession])] {
-        if cachedGroupedSearchText == searchText && cachedGroupedSessionCount == sessions.count {
+        if cachedGroupedSearchText == searchText && cachedGroupedVersion == sessionsMutationVersion {
             return cachedGroupedSessions
         }
         let filtered = filteredSessions
@@ -122,7 +130,7 @@ class SessionsViewModel {
         }
         cachedGroupedSessions = sorted
         cachedGroupedSearchText = searchText
-        cachedGroupedSessionCount = sessions.count
+        cachedGroupedVersion = sessionsMutationVersion
         return sorted
     }
 
@@ -290,12 +298,17 @@ class SessionsViewModel {
 
             if currentPage == 1 {
                 sessions = newItems
-                // C-MED-6: Use Task instead of Task.detached — only calls CacheService actor.
-                Task { await CacheService.shared.cacheSessions(newItems) }
+                rebuildSearchCache()
+                // Update cache with fresh data in background
+                Task.detached {
+                    await CacheService.shared.cacheSessions(newItems)
+                }
             } else {
+                // O(k) incremental append — avoids O(n) full rebuild on pagination
                 sessions.append(contentsOf: newItems)
+                searchCache.append(contentsOf: newItems.map { makeSearchEntry(for: $0) })
+                sessionsMutationVersion += 1
             }
-            rebuildSearchCache()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load sessions: \(error.localizedDescription)", category: "sessions")
@@ -329,7 +342,8 @@ class SessionsViewModel {
             let response: APIResponse<ChatSession> = try await client.post("/sessions", body: request)
             if let session = response.data {
                 sessions.insert(session, at: 0)
-                rebuildSearchCache()
+                searchCache.insert(makeSearchEntry(for: session), at: 0)
+                sessionsMutationVersion += 1
                 return session
             }
         } catch {
@@ -356,14 +370,18 @@ class SessionsViewModel {
         // External sessions can't be deleted from ILS DB
         if session.source == .external {
             sessions.removeAll { $0.id == session.id }
-            rebuildSearchCache()
+            // O(1) incremental remove — avoids O(n) full rebuild
+            searchCache.removeAll { $0.session.id == session.id }
+            sessionsMutationVersion += 1
             return
         }
 
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
             sessions.removeAll { $0.id == session.id }
-            rebuildSearchCache()
+            // O(1) incremental remove — avoids O(n) full rebuild
+            searchCache.removeAll { $0.session.id == session.id }
+            sessionsMutationVersion += 1
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to delete session: \(error.localizedDescription)", category: "sessions")
@@ -376,7 +394,8 @@ class SessionsViewModel {
             let response: APIResponse<ChatSession> = try await client.post("/sessions/\(session.id)/fork", body: EmptyBody())
             if let forked = response.data {
                 sessions.insert(forked, at: 0)
-                rebuildSearchCache()
+                searchCache.insert(makeSearchEntry(for: forked), at: 0)
+                sessionsMutationVersion += 1
                 return forked
             }
         } catch {
