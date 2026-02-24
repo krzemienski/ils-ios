@@ -66,3 +66,7 @@ docs/specs/
 
 # SOP planning artifacts
 .sop/
+
+# Instruments trace files (can be 100s of MB)
+*.trace
+*.trace/
