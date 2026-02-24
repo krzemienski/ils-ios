@@ -261,12 +261,6 @@ Plans:
   3. APIClient, CacheService, and AuthService have zero try? at JSON decode and Keychain operation sites — all failures are caught and logged with the specific error
   4. All JSONDecoders in the app have an explicit dateDecodingStrategy set; backend controllers that build JSON manually are replaced with Codable-conforming response types
   5. String-backed enum types in DTOs validate input on decode and throw a meaningful DecodingError for unrecognized values
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
-
 Plans:
 - [x] 21-01-PLAN.md -- Navigation: dead NavigationPath, nested NavigationStack in sheets, macOS detail NavigationStack, hooks route
 - [x] 21-02-PLAN.md -- Codable: APIClient try? documentation, .iso8601 dateDecodingStrategy, backend do/catch logging, 20 enum validating init(from:)
@@ -283,12 +277,6 @@ Plans:
   3. PremiumView, LaunchScreenView, and ScreenshotView use Dynamic Type text styles or font(_:) with a TextStyle argument — zero hardcoded point sizes remain in those files
   4. CitadelSSHService uses known_hosts or a user-presented fingerprint confirmation instead of .acceptAnything()
   5. All migration revert() functions use IF EXISTS table drops or are empty stubs — no DROP TABLE that destroys production data on accidental revert; FK constraint data validation is added to at least one migration; SidebarRootView uses a single stable root view with conditional content rather than branching between two NavigationStack instances
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
-
 Plans:
 - [x] 22-01-PLAN.md -- Energy: PulsingGlow/PulsingModifier animation lifecycle (ENRG-04), SSE background disconnect (ENRG-05), request batching docs (ENRG-06)
 - [x] 22-02-PLAN.md -- Build+A11Y+Layout: BUILD-01/02 verified correct, PremiumView Dynamic Type (A11Y-01), LaunchScreenView Dynamic Type (A11Y-02), A11Y-03 resolved-by-absence, LAYOUT-01 documentation
@@ -306,12 +294,6 @@ Plans:
   3. All architecture MEDIUM patterns are resolved: SessionsViewModel split consideration is documented, redundant ProjectsViewModel removed from NewSessionView, fire-and-forget Tasks converted to .task modifier where applicable, toast timer deduplication extracted to shared modifier, view helper functions marked private
   4. All navigation, Codable, build, accessibility, database, networking, security, memory, layout, and modernization MEDIUM and LOW items are either fixed or have a documented acceptance note in the code — zero silent deferrals
   5. Both iOS and macOS build successfully with zero warnings introduced by the MEDIUM/LOW fixes
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
-
 Plans:
 - [x] 23-01-PLAN.md -- Concurrency + Energy remaining MEDIUM (6 issues: readQueue, Task.detached, WebSocket visibility, health check docs, adaptive polling docs)
 - [x] 23-02-PLAN.md -- SwiftUI Architecture MEDIUM (5 issues: ProjectsViewModel removal, toast dedup modifier, private helpers, SessionsViewModel docs)
@@ -332,12 +314,6 @@ Plans:
   2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS on the simulator: sidebar navigation, settings inheritance, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP servers, backend API, zero visual regressions, session consistency
   3. A re-run of the 15 Axiom audits (or a representative subset of CRITICAL/HIGH checks) confirms zero CRITICAL findings remain open
   4. scratch/audit-findings-2026-02-22.md is updated with a resolution column showing the phase and commit that addressed each finding
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
-
 Plans:
 - [x] 24-01-PLAN.md -- Build verification (3 targets), Axiom audit re-run (6 audits), resolution document, state updates
 
@@ -371,11 +347,7 @@ Plans:
   3. `SystemMetricsService` continuation double-resume risk is eliminated with a guard or `CheckedContinuation`
   4. `ClaudeExecutorService.useAgentSDK` mutable static var is resolved for strict concurrency (nonisolated static let, actor-isolated access, or @TaskLocal)
   5. Both iOS and macOS build with zero errors after all changes
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+**Plans**: TBD
 
 ---
 
@@ -414,11 +386,7 @@ Plans:
   5. `NotificationManager` UNUserNotificationCenter delegate lifecycle correct; `SSEClient` observer removed in cleanup()
   6. All LOW memory items (NSTask hold, DispatchWorkItem timeout, flush timer false positive) resolved or documented
   7. Both iOS and macOS build with zero errors
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+**Plans**: TBD
 
 ---
 
@@ -451,11 +419,7 @@ Plans:
   3. `Scenario03_StreamingAndCancellation.swift` — all 6 sleep sites replaced with condition-based waiting
   4. Zero `sleep()` or `Thread.sleep()` calls remain in any test file
   5. All replaced tests pass when run via `xcodebuild test`
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+**Plans**: TBD
 
 ---
 
@@ -471,11 +435,7 @@ Plans:
   5. Test data factories/builders exist for common test objects (Session, Project, Message)
   6. Test parallelization configured in test plan
   7. All tests pass when run via `xcodebuild test`
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+**Plans**: TBD
 
 ---
 
@@ -489,11 +449,7 @@ Plans:
   3. `xcodebuild` with `-strict-concurrency=targeted` produces zero new warnings beyond baseline
   4. Remaining blockers for `-strict-concurrency=complete` are documented with migration path
   5. Both iOS and macOS build with zero errors
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+**Plans**: TBD
 
 ---
 
@@ -507,11 +463,7 @@ Plans:
   3. All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
   4. `scratch/audit-findings-2026-02-24.md` is updated with resolution status for all 70 issues
   5. All tests pass when run via `xcodebuild test`
-**Plans**: 2 plans
-
-Plans:
-- [ ] 25-01-PLAN.md — Fix non-Sendable Process in TeamsExecutorService + continuation safety in SystemMetricsService
-- [ ] 25-02-PLAN.md — Fix WebSocket Task capture in WebSocketService + mutable static var in ClaudeExecutorService
+**Plans**: TBD
 
 ---
 
