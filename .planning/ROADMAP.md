@@ -330,7 +330,7 @@ Plans:
 
 - [x] **Phase 25: Concurrency HIGH + Swift 6 Blockers** — 4 dangerous concurrency defects: non-Sendable Process, WebSocket capture, continuation double-resume, mutable static var (completed 2026-02-24)
 - [x] **Phase 26: Concurrency MEDIUM + LOW** — 15 remaining concurrency issues: Task.detached patterns, completion-to-async, nonisolated(unsafe), isolation verification (completed 2026-02-24)
-- [ ] **Phase 27: Energy + Memory** — 16 issues: material overhead, constrained network, LPM polling, flush timers, GPU passes, delegate cycles, observer cleanup
+- [x] **Phase 27: Energy + Memory** — 16 issues: material overhead, constrained network, LPM polling, flush timers, GPU passes, delegate cycles, observer cleanup (completed 2026-02-24)
 - [ ] **Phase 28: SwiftUI Performance** — 6 issues: CIFilter verification, computed filter caching, .contains() per tick, lazy VStack, duplicate formatModelName
 - [ ] **Phase 29: Testing CRITICAL — Sleep Replacement** — 4 requirement groups covering 18 sleep() instances across 3 test files
 - [ ] **Phase 30: Testing Infrastructure** — 7 issues: UI test startup, placeholder tests, Swift Testing migration, test data factories, parallelization
@@ -394,7 +394,7 @@ Plans:
 
 Plans:
 - [ ] 27-01-PLAN.md -- Energy: UI + Network (ConnectionBanner material, SSEClient config/cleanup, Fleet LPM polling, GlowEffect single-shadow)
-- [ ] 27-02-PLAN.md -- Energy + Memory: Services (AppLogger flush timer, SyncCoordinator debounce/observer, PollingManager docs)
+- [x] 27-02-PLAN.md -- Energy + Memory: Services (AppLogger flush timer, SyncCoordinator debounce/observer, PollingManager docs)
 - [ ] 27-03-PLAN.md -- macOS + Backend Memory (WindowManager delegate cycle, NotificationManager lifecycle, TeamsExecutorService NSTask cleanup)
 
 ---
@@ -519,7 +519,7 @@ Plans:
 | 24. Validation + Documentation | v3.0 | 1/1 | Complete | 2026-02-23 |
 | 25. Concurrency HIGH + Swift 6 Blockers | 2/2 | Complete    | 2026-02-24 | - |
 | 26. Concurrency MEDIUM + LOW | 2/2 | Complete    | 2026-02-24 | - |
-| 27. Energy + Memory | v1.5 | 0/? | Planned | - |
+| 27. Energy + Memory | 3/3 | Complete   | 2026-02-24 | - |
 | 28. SwiftUI Performance | v1.5 | 0/? | Planned | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | 0/? | Planned | - |
 | 30. Testing Infrastructure | v1.5 | 0/2 | Planned | - |

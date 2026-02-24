@@ -48,19 +48,19 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 - [ ] **ENRG-03**: Fleet health polling adds LPM interval doubling (MED-E1)
 - [ ] **ENRG-04**: AppLogger flush timer increased to 10s (MED-E2)
 - [ ] **ENRG-05**: GlowEffect double-shadow GPU passes reduced (MED-E3)
-- [ ] **ENRG-06**: macOS WindowManager UserDefaults throttled (MED-E4)
+- [x] **ENRG-06**: macOS WindowManager UserDefaults throttled (MED-E4)
 - [ ] **ENRG-07**: AppLogger synchronous disk write path addressed (LOW-E1)
 - [ ] **ENRG-08**: SyncCoordinator debounce increased to 500ms (LOW-E2)
 
 ### Memory
 
 - [ ] **MEM-01**: PollingManager unowned reference crash risk resolved (H-M2)
-- [ ] **MEM-02**: NSWindow delegate cycle in WindowManager broken (MED-M1)
-- [ ] **MEM-03**: NotificationManager UNUserNotificationCenter delegate lifecycle (MED-M2)
+- [x] **MEM-02**: NSWindow delegate cycle in WindowManager broken (MED-M1)
+- [x] **MEM-03**: NotificationManager UNUserNotificationCenter delegate lifecycle (MED-M2)
 - [ ] **MEM-04**: SyncCoordinator observer singleton cleanup (MED-M3)
 - [ ] **MEM-05**: SSEClient observer removal in cleanup() (MED-M4)
-- [ ] **MEM-06**: TeamsExecutorService NSTask held 5s post-termination (LOW-M1)
-- [ ] **MEM-07**: DispatchWorkItem timeout NSTask/Pipe 300s without cancel (LOW-M2)
+- [x] **MEM-06**: TeamsExecutorService NSTask held 5s post-termination (LOW-M1)
+- [x] **MEM-07**: DispatchWorkItem timeout NSTask/Pipe 300s without cancel (LOW-M2)
 - [ ] **MEM-08**: AppLogger flush timer false positive documented (LOW-M3)
 
 ### SwiftUI Performance
