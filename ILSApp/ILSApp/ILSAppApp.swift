@@ -59,6 +59,7 @@ struct ILSAppApp: App {
                                 AppLogger.shared.warning("Memory pressure: caches evicted", category: "memory")
                             }
                         }
+                        PerformanceMonitor.shared.start()
                         #endif
                     }
 
