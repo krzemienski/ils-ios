@@ -1,6 +1,12 @@
 import SwiftUI
 
-/// Launch screen following Liquid Glass design principles with cyberpunk theming
+/// Animated launch screen with a cyberpunk / Liquid Glass aesthetic.
+///
+/// Renders a pulsing neon glow ring, a frosted-glass backing circle, a monospaced
+/// `>_` prompt with dual-layer drop shadow, and staggered bottom accent capsules.
+/// All motion is driven by `withAnimation` blocks that resolve immediately when
+/// `accessibilityReduceMotion` is enabled, keeping the final fully-visible state
+/// without playing transitions.
 struct LaunchScreenView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

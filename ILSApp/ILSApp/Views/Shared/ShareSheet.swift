@@ -1,7 +1,12 @@
 import SwiftUI
 
 #if os(iOS)
-/// UIKit-bridged share sheet for exporting content via UIActivityViewController.
+/// UIKit-bridged share sheet for exporting content via `UIActivityViewController`.
+///
+/// Supports two initialisation paths: raw `[Any]` items (URLs, images, strings) or
+/// text content that is written to a `Caches/ShareExports/` file before presenting.
+/// Temporary export files are deleted automatically in the `completionWithItemsHandler`
+/// after the user finishes or cancels the share action.
 struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]
     private let tempURLs: [URL]
@@ -45,7 +50,10 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 #else
-/// macOS placeholder for ShareSheet (use NSSavePanel instead).
+/// macOS stub for `ShareSheet` — use `NSSavePanel` directly on macOS instead.
+///
+/// Accepts the same initialisers as the iOS version so call sites compile on both
+/// platforms, but renders `EmptyView` and performs no sharing action.
 struct ShareSheet: View {
     let activityItems: [Any]
 

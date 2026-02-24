@@ -1,8 +1,18 @@
 import SwiftUI
 import ILSShared
 
-/// File browser with breadcrumb navigation.
-/// Starts at ~/ and allows navigating into directories.
+/// File browser with breadcrumb navigation and text-file preview.
+///
+/// Starts at `~/` and allows navigating into subdirectories. Directories sort
+/// before files; both groups are ordered alphabetically. Tapping a file opens a
+/// read-only text preview sheet; tapping a directory updates ``currentPath`` and
+/// reloads the listing via the backend `listDirectory` API endpoint.
+///
+/// ## Topics
+/// ### State
+/// - ``currentPath`` - Currently displayed filesystem path (tilde-relative or absolute)
+/// - ``entries`` - Raw directory listing returned from the backend
+/// - ``previewFile`` - Non-nil while the text-file preview sheet is presented
 struct FileBrowserView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState

@@ -1,8 +1,16 @@
 import SwiftUI
 import ILSShared
 
-/// Process list with search and sort controls.
-/// Embedded in SystemMonitorView below the charts.
+/// Searchable, sortable process table embedded beneath the charts in `SystemMonitorView`.
+///
+/// Renders up to 50 running processes with PID, CPU%, and memory columns.
+/// Processes are colour-coded by classification: Claude (session accent), ILS Backend
+/// (success), Swift/Vapor (warning), and Node.js (skill accent). Sort order and search
+/// text live on `SystemMetricsViewModel` so state survives tab switches.
+///
+/// ## Topics
+/// ### Input
+/// - ``viewModel`` - Observable view-model supplying the process list, search text, and sort selection
 struct ProcessListView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Bindable var viewModel: SystemMetricsViewModel
