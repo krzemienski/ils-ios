@@ -29,6 +29,9 @@ class SSEClient {
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
     private var lastEventId: String?
+    #if os(iOS)
+    private var backgroundObserver: NSObjectProtocol?
+    #endif
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
     nonisolated private let jsonDecoder: JSONDecoder = {
@@ -45,13 +48,15 @@ class SSEClient {
         config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
         config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
         config.allowsExpensiveNetworkAccess = true
-        config.allowsConstrainedNetworkAccess = false // Disable SSE in Low Data Mode
+        // ENRG-02: Intentionally false — SSE streaming should not consume metered data in Low Data Mode.
+        // Users can still use the app with cached data; streaming resumes when Low Data Mode is disabled.
+        config.allowsConstrainedNetworkAccess = false
         self.session = URLSession(configuration: config)
 
         // ENRG-05: Cancel active SSE stream on background to save battery radio.
         // NotificationCenter observer is registered on main queue to match @MainActor isolation.
         #if os(iOS)
-        NotificationCenter.default.addObserver(
+        backgroundObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didEnterBackgroundNotification,
             object: nil,
             queue: .main
@@ -68,6 +73,13 @@ class SSEClient {
     /// Call from view's onDisappear; replaces deinit-based cleanup
     /// which cannot safely access @MainActor state.
     func cleanup() {
+        // MEM-05: Remove background observer to prevent retain cycle / stale notifications.
+        #if os(iOS)
+        if let observer = backgroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+            backgroundObserver = nil
+        }
+        #endif
         cancel()
         session.invalidateAndCancel()
     }
