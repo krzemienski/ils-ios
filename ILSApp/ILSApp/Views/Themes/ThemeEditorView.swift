@@ -5,6 +5,80 @@ import ILSShared
 // Each maps 1:1 to a theme token: colors (17), typography (13), spacing (10),
 // radius (8), shadow (9). Consolidating into structs would require custom Bindings
 // for every ColorPicker/Slider, adding complexity without reducing re-renders.
+
+/// Full-screen theme editor presenting a tabbed interface for creating and editing custom themes.
+///
+/// Manages a large set of design token ``@State`` properties across five categories: colors (17 tokens),
+/// typography (13 tokens), spacing (10 tokens), corner radius (8 tokens), and shadows (15 tokens).
+/// The **Editor** tab renders a scrollable ``Form`` of collapsible ``DisclosureGroup`` sections —
+/// one per token category — with native ``ColorPicker``, font ``Picker``, text fields, and
+/// point-value ``Slider`` controls. The **Preview** tab delegates to ``ThemePreviewView``, which
+/// renders a live snapshot built from ``previewTheme``.
+///
+/// A ``ColorPalette`` picker at the top of the Colors section lets users apply one of six preset
+/// color schemes (Material Design, Tailwind CSS, iOS Native, Nord, Dracula, Solarized) in a single
+/// tap via ``applyPalette(_:)``. The toolbar exposes **Cancel**, **Export** (via ``exportTheme()``),
+/// and **Save** (via ``saveTheme()``) actions. Saving calls either `createTheme` or `updateTheme`
+/// on ``ThemesViewModel`` depending on whether ``isNewTheme`` is true.
+///
+/// ## Topics
+/// ### Editing Sections
+/// - ``editorForm`` - Scrollable form with five collapsible token-category sections
+/// - ``previewTheme`` - Live `CustomTheme` snapshot assembled from all current `@State` values
+///
+/// ### State — Metadata
+/// - ``name`` - Theme display name; required to enable Save and Export
+/// - ``description`` - Optional short description shown in the theme list
+/// - ``author`` - Optional author attribution field
+/// - ``version`` - Semantic version string, defaulting to `"1.0.0"`
+///
+/// ### State — Color Tokens (17)
+/// - ``accent`` - Brand accent color used for interactive highlights throughout the UI
+/// - ``background`` - Primary canvas background
+/// - ``secondaryBackground`` - Slightly elevated surface behind cards and list rows
+/// - ``tertiaryBackground`` - Deepest background layer, used for nested containers
+/// - ``primaryText`` - Default body text color
+/// - ``secondaryText`` - Subdued label color for captions and secondary info
+/// - ``tertiaryText`` - Placeholder and disabled-text color
+/// - ``success`` / ``warning`` / ``error`` / ``info`` - Semantic status colors
+/// - ``userBubble`` / ``assistantBubble`` - Chat message bubble backgrounds
+/// - ``border`` / ``separator`` / ``overlay`` / ``highlight`` - Structural and decorative colors
+///
+/// ### State — Typography Tokens (13)
+/// - ``primaryFontFamily`` - Body / UI font family; empty string falls back to the system font
+/// - ``monospacedFontFamily`` - Font family for code blocks; empty uses the system monospaced font
+/// - ``titleSize`` / ``headlineSize`` / ``bodySize`` / ``captionSize`` / ``footnoteSize`` - Point sizes as decimal strings
+/// - ``titleWeight`` / ``headlineWeight`` / ``bodyWeight`` - Font weight strings (e.g. `"bold"`, `"medium"`)
+/// - ``titleLineHeight`` / ``bodyLineHeight`` / ``captionLineHeight`` - Multiplier line-height values
+///
+/// ### State — Spacing Tokens (10)
+/// - ``spacingXS`` … ``spacingXXL`` - Six-step spacing scale in points (slider range 0–100)
+/// - ``buttonPaddingHorizontal`` / ``buttonPaddingVertical`` - Button inset values
+/// - ``cardPadding`` - Internal padding applied to card containers
+/// - ``listItemSpacing`` - Vertical gap between list rows
+///
+/// ### State — Corner Radius Tokens (8)
+/// - ``cornerRadiusS`` … ``cornerRadiusXL`` - Four-step global radius scale (slider range 0–50)
+/// - ``buttonCornerRadius`` / ``cardCornerRadius`` / ``inputCornerRadius`` / ``bubbleCornerRadius`` - Component-specific radii
+///
+/// ### State — Shadow Tokens (15)
+/// - ``shadowLightColor`` / ``shadowLightOpacity`` / ``shadowLightRadius`` / ``shadowLightOffsetX`` / ``shadowLightOffsetY`` - Low-elevation shadow
+/// - ``shadowMediumColor`` … ``shadowMediumOffsetY`` - Mid-elevation shadow
+/// - ``shadowHeavyColor`` … ``shadowHeavyOffsetY`` - High-elevation shadow
+///
+/// ### State — UI / Presentation
+/// - ``expandedSections`` - Set of section keys currently expanded in the editor form (`"colors"`, `"typography"`, `"spacing"`, `"cornerRadius"`, `"shadows"`)
+/// - ``selectedPalette`` - Active ``ColorPalette`` preset; changing the value triggers ``applyPalette(_:)``
+/// - ``isSaving`` - True while the async save API call is in flight; disables the Save button
+/// - ``showSaveError`` - Controls the "Save Error" alert presentation
+/// - ``saveErrorMessage`` - Human-readable message shown inside the save-error alert
+/// - ``showShareSheet`` - Controls the share-sheet presentation for JSON export
+/// - ``exportURL`` - Temporary file URL written by ``exportTheme()``; cleaned up on sheet dismiss
+///
+/// ### Actions
+/// - ``saveTheme()`` - Assembles all token `@State` values into a `CustomTheme` and calls `createTheme` or `updateTheme` on ``ThemesViewModel``; dismisses on success
+/// - ``exportTheme()`` - Encodes ``previewTheme`` as pretty-printed ISO-8601 JSON, writes to the Caches directory, and opens the system share sheet
+/// - ``applyPalette(_:)`` - Batch-sets all 17 color tokens from the selected ``ColorPalette`` preset in one synchronous pass
 struct ThemeEditorView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(ThemesViewModel.self) var viewModel
@@ -13,91 +87,175 @@ struct ThemeEditorView: View {
     let isNewTheme: Bool
 
     // MARK: - Metadata State
+
+    /// Theme display name. Required (non-empty) to enable the Save and Export toolbar buttons.
     @State private var name: String
+    /// Optional short description shown beneath the theme name in the themes list.
     @State private var description: String
+    /// Optional author attribution, stored in the exported JSON.
     @State private var author: String
+    /// Semantic version string for the theme, defaulting to `"1.0.0"` for new themes.
     @State private var version: String
 
     // MARK: - Color Tokens State
+
+    /// Brand accent color used for interactive elements, links, and selection highlights.
     @State private var accent: Color
+    /// Primary canvas background color of the app.
     @State private var background: Color
+    /// Slightly elevated surface color, used behind cards and grouped list rows.
     @State private var secondaryBackground: Color
+    /// Deepest background layer, used for nested containers and modal sheets.
     @State private var tertiaryBackground: Color
+    /// Default body and label text color.
     @State private var primaryText: Color
+    /// Subdued text color for captions, secondary labels, and metadata.
     @State private var secondaryText: Color
+    /// Lightest text color, used for placeholders and disabled controls.
     @State private var tertiaryText: Color
+    /// Semantic success / positive-action color (green family).
     @State private var success: Color
+    /// Semantic warning / caution color (yellow/orange family).
     @State private var warning: Color
+    /// Semantic error / destructive-action color (red family).
     @State private var error: Color
+    /// Semantic informational color (blue family).
     @State private var info: Color
+    /// Background fill for user-sent chat message bubbles.
     @State private var userBubble: Color
+    /// Background fill for assistant-sent chat message bubbles.
     @State private var assistantBubble: Color
+    /// Stroke color for bordered UI elements such as text fields and cards.
     @State private var border: Color
+    /// Color used for `Divider` and section-separator hairlines.
     @State private var separator: Color
+    /// Semi-transparent scrim color drawn over content behind modal sheets.
     @State private var overlay: Color
+    /// Highlight / selection tint applied to focused or selected items.
     @State private var highlight: Color
 
     // MARK: - Typography Tokens State
+
+    /// Primary body/UI font family name. An empty string falls back to the system font.
     @State private var primaryFontFamily: String
+    /// Monospaced font family name for code blocks. An empty string uses the system monospaced font.
     @State private var monospacedFontFamily: String
+    /// Title text size in points, stored as a decimal string.
     @State private var titleSize: String
+    /// Headline text size in points, stored as a decimal string.
     @State private var headlineSize: String
+    /// Body text size in points, stored as a decimal string.
     @State private var bodySize: String
+    /// Caption text size in points, stored as a decimal string.
     @State private var captionSize: String
+    /// Footnote text size in points, stored as a decimal string.
     @State private var footnoteSize: String
+    /// Font weight for title text (e.g. `"bold"`, `"semibold"`).
     @State private var titleWeight: String
+    /// Font weight for headline text.
     @State private var headlineWeight: String
+    /// Font weight for body text.
     @State private var bodyWeight: String
+    /// Line-height multiplier for title text, stored as a decimal string.
     @State private var titleLineHeight: String
+    /// Line-height multiplier for body text, stored as a decimal string.
     @State private var bodyLineHeight: String
+    /// Line-height multiplier for caption text, stored as a decimal string.
     @State private var captionLineHeight: String
 
     // MARK: - Spacing Tokens State
+
+    /// Extra-small spacing value in points (slider range 0–100).
     @State private var spacingXS: String
+    /// Small spacing value in points.
     @State private var spacingS: String
+    /// Medium spacing value in points.
     @State private var spacingM: String
+    /// Large spacing value in points.
     @State private var spacingL: String
+    /// Extra-large spacing value in points.
     @State private var spacingXL: String
+    /// Extra-extra-large spacing value in points.
     @State private var spacingXXL: String
+    /// Horizontal inset applied inside button controls.
     @State private var buttonPaddingHorizontal: String
+    /// Vertical inset applied inside button controls.
     @State private var buttonPaddingVertical: String
+    /// Internal padding applied to card container views.
     @State private var cardPadding: String
+    /// Vertical gap inserted between adjacent list rows.
     @State private var listItemSpacing: String
 
     // MARK: - Corner Radius Tokens State
+
+    /// Small corner radius in points (slider range 0–50).
     @State private var cornerRadiusS: String
+    /// Medium corner radius in points.
     @State private var cornerRadiusM: String
+    /// Large corner radius in points.
     @State private var cornerRadiusL: String
+    /// Extra-large corner radius in points.
     @State private var cornerRadiusXL: String
+    /// Corner radius applied specifically to button shapes.
     @State private var buttonCornerRadius: String
+    /// Corner radius applied specifically to card containers.
     @State private var cardCornerRadius: String
+    /// Corner radius applied to text input fields.
     @State private var inputCornerRadius: String
+    /// Corner radius applied to chat message bubble shapes.
     @State private var bubbleCornerRadius: String
 
     // MARK: - Shadow Tokens State
+
+    /// Color of the low-elevation (light) drop shadow.
     @State private var shadowLightColor: Color
+    /// Opacity of the light shadow, stored as a decimal string in the range 0–1.
     @State private var shadowLightOpacity: String
+    /// Blur radius of the light shadow in points.
     @State private var shadowLightRadius: String
+    /// Horizontal offset of the light shadow in points.
     @State private var shadowLightOffsetX: String
+    /// Vertical offset of the light shadow in points.
     @State private var shadowLightOffsetY: String
+    /// Color of the mid-elevation (medium) drop shadow.
     @State private var shadowMediumColor: Color
+    /// Opacity of the medium shadow, stored as a decimal string in the range 0–1.
     @State private var shadowMediumOpacity: String
+    /// Blur radius of the medium shadow in points.
     @State private var shadowMediumRadius: String
+    /// Horizontal offset of the medium shadow in points.
     @State private var shadowMediumOffsetX: String
+    /// Vertical offset of the medium shadow in points.
     @State private var shadowMediumOffsetY: String
+    /// Color of the high-elevation (heavy) drop shadow.
     @State private var shadowHeavyColor: Color
+    /// Opacity of the heavy shadow, stored as a decimal string in the range 0–1.
     @State private var shadowHeavyOpacity: String
+    /// Blur radius of the heavy shadow in points.
     @State private var shadowHeavyRadius: String
+    /// Horizontal offset of the heavy shadow in points.
     @State private var shadowHeavyOffsetX: String
+    /// Vertical offset of the heavy shadow in points.
     @State private var shadowHeavyOffsetY: String
 
     // MARK: - UI State
+
+    /// True while the async ``saveTheme()`` API call is in flight; disables the Save toolbar button.
     @State private var isSaving = false
+    /// Controls presentation of the "Save Error" alert when ``saveTheme()`` fails.
     @State private var showSaveError = false
+    /// Human-readable error message displayed inside the save-error alert.
     @State private var saveErrorMessage = ""
+    /// Set of section identifier strings whose ``DisclosureGroup`` is currently expanded.
+    /// Valid keys: `"colors"`, `"typography"`, `"spacing"`, `"cornerRadius"`, `"shadows"`.
     @State private var expandedSections: Set<String> = []
+    /// Controls presentation of the system share sheet after ``exportTheme()`` writes the JSON file.
     @State private var showShareSheet = false
+    /// Temporary file URL of the exported JSON theme written to the Caches directory by ``exportTheme()``.
+    /// Cleaned up via `FileManager.removeItem` when the share sheet is dismissed.
     @State private var exportURL: URL?
+    /// Currently selected color palette preset. Changing this value triggers ``applyPalette(_:)``
+    /// which batch-sets all 17 color tokens.
     @State private var selectedPalette: ColorPalette = .none
 
     // MARK: - Color Palette Enum
