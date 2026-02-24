@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 26-concurrency-medium-low
-Plan: 1 of 2 complete
-Status: Plan 26-01 COMPLETE — 4 MEDIUM concurrency fixes (Task.detached, init deferral, nonisolated(unsafe) removal)
-Last activity: 2026-02-24 — Completed 26-01 (ProjectsViewModel, SubscriptionManager, LowPowerModeMonitor, AppLogger)
+Plan: 2 of 2 complete
+Status: Phase 26 COMPLETE — all 13 MEDIUM/LOW concurrency requirements resolved (4 code fixes + 9 documented/verified)
+Last activity: 2026-02-24 — Completed 26-02 (documentation + verification of CONC-04/05/08/09/11/14/15/16/17)
 
 ## Previous Milestones
 
@@ -37,6 +37,8 @@ Last activity: 2026-02-24 — Completed 26-01 (ProjectsViewModel, SubscriptionMa
 - [26-01]: SubscriptionManager startListening() called at end of init to preserve singleton behavior
 - [26-01]: LowPowerModeMonitor deinit removed -- singleton never deallocates, observer cleaned at process exit
 - [26-01]: AppLogger recentLogs file read inlined -- already non-isolated async context
+- [26-02]: CONC-14 already documented via SPERF-04 comment -- no duplicate tag added
+- [26-02]: CONC-11 sendPermissionResponse removed from iOS side; backend version is actor-isolated (correctly)
 
 ### Audit Source Data
 
@@ -56,7 +58,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 26-01-PLAN.md — ready for 26-02
+Stopped at: Completed Phase 26 (all plans) — ready for Phase 27
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
-Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13)
+Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs)
