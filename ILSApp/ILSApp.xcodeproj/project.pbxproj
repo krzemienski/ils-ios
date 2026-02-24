@@ -372,6 +372,14 @@
 		FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
+		AA11223344556677889911AA /* BashGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677889900AA /* BashGrammar.swift */; };
+		AA11223344556677889922AA /* BashGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677889900AA /* BashGrammar.swift */; };
+		BB11223344556677889911BB /* PythonGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11223344556677889900BB /* PythonGrammar.swift */; };
+		BB11223344556677889922BB /* PythonGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11223344556677889900BB /* PythonGrammar.swift */; };
+		CC11223344556677889911CC /* JavaScriptGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11223344556677889900CC /* JavaScriptGrammar.swift */; };
+		CC11223344556677889922CC /* JavaScriptGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11223344556677889900CC /* JavaScriptGrammar.swift */; };
+		DD11223344556677889911DD /* SwiftGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD11223344556677889900DD /* SwiftGrammar.swift */; };
+		DD11223344556677889922DD /* SwiftGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD11223344556677889900DD /* SwiftGrammar.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -592,6 +600,10 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		AA11223344556677889900AA /* BashGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BashGrammar.swift; sourceTree = "<group>"; };
+		BB11223344556677889900BB /* PythonGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonGrammar.swift; sourceTree = "<group>"; };
+		CC11223344556677889900CC /* JavaScriptGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaScriptGrammar.swift; sourceTree = "<group>"; };
+		DD11223344556677889900DD /* SwiftGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftGrammar.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -883,11 +895,23 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		EE11223344556677889900EE /* Grammars */ = {
+			isa = PBXGroup;
+			children = (
+				AA11223344556677889900AA /* BashGrammar.swift */,
+				BB11223344556677889900BB /* PythonGrammar.swift */,
+				CC11223344556677889900CC /* JavaScriptGrammar.swift */,
+				DD11223344556677889900DD /* SwiftGrammar.swift */,
+			);
+			path = Grammars;
+			sourceTree = "<group>";
+		};
 		92D7643E99811E4C62DD60B6 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
 				4DEE8624B9BCC400474F4F46 /* AppConstants.swift */,
 				17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */,
+				EE11223344556677889900EE /* Grammars */,
 				64417034D7BE8F3619B3BC06 /* HapticManager.swift */,
 				7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */,
 				DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */,
@@ -1528,6 +1552,10 @@
 				895B75AB05181525D8F74B26 /* UserMessageCard.swift in Sources */,
 				F67CF6C7C6DFE2DE29538176 /* WidgetBundle.swift in Sources */,
 				CBEE11D4F11C220DCBD5A6E9 /* WidgetDataProvider.swift in Sources */,
+				AA11223344556677889911AA /* BashGrammar.swift in Sources */,
+				BB11223344556677889911BB /* PythonGrammar.swift in Sources */,
+				CC11223344556677889911CC /* JavaScriptGrammar.swift in Sources */,
+				DD11223344556677889911DD /* SwiftGrammar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1704,6 +1732,10 @@
 				69B49241EE62B52643029E85 /* WidgetBundle.swift in Sources */,
 				F276A16D5AE2E3F7EC2DC5B8 /* WidgetDataProvider.swift in Sources */,
 				14CA4BF383D513A6B6617243 /* WindowManager.swift in Sources */,
+				AA11223344556677889922AA /* BashGrammar.swift in Sources */,
+				BB11223344556677889922BB /* PythonGrammar.swift in Sources */,
+				CC11223344556677889922CC /* JavaScriptGrammar.swift in Sources */,
+				DD11223344556677889922DD /* SwiftGrammar.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
