@@ -221,6 +221,7 @@ struct AdvancedOptionsSheet: View {
             HStack(spacing: 0) {
                 ForEach(["sonnet", "opus", "haiku"], id: \.self) { model in
                     Button {
+                        HapticManager.selection()
                         config.model = model
                     } label: {
                         Text(model.capitalized)

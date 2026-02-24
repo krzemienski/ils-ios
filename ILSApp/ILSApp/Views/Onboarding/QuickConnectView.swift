@@ -80,6 +80,7 @@ struct QuickConnectView: View {
         HStack(spacing: 0) {
             ForEach(ConnectionMode.allCases) { mode in
                 Button {
+                    HapticManager.selection()
                     viewModel.selectedMode = mode
                 } label: {
                     HStack(spacing: 4) {
