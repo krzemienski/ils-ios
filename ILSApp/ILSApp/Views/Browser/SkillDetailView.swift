@@ -20,6 +20,10 @@ struct SkillDetailView: View {
     @State private var isSaving = false
     @State private var isDeleting = false
 
+    /// Cached MarkdownUI theme — only rebuilt when the app theme changes.
+    @State private var cachedMarkdownTheme: MarkdownUI.Theme = .basic
+    @State private var cachedMarkdownThemeId: String = ""
+
     var body: some View {
         ScrollView {
             VStack(spacing: theme.spacingMD) {
@@ -284,10 +288,15 @@ struct SkillDetailView: View {
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Markdown(skill.rawContent ?? skill.content ?? "")
-                        .markdownTheme(markdownTheme)
+                        .markdownTheme(cachedMarkdownTheme)
                         .markdownCodeSyntaxHighlighter(ILSCodeHighlighter())
                         .textSelection(.enabled)
                         .padding(theme.spacingMD)
+                        .onChange(of: theme.id, initial: true) {
+                            guard theme.id != cachedMarkdownThemeId else { return }
+                            cachedMarkdownThemeId = theme.id
+                            cachedMarkdownTheme = buildSkillMarkdownTheme(from: theme)
+                        }
                 }
                 .modifier(GlassCard())
             }
@@ -296,9 +305,10 @@ struct SkillDetailView: View {
 
     // MARK: - Markdown Theme
 
-    private var markdownTheme: MarkdownUI.Theme {
-        let t = theme
-        return Theme()
+    /// Build a MarkdownUI theme dynamically from current AppTheme tokens.
+    /// Only called when theme.id changes via onChange.
+    private func buildSkillMarkdownTheme(from t: ThemeSnapshot) -> MarkdownUI.Theme {
+        Theme()
             .text {
                 ForegroundColor(t.textPrimary)
                 FontSize(.em(0.95))
