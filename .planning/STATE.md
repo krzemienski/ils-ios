@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 30-testing-infrastructure
-Plan: 2 of 2 complete
-Status: Phase 30 COMPLETE — Swift Testing migration (31 tests), test data factories, health controller tests, NavigationTests setUp fix, parallelization configured
-Last activity: 2026-02-24 — Completed 30-01 (Swift Testing migration: 31 tests across ILSSharedTests + ILSBackendTests, test data factories)
+Phase: 31-swift6-preparation
+Plan: 1 of 2 complete
+Status: 31-01 COMPLETE — strict-concurrency=targeted enabled across all targets, useAgentSDK promoted to static let
+Last activity: 2026-02-24 — Completed 31-01 (strict concurrency targeted: iOS, macOS, UITests, Backend, Shared all building cleanly)
 
 ## Previous Milestones
 
@@ -65,6 +65,9 @@ Last activity: 2026-02-24 — Completed 30-01 (Swift Testing migration: 31 tests
 - [30-01]: Used Swift Testing framework (@Test, #expect, @Suite) exclusively over XCTest for new model tests
 - [30-01]: XCTVapor warning suppressed via emitWarningIfCurrentTestInfoIsAvailable -- app.testing() not available in Vapor 4.89
 - [30-01]: Tested /health/live endpoint (no DB dependency) rather than /health detailed endpoint requiring full DB setup
+- [31-01]: useAgentSDK promoted from nonisolated(unsafe) static var to static let -- zero mutation sites in codebase
+- [31-01]: TeamsExecutorService shutdownTeammate already correct from Phase 27-03 -- no changes needed
+- [31-01]: Pre-existing DispatchWorkItem non-Sendable warnings accepted as baseline (not caused by this plan's changes)
 
 ### Audit Source Data
 
@@ -78,13 +81,13 @@ None yet.
 
 ### Blockers/Concerns
 
-- Swift 6 strict-concurrency=complete: both compile-error blockers resolved (TeamsExecutorService in 25-01, ClaudeExecutorService in 25-02)
+- Swift 6 strict-concurrency=targeted now enabled and building cleanly across all targets (31-01). Path to =complete requires addressing DispatchWorkItem warnings.
 - Testing overhaul is the highest-effort category (~8-12 hrs estimated)
 
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 30-01-PLAN.md (Swift Testing migration + test data factories) — Phase 30 fully complete
+Stopped at: Completed 31-01-PLAN.md (strict concurrency targeted enabled across all build targets)
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
 Prior commits: a161a27 (TEST-02/TEST-03 sleep replacement), c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02), acedf3d (CONC-02/CONC-10/SWIFT6-01), 4dfb341 (CONC-03/CONC-06/CONC-12/CONC-13), c5692ec (CONC-04/05/08/09/11/14/15/16/17 docs), 16b9b26 (ENRG-04/ENRG-07/MEM-08), a26415e (ENRG-08/MEM-01/MEM-04), 15945af (ENRG-01/ENRG-02/MEM-05), dfa16b4 (ENRG-03/ENRG-05), 9b976a6 (MEM-02/ENRG-06 docs), 8aec0c3 (MEM-03/MEM-06/MEM-07), eb94c53 (UIPERF-01/UIPERF-04/UIPERF-05), 29c6c50 (UIPERF-02/UIPERF-03/UIPERF-06)

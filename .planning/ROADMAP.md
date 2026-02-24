@@ -523,5 +523,5 @@ Plans:
 | 28. SwiftUI Performance | 2/2 | Complete    | 2026-02-24 | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | Complete    | 2026-02-24 | 2026-02-24 |
 | 30. Testing Infrastructure | v1.5 | Complete    | 2026-02-24 | 2026-02-24 |
-| 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
+| 31. Swift 6 Preparation | 1/2 | In Progress|  | - |
 | 32. Final Validation | v1.5 | 0/? | Planned | - |

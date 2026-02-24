@@ -76,7 +76,7 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 - [x] **SWIFT6-01**: ClaudeExecutorService.useAgentSDK mutable static var resolved for strict concurrency
 - [x] **SWIFT6-02**: TeamsExecutorService.shutdownTeammate non-Sendable Process crossing resolved
-- [ ] **SWIFT6-03**: Build verified with -strict-concurrency=targeted (no new errors introduced)
+- [x] **SWIFT6-03**: Build verified with -strict-concurrency=targeted (no new errors introduced)
 
 ## Future Requirements
 
