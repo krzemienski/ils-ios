@@ -55,30 +55,44 @@ func configure(_ app: Application) async throws {
     app.routes.defaultMaxBodySize = "10mb"
 
     // Database configuration
+    // SQLiteConfiguration.enableForeignKeys defaults to true, which issues
+    // PRAGMA foreign_keys = ON on every pooled connection via SQLiteKit's
+    // SQLiteConnectionSource. This ensures FK constraints are enforced
+    // across all connections, not just the first one.
     let dbPath = app.directory.workingDirectory + "ils.sqlite"
-    app.databases.use(.sqlite(.file(dbPath)), as: .sqlite)
+    let sqliteConfig = SQLiteConfiguration(storage: .file(path: dbPath), enableForeignKeys: true)
+    app.databases.use(.sqlite(sqliteConfig), as: .sqlite)
 
-    // Enable foreign key enforcement — SQLite disables this by default.
-    // Must be set per-connection, so we run it after migrations.
-    // Fluent's SQLite driver creates connections lazily; we execute the PRAGMA
-    // via a raw query after autoMigrate to ensure the pool's connections have it.
-
-    // Register migrations
+    // DB-MED-2: Migration versioning strategy.
+    // Fluent runs migrations in registration order. Each migration is idempotent
+    // (CREATE TABLE IF NOT EXISTS). Reverts are no-ops (Phase 22 decision).
+    // New migrations MUST be appended — never reorder or insert.
+    //
+    // v1.0 — Core tables
     app.migrations.add(CreateProjects())
     app.migrations.add(CreateSessions())
     app.migrations.add(CreateMessages())
     app.migrations.add(CreateThemes())
     app.migrations.add(CreateCachedResults())
+    // v2.0 — Fleet management
     app.migrations.add(CreateFleetHosts())
+    // v3.0 — Performance indexes
     app.migrations.add(AddDatabaseIndexes())
 
     // Run migrations
     try await app.autoMigrate()
 
-    // Enable foreign key constraints on the SQLite connection
-    if let sqlDB = app.db as? SQLDatabase {
-        try await sqlDB.raw("PRAGMA foreign_keys = ON").run()
+    #if DEBUG
+    // DB-03: Validate existing data satisfies FK constraints after migration.
+    // PRAGMA foreign_key_check returns rows for any FK violations found in the database.
+    // Runs only in DEBUG builds to catch data integrity issues during development.
+    if let sql = app.db as? SQLDatabase {
+        let violations = try await sql.raw("PRAGMA foreign_key_check").all()
+        if !violations.isEmpty {
+            app.logger.warning("DB-03: FK constraint violations found: \(violations.count) rows affected")
+        }
     }
+    #endif
 
     // Register routes
     try routes(app)

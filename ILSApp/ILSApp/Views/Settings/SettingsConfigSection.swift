@@ -41,10 +41,7 @@ struct SettingsConfigSection: View {
                     Picker("Default Model", selection: Binding(
                         get: { config.model ?? SettingsViewModel.defaultModelID },
                         set: { newModel in
-                            Task {
-                                _ = await viewModel.saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
-                                await viewModel.loadConfig()
-                            }
+                            viewModel.updateModel(newModel)
                         }
                     )) {
                         ForEach(availableModels, id: \.self) { model in
@@ -80,10 +77,7 @@ struct SettingsConfigSection: View {
                         get: { config.alwaysThinkingEnabled ?? false },
                         set: { newValue in
                             HapticManager.selection()
-                            Task {
-                                _ = await viewModel.saveConfigToggle(key: "alwaysThinkingEnabled", value: newValue)
-                                await viewModel.loadConfig()
-                            }
+                            viewModel.updateToggle(key: "alwaysThinkingEnabled", value: newValue)
                         }
                     )) {
                         Text("Extended Thinking")
@@ -101,10 +95,7 @@ struct SettingsConfigSection: View {
                         get: { config.includeCoAuthoredBy ?? false },
                         set: { newValue in
                             HapticManager.selection()
-                            Task {
-                                _ = await viewModel.saveConfigToggle(key: "includeCoAuthoredBy", value: newValue)
-                                await viewModel.loadConfig()
-                            }
+                            viewModel.updateToggle(key: "includeCoAuthoredBy", value: newValue)
                         }
                     )) {
                         Text("Include Co-Author")
@@ -268,7 +259,7 @@ struct SettingsConfigSection: View {
                             }
                         }
                         .buttonStyle(.plain)
-                        hookEventBreakdown(hooks)
+                        hookBreakdownView
                     } else {
                         NavigationLink {
                             HooksManagementView()
@@ -401,7 +392,7 @@ struct SettingsConfigSection: View {
     // MARK: - Reusable Components
 
     @ViewBuilder
-    func sectionLabel(_ text: String) -> some View {
+    private func sectionLabel(_ text: String) -> some View {
         Text(text)
             .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
@@ -410,7 +401,7 @@ struct SettingsConfigSection: View {
     }
 
     @ViewBuilder
-    func settingsRow(_ label: String, value: String) -> some View {
+    private func settingsRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -423,7 +414,7 @@ struct SettingsConfigSection: View {
     }
 
     @ViewBuilder
-    func settingsRow(_ label: String, icon: String, iconColor: Color) -> some View {
+    private func settingsRow(_ label: String, icon: String, iconColor: Color) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -446,16 +437,11 @@ struct SettingsConfigSection: View {
         return count
     }
 
+    /// Reads pre-computed hook event breakdown from ViewModel
+    /// instead of building filtered arrays inline in the view body.
     @ViewBuilder
-    func hookEventBreakdown(_ hooks: HooksConfig) -> some View {
-        let events: [(String, Int)] = [
-            ("SessionStart", hooks.sessionStart?.count ?? 0),
-            ("SubagentStart", hooks.subagentStart?.count ?? 0),
-            ("UserPromptSubmit", hooks.userPromptSubmit?.count ?? 0),
-            ("PreToolUse", hooks.preToolUse?.count ?? 0),
-            ("PostToolUse", hooks.postToolUse?.count ?? 0)
-        ].filter { $0.1 > 0 }
-
+    var hookBreakdownView: some View {
+        let events = viewModel.hookEventBreakdown
         if !events.isEmpty {
             HStack(spacing: theme.spacingSM) {
                 ForEach(events, id: \.0) { event in
@@ -470,7 +456,7 @@ struct SettingsConfigSection: View {
     // MARK: - Setting Annotation
 
     @ViewBuilder
-    func settingAnnotation(isInherited: Bool, tooltip: String) -> some View {
+    private func settingAnnotation(isInherited: Bool, tooltip: String) -> some View {
         HStack(spacing: theme.spacingSM) {
             InheritanceBadge(isInherited: isInherited)
             Spacer()

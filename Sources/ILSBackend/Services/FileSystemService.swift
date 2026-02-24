@@ -109,7 +109,7 @@ struct FileSystemService {
 
     // MARK: - Path Properties (exposed for backward compatibility)
 
-    /// User's home directory path (e.g., `/Users/username`)
+    /// User's home directory path (resolves `~` to absolute path)
     var homeDirectory: String {
         config.homeDirectory
     }
@@ -266,8 +266,10 @@ struct FileSystemService {
             return cached
         }
         let converted = try sessions.scanExternalSessionsAsChatSessions()
-        await FileSystemCache.shared.setCachedExternalSessions(converted)
-        return converted
+        // Pre-sort at cache time (once) so callers can merge without re-sorting 22K+ items per request
+        let sorted = converted.sorted { $0.lastActiveAt > $1.lastActiveAt }
+        await FileSystemCache.shared.setCachedExternalSessions(sorted)
+        return sorted
     }
 
     /// Invalidate the external sessions cache.
@@ -281,8 +283,8 @@ struct FileSystemService {
     ///   - sessionId: Session UUID
     ///   - limit: Maximum number of messages to return
     ///   - offset: Number of messages to skip
-    /// - Returns: Array of Message objects
-    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> [Message] {
+    /// - Returns: TranscriptResult containing paginated messages and total count
+    func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> SessionFileService.TranscriptResult {
         try sessions.readTranscriptMessages(encodedProjectPath: encodedProjectPath, sessionId: sessionId, limit: limit, offset: offset)
     }
 }

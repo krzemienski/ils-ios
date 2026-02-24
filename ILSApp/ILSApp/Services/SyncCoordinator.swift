@@ -44,7 +44,11 @@ actor SyncCoordinator {
     /// Reusable encoder/decoder — avoids allocating new instances on every
     /// persistQueue()/loadQueue() call (JSONEncoder/Decoder are expensive to init).
     private let encoder = JSONEncoder()
-    private static let decoder = JSONDecoder()
+    private static let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
 
     private var queue: [QueuedOperation] = []
     private var isDraining = false
@@ -170,7 +174,7 @@ actor SyncCoordinator {
         do {
             // Build the request directly to avoid MainActor dependency on ConnectionManager.
             // Read the server URL from UserDefaults (same source ConnectionManager uses).
-            let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+            let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? ConnectionDefaults.defaultURL
             let apiClient = APIClient(baseURL: baseURL)
             try await apiClient.rawRequest(
                 method: operation.method,

@@ -24,8 +24,9 @@ struct TunnelSettingsView: View {
     @State private var notInstalled = false
     @State private var installURL: String?
     @State private var showCopiedToast = false
-    @State private var toastTask: Task<Void, Never>?
     @State private var qrImage: PlatformImage?
+    // SEC-MED-2: Surface Keychain migration failures to user.
+    @State private var keychainMigrationError: String?
 
     // Custom domain fields
     @State private var cfToken = ""
@@ -35,6 +36,28 @@ struct TunnelSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: theme.spacingMD) {
+                // SEC-MED-2: Banner for Keychain migration errors.
+                if let keychainError = keychainMigrationError {
+                    HStack(spacing: theme.spacingSM) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(theme.warning)
+                        Text(keychainError)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Button {
+                            keychainMigrationError = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                        .accessibilityLabel("Dismiss error")
+                    }
+                    .padding(theme.spacingSM)
+                    .background(theme.warning.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+
                 quickTunnelSection
                 if isRunning, let url = tunnelURL {
                     tunnelInfoSection(url: url)
@@ -66,9 +89,6 @@ struct TunnelSettingsView: View {
             }
         }
         .screenshotProtected()
-        .onDisappear {
-            toastTask?.cancel()
-        }
     }
 
     // MARK: - Quick Tunnel Section
@@ -186,13 +206,8 @@ struct TunnelSettingsView: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(url, forType: .string)
                     #endif
+                    // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
                     showCopiedToast = true
-                    toastTask?.cancel()
-                    toastTask = Task {
-                        try? await Task.sleep(for: .seconds(2))
-                        guard !Task.isCancelled else { return }
-                        showCopiedToast = false
-                    }
                 } label: {
                     Label("Copy URL", systemImage: "doc.on.doc")
                         .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
@@ -518,7 +533,11 @@ struct TunnelSettingsView: View {
 
         // Persist custom domain settings — token goes to Keychain, others to UserDefaults
         let defaults = UserDefaults.standard
-        try? await KeychainService.shared.saveCredential(key: "cfToken", value: cfToken)
+        do {
+            try await KeychainService.shared.saveCredential(key: "cfToken", value: cfToken)
+        } catch {
+            AppLogger.shared.error("Failed to save cfToken to Keychain: \(error)", category: "keychain")
+        }
         defaults.set(cfTunnelName, forKey: "cfTunnelName")
         defaults.set(cfDomain, forKey: "cfDomain")
 
@@ -549,11 +568,20 @@ struct TunnelSettingsView: View {
         let defaults = UserDefaults.standard
         // Load token from Keychain (migrate from UserDefaults if present)
         Task {
+            // CODBL-03: try? intentional — token may not exist yet
             if let token = try? await KeychainService.shared.getCredential(key: "cfToken") {
                 await MainActor.run { cfToken = token }
             } else if let legacyToken = defaults.string(forKey: "cfToken"), !legacyToken.isEmpty {
                 // Migrate legacy token from UserDefaults to Keychain
-                try? await KeychainService.shared.saveCredential(key: "cfToken", value: legacyToken)
+                do {
+                    try await KeychainService.shared.saveCredential(key: "cfToken", value: legacyToken)
+                } catch {
+                    AppLogger.shared.error("Failed to migrate cfToken to Keychain: \(error)", category: "keychain")
+                    // SEC-MED-2: Surface migration error to user.
+                    await MainActor.run {
+                        keychainMigrationError = "Tunnel token couldn't be secured. Please re-enter your token."
+                    }
+                }
                 defaults.removeObject(forKey: "cfToken")
                 await MainActor.run { cfToken = legacyToken }
             }

@@ -6,6 +6,20 @@ public enum PluginSource: String, Codable, Sendable {
     case official
     /// Community-contributed plugin.
     case community
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized PluginSource: '\(raw)'. Expected: official, community"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Represents a Claude Code plugin that extends functionality.

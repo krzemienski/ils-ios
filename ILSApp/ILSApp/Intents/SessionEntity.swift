@@ -115,6 +115,8 @@ private struct IntentSessionData: Decodable {
         // id can be UUID string
         self.id = try container.decode(String.self, forKey: .id)
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        // COD-MED-4: try? with defaults is intentional — external sessions may lack these fields.
+        // Using decodeIfPresent would still need ?? fallback; try? achieves the same with less code.
         self.model = (try? container.decode(String.self, forKey: .model)) ?? "sonnet"
         self.messageCount = (try? container.decode(Int.self, forKey: .messageCount)) ?? 0
         self.projectName = try container.decodeIfPresent(String.self, forKey: .projectName)

@@ -110,10 +110,18 @@ struct ProjectsController: RouteCollection {
                     continue
                 }
 
-                guard let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)) else {
+                let data: Data
+                do {
+                    data = try Data(contentsOf: URL(fileURLWithPath: indexPath))
+                } catch {
+                    req.logger.warning("Cannot read sessions-index.json at \(indexPath): \(error)")
                     continue
                 }
-                guard let index: FileSystemService.SessionsIndex = try? JSONDecoder().decode(FileSystemService.SessionsIndex.self, from: data) else {
+                let index: FileSystemService.SessionsIndex
+                do {
+                    index = try JSONDecoder().decode(FileSystemService.SessionsIndex.self, from: data)
+                } catch {
+                    req.logger.warning("Malformed sessions-index.json at \(indexPath): \(error)")
                     continue
                 }
 
@@ -191,10 +199,24 @@ struct ProjectsController: RouteCollection {
             }
 
             let indexPath = "\(projectDirPath)/sessions-index.json"
-            guard FileManager.default.fileExists(atPath: indexPath),
-                  let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)),
-                  let index = try? JSONDecoder().decode(FileSystemService.SessionsIndex.self, from: data),
-                  let firstEntry = index.entries.first else {
+            guard FileManager.default.fileExists(atPath: indexPath) else {
+                continue
+            }
+            let data: Data
+            do {
+                data = try Data(contentsOf: URL(fileURLWithPath: indexPath))
+            } catch {
+                req.logger.warning("Cannot read sessions-index.json at \(indexPath): \(error)")
+                continue
+            }
+            let index: FileSystemService.SessionsIndex
+            do {
+                index = try JSONDecoder().decode(FileSystemService.SessionsIndex.self, from: data)
+            } catch {
+                req.logger.warning("Malformed sessions-index.json at \(indexPath): \(error)")
+                continue
+            }
+            guard let firstEntry = index.entries.first else {
                 continue
             }
 

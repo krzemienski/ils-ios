@@ -29,6 +29,20 @@ public struct SetupProgress: Codable, Hashable, Sendable {
         case healthCheck = "health_check"
         /// Setting up a tunnel for remote access.
         case setupTunnel = "setup_tunnel"
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized SetupStep: '\(raw)'. Expected: connect_ssh, detect_platform, install_dependencies, clone_repository, build_backend, start_backend, health_check, setup_tunnel"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Status of an individual setup step.
@@ -43,6 +57,20 @@ public struct SetupProgress: Codable, Hashable, Sendable {
         case failure
         /// Step was skipped (not required).
         case skipped
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized StepStatus: '\(raw)'. Expected: pending, in_progress, success, failure, skipped"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Creates a new setup progress entry.

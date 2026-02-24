@@ -10,6 +10,20 @@ public enum SkillSource: String, Codable, Sendable {
     case builtin
     /// Skill from GitHub marketplace.
     case github
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized SkillSource: '\(raw)'. Expected: local, plugin, builtin, github"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Represents a Claude Code skill (custom command/workflow).

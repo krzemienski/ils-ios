@@ -20,9 +20,9 @@ import ILSShared
 /// ### Callbacks
 /// - ``onSelect`` - Receives the formatted command string (e.g. `/compact`, `--model opus`)
 ///
-/// ### Computed Properties
-/// - ``builtInCommands`` - ``allBuiltInCommands`` filtered by ``searchText``
-/// - ``filteredSkills`` - ``skills`` filtered by ``searchText``
+/// ### Debounced Filtering
+/// - ``debouncedBuiltInCommands`` - Built-in commands filtered by search via `.task(id:)`
+/// - ``debouncedFilteredSkills`` - Skills filtered by search via `.task(id:)`
 ///
 /// ### Async Loading
 /// - ``loadSkills()`` - Fetches skills from the API and populates ``skills``
@@ -38,9 +38,13 @@ struct CommandPaletteView: View {
     /// Live search text used to filter all three command sections.
     @State private var searchText = ""
     /// Skills loaded from the `/skills` API endpoint.
-    @State private var skills: [Skill] = []
+    @State private var skills: [Skill] = Self.cachedSkills
     /// True while the initial skills API call is in flight.
-    @State private var isLoading = true
+    @State private var isLoading = Self.cachedSkills.isEmpty
+
+    // SPERF-MED-5: Static cache avoids re-fetching skills on every sheet presentation.
+    // Skills rarely change during a session, so caching across presentations is safe.
+    @MainActor private static var cachedSkills: [Skill] = []
     /// Debounced filtered built-in commands.
     @State private var debouncedBuiltInCommands: [CommandItem] = Self.allBuiltInCommands
     /// Debounced filtered skills.
@@ -50,67 +54,70 @@ struct CommandPaletteView: View {
     let onSelect: (String) -> Void
 
     var body: some View {
-        NavigationStack {
-            List {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    // Built-in commands
-                    Section("Built-in") {
-                        ForEach(debouncedBuiltInCommands) { command in
-                            CommandRow(command: command, onSelect: selectCommand)
-                        }
+        List {
+            if isLoading {
+                ProgressView()
+            } else {
+                // Built-in commands
+                Section("Built-in") {
+                    ForEach(debouncedBuiltInCommands) { command in
+                        CommandRow(command: command, onSelect: selectCommand)
                     }
+                }
 
-                    // Skills
-                    if !debouncedFilteredSkills.isEmpty {
-                        Section("Skills") {
-                            ForEach(debouncedFilteredSkills) { skill in
-                                SkillRow(skill: skill) {
-                                    selectCommand("/\(skill.name)")
-                                }
-                            }
-                        }
-                    }
-
-                    // Model switching
-                    Section("Switch Model") {
-                        ForEach(["sonnet", "opus", "haiku"], id: \.self) { model in
-                            Button {
-                                selectCommand("--model \(model)")
-                            } label: {
-                                Label(model.capitalized, systemImage: "cpu")
+                // Skills
+                if !debouncedFilteredSkills.isEmpty {
+                    Section("Skills") {
+                        ForEach(debouncedFilteredSkills) { skill in
+                            SkillRow(skill: skill) {
+                                selectCommand("/\(skill.name)")
                             }
                         }
                     }
                 }
-            }
-            .scrollContentBackground(.hidden)
-            .background(theme.bgPrimary)
-            .searchable(text: $searchText, prompt: "Search commands...")
-            .navigationTitle("Commands")
-            #if os(iOS)
-            .inlineNavigationBarTitle()
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+
+                // Model switching
+                Section("Switch Model") {
+                    ForEach(["sonnet", "opus", "haiku"], id: \.self) { model in
+                        Button {
+                            selectCommand("--model \(model)")
+                        } label: {
+                            Label(model.capitalized, systemImage: "cpu")
+                        }
+                    }
                 }
             }
-            #if os(iOS)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(theme.bgPrimary, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            #endif
-            .task {
+        }
+        .scrollContentBackground(.hidden)
+        .background(theme.bgPrimary)
+        .searchable(text: $searchText, prompt: "Search commands...")
+        .navigationTitle("Commands")
+        #if os(iOS)
+        .inlineNavigationBarTitle()
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+        }
+        #if os(iOS)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(theme.bgPrimary, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
+        // SPERF-MED-5: Only fetch skills once — cache across presentations.
+        .task {
+            if skills.isEmpty {
                 await loadSkills()
+            } else {
+                isLoading = false
             }
-            .task(id: searchText) {
-                try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { return }
-                debouncedBuiltInCommands = Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
-                debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
-            }
+        }
+        .task(id: searchText) {
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled else { return }
+            debouncedBuiltInCommands = Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
+            debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
         }
         .preferredColorScheme(.dark)
     }
@@ -135,16 +142,6 @@ struct CommandPaletteView: View {
         CommandItem(name: "/terminal-setup", description: "Install shell integration for enhanced terminal support", icon: "terminal")
     ]
 
-    /// Built-in commands filtered by ``searchText`` (name and description, case-insensitive).
-    private var builtInCommands: [CommandItem] {
-        Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
-    }
-
-    /// API-loaded skills filtered by ``searchText`` (name, case-insensitive).
-    private var filteredSkills: [Skill] {
-        skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
-
     /// Forwards the selected command string to ``onSelect`` and dismisses the sheet.
     private func selectCommand(_ command: String) {
         onSelect(command)
@@ -162,6 +159,7 @@ struct CommandPaletteView: View {
             let response: APIResponse<ListResponse<Skill>> = try await client.get("/skills")
             if let data = response.data {
                 skills = data.items
+                Self.cachedSkills = data.items
             }
         } catch {
             AppLogger.shared.error("Failed to load skills: \(error)", category: "ui")

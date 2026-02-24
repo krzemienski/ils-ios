@@ -7,6 +7,12 @@ import ILSShared
 /// Manages both ILS-managed sessions (from database) and external Claude Code sessions
 /// (discovered from `~/.claude/projects/`). Supports pagination, search, and project grouping.
 ///
+/// SA-MED-1: This ViewModel has 19+ properties — accepted as cohesive domain scope.
+/// All properties serve tightly coupled session concerns: pagination (offset, total, hasMore),
+/// search (searchText, filteredSessions), grouping (groupedSessions, projectGroups),
+/// caching (cacheService), and CRUD operations. Splitting would fragment cache invalidation
+/// logic and create cross-ViewModel coordination complexity without meaningful benefit.
+///
 /// ## Topics
 /// ### Properties
 /// - ``sessions`` - Array of all loaded sessions
@@ -121,6 +127,12 @@ class SessionsViewModel {
         }
     }
 
+    /// Look up a session by its ID. Uses a linear scan which is fine for the
+    /// typical loaded session count (~50). Called once during state restoration.
+    func session(byID id: UUID) -> ChatSession? {
+        sessions.first { $0.id == id }
+    }
+
     /// Empty state text for UI display
     var emptyStateText: String {
         if isLoading {
@@ -226,10 +238,8 @@ class SessionsViewModel {
 
             if currentPage == 1 {
                 sessions = newItems
-                // Update cache with fresh data in background
-                Task.detached {
-                    await CacheService.shared.cacheSessions(newItems)
-                }
+                // C-MED-6: Use Task instead of Task.detached — only calls CacheService actor.
+                Task { await CacheService.shared.cacheSessions(newItems) }
             } else {
                 sessions.append(contentsOf: newItems)
             }

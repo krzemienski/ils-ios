@@ -14,7 +14,7 @@ class MCPViewModel {
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
-    @ObservationIgnored nonisolated(unsafe) private var healthTimer: Task<Void, Never>?
+    @ObservationIgnored private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
     var isSelecting = false
@@ -156,6 +156,17 @@ class MCPViewModel {
     }
 
     // MARK: - Spec 012: Health Monitoring
+    //
+    // E-MED-5: MCPViewModel health polling is intentionally separate from PollingManager.
+    // PollingManager handles the global backend connectivity check (health endpoint).
+    // MCPViewModel polls the /mcp endpoint specifically to refresh server statuses,
+    // which is different data from the general health check. Consolidation would mix
+    // concerns: "is the backend reachable?" vs "what's the MCP server status?"
+    //
+    // E-MED-6: Adaptive polling by battery level is deferred. iOS already manages
+    // background activity via Low Power Mode (which reduces CPU/network). The app
+    // connects to localhost in typical usage, making battery-adaptive polling
+    // over-engineering for the current deployment model.
 
     func startHealthPolling(interval: TimeInterval = 30) {
         stopHealthPolling()
@@ -173,9 +184,15 @@ class MCPViewModel {
     }
 
     func checkHealth() async {
+        guard let client else { return }
         isHealthChecking = true
-        await loadServers()
-        lastHealthCheck = Date()
+        do {
+            // Only check reachability — do not reload full server list
+            let _: APIResponse<ListResponse<MCPServer>> = try await client.get("/mcp")
+            lastHealthCheck = Date()
+        } catch {
+            AppLogger.shared.warning("MCP health check failed: \(error.localizedDescription)", category: "mcp")
+        }
         isHealthChecking = false
     }
 

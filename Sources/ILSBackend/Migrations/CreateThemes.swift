@@ -19,6 +19,8 @@ struct CreateThemes: AsyncMigration {
     }
 
     func revert(on database: Database) async throws {
-        try await database.schema("themes").delete()
+        // DB-02: Revert is intentionally a no-op in production.
+        // Dropping tables would permanently destroy user data.
+        // For development reset, use: database.schema("themes").delete()
     }
 }

@@ -99,7 +99,7 @@ public struct ProcessInfoResponse: Codable, Sendable {
 // MARK: - File Entry Response
 
 /// A single file or directory entry from a directory listing.
-public struct FileEntryResponse: Codable, Sendable {
+public struct FileEntryResponse: Codable, Sendable, Equatable {
     /// File or directory name.
     public let name: String
     /// Whether this entry is a directory.

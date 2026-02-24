@@ -139,11 +139,14 @@ struct SystemMonitorView: View {
             viewModel.disconnect()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                if viewModel.isConnected {
-                    livePulse = true
-                }
-            } else {
+            switch phase {
+            case .active:
+                viewModel.connect()  // BATT-02: Resume WebSocket on foreground
+                if viewModel.isConnected { livePulse = true }
+            case .background:
+                viewModel.disconnect()  // BATT-02: Suspend WebSocket on background
+                livePulse = false
+            default:
                 livePulse = false
             }
         }

@@ -29,10 +29,10 @@ struct MacSettingsView: View {
     @Environment(AppState.self) var appState
     @Environment(ThemeManager.self) var themeManager
     @Environment(\.theme) var theme: ThemeSnapshot
-    @State var viewModel = SettingsViewModel()
+    @State private var viewModel = SettingsViewModel()
 
     @State private var selectedTab: SettingsTab = .general
-    @State var serverURL: String = ""
+    @State private var serverURL: String = ""
     @AppStorage("colorScheme") var colorSchemePreference: String = "dark"
     @AppStorage("defaultModel") var defaultModel: String = "claude-sonnet-4-20250514"
     @AppStorage("enableAgentTeams") var enableAgentTeams: Bool = false

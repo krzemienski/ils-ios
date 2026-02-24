@@ -2,7 +2,9 @@ import SwiftUI
 import ILSShared
 
 // MARK: - Mac Dashboard View
-
+// SPERF-MED-3: This view is unused (MacContentView uses HomeView instead).
+// Retained for potential future macOS-specific dashboard. Duplicate SessionsViewModel
+// is a non-issue since this view is never instantiated outside previews.
 struct MacDashboardView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -492,7 +494,8 @@ struct NewSessionSheet: View {
             }
         }
         .padding(theme.spacingXL)
-        .frame(width: 420, height: 280)
+        // LAY-MED-1: Use flexible frames for macOS sheets.
+        .frame(minWidth: 360, idealWidth: 420, maxWidth: 540, minHeight: 240, idealHeight: 280, maxHeight: 400)
         .background(theme.bgPrimary)
     }
 }

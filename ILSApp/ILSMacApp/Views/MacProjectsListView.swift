@@ -257,7 +257,8 @@ struct MacProjectsListView: View {
                 showingCreateSheet = false
             }
         )
-        .frame(width: 480, height: 400)
+        // LAY-MED-1: Use flexible frames for macOS sheets.
+        .frame(minWidth: 400, idealWidth: 480, maxWidth: 600, minHeight: 300, idealHeight: 400, maxHeight: 600)
     }
 
     // MARK: - Edit Project Sheet
@@ -285,7 +286,8 @@ struct MacProjectsListView: View {
                 projectToEdit = nil
             }
         )
-        .frame(width: 480, height: 400)
+        // LAY-MED-1: Use flexible frames for macOS sheets.
+        .frame(minWidth: 400, idealWidth: 480, maxWidth: 600, minHeight: 300, idealHeight: 400, maxHeight: 600)
     }
 
     // MARK: - Helpers

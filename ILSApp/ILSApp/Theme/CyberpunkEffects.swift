@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 // MARK: - Glow Effect
 
@@ -34,29 +35,48 @@ extension View {
 struct PulsingGlow: ViewModifier {
     let color: Color
     @State private var isAnimating = false
+    @State private var isVisible = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .shadow(
-                color: color.opacity(reduceMotion ? 0.4 : (isAnimating ? 0.6 : 0.2)),
-                radius: reduceMotion ? 10 : (isAnimating ? 15 : 5)
+                color: color.opacity((reduceMotion || isLowPowerMode) ? 0.4 : (isAnimating ? 0.6 : 0.2)),
+                radius: (reduceMotion || isLowPowerMode) ? 10 : (isAnimating ? 15 : 5)
             )
             .onAppear {
-                guard !reduceMotion, !isAnimating else { return }
+                isVisible = true
+                guard !reduceMotion, !isLowPowerMode, !isAnimating else { return }
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
+            .onDisappear {
+                isVisible = false
+                withAnimation(.linear(duration: 0.1)) {
+                    isAnimating = false
+                }
+            }
             .onChange(of: scenePhase) { _, newPhase in
-                guard !reduceMotion else { return }
-                if newPhase == .active {
+                guard !reduceMotion, !isLowPowerMode else { return }
+                if newPhase == .active, isVisible {
                     guard !isAnimating else { return }
                     withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                         isAnimating = true
                     }
                 } else {
+                    withAnimation(.linear(duration: 0.1)) {
+                        isAnimating = false
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: Notification.Name.NSProcessInfoPowerStateDidChange
+            )) { _ in
+                isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+                if isLowPowerMode {
                     withAnimation(.linear(duration: 0.1)) {
                         isAnimating = false
                     }
@@ -76,20 +96,27 @@ extension View {
 struct PulsingModifier: ViewModifier {
     let active: Bool
     @State private var isAnimating = false
+    @State private var isVisible = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
-            .opacity(reduceMotion ? 1.0 : (active && isAnimating ? 0.5 : 1.0))
+            .opacity((reduceMotion || isLowPowerMode) ? 1.0 : (active && isAnimating ? 0.5 : 1.0))
             .onAppear {
-                guard active, !isAnimating, !reduceMotion else { return }
+                isVisible = true
+                guard active, !isAnimating, !reduceMotion, !isLowPowerMode else { return }
                 withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                     isAnimating = true
                 }
             }
+            .onDisappear {
+                isVisible = false
+                isAnimating = false
+            }
             .onChange(of: active) { oldValue, newValue in
-                guard !reduceMotion else { return }
+                guard !reduceMotion, !isLowPowerMode else { return }
                 if newValue {
                     guard !isAnimating else { return }
                     isAnimating = false // reset before re-arming
@@ -101,8 +128,8 @@ struct PulsingModifier: ViewModifier {
                 }
             }
             .onChange(of: scenePhase) { _, newPhase in
-                guard active, !reduceMotion else { return }
-                if newPhase == .active {
+                guard active, !reduceMotion, !isLowPowerMode else { return }
+                if newPhase == .active, isVisible {
                     guard !isAnimating else { return }
                     isAnimating = false // reset before re-arming
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
@@ -112,6 +139,14 @@ struct PulsingModifier: ViewModifier {
                     withAnimation(.linear(duration: 0.1)) {
                         isAnimating = false
                     }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: Notification.Name.NSProcessInfoPowerStateDidChange
+            )) { _ in
+                isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+                if isLowPowerMode {
+                    isAnimating = false
                 }
             }
     }

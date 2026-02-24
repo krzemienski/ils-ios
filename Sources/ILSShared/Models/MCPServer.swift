@@ -8,6 +8,20 @@ public enum MCPScope: String, Codable, Sendable {
     case project
     /// Local configuration (current directory).
     case local
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized MCPScope: '\(raw)'. Expected: user, project, local"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Health status of an MCP server.
@@ -18,6 +32,20 @@ public enum MCPStatus: String, Codable, Sendable {
     case unhealthy
     /// Health status not yet determined.
     case unknown
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        guard let value = Self(rawValue: raw) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unrecognized MCPStatus: '\(raw)'. Expected: healthy, unhealthy, unknown"
+                )
+            )
+        }
+        self = value
+    }
 }
 
 /// Represents an MCP (Model Context Protocol) server configuration.

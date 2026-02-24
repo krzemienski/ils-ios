@@ -38,6 +38,20 @@ public struct FleetHost: Codable, Identifiable, Hashable, Sendable {
         case unreachable
         /// Health status has not been checked.
         case unknown
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized HealthStatus: '\(raw)'. Expected: healthy, degraded, unreachable, unknown"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Creates a new fleet host entry.

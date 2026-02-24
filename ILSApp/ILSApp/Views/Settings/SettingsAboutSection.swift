@@ -155,7 +155,7 @@ struct SettingsAboutSection: View {
     // MARK: - Reusable Components
 
     @ViewBuilder
-    func sectionLabel(_ text: String) -> some View {
+    private func sectionLabel(_ text: String) -> some View {
         Text(text)
             .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
             .foregroundStyle(theme.textTertiary)
@@ -164,7 +164,7 @@ struct SettingsAboutSection: View {
     }
 
     @ViewBuilder
-    func settingsRow(_ label: String, value: String) -> some View {
+    private func settingsRow(_ label: String, value: String) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))

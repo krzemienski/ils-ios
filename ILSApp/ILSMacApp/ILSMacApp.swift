@@ -137,7 +137,14 @@ class AppState {
     }
 
     func handleScenePhase(_ phase: ScenePhase) {
-        pollingManager.handleScenePhase(phase)
+        let appPhase: PollingManager.AppPhase
+        switch phase {
+        case .active: appPhase = .active
+        case .inactive: appPhase = .inactive
+        case .background: appPhase = .background
+        @unknown default: appPhase = .inactive
+        }
+        pollingManager.handleScenePhase(appPhase)
     }
 
     func updateLastSessionId(_ id: UUID?) {

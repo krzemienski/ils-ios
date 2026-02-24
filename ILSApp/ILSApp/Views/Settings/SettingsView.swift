@@ -98,10 +98,7 @@ struct SettingsView: View {
     }
 
     private func testConnection() {
-        Task {
-            saveServerSettings()
-            await viewModel.testConnection()
-        }
+        viewModel.saveAndTestConnection(url: serverURL, appState: appState)
     }
 
     // MARK: - Color Scheme

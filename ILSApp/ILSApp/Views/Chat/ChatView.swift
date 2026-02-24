@@ -220,7 +220,7 @@ struct ChatView: View {
     /// Scrollable list of chat messages with delete and retry gesture support.
     private var messageList: some View {
         ChatMessageList(
-            messages: viewModel.messages,
+            messages: viewModel.displayMessages,
             isStreaming: viewModel.isStreaming,
             isLoadingHistory: viewModel.isLoadingHistory,
             statusText: viewModel.statusText,
@@ -233,6 +233,11 @@ struct ChatView: View {
             },
             onRetryMessage: { msg in
                 viewModel.retryMessage(msg, projectId: session.projectId)
+            },
+            canLoadMore: viewModel.canLoadOlderMessages,
+            isLoadingMore: viewModel.isLoadingOlderMessages,
+            onLoadMore: {
+                Task { await viewModel.loadOlderMessages() }
             },
             sessionProjectId: session.projectId?.uuidString
         )

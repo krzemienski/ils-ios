@@ -10,11 +10,13 @@ struct LogViewerView: View {
                 ContentUnavailableView("No Logs", systemImage: "doc.text", description: Text("App logs will appear here"))
                     .foregroundStyle(theme.textSecondary)
             } else {
+                // SPERF-MED-6: Use index-based ID for stable ForEach identity.
+                // SPERF-MED-2: logColor computed inline — no caching needed for simple contains checks.
                 LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
-                        Text(line)
+                    ForEach(logs.indices, id: \.self) { index in
+                        Text(logs[index])
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(logColor(for: line))
+                            .foregroundStyle(logColor(for: logs[index]))
                             .padding(.horizontal, theme.spacingSM)
                             .padding(.vertical, 2)
                     }

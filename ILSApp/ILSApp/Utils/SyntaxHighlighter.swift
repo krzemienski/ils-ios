@@ -1,17 +1,20 @@
 import Foundation
+import os
 import Splash
 import SwiftUI
 
-/// Wrapper around Splash library for syntax highlighting code
+/// Wrapper around Splash library for syntax highlighting code.
+/// Nonisolated with OSAllocatedUnfairLock-protected cache so highlighting
+/// can run on background threads via Task.detached without blocking the main thread.
 enum SyntaxHighlighter {
     /// Shared output format instance (stateless, safe to reuse)
     private static let outputFormat = AttributedStringOutputFormat()
 
     /// Cache of highlighters keyed by language to avoid per-call allocation.
-    /// `nonisolated(unsafe)` is safe here because:
-    /// - Dictionary reads/writes happen only on @MainActor (SwiftUI rendering)
-    /// - Splash.SyntaxHighlighter is a struct, so values are copied on read
-    nonisolated(unsafe) private static var highlighterCache: [String: Splash.SyntaxHighlighter<AttributedStringOutputFormat>] = [:]
+    /// Protected by OSAllocatedUnfairLock for thread-safe access from any thread.
+    private static let cacheLock = OSAllocatedUnfairLock(
+        initialState: [String: Splash.SyntaxHighlighter<AttributedStringOutputFormat>]()
+    )
 
     /// Highlight code with syntax colors using Splash
     /// - Parameters:
@@ -24,14 +27,16 @@ enum SyntaxHighlighter {
             return plainMonospace(code)
         }
 
-        // Reuse cached highlighter for this language to avoid per-call allocation
-        let highlighter: Splash.SyntaxHighlighter<AttributedStringOutputFormat>
-        if let cached = highlighterCache[language] {
-            highlighter = cached
-        } else {
+        // Get or create highlighter under the lock, then highlight OUTSIDE the lock
+        // (highlighting is the expensive part and should not hold the lock)
+        let highlighter = cacheLock.withLock { cache -> Splash.SyntaxHighlighter<AttributedStringOutputFormat> in
+            if let cached = cache[language] {
+                return cached
+            }
             let grammar = grammarForLanguage(language)
-            highlighter = Splash.SyntaxHighlighter(format: outputFormat, grammar: grammar)
-            highlighterCache[language] = highlighter
+            let h = Splash.SyntaxHighlighter(format: outputFormat, grammar: grammar)
+            cache[language] = h
+            return h
         }
 
         return highlighter.highlight(code)

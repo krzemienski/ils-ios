@@ -2,6 +2,9 @@ import SwiftUI
 import ILSShared
 
 /// macOS-optimized sessions list view with search, grouping, and keyboard navigation
+/// SPERF-MED-4: This view is unused (MacContentView manages sessions inline).
+/// Retained for potential future macOS-specific sessions UI. Duplicate SessionsViewModel
+/// is a non-issue since this view is never instantiated outside previews.
 struct MacSessionsListView: View {
     @State private var viewModel = SessionsViewModel()
     @Environment(AppState.self) var appState

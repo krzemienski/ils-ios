@@ -131,6 +131,7 @@ struct HostProfileDetailView: View {
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.accent)
                 }
+                .accessibilityLabel("Refresh logs")
             }
 
             ScrollView {
@@ -141,8 +142,9 @@ struct HostProfileDetailView: View {
                             .foregroundStyle(theme.textTertiary)
                             .padding(.vertical, theme.spacingSM)
                     } else {
-                        ForEach(Array(logs.enumerated()), id: \.offset) { _, line in
-                            Text(line)
+                        // SPERF-MED-6: Use indices for stable ForEach identity.
+                        ForEach(logs.indices, id: \.self) { index in
+                            Text(logs[index])
                                 .font(.system(size: 11, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }

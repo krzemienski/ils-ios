@@ -42,11 +42,19 @@ struct ThinkingSection: View {
                 startPulsing()
             }
         }
+        .onDisappear {
+            // H-E1: Cancel repeatForever animation to stop GPU work after navigation.
+            withAnimation(.linear(duration: 0.0)) {
+                pulseScale = 1.0
+            }
+        }
         .onChange(of: isActive) { _, active in
             if active && !reduceMotion {
                 startPulsing()
             } else {
-                pulseScale = 1.0
+                withAnimation(.linear(duration: 0.0)) {
+                    pulseScale = 1.0
+                }
             }
         }
         .onChange(of: scenePhase) { _, phase in

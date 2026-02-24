@@ -23,6 +23,20 @@ public struct ServerConnection: Codable, Identifiable, Hashable, Sendable {
         case password
         /// SSH key-based authentication.
         case sshKey
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let raw = try container.decode(String.self)
+            guard let value = Self(rawValue: raw) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: decoder.codingPath,
+                        debugDescription: "Unrecognized AuthMethod: '\(raw)'. Expected: password, sshKey"
+                    )
+                )
+            }
+            self = value
+        }
     }
 
     /// Creates a new server connection.
