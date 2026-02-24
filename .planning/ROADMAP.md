@@ -521,7 +521,7 @@ Plans:
 | 26. Concurrency MEDIUM + LOW | 2/2 | Complete    | 2026-02-24 | - |
 | 27. Energy + Memory | 3/3 | Complete    | 2026-02-24 | - |
 | 28. SwiftUI Performance | 2/2 | Complete    | 2026-02-24 | - |
-| 29. Testing CRITICAL — Sleep Replacement | v1.5 | 0/? | Planned | - |
+| 29. Testing CRITICAL — Sleep Replacement | 1/2 | In Progress|  | - |
 | 30. Testing Infrastructure | v1.5 | 0/2 | Planned | - |
 | 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
 | 32. Final Validation | v1.5 | 0/? | Planned | - |
