@@ -60,7 +60,7 @@
 - [x] **Phase 14: SSE & Background Lifecycle** - Low Power Mode polling, background suspend/resume for SSE and WebSocket (completed 2026-02-23)
 - [x] **Phase 15: View Layer Rendering** - 60fps session scrolling, chat virtualization, off-thread syntax highlighting, animation gating (completed 2026-02-23)
 - [x] **Phase 16: Cross-Platform Verification** - macOS compilation, full v1.0 REQ regression check (completed 2026-02-23)
-- [ ] **Phase 17: Regression Test Infrastructure** - XCTest performance baselines, MetricKit production metrics
+- [x] **Phase 17: Regression Test Infrastructure** - XCTest performance baselines, MetricKit production metrics (completed 2026-02-24)
 
 ## Phase Details
 
@@ -342,7 +342,7 @@ Plans:
 | 14. SSE & Background | 1/1 | Complete    | 2026-02-23 | - |
 | 15. View Layer Rendering | 3/3 | Complete    | 2026-02-23 | - |
 | 16. Cross-Platform Verify | v2.0 | Complete    | 2026-02-24 | 2026-02-23 |
-| 17. Regression Tests | 1/2 | In Progress|  | - |
+| 17. Regression Tests | 2/2 | Complete   | 2026-02-24 | - |
 | 18. CRITICAL Fixes | 4/4 | Complete   | 2026-02-22 | - |
 | 19. Concurrency + Memory HIGH | 3/3 | Complete    | 2026-02-22 | - |
 | 20. Architecture + Performance HIGH | 4/4 | Complete   | 2026-02-22 | - |
