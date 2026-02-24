@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 25-32 (planning all phases in parallel)
-Plan: —
-Status: Planning — 8 planner agents spawned in parallel
-Last activity: 2026-02-24 — Roadmap phases 25-32 defined, requirements mapped, planners launched
+Phase: 25-concurrency-high-swift6-blockers
+Plan: 2 of 2 complete
+Status: Phase 25 COMPLETE — all 4 HIGH concurrency defects + 2 Swift 6 blockers resolved
+Last activity: 2026-02-24 — Completed 25-02 (WebSocket Task capture + ClaudeExecutorService static var)
 
 ## Previous Milestones
 
@@ -29,6 +29,10 @@ Last activity: 2026-02-24 — Roadmap phases 25-32 defined, requirements mapped,
 - [v1.5]: v1.5 naming is user-specified, decoupled from internal phase numbering
 - [v1.5]: 10 issues already fixed in commit c57690f before milestone start
 - [v1.5]: Testing is largest category (~19 issues) — likely gets its own phase(s)
+- [25-01]: Used kill(pid, 0) instead of process.isRunning to avoid non-Sendable Process in Task.detached
+- [25-01]: hasResumed boolean guard pattern for continuation double-resume safety (3 resume sites)
+- [25-02]: Used [weak self] on inner Task closures (not just outer closure) in WebSocket handlers
+- [25-02]: Used nonisolated(unsafe) for useAgentSDK static var -- set-once-read-many pattern, eliminates Swift 6 blocker
 
 ### Audit Source Data
 
@@ -42,13 +46,13 @@ None yet.
 
 ### Blockers/Concerns
 
-- Swift 6 strict-concurrency=complete has 2 compile-error blockers (ClaudeExecutorService, TeamsExecutorService)
+- Swift 6 strict-concurrency=complete: both compile-error blockers resolved (TeamsExecutorService in 25-01, ClaudeExecutorService in 25-02)
 - Testing overhaul is the highest-effort category (~8-12 hrs estimated)
 
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Milestone v1.5 initialization (requirements definition in progress)
+Stopped at: Completed 25-01-PLAN.md (TeamsExecutorService + SystemMetricsService concurrency fixes)
 Resume file: None
 Audit data: scratch/audit-findings-2026-02-24.md
-Prior commits: c57690f (10 CRITICAL/HIGH fixes)
+Prior commits: c57690f (10 CRITICAL/HIGH fixes), 3dcf61f (CONC-01/CONC-07/SWIFT6-02)

@@ -23,13 +23,13 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 ### Concurrency
 
-- [ ] **CONC-01**: TeamsExecutorService non-Sendable Process in Task.detached resolved (H-C1)
+- [x] **CONC-01**: TeamsExecutorService non-Sendable Process in Task.detached resolved (H-C1)
 - [ ] **CONC-02**: WebSocketService ws.onText Task uses [weak self] or Sendable capture (H-C2)
 - [ ] **CONC-03**: ProjectsViewModel unnecessary Task.detached replaced (MED-03)
 - [ ] **CONC-04**: SpotlightIndexer completion handler converted to async/await (MED-04)
 - [ ] **CONC-05**: PollingManager unowned reference design reviewed and documented (MED-01)
 - [ ] **CONC-06**: SubscriptionManager.init Tasks deferred until after full initialization (MED-06)
-- [ ] **CONC-07**: SystemMetricsService continuation double-resume risk eliminated (MED-07)
+- [x] **CONC-07**: SystemMetricsService continuation double-resume risk eliminated (MED-07)
 - [ ] **CONC-08**: NotificationManager.checkAuthorizationStatus capture fixed (MED-05)
 - [ ] **CONC-09**: TunnelService terminationHandler capture uses [weak self] (MMED-01)
 - [ ] **CONC-10**: ClaudeExecutorService.useAgentSDK mutable static resolved (Swift 6 blocker) (MMED-02)
@@ -75,7 +75,7 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 ### Swift 6 Preparation
 
 - [ ] **SWIFT6-01**: ClaudeExecutorService.useAgentSDK mutable static var resolved for strict concurrency
-- [ ] **SWIFT6-02**: TeamsExecutorService.shutdownTeammate non-Sendable Process crossing resolved
+- [x] **SWIFT6-02**: TeamsExecutorService.shutdownTeammate non-Sendable Process crossing resolved
 - [ ] **SWIFT6-03**: Build verified with -strict-concurrency=targeted (no new errors introduced)
 
 ## Future Requirements

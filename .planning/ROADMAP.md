@@ -328,7 +328,7 @@ Plans:
 **Source Data:** `scratch/audit-findings-2026-02-24.md` (70 issues from 16 parallel agents)
 **Prior Fixes:** commit c57690f (10 CRITICAL/HIGH issues across 9 files)
 
-- [ ] **Phase 25: Concurrency HIGH + Swift 6 Blockers** — 4 dangerous concurrency defects: non-Sendable Process, WebSocket capture, continuation double-resume, mutable static var
+- [x] **Phase 25: Concurrency HIGH + Swift 6 Blockers** — 4 dangerous concurrency defects: non-Sendable Process, WebSocket capture, continuation double-resume, mutable static var (completed 2026-02-24)
 - [ ] **Phase 26: Concurrency MEDIUM + LOW** — 15 remaining concurrency issues: Task.detached patterns, completion-to-async, nonisolated(unsafe), isolation verification
 - [ ] **Phase 27: Energy + Memory** — 16 issues: material overhead, constrained network, LPM polling, flush timers, GPU passes, delegate cycles, observer cleanup
 - [ ] **Phase 28: SwiftUI Performance** — 6 issues: CIFilter verification, computed filter caching, .contains() per tick, lazy VStack, duplicate formatModelName
@@ -517,7 +517,7 @@ Plans:
 | 22. Energy + Build + A11Y + Networking HIGH | v3.0 | 3/3 | Complete | 2026-02-22 |
 | 23. All MEDIUM + LOW Issues | v3.0 | 7/7 | Complete | 2026-02-22 |
 | 24. Validation + Documentation | v3.0 | 1/1 | Complete | 2026-02-23 |
-| 25. Concurrency HIGH + Swift 6 Blockers | v1.5 | 0/? | Planned | - |
+| 25. Concurrency HIGH + Swift 6 Blockers | 2/2 | Complete   | 2026-02-24 | - |
 | 26. Concurrency MEDIUM + LOW | v1.5 | 0/? | Planned | - |
 | 27. Energy + Memory | v1.5 | 0/? | Planned | - |
 | 28. SwiftUI Performance | v1.5 | 0/? | Planned | - |
