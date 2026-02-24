@@ -140,7 +140,7 @@ struct MacContentView: View {
             isSearchFocused = true
             return .handled
         }
-        .sheet(isPresented: $appState.showOnboarding) {
+        .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)

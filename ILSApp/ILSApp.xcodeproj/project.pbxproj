@@ -171,6 +171,7 @@
 		6E34C5445A2760CEE34B49CE /* CitadelSSHService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */; };
 		6FF2FE7DC2E16FC1CCC1DADB /* CacheStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A7C4DEC0862087B19372E0 /* CacheStatusView.swift */; };
 		7028F525BA99455BEDFE1F6F /* HostProfilesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */; };
+		AA11BB22CC33DD44EE55FF67 /* HooksViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF66 /* HooksViewModel.swift */; };
 		7032D6514C652C6659D7AAC1 /* AgentTeamsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE41ED8B341B393213181A2 /* AgentTeamsListView.swift */; };
 		71C18EAD0BF92EFF8D18EFF9 /* NavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B824DF030C0B4B82286920E /* NavigationTests.swift */; };
 		7325F9F731AFB7AC98F31B02 /* Scenario11_ExtendedChatConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA64C24264E1BEDA2EC9E517 /* Scenario11_ExtendedChatConversation.swift */; };
@@ -380,6 +381,7 @@
 		FC8E8149BA516A5E6CE398EC /* ThinkingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 821CFEE940D55731D5E8D672 /* ThinkingSection.swift */; };
 		FE3FF3C3B777C6E27B42FCA1 /* CitadelSSHService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */; };
 		FE55A27609BDAB92D6E33BB2 /* HostProfilesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */; };
+		AA11BB22CC33DD44EE55FF68 /* HooksViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF66 /* HooksViewModel.swift */; };
 		FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
@@ -537,6 +539,7 @@
 		A737BC14D9734232F0E080B8 /* ToastModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastModifier.swift; sourceTree = "<group>"; };
 		AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionMode.swift; sourceTree = "<group>"; };
 		ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostProfilesViewModel.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55FF66 /* HooksViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksViewModel.swift; sourceTree = "<group>"; };
 		AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalDatabase.swift; sourceTree = "<group>"; };
 		AF8AAD2FE6EFAF610173E82A /* SkeletonRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonRow.swift; sourceTree = "<group>"; };
 		B121B5870E59B111E9F54CFC /* AssistantCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantCard.swift; sourceTree = "<group>"; };
@@ -1083,6 +1086,7 @@
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
 				24D353CDD851FB15B68338DA /* FleetViewModel.swift */,
 				ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */,
+				AA11BB22CC33DD44EE55FF66 /* HooksViewModel.swift */,
 				974AE71DCAD6F3D4705F56B8 /* MCPViewModel.swift */,
 				6B5A3A7DE6A8C29B6859190C /* NewSessionViewModel.swift */,
 				49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */,
@@ -1464,6 +1468,7 @@
 				95865DF75FE8F66BBF3DDCB9 /* HapticManager.swift in Sources */,
 				670190C2C456CD11D49B71AD /* HomeView.swift in Sources */,
 				DAF4A04FCE7DA11423A0F8E5 /* HooksManagementView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF67 /* HooksViewModel.swift in Sources */,
 				BDEC0563E52F5228E7EAB372 /* HostProfileDetailView.swift in Sources */,
 				4F6BF4FC5433FAB1EB094E9E /* HostProfilesView.swift in Sources */,
 				7028F525BA99455BEDFE1F6F /* HostProfilesViewModel.swift in Sources */,
@@ -1633,6 +1638,7 @@
 				E40DD2C368904D059EF66C6F /* HapticManager.swift in Sources */,
 				5D82EF938390DCD237527FF0 /* HomeView.swift in Sources */,
 				D16F32907FC22CE7467DF3CD /* HooksManagementView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF68 /* HooksViewModel.swift in Sources */,
 				1BAFCBAC8E2589E35EE8978F /* HostProfileDetailView.swift in Sources */,
 				457B3E555C76D5D61825281B /* HostProfilesView.swift in Sources */,
 				FE55A27609BDAB92D6E33BB2 /* HostProfilesViewModel.swift in Sources */,
