@@ -98,65 +98,65 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
-| TEST-06 | TBD | Pending |
-| TEST-07 | TBD | Pending |
-| TEST-08 | TBD | Pending |
-| TEST-09 | TBD | Pending |
-| TEST-10 | TBD | Pending |
-| TEST-11 | TBD | Pending |
-| CONC-01 | TBD | Pending |
-| CONC-02 | TBD | Pending |
-| CONC-03 | TBD | Pending |
-| CONC-04 | TBD | Pending |
-| CONC-05 | TBD | Pending |
-| CONC-06 | TBD | Pending |
-| CONC-07 | TBD | Pending |
-| CONC-08 | TBD | Pending |
-| CONC-09 | TBD | Pending |
-| CONC-10 | TBD | Pending |
-| CONC-11 | TBD | Pending |
-| CONC-12 | TBD | Pending |
-| CONC-13 | TBD | Pending |
-| CONC-14 | TBD | Pending |
-| CONC-15 | TBD | Pending |
-| CONC-16 | TBD | Pending |
-| CONC-17 | TBD | Pending |
-| ENRG-01 | TBD | Pending |
-| ENRG-02 | TBD | Pending |
-| ENRG-03 | TBD | Pending |
-| ENRG-04 | TBD | Pending |
-| ENRG-05 | TBD | Pending |
-| ENRG-06 | TBD | Pending |
-| ENRG-07 | TBD | Pending |
-| ENRG-08 | TBD | Pending |
-| MEM-01 | TBD | Pending |
-| MEM-02 | TBD | Pending |
-| MEM-03 | TBD | Pending |
-| MEM-04 | TBD | Pending |
-| MEM-05 | TBD | Pending |
-| MEM-06 | TBD | Pending |
-| MEM-07 | TBD | Pending |
-| MEM-08 | TBD | Pending |
-| UIPERF-01 | TBD | Pending |
-| UIPERF-02 | TBD | Pending |
-| UIPERF-03 | TBD | Pending |
-| UIPERF-04 | TBD | Pending |
-| UIPERF-05 | TBD | Pending |
-| UIPERF-06 | TBD | Pending |
-| SWIFT6-01 | TBD | Pending |
-| SWIFT6-02 | TBD | Pending |
-| SWIFT6-03 | TBD | Pending |
+| CONC-01 | 25 | Planned |
+| CONC-02 | 25 | Planned |
+| CONC-07 | 25 | Planned |
+| CONC-10 | 25 | Planned |
+| SWIFT6-01 | 25, 31 | Planned |
+| SWIFT6-02 | 25, 31 | Planned |
+| CONC-03 | 26 | Planned |
+| CONC-04 | 26 | Planned |
+| CONC-05 | 26 | Planned |
+| CONC-06 | 26 | Planned |
+| CONC-08 | 26 | Planned |
+| CONC-09 | 26 | Planned |
+| CONC-11 | 26 | Planned |
+| CONC-12 | 26 | Planned |
+| CONC-13 | 26 | Planned |
+| CONC-14 | 26 | Planned |
+| CONC-15 | 26 | Planned |
+| CONC-16 | 26 | Planned |
+| CONC-17 | 26 | Planned |
+| ENRG-01 | 27 | Planned |
+| ENRG-02 | 27 | Planned |
+| ENRG-03 | 27 | Planned |
+| ENRG-04 | 27 | Planned |
+| ENRG-05 | 27 | Planned |
+| ENRG-06 | 27 | Planned |
+| ENRG-07 | 27 | Planned |
+| ENRG-08 | 27 | Planned |
+| MEM-01 | 27 | Planned |
+| MEM-02 | 27 | Planned |
+| MEM-03 | 27 | Planned |
+| MEM-04 | 27 | Planned |
+| MEM-05 | 27 | Planned |
+| MEM-06 | 27 | Planned |
+| MEM-07 | 27 | Planned |
+| MEM-08 | 27 | Planned |
+| UIPERF-01 | 28 | Planned |
+| UIPERF-02 | 28 | Planned |
+| UIPERF-03 | 28 | Planned |
+| UIPERF-04 | 28 | Planned |
+| UIPERF-05 | 28 | Planned |
+| UIPERF-06 | 28 | Planned |
+| TEST-01 | 29 | Planned |
+| TEST-02 | 29 | Planned |
+| TEST-03 | 29 | Planned |
+| TEST-04 | 29 | Planned |
+| TEST-05 | 30 | Planned |
+| TEST-06 | 30 | Planned |
+| TEST-07 | 30 | Planned |
+| TEST-08 | 30 | Planned |
+| TEST-09 | 30 | Planned |
+| TEST-10 | 30 | Planned |
+| TEST-11 | 30 | Planned |
+| SWIFT6-03 | 31 | Planned |
 
 **Coverage:**
-- v1.5 requirements: 50 total
-- Mapped to phases: 0
-- Unmapped: 50 (pending roadmap creation)
+- v1.5 requirements: 50 total (+ 2 shared: SWIFT6-01/02 in Phase 25 and 31)
+- Mapped to phases: 50/50 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-24*
-*Last updated: 2026-02-24 after initial definition*
+*Last updated: 2026-02-24 — all requirements mapped to phases 25-32*

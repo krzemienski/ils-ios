@@ -390,11 +390,12 @@ Plans:
   5. `NotificationManager` UNUserNotificationCenter delegate lifecycle correct; `SSEClient` observer removed in cleanup()
   6. All LOW memory items (NSTask hold, DispatchWorkItem timeout, flush timer false positive) resolved or documented
   7. Both iOS and macOS build with zero errors
-**Plans**: 2 plan(s)
+**Plans**: 3 plans
 
 Plans:
-- [ ] 27-01-PLAN.md -- Energy fixes: ConnectionBanner, SSEClient, Fleet LPM, AppLogger flush, GlowEffect, WindowManager
-- [ ] 27-02-PLAN.md -- Memory fixes: PollingManager, WindowManager delegate, NotificationManager, SSEClient observer, LOW items
+- [ ] 27-01-PLAN.md -- Energy: UI + Network (ConnectionBanner material, SSEClient config/cleanup, Fleet LPM polling, GlowEffect single-shadow)
+- [ ] 27-02-PLAN.md -- Energy + Memory: Services (AppLogger flush timer, SyncCoordinator debounce/observer, PollingManager docs)
+- [ ] 27-03-PLAN.md -- macOS + Backend Memory (WindowManager delegate cycle, NotificationManager lifecycle, TeamsExecutorService NSTask cleanup)
 
 ---
 
@@ -447,10 +448,11 @@ Plans:
   5. Test data factories/builders exist for common test objects (Session, Project, Message)
   6. Test parallelization configured in test plan
   7. All tests pass when run via `xcodebuild test`
-**Plans**: 1 plan(s)
-
+**Plans**: 2 plans
 Plans:
-- [ ] 30-01-PLAN.md -- Testing infrastructure: UI test optimization, Swift Testing migration, test factories, parallelization
+
+- [ ] 30-01-PLAN.md -- Swift Testing migration: ILSSharedTests + ILSBackendTests placeholders replaced, test data factories, Codable/enum tests
+- [ ] 30-02-PLAN.md -- UI test infrastructure: NavigationTests setUp fix, test parallelization config, startup optimization
 
 ---
 
@@ -485,7 +487,8 @@ Plans:
 **Plans**: 1 plan(s)
 
 Plans:
-- [ ] 32-01-PLAN.md -- Final validation: 3-target build, 5 Axiom audits, v1.0 REQ regression, findings update
+- [ ] 32-01-PLAN.md -- Build verification, test suite, 5 Axiom audits, v1.0 REQ spot-check
+- [ ] 32-02-PLAN.md -- Audit findings resolution update, milestone closure
 
 ---
 
@@ -519,6 +522,6 @@ Plans:
 | 27. Energy + Memory | v1.5 | 0/? | Planned | - |
 | 28. SwiftUI Performance | v1.5 | 0/? | Planned | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | 0/? | Planned | - |
-| 30. Testing Infrastructure | v1.5 | 0/? | Planned | - |
+| 30. Testing Infrastructure | v1.5 | 0/2 | Planned | - |
 | 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
 | 32. Final Validation | v1.5 | 0/? | Planned | - |
