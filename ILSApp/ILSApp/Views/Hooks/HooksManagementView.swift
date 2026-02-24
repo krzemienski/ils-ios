@@ -343,3 +343,4 @@ struct HooksManagementView: View {
             .environment(AppState())
     }
 }
+
