@@ -1,10 +1,32 @@
 import SwiftUI
 import ILSShared
 
-/// Modal presented when Claude requests permission to use a tool.
-/// Shows tool name, input preview, and allow/deny buttons.
+/// Sheet that interrupts the chat flow to let the user approve or deny a Claude tool-use request.
+///
+/// Structured as a fixed three-zone layout: a header with a shield icon and "Permission Required"
+/// title, a scrollable body showing the tool name/icon/description and a formatted input preview,
+/// and a pinned footer with Deny (error-tinted) and Allow (success-filled) buttons.
+///
+/// The tool icon and human-readable description are derived from keyword matching on
+/// `request.toolName` (bash → terminal, write → doc.text, etc.) via private computed properties.
+/// The `request.toolInput` `AnyCodable` value is unpacked into a sorted `key: value` multiline
+/// string for the input preview section.
+///
+/// Tapping either action button calls `onDecision` with `"allow"` or `"deny"`, then dismisses
+/// the sheet using the SwiftUI environment `dismiss` action. The caller is responsible for
+/// forwarding the decision string to the backend permission endpoint.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``request`` - The `PermissionRequest` model describing the tool name and encoded input
+///
+/// ### Callbacks
+/// - ``onDecision`` - Called with `"allow"` or `"deny"` before the sheet is dismissed
 struct PermissionRequestModal: View {
+    /// The permission request describing which tool Claude wants to invoke and its input payload.
     let request: PermissionRequest
+    /// Called with `"allow"` or `"deny"` when the user taps an action button.
+    /// The sheet is dismissed immediately after this closure returns.
     let onDecision: (String) -> Void
 
     @Environment(\.theme) private var theme: ThemeSnapshot

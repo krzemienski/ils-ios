@@ -1,9 +1,27 @@
 import SwiftUI
 
-/// Red-tinted card for displaying error messages in the chat.
-/// Uses theme error color at low opacity for background, with full error color for icon and border.
+/// Red-tinted card that surfaces an error string inside the chat message flow.
+///
+/// Renders an `exclamationmark.triangle.fill` icon alongside the error text, both in
+/// `theme.error` color. The card background is `theme.error` at 10 % opacity with a
+/// 0.5 pt stroke at 30 % opacity, making errors visually distinct without overpowering
+/// the surrounding conversation.
+///
+/// When `onRetry` is provided a plain "Try Again" button is appended below the message
+/// text. The entire card is collapsed into a single accessibility element whose label
+/// includes a prompt to tap "Try Again" when the retry handler is present.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``message`` - The human-readable error string to display
+///
+/// ### Callbacks
+/// - ``onRetry`` - Optional closure invoked when the user taps "Try Again"; omit to hide
+///   the retry button
 struct ErrorMessageView: View {
+    /// The human-readable error string to display inside the card.
     let message: String
+    /// Called when the user taps "Try Again". When `nil`, the retry button is hidden.
     var onRetry: (() -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot

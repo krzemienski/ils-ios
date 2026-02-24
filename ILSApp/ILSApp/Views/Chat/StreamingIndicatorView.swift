@@ -1,10 +1,27 @@
 import SwiftUI
 import Foundation
 
-/// Single pulsing orange dot with "Claude is thinking..." text.
-/// Left-aligned, minimal footprint on pure black background.
-/// Three-tier animation hierarchy: reduceMotion > Low Power Mode > scenePhase.
+/// Left-aligned typing indicator shown while Claude is streaming but no tokens have arrived yet.
+///
+/// Displays a 2 pt accent bar (matching the visual language of `AssistantCard`), a small
+/// pulsing accent-colored dot, and a status label. The dot animates between 30 % and 100 %
+/// opacity on a repeating 0.8 s ease-in-out curve unless `accessibilityReduceMotion` is
+/// enabled, in which case the animation is skipped entirely.
+///
+/// Animation is also paused when the app transitions to a non-active `scenePhase` (e.g.
+/// backgrounded or in the app switcher) and resumed when the scene returns to `.active`,
+/// preventing CPU spin in the background.
+///
+/// The status label defaults to "Claude is thinking…" but can be overridden via `statusText`
+/// to surface real-time tool-use status strings from the streaming pipeline.
+///
+/// ## Topics
+/// ### Input Properties
+/// - ``statusText`` - Optional override for the default "Claude is thinking…" label; typically
+///   a short tool-use status string sourced from the streaming event payload
 struct StreamingIndicatorView: View {
+    /// Optional label shown next to the pulsing dot; falls back to "Claude is thinking…"
+    /// when `nil`. Typically set to a short tool-use status from the streaming event.
     var statusText: String?
 
     @State private var isPulsing = false
