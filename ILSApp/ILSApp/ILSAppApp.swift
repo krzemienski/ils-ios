@@ -46,9 +46,10 @@ struct ILSAppApp: App {
                             await CacheService.shared.initialize()
                         }
                         #if os(iOS)
-                        // MEM-01: Proactive cache eviction under memory pressure.
-                        // NSCache handles its own in-memory eviction, but CacheService
-                        // (GRDB-backed persistent cache) needs explicit cleanup.
+                        // MEM-01 + H-M1: Proactive cache eviction under memory pressure.
+                        // Observer targets a singleton (CacheService.shared) so no retain cycle,
+                        // but NotificationCenter holds the token forever. Acceptable for app-lifetime
+                        // observer registered once in the root @main struct.
                         NotificationCenter.default.addObserver(
                             forName: UIApplication.didReceiveMemoryWarningNotification,
                             object: nil,
@@ -190,21 +191,21 @@ class AppState {
         }
     }
 
+    // H-C4: Use [weak self] to prevent retain cycle if AppState is deallocated during fetch.
     private func navigateToSession(id: UUID) {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
-                let response: APIResponse<ChatSession> = try await apiClient.get("/sessions/\(id.uuidString)")
+                let response: APIResponse<ChatSession> = try await self.apiClient.get("/sessions/\(id.uuidString)")
                 if let session = response.data {
-                    navigationIntent = .chat(session)
+                    self.navigationIntent = .chat(session)
                 } else {
-                    // API returned no data — open a minimal session
                     let session = ChatSession(id: id, name: "Session")
-                    navigationIntent = .chat(session)
+                    self.navigationIntent = .chat(session)
                 }
             } catch {
-                // Session not found in DB (may be external) — open with minimal info
                 let session = ChatSession(id: id, name: "Session")
-                navigationIntent = .chat(session)
+                self.navigationIntent = .chat(session)
             }
         }
     }

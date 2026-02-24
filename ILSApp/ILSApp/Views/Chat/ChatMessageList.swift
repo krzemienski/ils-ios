@@ -141,12 +141,10 @@ struct ChatMessageList: View {
                 .id("load-more")
             }
 
-            ForEach(messages) { message in
-                let prevMessage: ChatMessage? = {
-                    guard let idx = messages.firstIndex(where: { $0.id == message.id }),
-                          idx > 0 else { return nil }
-                    return messages[idx - 1]
-                }()
+            // H-SP1: Use Array.enumerated() for O(1) prev-message lookup
+            // instead of O(n) firstIndex(where:) which caused O(n²) per render.
+            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+                let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
                 let isSameSender = prevMessage?.isUser == message.isUser
 
                 if message.isUser {

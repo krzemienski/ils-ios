@@ -119,10 +119,12 @@ class SSEClient {
 
         do {
             // Race connection against 60s timeout
+            // H-C3: Capture session locally to avoid implicit strong self in TaskGroup.addTask.
+            let urlSession = self.session
             let (asyncBytes, response) = try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
                 // Connection task
                 group.addTask {
-                    try await self.session.bytes(for: urlRequest)
+                    try await urlSession.bytes(for: urlRequest)
                 }
 
                 // Timeout task

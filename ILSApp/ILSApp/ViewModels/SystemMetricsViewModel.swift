@@ -32,7 +32,10 @@ final class SystemMetricsViewModel {
     nonisolated private let decoder: JSONDecoder
 
     @ObservationIgnored private var processRefreshTask: Task<Void, Never>?
-    private let processRefreshInterval: TimeInterval = 15 // seconds (balanced CPU vs freshness)
+    // CRIT-E1: Double interval in Low Power Mode to reduce battery drain.
+    private var processRefreshInterval: TimeInterval {
+        LowPowerModeMonitor.shared.isLowPowerModeEnabled ? 30 : 15
+    }
 
     enum ProcessSortOption: String, CaseIterable {
         case cpu = "CPU"

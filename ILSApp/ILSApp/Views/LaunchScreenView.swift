@@ -162,8 +162,11 @@ struct LaunchScreenView: View {
             }
         }
         .onDisappear {
-            isAnimating = false
-            glowIntensity = 0.3
+            // H-E5: Cancel repeatForever animation explicitly to stop GPU work.
+            withAnimation(.linear(duration: 0.0)) {
+                isAnimating = false
+                glowIntensity = 0.3
+            }
         }
     }
 }

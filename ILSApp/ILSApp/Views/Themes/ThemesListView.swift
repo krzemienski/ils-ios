@@ -134,12 +134,22 @@ struct ThemesListView: View {
                 showImportError = true
                 return
             }
-            defer { fileURL.stopAccessingSecurityScopedResource() }
+            // CRIT-SP1: Security-scoped resources are thread-bound on iOS.
+            // Read raw bytes on the calling thread (where the scope is active),
+            // then decode off-thread to avoid blocking UI with JSON parsing.
+            let jsonData: Data
+            do {
+                jsonData = try Data(contentsOf: fileURL)
+            } catch {
+                fileURL.stopAccessingSecurityScopedResource()
+                throw error
+            }
+            fileURL.stopAccessingSecurityScopedResource()
 
-            let jsonData = try Data(contentsOf: fileURL)
-
-            // Decode theme
-            let importedTheme = try Self.jsonDecoder.decode(CustomTheme.self, from: jsonData)
+            // Decode off main thread — Data is Sendable, safe to cross boundary.
+            let importedTheme = try await Task.detached(priority: .userInitiated) {
+                try Self.jsonDecoder.decode(CustomTheme.self, from: jsonData)
+            }.value
 
             // Create theme via API
             let created = await viewModel.createTheme(

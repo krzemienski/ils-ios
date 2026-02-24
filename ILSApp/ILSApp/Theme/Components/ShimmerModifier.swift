@@ -44,10 +44,19 @@ struct ShimmerModifier: ViewModifier {
                     .clipped()
                 )
                 .onAppear { startAnimation() }
-                .onDisappear { phase = -1.0 }
+                .onDisappear {
+                    // H-E2: Cancel repeatForever animation to stop GPU work after navigation.
+                    withAnimation(.linear(duration: 0.0)) {
+                        phase = -1.0
+                    }
+                }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active { startAnimation() }
-                    else { phase = -1.0 }
+                    else {
+                        withAnimation(.linear(duration: 0.0)) {
+                            phase = -1.0
+                        }
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(
                     for: Notification.Name.NSProcessInfoPowerStateDidChange
