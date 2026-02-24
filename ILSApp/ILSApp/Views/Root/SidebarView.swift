@@ -132,6 +132,9 @@ struct SidebarView: View {
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(1)
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Connection status")
+            .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.top, theme.spacingLG)
