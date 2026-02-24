@@ -13,13 +13,13 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 - [x] **TEST-02**: ErrorHandlingTests sleep instances (15 sites) replaced with condition-based waiting
 - [x] **TEST-03**: FeatureGateTests sleep instances (10 sites) replaced with condition-based waiting
 - [x] **TEST-04**: Scenario03_StreamingAndCancellation sleep instances (6 sites) replaced with async expectations
-- [ ] **TEST-05**: UI test startup time reduced (shared XCUIApplication or test grouping to avoid 15-45s per test)
+- [x] **TEST-05**: UI test startup time reduced (shared XCUIApplication or test grouping to avoid 15-45s per test)
 - [ ] **TEST-06**: ILSBackendTests placeholder replaced with meaningful Swift Testing tests
 - [ ] **TEST-07**: ILSSharedTests placeholder replaced with meaningful Swift Testing tests
 - [ ] **TEST-08**: Swift Testing framework adopted for new test files (`import Testing`, `@Test`, `#expect`)
-- [ ] **TEST-09**: NavigationTests.swift instance var `app` moved to setUp
+- [x] **TEST-09**: NavigationTests.swift instance var `app` moved to setUp
 - [ ] **TEST-10**: Test data factories/builders created for common test objects
-- [ ] **TEST-11**: Test parallelization configured in test plan
+- [x] **TEST-11**: Test parallelization configured in test plan
 
 ### Concurrency
 

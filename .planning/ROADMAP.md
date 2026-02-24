@@ -452,7 +452,7 @@ Plans:
 Plans:
 
 - [ ] 30-01-PLAN.md -- Swift Testing migration: ILSSharedTests + ILSBackendTests placeholders replaced, test data factories, Codable/enum tests
-- [ ] 30-02-PLAN.md -- UI test infrastructure: NavigationTests setUp fix, test parallelization config, startup optimization
+- [x] 30-02-PLAN.md -- UI test infrastructure: NavigationTests setUp fix, test parallelization config, startup optimization (completed 2026-02-24)
 
 ---
 
@@ -522,6 +522,6 @@ Plans:
 | 27. Energy + Memory | 3/3 | Complete    | 2026-02-24 | - |
 | 28. SwiftUI Performance | 2/2 | Complete    | 2026-02-24 | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | Complete    | 2026-02-24 | 2026-02-24 |
-| 30. Testing Infrastructure | v1.5 | 0/2 | Planned | - |
+| 30. Testing Infrastructure | v1.5 | 1/2 | In Progress | - |
 | 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
 | 32. Final Validation | v1.5 | 0/? | Planned | - |
