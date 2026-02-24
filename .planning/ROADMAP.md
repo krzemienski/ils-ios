@@ -347,7 +347,11 @@ Plans:
   3. `SystemMetricsService` continuation double-resume risk is eliminated with a guard or `CheckedContinuation`
   4. `ClaudeExecutorService.useAgentSDK` mutable static var is resolved for strict concurrency (nonisolated static let, actor-isolated access, or @TaskLocal)
   5. Both iOS and macOS build with zero errors after all changes
-**Plans**: TBD
+**Plans**: 2 plan(s)
+
+Plans:
+- [ ] 25-01-PLAN.md -- TeamsExecutorService non-Sendable Process + SystemMetricsService continuation safety
+- [ ] 25-02-PLAN.md -- WebSocket Task capture + ClaudeExecutorService mutable static var
 
 ---
 
@@ -386,7 +390,11 @@ Plans:
   5. `NotificationManager` UNUserNotificationCenter delegate lifecycle correct; `SSEClient` observer removed in cleanup()
   6. All LOW memory items (NSTask hold, DispatchWorkItem timeout, flush timer false positive) resolved or documented
   7. Both iOS and macOS build with zero errors
-**Plans**: TBD
+**Plans**: 2 plan(s)
+
+Plans:
+- [ ] 27-01-PLAN.md -- Energy fixes: ConnectionBanner, SSEClient, Fleet LPM, AppLogger flush, GlowEffect, WindowManager
+- [ ] 27-02-PLAN.md -- Memory fixes: PollingManager, WindowManager delegate, NotificationManager, SSEClient observer, LOW items
 
 ---
 
@@ -419,7 +427,11 @@ Plans:
   3. `Scenario03_StreamingAndCancellation.swift` — all 6 sleep sites replaced with condition-based waiting
   4. Zero `sleep()` or `Thread.sleep()` calls remain in any test file
   5. All replaced tests pass when run via `xcodebuild test`
-**Plans**: TBD
+**Plans**: 2 plan(s)
+
+Plans:
+- [ ] 29-01-PLAN.md -- ErrorHandlingTests + FeatureGateTests sleep replacement
+- [ ] 29-02-PLAN.md -- Scenario03_StreamingAndCancellation sleep replacement + zero-sleep verification
 
 ---
 
@@ -435,7 +447,10 @@ Plans:
   5. Test data factories/builders exist for common test objects (Session, Project, Message)
   6. Test parallelization configured in test plan
   7. All tests pass when run via `xcodebuild test`
-**Plans**: TBD
+**Plans**: 1 plan(s)
+
+Plans:
+- [ ] 30-01-PLAN.md -- Testing infrastructure: UI test optimization, Swift Testing migration, test factories, parallelization
 
 ---
 
@@ -449,7 +464,11 @@ Plans:
   3. `xcodebuild` with `-strict-concurrency=targeted` produces zero new warnings beyond baseline
   4. Remaining blockers for `-strict-concurrency=complete` are documented with migration path
   5. Both iOS and macOS build with zero errors
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 31-01-PLAN.md -- Verify Phase 25 Swift 6 blocker fixes, enable -strict-concurrency=targeted across all targets, fix new warnings
+- [ ] 31-02-PLAN.md -- Document remaining -strict-concurrency=complete blockers with migration path, final cross-platform verification
 
 ---
 
@@ -463,7 +482,10 @@ Plans:
   3. All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
   4. `scratch/audit-findings-2026-02-24.md` is updated with resolution status for all 70 issues
   5. All tests pass when run via `xcodebuild test`
-**Plans**: TBD
+**Plans**: 1 plan(s)
+
+Plans:
+- [ ] 32-01-PLAN.md -- Final validation: 3-target build, 5 Axiom audits, v1.0 REQ regression, findings update
 
 ---
 
@@ -498,5 +520,5 @@ Plans:
 | 28. SwiftUI Performance | v1.5 | 0/? | Planned | - |
 | 29. Testing CRITICAL — Sleep Replacement | v1.5 | 0/? | Planned | - |
 | 30. Testing Infrastructure | v1.5 | 0/? | Planned | - |
-| 31. Swift 6 Preparation | v1.5 | 0/? | Planned | - |
+| 31. Swift 6 Preparation | v1.5 | 0/2 | Planned | - |
 | 32. Final Validation | v1.5 | 0/? | Planned | - |
