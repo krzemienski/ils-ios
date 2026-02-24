@@ -198,6 +198,8 @@
 		842839140BC077E5062CD5FD /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DC9574244B220CAAD31669BC /* Localizable.strings */; };
 		84A0C3EB7D957139BF54D41B /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */; };
 		851B6A5D353AED3FBC2163E3 /* ILSAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C61E9BD62ADC2F088EC42D0 /* ILSAppApp.swift */; };
+		AA01234500000001AABBCCDD /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01234500000002AABBCCDD /* AppState.swift */; };
+		AA01234500000003AABBCCDD /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01234500000002AABBCCDD /* AppState.swift */; };
 		8534EEB9C7E7003C2ED71103 /* Scenario01_CompleteSessionLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E664C3195016F6ABF8B3D121 /* Scenario01_CompleteSessionLifecycle.swift */; };
 		8693100F646512D6234ED00E /* ToastModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A737BC14D9734232F0E080B8 /* ToastModifier.swift */; };
 		88AD5DA924D58B1F29D63CC4 /* SSHViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */; };
@@ -419,6 +421,7 @@
 		17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
 		18502885F5B6E45B14619177 /* ChatMessageList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageList.swift; sourceTree = "<group>"; };
 		1C61E9BD62ADC2F088EC42D0 /* ILSAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSAppApp.swift; sourceTree = "<group>"; };
+		AA01234500000002AABBCCDD /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConfigSection.swift; sourceTree = "<group>"; };
 		1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
@@ -1164,6 +1167,7 @@
 			children = (
 				DA6635DCADB264C0B2D4EB85 /* Assets.xcassets */,
 				04F6CC373959582D04DEEDFC /* ILSApp.entitlements */,
+				AA01234500000002AABBCCDD /* AppState.swift */,
 				1C61E9BD62ADC2F088EC42D0 /* ILSAppApp.swift */,
 				34A38E2EB4ACEC6AB77826C3 /* Info.plist */,
 				482028C3E3B35A6E9FF0920C /* PrivacyInfo.xcprivacy */,
@@ -1463,6 +1467,7 @@
 				BDEC0563E52F5228E7EAB372 /* HostProfileDetailView.swift in Sources */,
 				4F6BF4FC5433FAB1EB094E9E /* HostProfilesView.swift in Sources */,
 				7028F525BA99455BEDFE1F6F /* HostProfilesViewModel.swift in Sources */,
+				AA01234500000001AABBCCDD /* AppState.swift in Sources */,
 				851B6A5D353AED3FBC2163E3 /* ILSAppApp.swift in Sources */,
 				9F4023B2D94B8E5E33B6A235 /* ILSCodeHighlighter.swift in Sources */,
 				5D71DAD64BD884C2F68EEAA9 /* ILSLiveActivity.swift in Sources */,
@@ -1634,6 +1639,7 @@
 				FA015F4EAC553238A62D3A7F /* ILSCodeHighlighter.swift in Sources */,
 				5AE7F9534DF041D282855BF8 /* ILSCommands.swift in Sources */,
 				8DABBEB4FEE67AC676D005FA /* ILSLiveActivity.swift in Sources */,
+				AA01234500000003AABBCCDD /* AppState.swift in Sources */,
 				18357DC6909A92960DCF90E6 /* ILSMacApp.swift in Sources */,
 				48D85DFFA54660C66A98E3B0 /* ILSShortcuts.swift in Sources */,
 				F0F643AE7F2B275AFC610602 /* ILSTheme.swift in Sources */,
