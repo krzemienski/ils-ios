@@ -56,6 +56,7 @@ struct BrowserView: View {
                 .padding(.bottom, theme.spacingLG)
             }
             .refreshable {
+                HapticManager.impact(.medium)
                 await refreshCurrentSegment()
             }
         }
