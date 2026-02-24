@@ -15,6 +15,7 @@ struct MacProjectsListView: View {
     @State private var projectToEdit: Project?
     @State private var showingDeleteConfirmation: Bool = false
     @State private var projectToDelete: Project?
+    @State private var cachedFilteredProjects: [Project] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -63,10 +64,10 @@ struct MacProjectsListView: View {
             List(selection: $selectedProject) {
                 if viewModel.isLoading && viewModel.projects.isEmpty {
                     loadingView
-                } else if filteredProjects.isEmpty {
+                } else if cachedFilteredProjects.isEmpty {
                     emptyView
                 } else {
-                    ForEach(filteredProjects) { project in
+                    ForEach(cachedFilteredProjects) { project in
                         Button {
                             selectedProject = project
                         } label: {
@@ -151,6 +152,13 @@ struct MacProjectsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadProjects(refresh: true)
+            updateFilteredProjects()
+        }
+        .onChange(of: searchText) { _, _ in
+            updateFilteredProjects()
+        }
+        .onChange(of: viewModel.projects.count) { _, _ in
+            updateFilteredProjects()
         }
         .sheet(isPresented: $showingCreateSheet) {
             createProjectSheet
@@ -292,10 +300,13 @@ struct MacProjectsListView: View {
 
     // MARK: - Helpers
 
-    private var filteredProjects: [Project] {
-        guard !searchText.isEmpty else { return viewModel.projects }
+    private func updateFilteredProjects() {
+        guard !searchText.isEmpty else {
+            cachedFilteredProjects = viewModel.projects
+            return
+        }
         let query = searchText.lowercased()
-        return viewModel.projects.filter { project in
+        cachedFilteredProjects = viewModel.projects.filter { project in
             project.name.lowercased().contains(query) ||
             (project.description?.lowercased().contains(query) ?? false) ||
             project.path.lowercased().contains(query)
@@ -365,7 +376,7 @@ struct ProjectFormSheet: View {
 
                 Picker("Default Model", selection: $model) {
                     ForEach(availableModels, id: \.self) { model in
-                        Text(formatModelName(model))
+                        Text(ClaudeModel.displayNameForID(model))
                             .tag(model)
                     }
                 }
@@ -393,12 +404,6 @@ struct ProjectFormSheet: View {
         .background(theme.bgPrimary)
     }
 
-    private func formatModelName(_ model: String) -> String {
-        if model.contains("sonnet") { return "Claude Sonnet" }
-        if model.contains("opus") { return "Claude Opus" }
-        if model.contains("haiku") { return "Claude Haiku" }
-        return model
-    }
 }
 
 #Preview {

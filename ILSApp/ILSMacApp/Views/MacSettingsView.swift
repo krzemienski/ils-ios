@@ -111,7 +111,7 @@ struct MacSettingsView: View {
                 settingRow(label: "Default Model") {
                     Picker("Default Model", selection: $defaultModel) {
                         ForEach(availableModels, id: \.self) { model in
-                            Text(formatModelName(model)).tag(model)
+                            Text(ClaudeModel.displayNameForID(model)).tag(model)
                         }
                     }
                     .pickerStyle(.menu)
@@ -476,12 +476,6 @@ struct MacSettingsView: View {
         themeManager.setTheme("obsidian")
     }
 
-    func formatModelName(_ model: String) -> String {
-        if model.contains("sonnet") { return "Claude Sonnet" }
-        if model.contains("opus") { return "Claude Opus" }
-        if model.contains("haiku") { return "Claude Haiku" }
-        return model
-    }
 }
 
 #Preview {
