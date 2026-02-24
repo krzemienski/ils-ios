@@ -1,12 +1,33 @@
 import SwiftUI
 import ILSShared
 
+/// Detail view for a single agent team, presenting a tabbed interface over team data.
+///
+/// Displays a header card with the team description and member count, then a segmented
+/// tab bar switching between the Members, Tasks, and Messages tabs. The Members tab
+/// lists all ``TeamMember`` cards with live status badges and a "Spawn Teammate" button
+/// that opens ``SpawnTeammateView``. Polls team state while visible via ``TeamsViewModel``.
+///
+/// ## Topics
+/// ### State
+/// - ``viewModel`` - View model managing team detail, polling, and mutations
+/// - ``selectedTab`` - Index of the currently active tab (0 Members, 1 Tasks, 2 Messages)
+/// - ``showSpawnSheet`` - Controls presentation of the spawn-teammate sheet
+///
+/// ### View Components
+/// - ``headerSection(_:)`` - Card showing team description and member count
+/// - ``membersTab`` - Scrollable list of member cards with a spawn button
+/// - ``memberCard(_:)`` - Row card for an individual team member
+/// - ``statusBadge(for:)`` - Colored pill label reflecting a member's live status
 struct AgentTeamDetailView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
+    /// View model managing team detail loading, live polling, and teammate mutations.
     @State private var viewModel: TeamsViewModel
     let teamName: String
+    /// Index of the currently selected tab: 0 = Members, 1 = Tasks, 2 = Messages.
     @State private var selectedTab = 0
+    /// Whether the spawn-teammate sheet is currently presented.
     @State private var showSpawnSheet = false
 
     init(teamName: String, apiClient: APIClient) {
