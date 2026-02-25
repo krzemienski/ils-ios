@@ -606,6 +606,11 @@ Plans:
   1. `xcodebuild` for ILSApp and ILSMacApp both exit 0 with zero errors; `swift build` for backend exits 0
   2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS
   3. Feature parity verified across iOS, iPadOS, and macOS for all v3.1 changes (navigation, host profiles, settings, browse, system monitor, themes)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 38-01-PLAN.md — Build all three targets, fix compilation errors, platform guard audit (XP-01)
+- [ ] 38-02-PLAN.md — Fix macOS parity gaps, re-validate 15 v1.0 REQs, document feature parity (XP-02, XP-03)
 
 ---
 
