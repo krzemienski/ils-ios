@@ -2,17 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-24)
+See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
+**Current focus:** Phase 37 — System Monitor & Themes
 
 ## Current Position
 
-Phase: 36 — Browse, Skills & Plugins -- COMPLETE (3/3 plans complete)
-Plan: 3 plans in 2 waves (36-01 backend W1 DONE, 36-02 skills UI W2 DONE, 36-03 plugins UI W2 DONE)
-Status: Phase 36 complete; all 8 BRW requirements satisfied
-Last activity: 2026-02-25 — Completed 36-03 plugins UI plan (GitHub browse, per-item install, Installed badges)
+Phase: 37 — System Monitor & Themes
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-02-25 — Phase 36 complete, transitioning to Phase 37
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -79,5 +79,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 36-03-PLAN.md — Phase 36 complete (plugins GitHub browse, per-item install, Installed badges)
+Stopped at: Phase 36 complete, ready to plan Phase 37
 Resume file: None

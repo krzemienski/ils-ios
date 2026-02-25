@@ -41,7 +41,7 @@ Every screen works correctly, reflects the connected host's configuration, and p
 
 - Navigation & Home Screen (side menu from all screens, session back button, home layout)
 - Settings & Defaults Sync (host CLI config inheritance, override indicators, explanatory text)
-- Browse, Skills & Plugins (status badges, GitHub browse/install, plugin management)
+- ~~Browse, Skills & Plugins~~ — VALIDATED Phase 36 (BRW-01..08: GitHub browse/install, per-item progress, badges, branch detection, rate limits, context menus)
 - System Monitor (SSH connection fix, real-time data)
 - Host Profiles (Fleet redesign, multi-host switching)
 - Themes (default loading, cross-platform consistency)
@@ -62,7 +62,7 @@ Every screen works correctly, reflects the connected host's configuration, and p
 - **Code quality**: All builds green, 31 tests pass, Swift 6 targeted, 70/70 audit findings resolved
 - **Product gaps**: Multiple screens have broken or missing functionality despite code-quality hardening
 - **Host sync**: App does not currently inherit defaults from connected Claude Code CLI configuration
-- **Skills/Plugins**: Browse screen shows raw data without install/enable/disable workflow
+- **Skills/Plugins**: GitHub browse/install with per-item progress, badges, branch detection, rate limit messaging (Phase 36)
 - **Fleet**: Current implementation needs redesign to Host Profiles concept
 - **Backend**: Vapor 4, SQLite, port 9999 — may need endpoint additions for new features
 
@@ -87,6 +87,8 @@ Every screen works correctly, reflects the connected host's configuration, and p
 | Shift to product quality (v3.1) | Code health complete; UX gaps now blocking real usage | — Pending |
 | Fleet → Host Profiles (v3.1) | Multi-host concept clearer than fleet metaphor | — Pending |
 | Host CLI config sync (v3.1) | App must reflect connected host's defaults to be useful | — Pending |
+| Symmetric GitHub browse (Phase 36) | Skills and plugins get identical browse/install/manage UX | ✓ Good |
+| Context menu for inline actions (Phase 36) | LazyVStack can't use swipeActions; context menu is standard iOS pattern | ✓ Good |
 
 ---
-*Last updated: 2026-02-24 after v3.1 milestone start (Comprehensive Audit, Bug Fix & UX Overhaul)*
+*Last updated: 2026-02-25 after Phase 36 (Browse, Skills & Plugins)*
