@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 33 — Navigation & UX Overhaul -- COMPLETE
-Plan: 3/3 complete — all plans in phase done
-Status: Phase 33 complete. All 3 plans shipped (design tokens, back button, deep links).
-Last activity: 2026-02-25 — Completed 33-03 (deep link browser segments + chat back button integration)
+Phase: 34 — Host Profiles Fix & Redesign -- IN PROGRESS
+Plan: 3/3 complete — dead file cleanup done
+Status: Plan 03 complete. Dead Fleet* files deleted, doc comments updated, naming migration finished.
+Last activity: 2026-02-25 — Completed 34-03 (dead file cleanup and doc comment update)
 
 ## Previous Milestones
 
@@ -38,6 +38,8 @@ Last activity: 2026-02-25 — Completed 33-03 (deep link browser segments + chat
 - [33-03]: Used BrowserSegment type (not String) for browserSegmentIntent since enum is top-level and target-accessible
 - [33-03]: ils://projects grouped with ils://browser (no .projects case in BrowserSegment); mcp/skills/plugins get individual segment intents
 - [33-03]: Non-chat deep links clear previousScreen to prevent stale back destinations
+- [34-03]: UI-facing terminology uses "host profile"; backend API paths and model types keep "fleet"
+- [34-03]: Fixed HostProfilesView optional viewModel pattern to match updated init(appState:) signature
 
 ### Pending Todos
 
@@ -50,5 +52,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 33-03-PLAN.md — Phase 33 fully complete
+Stopped at: Completed 34-03-PLAN.md — Dead file cleanup and doc comment update
 Resume file: None

@@ -21,7 +21,7 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 - [ ] **HP-02**: All ViewModels reload data on host switch — reactive invalidation via `AppState` observable change
 - [ ] **HP-03**: Active profile indicator visible on list row and sidebar
 - [ ] **HP-04**: Health status badges per host with colored dot
-- [ ] **HP-05**: Fleet → Host Profiles naming consistency in all UI strings and navigation
+- [x] **HP-05**: Fleet → Host Profiles naming consistency in all UI strings and navigation
 
 ### Settings & Config Sync
 
