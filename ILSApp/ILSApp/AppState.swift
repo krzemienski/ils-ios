@@ -48,6 +48,7 @@ class AppState {
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
         self.networkMonitor = NetworkMonitor.shared
+        self.activeHostName = UserDefaults.standard.string(forKey: "activeHostName")
 
         pollingManager.checkConnection()
     }

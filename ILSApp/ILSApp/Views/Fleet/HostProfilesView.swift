@@ -34,54 +34,61 @@ struct HostProfilesView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     /// View model driving host list data, active host selection, and periodic health polling.
-    @State private var viewModel = HostProfilesViewModel()
+    @State private var viewModel: HostProfilesViewModel?
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: theme.spacingMD) {
-                ForEach(viewModel.hosts) { host in
-                    NavigationLink {
-                        HostProfileDetailView(host: host)
-                    } label: {
-                        hostProfileRow(host)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                if let error = viewModel.loadError {
-                    VStack(spacing: theme.spacingSM) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.title2)
-                            .foregroundStyle(theme.error)
-                        Text(error)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                            .multilineTextAlignment(.center)
-                        Button("Retry") {
-                            Task { await viewModel.loadHosts() }
+        Group {
+            if let viewModel {
+                ScrollView {
+                    LazyVStack(spacing: theme.spacingMD) {
+                        ForEach(viewModel.hosts) { host in
+                            NavigationLink {
+                                HostProfileDetailView(host: host)
+                            } label: {
+                                hostProfileRow(host, viewModel: viewModel)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(theme.accent)
+
+                        if let error = viewModel.loadError {
+                            VStack(spacing: theme.spacingSM) {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .font(.title2)
+                                    .foregroundStyle(theme.error)
+                                Text(error)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                Button("Retry") {
+                                    Task { await viewModel.loadHosts() }
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(theme.accent)
+                            }
+                            .padding(theme.spacingLG)
+                        }
+
+                        if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
+                            EmptyEntityState(
+                                entityType: .system,
+                                title: "No Host Profiles",
+                                description: "Add a host profile to connect to a remote ILS backend."
+                            )
+                        }
+
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(theme.accent)
+                                .padding(.vertical, theme.spacingLG)
+                        }
                     }
-                    .padding(theme.spacingLG)
+                    .padding(.horizontal, theme.spacingMD)
+                    .padding(.top, theme.spacingSM)
                 }
-
-                if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
-                    EmptyEntityState(
-                        entityType: .system,
-                        title: "No Host Profiles",
-                        description: "Add a host profile to connect to a remote ILS backend."
-                    )
-                }
-
-                if viewModel.isLoading {
-                    ProgressView()
-                        .tint(theme.accent)
-                        .padding(.vertical, theme.spacingLG)
-                }
+            } else {
+                ProgressView()
+                    .tint(theme.accent)
             }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.top, theme.spacingSM)
         }
         .background(theme.bgPrimary)
         .navigationTitle("Host Profiles")
@@ -107,9 +114,14 @@ struct HostProfilesView: View {
             }
             #endif
         }
-        .task { await viewModel.loadHosts() }
-        .onAppear { viewModel.startHealthPolling() }
-        .onDisappear { viewModel.stopHealthPolling() }
+        .task {
+            if viewModel == nil {
+                viewModel = HostProfilesViewModel(appState: appState)
+            }
+            await viewModel?.loadHosts()
+        }
+        .onAppear { viewModel?.startHealthPolling() }
+        .onDisappear { viewModel?.stopHealthPolling() }
     }
 
     // MARK: - Host Row
@@ -117,7 +129,7 @@ struct HostProfilesView: View {
     /// Card row for a single host profile showing its health badge, name, address, platform,
     /// active indicator, and a context menu with activate/remove actions.
     @ViewBuilder
-    private func hostProfileRow(_ host: FleetHost) -> some View {
+    private func hostProfileRow(_ host: FleetHost, viewModel: HostProfilesViewModel) -> some View {
         HStack(spacing: theme.spacingMD) {
             healthBadge(host.healthStatus)
 
