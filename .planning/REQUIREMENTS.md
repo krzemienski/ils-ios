@@ -25,13 +25,13 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 
 ### Settings & Config Sync
 
-- [ ] **CFG-01**: Display effective config values pulled from connected host CLI (`~/.claude/settings.json`)
+- [x] **CFG-01**: Display effective config values pulled from connected host CLI (`~/.claude/settings.json`)
 - [ ] **CFG-02**: `InheritanceBadge` (Host Default / Custom) applied to ALL settings fields, not just model and two toggles
-- [ ] **CFG-03**: Config auto-refresh on reconnect and host switch (`onChange(appState.isConnected)`)
+- [x] **CFG-03**: Config auto-refresh on reconnect and host switch (`onChange(appState.isConnected)`)
 - [ ] **CFG-04**: Explanatory tooltip (`SettingsInfoButton`) on every settings field — full coverage
-- [ ] **CFG-05**: Write allowlist prevents CLI field deletion — `hooks`, `env`, `permissions`, `statusLine` never included in write payloads
+- [x] **CFG-05**: Write allowlist prevents CLI field deletion — `hooks`, `env`, `permissions`, `statusLine` never included in write payloads
 - [ ] **CFG-06**: System prompt field displayed (read-only if inherited from host)
-- [ ] **CFG-07**: Inline edit uses read-then-patch pattern — load fresh config, apply minimal delta, PUT back
+- [x] **CFG-07**: Inline edit uses read-then-patch pattern — load fresh config, apply minimal delta, PUT back
 
 ### Browse, Skills & Plugins
 

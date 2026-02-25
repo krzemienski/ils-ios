@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 34 — Host Profiles Fix & Redesign -- COMPLETE
-Plan: 3/3 complete — All summaries documented
-Status: All 3 plans executed and documented. Phase 34 complete.
-Last activity: 2026-02-25 — Completed 34-02 (ViewModel reactive reconfiguration on host switch)
+Phase: 35 — Settings & Config Sync -- IN PROGRESS
+Plan: 1/2 complete — 35-01 (safe config writes + reconnect refresh) done
+Status: Plan 01 executed. Plan 02 (annotation badges and tooltips) remaining.
+Last activity: 2026-02-25 — Completed 35-01 (read-then-patch config writes + reconnect auto-refresh)
 
 ## Previous Milestones
 
@@ -47,6 +47,8 @@ Last activity: 2026-02-25 — Completed 34-02 (ViewModel reactive reconfiguratio
 - [34-02]: SettingsView onChange updates local serverURL @State so connection section reflects new host URL immediately
 - [34-02]: ConfigEditorView onChange resets both configText and originalConfigText to prevent false unsaved-changes warnings
 - [34-02]: ChatView only reconfigures clients without reloading -- preserves visible conversation
+- [35-01]: Closure-based delta pattern for saveWithPatch instead of KeyPath -- supports compound mutations (model + theme)
+- [35-01]: PUT full config back (not stripped) because server writes payload verbatim; stripping would also drop CLI fields
 
 ### Pending Todos
 
@@ -59,5 +61,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 34-02-PLAN.md — 8 views gain reactive ViewModel reconfiguration on host switch
+Stopped at: Completed 35-01-PLAN.md — safe read-then-patch config writes + reconnect auto-refresh
 Resume file: None

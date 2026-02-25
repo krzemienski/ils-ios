@@ -559,7 +559,7 @@ Plans:
   5. Config write operations use a read-then-patch pattern with an allowlist — `hooks`, `env`, `permissions`, `statusLine` are never included in write payloads
   6. System prompt field is displayed (read-only if inherited from host default)
   7. Inline edits of user-scope settings save immediately via minimal-delta PUT
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 35-01-PLAN.md -- Safe config write (read-then-patch) and reconnect auto-refresh
@@ -642,7 +642,7 @@ Plans:
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
 | 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
-| 35. Settings & Config Sync | v3.1 | 0/? | Planned | — |
+| 35. Settings & Config Sync | 1/2 | In Progress|  | — |
 | 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |
 | 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
 | 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |
