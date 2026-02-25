@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 36 — Browse, Skills & Plugins -- PLANNED (ready for execution)
-Plan: 3 plans in 2 waves (36-01 backend W1, 36-02 skills UI W2, 36-03 plugins UI W2)
-Status: Research + planning + verification complete for phases 36, 37, 38
-Last activity: 2026-02-25 — All 3 remaining phases researched, planned, and verified
+Phase: 36 — Browse, Skills & Plugins -- IN PROGRESS (1/3 plans complete)
+Plan: 3 plans in 2 waves (36-01 backend W1 DONE, 36-02 skills UI W2, 36-03 plugins UI W2)
+Status: 36-01 backend infrastructure complete; 36-02 and 36-03 ready for execution
+Last activity: 2026-02-25 — Completed 36-01 backend plan (branch detection, plugin search, skill enable/disable)
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -58,6 +58,9 @@ Last activity: 2026-02-25 — All 3 remaining phases researched, planned, and ve
 - [35-02]: Agent Teams always shows Custom badge -- device-local @AppStorage setting
 - [35-02]: System Prompt section is read-only informational -- systemPrompt is NOT a settings.json field
 - [35-02]: Advanced fields (statusLine, env) show fallback rows when nil so badges are always visible
+- [36-01]: getDefaultBranch falls back to "main" on any error (best-effort, no crash)
+- [36-01]: Skills enable/disable uses .skills-config.json in ~/.claude/skills/ (isolated from main settings)
+- [36-01]: searchPlugins reuses GitHubSearchResult DTO (skillPath field holds plugin.json path)
 
 ### Pending Todos
 
@@ -70,5 +73,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 35-02-PLAN.md — full annotation badge + tooltip coverage on all settings fields
+Stopped at: Completed 36-01-PLAN.md — backend infrastructure for browse improvements (branch detection, plugin search, skill enable/disable)
 Resume file: None
