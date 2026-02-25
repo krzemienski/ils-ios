@@ -506,7 +506,7 @@ Plans:
 - [x] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips (completed 2026-02-25)
 - [x] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX (completed 2026-02-25)
 - [x] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency (completed 2026-02-25)
-- [ ] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
+- [x] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
 
 ---
 
@@ -612,11 +612,11 @@ Plans:
   1. `xcodebuild` for ILSApp and ILSMacApp both exit 0 with zero errors; `swift build` for backend exits 0
   2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS
   3. Feature parity verified across iOS, iPadOS, and macOS for all v3.1 changes (navigation, host profiles, settings, browse, system monitor, themes)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 38-01-PLAN.md — Build all three targets, fix compilation errors, platform guard audit (XP-01)
-- [ ] 38-02-PLAN.md — Fix macOS parity gaps, re-validate 15 v1.0 REQs, document feature parity (XP-02, XP-03)
+- [x] 38-02-PLAN.md — Fix macOS parity gaps, re-validate 15 v1.0 REQs, document feature parity (XP-02, XP-03)
 
 ---
 

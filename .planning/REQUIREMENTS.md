@@ -53,8 +53,8 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 ### Cross-Platform Validation
 
 - [x] **XP-01**: macOS builds with zero errors after all v3.1 changes
-- [ ] **XP-02**: All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
-- [ ] **XP-03**: iOS/iPadOS/macOS feature parity verified for all v3.1 changes
+- [x] **XP-02**: All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
+- [x] **XP-03**: iOS/iPadOS/macOS feature parity verified for all v3.1 changes
 
 ---
 
@@ -187,8 +187,8 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 | SYS-02 | 37 | Open |
 | SYS-03 | 37 | Open |
 | XP-01 | 38 | Open |
-| XP-02 | 38 | Open |
-| XP-03 | 38 | Open |
+| XP-02 | 38 | Complete |
+| XP-03 | 38 | Complete |
 
 **Coverage:**
 - v3.1 requirements: 31 total

@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 38 — Cross-Platform Validation (IN PROGRESS)
-Plan: 1 of 2 complete
-Status: Executing Phase 38
-Last activity: 2026-02-25 — Plan 01 (cross-platform build validation) verified — all 3 targets build with zero errors
+Phase: 38 — Cross-Platform Validation (COMPLETE)
+Plan: 2 of 2 complete
+Status: Phase 38 complete
+Last activity: 2026-02-25 — Plan 02 (v1.0 REQ regression + macOS parity) — 15/15 REQs PASS, 3 macOS gaps closed
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -75,6 +75,9 @@ Last activity: 2026-02-25 — Plan 01 (cross-platform build validation) verified
 - [38-01]: No code changes needed -- all three targets already build cleanly after Phases 33-37
 - [38-01]: HapticManager cross-platform pattern confirmed correct -- #if os(iOS) with macOS no-op stubs
 - [38-01]: .refreshable in SettingsView confirmed safe -- available on macOS 13+ and app targets macOS 14+
+- [38-02]: Added ThemeManager @Environment to MacContentView to reload custom themes on host switch (mirrors iOS SidebarRootView pattern)
+- [38-02]: macOS BrowserView now receives initialSegment parameter for deep link segment routing (was using default .mcp)
+- [38-02]: sessionsViewModel reloads via loadProjectGroups() on host switch (not loadSessions) because macOS uses project-grouped sidebar
 
 ### Pending Todos
 
@@ -87,5 +90,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 38-01-PLAN.md (cross-platform build validation) -- 1/2 plans done in Phase 38
+Stopped at: Completed 38-02-PLAN.md (v1.0 REQ regression + macOS parity) -- Phase 38 complete (2/2 plans)
 Resume file: None
