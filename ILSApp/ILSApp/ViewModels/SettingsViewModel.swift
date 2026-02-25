@@ -100,26 +100,34 @@ class SettingsViewModel {
         ].filter { $0.1 > 0 }
     }
 
-    func saveConfig(model: String, colorScheme: String) async -> String? {
+    // MARK: - Safe Config Write (read-then-patch)
+
+    /// Loads fresh config from the server, applies a single-field delta, and PUTs the full
+    /// config back. This preserves CLI-only fields (hooks, env, permissions, statusLine,
+    /// enabledPlugins, extraKnownMarketplaces) that the iOS app reads but should never overwrite.
+    ///
+    /// - Parameter delta: A closure that mutates ONLY the intended field(s) on a fresh config copy.
+    /// - Returns: An error message string, or `nil` on success.
+    func saveWithPatch(applying delta: (inout ClaudeConfig) -> Void) async -> String? {
         guard let client else { return "Client not configured" }
         isSaving = true
         defer { isSaving = false }
 
-        guard var currentConfig = config?.content else {
-            return "No configuration loaded"
-        }
-
-        currentConfig.model = model
-        if currentConfig.theme == nil {
-            currentConfig.theme = ThemeConfig(colorScheme: colorScheme, accentColor: nil)
-        } else {
-            currentConfig.theme?.colorScheme = colorScheme
-        }
-
         do {
-            let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
-            let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
-            if let updatedConfig = response.data {
+            // Step 1: Load fresh config from server (not from in-memory cache)
+            let freshResponse: APIResponse<ConfigInfo> = try await client.get("/config?scope=user")
+            guard var freshConfig = freshResponse.data?.content else {
+                return "Could not load current configuration"
+            }
+
+            // Step 2: Apply the delta closure -- mutates ONLY the intended field(s)
+            delta(&freshConfig)
+
+            // Step 3: PUT the FULL config back (preserving hooks, env, permissions, etc.)
+            let scope = freshResponse.data?.scope ?? "user"
+            let request = UpdateConfigRequest(scope: scope, content: freshConfig)
+            let putResponse: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
+            if let updatedConfig = putResponse.data {
                 config = updatedConfig
                 if !updatedConfig.isValid {
                     return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
@@ -131,13 +139,36 @@ class SettingsViewModel {
         }
     }
 
+    func saveConfig(model: String, colorScheme: String) async -> String? {
+        return await saveWithPatch { config in
+            config.model = model
+            if config.theme == nil {
+                config.theme = ThemeConfig(colorScheme: colorScheme, accentColor: nil)
+            } else {
+                config.theme?.colorScheme = colorScheme
+            }
+        }
+    }
+
+    func saveConfigToggle(key: String, value: Bool) async -> String? {
+        return await saveWithPatch { config in
+            switch key {
+            case "alwaysThinkingEnabled":
+                config.alwaysThinkingEnabled = value
+            case "includeCoAuthoredBy":
+                config.includeCoAuthoredBy = value
+            default:
+                break // Unknown keys silently ignored; caller validates
+            }
+        }
+    }
+
     // MARK: - Fire-and-forget wrappers (synchronous entry points for Binding setters)
 
     /// Updates the default model from a Binding setter without requiring Task/await.
     func updateModel(_ newModel: String) {
-        guard let config = config?.content else { return }
         Task {
-            _ = await saveConfig(model: newModel, colorScheme: config.theme?.colorScheme ?? "system")
+            _ = await saveConfig(model: newModel, colorScheme: config?.content.theme?.colorScheme ?? "system")
             await loadConfig()
         }
     }
@@ -147,40 +178,6 @@ class SettingsViewModel {
         Task {
             _ = await saveConfigToggle(key: key, value: value)
             await loadConfig()
-        }
-    }
-
-    func saveConfigToggle(key: String, value: Bool) async -> String? {
-        guard let client else { return "Client not configured" }
-        isSaving = true
-        defer { isSaving = false }
-
-        guard var currentConfig = config?.content else {
-            return "No configuration loaded"
-        }
-
-        // Update the specific toggle
-        switch key {
-        case "alwaysThinkingEnabled":
-            currentConfig.alwaysThinkingEnabled = value
-        case "includeCoAuthoredBy":
-            currentConfig.includeCoAuthoredBy = value
-        default:
-            return "Unknown config key: \(key)"
-        }
-
-        do {
-            let request = UpdateConfigRequest(scope: config?.scope ?? "user", content: currentConfig)
-            let response: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
-            if let updatedConfig = response.data {
-                config = updatedConfig
-                if !updatedConfig.isValid {
-                    return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
-                }
-            }
-            return nil
-        } catch {
-            return "Failed to save: \(error.localizedDescription)"
         }
     }
 }
