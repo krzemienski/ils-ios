@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 34 — Host Profiles Fix & Redesign -- IN PROGRESS
-Plan: 3/3 complete — dead file cleanup done
-Status: Plan 03 complete. Dead Fleet* files deleted, doc comments updated, naming migration finished.
-Last activity: 2026-02-25 — Completed 34-03 (dead file cleanup and doc comment update)
+Plan: 1/3 documented — 34-01 SUMMARY created (code for all 3 plans committed in prior session)
+Status: Plan 01 SUMMARY documented. Plans 02 and 03 need SUMMARY documentation.
+Last activity: 2026-02-25 — Documented 34-01 (host activation architecture fix)
 
 ## Previous Milestones
 
@@ -39,6 +39,9 @@ Last activity: 2026-02-25 — Completed 34-03 (dead file cleanup and doc comment
 - [33-03]: ils://projects grouped with ils://browser (no .projects case in BrowserSegment); mcp/skills/plugins get individual segment intents
 - [33-03]: Non-chat deep links clear previousScreen to prevent stale back destinations
 - [34-03]: UI-facing terminology uses "host profile"; backend API paths and model types keep "fleet"
+- [34-01]: HostProfilesViewModel uses optional pattern in View -- initialized in .task to ensure AppState is available from @Environment
+- [34-01]: hostProfileRow receives unwrapped viewModel as parameter rather than optional chaining throughout
+- [34-01]: Health polling uses silent catch (best-effort) while user-facing operations surface errors via loadError
 - [34-03]: Fixed HostProfilesView optional viewModel pattern to match updated init(appState:) signature
 
 ### Pending Todos
@@ -52,5 +55,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 34-03-PLAN.md — Dead file cleanup and doc comment update
+Stopped at: Completed 34-01-PLAN.md documentation — SUMMARY created, verified all plan requirements met
 Resume file: None
