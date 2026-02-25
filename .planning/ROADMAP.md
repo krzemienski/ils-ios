@@ -3,8 +3,10 @@
 ## Milestones
 
 - **v1.0 Cross-Platform Audit** - Phases 1-10 (shipped 2026-02-21)
-- **v2.0 Performance Optimization Suite** - Phases 11-17 (in progress)
-- **v3.0 Comprehensive Audit Remediation** - Phases 18-24 (started 2026-02-22)
+- **v2.0 Performance Optimization Suite** - Phases 11-17 (shipped 2026-02-24)
+- **v3.0 Comprehensive Audit Remediation** - Phases 18-24 (shipped 2026-02-23)
+- **v1.5 All Audit Fixes** - Phases 25-32 (shipped 2026-02-24)
+- **v3.1 Comprehensive Audit, Bug Fix & UX Overhaul** - Phases 33-38 (started 2026-02-24)
 
 ## Phases
 
@@ -492,6 +494,106 @@ Plans:
 
 ---
 
+## v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
+
+**Milestone Goal:** Systematically audit every screen, fix broken functionality, restore missing features (GitHub skill/plugin browsing, host config sync, hooks management), redesign Fleet into Host Profiles, and ensure consistent UX across iOS, iPadOS, and macOS. Shift from code health to product quality.
+
+**Research:** `.planning/research/` (STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md — 109KB)
+**Key Constraint:** Phase 34 (Host Profiles) MUST complete before Phases 35-36 can be validated — config sync and GitHub install depend on targeting the correct host.
+
+- [ ] **Phase 33: Navigation & UX Overhaul** — Side menu accessibility, chat back button, home layout, sidebar host indicator, deep link consistency
+- [ ] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename
+- [ ] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips
+- [ ] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX
+- [ ] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency
+- [ ] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
+
+---
+
+### Phase 33: Navigation & UX Overhaul
+**Goal**: Side menu is accessible from every screen, chat has a back button, home screen is polished, sidebar shows active host, and deep links work consistently
+**Depends on**: Nothing (first phase of v3.1; zero backend risk)
+**Requirements**: NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
+**Plans:** 3 plans
+Plans:
+- [ ] 33-01-PLAN.md — Inline nav titles on 4 missing screens + Home layout polish (NAV-01, NAV-03)
+- [ ] 33-02-PLAN.md — Chat back button via previousScreen tracking + sidebar host indicator (NAV-02, NAV-04)
+- [ ] 33-03-PLAN.md — Deep link browser segment routing + back button integration (NAV-05)
+**Success Criteria** (what must be TRUE):
+  1. Hamburger menu button is visible and functional on ALL screens — no child view adds a conflicting `.topBarLeading` toolbar item that hides the hamburger
+  2. Chat view has a back button that returns to the sessions list without losing the active session's @SceneStorage state
+  3. Home screen stats cards and quick actions are consistently spaced and ordered
+  4. Sidebar header area shows the active host profile name (or "Local" if no profile active)
+  5. All registered `ils://` deep link routes navigate correctly without stale state
+
+---
+
+### Phase 34: Host Profiles Fix + Redesign
+**Goal**: Host activation propagates through AppState so all ViewModels target the correct host, and the Fleet UI is redesigned as Host Profiles with consistent naming
+**Depends on**: Phase 33 (navigation must be stable before host switching triggers full-app reloads)
+**Requirements**: HP-01, HP-02, HP-03, HP-04, HP-05
+**Success Criteria** (what must be TRUE):
+  1. `HostProfilesViewModel` receives `AppState` (not a standalone `APIClient()`) — activation calls `appState.updateServerURL()` which recreates APIClient and SSEClient in ConnectionManager
+  2. After switching hosts, BrowserView, SettingsView, and SystemMonitorView all show data from the NEW host (not stale data from the previous host)
+  3. Active profile indicator is visible on the host list row and in the sidebar
+  4. Health status badges (colored dot) display per host with polling
+  5. All UI strings say "Host Profiles" (not "Fleet") — navigation title, sidebar item, settings references
+
+---
+
+### Phase 35: Settings & Config Sync
+**Goal**: Settings display the connected host's effective config with per-field inheritance badges, write operations use a safe allowlist, and all fields have explanatory tooltips
+**Depends on**: Phase 34 (correct host must be targeted before config sync is meaningful)
+**Requirements**: CFG-01, CFG-02, CFG-03, CFG-04, CFG-05, CFG-06, CFG-07
+**Success Criteria** (what must be TRUE):
+  1. Settings screen shows effective config values from the connected host's `~/.claude/settings.json`
+  2. Every settings field has an `InheritanceBadge` showing "Host Default" or "Custom" based on whether the value is inherited or overridden
+  3. Config auto-refreshes on reconnect and host switch via `onChange(appState.isConnected)` trigger
+  4. Every settings field has a `SettingsInfoButton` tooltip with explanatory text
+  5. Config write operations use a read-then-patch pattern with an allowlist — `hooks`, `env`, `permissions`, `statusLine` are never included in write payloads
+  6. System prompt field is displayed (read-only if inherited from host default)
+  7. Inline edits of user-scope settings save immediately via minimal-delta PUT
+
+---
+
+### Phase 36: Browse, Skills & Plugins
+**Goal**: GitHub browse and install works for both skills and plugins with per-item progress, status badges, branch detection, and graceful rate limiting
+**Depends on**: Phase 34 (browse must target the correct host's backend)
+**Requirements**: BRW-01, BRW-02, BRW-03, BRW-04, BRW-05, BRW-06, BRW-07, BRW-08
+**Success Criteria** (what must be TRUE):
+  1. GitHub skill search returns results with name, description, star count, and repo path displayed
+  2. Install uses per-item spinner (`installingSkills: Set<String>`) — list remains browsable during install
+  3. Installed skills show an "Installed" badge on their GitHub search result row
+  4. Plugins tab has a GitHub browse section (symmetric with skills tab)
+  5. Installed skills and plugins have an inline enable/disable toggle
+  6. `fetchRawContent` tries the repo's default branch (not hardcoded `main`)
+  7. Rate limit 429 shows: "GitHub search limit reached. Set GITHUB_TOKEN on host to increase limits."
+  8. Installed items can be uninstalled via `.contextMenu` "Remove" action from browse tab
+
+---
+
+### Phase 37: System Monitor & Themes
+**Goal**: System monitor shows real-time metrics from the connected host, themes load correctly on fresh launch, and theme appearance is consistent across platforms
+**Depends on**: Phase 34 (system monitor needs correct host connection)
+**Requirements**: SYS-01, SYS-02, SYS-03
+**Success Criteria** (what must be TRUE):
+  1. System monitor screen displays real-time CPU, memory, disk, and network metrics from the connected host
+  2. Default theme loads correctly on fresh app installation (no blank/broken theme state)
+  3. Theme colors and typography are consistent between iOS, iPadOS, and macOS
+
+---
+
+### Phase 38: Cross-Platform Validation
+**Goal**: All v3.1 changes verified on iOS, iPadOS, and macOS; all v1.0 audit REQs remain PASS; zero regressions
+**Depends on**: Phases 33-37 (all feature work complete)
+**Requirements**: XP-01, XP-02, XP-03
+**Success Criteria** (what must be TRUE):
+  1. `xcodebuild` for ILSApp and ILSMacApp both exit 0 with zero errors; `swift build` for backend exits 0
+  2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS
+  3. Feature parity verified across iOS, iPadOS, and macOS for all v3.1 changes (navigation, host profiles, settings, browse, system monitor, themes)
+
+---
+
 ## Progress
 
 **v2.0 Execution Order:** Phase 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
@@ -499,6 +601,8 @@ Plans:
 **v3.0 Execution Order:** Phase 18 -> 19 -> 20 -> 21 -> 22 -> 23 -> 24
 
 **v1.5 Execution Order:** Phase 25 -> 26 -> 27 -> 28 -> 29 -> 30 -> 31 -> 32
+
+**v3.1 Execution Order:** Phase 33 -> 34 -> 35 -> 36 -> 37 -> 38
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -524,4 +628,10 @@ Plans:
 | 29. Testing CRITICAL -- Sleep Replacement | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 30. Testing Infrastructure | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 31. Swift 6 Preparation | v1.5 | 2/2 | Complete | 2026-02-24 |
-| 32. Final Validation | 2/2 | Complete    | 2026-02-24 | 2026-02-24 |
+| 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
+| 33. Navigation & UX Overhaul | v3.1 | 0/? | Planned | — |
+| 34. Host Profiles Fix + Redesign | v3.1 | 0/? | Planned | — |
+| 35. Settings & Config Sync | v3.1 | 0/? | Planned | — |
+| 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |
+| 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
+| 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |
