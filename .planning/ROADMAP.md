@@ -559,6 +559,11 @@ Plans:
   5. Config write operations use a read-then-patch pattern with an allowlist — `hooks`, `env`, `permissions`, `statusLine` are never included in write payloads
   6. System prompt field is displayed (read-only if inherited from host default)
   7. Inline edits of user-scope settings save immediately via minimal-delta PUT
+**Plans:** 2 plans
+
+Plans:
+- [ ] 35-01-PLAN.md -- Safe config write (read-then-patch) and reconnect auto-refresh
+- [ ] 35-02-PLAN.md -- InheritanceBadge + tooltip coverage on all fields, system prompt info section
 
 ---
 
