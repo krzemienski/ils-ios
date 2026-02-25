@@ -6,7 +6,8 @@
 - **v2.0 Performance Optimization Suite** - Phases 11-17 (shipped 2026-02-24)
 - **v3.0 Comprehensive Audit Remediation** - Phases 18-24 (shipped 2026-02-23)
 - **v1.5 All Audit Fixes** - Phases 25-32 (shipped 2026-02-24)
-- **v3.1 Comprehensive Audit, Bug Fix & UX Overhaul** - Phases 33-39 (started 2026-02-24)
+- **v3.1 Comprehensive Audit, Bug Fix & UX Overhaul** - Phases 33-39 (shipped 2026-02-25)
+- **v3.5 Comprehensive Functional Validation (iOS & iPad)** - Phases 40-42 (started 2026-02-25)
 
 ## Phases
 
@@ -492,9 +493,10 @@ Plans:
 - [x] 32-01-PLAN.md -- Build verification, test suite, 5 Axiom audits, v1.0 REQ spot-check (completed 2026-02-24)
 - [x] 32-02-PLAN.md -- Audit findings resolution update, milestone closure (completed 2026-02-24)
 
----
 
-## v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
+<details>
+<summary>v3.1 Comprehensive Audit, Bug Fix & UX Overhaul (Phases 33-39) -- SHIPPED 2026-02-25</summary>
+
 
 **Milestone Goal:** Systematically audit every screen, fix broken functionality, restore missing features (GitHub skill/plugin browsing, host config sync, hooks management), redesign Fleet into Host Profiles, and ensure consistent UX across iOS, iPadOS, and macOS. Shift from code health to product quality.
 
@@ -631,6 +633,71 @@ Plans:
 
 ---
 
+</details>
+
+
+---
+
+## v3.5 Comprehensive Functional Validation (iOS & iPad)
+
+**Milestone Goal:** Launch every screen on iPhone and iPad simulators, capture screenshot evidence, verify logs, fix any issue found on the spot, and have two independent agent teammates confirm all evidence is accurate. First true functional validation -- no code-level verification shortcuts.
+
+**Research:** `.planning/research/` (SUMMARY.md, STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md)
+**Key Constraint:** Phases are STRICTLY SEQUENTIAL -- iPhone validation must complete before iPad (fix-as-you-go changes the binary).
+**Embedded Evidence Gates:** Each phase includes its own dual-agent verification gate. Issues are caught and fixed in the phase where they belong -- no pile-up of rework at the end.
+
+- [ ] **Phase 40: Environment Setup & Screen Inventory** -- Simulators booted, app installed, backend verified, evidence directories created, PASS criteria defined, dual-agent verification of setup correctness
+- [ ] **Phase 41: iPhone Full Validation + Deep Links** -- All 12+ screens validated with fix-as-you-go, deep links tested, screenshots organized, dual-agent review of all iPhone evidence before proceeding
+- [ ] **Phase 42: iPad Full Validation** -- All screens validated in split-view layout, sidebar sync verified, screenshots organized, dual-agent review of all iPad evidence, cross-device comparison
+
+---
+
+### Phase 40: Environment Setup & Screen Inventory
+**Goal**: Both simulators are booted with the newest binary, backend is verified running from the correct path, evidence directories exist, a PASS criteria document defines what success looks like for every screen, and two independent agents confirm the setup is correct before validation begins
+**Depends on**: Nothing (first phase of v3.5)
+**Requirements**: ENV-01, ENV-02, ENV-03, ENV-04, ENV-05, ENV-06, GATE-05
+**Success Criteria** (what must be TRUE):
+  1. iPhone simulator (50523130) shows the ILS app home screen after fresh install from the newest DerivedData binary (verified by `ls -td` timestamp, not `find | head`)
+  2. iPad simulator (C074375B) shows the ILS app home screen after install of the same binary used on iPhone
+  3. `curl http://localhost:9999/health` returns success and `lsof -i :9999` confirms the binary path contains `ils-ios/`
+  4. `/tmp/v3.5-evidence/iphone/` and `/tmp/v3.5-evidence/ipad/` directories exist and are empty
+  5. A PASS criteria document lists every screen with numbered verification points for both devices
+  6. **Evidence gate:** Two independent agents confirm setup is correct (simulators responsive, backend healthy, correct binary installed, evidence dirs ready) -- 2/2 agreement required before proceeding to Phase 41
+**Plans**: TBD
+
+---
+
+### Phase 41: iPhone Full Validation + Deep Links
+**Goal**: Every screen on iPhone is launched, visually verified, and captured as numbered screenshot evidence; every deep link route navigates correctly; any issue found is fixed immediately and re-validated; all iPhone screenshots are reviewed by two independent agents who must agree on every screen before proceeding to iPad
+**Depends on**: Phase 40 (setup verified by dual-agent gate)
+**Requirements**: IPH-01, IPH-02, IPH-03, IPH-04, IPH-05, IPH-06, IPH-07, IPH-08, IPH-09, IPH-10, IPH-11, IPH-12, IPH-13, DL-01, DL-02, DL-03, DL-04, DL-05, DL-06, GATE-01, GATE-03
+**Success Criteria** (what must be TRUE):
+  1. All 12+ iPhone screens have numbered screenshots in `/tmp/v3.5-evidence/iphone/` showing correct data rendering (stats cards, session rows, chat messages, MCP health indicators, metrics graphs, settings badges, profile rows, theme previews, sidebar items)
+  2. All `ils://` deep link routes (`home`, `sessions`, `sessions/{uuid}`, `browser`, `mcp`, `skills`, `plugins`, `settings`, `system`, `fleet`, `themes`) navigate to the correct screen without crashes
+  3. Console log stream captured during validation shows zero crashes and zero unhandled errors
+  4. Every issue found during validation has a corresponding fix commit, rebuild, and re-validation screenshot
+  5. Sidebar navigation is accessible from every screen and the active item is highlighted
+  6. All iPhone screenshots are organized with numbered naming (`01-home.png`, `02-sessions.png`, etc.) in the evidence directory
+  7. **Evidence gate:** Agent A produces an independent verdict document with PASS/FAIL per iPhone screen; Agent B produces an independent verdict document with PASS/FAIL per iPhone screen; 2/2 agreement required on every screen -- any disagreement triggers re-investigation, fix, and re-validation within this phase before proceeding to Phase 42
+**Plans**: TBD
+
+---
+
+### Phase 42: iPad Full Validation
+**Goal**: Every screen on iPad renders correctly in the split-view layout, sidebar selection syncs with the active screen, iPad-specific layout issues are fixed on the spot, all iPad screenshots are reviewed by two independent agents, and cross-device comparison confirms parity between iPhone and iPad evidence
+**Depends on**: Phase 41 (iPhone validation complete and evidence gate passed -- the post-fix binary is what iPad tests against)
+**Requirements**: IPAD-01, IPAD-02, IPAD-03, IPAD-04, IPAD-05, IPAD-06, IPAD-07, GATE-02, GATE-04
+**Success Criteria** (what must be TRUE):
+  1. NavigationSplitView persistent sidebar is visible on iPad with all expected navigation items
+  2. All 12+ screens render correctly in the iPad detail column without stretched, compressed, or overlapping elements
+  3. Sidebar selection highlight updates correctly when switching screens (including after deep link navigation)
+  4. Chat view uses the full detail column width appropriately -- message bubbles, input field, and toolbar are properly sized
+  5. Any iPad-specific layout fix has a corresponding commit, rebuild on both simulators, and re-validation screenshot
+  6. All iPad screenshots are organized with numbered naming in the evidence directory
+  7. **Evidence gate:** Agent A produces an independent verdict document with PASS/FAIL per iPad screen; Agent B produces an independent verdict document with PASS/FAIL per iPad screen; 2/2 agreement required on every screen -- any disagreement triggers re-investigation, fix, and re-validation within this phase
+  8. Cross-device comparison: agents confirm no regression between iPhone evidence (from Phase 41) and iPad evidence -- layout differences are intentional (split-view vs stack), not bugs
+
+
 ## Progress
 
 **v2.0 Execution Order:** Phase 11 -> 12 -> 13 -> 14 -> 15 -> 16 -> 17
@@ -640,6 +707,8 @@ Plans:
 **v1.5 Execution Order:** Phase 25 -> 26 -> 27 -> 28 -> 29 -> 30 -> 31 -> 32
 
 **v3.1 Execution Order:** Phase 33 -> 34 -> 35 -> 36 -> 37 -> 38
+
+**v3.5 Execution Order:** Phase 40 -> 41 -> 42
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -666,9 +735,13 @@ Plans:
 | 30. Testing Infrastructure | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 31. Swift 6 Preparation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
-| 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
-| 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
-| 35. Settings & Config Sync | 2/2 | Complete    | 2026-02-25 | — |
-| 36. Browse, Skills & Plugins | 3/3 | Complete    | 2026-02-25 | — |
-| 37. System Monitor & Themes | 2/2 | Complete    | 2026-02-25 | — |
-| 38. Cross-Platform Validation | 1/2 | Complete    | 2026-02-25 | — |
+| 33. Navigation & UX Overhaul | v3.1 | 3/3 | Complete | 2026-02-25 |
+| 34. Host Profiles Fix + Redesign | v3.1 | 3/3 | Complete | 2026-02-25 |
+| 35. Settings & Config Sync | v3.1 | 2/2 | Complete | 2026-02-25 |
+| 36. Browse, Skills & Plugins | v3.1 | 3/3 | Complete | 2026-02-25 |
+| 37. System Monitor & Themes | v3.1 | 2/2 | Complete | 2026-02-25 |
+| 38. Cross-Platform Validation | v3.1 | 2/2 | Complete | 2026-02-25 |
+| 39. Gap Closure | v3.1 | 0/0 | Complete | 2026-02-25 |
+| 40. Environment Setup & Screen Inventory | v3.5 | 0/0 | Not started | - |
+| 41. iPhone Full Validation + Deep Links | v3.5 | 0/0 | Not started | - |
+| 42. iPad Full Validation | v3.5 | 0/0 | Not started | - |
