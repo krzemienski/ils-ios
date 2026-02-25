@@ -189,6 +189,9 @@ struct ChatView: View {
                 }
             }
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
+        }
     }
 
     // MARK: - View Components

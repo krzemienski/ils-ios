@@ -84,6 +84,14 @@ struct ConfigEditorView: View {
             configText = viewModel.configJson
             originalConfigText = viewModel.configJson
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            viewModel.configure(client: appState.apiClient)
+            Task {
+                await viewModel.loadConfig(scope: scope)
+                configText = viewModel.configJson
+                originalConfigText = viewModel.configJson
+            }
+        }
         .onChange(of: configText) { _, newValue in
             hasUnsavedChanges = (newValue != originalConfigText)
         }

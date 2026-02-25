@@ -118,6 +118,10 @@ struct ThemesListView: View {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadThemes()
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            viewModel.configure(client: appState.apiClient)
+            Task { await viewModel.loadThemes() }
+        }
         .fileImporter(
             isPresented: $showingImporter,
             allowedContentTypes: [.json],

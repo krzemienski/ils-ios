@@ -30,6 +30,10 @@ struct HooksManagementView: View {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadConfig()
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            viewModel.configure(client: appState.apiClient)
+            Task { await viewModel.loadConfig() }
+        }
     }
 
     // MARK: - Helpers
