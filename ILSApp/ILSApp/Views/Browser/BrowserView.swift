@@ -322,6 +322,20 @@ struct BrowserView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .contextMenu {
+                    Button {
+                        Task { await skillsVM.toggleSkillActive(skill) }
+                    } label: {
+                        Label(skill.isActive ? "Disable" : "Enable", systemImage: skill.isActive ? "pause.circle" : "play.circle")
+                    }
+                    if skill.source == .local || skill.source == .github {
+                        Button(role: .destructive) {
+                            Task { await skillsVM.deleteSkill(skill) }
+                        } label: {
+                            Label("Remove", systemImage: "trash")
+                        }
+                    }
+                }
             }
         }
 
@@ -384,6 +398,20 @@ struct BrowserView: View {
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
+            // Rate limit error banner
+            if let gitHubError = skillsVM.gitHubError {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(theme.warning)
+                    Text(gitHubError)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+                .padding(theme.spacingMD)
+                .background(theme.warning.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+
             // GitHub results
             if !skillsVM.gitHubResults.isEmpty {
                 VStack(spacing: theme.spacingSM) {
@@ -418,6 +446,16 @@ struct BrowserView: View {
 
                     Spacer()
 
+                    if skillsVM.isInstalled(result: result) {
+                        Text("Installed")
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.success)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(theme.success.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+
                     if result.stars > 0 {
                         HStack(spacing: 3) {
                             Image(systemName: "star.fill")
@@ -443,22 +481,26 @@ struct BrowserView: View {
                     .lineLimit(1)
             }
 
-            // Install button
-            Button {
-                Task {
-                    let installed = await skillsVM.installFromGitHub(result: result)
-                    if installed {
-                        HapticManager.impact(.medium)
+            // Install button / installed indicator
+            if skillsVM.isInstalled(result: result) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(theme.success)
+                    .frame(width: 60)
+            } else if skillsVM.installingSkills.contains(result.repository) {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(0.7)
+                    .tint(theme.accent)
+                    .frame(width: 60)
+            } else {
+                Button {
+                    Task {
+                        let installed = await skillsVM.installFromGitHub(result: result)
+                        if installed {
+                            HapticManager.impact(.medium)
+                        }
                     }
-                }
-            } label: {
-                if skillsVM.isLoading {
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .scaleEffect(0.7)
-                        .tint(theme.accent)
-                        .frame(width: 60)
-                } else {
+                } label: {
                     Text("Install")
                         .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textOnAccent)
@@ -467,9 +509,8 @@ struct BrowserView: View {
                         .background(theme.accent)
                         .clipShape(Capsule())
                 }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-            .disabled(skillsVM.isLoading)
         }
         .padding(theme.spacingMD)
         .modifier(GlassCard())
@@ -536,6 +577,24 @@ struct BrowserView: View {
                         pluginRow(plugin)
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        Button {
+                            Task {
+                                if plugin.isEnabled {
+                                    await pluginsVM.disablePlugin(plugin)
+                                } else {
+                                    await pluginsVM.enablePlugin(plugin)
+                                }
+                            }
+                        } label: {
+                            Label(plugin.isEnabled ? "Disable" : "Enable", systemImage: plugin.isEnabled ? "pause.circle" : "play.circle")
+                        }
+                        Button(role: .destructive) {
+                            Task { await pluginsVM.uninstallPlugin(plugin) }
+                        } label: {
+                            Label("Remove", systemImage: "trash")
+                        }
+                    }
                 }
             }
         }
