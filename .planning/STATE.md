@@ -5,19 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v3.1 milestone complete — all 6 phases (33-38) shipped
+**Current focus:** v3.5 Comprehensive Functional Validation (iOS & iPad)
 
 ## Current Position
 
-Phase: 38 — Cross-Platform Validation (COMPLETE)
-Plan: 2 of 2 complete
-Status: Phase 38 complete
-Last activity: 2026-02-25 — Quick task 5: Deep link segment routing fix + partial cross-milestone audit (7/12 screens PASS)
-
-### Planning Summary (Phases 36-38)
-- Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
-- Phase 37: 2 plans / 1 wave / 3 reqs (SYS-01..03) — System monitor host fix + theme verification
-- Phase 38: 2 plans / 2 waves / 3 reqs (XP-01..03) — Cross-platform build + parity validation
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-25 — Milestone v3.5 started
 
 ## Previous Milestones
 
@@ -96,5 +91,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: v3.1 milestone complete — all 6 phases (33-38) shipped, 14 requirements validated, 15/15 v1.0 REQs PASS
+Stopped at: v3.5 milestone initialization — defining requirements
 Resume file: None

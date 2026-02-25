@@ -27,12 +27,6 @@ Every screen works correctly, reflects the connected host's configuration, and p
 - v1.5 (Phases 25-32): All Audit Fixes — SHIPPED 2026-02-24
 - v3.1 (Phases 33-39): Comprehensive Audit, Bug Fix & UX Overhaul — SHIPPED 2026-02-25
 
-**Previous Milestones:**
-- v1.0 (Phases 1-10): Cross-Platform Audit — SHIPPED 2026-02-21
-- v2.0 (Phases 11-17): Performance Optimization Suite — COMPLETE 2026-02-24
-- v3.0 (Phases 18-24): Comprehensive Audit Remediation — COMPLETE 2026-02-23
-- v1.5 (Phases 25-32): All Audit Fixes — SHIPPED 2026-02-24
-
 ## Requirements
 
 ### Validated
