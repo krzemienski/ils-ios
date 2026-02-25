@@ -504,7 +504,7 @@ Plans:
 - [x] **Phase 33: Navigation & UX Overhaul** — Side menu accessibility, chat back button, home layout, sidebar host indicator, deep link consistency (completed 2026-02-25)
 - [x] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename (completed 2026-02-25)
 - [x] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips (completed 2026-02-25)
-- [ ] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX
+- [x] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX (completed 2026-02-25)
 - [ ] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency
 - [ ] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
 
@@ -580,7 +580,7 @@ Plans:
   6. `fetchRawContent` tries the repo's default branch (not hardcoded `main`)
   7. Rate limit 429 shows: "GitHub search limit reached. Set GITHUB_TOKEN on host to increase limits."
   8. Installed items can be uninstalled via `.contextMenu` "Remove" action from browse tab
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 36-01-PLAN.md — Backend: branch detection, rate limit messaging, skill enable/disable routes, plugin GitHub search endpoint
@@ -658,6 +658,6 @@ Plans:
 | 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
 | 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
 | 35. Settings & Config Sync | 2/2 | Complete    | 2026-02-25 | — |
-| 36. Browse, Skills & Plugins | 2/3 | In Progress|  | — |
+| 36. Browse, Skills & Plugins | 3/3 | Complete   | 2026-02-25 | — |
 | 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
 | 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |

@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 36 — Browse, Skills & Plugins -- IN PROGRESS (2/3 plans complete)
-Plan: 3 plans in 2 waves (36-01 backend W1 DONE, 36-02 skills UI W2 DONE, 36-03 plugins UI W2)
-Status: 36-02 skills UI complete; 36-03 plugins UI ready for execution
-Last activity: 2026-02-25 — Completed 36-02 skills UI plan (per-item spinners, badges, context menus, rate limit banner)
+Phase: 36 — Browse, Skills & Plugins -- COMPLETE (3/3 plans complete)
+Plan: 3 plans in 2 waves (36-01 backend W1 DONE, 36-02 skills UI W2 DONE, 36-03 plugins UI W2 DONE)
+Status: Phase 36 complete; all 8 BRW requirements satisfied
+Last activity: 2026-02-25 — Completed 36-03 plugins UI plan (GitHub browse, per-item install, Installed badges)
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -64,6 +64,9 @@ Last activity: 2026-02-25 — Completed 36-02 skills UI plan (per-item spinners,
 - [36-02]: isInstalled checks both skill.name and skill.path against repo name for robust matching
 - [36-02]: Rate limit errors routed to gitHubError (inline banner) while other errors go to generic error property
 - [36-02]: Context menu Enable/Disable placed before Remove for safer default action ordering
+- [36-03]: Used InstallPluginRequest (not SkillInstallRequest) for plugin GitHub install -- matches actual backend endpoint contract
+- [36-03]: Plugin GitHub results use context menu Remove (not inline delete) matching skills pattern
+- [36-03]: Enable/disable on installed rows served via existing context menus from Plan 02 -- no additional UI needed
 
 ### Pending Todos
 
@@ -76,5 +79,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 36-02-PLAN.md — skills UI improvements (per-item spinners, badges, context menus, rate limit banner)
+Stopped at: Completed 36-03-PLAN.md — Phase 36 complete (plugins GitHub browse, per-item install, Installed badges)
 Resume file: None
