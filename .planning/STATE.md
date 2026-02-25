@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** Phase 37 — System Monitor & Themes
+**Current focus:** Phase 38 — Cross-Platform Validation
 
 ## Current Position
 
-Phase: 37 — System Monitor & Themes
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-02-25 — Phase 36 complete, transitioning to Phase 37
+Phase: 37 — System Monitor & Themes (COMPLETE)
+Plan: 2 of 2 complete
+Status: Ready for Phase 38
+Last activity: 2026-02-25 — Plan 02 (theme default & cross-platform parity) verified
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -67,6 +67,9 @@ Last activity: 2026-02-25 — Phase 36 complete, transitioning to Phase 37
 - [36-03]: Used InstallPluginRequest (not SkillInstallRequest) for plugin GitHub install -- matches actual backend endpoint contract
 - [36-03]: Plugin GitHub results use context menu Remove (not inline delete) matching skills pattern
 - [36-03]: Enable/disable on installed rows served via existing context menus from Plan 02 -- no additional UI needed
+- [37-01]: Kept init default parameter as localhost:9999 for previews; only runtime baseURL is mutable via updateBaseURL()
+- [37-01]: updateBaseURL is a no-op when URL unchanged (guard) -- safe to call on every onAppear
+- [37-01]: Removed redundant loadProcesses from onAppear since connect() already calls startProcessAutoRefresh which does initial load
 
 ### Pending Todos
 
@@ -79,5 +82,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Phase 36 complete, ready to plan Phase 37
+Stopped at: Completed 37-01-PLAN.md (System Monitor host fix)
 Resume file: None

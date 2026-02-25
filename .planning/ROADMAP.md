@@ -505,7 +505,7 @@ Plans:
 - [x] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename (completed 2026-02-25)
 - [x] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips (completed 2026-02-25)
 - [x] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX (completed 2026-02-25)
-- [ ] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency
+- [x] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency (completed 2026-02-25)
 - [ ] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
 
 ---
@@ -593,7 +593,7 @@ Plans:
 **Goal**: System monitor shows real-time metrics from the connected host, themes load correctly on fresh launch, and theme appearance is consistent across platforms
 **Depends on**: Phase 34 (system monitor needs correct host connection)
 **Requirements**: SYS-01, SYS-02, SYS-03
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 37-01-PLAN.md — Fix system monitor to use active host URL for WebSocket + REST
 - [ ] 37-02-PLAN.md — Verify theme default loading and cross-platform injection parity
@@ -659,5 +659,5 @@ Plans:
 | 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
 | 35. Settings & Config Sync | 2/2 | Complete    | 2026-02-25 | — |
 | 36. Browse, Skills & Plugins | 3/3 | Complete    | 2026-02-25 | — |
-| 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
+| 37. System Monitor & Themes | 2/2 | Complete   | 2026-02-25 | — |
 | 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |
