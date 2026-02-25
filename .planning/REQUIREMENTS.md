@@ -158,23 +158,23 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NAV-01 | 33 | Open |
-| NAV-02 | 33 | Open |
-| NAV-03 | 33 | Open |
-| NAV-04 | 33 | Open |
-| NAV-05 | 33 | Open |
-| HP-01 | 34 | Open |
-| HP-02 | 34 | Open |
-| HP-03 | 34 | Open |
-| HP-04 | 34 | Open |
-| HP-05 | 34 | Open |
-| CFG-01 | 35 | Open |
-| CFG-02 | 35 | Open |
-| CFG-03 | 35 | Open |
-| CFG-04 | 35 | Open |
-| CFG-05 | 35 | Open |
-| CFG-06 | 35 | Open |
-| CFG-07 | 35 | Open |
+| NAV-01 | 33 | Complete |
+| NAV-02 | 33 | Complete |
+| NAV-03 | 33 | Complete |
+| NAV-04 | 33 | Complete |
+| NAV-05 | 33 | Complete |
+| HP-01 | 34 | Complete |
+| HP-02 | 34 | Complete |
+| HP-03 | 34 | Complete |
+| HP-04 | 34 | Complete |
+| HP-05 | 34 | Complete |
+| CFG-01 | 35 | Complete |
+| CFG-02 | 35 | Complete |
+| CFG-03 | 35 | Complete |
+| CFG-04 | 35 | Complete |
+| CFG-05 | 35 | Complete |
+| CFG-06 | 35 | Complete |
+| CFG-07 | 35 | Complete |
 | BRW-01 | 36 | Complete |
 | BRW-02 | 36 | Complete |
 | BRW-03 | 36 | Complete |
@@ -183,18 +183,18 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 | BRW-06 | 36 | Complete |
 | BRW-07 | 36 | Complete |
 | BRW-08 | 36 | Complete |
-| SYS-01 | 37 | Open |
-| SYS-02 | 37 | Open |
-| SYS-03 | 37 | Open |
-| XP-01 | 38 | Open |
+| SYS-01 | 37 | Complete |
+| SYS-02 | 37 | Complete |
+| SYS-03 | 37, 39 | Complete |
+| XP-01 | 38 | Complete |
 | XP-02 | 38 | Complete |
 | XP-03 | 38 | Complete |
 
 **Coverage:**
 - v3.1 requirements: 31 total
 - Mapped to phases: 31/31 (100%)
-- Complete: 0
-- Open: 31
+- Complete: 31
+- Open: 0
 
 ---
 *Requirements defined: 2026-02-24*

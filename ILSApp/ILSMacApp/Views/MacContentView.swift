@@ -101,6 +101,9 @@ struct MacContentView: View {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadProjectGroups()
 
+            // Load custom themes from backend on cold start (parity with iOS SidebarRootView)
+            await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
+
             // Index sessions in Spotlight after loading
             let allSessions = sessionsViewModel.projectSessions.values.flatMap { $0 }
             SpotlightIndexer.shared.indexSessions(Array(allSessions))

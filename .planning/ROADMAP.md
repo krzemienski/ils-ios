@@ -6,7 +6,7 @@
 - **v2.0 Performance Optimization Suite** - Phases 11-17 (shipped 2026-02-24)
 - **v3.0 Comprehensive Audit Remediation** - Phases 18-24 (shipped 2026-02-23)
 - **v1.5 All Audit Fixes** - Phases 25-32 (shipped 2026-02-24)
-- **v3.1 Comprehensive Audit, Bug Fix & UX Overhaul** - Phases 33-38 (started 2026-02-24)
+- **v3.1 Comprehensive Audit, Bug Fix & UX Overhaul** - Phases 33-39 (started 2026-02-24)
 
 ## Phases
 
@@ -507,6 +507,7 @@ Plans:
 - [x] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX (completed 2026-02-25)
 - [x] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency (completed 2026-02-25)
 - [x] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
+- [ ] **Phase 39: Gap Closure & Milestone Finalization** — macOS custom theme cold-load fix, traceability table sync
 
 ---
 
@@ -617,6 +618,16 @@ Plans:
 Plans:
 - [x] 38-01-PLAN.md — Build all three targets, fix compilation errors, platform guard audit (XP-01)
 - [x] 38-02-PLAN.md — Fix macOS parity gaps, re-validate 15 v1.0 REQs, document feature parity (XP-02, XP-03)
+
+### Phase 39: Gap Closure & Milestone Finalization
+**Goal**: Close the 1 low-severity integration gap and sync documentation traceability table for milestone completion
+**Depends on**: Phase 38 (audit identifies gaps)
+**Requirements**: SYS-03 (integration gap closure)
+**Gap Closure:** Closes gaps from v3.1-MILESTONE-AUDIT.md
+**Success Criteria** (what must be TRUE):
+  1. macOS `MacContentView.swift` `.task` calls `themeManager.loadAndRegisterCustomThemes(client:)` on cold start (parity with iOS)
+  2. REQUIREMENTS.md traceability table shows 31/31 Complete, 0 Open
+**Plans:** 0/0 (direct fix — no plan needed for 1-line code change + doc sync)
 
 ---
 
