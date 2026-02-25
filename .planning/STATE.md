@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 40 of 42 (Environment Setup & Screen Inventory)
-Plan: 0 of 0 in current phase
-Status: Ready to plan
-Last activity: 2026-02-25 -- Roadmap revised: eliminated standalone Evidence Gate (Phase 43), embedded dual-agent verification into each of 3 phases (40-42)
+Phase: 40 of 42 (Environment Setup & Screen Inventory) -- COMPLETE
+Plan: 3 of 3 complete (40-01, 40-02, 40-03)
+Status: Phase 40 complete, Phase 41 ready to begin
+Last activity: 2026-02-25 -- Phase 40 executed: environment setup, PASS criteria authored, dual-agent gate PASSED (7/7 checks, 2/2 agreement)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Previous Milestones
 
@@ -52,5 +52,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: v3.5 roadmap revised -- embedded evidence gates into each phase, ready to plan Phase 40
+Stopped at: Phase 40 complete. Phase 41 (iPhone Full Validation + Deep Links) ready to begin. Simulators booted, backend running, PASS criteria defined.
 Resume file: None
+Key artifacts: /tmp/v3.5-evidence/ (evidence tree), gate/session-uuid.txt (eeba4856-c40c-47cc-9029-95599704c82f)
+Screenshot workaround: xcrun simctl io screenshot has "Timeout waiting for screen surfaces" error; use `screencapture -l <windowID>` via Quartz CGWindowListCopyWindowInfo instead

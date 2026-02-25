@@ -646,7 +646,7 @@ Plans:
 **Key Constraint:** Phases are STRICTLY SEQUENTIAL -- iPhone validation must complete before iPad (fix-as-you-go changes the binary).
 **Embedded Evidence Gates:** Each phase includes its own dual-agent verification gate. Issues are caught and fixed in the phase where they belong -- no pile-up of rework at the end.
 
-- [ ] **Phase 40: Environment Setup & Screen Inventory** -- Simulators booted, app installed, backend verified, evidence directories created, PASS criteria defined, dual-agent verification of setup correctness
+- [x] **Phase 40: Environment Setup & Screen Inventory** -- Simulators booted, app installed, backend verified, evidence directories created, PASS criteria defined, dual-agent verification of setup correctness (DONE 2026-02-25)
 - [ ] **Phase 41: iPhone Full Validation + Deep Links** -- All 12+ screens validated with fix-as-you-go, deep links tested, screenshots organized, dual-agent review of all iPhone evidence before proceeding
 - [ ] **Phase 42: iPad Full Validation** -- All screens validated in split-view layout, sidebar sync verified, screenshots organized, dual-agent review of all iPad evidence, cross-device comparison
 
@@ -663,7 +663,8 @@ Plans:
   4. `/tmp/v3.5-evidence/iphone/` and `/tmp/v3.5-evidence/ipad/` directories exist and are empty
   5. A PASS criteria document lists every screen with numbered verification points for both devices
   6. **Evidence gate:** Two independent agents confirm setup is correct (simulators responsive, backend healthy, correct binary installed, evidence dirs ready) -- 2/2 agreement required before proceeding to Phase 41
-**Plans**: TBD
+**Plans**: 40-01 (infrastructure setup), 40-02 (PASS criteria), 40-03 (dual-agent gate)
+**Status**: COMPLETE (2026-02-25) -- All 7 requirements met, GATE-05 passed with 2/2 agent agreement
 
 ---
 
