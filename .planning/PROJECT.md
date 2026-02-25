@@ -35,18 +35,17 @@ Every screen works correctly, reflects the connected host's configuration, and p
 - v2.0: LAUNCH-01/02, NET-01/02/03, MEM-01/02/03, BATT-01/02, RENDER-01/02/03, BATT-03, COMPAT-01/02, TEST-01/02/03/04 — Performance optimization complete
 - v3.0: 165 audit issues remediated across Phases 18-24 (concurrency, energy, architecture, performance, navigation, Codable, build, accessibility, database, networking, security, memory, layout, modernization)
 - v1.5-partial: 10 issues fixed in commit c57690f (CRIT-C1, CRIT-E1, CRIT-SP1, H-SP1, H-E1, H-E2, H-E5, H-C3, H-C4, H-M1)
+- v3.1: NAV-01..05, HP-01..05, CFG-01..07, BRW-01..08, SYS-01..03, XP-01..03 — 31/31 requirements PASS (shipped 2026-02-25)
 
-### Active (v3.1 Comprehensive Audit, Bug Fix & UX Overhaul)
+### Active (v3.5 Comprehensive Functional Validation — iOS & iPad)
 
 *See `.planning/REQUIREMENTS.md` for full scoped requirements with REQ-IDs.*
 
-- Navigation & Home Screen (side menu from all screens, session back button, home layout)
-- Settings & Defaults Sync (host CLI config inheritance, override indicators, explanatory text)
-- ~~Browse, Skills & Plugins~~ — VALIDATED Phase 36 (BRW-01..08: GitHub browse/install, per-item progress, badges, branch detection, rate limits, context menus)
-- ~~System Monitor~~ — VALIDATED Phase 37 (SYS-01: host-aware WebSocket + REST connections)
-- Host Profiles (Fleet redesign, multi-host switching)
-- ~~Themes~~ — VALIDATED Phase 37 (SYS-02/03: fresh install defaults, cross-platform parity confirmed)
-- ~~Cross-Platform Validation~~ — VALIDATED Phase 38 (XP-01/02/03: all 3 builds green, 15/15 REQs PASS, 3 macOS gaps closed)
+- Environment & Infrastructure (ENV-01..06): simulators, backend, evidence dirs, PASS criteria
+- iPhone Validation (IPH-01..13): all 12+ screens with fix-as-you-go + embedded evidence gate
+- Deep Link Testing (DL-01..06): all ils:// routes on both devices
+- iPad Validation (IPAD-01..07): split-view layout, sidebar sync + embedded evidence gate
+- Evidence Gates (GATE-01..05): dual-agent confirmation built into each phase
 
 ### Out of Scope
 
@@ -94,4 +93,4 @@ Every screen works correctly, reflects the connected host's configuration, and p
 | macOS parity via MacContentView mirroring (Phase 38) | 3 gaps closed by mirroring iOS SidebarRootView patterns | ✓ Good |
 
 ---
-*Last updated: 2026-02-25 after Phase 38 (Cross-Platform Validation) — v3.1 milestone complete*
+*Last updated: 2026-02-25 after v3.5 milestone initialization (3 phases, 37 requirements, embedded gates)*
