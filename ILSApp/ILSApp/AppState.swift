@@ -14,6 +14,11 @@ class AppState {
     var lastSessionId: UUID?
     var lastSyncDate: Date?
 
+    /// The display name of the active host profile, or `nil` when no profile is selected.
+    /// When connected with no profile, the sidebar shows "Local".
+    /// Set by `HostProfilesViewModel.activate()` in Phase 34.
+    var activeHostName: String? = nil
+
     /// Driven by NetworkMonitor — true when device has no network path.
     var isOffline: Bool { !networkMonitor.isConnected }
 

@@ -135,6 +135,34 @@ struct SidebarView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Connection status")
             .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
+
+            // Active host indicator
+            if let hostName = appState.activeHostName {
+                HStack(spacing: theme.spacingXS) {
+                    Image(systemName: "desktopcomputer")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                    Text(hostName)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .lineLimit(1)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Active host")
+                .accessibilityValue(hostName)
+            } else if appState.isConnected {
+                HStack(spacing: theme.spacingXS) {
+                    Image(systemName: "desktopcomputer")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                    Text("Local")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Active host")
+                .accessibilityValue("Local")
+            }
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.top, theme.spacingLG)
