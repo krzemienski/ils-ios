@@ -42,9 +42,9 @@ Every screen works correctly, reflects the connected host's configuration, and p
 - Navigation & Home Screen (side menu from all screens, session back button, home layout)
 - Settings & Defaults Sync (host CLI config inheritance, override indicators, explanatory text)
 - ~~Browse, Skills & Plugins~~ — VALIDATED Phase 36 (BRW-01..08: GitHub browse/install, per-item progress, badges, branch detection, rate limits, context menus)
-- System Monitor (SSH connection fix, real-time data)
+- ~~System Monitor~~ — VALIDATED Phase 37 (SYS-01: host-aware WebSocket + REST connections)
 - Host Profiles (Fleet redesign, multi-host switching)
-- Themes (default loading, cross-platform consistency)
+- ~~Themes~~ — VALIDATED Phase 37 (SYS-02/03: fresh install defaults, cross-platform parity confirmed)
 - Cross-Platform Validation (iOS, iPadOS, macOS)
 
 ### Out of Scope
@@ -91,4 +91,4 @@ Every screen works correctly, reflects the connected host's configuration, and p
 | Context menu for inline actions (Phase 36) | LazyVStack can't use swipeActions; context menu is standard iOS pattern | ✓ Good |
 
 ---
-*Last updated: 2026-02-25 after Phase 36 (Browse, Skills & Plugins)*
+*Last updated: 2026-02-25 after Phase 37 (System Monitor & Themes)*
