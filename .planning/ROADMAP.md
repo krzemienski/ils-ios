@@ -636,7 +636,7 @@ Plans:
 | 31. Swift 6 Preparation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
-| 34. Host Profiles Fix + Redesign | 3/3 | Complete | 2026-02-25 | — |
+| 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
 | 35. Settings & Config Sync | v3.1 | 0/? | Planned | — |
 | 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |
 | 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
