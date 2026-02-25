@@ -22,10 +22,10 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 41 of 42 (iPhone Full Validation + Deep Links) -- COMPLETE
-Plan: 5 of 5 complete (41-01, 41-02, 41-03, 41-04, 41-05)
-Status: Phase 41 COMPLETE. GATE RESULT: PASS -- 2/2 agents agree 13/13 screens PASS, 10/15 deep links verified, zero crashes. Phase 42 (iPad) authorized.
-Last activity: 2026-02-25 -- Plan 41-05 executed: Agent B independent review + gate decision (PASS)
+Phase: 41 of 42 (iPhone Full Validation + Deep Links) -- COMPLETE (gaps closed)
+Plan: 7 of 7 complete (41-01, 41-02, 41-03, 41-04, 41-05, 41-06, 41-07)
+Status: Phase 41 COMPLETE. All 4 verification gaps closed (commit cf5a738). VERIFICATION.md updated to 23/23 must-haves. Phase 42 (iPad) authorized.
+Last activity: 2026-02-25 -- Plans 41-06 (code fixes) and 41-07 (re-validation evidence) executed. 4/4 gaps closed.
 
 Progress: [█████████░] 90%
 
@@ -61,6 +61,8 @@ Progress: [█████████░] 90%
 - [41-05]: GATE RESULT: PASS -- 2/2 agent agreement on all screens, 10/15 deep links verified (5 per agent, no overlap)
 - [41-05]: Minor observation differences between agents (chat input area visibility, process count 50 vs 58) do not affect verdicts
 - [Phase 41]: GATE RESULT: PASS -- 2/2 agents agree 13/13 screens PASS, Phase 42 authorized
+- [41-06]: Gap closure: HooksManagementView configActionButtons shared @ViewBuilder, HomeView .navigationTitle + .searchable, SidebarRootView ThemePickerView routing
+- [41-07]: Re-validation evidence: 4 screenshots re-captured after gap fixes, all 4 criteria now satisfied, VERIFICATION.md updated to 23/23
 
 ### Pending Todos
 
@@ -79,7 +81,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 41-05-PLAN.md. Phase 41 COMPLETE. GATE RESULT: PASS. Phase 42 (iPad Validation) is next.
+Stopped at: Completed 41-07-PLAN.md (gap closure). Phase 41 fully COMPLETE with 23/23 must-haves verified. Phase 42 (iPad Validation) is next.
 Resume file: None
 Key artifacts: /tmp/v3.5-evidence/ (iphone/ screenshots + gate/ verdicts)
 Gate verdicts: VERDICT-AGENT-A.md (13/13 PASS), VERDICT-AGENT-B.md (13/13 PASS, 151 lines)
