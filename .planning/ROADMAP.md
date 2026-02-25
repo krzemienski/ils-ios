@@ -659,5 +659,5 @@ Plans:
 | 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
 | 35. Settings & Config Sync | 2/2 | Complete    | 2026-02-25 | — |
 | 36. Browse, Skills & Plugins | 3/3 | Complete    | 2026-02-25 | — |
-| 37. System Monitor & Themes | 2/2 | Complete   | 2026-02-25 | — |
+| 37. System Monitor & Themes | 2/2 | Complete    | 2026-02-25 | — |
 | 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |
