@@ -587,6 +587,10 @@ Plans:
 **Goal**: System monitor shows real-time metrics from the connected host, themes load correctly on fresh launch, and theme appearance is consistent across platforms
 **Depends on**: Phase 34 (system monitor needs correct host connection)
 **Requirements**: SYS-01, SYS-02, SYS-03
+**Plans:** 2 plans
+Plans:
+- [ ] 37-01-PLAN.md — Fix system monitor to use active host URL for WebSocket + REST
+- [ ] 37-02-PLAN.md — Verify theme default loading and cross-platform injection parity
 **Success Criteria** (what must be TRUE):
   1. System monitor screen displays real-time CPU, memory, disk, and network metrics from the connected host
   2. Default theme loads correctly on fresh app installation (no blank/broken theme state)
