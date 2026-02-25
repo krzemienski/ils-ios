@@ -597,6 +597,196 @@ struct BrowserView: View {
                     }
                 }
             }
+
+            // GitHub Browse Section
+            pluginGitHubBrowseSection
+        }
+    }
+
+    // MARK: - Plugin GitHub Browse Section
+
+    @ViewBuilder
+    private var pluginGitHubBrowseSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            // Section header
+            HStack {
+                Image(systemName: "globe")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text("BROWSE GITHUB")
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .tracking(1)
+                Spacer()
+            }
+            .padding(.top, theme.spacingMD)
+
+            // GitHub search field
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textTertiary)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                TextField("Search GitHub for plugins...", text: $pluginsVM.gitHubSearchText)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .onChange(of: pluginsVM.gitHubSearchText) { _, text in
+                        pluginsVM.updateGitHubSearchText(text)
+                    }
+                if !pluginsVM.gitHubSearchText.isEmpty {
+                    Button {
+                        pluginsVM.gitHubSearchText = ""
+                        pluginsVM.gitHubResults = []
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                if pluginsVM.isSearchingGitHub {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.7)
+                        .tint(theme.accent)
+                }
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            // Rate limit error banner
+            if let gitHubError = pluginsVM.gitHubError {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(theme.warning)
+                    Text(gitHubError)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+                .padding(theme.spacingMD)
+                .background(theme.warning.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+
+            // GitHub results
+            if !pluginsVM.gitHubResults.isEmpty {
+                VStack(spacing: theme.spacingSM) {
+                    ForEach(pluginsVM.gitHubResults, id: \.repository) { result in
+                        pluginGitHubResultRow(result)
+                    }
+                }
+            } else if !pluginsVM.gitHubSearchText.isEmpty && !pluginsVM.isSearchingGitHub {
+                Text("No plugins found on GitHub for \"\(pluginsVM.gitHubSearchText)\"")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingSM)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func pluginGitHubResultRow(_ result: GitHubSearchResult) -> some View {
+        HStack(spacing: theme.spacingMD) {
+            // Entity dot
+            Circle()
+                .fill(theme.entityPlugin.opacity(0.6))
+                .frame(width: 10, height: 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(result.name.isEmpty ? result.repository : result.name)
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    if pluginsVM.isInstalled(result: result) {
+                        Text("Installed")
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.success)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(theme.success.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+
+                    if result.stars > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.warning)
+                            Text("\(result.stars)")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                        }
+                    }
+                }
+
+                if let description = result.description {
+                    Text(description)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .lineLimit(2)
+                }
+
+                Text(result.repository)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .lineLimit(1)
+            }
+
+            // Install button / installed indicator
+            if pluginsVM.isInstalled(result: result) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(theme.success)
+                    .frame(width: 60)
+            } else if pluginsVM.installingPlugins.contains(result.repository) {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(0.7)
+                    .tint(theme.accent)
+                    .frame(width: 60)
+            } else {
+                Button {
+                    Task {
+                        let installed = await pluginsVM.installFromGitHub(result: result)
+                        if installed {
+                            HapticManager.impact(.medium)
+                        }
+                    }
+                } label: {
+                    Text("Install")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textOnAccent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(theme.accent)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
+        .contextMenu {
+            if pluginsVM.isInstalled(result: result) {
+                if let matchingPlugin = pluginsVM.plugins.first(where: {
+                    let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.repository
+                    return $0.name == repoName || ($0.path?.contains(repoName) ?? false)
+                }) {
+                    Button(role: .destructive) {
+                        Task { await pluginsVM.uninstallPlugin(matchingPlugin) }
+                    } label: {
+                        Label("Remove", systemImage: "trash")
+                    }
+                }
+            }
         }
     }
 
