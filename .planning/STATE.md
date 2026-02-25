@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 33 — Navigation & UX Overhaul
-Plan: 1/3 complete — executing plan 02 next
-Status: Plan 01 complete (inline nav titles + Home layout polish). 2 remaining plans in phase.
-Last activity: 2026-02-25 — Completed 33-01 (nav titles + Home spacing)
+Plan: 2/3 complete — executing plan 03 next
+Status: Plan 02 complete (chat back button + host indicator). 1 remaining plan in phase.
+Last activity: 2026-02-25 — Completed 33-02 (previousScreen tracking, chat back button, sidebar host indicator)
 
 ## Previous Milestones
 
@@ -32,6 +32,9 @@ Last activity: 2026-02-25 — Completed 33-01 (nav titles + Home spacing)
 - [v3.1]: Scope includes new features (GitHub browse/install, host sync) unlike previous code-health milestones
 - [33-01]: Sub-token spacing (1pt, 2pt) retained for tight label pairs -- below spacingXS threshold by design
 - [33-01]: HomeView section ordering verified correct as-is -- no reordering needed
+- [33-02]: Used lightweight previousScreen @State instead of NavigationPath to avoid breaking @SceneStorage chat restoration
+- [33-02]: Back button replaces hamburger via topBarLeading placement; sidebar remains accessible via edge swipe
+- [33-02]: activeHostName defaults to nil; wired by Phase 34 HostProfilesViewModel.activate()
 
 ### Pending Todos
 
@@ -44,5 +47,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 33-01-PLAN.md
+Stopped at: Completed 33-02-PLAN.md
 Resume file: None
