@@ -4,10 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class MCPViewModel {
+class MCPViewModel: BaseViewModel {
     var servers: [MCPServer] = []
-    var isLoading = false
-    var error: Error?
     var searchText = ""
     var selectedScope: String = "user"
 
@@ -23,19 +21,11 @@ class MCPViewModel {
 
     var selectedCount: Int { selectedServerIDs.count }
 
-    private var client: APIClient?
-
     /// Precomputed lowercase search strings keyed by server, rebuilt when servers change
     private var searchCache: [(server: MCPServer, searchText: String)] = []
 
-    init() {}
-
     deinit {
         healthTimer?.cancel()
-    }
-
-    func configure(client: APIClient) {
-        self.client = client
     }
 
     /// Filtered servers based on search text using precomputed lowercase cache
