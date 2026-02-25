@@ -286,7 +286,7 @@ struct HomeView: View {
                 .fill(theme.bgTertiary)
                 .frame(width: 8, height: 8)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(theme.bgTertiary)
                     .frame(width: 140, height: 14)
