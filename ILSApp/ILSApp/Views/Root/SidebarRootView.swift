@@ -102,6 +102,9 @@ struct SidebarRootView: View {
     /// The currently displayed app screen, switched by selecting items in the sidebar or via
     /// ``AppState/navigationIntent``.
     @State private var activeScreen: ActiveScreen = .home
+    /// The screen the user was on before navigating to chat, used for the back button.
+    /// `nil` when chat was opened via @SceneStorage restoration (no meaningful "back").
+    @State private var previousScreen: ActiveScreen? = nil
     @State private var sidebarDragOffset: CGFloat = 0
     /// Controls NavigationSplitView column visibility on iPad, allowing the sidebar column
     /// to be shown or hidden programmatically.
@@ -139,7 +142,12 @@ struct SidebarRootView: View {
         }
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
-            activeScreen = screen
+            if case .chat(let session) = screen {
+                navigateToChat(session)
+            } else {
+                previousScreen = nil
+                activeScreen = screen
+            }
             appState.navigationIntent = nil
             if !isRegularWidth {
                 closeSidebar()
@@ -150,6 +158,9 @@ struct SidebarRootView: View {
             // Persist the chat session ID for state restoration
             if case .chat(let session) = newScreen {
                 lastChatSessionId = session.id.uuidString
+            } else {
+                // Sidebar navigation to a non-chat screen clears stale back history
+                previousScreen = nil
             }
         }
         .onAppear {
@@ -195,7 +206,7 @@ struct SidebarRootView: View {
                 activeScreen: $activeScreen,
                 isSidebarOpen: .constant(true),
                 onSessionSelected: { session in
-                    activeScreen = .chat(session)
+                    navigateToChat(session)
                 }
             )
             .background(theme.bgSidebar)
@@ -237,7 +248,12 @@ struct SidebarRootView: View {
                 case .home:
                     homeScreen
                 case .chat(let session):
-                    ChatView(session: session)
+                    ChatView(session: session, onBack: previousScreen != nil ? {
+                        if let prev = previousScreen {
+                            activeScreen = prev
+                            previousScreen = nil
+                        }
+                    } : nil)
                 case .system:
                     systemScreen
                 case .settings:
@@ -308,7 +324,7 @@ struct SidebarRootView: View {
                 activeScreen: $activeScreen,
                 isSidebarOpen: $isSidebarOpen,
                 onSessionSelected: { session in
-                    activeScreen = .chat(session)
+                    navigateToChat(session)
                 }
             )
             .frame(width: sidebarWidth)
@@ -333,7 +349,7 @@ struct SidebarRootView: View {
         HomeView(
             sessionsVM: sessionsVM,
             onSessionSelected: { session in
-                activeScreen = .chat(session)
+                navigateToChat(session)
             },
             onNavigate: { screen in
                 activeScreen = screen
@@ -378,6 +394,20 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var hooksScreen: some View {
         HooksManagementView()
+    }
+
+    // MARK: - Chat Navigation
+
+    /// Navigate to a chat session, recording the current screen for back-button support.
+    /// When already viewing a chat, switches session without updating `previousScreen`.
+    private func navigateToChat(_ session: ChatSession) {
+        if case .chat = activeScreen {
+            // Already in chat — just switch session, don't update previousScreen
+            activeScreen = .chat(session)
+        } else {
+            previousScreen = activeScreen
+            activeScreen = .chat(session)
+        }
     }
 
     // MARK: - Sidebar Logic (iPhone)

@@ -28,6 +28,9 @@ import ILSShared
 struct ChatView: View {
     /// The chat session this view is presenting.
     let session: ChatSession
+    /// Optional closure invoked when the user taps the back button. When non-nil a back
+    /// button replaces the hamburger menu in the toolbar leading position.
+    var onBack: (() -> Void)? = nil
     @Environment(AppState.self) var appState
     /// View model managing chat messages, streaming state, and session connectivity.
     @State private var viewModel = ChatViewModel()
@@ -266,6 +269,22 @@ struct ChatView: View {
     /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        #if os(iOS)
+        if let onBack {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onBack) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 17, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 17))
+                    }
+                    .foregroundStyle(theme.accent)
+                }
+                .accessibilityLabel("Go back")
+            }
+        }
+        #endif
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button {
