@@ -27,7 +27,7 @@ final class SystemMetricsViewModel {
     /// Cached sorted processes to avoid re-sorting on every `filteredProcesses` access.
     private var _cachedSortedProcesses: [ProcessInfoResponse]?
 
-    private let baseURL: String
+    private(set) var baseURL: String
     private let session: URLSession
     nonisolated private let decoder: JSONDecoder
 
@@ -138,6 +138,16 @@ final class SystemMetricsViewModel {
     func disconnect() {
         metricsClient.disconnect()
         stopProcessAutoRefresh()
+    }
+
+    /// Updates the base URL for both WebSocket and REST endpoints.
+    /// Disconnects existing connections, replaces the MetricsWebSocketClient, and clears stale process data.
+    func updateBaseURL(_ url: String) {
+        guard url != baseURL else { return }
+        disconnect()
+        baseURL = url
+        metricsClient = MetricsWebSocketClient(baseURL: url)
+        processes = []
     }
 
     // MARK: - Process Auto-Refresh
