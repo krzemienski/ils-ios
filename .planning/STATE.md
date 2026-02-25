@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** Phase 38 — Cross-Platform Validation
+**Current focus:** v3.1 milestone complete — all 6 phases (33-38) shipped
 
 ## Current Position
 
@@ -90,5 +90,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 38-02-PLAN.md (v1.0 REQ regression + macOS parity) -- Phase 38 complete (2/2 plans)
+Stopped at: v3.1 milestone complete — all 6 phases (33-38) shipped, 14 requirements validated, 15/15 v1.0 REQs PASS
 Resume file: None

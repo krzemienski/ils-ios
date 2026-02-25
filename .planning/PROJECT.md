@@ -45,7 +45,7 @@ Every screen works correctly, reflects the connected host's configuration, and p
 - ~~System Monitor~~ — VALIDATED Phase 37 (SYS-01: host-aware WebSocket + REST connections)
 - Host Profiles (Fleet redesign, multi-host switching)
 - ~~Themes~~ — VALIDATED Phase 37 (SYS-02/03: fresh install defaults, cross-platform parity confirmed)
-- Cross-Platform Validation (iOS, iPadOS, macOS)
+- ~~Cross-Platform Validation~~ — VALIDATED Phase 38 (XP-01/02/03: all 3 builds green, 15/15 REQs PASS, 3 macOS gaps closed)
 
 ### Out of Scope
 
@@ -84,11 +84,13 @@ Every screen works correctly, reflects the connected host's configuration, and p
 | Regression tests included (v2.0) | XCTest metrics in Phase 17 | ✓ Good |
 | Skip research for v1.5 | Audit reports serve as requirements — no new features | ✓ Good |
 | v1.5 naming (user-specified) | Decoupled from internal phase numbering (Phase 25+) | ✓ Good |
-| Shift to product quality (v3.1) | Code health complete; UX gaps now blocking real usage | — Pending |
-| Fleet → Host Profiles (v3.1) | Multi-host concept clearer than fleet metaphor | — Pending |
-| Host CLI config sync (v3.1) | App must reflect connected host's defaults to be useful | — Pending |
+| Shift to product quality (v3.1) | Code health complete; UX gaps now blocking real usage | ✓ Good |
+| Fleet → Host Profiles (v3.1) | Multi-host concept clearer than fleet metaphor | ✓ Good |
+| Host CLI config sync (v3.1) | App must reflect connected host's defaults to be useful | ✓ Good |
 | Symmetric GitHub browse (Phase 36) | Skills and plugins get identical browse/install/manage UX | ✓ Good |
 | Context menu for inline actions (Phase 36) | LazyVStack can't use swipeActions; context menu is standard iOS pattern | ✓ Good |
+| No code fixes needed for cross-platform (Phase 38) | All v3.1 phases already had correct #if os(iOS) guards | ✓ Good |
+| macOS parity via MacContentView mirroring (Phase 38) | 3 gaps closed by mirroring iOS SidebarRootView patterns | ✓ Good |
 
 ---
-*Last updated: 2026-02-25 after Phase 37 (System Monitor & Themes)*
+*Last updated: 2026-02-25 after Phase 38 (Cross-Platform Validation) — v3.1 milestone complete*
