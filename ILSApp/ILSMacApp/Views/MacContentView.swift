@@ -51,12 +51,15 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // enables deep link handling across platforms via the same route definitions.
 struct MacContentView: View {
     @Environment(AppState.self) var appState
+    @Environment(ThemeManager.self) private var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
     @State private var activeScreen: ActiveScreen = .home
+    /// Initial segment selection forwarded to ``BrowserView`` when navigation is triggered via deep link.
+    @State private var browserSegment: BrowserSegment = .mcp
 
     /// Comma-separated project names whose DisclosureGroups are expanded, persisted across app launches.
     @AppStorage("macExpandedProjects") private var expandedProjectsStorage: String = ""
@@ -105,6 +108,13 @@ struct MacContentView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
             handleNavigationIntent(intent)
+        }
+        .onChange(of: appState.serverURL) { _, _ in
+            sessionsViewModel.configure(client: appState.apiClient)
+            Task {
+                await sessionsViewModel.loadProjectGroups()
+                await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
+            }
         }
         // Observe menu bar command notifications
         .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
@@ -195,6 +205,19 @@ struct MacContentView: View {
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
+                    }
+
+                    // Active host indicator
+                    if let hostName = appState.activeHostName {
+                        HStack(spacing: theme.spacingXS) {
+                            Image(systemName: "desktopcomputer")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                            Text(hostName)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(1)
+                        }
                     }
                 }
                 .padding(.vertical, theme.spacingSM)
@@ -346,7 +369,7 @@ struct MacContentView: View {
         case .settings:
             SettingsView()
         case .browser:
-            BrowserView()
+            BrowserView(initialSegment: browserSegment)
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
         case .hostProfiles:
@@ -578,6 +601,12 @@ struct MacContentView: View {
     }
 
     private func handleNavigationIntent(_ intent: ActiveScreen) {
+        // Handle browser segment intent for deep links
+        if case .browser = intent, let segmentIntent = appState.browserSegmentIntent {
+            browserSegment = segmentIntent
+            appState.browserSegmentIntent = nil
+        }
+
         // Sync sidebar selection for non-chat screens
         switch intent {
         case .home: selectedSection = .home
