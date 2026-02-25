@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 Phase: 38 — Cross-Platform Validation (COMPLETE)
 Plan: 2 of 2 complete
 Status: Phase 38 complete
-Last activity: 2026-02-25 — Plan 02 (v1.0 REQ regression + macOS parity) — 15/15 REQs PASS, 3 macOS gaps closed
+Last activity: 2026-02-25 — Quick task 5: Deep link segment routing fix + partial cross-milestone audit (7/12 screens PASS)
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -86,6 +86,12 @@ None.
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 5 | Cross-milestone audit session 1: deep link fix + 7/12 screens PASS | 2026-02-25 | d351068 | [5-cross-milestone-reflection-audit-with-fu](./quick/5-cross-milestone-reflection-audit-with-fu/) |
 
 ## Session Continuity
 
