@@ -256,6 +256,28 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         self.encodedProjectPath = encodedProjectPath
         self.firstPrompt = firstPrompt
     }
+
+    /// A cleaned display name suitable for UI rendering.
+    ///
+    /// Strips leading markdown heading prefixes (`#`, `##`, `###`, etc.) and trims
+    /// whitespace so that session names imported from Claude Code conversations
+    /// render cleanly in lists and navigation bars.  Falls back to `"Unnamed Session"`
+    /// when no meaningful name is available.
+    public var displayName: String {
+        if let name, !name.isEmpty {
+            let cleaned = name
+                .replacingOccurrences(of: "^#{1,6}\\s*", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespaces)
+            return cleaned.isEmpty ? "Unnamed Session" : cleaned
+        }
+        if let prompt = firstPrompt, !prompt.isEmpty {
+            let trimmed = prompt
+                .replacingOccurrences(of: "^#{1,6}\\s*", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespaces)
+            return String(trimmed.prefix(40))
+        }
+        return "Unnamed Session"
+    }
 }
 
 /// External session discovered from Claude Code storage.

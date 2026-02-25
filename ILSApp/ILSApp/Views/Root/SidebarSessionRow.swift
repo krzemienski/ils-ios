@@ -100,13 +100,7 @@ struct SidebarSessionRow: View {
     // MARK: - Helpers
 
     private var sessionDisplayName: String {
-        if let name = session.name, !name.isEmpty {
-            return name
-        }
-        if let prompt = session.firstPrompt, !prompt.isEmpty {
-            return String(prompt.prefix(40))
-        }
-        return "Unnamed Session"
+        session.displayName
     }
 
     private var relativeTime: String {

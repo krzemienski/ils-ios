@@ -248,7 +248,7 @@ struct HomeView: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.name ?? "Unnamed Session")
+                Text(session.displayName)
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -278,7 +278,7 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
+        .accessibilityLabel("\(session.displayName), \(session.model), \(session.messageCount) messages")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }

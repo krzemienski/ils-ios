@@ -376,7 +376,7 @@ struct NewSessionView: View {
                     .frame(width: 8, height: 8)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(session.name ?? "Unnamed Session")
+                    Text(session.displayName)
                         .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                         .lineLimit(1)
@@ -414,7 +414,7 @@ struct NewSessionView: View {
             .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
+        .accessibilityLabel("\(session.displayName), \(session.model), \(session.messageCount) messages")
     }
 
     // MARK: - Create Project Section

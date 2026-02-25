@@ -83,7 +83,7 @@ struct ChatView: View {
     var body: some View {
         mainContent
             .background(theme.bgPrimary)
-            .navigationTitle(session.name ?? "Chat")
+            .navigationTitle(session.displayName)
             #if os(iOS)
             .inlineNavigationBarTitle()
             #endif
