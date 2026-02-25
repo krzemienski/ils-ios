@@ -538,6 +538,12 @@ Plans:
   3. Active profile indicator is visible on the host list row and in the sidebar
   4. Health status badges (colored dot) display per host with polling
   5. All UI strings say "Host Profiles" (not "Fleet") — navigation title, sidebar item, settings references
+**Plans**: 3 plans
+
+Plans:
+- [ ] 34-01-PLAN.md — Core AppState injection into HostProfilesViewModel, activate() propagation, activeHostName persistence (HP-01, HP-03, HP-04)
+- [ ] 34-02-PLAN.md — Reactive ViewModel reconfiguration via .onChange(of: appState.serverURL) on all views (HP-02)
+- [ ] 34-03-PLAN.md — Delete dead Fleet* files, update doc comments for naming consistency (HP-05)
 
 ---
 
