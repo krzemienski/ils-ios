@@ -24,4 +24,5 @@ func routes(_ app: Application) throws {
     try api.register(collection: TeamsController(fileService: TeamsFileService(), executorService: TeamsExecutorService()))
     try api.register(collection: TunnelController())
     try api.register(collection: FleetController())
+    try api.register(collection: SSHController())
 }

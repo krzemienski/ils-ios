@@ -244,4 +244,27 @@ final class SSHViewModel {
     func executeCommand(_ command: String, timeout: Int? = 30) async throws -> (stdout: String, stderr: String, exitCode: Int32) {
         return try await sshService.executeCommand(command, timeout: timeout)
     }
+
+    // MARK: - Phase 6: Port Forwarding
+
+    /// Starts SSH local port forwarding. Binds to 127.0.0.1:localPort and tunnels
+    /// traffic to remoteHost:remotePort through the active SSH connection.
+    /// - Returns: Server URL string (e.g., "http://localhost:8080")
+    func startPortForwarding(localPort: Int, remoteHost: String = "localhost", remotePort: Int) async throws -> String {
+        return try await sshService.startPortForwarding(
+            localPort: localPort,
+            remoteHost: remoteHost,
+            remotePort: remotePort
+        )
+    }
+
+    /// Stops an active SSH local port forwarding and releases the local port.
+    func stopPortForwarding(localPort: Int) async throws {
+        try await sshService.stopPortForwarding(localPort: localPort)
+    }
+
+    /// Returns the list of local ports currently being forwarded through SSH.
+    func getActivePortForwardings() async -> [Int] {
+        return await sshService.getActivePortForwardings()
+    }
 }
