@@ -163,7 +163,10 @@ struct SystemMonitorView: View {
             switch phase {
             case .active:
                 viewModel.connect()  // BATT-02: Resume WebSocket on foreground
-                if viewModel.isConnected { livePulse = true }
+                // BATT-03: Only pulse in active phase when not in Low Power Mode.
+                if viewModel.isConnected && !LowPowerModeMonitor.shared.isLowPowerModeEnabled {
+                    livePulse = true
+                }
             case .background:
                 viewModel.disconnect()  // BATT-02: Suspend WebSocket on background
                 livePulse = false
@@ -275,12 +278,19 @@ struct SystemMonitorView: View {
                 .frame(width: 8, height: 8)
                 .scaleEffect(livePulse && viewModel.isConnected ? 1.3 : 1.0)
                 .animation(
-                    reduceMotion ? nil : (viewModel.isConnected
-                        ? .easeInOut(duration: 1.0).repeatForever(autoreverses: true)
-                        : .default),
+                    // BATT-03: Suppress pulse animation in Low Power Mode and Reduce Motion.
+                    (reduceMotion || LowPowerModeMonitor.shared.isLowPowerModeEnabled) ? nil
+                        : (viewModel.isConnected
+                            ? .easeInOut(duration: 1.0).repeatForever(autoreverses: true)
+                            : .default),
                     value: livePulse
                 )
-                .onAppear { livePulse = true }
+                // BATT-03: Guard pulse start against Low Power Mode to avoid background GPU work.
+                .onAppear {
+                    if !reduceMotion && !LowPowerModeMonitor.shared.isLowPowerModeEnabled {
+                        livePulse = true
+                    }
+                }
 
             Text(viewModel.isConnected ? "Live" : "Offline")
                 .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
