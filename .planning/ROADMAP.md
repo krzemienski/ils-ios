@@ -680,7 +680,15 @@ Plans:
   5. Sidebar navigation is accessible from every screen and the active item is highlighted
   6. All iPhone screenshots are organized with numbered naming (`01-home.png`, `02-sessions.png`, etc.) in the evidence directory
   7. **Evidence gate:** Agent A produces an independent verdict document with PASS/FAIL per iPhone screen; Agent B produces an independent verdict document with PASS/FAIL per iPhone screen; 2/2 agreement required on every screen -- any disagreement triggers re-investigation, fix, and re-validation within this phase before proceeding to Phase 42
-**Plans**: TBD
+**Plans**: 7 plans
+Plans:
+- [x] 41-01-PLAN.md -- Validate core screens 01-06 (Home, Sessions, Chat, MCP, Skills, Plugins)
+- [x] 41-02-PLAN.md -- Validate screens 07-13 (System, Settings, Fleet, Teams, Themes, Hooks, Sidebar)
+- [x] 41-03-PLAN.md -- Deep link sweep + log analysis
+- [x] 41-04-PLAN.md -- Agent A gate review (13/13 PASS)
+- [x] 41-05-PLAN.md -- Agent B gate review (GATE PASS)
+- [ ] 41-06-PLAN.md -- Gap closure: fix Hooks buttons, Home nav title, Sessions search, Themes routing
+- [ ] 41-07-PLAN.md -- Gap closure: rebuild, re-screenshot 4 screens, update verification
 
 ---
 
