@@ -12,6 +12,7 @@ import ILSShared
 /// - `GET /plugins/marketplace`: List available plugin marketplaces
 /// - `POST /plugins/marketplaces`: Register a new plugin marketplace
 /// - `POST /plugins/install`: Install a plugin via git clone
+/// - `GET /plugins/github-search`: Search GitHub for plugin.json repositories
 /// - `POST /plugins/:name/enable`: Enable a plugin
 /// - `POST /plugins/:name/disable`: Disable a plugin
 /// - `DELETE /plugins/:name`: Uninstall a plugin
@@ -27,6 +28,7 @@ struct PluginsController: RouteCollection {
 
         plugins.get(use: list)
         plugins.get("search", use: search)
+        plugins.get("github-search", use: githubSearch)
         plugins.get("marketplace", use: marketplace)
         plugins.post("marketplaces", use: addMarketplace)
         plugins.post("install", use: install)
@@ -130,6 +132,32 @@ struct PluginsController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: filtered)
+        )
+    }
+
+    /// Search GitHub for plugin repositories containing plugin.json files.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required)
+    /// - `page`: Page number (default 1)
+    /// - `per_page`: Results per page (default 20)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of GitHubSearchResult objects
+    @Sendable
+    func githubSearch(req: Request) async throws -> APIResponse<ListResponse<GitHubSearchResult>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'q' is required")
+        }
+
+        let page = req.query[Int.self, at: "page"] ?? 1
+        let perPage = req.query[Int.self, at: "per_page"] ?? 20
+
+        let results = try await req.application.githubService.searchPlugins(query: query, page: page, perPage: perPage)
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: results)
         )
     }
 
