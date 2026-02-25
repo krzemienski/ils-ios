@@ -1,14 +1,13 @@
 import SwiftUI
 import ILSShared
 
-/// Detail view for a saved host profile, presenting the same four-section layout as the fleet host detail.
+/// Detail view for a saved host profile, presenting a four-section scrollable layout.
 ///
-/// Renders a ``FleetHost`` profile in a scrollable layout covering connection info, health status,
-/// lifecycle controls, and remote logs. This view is used within the Host Profiles flow rather than
-/// the live fleet discovery flow, but shares an identical structure and data model. Lifecycle
-/// operations (start, stop, restart) fire async POST requests to the fleet API. Logs are loaded
-/// on appearance and support manual refresh. Optional host fields — SSH username, operating
-/// platform, and authentication method — are conditionally rendered when non-nil.
+/// Renders a ``FleetHost`` host profile in a scrollable layout covering connection info, health
+/// status, lifecycle controls, and remote logs. This view is the primary host profile detail
+/// screen. Lifecycle operations (start, stop, restart) fire async POST requests to the fleet API.
+/// Logs are loaded on appearance and support manual refresh. Optional host fields — SSH username,
+/// operating platform, and authentication method — are conditionally rendered when non-nil.
 ///
 /// ## Topics
 /// ### State
