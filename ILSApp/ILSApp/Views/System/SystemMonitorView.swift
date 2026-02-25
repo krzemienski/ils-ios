@@ -153,14 +153,8 @@ struct SystemMonitorView: View {
             #endif
         }
         .onAppear {
-            if viewModel.metricsClient.baseURL != appState.serverURL {
-                viewModel.disconnect()
-                viewModel.metricsClient = MetricsWebSocketClient(baseURL: appState.serverURL)
-            }
+            viewModel.updateBaseURL(appState.serverURL)
             viewModel.connect()
-            Task {
-                await viewModel.loadProcesses()
-            }
         }
         .onDisappear {
             viewModel.disconnect()
@@ -176,6 +170,10 @@ struct SystemMonitorView: View {
             default:
                 livePulse = false
             }
+        }
+        .onChange(of: appState.serverURL) { _, newURL in
+            viewModel.updateBaseURL(newURL)
+            viewModel.connect()
         }
     }
 
