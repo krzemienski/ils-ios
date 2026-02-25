@@ -11,6 +11,10 @@ class AppState {
     var selectedProject: Project?
     var selectedTab: String = "dashboard"
     var navigationIntent: ActiveScreen?
+    /// The browser segment to select when navigating via deep link.
+    /// Set by `handleURL()` for `ils://mcp`, `ils://skills`, `ils://plugins` routes.
+    /// Consumed and cleared by SidebarRootView's `.onChange(of: navigationIntent)` handler.
+    var browserSegmentIntent: BrowserSegment? = nil
     var lastSessionId: UUID?
     var lastSyncDate: Date?
 
@@ -100,7 +104,16 @@ class AppState {
             } else {
                 navigationIntent = .home
             }
-        case "browser", "projects", "plugins", "mcp", "skills":
+        case "browser", "projects":
+            navigationIntent = .browser
+        case "mcp":
+            browserSegmentIntent = .mcp
+            navigationIntent = .browser
+        case "skills":
+            browserSegmentIntent = .skills
+            navigationIntent = .browser
+        case "plugins":
+            browserSegmentIntent = .plugins
             navigationIntent = .browser
         case "settings":
             navigationIntent = .settings
