@@ -8,17 +8,24 @@ A native Swift iOS/macOS client for Claude Code (ILS). The app is code-quality s
 
 Every screen works correctly, reflects the connected host's configuration, and provides a polished native experience for managing Claude Code sessions, skills, plugins, and system monitoring.
 
-## Current Milestone: v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
+## Current Milestone: v3.5 Comprehensive Functional Validation (iOS & iPad)
 
-**Goal:** Systematically audit every screen, fix broken functionality, restore missing features (GitHub skill/plugin browsing, host config sync, hooks management), redesign Fleet into Host Profiles, and ensure consistent UX across iOS, iPadOS, and macOS.
+**Goal:** Launch every screen on iPhone and iPad simulators, capture screenshot evidence, verify logs, fix any issues found on the spot, and have independent agent teammates confirm all evidence is accurate. This is the first true functional validation — no code-level verification shortcuts.
 
 **Target features:**
-- Navigation fixes (side menu accessibility from all screens, session back button, home screen layout)
-- Settings & defaults sync (inherit model, system prompt, tools, permissions from host CLI config)
-- Browse, Skills & Plugins overhaul (status badges, GitHub browse/install flow, plugin management)
-- System Monitor restoration (SSH connection, real-time data)
-- Fleet → Host Profiles redesign (multi-host switching, active profile indicator)
-- Theme loading fixes and cross-platform validation
+- iPhone validation of all 12+ screens with numbered screenshot evidence
+- iPad validation of all screens including split-view layout verification
+- Deep link navigation testing across all `ils://` routes on both devices
+- Real-time log capture and crash report checking during every validation run
+- Fix-as-you-go: any issue found during validation is fixed immediately, rebuilt, and re-validated
+- Evidence gate: two independent agent teammates confirm every screenshot and log verdict
+
+**Previous Milestones:**
+- v1.0 (Phases 1-10): Cross-Platform Audit — SHIPPED 2026-02-21
+- v2.0 (Phases 11-17): Performance Optimization Suite — COMPLETE 2026-02-24
+- v3.0 (Phases 18-24): Comprehensive Audit Remediation — COMPLETE 2026-02-23
+- v1.5 (Phases 25-32): All Audit Fixes — SHIPPED 2026-02-24
+- v3.1 (Phases 33-39): Comprehensive Audit, Bug Fix & UX Overhaul — SHIPPED 2026-02-25
 
 **Previous Milestones:**
 - v1.0 (Phases 1-10): Cross-Platform Audit — SHIPPED 2026-02-21
