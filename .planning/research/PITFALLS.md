@@ -1,197 +1,289 @@
-# Pitfalls Research
+# Domain Pitfalls: Comprehensive Functional Validation (iOS & iPad)
 
-**Domain:** Adding host CLI config sync, GitHub extension browsing/install, Host Profiles redesign, and navigation/UX overhaul to a hardened SwiftUI iOS/macOS codebase
-**Project:** ILS iOS/macOS — v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
-**Researched:** 2026-02-24
-**Confidence:** HIGH — all findings derived from direct code inspection of this codebase, cross-referenced against project memory from prior milestones
+**Domain:** Adding screenshot-evidence functional validation workflows to an existing SwiftUI iOS/iPad/macOS app
+**Project:** ILS iOS/macOS -- v3.5 Comprehensive Functional Validation
+**Researched:** 2026-02-25
+**Confidence:** HIGH -- derived from direct code inspection, project memory of 5 prior milestones, and verified simulator behavior
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause silent data corruption, wrong-host operations, or require architectural rewrites.
+Mistakes that produce false PASS verdicts, waste entire validation phases, or require re-running validation from scratch.
 
 ---
 
-### Pitfall 1: Host Profile Activation Does Not Rebuild Downstream ViewModels
+### Pitfall 1: Stale DerivedData Binary Silently Installed -- Screenshots Validate Wrong Build
 
 **What goes wrong:**
-`HostProfilesViewModel.activate()` posts to `/fleet/{id}/activate` and updates `activeHostId` locally — but it does NOT call `appState.updateServerURL()` or recreate the `APIClient`/`SSEClient`. All downstream ViewModels (`SkillsViewModel`, `PluginsViewModel`, `SettingsViewModel`, `MCPViewModel`) hold a reference to the old `APIClient` instance captured at `configure(client:)` call time. They silently continue hitting the previously-connected host's backend.
+`xcrun simctl install` installs whatever `.app` binary you point it at. With 40+ `ILSApp-*` directories in `~/Library/Developer/Xcode/DerivedData/`, a naive `find ... | head -1` grabs a stale binary from days or weeks ago. The app launches, screens render, screenshots look normal -- but the build does not contain the latest code changes. Every screenshot captured validates the wrong binary. The entire validation session produces false evidence.
 
-The root cause is in `HostProfilesViewModel.init`:
-```swift
-init(apiClient: APIClient = APIClient()) {   // completely disconnected from AppState
-    self.apiClient = apiClient
-}
-```
-This is a forked, stale client — never updated when the user switches profiles.
+**This already happened.** Quick-5 audit (2026-02-25) discovered that deep link fixes were not present because the install script grabbed a stale DerivedData directory. The fix was applied but the wrong binary was installed, making the fix appear to not work.
 
 **Why it happens:**
-The `configure(client:)` injection pattern captures an `APIClient` snapshot at view-`.task` time. There is no reactive mechanism to re-inject a new client when the underlying URL changes. `HostProfilesViewModel` was written before multi-host switching became a product requirement.
+- DerivedData directories accumulate (40+ found in this project) and are never cleaned automatically
+- `find` returns results in filesystem order, not modification time
+- The `.app` bundle timestamp is not checked against the latest `xcodebuild` completion time
+- Simulator does not warn when installing an older binary over a newer one
+- The app UI looks the same across builds unless the specific changed screen is examined
 
-**How to avoid:**
-Profile activation must propagate through `AppState`. The `activate()` path must:
-1. POST to `/fleet/{id}/activate` and get back the activated host's URL
-2. Call `appState.updateServerURL(newURL)` — which recreates both `APIClient` and `SSEClient` in `ConnectionManager`
-3. Trigger a reload notification or `@Observable` invalidation so all open screens refresh against the new host
-4. `HostProfilesViewModel` must receive `AppState` (not a raw `APIClient`) so it can call through
+**Consequences:**
+- Every screenshot from the session is invalid evidence
+- PASS verdicts are false positives -- the fix was never actually validated
+- The validation phase must be re-run entirely after discovering the mistake
+- If not discovered, the milestone ships with unvalidated claims
 
-**Warning signs:**
-- After switching profiles, `BrowserView` still shows skill/plugin data from the old host
-- `SettingsView` loads config from the wrong backend
-- No visible loading activity after profile switch despite confirming activation
-- Chat sends messages to the wrong host
-
-**Phase to address:** Host Profiles redesign phase — must be the first concern, as every other feature depends on the correct host being targeted.
-
----
-
-### Pitfall 2: Config Sync Write-Back Silently Drops Unrendered CLI Fields
-
-**What goes wrong:**
-`SettingsViewModel.saveConfig()` does a full `ClaudeConfig` struct round-trip: reads `config?.content`, mutates one field (e.g. `model` or `colorScheme`), then PUTs the entire struct back. The `ConfigController` calls `fileSystem.writeConfig()` which serializes whatever is sent — there is no server-side merge.
-
-`ClaudeConfig` has fields the iOS app does not render any UI for: `hooks`, `env`, `extraKnownMarketplaces`, `statusLine`, `permissions.allow`, `permissions.deny`. These are optional and default to `nil` in Swift. If the backend returns a config that omits them (they are absent from the JSON), Swift decodes them as `nil`, and the next PUT from the app writes `nil` back — effectively deleting those fields from `~/.claude/config.json`.
-
-**Why it happens:**
-JSON `Codable` with optional fields silently round-trips `nil` as field omission. The in-memory struct faithfully carries whatever the backend returned — but if the backend ever omits a field, the app's next write erases it permanently from disk.
-
-**How to avoid:**
-Implement read-then-patch for all app write operations:
-- Load fresh config from backend immediately before any PUT
-- Apply only the minimal delta (the one field the user changed)
-- Treat `hooks`, `env`, `extraKnownMarketplaces`, `statusLine` as read-only in the iOS app — display them but never include them in write payloads
-- Add a "fields this app manages" allowlist to `SettingsViewModel` — any field not in the allowlist is stripped from the write payload and preserved from the current server value
-
-**Warning signs:**
-- Hook configurations vanish from `~/.claude/config.json` after the user changes the model in Settings
-- `CLAUDE_CODE_*` env vars disappear after a settings save
-- User reports "Claude CLI stopped responding to hooks after using the iOS app"
-- `permissions.allow`/`permissions.deny` entries disappear silently
-
-**Phase to address:** Settings & Defaults Sync phase. Define the write-allowlist before implementing any new config sync UI.
-
----
-
-### Pitfall 3: GitHub Rate Limit Surfaces as Opaque Error With No Actionable Guidance
-
-**What goes wrong:**
-`GitHubService.searchSkills()` throws `Abort(.tooManyRequests)` when the unauthenticated GitHub API rate limit (60 requests/hour) is exceeded. The backend maps this to HTTP 429. `APIClient.validateResponse()` converts 429 into `APIError.httpError(statusCode: 429)`. `SkillsViewModel.searchGitHub()` stores this in `self.error`. The UI then shows "HTTP error: 429 - Too Many Requests" with no explanation that this is a GitHub rate limit, no countdown, and no guidance on how to fix it.
-
-Without `GITHUB_TOKEN` in the backend environment, the limit is hit trivially — 60 searches per hour across all users sharing the same backend host. The 300ms debounce in `debouncedGitHubSearch()` helps but does not prevent it.
-
-**Why it happens:**
-`GitHubService` correctly reads `GITHUB_TOKEN` from environment but there is no path in the iOS Settings UI to configure it, no documentation shown to the user, and no 429-specific error handling in `SkillsViewModel`.
-
-**How to avoid:**
-1. Add a 429-specific branch in `SkillsViewModel.searchGitHub()` error handling that sets a distinct `isRateLimited: Bool` flag, surfaced as: "GitHub search limit reached. Ask your host administrator to set `GITHUB_TOKEN` in the backend environment to increase limits."
-2. Add an informational note in SettingsView under a "GitHub Integration" disclosure: "GitHub search uses the GITHUB_TOKEN environment variable on your connected host."
-3. Verify `RateLimitMiddleware` in the backend is applied to `/skills/search` — check `Sources/ILSBackend/Middleware/RateLimitMiddleware.swift` is registered for this route, to prevent the iOS app from hammering GitHub with rapid typing before the debounce fires
-
-**Warning signs:**
-- GitHub search returns no results with a terse error after a burst of searches
-- Backend logs show repeated 403/429 responses to `api.github.com`
-- `isSearchingGitHub` toggles without results appearing
-
-**Phase to address:** Browse, Skills & Plugins phase.
-
----
-
-### Pitfall 4: GitHub `fetchRawContent` Hardcoded to `main` Branch — Fails Silently on `master` Repos
-
-**What goes wrong:**
-`GitHubService.fetchRawContent()` constructs the raw GitHub URL with a hardcoded `main` branch:
-```swift
-let uri = URI(string: "https://raw.githubusercontent.com/\(owner)/\(repo)/main/\(path)")
-```
-Repositories using `master` or any other default branch name return HTTP 404. `SkillsController.install()` then throws `Abort(.notFound, reason: "Could not fetch file from GitHub")`. The iOS app receives a 404 and displays "Resource not found" — no indication that the branch name is wrong.
-
-**Why it happens:**
-`main` is now the GitHub default for new repositories, so it covers a large majority. But `master` repos (pre-2020, many corporate/academic) fail silently. `GitHubRepository` in `SearchResult.swift` does not include a `defaultBranch` field — the `CodingKeys` only maps `id`, `fullName`, `description`, `stargazersCount`, `updatedAt`.
-
-**How to avoid:**
-Two options (implement the simpler first):
-1. **Quick fix:** In `GitHubService.fetchRawContent()`, try `main` branch; if 404, try `master`; if still 404, return a descriptive error: "SKILL.md not found on `main` or `master` branches. Repository may use a different default branch."
-2. **Proper fix:** Add `defaultBranch: String?` to `GitHubRepository` (mapped from `"default_branch"` in CodingKeys). This field is present in GitHub's Code Search API response — pass it through `GitHubSearchResult` into the install request.
-
-Prefer the quick fix for v3.1 given scope; note the proper fix as a follow-up.
-
-**Warning signs:**
-- Install consistently fails for certain GitHub repos
-- Repos with "last updated" dates before 2020 fail disproportionately
-- Backend logs show 404 from `raw.githubusercontent.com` for a valid-looking path
-
-**Phase to address:** Browse, Skills & Plugins phase, in the GitHub install flow task.
-
----
-
-### Pitfall 5: Navigation Screen Switch Abandons In-Progress GitHub Installs to Wrong Host
-
-**What goes wrong:**
-`SkillsViewModel` is declared as `@State private var skillsVM = SkillsViewModel()` inside `BrowserView`. When `activeScreen` changes (sidebar tap, deep link, profile activation), SwiftUI removes `BrowserView` from the hierarchy and the `@State` is deallocated. `SkillsViewModel.deinit` cancels `searchTask`, but any in-progress `installFromGitHub` Task is NOT explicitly cancelled — it continues running against whatever `APIClient` it captured.
-
-If a user starts a GitHub skill install and then activates a different host profile mid-install, the install completes against the original host. But the user is now looking at the new host's skill list and does not see the installed skill — and the original host has a new skill the user did not intend.
-
-**Why it happens:**
-The `installFromGitHub` task is created inline in `BrowserView`'s button action closure:
-```swift
-Task {
-    let installed = await skillsVM.installFromGitHub(result: result)
-```
-This `Task` is unstructured and holds its own reference to the captured `client`. It is not tracked in `SkillsViewModel` for cancellation on dealloc.
-
-**How to avoid:**
-1. Track the install task in `SkillsViewModel`:
-   ```swift
-   @ObservationIgnored private var installTask: Task<Bool, Never>?
+**Prevention:**
+1. **Always build immediately before install.** Never separate build and install into different phases or sessions.
+2. **Use modification-time ordering to find the newest binary:**
+   ```bash
+   APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug-iphonesimulator/ILSApp.app -maxdepth 0 -print0 2>/dev/null | xargs -0 ls -dt | head -1)
    ```
-   Cancel it in `deinit` alongside `searchTask`.
-2. Block profile switching while an install is in progress: when `HostProfilesViewModel.activate()` is called, check if any VM has an active install task and show an alert: "A skill installation is in progress. Please wait for it to complete before switching hosts."
-3. Alternatively: lift `skillsVM` to `SidebarRootView` level so it survives tab switches and its install task is not abandoned mid-flight.
+3. **Verify binary timestamp matches build time:**
+   ```bash
+   stat -f "%m %Sm" "$APP_PATH/ILSApp"  # Must be within seconds of build completion
+   ```
+4. **Uninstall before install** to prevent cached state from masking binary differences:
+   ```bash
+   xcrun simctl uninstall $UDID com.ils.app && xcrun simctl install $UDID "$APP_PATH"
+   ```
+5. **Add a build hash or timestamp to the app's About/Settings screen** so screenshots contain machine-verifiable evidence of which build is running.
 
-**Warning signs:**
-- Install button shows progress, user switches to Settings, returns to Browser, skill is missing from list
-- Skill appears installed on the wrong host's backend
-- No error shown after navigation-during-install but skill never appears
+**Detection:**
+- Screenshot shows old UI state that should have been changed by recent code
+- Deep link that was "fixed" does not work in simulator
+- Feature that was "added" is not visible
 
-**Phase to address:** Navigation/UX overhaul phase (structured cancellation) and Host Profiles phase (guard on profile switch).
+**Phase to address:** Phase 0 (validation infrastructure setup) -- build the install script with these guards before any validation begins.
 
 ---
 
-### Pitfall 6: Every Shared Swift Edit Triggers macOS Build — iOS-Only Imports Break It Silently
+### Pitfall 2: Screenshot Captured Before SwiftUI View Finishes Rendering -- Blank or Partial Content
 
 **What goes wrong:**
-The auto-build hook fires `xcodebuild` on every `.swift` file save. For files in `ILSApp/ILSApp/` (shared between iOS and macOS), the hook builds the iOS scheme — but does NOT automatically build the macOS scheme. A UIKit import or iOS-only API added to a shared ViewModel breaks the macOS build without the auto-hook surfacing it.
+`xcrun simctl io $UDID screenshot /tmp/screenshot.png` captures the screen at the exact moment it is called. SwiftUI views rendered via `.task {}` or `onAppear` fetch data asynchronously -- the view shows a loading state (or empty content) for 0.5-3 seconds after navigation. If the screenshot is taken before data loads, it captures a blank screen or a loading spinner, which either:
+- Produces a false FAIL (the screen works but was not ready)
+- Produces a misleading PASS (the loading state looks like real content at a glance)
 
-For v3.1 specifically:
-- New ViewModels for config sync or profile switching that import `UIKit` (e.g., for `UIApplication.shared.open()` to open GitHub URLs in Safari) will fail the macOS build
-- `HostProfilesViewModel` is shared — adding iOS-only types to its interface breaks both targets
-- New `@Environment(\.openURL)` usage is cross-platform safe; `UIApplication.shared` is not
+This is worse on iPad, where `NavigationSplitView` performs column animations that take 300-500ms to settle, and detail views may render blank until the sidebar selection propagates.
 
 **Why it happens:**
-The auto-build hook maps file paths to schemes:
-```
-ILSApp/**/*.swift    → xcodebuild ILSApp scheme
-ILSMacApp/**/*.swift → xcodebuild ILSMacApp scheme
-Sources/**/*.swift   → swift build
-```
-Shared files build only the iOS scheme automatically. The macOS build is a manual check.
+- `xcrun simctl io screenshot` has no "wait for idle" flag
+- SwiftUI has no public API to signal "rendering complete"
+- Network calls to the backend (localhost:9999) add 100-500ms latency even locally
+- iPad `NavigationSplitView` column transitions animate asynchronously
+- Deep link navigation triggers multiple `onChange` handlers in sequence, each potentially causing a re-render
 
-**How to avoid:**
-- Always use `@Environment(\.openURL)` for URL opening rather than `UIApplication.shared.open()`
-- For platform-specific code, use `#if os(iOS)` / `#else` / `#endif` guards
-- After every shared-file edit session, run the macOS build explicitly:
-  ```bash
-  xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' -quiet 2>&1 | tail -10
+**Consequences:**
+- Screenshots show loading spinners instead of actual content -- must be re-taken
+- Screenshots show partially loaded lists (20 of 50 skills) -- misleading evidence
+- iPad screenshots show sidebar-only with blank detail pane -- false FAIL
+- Blank screenshots waste time in evidence review and erode trust in the validation process
+
+**Prevention:**
+1. **Fixed delay after every navigation action before screenshot:**
+   ```bash
+   # Navigate via deep link
+   xcrun simctl openurl $UDID "ils://skills"
+   # Wait for navigation + data load + render
+   sleep 3
+   # Now capture
+   xcrun simctl io $UDID screenshot /tmp/screenshot.png
+   ```
+2. **Use `idb_describe` to verify content is present before capturing.** Check the accessibility tree for expected elements (e.g., "Search skills..." placeholder text, or a specific skill name).
+3. **For iPad:** Add an extra 1-second delay after NavigationSplitView transitions because column animations take longer than stack transitions.
+4. **For data-dependent screens** (Home stats, Browser lists, System Monitor), wait for the loading indicator to disappear or for a known data element to appear in the accessibility tree.
+5. **Capture two screenshots 2 seconds apart** and compare -- if they differ significantly, the first one was premature.
+
+**Detection:**
+- Screenshot shows "Loading..." or a spinner
+- Screenshot shows empty list where data should be
+- iPad screenshot shows sidebar but blank detail area
+- Screenshot differs from what the reviewer sees when they manually open the same screen
+
+**Phase to address:** Phase 0 (validation infrastructure) -- establish timing protocol before any screenshots are captured.
+
+---
+
+### Pitfall 3: iPhone Coordinates Used on iPad -- idb_tap Hits Wrong Element
+
+**What goes wrong:**
+The project has well-documented iPhone 16 Pro Max coordinates (440x956 logical points) baked into MEMORY.md and used in prior validation sessions. When validation extends to iPad Pro 13-inch (1032x1376 logical points), reusing iPhone coordinates hits completely wrong screen locations. A tap at iPhone's sidebar item y=198 hits a different element on iPad's always-visible NavigationSplitView sidebar. The hamburger button (x=20, y=50 on iPhone) does not exist on iPad at all -- the sidebar is persistent.
+
+**Why it happens:**
+- iPad logical resolution is 2.3x wider than iPhone (1032 vs 440 points)
+- iPad uses `NavigationSplitView` (persistent sidebar) while iPhone uses overlay sidebar (sheet)
+- Coordinates from prior sessions are copy-pasted without adjusting for device
+- `idb_tap` uses logical points, not percentages -- coordinates are device-specific
+- The accessibility tree structure differs between iPhone and iPad layouts due to the `isRegularWidth` branch in SidebarRootView
+
+**Consequences:**
+- Taps miss intended targets -- buttons not pressed, navigation not triggered
+- Taps hit unintended targets -- wrong screen opened, wrong action performed
+- Automation scripts designed for iPhone silently fail on iPad
+- Screenshots captured after failed taps show unexpected screens -- false evidence
+
+**Prevention:**
+1. **Always run `idb_describe` fresh on each device before any tap sequence.** Never reuse coordinates across devices.
+   ```bash
+   idb describe --udid $IPAD_UDID operation:all 2>/dev/null | head -100
+   ```
+2. **Maintain separate coordinate maps for iPhone and iPad.** Document them in the validation plan with device UDID labels.
+3. **Prefer deep links over taps for navigation** -- `xcrun simctl openurl $UDID "ils://settings"` works identically on both devices.
+4. **For iPad-specific interactions** (sidebar selection in NavigationSplitView), the sidebar is always visible -- tap directly on sidebar items without needing an edge swipe first.
+5. **Document iPad quirk:** On iPad, the sidebar column is 260-380pt wide (from `navigationSplitViewColumnWidth`), so sidebar item taps need x-coordinates in the 20-300 range, while detail content starts at x=300+.
+
+**Detection:**
+- Tap produces no visible change on iPad
+- Wrong screen appears after tap sequence
+- Edge swipe gesture (used to open iPhone sidebar) does nothing on iPad because sidebar is already persistent
+
+**Phase to address:** Phase 1 (iPhone validation) and Phase 2 (iPad validation) -- establish per-device coordinate discovery as the first step of each device's validation run.
+
+---
+
+### Pitfall 4: iPad NavigationSplitView Layout Not Validated -- Only Detail Pane Checked
+
+**What goes wrong:**
+On iPad, the app renders a `NavigationSplitView` with a persistent sidebar column (260-380pt wide) alongside the detail content. Validation that only screenshots the full screen and checks "does the content look right?" misses iPad-specific layout issues:
+- Sidebar overlapping detail content due to incorrect `navigationSplitViewColumnWidth`
+- Detail content not filling the remaining width (leaving white/black bands)
+- Sidebar selection highlight not matching `activeScreen` state
+- Column visibility toggling (`columnVisibility: .all` vs `.detailOnly`) not working
+- Landscape vs portrait sidebar behavior differences
+
+This is the **number one iPad-specific pitfall** because the iPhone layout (ZStack overlay sidebar) is completely different code from the iPad layout (`NavigationSplitView`). Testing iPhone does not validate iPad layout at all.
+
+**Why it happens:**
+- SidebarRootView.body branches on `isRegularWidth` (line 137):
+  ```swift
+  if isRegularWidth { iPadLayout } else { iPhoneLayout }
   ```
-- Make this the final step of every phase's definition-of-done checklist
+  These are entirely different view hierarchies. iPhone validation exercises `iPhoneLayout` but never touches `iPadLayout`.
+- The `iPadLayout` uses `NavigationSplitView(columnVisibility:)` which has documented SwiftUI bugs around column width and visibility
+- `SidebarView` receives `isSidebarOpen: .constant(true)` on iPad (line 224), which may suppress open/close animations that should be tested
 
-**Warning signs:**
-- macOS build fails after an iOS-only review session
-- `Cannot find type 'UIViewController' in scope` errors in a ViewModel
-- `UIApplication` referenced from any file in `ILSApp/ILSApp/` (not `ILSMacApp/`)
+**Consequences:**
+- iPad ships with layout issues invisible on iPhone
+- Sidebar column may render too wide or too narrow on specific iPad models
+- Column visibility toggle may not work, leaving users unable to hide sidebar for full-screen content
+- Evidence screenshots show "content looks correct" but miss structural layout problems
 
-**Phase to address:** Every phase — embed macOS build verification in each phase's done criteria.
+**Prevention:**
+1. **iPad validation must explicitly check:**
+   - Sidebar visible alongside detail on launch (not overlaying)
+   - Sidebar width is proportional (not full-screen or sliver)
+   - Detail content fills remaining space without white bands
+   - Selecting a sidebar item updates the detail pane
+   - Column visibility can be toggled (if exposed in UI)
+2. **Take iPad screenshots in both orientations** -- portrait and landscape, because NavigationSplitView column behavior changes
+3. **Check iPad mini separately** (744x1133 points) -- it may fall to compact width class in portrait multitasking, triggering the iPhone layout path instead of iPad layout
+4. **Verify sidebar selection state** -- after navigating to Settings via deep link, the sidebar should highlight Settings (not Home)
+
+**Detection:**
+- iPad screenshot shows sidebar and detail, but sidebar highlight does not match the displayed screen
+- iPad landscape shows different sidebar width than portrait
+- iPad mini in Split View shows iPhone-style overlay sidebar instead of persistent sidebar
+
+**Phase to address:** Phase 2 (iPad validation) -- this is the primary purpose of the iPad validation phase.
+
+---
+
+### Pitfall 5: Fresh Install Clears UserDefaults -- Validation Starts With Broken State
+
+**What goes wrong:**
+`xcrun simctl uninstall` + `xcrun simctl install` (recommended in Pitfall 1 to avoid stale binaries) **also clears all UserDefaults**. This means:
+- `serverURL` resets to default `localhost:9999` -- fine if backend is local, but breaks if previously configured to a remote host
+- `hasConnectedBefore` resets to `false` -- triggers the onboarding flow instead of the main app
+- `activeScreenKey` in `@SceneStorage` resets -- app starts at Home instead of the last screen
+- `colorSchemePreference` in `@AppStorage` resets to `"dark"` -- may differ from expected
+- `activeHostName` resets to `nil` -- host indicator in sidebar disappears
+
+If validation expects to see a configured app state (sessions loaded, specific host connected), a fresh install produces an unconfigured app that shows onboarding or connection errors.
+
+**Why it happens:**
+- `xcrun simctl uninstall` removes the app sandbox including UserDefaults plist
+- `@AppStorage` and `@SceneStorage` are backed by UserDefaults/scene state respectively
+- `ConnectionManager.init()` reads `UserDefaults.standard.string(forKey: "serverURL")` -- after fresh install this is nil, falling back to building URL from defaults
+- Previous milestones documented this: "Fresh install clears UserDefaults (stale Cloudflare tunnel URL)"
+
+**Consequences:**
+- First screenshot shows onboarding sheet instead of the expected Home screen
+- Validation session wastes time dismissing onboarding and reconfiguring
+- If not handled, screenshots of "unconfigured" app are captured as evidence -- false representation
+- @SceneStorage restoration of `activeScreenKey` and `lastChatSessionId` is lost
+
+**Prevention:**
+1. **After fresh install, always perform a setup sequence before validation:**
+   ```bash
+   # Launch app
+   xcrun simctl launch $UDID com.ils.app
+   sleep 3
+   # Configure via deep link or verify backend auto-connects
+   curl -s http://localhost:9999/health  # Verify backend is up
+   sleep 2
+   # Now app should auto-connect and show Home
+   ```
+2. **For validation that requires specific state** (e.g., chat history, host profiles), use the backend's existing data rather than depending on UserDefaults. The app fetches sessions from the API, not from local storage.
+3. **Do NOT uninstall before every screenshot** -- only uninstall once at the start of a validation phase to ensure the correct binary, then leave installed for the remainder.
+4. **Consider `xcrun simctl install` WITHOUT prior uninstall** -- iOS will upgrade the app in-place, preserving UserDefaults. This is safer for state-dependent validation but risks stale cached views.
+
+**Detection:**
+- Screenshot shows ServerSetupSheet / onboarding instead of Home
+- No sessions visible despite backend having 22,000+ sessions
+- Sidebar shows no host name indicator
+
+**Phase to address:** Phase 0 (validation infrastructure) -- define the install strategy (fresh vs upgrade) and post-install setup sequence.
+
+---
+
+### Pitfall 6: Validating Against Wrong Backend Binary -- Old Backend Returns Different Data Format
+
+**What goes wrong:**
+Two backend binaries exist on this machine:
+- **OLD:** `/Users/nick/ils/ILSBackend/` -- returns raw Claude Code data (bare arrays, snake_case)
+- **CURRENT:** `/Users/nick/Desktop/ils-ios/` -- returns proper `APIResponse` wrappers (camelCase)
+
+If the old backend is running on port 9999 when validation starts, the app connects successfully (port is the same), loads data, and even renders screens -- but with malformed data. Session counts may differ, field names may be wrong, and some views may show "0 items" because JSON decoding partially fails silently (optional fields decode as nil).
+
+**This has happened before.** MEMORY.md documents: "OLD backend returns raw data. ALWAYS use `/Users/nick/Desktop/ils-ios/`"
+
+**Why it happens:**
+- Both backends listen on the same port (9999)
+- The app does not validate the backend version/identity on connection
+- `curl http://localhost:9999/health` returns 200 from either backend
+- Previous sessions may have left the old backend running
+- `swift run ILSBackend` from the wrong directory is an easy mistake
+
+**Consequences:**
+- Screens that depend on `APIResponse.data` wrapper get empty content
+- Home screen stats may show wrong numbers (22K sessions vs 41 sessions)
+- Chat may fail to stream (different SSE format)
+- Screenshots show partially-populated screens that could be misread as PASS or FAIL
+
+**Prevention:**
+1. **At the start of every validation session, verify the backend binary path:**
+   ```bash
+   lsof -i :9999 -P -n | grep LISTEN
+   # Output MUST contain "ils-ios" in the path, NOT "ils/ILSBackend"
+   ```
+2. **Kill any existing backend before starting a new one:**
+   ```bash
+   lsof -ti :9999 | xargs kill -9 2>/dev/null
+   PORT=9999 swift run ILSBackend  # Run from /Users/nick/Desktop/ils-ios/
+   ```
+3. **Validate response format, not just connectivity:**
+   ```bash
+   curl -s http://localhost:9999/api/v1/sessions | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Format: {\"APIResponse\" if \"data\" in d else \"RAW\"}, Sessions: {len(d.get(\"data\",[]))}')"
+   ```
+4. **Include a backend version check in the validation infrastructure script.**
+
+**Detection:**
+- Home screen shows surprisingly low session count (41 instead of 22,000+)
+- API responses are bare arrays instead of `{"data": [...], "metadata": {...}}`
+- `lsof -i :9999` shows binary path containing `ils/ILSBackend` instead of `ils-ios`
+
+**Phase to address:** Phase 0 (validation infrastructure) -- backend verification is the very first step.
 
 ---
 
@@ -199,183 +291,290 @@ Shared files build only the iOS scheme automatically. The macOS build is a manua
 
 ---
 
-### Pitfall 7: APIClient Cache Not Invalidated After Host Profile Switch
+### Pitfall 7: iPad Deep Links Navigate But Sidebar Selection Does Not Update
 
 **What goes wrong:**
-`APIClient` has an `NSCache`-backed response cache with per-endpoint TTLs (5 minutes for skills/plugins/MCP, 60 seconds for config). When a user switches to a different host profile and `ConnectionManager.updateServerURL()` creates a new `APIClient`, the cache starts empty for the new client. However, any ViewModel still holding a reference to the old `APIClient` instance serves stale cached data from the previous host — because the old instance's cache is still alive.
+On iPhone, deep links set `appState.navigationIntent` which triggers `onChange` in SidebarRootView, updating `activeScreen` and closing the sidebar. On iPad, the sidebar is persistent via `NavigationSplitView` -- when a deep link navigates to a new screen, the detail pane updates correctly, but the sidebar's visual selection indicator may not highlight the correct item because `NavigationSplitView` manages its own selection state separately from `@State activeScreen`.
 
-Additionally: if the new host happens to respond at the same paths with different content (same `APIClient` key, different host), any ViewModels that were NOT refreshed after the switch continue to show old data with no indication it is stale.
+**Why it happens:**
+- `SidebarView` receives `activeScreen: $activeScreen` as a binding
+- On iPad, `NavigationSplitView` has its own internal selection tracking for the sidebar column
+- When `activeScreen` changes programmatically (via deep link), the `NavigationSplitView` may not sync its internal selection highlight
+- This is a known SwiftUI limitation with `NavigationSplitView` -- programmatic changes to the sidebar binding do not always update the visual selection appearance
 
 **How to avoid:**
-- After profile switch, explicitly call `appState.apiClient.invalidateCache()` (the parameterless version that clears all entries) before any ViewModel reloads from the new host
-- ViewModels that hold a direct `client` reference must re-`configure()` after profile switch — this is best achieved by passing `appState.apiClient` directly at call time rather than caching it at `configure()` time
+- After each deep link test on iPad, verify BOTH the detail pane content AND the sidebar highlight
+- If sidebar highlight is wrong, this is a real bug to fix (not a test artifact)
+- Use `idb_describe` to check the accessibility state of sidebar items (selected vs not selected)
 
 **Warning signs:**
-- Browser shows skills from previous host for several minutes after profile switch
-- Config section in Settings shows the previous host's model and settings
-- Pull-to-refresh is the only way to get current data after switching hosts
+- iPad screenshot shows Settings in the detail pane but Home is highlighted in the sidebar
+- Sidebar highlight lags behind by one navigation event
 
-**Phase to address:** Host Profiles redesign phase — coordinate cache invalidation with the profile switch flow.
+**Phase to address:** Phase 2 (iPad validation) -- check sidebar selection after every deep link navigation.
 
 ---
 
-### Pitfall 8: SSEClient Zombie Connection After Host Switch
+### Pitfall 8: Simulator State Leaks Between Validation Runs -- Cached Screens Show Old Data
 
 **What goes wrong:**
-`ConnectionManager.updateServerURL()` creates a new `SSEClient`, but any `ChatViewModel` that holds a reference to the old `SSEClient` (captured at ViewModel creation time) maintains an open SSE connection to the old host. This is a zombie connection — it consumes network resources and may receive events that update the wrong UI.
+iOS Simulator preserves app state across `xcrun simctl launch` calls (unlike fresh installs). This means:
+- `@SceneStorage("activeScreenKey")` restores the last screen from the previous run
+- `NSCache`-backed API responses may still be warm
+- SSEClient connections from a previous run may interfere with new connections
+- In-memory ViewModel state is gone (fresh launch), but UserDefaults/Keychain persists
 
-The existing `SSEClient` heartbeat watchdog (`LastActivityTracker`) does not detect host-mismatch, only inactivity. A zombie connection to a still-responsive old host never trips the watchdog.
+If validation Phase 1 leaves the app on the Settings screen, Phase 2's first screenshot shows Settings (from SceneStorage restoration) instead of Home. This can either produce a false FAIL ("why is Settings showing instead of Home?") or mask a Home screen bug if the validator does not notice.
 
 **How to avoid:**
-- When profile switches, disconnect any active `SSEClient` connections before creating the new one: `oldSSEClient.disconnect()` (already implemented in `SSEClient`)
-- `ChatViewModel` should observe `appState.isConnected` changes (it already does via `onChange(of: appState.isConnected)`) and reconnect — but it must also detect URL changes, not just connection state changes
-- Consider adding `appState.serverURL` to the observation chain in `ChatViewModel`
+- At the start of each validation phase, navigate to a known starting point:
+  ```bash
+  xcrun simctl openurl $UDID "ils://home"
+  sleep 2
+  ```
+- Document that screenshots numbered 01 are always "initial state after launch and navigation to home"
+- If testing fresh-launch behavior specifically, terminate the app first:
+  ```bash
+  xcrun simctl terminate $UDID com.ils.app
+  xcrun simctl launch $UDID com.ils.app
+  sleep 3
+  ```
 
 **Warning signs:**
-- After switching profiles, chat messages appear to send successfully but the response comes from the old host's Claude session
-- Two SSE connections visible in Instruments → Network when only one should exist
-- Old host's chat stream events appear in the new host's chat UI
+- First screenshot shows a screen the validator did not navigate to
+- Data counts differ between sequential runs without backend restart
 
-**Phase to address:** Host Profiles redesign phase.
+**Phase to address:** Phase 1 and Phase 2 -- define a clean starting state protocol for each phase.
 
 ---
 
-### Pitfall 9: Config Scope Semantics Mismatch — "User" Config Is Not "Effective" Config
+### Pitfall 9: iPad Multitasking / Split View Triggers Compact Size Class -- App Switches to iPhone Layout
 
 **What goes wrong:**
-The Settings sync feature loads config via `GET /config?scope=user`, which reads `~/.claude/config.json`. But Claude CLI applies a three-level merge: local (project `.claude/config.json`) overrides project (workspace) overrides user. The app showing "user" scope config as "host defaults" is misleading — if the user has a project-level config overriding their model, the app shows the user-level default, not what Claude CLI actually uses.
-
-`ConfigController.get()` reads the literal file for the requested scope — there is no effective/merged config endpoint.
+iPad in multitasking (Slide Over, 1/3 Split View) downgrades the horizontal size class to `.compact`. SidebarRootView's `isRegularWidth` check (line 119-121) returns `false`, causing the app to render the iPhone overlay-sidebar layout instead of the iPad NavigationSplitView layout. If validation inadvertently activates multitasking (another app slides over, or the simulator window is resized), the screenshots show the iPhone layout on an iPad -- which either:
+- Produces a false PASS (iPhone layout works, iPad layout was never tested)
+- Produces a confusing FAIL (layout looks wrong for iPad)
 
 **How to avoid:**
-- Either add a `/config/effective` endpoint to the backend that performs scope merging (the correct approach), or
-- Clearly label the displayed config as "User defaults (~/.claude/config.json)" — not "Host defaults" or "Active settings"
-- Show a note: "Project-level configs may override these values when Claude Code runs in a specific project"
-- Do not advertise this as "inheriting from CLI" when it is only inheriting from user scope
+- Ensure iPad simulator runs in full-screen mode (not Slide Over or Split View)
+- Verify size class before capturing screenshots:
+  ```bash
+  # Check accessibility tree for NavigationSplitView presence (iPad) vs ZStack (iPhone)
+  idb describe --udid $IPAD_UDID operation:all 2>/dev/null | grep -i "split"
+  ```
+- If deliberately testing multitasking scenarios, document that compact layout is expected
+- Consider testing iPad mini in portrait -- its 744pt width is still regular class at full screen, but verify
 
 **Warning signs:**
-- User sets model to `claude-haiku-4-5` in CLI project config but app shows `claude-sonnet-4-5` as "active"
-- Support request: "App shows wrong model — my actual sessions use a different model"
+- iPad screenshot shows hamburger menu button (iPhone-only) instead of persistent sidebar
+- iPad screenshot shows overlay sidebar instead of NavigationSplitView column
 
-**Phase to address:** Settings & Defaults Sync phase — set correct scope expectations before building the UI.
+**Phase to address:** Phase 2 (iPad validation) -- verify full-screen mode before starting.
 
 ---
 
-### Pitfall 10: HostProfilesViewModel Duplicated APIClient — Not Sharing AppState's Client
+### Pitfall 10: Deep Link UUID Case Sensitivity -- Uppercase UUIDs Fail Silently
 
 **What goes wrong:**
-`HostProfilesViewModel` creates its own `APIClient()` in its initializer with no arguments, which defaults to `AppConstants.defaultServerURL`. This means:
-1. The ViewModel always hits `localhost:9999` regardless of what `AppState.serverURL` is set to
-2. If the user changes server URL in Settings, `HostProfilesViewModel` does not pick it up
-3. When `HostProfilesView` is displayed, it talks to a different endpoint than every other view in the app if the server URL was customized
+Deep links like `ils://sessions/{uuid}` require **lowercase** UUIDs. Uppercase UUIDs (the default format from `UUID().uuidString` in Swift) fail to match -- the URL handler receives the path, attempts lookup, finds no match, and silently falls through to the default screen (Home). The validation shows Home screen instead of the expected session.
+
+**This is a known project pitfall** documented in CLAUDE.md: "Deep link UUIDs must be LOWERCASE -- uppercase causes failures."
 
 **How to avoid:**
-`HostProfilesViewModel` must receive its `APIClient` from `AppState`, not construct one internally. Either:
-- Pass `appState.apiClient` at `HostProfilesView.task` time via `viewModel.configure(client: appState.apiClient)` (consistent with every other ViewModel's pattern)
-- Or pass `AppState` directly to the ViewModel so it can read `appState.apiClient` dynamically
-
-The `FleetViewModel` typealias existing at the bottom of `HostProfilesViewModel.swift` suggests this ViewModel predates the AppState architecture — it needs to be brought in line.
+- Always lowercase UUIDs in deep link URLs:
+  ```bash
+  SESSION_ID=$(echo "A1B2C3D4-E5F6-..." | tr '[:upper:]' '[:lower:]')
+  xcrun simctl openurl $UDID "ils://sessions/$SESSION_ID"
+  ```
+- In automation scripts, pipe UUID through `tr '[:upper:]' '[:lower:]'` or use `${UUID,,}` bash lowercasing
+- Verify the deep link handler in `ILSAppApp.swift handleURL()` does case-insensitive UUID comparison (if not, fix it)
 
 **Warning signs:**
-- `HostProfilesView` shows different data than other screens for the same host
-- Health polling hits `localhost:9999` even when user configured a remote server
-- Profile registration fails silently because the request goes to the wrong endpoint
+- Deep link navigates to Home instead of the expected session/detail screen
+- Some deep links work (non-UUID routes like `ils://settings`) but session links fail
 
-**Phase to address:** Host Profiles redesign phase — fix the APIClient injection before adding any new functionality.
+**Phase to address:** Phase 1 (deep link testing) -- include both upper and lowercase UUID tests.
 
 ---
 
-### Pitfall 11: `try?` on Fleet Mutating Operations Silently Eats Activation Errors
+### Pitfall 11: RalphMobile Reinstalls Itself During Build -- Occupies Simulator
 
 **What goes wrong:**
-In `HostProfilesViewModel.activate()` and `remove()`:
-```swift
-let updated: FleetHost? = try? await apiClient.post("/fleet/\(id)/activate", body: EmptyBody())
+RalphMobile (a separate app on the same machine) reinstalls itself during its build/install cycle. If a RalphMobile build triggers while ILS validation is running on the same simulator, RalphMobile's install may interfere with the simulator state, or RalphMobile's Xcode build may grab the simulator for its own use.
+
+**This is a known project hazard** documented in MEMORY.md: "RalphMobile reinstalls itself during build/install -- uninstall AFTER each build."
+
+**How to avoid:**
+- **Use the dedicated iPhone simulator** (UDID: `50523130-57AA-48B0-ABD0-4D59CE455F14`) only for ILS validation
+- **Use the dedicated iPad simulator** (UDID: `C074375B-2CB2-4F95-A55C-972F2FF35041` -- "iPad Pro 13 ILS") for iPad validation
+- Do not run RalphMobile builds during validation sessions
+- If RalphMobile accidentally installs on the ILS simulator, uninstall it:
+  ```bash
+  xcrun simctl uninstall $UDID com.ralph.mobile  # or whatever its bundle ID is
+  ```
+
+**Warning signs:**
+- Simulator shows RalphMobile instead of ILS after a build
+- Unexpected app appears on simulator home screen
+- Build times spike because multiple Xcode builds compete
+
+**Phase to address:** Every phase -- document "do not run other builds during validation" as a session prerequisite.
+
+---
+
+### Pitfall 12: Evidence Screenshots Not Machine-Verifiable -- Rely on Human Visual Inspection
+
+**What goes wrong:**
+Screenshots are `.png` files with no metadata about what they are supposed to show. When the dual-agent confirmation step reviews 50+ screenshots, the reviewer must:
+1. Open each screenshot
+2. Visually identify which screen it shows
+3. Compare against expected criteria
+4. Render a PASS/FAIL judgment
+
+This is error-prone. The reviewer may conflate screenshots, miss subtle issues (wrong session count, missing badge), or rubber-stamp PASS on screenshots that are actually from a different screen.
+
+**How to avoid:**
+1. **Structured naming convention:**
+   ```
+   {device}-{nn}-{screen}-{state}.png
+   iphone-01-home-loaded.png
+   iphone-02-sidebar-open.png
+   ipad-01-home-splitview.png
+   ipad-07-settings-scrolled-bottom.png
+   ```
+2. **Companion metadata file** for each screenshot:
+   ```json
+   {"file": "iphone-03-skills.png", "screen": "Browser > Skills", "expected": "50+ skills listed, Active badges visible, search bar present", "deep_link": "ils://skills", "timestamp": "2026-02-25T14:30:00Z"}
+   ```
+3. **Use `idb_describe` output as machine-verifiable evidence** alongside screenshots. The accessibility tree text can be diffed and checked programmatically:
+   ```bash
+   idb describe --udid $UDID operation:all > /tmp/evidence/iphone-03-skills-accessibility.txt
+   grep -c "Active" /tmp/evidence/iphone-03-skills-accessibility.txt  # Should be > 0
+   ```
+4. **Capture backend state alongside UI screenshots:**
+   ```bash
+   curl -s http://localhost:9999/api/v1/skills | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'Skills count: {len(d[\"data\"])}')" > /tmp/evidence/iphone-03-skills-backend.txt
+   ```
+
+**Warning signs:**
+- Reviewer asks "which screen is this?" about an evidence file
+- Two screenshots from different devices/screens have similar names
+- Reviewer approves a screenshot without noticing the data count is wrong
+
+**Phase to address:** Phase 0 (validation infrastructure) -- establish naming and metadata conventions before any screenshots are captured.
+
+---
+
+## Minor Pitfalls
+
+---
+
+### Pitfall 13: Simulator Clock and Status Bar Clutter Evidence Screenshots
+
+**What goes wrong:**
+Simulator status bar shows "9:41 AM" by default but may show different times after prolonged sessions, carrier name "Carrier", battery indicator, etc. These are irrelevant to validation but can confuse reviewers or make screenshots look inconsistent across a validation session.
+
+**How to avoid:**
+Override simulator status bar before capturing evidence:
+```bash
+xcrun simctl status_bar $UDID override \
+  --time "9:41" \
+  --batteryState charged \
+  --batteryLevel 100 \
+  --cellularMode active \
+  --dataNetwork wifi \
+  --wifiMode active \
+  --wifiBars 3
 ```
-If the POST fails (network error, wrong host, 404 because the backend doesn't know about this fleet host), `updated` is `nil` and the error is silently discarded. The UI then shows the profile as "Active" because `activeHostId = id` is set unconditionally after a nil result:
-```swift
-if updated != nil {
-    activeHostId = id
-```
-Wait — actually this correctly guards, so the UI won't update on nil. But the user gets NO feedback that activation failed — the context menu dismisses and nothing appears to have changed.
+
+**Phase to address:** Phase 0 (validation infrastructure) -- add to setup script.
+
+---
+
+### Pitfall 14: iPad Landscape vs Portrait -- Different Sidebar Column Width
+
+**What goes wrong:**
+`NavigationSplitView` adjusts sidebar column width based on available space. The `navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)` constraint means:
+- Portrait (1032pt width): sidebar ~300pt, detail ~732pt
+- Landscape (1376pt width): sidebar ~300-380pt, detail ~996-1076pt
+
+Screenshots taken in only one orientation miss layout issues in the other. A view that fits in 732pt detail width may overflow or look sparse in 996pt detail width.
 
 **How to avoid:**
-Replace `try?` with `do/catch` in all fleet mutation operations. Surface errors to the UI via a `loadError` or a new `activationError` property. The existing `loadError: String?` could be repurposed or a new `actionError: String?` added for transient feedback.
+- Capture key screens in both portrait and landscape on iPad
+- At minimum: Home, Settings, Browser (Skills tab), Chat in both orientations
+- Rotate simulator:
+  ```bash
+  # Device > Rotate Left in Simulator, or use Hardware menu
+  # Or trigger via simctl (limited support)
+  ```
 
-**Warning signs:**
-- User taps "Activate" and nothing happens — no feedback, no error, no state change
-- Profile switch appears to succeed in the UI but subsequent API calls still go to old host
-
-**Phase to address:** Host Profiles redesign phase.
-
----
-
-## Technical Debt Patterns
-
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| `HostProfilesViewModel.init(apiClient: APIClient = APIClient())` | No AppState dependency needed at init | Always hits localhost:9999 regardless of configured URL; profile switching doesn't update the client | Never — fix in Host Profiles phase |
-| Full `ClaudeConfig` struct write-back on any field change | Simple one-call save | Silently drops fields not rendered in the app UI (hooks, env, permissions) | Never for write operations — always read-then-patch |
-| Hardcoded `main` branch in `fetchRawContent` | Works for 80% of GitHub repos | Silent install failures for `master`-defaulting repos | Acceptable as v3.1 quick fix only if `master` fallback is added |
-| `try?` on fleet activation/remove | Shorter code, no error handling boilerplate | User gets no feedback when operations fail | Never for mutating operations visible to the user |
-| `isLoading` shared between local list load and GitHub install in `SkillsViewModel` | One flag, simple | Install button shows loading state while local list refreshes post-install, blocking UX unnecessarily | Acceptable for v3.1; separate into `isInstallingFromGitHub` for better UX |
-| `@State private var skillsVM` inside `BrowserView` | Clean ownership, simple state | ViewModel destroyed on every screen switch; in-progress installs orphaned | Consider lifting to `SidebarRootView` level for persistence |
+**Phase to address:** Phase 2 (iPad validation) -- include orientation testing for critical screens.
 
 ---
 
-## Integration Gotchas
+### Pitfall 15: Auto-Build Hook Fires During Validation -- No Swift Edits Expected
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| `APIClient` actor + `@MainActor` ViewModels | Forgetting `await` when calling actor methods from `@MainActor` context | Always `await` actor calls — actor isolation is compatible with `@MainActor` but explicit `await` is always required |
-| GitHub Code Search API | Changing search strategy to search repo descriptions instead of `filename:SKILL.md` | Keep current `filename:SKILL.md` strategy — it correctly limits results to repos with skill files rather than any repo mentioning the search term |
-| `ConfigController` `PUT /config` | Sending only changed fields expecting server merge | Server writes the full payload verbatim — always send complete config with delta applied, never partial |
-| `FleetController` activate endpoint | Assuming activation also switches the backend's own active client | `POST /fleet/{id}/activate` only persists the selection in SQLite — app must separately call `appState.updateServerURL()` |
-| SSEClient after host switch | Assuming new `SSEClient` cancels the old one's connections | `updateServerURL()` creates a new `SSEClient` instance; any ViewModel still holding a reference to the old instance must explicitly call `.disconnect()` |
-| `readConfig(scope: "user")` for CLI defaults display | Assuming this returns merged effective config | Returns only the user-scope file content — project and local overrides are not included; label clearly as "User defaults" |
-| `GITHUB_TOKEN` configuration | Putting GitHub token in iOS Keychain | Token is needed by the Vapor backend process — must be in the host's shell environment, not in the iOS app; the app only stores the ILS API key in Keychain |
-| New ViewModel with `configure(client:)` pattern | Calling `configure()` once at view creation and never again | After `updateServerURL()`, the old captured client is stale — either re-`configure()` on reconnect or read from `appState.apiClient` at call time |
+**What goes wrong:**
+The auto-build hook triggers on every `.swift` file edit. During pure validation phases (no code changes), this should never fire. But if a fix is applied mid-validation (the "fix-as-you-go" approach), the hook fires, potentially taking 15-45 seconds and blocking the session. If the fix introduces a build error, the hook surfaces `BUILD FAILED` and the validation must pause for a fix cycle.
 
----
+**How to avoid:**
+- If doing fix-as-you-go, expect build pauses after every fix
+- Batch related fixes before rebuilding rather than editing one file at a time
+- After a fix cycle: rebuild, reinstall (using Pitfall 1's safe install), re-navigate to the screen, re-capture the screenshot
+- Never capture a screenshot between a fix and a rebuild -- the simulator still has the old binary
 
-## Security Mistakes
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Storing `GITHUB_TOKEN` in iOS Keychain | Token intended for backend process sent over network to iOS app — unnecessary exposure; the app cannot use it directly | Document that `GITHUB_TOKEN` is a backend environment variable, not an app secret; Settings UI should explain where to set it |
-| Displaying raw `config.path` from backend | Exposes full host filesystem layout (e.g., `/Users/nick/.claude/config.json`) to any screen capturer | Truncate displayed paths to relative form (`~/.claude/config.json`); `SettingsView` already uses `.screenshotProtected()` — preserve this modifier on any new config-sync views |
-| Installing GitHub skills without content size validation | Malicious `SKILL.md` with extreme size could exhaust host disk | `SkillsController.create()` enforces 1MB content limit — verify `install()` applies the same limit to fetched GitHub content before writing to disk; currently it does not |
-| Deep link `ils://profiles/activate/{id}` if added | Malicious app or webpage could silently switch active host | Do not add activation as a deep link parameter — activation requires explicit in-app user gesture only |
-| New Host Profile fields (SSH key content) stored in UserDefaults | Plaintext credentials in UserDefaults readable by other processes on a jailbroken device | All credential fields (SSH keys, passwords, passphrases) must use `KeychainService.saveSync()` — never `UserDefaults.standard.set()` |
+**Phase to address:** All fix-as-you-go phases -- document the fix-rebuild-reinstall-recapture cycle.
 
 ---
 
-## UX Pitfalls
+### Pitfall 16: idb_tap Cannot Hit SwiftUI Toolbar Buttons -- Known Limitation
 
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| No persistent active host indicator outside Host Profiles screen | User cannot tell which host they are connected to from Home, Chat, or Settings | Add active profile name/icon to `SidebarView` header — one persistent indicator always visible in sidebar |
-| Config sync shows raw Claude CLI field names | `alwaysThinkingEnabled`, `includeCoAuthoredBy` are developer-facing names | Map to human labels: "Extended thinking (always on)", "Include Claude attribution in commits" with info tooltips |
-| GitHub install success has no durable confirmation | `isLoading` clears and skill appears in list — but list may be long; user may miss it | Show a brief "Installed" badge or `HapticManager.impact(.medium)` + inline HUD for 3 seconds after install |
-| Config scope picker not shown in settings sync UI | User does not know whether they are editing user-scope or project-scope defaults | Default to user scope with a visible label "Editing ~/.claude/config.json"; project scope is power-user via a separate disclosure |
-| "Activate" buried in context menu ellipsis | Primary action (switch host) two taps deep in an ellipsis; easy to miss | Make row tap = show profile details with a prominent "Set as Active Host" button; ellipsis = secondary actions (edit, remove) |
-| No feedback when profile activation fails due to network error | User taps Activate, context menu dismisses, nothing changes — silent failure | Always show success or failure feedback: `HapticManager.impact(.medium)` on success, an error alert on failure |
+**What goes wrong:**
+SwiftUI toolbar buttons (hamburger menu, navigation bar items) are not reliably tappable via `idb_tap`. The accessibility tree shows them, but taps at their coordinates often miss. This is documented in MEMORY.md: "idb_tap CANNOT hit SwiftUI toolbar buttons."
+
+**How to avoid:**
+- **Open sidebar on iPhone:** Use edge swipe instead:
+  ```bash
+  idb ui swipe --udid $UDID 5 500 300 500 --duration 0.3
+  ```
+- **Navigate between screens:** Use deep links:
+  ```bash
+  xcrun simctl openurl $UDID "ils://settings"
+  ```
+- **For toolbar actions that have no deep link equivalent** (e.g., chat menu button), use the coordinate approach from MEMORY.md but verify with `idb_describe` first
+
+**Phase to address:** Phase 1 and Phase 2 -- prefer deep links over taps for all navigation.
 
 ---
 
-## "Looks Done But Isn't" Checklist
+## Phase-Specific Warnings
 
-- [ ] **Host Profile switch:** Verify `appState.serverURL` actually changed after activation — check `curl http://{new-host}/health` responds; old host does NOT appear in `lsof -i :9999` if localhost was previous
-- [ ] **Config sync read-only fields:** Save a config with hooks configured on the host; change the model in the iOS app; read the config file on the host and verify hooks are still present
-- [ ] **GitHub install on correct host:** Install a skill from GitHub; switch profiles; verify the skill is on the originally-intended host's backend, not the newly-switched-to host
-- [ ] **GitHub rate limit error:** Exhaust rate limit (or mock HTTP 429 from backend); verify the error message is user-readable with guidance, not "HTTP error: 429"
-- [ ] **macOS build:** Every new shared Swift file must compile with `ILSMacApp` scheme — run the macOS build check after every phase
-- [ ] **SSEClient cleanup:** After profile switch, verify no zombie SSE connections remain to old host — check Instruments Network or `lsof -i TCP`
-- [ ] **Health polling stop:** Navigate away from Host Profiles screen; verify `stopHealthPolling()` was called — no repeated network calls in Console
-- [ ] **Keychain storage:** Any new credential fields in Host Profiles redesign — verify they appear in Keychain and not in UserDefaults (check via `UserDefaults.standard.dictionaryRepresentation()`)
-- [ ] **Override indicators:** For each config field shown in the sync UI, verify the UI correctly distinguishes "CLI default" from "app override"
-- [ ] **Branch fallback:** Install a skill from a GitHub repo with `master` as default branch — verify it succeeds with the fallback or shows a clear error (not a generic 404)
-- [ ] **`fetchRawContent` skill content size:** Install a skill from a repo with a large SKILL.md (>1MB) — verify the backend rejects it with a clear error, not a silent truncation
+| Phase | Likely Pitfall | Mitigation |
+|-------|---------------|------------|
+| Phase 0: Validation Infrastructure | Stale binary install (P1), wrong backend (P6) | Build install script with timestamp verification and backend path check |
+| Phase 1: iPhone Validation | Screenshot timing (P2), deep link UUID case (P10), toolbar taps (P16) | 3-second delays, lowercase UUIDs, prefer deep links |
+| Phase 2: iPad Validation | Wrong coordinates (P3), NavigationSplitView layout (P4), multitasking size class (P9), sidebar selection (P7) | Fresh `idb_describe`, verify split view, full-screen mode, check both sidebar and detail |
+| Phase 3: Deep Link Testing | UUID case (P10), sidebar not updating (P7), fresh install state (P5) | Test both cases, verify sidebar highlight, consistent starting state |
+| Phase 4: Fix-as-you-go | Auto-build hook (P15), stale binary after fix (P1), evidence naming (P12) | Full fix-rebuild-install-capture cycle, structured naming |
+| Phase 5: Evidence Review | Non-machine-verifiable screenshots (P12), false positives from timing (P2) | Metadata files, accessibility tree dumps, backend state capture |
+
+---
+
+## "Looks Validated But Isn't" Checklist
+
+- [ ] **Binary freshness:** `stat` the installed `.app` binary -- timestamp must match the latest `xcodebuild` completion time
+- [ ] **Backend identity:** `lsof -i :9999 -P -n` shows binary path containing `ils-ios/`, NOT `ils/ILSBackend/`
+- [ ] **iPad layout type:** Screenshot shows NavigationSplitView (persistent sidebar + detail), NOT overlay sidebar with hamburger button
+- [ ] **iPad sidebar highlight:** After deep link navigation, sidebar highlights the correct item (not Home or previous item)
+- [ ] **Data loaded:** Screenshots show real data counts (22,000+ sessions, 50+ skills, 15+ MCP servers), not 0 or loading spinners
+- [ ] **Both orientations on iPad:** At least Home and Settings captured in both portrait and landscape
+- [ ] **Deep link UUIDs lowercase:** Session deep links use lowercase UUIDs
+- [ ] **Post-fix screenshots:** After any fix-as-you-go, the screenshot was captured AFTER rebuild + reinstall, not before
+- [ ] **Evidence naming:** Every screenshot has a structured name identifying device, sequence number, screen, and state
+- [ ] **Accessibility tree evidence:** Key screens have `idb_describe` output alongside visual screenshots for machine verification
+- [ ] **UserDefaults state:** Fresh install vs upgrade install decision was intentional, not accidental
+- [ ] **Status bar clean:** Simulator status bar overridden for consistent evidence appearance
 
 ---
 
@@ -383,49 +582,32 @@ Replace `try?` with `do/catch` in all fleet mutation operations. Surface errors 
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Profile switch doesn't rebuild downstream clients | HIGH | Refactor `HostProfilesViewModel` to receive `AppState`; update `activate()` to call `appState.updateServerURL()`; add reload triggers to all browser VMs; coordinate with ConnectionManager and SSEClient cleanup |
-| Config sync drops CLI hooks/env fields | MEDIUM | Add write allowlist to `SettingsViewModel.saveConfig()`; add read-before-write on all PUT calls; one additional network round-trip per save |
-| GitHub install fails on `master` branch repos | LOW | Add branch fallback in `GitHubService.fetchRawContent()` — try `main`, then `master`, then return descriptive error; no model changes required |
-| macOS build broken by iOS-only import | LOW | Wrap with `#if os(iOS)` guard or extract to iOS-only file; auto-build hook surfaces this on next edit; typically a 5-minute fix |
-| Rate limit shows opaque 429 error | LOW | Add 429 detection in `SkillsViewModel.searchGitHub()` error handler; show user-readable message; no architecture changes needed |
-| In-flight install abandoned on navigation | MEDIUM | Track install task in `SkillsViewModel` for cancellation; lift ViewModel to SidebarRootView level OR add profile-switch guard while install is in progress |
-| `try?` on fleet mutations hiding errors | LOW | Replace with `do/catch`; add `actionError: String?` property; show error alert or banner in `HostProfilesView` |
-
----
-
-## Pitfall-to-Phase Mapping
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Profile switch doesn't rebuild downstream clients | Host Profiles redesign | After activate, confirm `appState.serverURL` changed AND Browser/Settings show data from new host |
-| Config sync drops unrendered fields | Settings & Defaults Sync | Change model in app; verify hooks still in `~/.claude/config.json` on host machine |
-| GitHub rate limit with no user guidance | Browse, Skills & Plugins | Mock HTTP 429; verify error message is actionable |
-| `fetchRawContent` hardcoded to `main` | Browse, Skills & Plugins | Install from a `master`-default repo; verify success or clear error |
-| In-flight install abandoned on nav | Navigation/UX overhaul + Host Profiles | Start install, switch profiles, return — verify install completed on intended host |
-| macOS build broken by iOS-only code | Every phase | Every phase done criteria must include ILSMacApp build check |
-| Credentials in UserDefaults | Host Profiles redesign | Add SSH key via new profile UI; confirm it appears in Keychain, not UserDefaults |
-| SSEClient zombie after host switch | Host Profiles redesign | Switch profile while chat is open; verify no old-host SSE connections in Instruments |
-| Config scope mismatch (user != effective) | Settings & Defaults Sync | Set UI label to "User defaults"; verify no claim of "active" or "effective" config |
-| `try?` hiding fleet activation errors | Host Profiles redesign | Force a network failure during activate; verify error feedback is shown to user |
-| No active host indicator | Navigation/UX overhaul | From Home, Settings, Chat — verify which host is active without visiting Host Profiles screen |
+| Stale binary installed (P1) | HIGH -- re-run entire validation | Build fresh, verify timestamp, reinstall, recapture ALL screenshots |
+| Wrong backend (P6) | HIGH -- re-run entire validation | Kill old backend, start correct one, verify response format, recapture all |
+| Screenshot timing (P2) | LOW -- recapture specific screenshot | Add delay, verify with idb_describe, recapture |
+| Wrong coordinates on iPad (P3) | LOW -- re-run idb_describe | Fresh accessibility tree dump, update coordinate map, retry taps |
+| iPad layout not checked (P4) | MEDIUM -- add iPad-specific checks | Run iPad validation phase with explicit split-view checks |
+| Fresh install clears state (P5) | LOW -- reconfigure | Launch app, wait for auto-connect, navigate to Home, continue |
+| Deep link UUID case (P10) | LOW -- lowercase and retry | Pipe through `tr`, retry deep link |
+| Evidence not verifiable (P12) | MEDIUM -- retroactive naming | Rename files, add metadata, re-verify uncertain screenshots |
 
 ---
 
 ## Sources
 
-- Direct code inspection: `ILSApp/ILSApp/ViewModels/HostProfilesViewModel.swift` — `init(apiClient: APIClient = APIClient())` disconnected from AppState; `activate()` does not call `appState.updateServerURL()`; `try?` on mutation operations
-- Direct code inspection: `ILSApp/ILSApp/Services/ConnectionManager.swift` — `updateServerURL()` recreates `apiClient` and `sseClient` in-place; no broadcast to downstream ViewModels
-- Direct code inspection: `ILSApp/ILSApp/ViewModels/SettingsViewModel.swift` — full `ClaudeConfig` struct write in `saveConfig()`; no field-level merge; fields like `hooks`, `env` travel as optionals
-- Direct code inspection: `Sources/ILSShared/Models/ClaudeConfig.swift` — all config fields are `var` optionals; `nil` means "not set" but round-trips through JSON as field omission
-- Direct code inspection: `Sources/ILSBackend/Services/GitHubService.swift` — `main` hardcoded in `fetchRawContent()`; 60-request unauthenticated rate limit; `GITHUB_TOKEN` from environment only
-- Direct code inspection: `Sources/ILSShared/DTOs/SearchResult.swift` — `GitHubRepository` has no `defaultBranch` field
-- Direct code inspection: `Sources/ILSBackend/Controllers/SkillsController.swift` — `install()` enforces no content size limit on GitHub-fetched content (unlike `create()` which enforces 1MB)
-- Direct code inspection: `Sources/ILSBackend/Controllers/ConfigController.swift` — `update()` writes full payload verbatim via `fileSystem.writeConfig()`; no server-side merge
-- Direct code inspection: `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — `switch activeScreen` in `mainContent()` destroys and recreates destination views on every screen change; `@State private var skillsVM` in BrowserView is lost on screen switch
-- Direct code inspection: `ILSApp/ILSApp/AppState.swift` — `updateServerURL()` delegates to `connectionManager`; no automatic broadcast to child ViewModels
-- Direct code inspection: `ILSApp/ILSMacApp/ILSMacApp.swift` — 14 macOS-specific files; shared iOS files in `ILSApp/ILSApp/` compile into both targets
-- Project memory: Known pitfalls from prior milestones — `CryptoKit` vs `Crypto` import, env var stripping for Claude CLI, `nonisolated(unsafe)` for Task properties in deinit, wrong backend binary at `/Users/nick/ils/ILSBackend/`
+- Direct code inspection: `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` -- `isRegularWidth` branch at line 137 switches between `iPadLayout` (NavigationSplitView) and `iPhoneLayout` (ZStack overlay); `navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)` at line 230; `columnVisibility` state at line 111
+- Direct code inspection: `ILSApp/ILSApp/Services/ConnectionManager.swift` -- `UserDefaults.standard.string(forKey: "serverURL")` read at line 31; `hasConnectedBefore` flag at line 62/68
+- Direct code inspection: `ILSApp/ILSApp/ILSAppApp.swift` -- `@AppStorage("colorScheme")` at line 14; URL handler `handleURL()` for deep link routing
+- Project memory (MEMORY.md): Stale DerivedData install, idb_tap toolbar limitation, deep link UUID case sensitivity, RalphMobile reinstall, iPhone 16 Pro Max 440x956 logical resolution, fresh install UserDefaults clearing, wrong backend binary
+- Quick-5 audit summary (5-SUMMARY.md): 40+ ILSApp-* DerivedData directories found; deep link fix validated against wrong binary; stale install script using `find | head -1`
+- Simulator listing: `iPad Pro 13 ILS` (C074375B-2CB2-4F95-A55C-972F2FF35041) confirmed available for iPad validation
+- iPad Pro 13-inch M4 logical resolution: 1032x1376 points ([Use Your Loaf](https://useyourloaf.com/blog/ipad-2024-screen-sizes/))
+- iPad size class behavior: All iPads full-screen are regular/regular; 1/3 Split View downgrades to compact horizontal ([Hacking with Swift](https://www.hackingwithswift.com/quick-start/swiftui/how-to-create-different-layouts-using-size-classes))
+- SwiftUI NavigationSplitView column behavior: Collapses to stack in compact size class ([Apple Developer Documentation](https://developer.apple.com/documentation/swiftui/navigationsplitview))
+- Screenshot timing: `xcrun simctl io screenshot` has no wait-for-idle; SwiftUI animations can produce partial captures ([simctl reference](https://nshipster.com/simctl/))
+- idb accessibility primitives: `idb describe` returns accessibility tree with coordinates; consistent across device types ([idb documentation](https://fbidb.io/docs/accessibility/))
+- Animation false positives in UI testing: Elements can exist in accessibility tree before reaching final position ([Flaky UI Tests](https://trinhngocthuyen.com/posts/tech/dealing-with-flaky-ui-tests/))
 
 ---
-*Pitfalls research for: ILS iOS/macOS — v3.1 new features (config sync, GitHub browsing/install, Host Profiles redesign, navigation/UX overhaul)*
-*Researched: 2026-02-24*
+*Pitfalls research for: ILS iOS/macOS -- v3.5 Comprehensive Functional Validation (iOS & iPad)*
+*Researched: 2026-02-25*

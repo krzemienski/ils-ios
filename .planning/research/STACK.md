@@ -1,177 +1,313 @@
 # Stack Research
 
-**Domain:** iOS/macOS SwiftUI client — v3.1 new feature additions only
-**Researched:** 2026-02-24
-**Confidence:** HIGH (all findings grounded in current codebase + existing resolved packages)
+**Domain:** Functional validation tooling for iOS/iPad SwiftUI app
+**Researched:** 2026-02-25
+**Confidence:** HIGH (all findings grounded in verified local tool inventory + Apple docs)
 
 ---
 
 ## Scope: What This File Covers
 
-This document covers ONLY the stack additions/changes required for v3.1 new features:
+This document covers ONLY the stack additions/changes required for v3.5 Comprehensive Functional Validation:
 
-1. Host CLI config sync (reading `~/.claude/settings.json` from connected host)
-2. GitHub skill/plugin browse + install
-3. Host Profiles redesign (Fleet rename + multi-host switching UX)
-4. Navigation/UX changes (side menu from all screens, session back button)
+1. iPad simulator setup and multi-device screenshot capture
+2. Log streaming and crash report collection during validation
+3. Evidence organization (numbered screenshots, structured directories)
+4. Deep link navigation testing across both iPhone and iPad
+5. Dual-agent confirmation workflow tooling
 
-**Everything in this file describes net-new needs.** The existing stack (SwiftUI, Vapor 4, Fluent/SQLite, Citadel, Yams, Splash, MarkdownUI, SSEClient, APIClient actor) is already validated and requires no version changes or new packages for these features.
-
----
-
-## What Already Exists — Do NOT Re-Add
-
-| Capability | Already In Stack | Location |
-|------------|-----------------|----------|
-| SSH command execution | Citadel (iOS + macOS Xcode targets, `XCRemoteSwiftPackageReference`) | `ILSApp/ILSApp/Services/CitadelSSHService.swift` |
-| Config file read/write | `ConfigFileService` + `ConfigController` | `Sources/ILSBackend/` — reads all three scopes (user/project/local) |
-| `ClaudeConfig` model | `ILSShared/Models/ClaudeConfig.swift` | Covers model, permissions, hooks, env, plugins, theme, status line |
-| GitHub Code Search | `GitHubService.swift` | Already searches `filename:SKILL.md`, fetches raw content, caches, handles rate limits |
-| Fleet/Host model | `ILSShared/Models/FleetHost.swift` | `HostProfile` typealias already present; id, name, host, port, backendPort, isActive, healthStatus |
-| Fleet CRUD backend | `FleetController.swift` | GET list, POST register, POST activate (atomic transaction), DELETE, GET health |
-| Markdown rendering | `swift-markdown-ui` / `MarkdownUI` | Linked in Xcode project for both iOS and macOS targets |
-| YAML parsing | Yams 5.4.0 (resolved) | Backend only, for skill file parsing |
-| NavigationStack + sheet sidebar | SwiftUI native | `SidebarRootView.swift` — iPhone uses `.sheet` sidebar + `NavigationStack`; iPad uses `NavigationSplitView` |
+**Everything here describes net-new validation capabilities.** The existing app stack (SwiftUI, Vapor 4, Fluent/SQLite, etc.) is NOT changing. No new SPM packages, no Xcode project modifications, no new Swift source files are needed for validation tooling.
 
 ---
 
-## Recommended Stack Additions
+## What Already Exists -- Do NOT Re-Add or Reconfigure
 
-**No new SPM packages or Xcode package references are required.** All four feature areas are implementable with what's already linked. Adding packages for this scope would increase build complexity and binary size without providing any capability the existing stack lacks.
-
-### Capabilities to Enable From Existing Stack
-
-| Existing Asset | Use For v3.1 | Integration Point |
-|---------------|-------------|-------------------|
-| `CitadelSSHService.executeCommand` | Read remote host's `~/.claude/settings.json` over SSH | `SettingsViewModel` calls new backend endpoint that proxies SSH read for active fleet host |
-| `ConfigController GET /config?scope=user` | Local host config sync | Already works — backend reads from host filesystem. Expose merged defaults via new `/config/defaults` endpoint |
-| `ConfigFileService` | Backend-side config merge (user + project scopes) | Add a `mergedDefaults()` method that overlays project scope on top of user scope |
-| `GitHubService.searchSkills` | Extend to plugin search | Add `searchPlugins(query:)` method using `filename:PLUGIN.md` search query — identical pattern, different filename |
-| `GitHubService.fetchRawContent` | Preview skill/plugin content before install | Already fetches raw GitHub file content; wire to a preview sheet in `BrowserView` |
-| `FleetHost` / `HostProfile` typealias | Host Profiles redesign | Model is correct as-is; rename is cosmetic (view names, UI labels, route comments) |
-| `FleetController POST /:id/activate` | Multi-host switching | Already deactivates all hosts then activates selected one in a DB transaction |
-| `SidebarRootView` toolbar pattern | Side menu from all screens | Add `.toolbar` modifier with sidebar button to every top-level screen; `SidebarRootView` already owns the sidebar sheet state |
-| `navigationPath` `@State<NavigationPath>` | Session back button | Already declared in `SidebarRootView`; push `ChatSession` onto path from any screen using existing `navigationDestination` |
+| Capability | Already Working | Evidence |
+|------------|----------------|----------|
+| iPhone 16 Pro Max simulator | UDID `50523130-57AA-48B0-ABD0-4D59CE455F14`, iOS 18.6 | Verified: `xcrun simctl list` |
+| iPad Pro 13-inch (M4) simulator | UDID `C074375B-2CB2-4F95-A55C-972F2FF35041`, iOS 18.6, named "iPad Pro 13 ILS" | Verified: `xcrun simctl list -j` |
+| idb (Facebook's iOS Development Bridge) | `/Users/nick/Library/Python/3.12/bin/idb` -- screenshot, tap, swipe, describe, log | Verified: `which idb` |
+| xcrun simctl | screenshot via `io`, `openurl` for deep links, `install`, `launch`, `terminate`, `spawn log` | Verified: `xcrun simctl help` |
+| Auto-build hook | Fires on every `.swift` edit, builds correct target | Configured in `.claude/settings.local.json` |
+| Fastlane screenshots lane | Configured for iPhone 16 Pro Max, iPhone 16, iPad Pro 12.9" | `fastlane/Fastfile` |
+| ILS-Validator-A | iPhone 16 Pro (`2B0BCA0C`), iOS 18.6 -- pre-created validator sim | Verified: `xcrun simctl list` |
+| ILS-Validator-B | iPhone 16 (`A0B383E0`), iOS 18.6 -- pre-created validator sim | Verified: `xcrun simctl list` |
+| Quick-5 audit patterns | 7/12 iPhone screens validated with numbered screenshots in `/tmp/cross-milestone-audit/` | `.planning/quick/5-*/5-SUMMARY.md` |
+| Deep link handler | `ils://` scheme with 12+ routes (`home`, `sessions`, `browser`, `settings`, `system`, `fleet`, `themes`, etc.) | `ILSAppApp.swift` handleURL |
 
 ---
 
-## Feature-by-Feature Stack Analysis
+## Recommended Stack: Validation Tooling
 
-### Feature 1: Host CLI Config Sync
+### No new software to install. Zero.
 
-**What's needed:** Surface the connected host's `~/.claude/settings.json` defaults in the iOS Settings screen, with visual indicators showing which values come from the host vs. are overridden locally.
-
-**How the existing stack handles it:**
-
-The `ConfigController` (`GET /api/v1/config?scope=user`) already reads `~/.claude/settings.json` from the machine running the Vapor backend. Since the backend runs on the host (not the iOS device), calling this endpoint from the iOS `APIClient` already returns the host's config. The `ClaudeConfig` Codable model in `ILSShared` already covers every relevant field (model, permissions, hooks, env, plugins, theme).
-
-**What needs to be built (code, not new tech):**
-
-1. `GET /api/v1/config/defaults` backend endpoint — returns a merged `ClaudeConfig` where project-scope settings overlay user-scope settings. This is a new route and a `mergedDefaults()` method on `ConfigFileService`, not a new library.
-
-2. `HostConfigViewModel` in the iOS app — calls `/config/defaults`, stores the result, and compares against locally-stored user overrides. Pure `@Observable` Swift code.
-
-3. UI overlay indicators in `SettingsView` — small "From host" badges on fields whose values come from the host config. Pure SwiftUI.
-
-**For remote hosts (non-local fleet hosts):** Use `CitadelSSHService.executeCommand("cat ~/.claude/settings.json")` to read the file over SSH, then decode the JSON string as `ClaudeConfig`. This requires no new library — `CitadelSSHService` already supports arbitrary command execution and the `ClaudeConfig` Codable model handles deserialization.
-
-**Confidence:** HIGH. The complete data path exists; the work is wiring, not technology.
+Every tool needed for v3.5 is already present on this machine. The validation milestone is about **workflow scripts and evidence discipline**, not new technology.
 
 ---
 
-### Feature 2: GitHub Skill/Plugin Browse + Install
+### Core: Screenshot Capture
 
-**What's needed:** Browse GitHub for skills and plugins, preview content, install to the host's Claude Code directories.
+| Tool | Command Pattern | Use For | Why This One |
+|------|----------------|---------|-------------|
+| `xcrun simctl io` | `xcrun simctl io <UDID> screenshot <path>.png` | Primary screenshot tool for both iPhone and iPad | Works on any simulator state (booted), device-agnostic, outputs PNG directly, no companion needed |
+| `idb screenshot` | `idb screenshot --udid <UDID> <path>.png` | Backup / when idb companion is already connected | Requires companion connection; simctl is simpler for batch capture |
 
-**How the existing stack handles it:**
+**Use `xcrun simctl io` as primary.** It requires only a booted simulator (no idb companion handshake), works identically for iPhone and iPad, and outputs to any path. idb screenshot adds a companion connection step that can fail silently.
 
-`GitHubService` already implements:
-- GitHub Code Search API (`GET https://api.github.com/search/code?q=...+filename:SKILL.md`) via Vapor's `Client`
-- Raw file fetch (`raw.githubusercontent.com`)
-- Rate limit header monitoring (logs warning at <10 remaining requests)
-- `GITHUB_TOKEN` env var support for 30 req/min (vs 10 unauthenticated)
-- Result caching via `IndexingService` (keyed by query+page+perPage)
+**Status bar cleanup for evidence screenshots:**
+```bash
+xcrun simctl status_bar <UDID> override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3
+```
+This gives consistent, professional screenshot evidence (Apple's standard "9:41" time). Run once after boot, persists for the session.
 
-**What needs to be built (code, not new tech):**
-
-1. `searchPlugins(query:page:perPage:)` on `GitHubService` — identical to `searchSkills` but with `filename:PLUGIN.md`. 10 lines of code.
-
-2. Install endpoint: `POST /api/v1/github/install` — accepts `{type: "skill"|"plugin", owner, repo, path}`, fetches raw content via `fetchRawContent`, then writes the file to the appropriate host directory using `FileManager` (for local host) or `CitadelSSHService.executeCommand("mkdir -p ~/.claude/skills && cat > ...")` for remote hosts.
-
-3. iOS `BrowserViewModel` extension — calls search and install endpoints, manages install state per item. Pure `@Observable` Swift.
-
-4. UI: status badges (Installed, Available, Update available) in `BrowserView`. Pure SwiftUI.
-
-**Rate limiting:** The existing `IndexingService` cache handles the 10/30 req/min constraint for search. Raw content fetches are not rate-limited by the Code Search quota — they go to `raw.githubusercontent.com` which is served by CDN.
-
-**What NOT to add:** Do not add `octokit.swift` or any GitHub SDK. The existing bespoke `GitHubService` covers all needed endpoints with proper caching and rate limit handling. A full SDK adds 30+ source files for 3 API endpoints.
-
-**Confidence:** HIGH. Search and content fetch already work; install is filesystem + optional SSH write.
+**Confidence:** HIGH -- verified `xcrun simctl io` help and `idb screenshot --help` on this machine.
 
 ---
 
-### Feature 3: Host Profiles Redesign
+### Core: iPad Simulator
 
-**What's needed:** Rename "Fleet" to "Host Profiles" throughout the UI, add visible active-profile indicator, make host switching prominent.
+| Item | Value | Notes |
+|------|-------|-------|
+| Simulator Name | `iPad Pro 13 ILS` | Already created, named for this project |
+| UDID | `C074375B-2CB2-4F95-A55C-972F2FF35041` | Verified via `xcrun simctl list -j` |
+| Device Type | iPad Pro 13-inch (M4), 8GB | `com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-8GB` |
+| Runtime | iOS 18.6 | Same as iPhone simulator -- consistent testing |
+| Last Booted | 2026-02-20 | Has been used before; data directory exists (2.2GB) |
+| Logical Resolution | 1032 x 1376 points | iPad Pro 13" in portrait (standard) |
 
-**How the existing stack handles it:**
+**No new iPad simulator needed.** The "iPad Pro 13 ILS" already exists at iOS 18.6 matching the iPhone simulator runtime. Use this one exclusively for iPad validation.
 
-- `FleetHost.swift` already has `public typealias HostProfile = FleetHost` — the rename hook is in place.
-- `isActive` field + `POST /fleet/:id/activate` already implement exclusive activation via atomic DB transaction.
-- `FleetController.index` already sorts active host first in the response.
-- `FleetListResponse` already includes `activeHostId`.
+**iPad build destination:**
+```bash
+xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp \
+  -destination 'id=C074375B-2CB2-4F95-A55C-972F2FF35041' -quiet
+```
 
-**What needs to be built (code, not new tech):**
+**iPad-specific validation concerns:**
+- `NavigationSplitView` layout (persistent sidebar vs sheet sidebar on iPhone)
+- Split-view proportions in landscape
+- Multitasking size classes (1/3, 1/2, 2/3 split)
+- Toolbar and navigation bar differences from iPhone
 
-1. New `GET /api/v1/fleet/active` convenience endpoint — returns just the active host without fetching the full list. Used by the home screen and sidebar to show the active profile indicator without over-fetching. 10 lines of controller code.
-
-2. iOS `HostProfileSwitcherView` — a `.sheet` or toolbar popover listing profiles with a checkmark/indicator on the active one, and a tap-to-switch action. Uses existing `FleetViewModel` data and the existing activate endpoint.
-
-3. Rename all UI labels from "Fleet" to "Host Profiles" — view names, navigation titles, sidebar item label. No model changes.
-
-4. Active profile indicator in the sidebar — a small badge or subtitle showing the active host name. Pure SwiftUI addition to `SidebarView`.
-
-**What NOT to add:** Do not create a new `HostProfile` Fluent model. The `FleetHostModel` is the right data store; adding a second model would require migrations and dual-write logic. The `HostProfile` typealias is the correct abstraction boundary.
-
-**Confidence:** HIGH. No architectural gap — the work is UI and one convenience endpoint.
-
----
-
-### Feature 4: Navigation/UX Overhaul
-
-**What's needed:** Side menu accessible from all screens (not just home), reliable session back button, home screen layout improvements.
-
-**How the existing stack handles it:**
-
-`SidebarRootView` already implements the correct architecture:
-- iPhone: `NavigationStack` with a `.sheet` sidebar triggered by a toolbar button. The sidebar sheet state (`isSidebarOpen`) is owned by `SidebarRootView`.
-- iPad: `NavigationSplitView` with a persistent sidebar column and `NavigationSplitViewVisibility` state.
-- `navigationPath: NavigationPath` `@State` is declared in `SidebarRootView` and passed down for push navigation.
-
-**What needs to be built (code, not new tech):**
-
-1. Sidebar toolbar button on every top-level screen — currently only some screens have it. Add a consistent `.toolbar { ToolbarItem(placement: .navigationBarLeading) { SidebarToggleButton() } }` to every screen's root view. Pure SwiftUI.
-
-2. Session back button — push `ChatSession` onto `navigationPath` from the sessions list row tap (instead of using `.sheet` presentation). This changes chat presentation from modal to push-navigation, enabling the system back button. The `navigationDestination(for: ChatSession.self)` handler is the right pattern (SwiftUI iOS 16+, already available in iOS 17 target).
-
-3. Home screen layout — purely compositional SwiftUI layout changes; no navigation architecture changes needed.
-
-**Key constraint:** `SidebarRootView`'s `isSidebarOpen` sheet state must remain the single source of truth. Do not duplicate sidebar state in individual screen ViewModels — pass the binding down or use `@Environment`.
-
-**What NOT to add:** Do not add a tab bar. The sidebar-first pattern is correct for 8+ top-level screens; a tab bar caps at 5 items and would require an information architecture redesign. Do not add a third-party navigation library (Coordinator pattern libraries, Router frameworks) — SwiftUI native `NavigationStack` + `navigationDestination` covers all needed push navigation.
-
-**Confidence:** HIGH. The architecture already supports all required changes; the work is consistent application of the existing patterns.
+**Confidence:** HIGH -- simulator verified present and bootable.
 
 ---
 
-## Installation
+### Core: Deep Link Testing
 
-No new packages to install. No `swift package update` or Xcode package reference additions needed.
+| Tool | Command Pattern | Use For |
+|------|----------------|---------|
+| `xcrun simctl openurl` | `xcrun simctl openurl <UDID> "ils://home"` | Trigger deep link navigation on any booted simulator |
 
-All v3.1 feature work is:
-- New Swift source files (ViewModels, Services, View components)
-- New backend controller methods/routes
-- Model extensions in `ILSShared` (if any DTO additions are needed)
+**All known `ils://` routes to test:**
+```
+ils://home, ils://sessions, ils://sessions/{uuid}
+ils://browser, ils://mcp, ils://skills, ils://plugins
+ils://settings, ils://system, ils://fleet, ils://themes
+```
+
+**Multi-device deep link testing pattern:**
+```bash
+# iPhone
+xcrun simctl openurl 50523130-57AA-48B0-ABD0-4D59CE455F14 "ils://skills"
+xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot /tmp/evidence/iphone-skills.png
+
+# iPad (same command, different UDID)
+xcrun simctl openurl C074375B-2CB2-4F95-A55C-972F2FF35041 "ils://skills"
+xcrun simctl io C074375B-2CB2-4F95-A55C-972F2FF35041 screenshot /tmp/evidence/ipad-skills.png
+```
+
+**Known deep link caveat:** `xcrun simctl openurl` on a fresh install may trigger an "Open in ILSApp?" system dialog. The app must be launched at least once first via `xcrun simctl launch <UDID> com.ils.app` before deep links work without prompts.
+
+**Confidence:** HIGH -- `xcrun simctl openurl` verified, deep link routes verified in codebase.
+
+---
+
+### Core: Log Streaming
+
+| Tool | Command Pattern | Use For | Why |
+|------|----------------|---------|-----|
+| `idb log` | `idb log --udid <UDID> -- --process ILSApp --level info --style json` | Real-time app log streaming during validation | Filters by process name, JSON output for parsing, supports predicate filtering |
+| `xcrun simctl spawn` | `xcrun simctl spawn <UDID> log stream --process ILSApp --level info` | Alternative log streaming | No idb companion needed; simpler but less filterable |
+
+**Use `xcrun simctl spawn log stream` as primary** because it avoids idb companion connection overhead and works immediately on any booted simulator.
+
+**Log capture pattern for evidence:**
+```bash
+# Start log capture in background, filtered to app process
+xcrun simctl spawn <UDID> log stream --process ILSApp --level error \
+  --style compact > /tmp/evidence/logs/iphone-errors.log 2>&1 &
+LOG_PID=$!
+
+# ... run validation steps ...
+
+# Stop capture
+kill $LOG_PID
+```
+
+**Crash log collection:**
+```bash
+# Via idb (structured)
+idb crash list --udid <UDID>
+idb crash show --udid <UDID> <crash_name>
+
+# Via simctl (raw directory)
+ls ~/Library/Logs/CoreSimulator/<UDID>/
+```
+
+**Confidence:** HIGH -- both `idb log --help` and `xcrun simctl spawn` verified on this machine.
+
+---
+
+### Core: UI Interaction (for navigating to screens)
+
+| Tool | Command Pattern | Use For |
+|------|----------------|---------|
+| `idb ui swipe` | `idb ui swipe --udid <UDID> 5 500 300 500 --duration 0.3` | Open sidebar (swipe from left edge) |
+| `idb ui tap` | `idb ui tap --udid <UDID> <x> <y>` | Tap specific UI elements |
+| `idb describe` | `idb describe --udid <UDID> operation:all` | Get accessibility tree with exact coordinates |
+| Deep links | `xcrun simctl openurl <UDID> "ils://settings"` | Navigate directly to any screen without tapping |
+
+**Prefer deep links over tap-based navigation for validation.** Deep links are deterministic and device-independent. Tap coordinates differ between iPhone (440x956 points) and iPad (1032x1376 points). Use taps only for interactions that cannot be achieved via deep links (scrolling, context menus, sheet dismissal).
+
+**iPad tap coordinates:** Must be recalculated via `idb describe` on the iPad simulator. iPhone coordinates from MEMORY.md (sidebar y-coords at x=80) will NOT work on iPad due to different layout (persistent sidebar column, not sheet).
+
+**Confidence:** HIGH -- all tools verified present; coordinate caveat documented from prior sessions.
+
+---
+
+### Core: Evidence Organization
+
+No tool needed -- this is a directory convention enforced by validation scripts.
+
+**Recommended evidence structure:**
+```
+/tmp/v3.5-evidence/
+  iphone/
+    01-home.png
+    02-sidebar.png
+    03-sessions.png
+    04-chat.png
+    05-browser-mcp.png
+    06-browser-skills.png
+    07-browser-plugins.png
+    08-settings-top.png
+    09-settings-bottom.png
+    10-system-monitor.png
+    11-host-profiles.png
+    12-themes.png
+    13-hooks.png
+    deeplinks/
+      dl-home.png
+      dl-skills.png
+      ...
+    logs/
+      validation-run.log
+      errors.log
+  ipad/
+    01-home.png
+    02-sidebar-split.png
+    ... (same numbering)
+    deeplinks/
+    logs/
+  confirmation/
+    agent-a-verdict.md
+    agent-b-verdict.md
+    discrepancies.md
+```
+
+**Numbering convention:** Two-digit prefix (`01-` through `nn-`), lowercase-hyphenated screen name, `.png` extension. Same numbering for iPhone and iPad enables 1:1 comparison.
+
+**Why `/tmp/`:** Previous milestones used `/tmp/` for evidence (quick-5 used `/tmp/cross-milestone-audit/`, functional validation used `/tmp/audit-evidence/`). Consistent with project convention. Evidence is ephemeral -- the verdicts and summaries go into `.planning/`.
+
+**Confidence:** HIGH -- pattern established in prior milestones.
+
+---
+
+### Dual-Agent Confirmation Workflow
+
+No new tooling. This is a **process pattern**, not a technology requirement.
+
+**How it works:**
+1. Agent A performs validation: boots simulators, captures screenshots, writes verdicts
+2. Agent B independently reviews the evidence: reads screenshots, reads logs, writes independent verdicts
+3. Discrepancies between A and B verdicts trigger re-validation of the specific screen
+
+**Tools Agent B needs (all already available):**
+- `Read` tool to view screenshot files (Claude Code is multimodal)
+- `Read` tool to parse log files
+- `Bash` to verify simulator state if needed
+- File write to produce confirmation verdicts
+
+**What NOT to build:** Do not build a custom "validation framework", "test runner", or "evidence collector" application. The tools are `xcrun simctl`, `idb`, shell scripts, and the file system. Wrapping these in a Swift tool would add build complexity and a new maintenance surface for zero capability gain.
+
+**Confidence:** HIGH -- agent confirmation is a workflow pattern, not a technology.
+
+---
+
+## Simulator Configuration Steps
+
+### One-Time iPad Setup (if erase needed)
+
+The iPad Pro 13 ILS simulator already exists. If a fresh start is needed:
+
+```bash
+# Erase to clean state (preserves simulator, wipes data)
+xcrun simctl erase C074375B-2CB2-4F95-A55C-972F2FF35041
+
+# Boot
+xcrun simctl boot C074375B-2CB2-4F95-A55C-972F2FF35041
+
+# Clean status bar for screenshots
+xcrun simctl status_bar C074375B-2CB2-4F95-A55C-972F2FF35041 override \
+  --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3
+
+# Build and install
+xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp \
+  -destination 'id=C074375B-2CB2-4F95-A55C-972F2FF35041' -quiet
+xcrun simctl install C074375B-2CB2-4F95-A55C-972F2FF35041 \
+  "$(find ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug-iphonesimulator/ILSApp.app -maxdepth 0 -type d | sort -t/ -k9 -r | head -1)"
+
+# First launch (required before deep links work without dialog)
+xcrun simctl launch C074375B-2CB2-4F95-A55C-972F2FF35041 com.ils.app
+```
+
+**CRITICAL: DerivedData stale binary trap.** The project has 40+ `ILSApp-*` directories in DerivedData (documented in quick-5 findings). Always find the NEWEST binary by modification time, never use `find | head -1`. The `sort -t/ -k9 -r | head -1` pattern above handles this.
+
+### Running Both Simulators Simultaneously
+
+Both iPhone and iPad can run concurrently:
+
+```bash
+# Boot both
+xcrun simctl boot 50523130-57AA-48B0-ABD0-4D59CE455F14
+xcrun simctl boot C074375B-2CB2-4F95-A55C-972F2FF35041
+
+# Build once, install to both (same binary for iPhone and iPad)
+xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp \
+  -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet
+
+APP_PATH="$(find ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug-iphonesimulator/ILSApp.app -maxdepth 0 -type d | sort -t/ -k9 -r | head -1)"
+
+xcrun simctl install 50523130-57AA-48B0-ABD0-4D59CE455F14 "$APP_PATH"
+xcrun simctl install C074375B-2CB2-4F95-A55C-972F2FF35041 "$APP_PATH"
+```
+
+**Note:** The `-iphonesimulator` SDK builds a universal binary that runs on both iPhone and iPad simulators. No separate iPad build is required.
+
+---
+
+## What NOT to Add
+
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| XCTest / XCUITest framework | Project mandate: NO test frameworks, NO mocks, NO stubs | `xcrun simctl` + `idb` + shell scripts for all validation |
+| Snapshot testing libraries (iOSSnapshotTestCase, swift-snapshot-testing) | These are test framework wrappers -- violates project rules | Direct `xcrun simctl io screenshot` with manual/agent review |
+| Fastlane `capture_screenshots` for validation | Requires XCUITest scheme -- only use for App Store marketing screenshots | Direct simctl/idb screenshot capture |
+| Custom Swift validation tool / test runner | Adds build target, maintenance burden, compilation time for zero capability over shell tools | Shell scripts calling xcrun/idb directly |
+| Appium / Detox / other UI automation frameworks | Heavy, require server processes, designed for CI pipelines not agent-driven validation | Deep links + idb tap/swipe for the few interactions needed |
+| New iPad simulator creation | "iPad Pro 13 ILS" already exists at iOS 18.6 | Use existing UDID `C074375B-2CB2-4F95-A55C-972F2FF35041` |
+| pytest / any Python test framework for validation scripts | Adds dependency; shell scripts are sufficient and match project patterns | Bash scripts with `set -e` for fail-fast |
 
 ---
 
@@ -179,58 +315,55 @@ All v3.1 feature work is:
 
 | Recommended | Alternative | Why Not |
 |-------------|-------------|---------|
-| Extend `GitHubService` with plugin search | Add `octokit.swift` (v0.15+) | 30+ source files for 3 API endpoints; existing service already handles rate limits and caching |
-| `CitadelSSHService.executeCommand` for remote config reads | Separate HTTP endpoint on remote host | Requires remote backend to be running; SSH works regardless of remote backend state |
-| `HostProfile` typealias (cosmetic rename only) | New `HostProfile` Fluent model replacing `FleetHostModel` | Would require DB migration, new backend routes, model mapping layer — all for a rename |
-| `NavigationStack` push for chat sessions | Modal `.sheet` for all session navigation | Sheets block the back-navigation mental model; push navigation gives the system back button for free |
-| Backend computes merged config (`/config/defaults`) | iOS client fetches all scopes and merges client-side | Server-side merge is testable, keeps business logic in one place, reduces iOS API calls from 3 to 1 |
-| Single `SidebarToggleButton` component in toolbar | Per-screen sidebar open logic | Consistency requires one component definition, applied uniformly |
+| `xcrun simctl io screenshot` | `idb screenshot` | simctl requires no companion; idb adds connection overhead |
+| `xcrun simctl spawn log stream` | `idb log` | simctl spawn is simpler; idb log has richer predicates but needs companion |
+| `xcrun simctl openurl` for deep links | `idb open` | simctl openurl is the standard; both work equivalently |
+| `/tmp/v3.5-evidence/` flat structure | Database-backed evidence tracking | Shell + filesystem is the lightest approach; prior milestones used this successfully |
+| Dual-agent review via file sharing | Custom gRPC/WebSocket agent coordination | Agents already share a filesystem; no IPC needed |
+| iPad Pro 13-inch (M4) | iPad mini or iPad Air | Pro 13" is the largest iPad; if layout works here, smaller iPads are covered. Also already exists. |
+| Status bar override via simctl | No cleanup | 9:41 time + full bars is Apple's standard for screenshots; looks professional |
 
 ---
 
-## What NOT to Use
+## Device Matrix
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| `octokit.swift` | Large dependency for 3 endpoints; `GitHubService` already does the work | Extend `GitHubService` with `searchPlugins` method |
-| GitHub GraphQL API | More complex than REST for file search; requires separate parsing setup | GitHub REST Code Search v3 (already in use, stable) |
-| SwiftData for Host Profiles | Codebase is on Fluent/SQLite; mixing ORMs creates dual migration paths | Continue with `FleetHostModel` (Fluent) |
-| `AsyncHTTPClient` in iOS app | NIO-based, adds complexity; URLSession is correct for iOS networking | `APIClient` actor (already handles all backend calls via URLSession) |
-| Third-party navigation/coordinator frameworks | `NavigationStack` + `navigationDestination` covers all needed patterns | SwiftUI native navigation (already in `SidebarRootView`) |
-| Separate "profiles" REST resource on backend | Model already exists as `/fleet`; duplication creates sync bugs | Add `GET /fleet/active` convenience endpoint on existing route group |
+| Device | Simulator Name | UDID | Runtime | Logical Resolution | Role |
+|--------|---------------|------|---------|-------------------|------|
+| iPhone 16 Pro Max | (default) | `50523130-57AA-48B0-ABD0-4D59CE455F14` | iOS 18.6 | 440 x 956 pt | Primary iPhone validation |
+| iPad Pro 13" (M4) | iPad Pro 13 ILS | `C074375B-2CB2-4F95-A55C-972F2FF35041` | iOS 18.6 | 1032 x 1376 pt | Primary iPad validation |
+
+**Do NOT use** ILS-Validator-A (`2B0BCA0C`, iPhone 16 Pro) or ILS-Validator-B (`A0B383E0`, iPhone 16) for this milestone. They are for other purposes. Two devices (one iPhone, one iPad) is the right scope.
 
 ---
 
 ## Version Compatibility
 
-No version changes required. All existing packages are compatible with the v3.1 additions.
+No version changes. All tools are pre-installed.
 
-| Component | Resolved Version | v3.1 Impact |
-|-----------|-----------------|-------------|
-| Vapor | 4.121.1 | Adding controller methods only — no API changes |
-| Fluent | 4.13.0 | No new migrations for Host Profiles rename |
-| Yams | 5.4.0 | Available in backend if YAML skill/plugin parsing is needed |
-| Citadel | Xcode-managed (no SPM pin) | No new Citadel APIs needed; `executeCommand` is already used |
-| MarkdownUI | Xcode-managed | Skill/plugin preview content uses existing Markdown rendering |
-| swift-markdown-ui | Xcode-managed | Same as above |
+| Component | Version | v3.5 Impact |
+|-----------|---------|-------------|
+| Xcode / xcrun simctl | Xcode 16+ (iOS 18.6 runtime) | Screenshot, openurl, boot, install, status_bar, spawn log -- all used |
+| idb | Python 3.12 install at `~/.local/bin/idb` | Backup for screenshot, log, crash, describe, tap, swipe |
+| Fastlane | Configured in `fastlane/` | NOT used for v3.5 validation (requires XCUITest). Available for App Store screenshots later |
+| xcodebuild | Xcode 16+ | Same build commands as development; no new flags needed |
 
 ---
 
 ## Sources
 
-- Codebase: `Sources/ILSBackend/Services/GitHubService.swift` — GitHub Code Search + raw fetch, rate limit handling, caching: HIGH confidence (direct inspection)
-- Codebase: `Sources/ILSBackend/Services/ConfigFileService.swift` — three-scope config read/write: HIGH confidence
-- Codebase: `Sources/ILSBackend/Controllers/ConfigController.swift` — existing GET/PUT/validate routes: HIGH confidence
-- Codebase: `Sources/ILSBackend/Controllers/FleetController.swift` — CRUD + activate with atomic DB transaction: HIGH confidence
-- Codebase: `Sources/ILSShared/Models/FleetHost.swift` — `HostProfile` typealias confirmed present: HIGH confidence
-- Codebase: `Sources/ILSShared/Models/ClaudeConfig.swift` — full config model with all relevant fields: HIGH confidence
-- Codebase: `ILSApp/ILSApp/Services/CitadelSSHService.swift` — `executeCommand` for SSH command execution: HIGH confidence
-- Codebase: `ILSApp/ILSApp.xcodeproj/project.pbxproj` — Citadel, MarkdownUI linked to both iOS and macOS targets: HIGH confidence
-- Codebase: `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — NavigationStack + NavigationSplitView architecture: HIGH confidence
-- Codebase: `Package.resolved` — full resolved dependency graph, no version gaps: HIGH confidence
-- GitHub REST API (training knowledge): Code Search `GET /search/code`, `filename:` qualifier, rate limits (10 unauth / 30 with token per minute): MEDIUM confidence (stable API since 2013, unlikely to have changed)
+- Local machine: `xcrun simctl list devices -j` -- full simulator inventory with UDIDs, runtimes, device types: HIGH confidence (direct output)
+- Local machine: `xcrun simctl help` -- all subcommands including `io`, `openurl`, `status_bar`, `spawn`: HIGH confidence
+- Local machine: `idb --help` -- all subcommands including `screenshot`, `log`, `crash`, `describe`, `ui`: HIGH confidence
+- Local machine: `idb screenshot --help` -- confirmed `--udid` flag and `dest_path` positional arg: HIGH confidence
+- Local machine: `idb log --help` -- confirmed `--process`, `--level`, `--style`, `--predicate` arguments: HIGH confidence
+- Local machine: `idb crash --help` -- confirmed `list`, `show`, `delete` subcommands: HIGH confidence
+- Local machine: `xcrun simctl io help` -- confirmed `screenshot`, `recordVideo`, `enumerate` operations: HIGH confidence
+- Codebase: `.planning/quick/5-*/5-SUMMARY.md` -- quick-5 audit patterns, DerivedData stale binary discovery: HIGH confidence
+- Codebase: `fastlane/Fastfile` -- existing screenshot lane configuration: HIGH confidence
+- Codebase: MEMORY.md -- iPhone logical resolution 440x956, sidebar tap coordinates, deep link routes: HIGH confidence
+- Apple documentation (training data): iPad Pro 13" logical resolution 1032x1376, `status_bar override` flags: MEDIUM confidence
 
 ---
 
-*Stack research for: ILS iOS/macOS v3.1 — Host CLI config sync, GitHub browse/install, Host Profiles redesign, Navigation/UX overhaul*
-*Researched: 2026-02-24*
+*Stack research for: ILS iOS/macOS v3.5 -- Comprehensive Functional Validation (iOS and iPad)*
+*Researched: 2026-02-25*

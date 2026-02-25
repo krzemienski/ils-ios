@@ -1,411 +1,550 @@
-# Architecture Research
+# Architecture Patterns
 
-**Domain:** iOS/macOS native client for Claude Code — v3.1 feature integration
-**Researched:** 2026-02-24
-**Confidence:** HIGH (based on direct codebase inspection, not inference)
+**Domain:** Functional validation workflow for iOS/iPad SwiftUI app
+**Researched:** 2026-02-25
+**Confidence:** HIGH (based on 5 prior milestones of validation evidence and proven tooling)
+
+## Recommended Architecture
+
+The v3.5 validation milestone does not introduce new app code proactively. It is an orchestration architecture: how agents set up simulators, capture evidence, fix issues discovered during validation, and confirm results across two device form factors. The system under test is the existing ILS SwiftUI app; the architecture described here is the validation workflow that wraps it.
+
+```
+                          +---------------------------+
+                          |   Phase 40: Environment   |
+                          |   Setup & Screen Inventory|
+                          +---------------------------+
+                                      |
+                          +-----------+-----------+
+                          |                       |
+                 +--------v--------+              |
+                 | Phase 41:       |              |
+                 | iPhone Full     |              |
+                 | Validation      |              |
+                 | (fix-as-you-go) |              |
+                 +--------+--------+              |
+                          |                       |
+                 +--------v--------+     +--------+
+                 | Phase 42:       |<----+
+                 | iPad Full       |
+                 | Validation      |
+                 | (fix-as-you-go) |
+                 +--------+--------+
+                          |
+                 +--------v--------+
+                 |   Phase 43:     |
+                 |   Evidence Gate |
+                 |   (2 parallel   |
+                 |    agents)      |
+                 +-----------------+
+```
+
+### Why Sequential (Not Parallel) for iPhone Then iPad
+
+Phase 8 (v1.0) ran 4 platform validators in parallel. That worked for a pure audit pass where no fixes were expected. v3.5 is explicitly fix-as-you-go: any issue found on iPhone gets fixed immediately, the app is rebuilt, and re-validated. If iPad validation ran in parallel, it would be testing a stale binary while iPhone fixes are being applied. Sequential ordering means:
+
+1. iPhone validation finds and fixes issues against a single build.
+2. iPad validation runs against the already-fixed binary, so iPad-specific issues are the only things left to address.
+3. Evidence gate compares screenshots from the same final codebase.
+
+**Exception:** If Phase 41 finds zero fixes needed, Phase 42 could theoretically run in parallel. But planning for that exception adds complexity without saving meaningful wall-clock time (each phase is ~30 minutes).
+
+### Component Boundaries
+
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| **Environment Setup (Phase 40)** | Create/boot iPad simulator, boot iPhone, build & install on both, verify backend, create evidence dirs, produce screen inventory with PASS criteria | All subsequent phases (provides UDIDs, paths, criteria doc) |
+| **ios-validation-runner Protocol** | 5-phase pipeline (SETUP-RECORD-ACT-COLLECT-VERIFY) per screen | Each validation task executes this independently |
+| **Screen Navigator** | Deep link + sidebar navigation to reach each screen deterministically | AppState.handleURL(), SidebarRootView |
+| **Evidence Capture** | Screenshots, log streams, crash report checks per screen | `/tmp/v3.5-validation/{device}/{nn-screen}.png` |
+| **Fix Loop** | Detect failure, edit Swift, auto-build hook fires, reinstall, re-validate | Xcode auto-build hook, `xcrun simctl install` |
+| **Evidence Gate (Phase 43)** | Two independent agents read every screenshot, produce separate verdicts | Evidence directory, VERDICT files |
+
+### Data Flow
+
+```
+1. SETUP
+   xcrun simctl boot {UDID}
+   xcrun simctl status_bar {UDID} override --time "9:41" --batteryState charged ...
+   lsof -i :9999 -P -n | grep ils-ios      (backend binary check)
+   curl -sf http://localhost:9999/health     (backend health check)
+
+2. BUILD & INSTALL
+   xcodebuild -scheme ILSApp -destination 'id={UDID}' -quiet
+   APP_PATH=$(ls -td ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug-iphonesimulator/ILSApp.app | head -1)
+   xcrun simctl install {UDID} "$APP_PATH"
+   xcrun simctl launch {UDID} com.ils.app
+
+3. PER-SCREEN VALIDATION (repeat for each of 12+ screens)
+   a. Navigate: xcrun simctl openurl {UDID} "ils://{route}"
+   b. Wait 2-3s for data load
+   c. Screenshot: xcrun simctl io {UDID} screenshot /tmp/v3.5-validation/{device}/{nn}-{screen}.png
+   d. Read screenshot via multimodal Read tool (agent visually inspects)
+   e. Check logs: grep -iE "error|crash|fatal" from log stream output
+   f. PASS? --> next screen
+      FAIL? --> enter Fix Loop
+
+4. FIX LOOP (when FAIL detected)
+   a. Diagnose from screenshot + logs
+   b. Edit Swift file(s) -- auto-build hook fires xcodebuild automatically
+   c. Wait for build to succeed
+   d. xcrun simctl install {UDID} "$APP_PATH"  (reinstall with new binary)
+   e. xcrun simctl launch {UDID} com.ils.app
+   f. Re-navigate to failed screen via deep link
+   g. Re-screenshot --> re-verify
+   h. If still FAIL, loop back to (a)
+   i. If PASS, log fix in FIX-NNN.md, continue to screen N+1
+
+5. EVIDENCE GATE (Phase 43)
+   Agent A reads all screenshots independently --> writes VERDICT-AGENT-A.md
+   Agent B reads all screenshots independently --> writes VERDICT-AGENT-B.md
+   Compare: 2/2 agree PASS on all screens --> FINAL-VERDICT.md = PASS
+            Any disagreement --> re-validate that specific screen
+```
 
 ---
 
-## Existing Architecture Map
+## Evidence Directory Structure
 
-Confirmed by reading source files directly:
+Use `/tmp/v3.5-validation/` as the root. This follows the established pattern from Phases 8-10 and Quick Task 5, which all used `/tmp/` for evidence.
 
 ```
-ILSAppApp.swift
-  ├── AppState (@Observable @MainActor)
-  │     ├── APIClient (actor) — HTTP, auto-prefixes /api/v1, NSCache
-  │     ├── ConnectionManager (@Observable @MainActor)
-  │     └── NavigationIntent (drives SidebarRootView routing)
-  │
-  ├── ThemeManager (@Observable)
-  │
-  └── SidebarRootView (root SwiftUI view)
-        ├── ActiveScreen enum (home/chat/system/settings/browser/
-        │                      teams/hostProfiles/themes/hooks)
-        ├── SessionsViewModel (@State)
-        ├── HomeView
-        ├── ChatView
-        ├── BrowserView → SkillsViewModel, PluginsViewModel, MCPViewModel
-        ├── SettingsView → SettingsViewModel (@State)
-        ├── HostProfilesView → HostProfilesViewModel (@State)
-        └── [system/teams/themes/hooks screens]
-
-Vapor Backend (:9999, /api/v1 prefix):
-  ConfigController   → FileSystemService → ~/.claude/settings.json
-  FleetController    → FleetHostModel (Fluent/SQLite)
-  SkillsController   → FileSystemService + GitHubService
-  PluginsController  → FileSystemService + git clone subprocess
-  [10 other controllers]
-
-ILSShared (Swift package, used by both iOS app and backend):
-  ClaudeConfig       — full config model, already has all fields needed
-  ConfigInfo         — scope + path + content + isValid
-  ConfigProfiles     — user/project/local triple (ALREADY EXISTS in ResponseDTOs.swift)
-  ConfigOverride     — per-key winning scope (ALREADY EXISTS in ResponseDTOs.swift)
-  FleetHost          — host model with health status
-  Skill, Plugin, MCPServer, etc.
+/tmp/v3.5-validation/
+  iphone/
+    00-environment-check.png        # Backend health confirmation, simulator booted
+    01-home.png                     # Home/Dashboard screen
+    02-sessions.png                 # Sessions list
+    03-chat.png                     # Chat view with real messages
+    04-browser-mcp.png              # Browser: MCP Servers tab
+    05-browser-skills.png           # Browser: Skills tab
+    06-browser-plugins.png          # Browser: Plugins tab
+    07-settings.png                 # Settings (top section)
+    07b-settings-scrolled.png       # Settings (bottom section)
+    08-system-monitor.png           # System Monitor with live metrics
+    09-host-profiles.png            # Host Profiles / Fleet
+    10-agent-teams.png              # Agent Teams
+    11-themes.png                   # Theme picker
+    12-sidebar.png                  # Sidebar open state
+    13-deep-link-skills.png         # Deep link verification: ils://skills
+    14-deep-link-plugins.png        # Deep link verification: ils://plugins
+    15-deep-link-settings.png       # Deep link verification: ils://settings
+    logs/
+      app.log                       # Full log stream during validation run
+      errors.txt                    # Filtered errors (grep output)
+      crash-check.txt               # Crash report check output
+    VERDICT-iphone.md               # Per-screen PASS/FAIL with evidence refs
+  ipad/
+    00-environment-check.png
+    01-home.png
+    ... (same numbering scheme as iPhone)
+    01b-split-view-layout.png       # iPad-specific: NavigationSplitView visible
+    12-sidebar-persistent.png       # iPad-specific: sidebar always visible
+    logs/
+      app.log
+      errors.txt
+      crash-check.txt
+    VERDICT-ipad.md
+  gate/
+    VERDICT-AGENT-A.md              # Independent agent A full verdict
+    VERDICT-AGENT-B.md              # Independent agent B full verdict
+    FINAL-VERDICT.md                # Consolidated pass/fail determination
+    comparison-matrix.md            # iPhone vs iPad per-screen comparison
+  fixes/
+    FIX-001-{description}.md        # Fix log: what broke, what changed, before/after
+    FIX-002-{description}.md
+    ...
 ```
+
+### Numbering Convention
+
+Two-digit prefix (01-15) maps directly to the screen inventory in Phase 40. Suffixes like `b` (scrolled state) or `-detail` (drill-down) extend the base. Deep link screenshots use 13+ numbering. This is consistent with Phase 9 (21 screenshots) and Phase 10 (per-REQ evidence).
+
+### Why /tmp/ and Not evidence/ in the Git Repo
+
+Previous milestones used both patterns:
+- Phase 8/9/10: `evidence/phase-{N}/` in repo (86 files, ~22.5 MB)
+- Phase 12, Quick Task 5: `/tmp/` directories
+
+For v3.5, `/tmp/` is correct because:
+1. Screenshots are validation artifacts, not shipped product assets.
+2. The `AppStoreMetadata/` directory already has curated marketing screenshots via Fastlane.
+3. Binary PNG files bloat git history. Previous `evidence/` directories added 22.5 MB.
+4. VERDICT.md files (text) and FIX-NNN.md files can be copied to `.planning/phases/` for permanent record.
 
 ---
 
-## New vs Modified Components
+## Device Configuration
 
-### New Components (must be created from scratch)
+### iPhone (Existing -- DO NOT create new)
 
-| Component | Type | File Path |
-|-----------|------|-----------|
-| `SettingsDefaultsSection` | SwiftUI View | `ILSApp/ILSApp/Views/Settings/SettingsDefaultsSection.swift` |
-| `ConfigOverrideRow` | SwiftUI View | `ILSApp/ILSApp/Views/Settings/ConfigOverrideRow.swift` |
-| `GitHubBrowseView` | SwiftUI View | `ILSApp/ILSApp/Views/Browser/GitHubBrowseView.swift` |
-| `GitHubResultRow` | SwiftUI View | `ILSApp/ILSApp/Views/Browser/GitHubResultRow.swift` |
-| `InstallProgressView` | SwiftUI View (sheet) | `ILSApp/ILSApp/Views/Browser/InstallProgressView.swift` |
-| `EffectiveConfigResponse` | Shared DTO | `Sources/ILSShared/DTOs/ResponseDTOs.swift` (additive) |
-| `GET /config/defaults` handler | Backend | `Sources/ILSBackend/Controllers/ConfigController.swift` (additive) |
-| `GET /fleet/:id/config` handler | Backend | `Sources/ILSBackend/Controllers/FleetController.swift` (additive) |
+| Property | Value |
+|----------|-------|
+| Name | iPhone 16 Pro Max |
+| UDID | `50523130-57AA-48B0-ABD0-4D59CE455F14` |
+| OS | iOS 18.6 |
+| Width | 430pt (compact size class) |
+| Navigation | Sheet-based sidebar overlay, NavigationStack for drill-downs |
+| Screenshot cmd | `xcrun simctl io 50523130-57AA-48B0-ABD0-4D59CE455F14 screenshot {path}` |
 
-### Modified Components (targeted additions to existing files)
+### iPad (Already Exists -- verify and boot)
 
-| Component | File | What Changes |
-|-----------|------|--------------|
-| `SettingsViewModel` | `ViewModels/SettingsViewModel.swift` | Add `loadEffectiveDefaults()`, `effectiveConfig` property |
-| `HostProfilesViewModel` | `ViewModels/HostProfilesViewModel.swift` | Add `fetchConfigForHost(id:)`, `configSnapshot` |
-| `SkillsViewModel` | `ViewModels/SkillsViewModel.swift` | Add `searchGitHub(query:)`, `installFromGitHub(repo:)`, `installedNames` |
-| `PluginsViewModel` | `ViewModels/PluginsViewModel.swift` | Add `install(name:marketplace:)`, `uninstall(name:)` calls (endpoints exist) |
-| `SidebarRootView` | `Views/Root/SidebarRootView.swift` | Fix hamburger accessibility from all screens |
-| `SidebarView` | `Views/Sidebar/SidebarView.swift` | Add active host name indicator |
-| `SettingsView` | `Views/Settings/SettingsView.swift` | Add `SettingsDefaultsSection` into scroll view |
-| `HostProfilesView` | `Views/Fleet/HostProfilesView.swift` | Add "Sync Config" action, active profile indicator |
-| `HostProfileDetailView` | `Views/Fleet/HostProfileDetailView.swift` | Show config snapshot section |
-| `SkillsView` | `Views/Browser/` (skills tab) | Status badges (installed/not-installed), GitHub browse button |
-| `PluginsView` | `Views/Browser/` (plugins tab) | Install/enable/disable action buttons, status badges |
-| `ConfigController` | `Sources/ILSBackend/Controllers/ConfigController.swift` | Add `defaults()` handler route |
-| `FleetController` | `Sources/ILSBackend/Controllers/FleetController.swift` | Add `remoteConfig()` handler route |
+| Property | Value |
+|----------|-------|
+| Name | iPad Pro 13 ILS |
+| UDID | `C074375B-2CB2-4F95-A55C-972F2FF35041` |
+| OS | iPadOS 18.6 (verify with `xcrun simctl list`) |
+| Width | ~1032pt landscape / ~768pt portrait (regular size class) |
+| Navigation | NavigationSplitView with persistent sidebar column |
+| Screenshot cmd | `xcrun simctl io C074375B-2CB2-4F95-A55C-972F2FF35041 screenshot {path}` |
 
----
+**Critical discovery:** The "iPad Pro 13 ILS" simulator already exists (UDID `C074375B-2CB2-4F95-A55C-972F2FF35041`), confirmed by `xcrun simctl list devices`. It was created during Phase 8 platform validation. No `xcrun simctl create` needed -- just boot it. An alternative is the generic "iPad Pro 13-inch (M4)" at `265C1F9B-5495-4ADC-957C-123FA879C5DE`, but the "ILS" named one was purpose-built for this project and avoids conflicts with other sessions.
 
-## Data Flows
+### iPad-Specific Validation Points
 
-### Feature 1: Host CLI Config Sync
+The app uses `@Environment(\.horizontalSizeClass)` in `SidebarRootView` to branch layout:
+- **iPhone (compact):** `iPhoneLayout` -- ZStack overlay sidebar, hamburger button, edge-swipe gesture
+- **iPad (regular):** `iPadLayout` -- `NavigationSplitView(columnVisibility:)` with persistent sidebar (~300pt), detail area (~732pt)
 
-Shows the user their host's effective Claude Code defaults, with per-key scope attribution.
-
-```
-SettingsView.task
-    → SettingsViewModel.loadEffectiveDefaults()
-    → APIClient.get("/config/defaults")                    ← NEW endpoint
-    → ConfigController.defaults()                          ← NEW handler
-        FileSystemService.readConfig("local")
-        FileSystemService.readConfig("project")
-        FileSystemService.readConfig("user")
-        mergeConfigs() → [ConfigOverride]
-    → EffectiveConfigResponse                              ← NEW DTO
-    → SettingsViewModel.effectiveConfig: EffectiveConfigResponse
-
-SettingsView body
-    → SettingsDefaultsSection(overrides: effectiveConfig.overrides)
-        → ConfigOverrideRow for each key
-            shows: key name + winning value + scope badge
-            ("model: claude-opus-4-6 · from user config")
-```
-
-**What's new at each layer:**
-
-Backend: one new route `config.get("defaults", use: defaults)`. Handler reads all three scopes via existing `FileSystemService.readConfig()`, merges with `local > project > user` precedence, builds `[ConfigOverride]` array. Uses `ConfigProfiles` and `ConfigOverride` that already exist in `ILSShared/DTOs/ResponseDTOs.swift`.
-
-ILSShared: new `EffectiveConfigResponse` struct wrapping `ConfigProfiles` + `[ConfigOverride]`. Additive to `ResponseDTOs.swift`.
-
-iOS: `SettingsViewModel` gets `effectiveConfig: EffectiveConfigResponse?` property and `loadEffectiveDefaults()` async method called from `loadAll()`. New `SettingsDefaultsSection` view inserted into `SettingsView` body. New `ConfigOverrideRow` component shows per-key scope badges.
-
-### Feature 2: GitHub Skill Browse + Install
-
-```
-BrowserView (Skills segment)
-    → "Browse GitHub" button → GitHubBrowseView (sheet or push)
-        SkillsViewModel.searchGitHub(query: String) async
-        → APIClient.get("/skills/search?q={query}")        ← endpoint EXISTS
-        → SkillsController.search()                        ← EXISTS, uses GitHubService
-        → [GitHubSearchResult]
-        GitHubBrowseView renders GitHubResultRow cards
-        User taps "Install" → InstallProgressView sheet
-            SkillsViewModel.installFromGitHub(repo: String) async
-            → APIClient.post("/skills/install", body: SkillInstallRequest)  ← EXISTS
-            → SkillsController.install()                   ← EXISTS
-            → fileSystem.invalidateSkillsCache()           ← EXISTS
-        On success:
-            SkillsViewModel.loadSkills()                   ← refresh list
-            Skill list shows "Installed" badge on newly installed entry
-```
-
-**What's new at each layer:**
-
-Backend: nothing. `GET /skills/search` and `POST /skills/install` are fully implemented in `SkillsController.swift`.
-
-ILSShared: nothing. `GitHubSearchResult` and `SkillInstallRequest` already exist in `SearchResult.swift`.
-
-iOS: new `GitHubBrowseView`, `GitHubResultRow`, `InstallProgressView` views. New `searchGitHub()` and `installFromGitHub()` methods on `SkillsViewModel`. `SkillsViewModel` needs a computed `installedSkillNames: Set<String>` from the existing `skills` array so `SkillsView` rows can show badges.
-
-### Feature 3: GitHub Plugin Browse + Install
-
-```
-BrowserView (Plugins segment)
-    PluginsViewModel.loadMarketplace() async
-    → APIClient.get("/plugins/marketplace")                ← EXISTS
-    → [PluginMarketplace] (official + custom)
-    Plugins list shows install/enable/disable buttons per row
-
-"Install" tapped → InstallProgressView (same component as skills)
-    PluginsViewModel.install(name: String, marketplace: String) async
-    → APIClient.post("/plugins/install", body: InstallPluginRequest)  ← EXISTS
-    → git clone in backend (~5–30s) → returns Plugin
-    Plugin row updates to show "Installed" + "Enabled" badges
-
-"Enable"/"Disable" tapped
-    PluginsViewModel.enable(name: String) / disable(name: String) async
-    → APIClient.post("/plugins/{name}/enable")             ← EXISTS
-    → APIClient.post("/plugins/{name}/disable")            ← EXISTS
-    → Plugin.isEnabled updated in-place in ViewModel
-
-"Uninstall" tapped (context menu)
-    PluginsViewModel.uninstall(name: String) async
-    → APIClient.delete("/plugins/{name}")                  ← EXISTS
-    → Plugin removed from ViewModel.plugins array
-```
-
-**What's new at each layer:**
-
-Backend: nothing. All endpoints exist in `PluginsController.swift`.
-
-ILSShared: nothing.
-
-iOS: `PluginsViewModel` gets `install()`, `uninstall()`, `enable()`, `disable()` async methods wrapping existing API calls (these methods are missing from the ViewModel — the endpoints are there but the VM doesn't call them). `PluginsView` rows get status badges and action buttons. `InstallProgressView` is reused from skills feature.
-
-### Feature 4: Host Profiles Redesign
-
-```
-HostProfilesView (existing)
-    Already shows: host list, health badges, active capsule badge, context menu
-    New: "Sync Config" action in context menu
-        HostProfilesViewModel.fetchConfigForHost(id: UUID) async
-        → APIClient.get("/fleet/{id}/config")              ← NEW endpoint
-        → FleetController.remoteConfig()                   ← NEW handler
-            Looks up FleetHostModel by ID
-            HTTP GET to http://{host}:{backendPort}/api/v1/config?scope=user
-            (same pattern as existing health() handler)
-        → configSnapshot: ConfigInfo stored on HostProfilesViewModel
-
-HostProfileDetailView (existing)
-    New section: "Configuration" showing configSnapshot values
-    If not yet fetched: "Fetch Config" button
-
-SidebarView header/footer
-    Active host name shown when activeHostId != nil
-    → HostProfilesViewModel.activeHost: FleetHost? (computed property)
-    → SidebarView reads from shared or newly loaded HostProfilesViewModel
-```
-
-**What's new at each layer:**
-
-Backend: one new route `fleet.get(":id", "config", use: remoteConfig)`. Handler follows the same pattern as `FleetController.health()` — loads the host model, makes HTTP GET to the remote host's backend, returns proxied response. Falls back to error if unreachable.
-
-ILSShared: nothing. `ConfigInfo` already exists and is the return type.
-
-iOS: `HostProfilesViewModel` gets `configSnapshot: [UUID: ConfigInfo]` dictionary and `fetchConfigForHost(id:)` method. `HostProfileDetailView` expanded with a config preview section. `HostProfilesView` context menu gets "Fetch Config" action. `SidebarView` reads `activeHostId` from `HostProfilesViewModel` to show active host name in header.
-
-**Note on SidebarView access to HostProfilesViewModel:** `HostProfilesViewModel` is currently `@State` inside `HostProfilesView`. For the sidebar to read the active host name, two options: (a) lift `activeHostId` into `AppState` when activation is called, or (b) give `SidebarView` its own lightweight `HostProfilesViewModel` reference. Option (a) is simpler — `AppState.activeHostName: String?` set by `HostProfilesViewModel.activate()`.
-
-### Feature 5: Navigation / UX Overhaul
-
-```
-Current problem:
-    Hamburger button is in each child view's toolbar independently.
-    Some screens don't have it at all.
-
-Fix in SidebarRootView.mainContent():
-    The NavigationStack is the container. The hamburger goes on the
-    NavigationStack's own toolbar, not inside child view bodies.
-    This ensures it appears consistently on EVERY screen.
-
-Current code (simplified):
-    NavigationStack {
-        Group { switch activeScreen { ... } }
-        .toolbar {
-            if showHamburger {
-                ToolbarItem(.topBarLeading) { hamburgerButton }
-            }
-        }
-    }
-
-The .toolbar modifier is already at the NavigationStack level in
-SidebarRootView.mainContent() — the fix is ensuring child views
-do NOT also add conflicting .topBarLeading items that override it.
-Audit each child view's .toolbar for conflicts.
-
-Session back button:
-    ChatView uses NavigationLink push — verify .navigationBarBackButtonHidden(false)
-    is not set. No code change expected — just a verification.
-
-Home screen layout:
-    HomeView.swift changes only — layout/spacing within existing view.
-```
-
-**What's new:** Primarily audit and remove conflicting toolbar items from child views. The navigation architecture (`SidebarRootView`, `ActiveScreen` enum) is not changed.
+iPad validation must specifically verify:
+1. Sidebar is persistently visible (not overlay sheet)
+2. Screen content renders in the detail column, not full-screen push
+3. Sheets present as centered form sheets (standard iPad behavior)
+4. Column proportions are reasonable (sidebar min:260, ideal:300, max:380)
+5. Chat sessions open in detail column from sidebar session tap
+6. `columnVisibility` state works (sidebar can be toggled if needed)
 
 ---
 
-## Component Boundaries
+## Patterns to Follow
 
-### Strict Rules to Maintain
+### Pattern 1: ios-validation-runner (Proven in Phases 8, 9, 10)
 
-| Rule | Rationale |
-|------|-----------|
-| iOS never reads `~/.claude/settings.json` directly | Sandbox + backend is the config broker |
-| GitHub API calls go through backend `/skills/search` | `GitHubService` in backend handles rate limits |
-| All new ViewModels follow `@Observable @MainActor class` pattern | Existing codebase convention |
-| No new `ActiveScreen` cases for GitHub browse | GitHub browse is a sub-flow within Browser, not a peer screen |
-| `EffectiveConfigResponse` goes in `ILSShared` | Both backend (produces it) and iOS (consumes it) need the type |
-| `APIClient` adds `/api/v1` prefix automatically | Never double-prefix paths |
+**What:** Five-phase protocol (SETUP-RECORD-ACT-COLLECT-VERIFY) for every screen interaction.
+**When:** Every screen validation on every device.
+**Why proven:** Phase 8 validated 49/49 screens across 4 platforms with 86 evidence files and 0 crashes. Phase 9 found and fixed 30 bugs. Phase 10 produced a full traceability matrix.
 
-### Component Communication
+```bash
+# SETUP
+xcrun simctl boot $UDID 2>/dev/null || true
+xcrun simctl status_bar $UDID override \
+  --time "9:41" --batteryState charged --batteryLevel 100 \
+  --wifiBars 3 --cellularBars 4
+lsof -i :9999 -P -n | grep -q "ils-ios" || { echo "WRONG BACKEND"; exit 1; }
+curl -sf http://localhost:9999/health || { echo "BACKEND UNHEALTHY"; exit 1; }
 
-| From | To | Via |
-|------|----|-----|
-| `SettingsView` | `ConfigController.defaults()` | `APIClient.get("/config/defaults")` |
-| `SkillsViewModel` | `SkillsController.search()` | `APIClient.get("/skills/search?q=")` |
-| `SkillsViewModel` | `SkillsController.install()` | `APIClient.post("/skills/install")` |
-| `PluginsViewModel` | `PluginsController.install()` | `APIClient.post("/plugins/install")` |
-| `PluginsViewModel` | `PluginsController.enable/disable()` | `APIClient.post("/plugins/{name}/enable|disable")` |
-| `HostProfilesViewModel` | `FleetController.remoteConfig()` | `APIClient.get("/fleet/{id}/config")` |
-| `HostProfilesViewModel` | `AppState.activeHostName` | Direct property set on activation |
-| `SidebarView` | `AppState.activeHostName` | `@Environment(AppState.self)` |
+# RECORD
+xcrun simctl spawn $UDID log stream \
+  --predicate 'subsystem == "com.ils.app"' \
+  > /tmp/v3.5-validation/$DEVICE/logs/app.log 2>&1 &
+LOG_PID=$!
 
----
+# ACT
+xcrun simctl openurl $UDID "ils://home"
+sleep 3
+xcrun simctl io $UDID screenshot /tmp/v3.5-validation/$DEVICE/01-home.png
 
-## Suggested Build Order
+# COLLECT
+kill $LOG_PID 2>/dev/null || true
+grep -iE "(error|crash|fatal|exception)" /tmp/v3.5-validation/$DEVICE/logs/app.log \
+  > /tmp/v3.5-validation/$DEVICE/logs/errors.txt || echo "NO ERRORS"
+find ~/Library/Logs/DiagnosticReports -name "ILSApp*" -newer /tmp/v3.5-start-marker 2>/dev/null \
+  > /tmp/v3.5-validation/$DEVICE/logs/crash-check.txt
 
-Dependencies between the four features:
+# VERIFY
+# Agent reads screenshot via multimodal Read tool
+# Agent writes PASS/FAIL verdict with specific evidence reference
+```
+
+### Pattern 2: Fix-as-you-go Loop (New for v3.5, extends Phase 9 fix pattern)
+
+**What:** When a screen fails validation, fix it immediately rather than logging for a later fix pass.
+**When:** Any FAIL verdict during Phase 41 or 42.
+**Why:** Previous milestones (Phase 8) deferred cosmetic fixes. Phase 9 fixed bugs but in a separate pass. v3.5 explicitly requires every screen to PASS before moving to the next. This prevents fix accumulation and ensures the evidence gate sees only passing screenshots.
 
 ```
-Navigation/UX Overhaul        ← no dependencies, unblocks comfortable dev of other screens
-GitHub Browse + Install        ← no backend changes needed
-Host CLI Config Sync           ← needs EffectiveConfigResponse DTO + GET /config/defaults
-Host Profiles Redesign         ← needs GET /fleet/:id/config; benefits from config sync patterns
+Screen N fails validation
+  |
+  v
+Diagnose from screenshot + logs
+  |
+  v
+Edit Swift file(s)
+  |  (auto-build hook fires xcodebuild automatically)
+  v
+Build succeeds?
+  |--- NO --> Fix build error, re-edit
+  |--- YES -+
+             v
+         xcrun simctl install $UDID "$APP_PATH"   (reinstall)
+         xcrun simctl launch $UDID com.ils.app
+             |
+             v
+         Re-navigate to screen N via deep link
+         Re-screenshot
+             |
+             v
+         PASS? --> Log fix in fixes/FIX-{NNN}.md, continue to screen N+1
+         FAIL? --> Loop back to diagnose
 ```
 
-### Step 1: Navigation / UX Overhaul (fastest, no backend)
+**Fix documentation template** (`/tmp/v3.5-validation/fixes/FIX-001-{slug}.md`):
+```markdown
+# FIX-001: {Brief description}
+**Screen:** {nn}-{screen-name}
+**Device:** iPhone / iPad / Both
+**Symptom:** {What the screenshot showed}
+**Root cause:** {Why it happened}
+**Files changed:** {list}
+**Before screenshot:** {path or description}
+**After screenshot:** {path}
+**Build verified:** YES (auto-build hook)
+```
 
-**Why first:** Every other feature requires navigating to its screen during development. Fixing the hamburger accessibility and home screen layout removes friction for all subsequent work. Zero backend risk.
+### Pattern 3: Deep Link Navigation (Proven in Phase 9, Quick Task 5)
 
-**Files touched:** `SidebarRootView.swift`, `HomeView.swift`, child view toolbar audits.
+**What:** Use `xcrun simctl openurl` with `ils://` deep links to navigate to each screen deterministically.
+**When:** Navigating to any screen that has a registered deep link route.
+**Why:** More reliable than `idb_tap` coordinate guessing. Deep links route through `AppState.handleURL()` which sets `navigationIntent`, and `SidebarRootView.onChange(of:)` switches `activeScreen`. Quick Task 5 validated and fixed browser segment routing for this exact use case.
 
-### Step 2: GitHub Browse + Install — Skills first, then Plugins
+All registered deep link routes (from `AppState.handleURL()`):
+```bash
+xcrun simctl openurl $UDID "ils://home"
+xcrun simctl openurl $UDID "ils://sessions"
+xcrun simctl openurl $UDID "ils://sessions/{lowercase-uuid}"
+xcrun simctl openurl $UDID "ils://browser"
+xcrun simctl openurl $UDID "ils://mcp"
+xcrun simctl openurl $UDID "ils://skills"
+xcrun simctl openurl $UDID "ils://plugins"
+xcrun simctl openurl $UDID "ils://settings"
+xcrun simctl openurl $UDID "ils://system"
+xcrun simctl openurl $UDID "ils://fleet"       # routes to .hostProfiles
+xcrun simctl openurl $UDID "ils://themes"
+xcrun simctl openurl $UDID "ils://hooks"
+xcrun simctl openurl $UDID "ils://teams"
+```
 
-**Why second:** Backend endpoints are complete. Pure iOS UI work — fastest path to demonstrable new functionality. Skills install is simpler (file write) vs plugins (git clone with longer latency), so tackle skills first to validate the `InstallProgressView` component before reusing it for plugins.
+**Screens that require alternative navigation (no deep link or needs interaction):**
+- **Sidebar:** Swipe from left edge (`idb ui swipe 5 500 300 500 --duration 0.3`) or tap hamburger. On iPad, sidebar is persistent -- just screenshot the current view.
+- **Chat View:** Needs a real session UUID. Query `/api/v1/sessions` first, take the first session ID, use `ils://sessions/{uuid}` with lowercase UUID.
+- **Settings scrolled:** Navigate via `ils://settings`, wait, then scroll with Quartz scroll events or `idb ui swipe` downward.
 
-**Files touched:** New `GitHubBrowseView`, `GitHubResultRow`, `InstallProgressView`. Modified `SkillsViewModel`, `PluginsViewModel`, `SkillsView`, `PluginsView`.
+### Pattern 4: Dual-Agent Evidence Gate (New for v3.5)
 
-### Step 3: Host CLI Config Sync
+**What:** Two independent agent teammates each read every screenshot and produce independent PASS/FAIL verdicts without seeing each other's work. Final verdict requires 2/2 agreement.
+**When:** Phase 43, after all screens pass on both devices.
+**Why:** Prevents single-agent confirmation bias. MEMORY.md explicitly warns: "Sub-agent validation reports can contain inaccurate claims -- cross-check with actual screenshots." Having two agents independently verify eliminates this risk.
 
-**Why third:** Requires the one meaningful ILSShared DTO addition (`EffectiveConfigResponse`) and one new backend handler (`GET /config/defaults`). The DTO change rebuilds both backend and iOS — do it in one commit. The backend handler is straightforward (3x `FileSystemService.readConfig()` calls + merge logic). iOS side is new `SettingsDefaultsSection` + `ConfigOverrideRow`.
+```
+Phase 43 Inputs:
+  /tmp/v3.5-validation/iphone/*.png   (12-15 screenshots)
+  /tmp/v3.5-validation/ipad/*.png     (12-15 screenshots)
+  PASS criteria document (from Phase 40 screen inventory)
 
-**Sequence within this step:**
-1. Add `EffectiveConfigResponse` to `ILSShared/DTOs/ResponseDTOs.swift`
-2. Add `defaults()` handler + route to `ConfigController.swift`
-3. Add `loadEffectiveDefaults()` to `SettingsViewModel`
-4. Add `SettingsDefaultsSection` + `ConfigOverrideRow` views
-5. Wire into `SettingsView`
+Agent A (independently):
+  for each screenshot in both device dirs:
+    Read(screenshot.png)
+    Compare visible content to PASS criteria
+    Write PASS or FAIL with specific reasoning
+  Write VERDICT-AGENT-A.md
 
-### Step 4: Host Profiles Redesign
+Agent B (independently, same task, zero access to A's output):
+  for each screenshot in both device dirs:
+    Read(screenshot.png)
+    Compare visible content to PASS criteria
+    Write PASS or FAIL with specific reasoning
+  Write VERDICT-AGENT-B.md
 
-**Why last:** Requires `GET /fleet/:id/config` (second new backend endpoint) and the active host indicator in the sidebar (which touches `AppState`). Benefits from having config display patterns established in step 3. The `HostProfileDetailView` config section reuses `ConfigOverrideRow` from step 3.
+Orchestrator:
+  diff VERDICT-A and VERDICT-B
+  All screens both PASS? --> FINAL-VERDICT.md = PASS
+  Any disagreement? --> Re-validate that specific screen with both agents watching
+```
 
-**Sequence within this step:**
-1. Add `activeHostName: String?` to `AppState`
-2. Set it in `HostProfilesViewModel.activate()`
-3. Add `remoteConfig()` handler + route to `FleetController.swift`
-4. Add `fetchConfigForHost()` + `configSnapshot` to `HostProfilesViewModel`
-5. Update `HostProfileDetailView` with config section
-6. Update `HostProfilesView` context menu with "Fetch Config" action
-7. Update `SidebarView` to show active host name
+### Pattern 5: Newest-Binary-First Install (Lesson from Quick Task 5)
+
+**What:** When installing from DerivedData, always select the newest binary by modification time.
+**When:** Every `xcrun simctl install` call in every phase.
+**Why:** Quick Task 5 discovered 40+ stale `ILSApp-*` directories in DerivedData. Using `find | head -1` grabbed a stale build. Using `ls -td | head -1` gets the newest.
+
+```bash
+# WRONG (grabs arbitrary/stale build)
+APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug-iphonesimulator/ILSApp.app -maxdepth 0 2>/dev/null | head -1)
+
+# RIGHT (grabs newest build by modification time)
+APP_PATH=$(ls -td ~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/Debug-iphonesimulator/ILSApp.app 2>/dev/null | head -1)
+```
+
+Both iPhone and iPad use the same `Debug-iphonesimulator` binary. There is no separate iPad build artifact -- the universal iOS binary runs on both device types.
 
 ---
 
-## Scaling Considerations
+## Anti-Patterns to Avoid
 
-This is a local-first iOS app connecting to a personal backend. Scaling is not a concern. Relevant practical limits:
+### Anti-Pattern 1: Parallel Fix-and-Validate on Multiple Devices
 
-| Concern | Approach |
-|---------|----------|
-| GitHub API rate limits on skill search | Backend `GitHubService` already proxies all calls; add response caching in `GitHubService` if rate limits hit during development |
-| `POST /plugins/install` latency (git clone) | Can take 5–30s. iOS must show a spinner + allow cancellation. `InstallProgressView` sheet handles this. Do not set a short URLSession timeout on the iOS side for this call |
-| `/config/defaults` reads filesystem 3x | Acceptable for a settings screen load — not a hot path. If latency is noticeable, combine into a single `readAllConfigs()` in `FileSystemService` |
-| Config cache in `APIClient` | `/config` path has 60s TTL. After `PUT /config`, call `APIClient.get("/config/defaults", bypassCache: true)` to get fresh effective defaults |
+**What:** Running iPhone and iPad validation simultaneously while also fixing issues.
+**Why bad:** A fix applied during iPhone validation changes the codebase. If iPad validation is running against the pre-fix binary, its results are invalid. The fix may also introduce iPad-specific regressions that only surface if iPad re-tests with the new code.
+**Instead:** Complete iPhone validation first (all screens PASS). Then run iPad validation against the post-fix binary. Only the evidence gate (Phase 43) runs agents in parallel because it is read-only.
+
+### Anti-Pattern 2: Guessing Tap Coordinates from Screenshots
+
+**What:** Looking at a screenshot and estimating pixel coordinates for `idb_tap`.
+**Why bad:** Coordinates vary by device size class, Dynamic Type setting, and content layout. Guesses frequently miss. This was a major lesson in MEMORY.md.
+**Instead:** Use `idb_describe operation:all` to get the accessibility tree with exact `centerX`/`centerY`, then use those coordinates. Or, strongly prefer deep links for top-level navigation -- no tapping needed.
+
+### Anti-Pattern 3: Video Recording for Every Screen
+
+**What:** Starting a video recording for each individual screen validation step.
+**Why bad:** Video recording consumes resources, produces large files (~50MB per recording), and the start/stop overhead slows validation. Phase 8 used video but Phase 9/10 found screenshots were the primary evidence cited in verdicts -- video was never referenced for passing screens.
+**Instead:** Use screenshots as primary evidence. Use video recording only as a fallback for intermittent or animation-related issues that cannot be captured in a single frame.
+
+### Anti-Pattern 4: Evidence Screenshots in Git Repo
+
+**What:** Storing screenshots in `evidence/` within the git working tree.
+**Why bad:** Phase 8 added 22.5 MB of binary files to the repo history. Screenshots from v3.5 would add another 10-20 MB. This bloats clone times permanently and provides no value since the VERDICT.md text files contain the actual pass/fail determinations.
+**Instead:** Use `/tmp/v3.5-validation/` for screenshots. Copy only VERDICT.md and FIX-NNN.md text files to `.planning/phases/` for permanent record.
+
+### Anti-Pattern 5: Re-reading Already-Read Files in a Session
+
+**What:** Agents re-reading source files or screenshots they already analyzed in the same session.
+**Why bad:** Wastes context window budget. CLAUDE.md explicitly warns against this pattern.
+**Instead:** Track what has been read in the session. If a file has not been modified since last read, use the cached understanding.
 
 ---
 
-## Anti-Patterns
+## Integration Points with Existing Architecture
 
-### Anti-Pattern 1: New ActiveScreen cases for sub-flows
+### Existing Components (No Modification Needed)
 
-**What people do:** Add `.githubSkills` or `.githubPlugins` to the `ActiveScreen` enum to navigate to GitHub browse.
+| Component | Location | How v3.5 Uses It |
+|-----------|----------|-------------------|
+| Auto-build hook | `.claude/settings.local.json` | Fires xcodebuild on every .swift edit -- fix loop gets automatic build verification for free |
+| Deep link handler | `AppState.handleURL()` | All 13 routes already registered and tested (Quick Task 5 fixed browser segment routing) |
+| SidebarRootView routing | `Views/Root/SidebarRootView.swift` | `ActiveScreen` enum has all 9 cases needed for screen navigation |
+| iPad NavigationSplitView | `SidebarRootView.iPadLayout` | Already implemented with `columnVisibility` control for persistent sidebar |
+| Status bar override | `xcrun simctl status_bar` | Proven in Phases 8-10 for clean, consistent screenshots |
+| Backend health check | `curl http://localhost:9999/health` | Standard prerequisite check from all previous phases |
+| iPhone simulator | UDID `50523130-57AA-48B0-ABD0-4D59CE455F14` | Dedicated device, never use another |
+| iPad simulator | UDID `C074375B-2CB2-4F95-A55C-972F2FF35041` | "iPad Pro 13 ILS" created during Phase 8, ready to boot |
+| Fastlane screenshots lane | `fastlane/Fastfile` | Not used for v3.5 (it requires XCUITest snapshots); manual `simctl io screenshot` is the method |
+| `idb_describe` | Facebook IDB tool | Accessibility tree with exact coordinates for any needed taps |
 
-**Why it's wrong:** GitHub browse is a sub-flow within the existing Browser screen, not a peer navigation destination. Adding top-level cases grows the sidebar nav model unnecessarily and breaks the existing URL scheme deep-link handling.
+### New Components Created by Phase 40
 
-**Do this instead:** Show `GitHubBrowseView` as a `.sheet` from `SkillsView`/`PluginsView`, or as a `NavigationLink` push within the Browser `NavigationStack`.
+| Component | Type | Purpose |
+|-----------|------|---------|
+| `/tmp/v3.5-validation/` tree | Filesystem dirs | Evidence storage: `{iphone,ipad}/{screenshots,logs}`, `gate/`, `fixes/` |
+| Screen inventory document | Markdown | Numbered list of all 12+ screens with per-device PASS criteria |
+| PASS criteria definitions | Markdown table | Specific observable states per screen: "Screen X shows Y from backend, Z layout, no errors" |
+| Fix log template | Markdown | Standardized FIX-NNN documentation for every fix applied during validation |
+| VERDICT templates | Markdown | Per-device verdict format and per-agent gate verdict format |
+| Start marker | Empty file | `touch /tmp/v3.5-start-marker` for crash report time-gating |
 
-### Anti-Pattern 2: URLSession GitHub calls directly from iOS ViewModels
+### Modified Components
 
-**What people do:** Add `URLSession` calls to `api.github.com` directly in `SkillsViewModel`.
+None planned proactively. All source code modifications happen reactively through the fix-as-you-go loop when validation discovers issues. The architecture is designed to discover what needs fixing, not to pre-plan fixes.
 
-**Why it's wrong:** Duplicates the existing `GitHubService` on the backend, splits rate-limit quota, adds GitHub token management to the iOS layer.
+---
 
-**Do this instead:** Call existing `GET /skills/search?q=`. The backend handles GitHub entirely.
+## Screen Inventory with PASS Criteria
 
-### Anti-Pattern 3: Singleton ViewModel for shared GitHub state
+Each screen requires specific observable evidence. These criteria define what "PASS" means concretely.
 
-**What people do:** Create a `GitHubViewModel` singleton shared between Skills and Plugins browse.
+| # | Screen | Deep Link | iPhone PASS Criteria | iPad Additional Criteria |
+|---|--------|-----------|---------------------|-------------------------|
+| 01 | Home/Dashboard | `ils://home` | Stats cards show numbers > 0 (sessions, skills, MCP, plugins). Quick Actions row visible. Recent Sessions list non-empty. Hamburger button in nav bar. | Split view: persistent sidebar visible alongside home content in detail column. |
+| 02 | Sessions List | `ils://sessions` | Session rows with names, model tags, timestamps. Count label > 0. Search bar visible at top. | Sessions visible in sidebar column or content area. Detail area shows placeholder or selected session. |
+| 03 | Chat View | `ils://sessions/{uuid}` | Real messages displayed (not empty). Back button present. Session title in nav bar. No stuck loading spinner. | Chat renders in detail column. Sidebar shows session highlighted with accent color. |
+| 04 | Browser: MCP | `ils://mcp` | Server list with health status badges (green "Healthy"). Server count > 0. Detail tappable. | Tab bar within detail column. Persistent sidebar still visible. |
+| 05 | Browser: Skills | `ils://skills` | Skills listed with Active/Inactive badges. Search placeholder visible. Count > 0. | Same content in detail column. |
+| 06 | Browser: Plugins | `ils://plugins` | Plugins listed with category filters. Enable/Disable badges visible. Version tags. Count > 0. | Same content in detail column. |
+| 07 | Settings | `ils://settings` | Config values displayed. InheritanceBadge (Host Default/Custom) on fields. Info tooltip (i) buttons present. Connection status section at top with green indicator. | Full-width detail content. |
+| 08 | System Monitor | `ils://system` | Live CPU %, Memory %, Disk %, Network stats visible. Process count > 0. "Live" indicator or real-time updates. | Metrics render in detail column. |
+| 09 | Host Profiles | `ils://fleet` | At least one host listed (localhost). Health badge visible. Active indicator on connected host. | Host list in detail column. |
+| 10 | Agent Teams | `ils://teams` | Screen renders without crash. Shows team list or empty state. | Detail column render. |
+| 11 | Themes | `ils://themes` | Theme picker with 12+ built-in themes listed. Current theme visually highlighted or indicated. | Theme picker in detail column. |
+| 12 | Sidebar | swipe/hamburger | All nav items visible: Home, System Monitor, Browse, Agent Teams, Host Profiles, Settings. Themes somewhere accessible. Active screen highlighted. Session list with counts. Host name shown if connected. | Sidebar is persistent (not overlay). Approximately 260-380pt width. All items visible without scrolling. |
 
-**Why it's wrong:** Established pattern is per-screen `@State` ViewModels. Singletons carry stale state across view lifecycles.
+---
 
-**Do this instead:** `SkillsViewModel` owns its own `githubResults: [GitHubSearchResult]` and `isGitHubLoading: Bool`. Same for `PluginsViewModel`. Separate state, same backing API.
+## Build Order and Phase Dependencies
 
-### Anti-Pattern 4: Reading config via direct file path from iOS
+```
+Phase 40: Environment Setup & Screen Inventory
+  Prerequisites: None (milestone start)
+  Outputs: Both simulators booted and verified
+           App built and installed on both devices
+           Backend running and health-checked
+           Evidence directory tree created
+           Screen inventory document with numbered PASS criteria
+           Start marker file for crash report gating
+  Duration: ~15 minutes
 
-**What people do:** Use `FileManager` to read `~/.claude/settings.json` from the iOS app by guessing a path via SSH or hardcoded path assumption.
+Phase 41: iPhone Full Validation
+  Prerequisites: Phase 40 complete
+  Inputs: iPhone UDID, evidence dir, screen inventory, PASS criteria
+  Outputs: 12-15 iPhone screenshots in /tmp/v3.5-validation/iphone/
+           app.log, errors.txt, crash-check.txt in logs/
+           VERDICT-iphone.md with per-screen PASS/FAIL
+           FIX-NNN.md files for any fixes applied
+           Rebuilt binary if any fixes were made
+  Duration: ~30-45 minutes (depends on number of fixes)
+  Constraint: Single agent, sequential screen-by-screen, fix before advancing
 
-**Why it's wrong:** iOS sandbox prevents this. The Vapor backend is the config broker — it runs on macOS with full filesystem access.
+Phase 42: iPad Full Validation
+  Prerequisites: Phase 41 COMPLETE (all iPhone screens PASS, final binary ready)
+  Inputs: iPad UDID, SAME binary from end of Phase 41, evidence dir, PASS criteria
+  Outputs: 12-15 iPad screenshots in /tmp/v3.5-validation/ipad/
+           app.log, errors.txt, crash-check.txt in logs/
+           VERDICT-ipad.md with per-screen PASS/FAIL
+           Additional FIX-NNN.md files if iPad-specific issues found
+  Duration: ~20-30 minutes (fewer fixes expected -- shared code already fixed)
+  Constraint: Must install the SAME binary that passed iPhone validation
+  Note: If fixes are needed, must also re-verify affected iPhone screens
 
-**Do this instead:** All config access via `APIClient.get("/config")` and `APIClient.put("/config")`.
+Phase 43: Evidence Gate
+  Prerequisites: Phase 41 AND Phase 42 both COMPLETE with all PASS
+  Inputs: All screenshots from both devices, PASS criteria document
+  Outputs: VERDICT-AGENT-A.md, VERDICT-AGENT-B.md
+           FINAL-VERDICT.md (consolidated determination)
+           comparison-matrix.md (iPhone vs iPad per-screen)
+  Duration: ~15-20 minutes
+  Constraint: Two agents run IN PARALLEL (read-only, no code changes)
+  Note: Any disagreement triggers targeted re-validation of disputed screen
+```
 
-### Anti-Pattern 5: Blocking the NIO event loop in new backend handlers
+**Total estimated duration:** 80-110 minutes
 
-**What people do:** Add synchronous network calls (e.g., `URLSession.shared.data(from:)`) inside new Vapor handlers without async/await.
+**Critical path:** Phase 40 --> Phase 41 --> Phase 42 --> Phase 43 (fully sequential except Phase 43 has internal parallelism between the two gate agents)
 
-**Why it's wrong:** Blocks NIO event loop threads, starving other requests.
+### Phase 42 Re-verification Rule
 
-**Do this instead:** Follow the existing pattern in `FleetController.health()` — use `async/await` with `URLSession` (which is async-compatible in Swift 5.10+) or run blocking work in a detached `Task`.
+If Phase 42 (iPad) discovers an issue that requires a code fix, the fix may affect iPhone behavior. In that case:
+1. Apply the fix.
+2. Auto-build hook fires.
+3. Reinstall on iPad, re-verify the fixed screen.
+4. Also reinstall on iPhone, re-verify the affected screen(s) only (not full re-run).
+5. Update both VERDICT files.
+
+This prevents a scenario where an iPad fix silently breaks an iPhone screen that already passed.
 
 ---
 
 ## Sources
 
-All findings based on direct file inspection:
+All findings based on direct inspection of project files and prior milestone artifacts:
 
-- `Sources/ILSBackend/Controllers/ConfigController.swift` — existing config routes and `FileSystemService` usage
-- `Sources/ILSBackend/Controllers/FleetController.swift` — health check HTTP proxy pattern (the model for remote config fetch)
-- `Sources/ILSBackend/Controllers/SkillsController.swift` — GitHub search and install endpoints (confirmed complete)
-- `Sources/ILSBackend/Controllers/PluginsController.swift` — install/enable/disable/uninstall endpoints (confirmed complete)
-- `Sources/ILSShared/Models/ClaudeConfig.swift` — full field inventory
-- `Sources/ILSShared/DTOs/ResponseDTOs.swift` — `ConfigProfiles` and `ConfigOverride` already present (lines 227–272)
-- `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — `ActiveScreen` enum, hamburger pattern, screen routing
-- `ILSApp/ILSApp/Views/Settings/SettingsView.swift` — section composition pattern
-- `ILSApp/ILSApp/Views/Fleet/HostProfilesView.swift` — existing host profile UI
-- `ILSApp/ILSApp/ViewModels/SettingsViewModel.swift` — existing config load/save pattern
-- `ILSApp/ILSApp/ViewModels/HostProfilesViewModel.swift` — fleet CRUD + health polling
-- `ILSApp/ILSApp/Services/APIClient.swift` — caching, path prefixing, per-endpoint TTLs
-- `.planning/PROJECT.md` — v3.1 scope and constraints
+- Phase 8 PLAN and SUMMARY (`.planning/phases/08-platform-validation/`) -- 49/49 screens across 4 platforms, ios-validation-runner protocol definition, team composition for parallel validation
+- Phase 9 SUMMARY (`.planning/phases/09-functional-bughunt/`) -- 30 bugs found/fixed, 65+ screenshots, evidence directory structure
+- Phase 10 PLAN (`.planning/phases/10-final-gate/`) -- Detailed ios-validation-runner protocol with exact bash commands, video recording approach, crash report detection
+- Quick Task 5 SUMMARY (`.planning/quick/5-cross-milestone-reflection-audit-with-fu/`) -- DerivedData stale binary discovery (40+ dirs), deep link browser segment fix, 7/12 screens validated
+- v3.5 Milestone Context (`.planning/v3.5-MILESTONE-CONTEXT.md`) -- Phase structure (40-43), device list, screen inventory, skill requirements
+- `AppState.swift` -- Deep link routing implementation (13 routes via `handleURL()`)
+- `SidebarRootView.swift` -- `ActiveScreen` enum (9 cases), `horizontalSizeClass` branching for iPhone/iPad layout, `columnVisibility` for NavigationSplitView
+- `xcrun simctl list devices` output -- Confirmed "iPad Pro 13 ILS" exists at UDID `C074375B-2CB2-4F95-A55C-972F2FF35041`
+- MEMORY.md -- Lessons about sub-agent validation inaccuracy, stale DerivedData binaries, idb_describe for coordinates, Quartz scroll for SwiftUI Forms
 
-Confidence: HIGH — all integration points verified against actual source, not inferred.
+Confidence: HIGH -- all integration points verified against actual source code and proven in prior milestones.
 
 ---
-*Architecture research for: ILS iOS/macOS v3.1 feature integration*
-*Researched: 2026-02-24*
+*Architecture research for: ILS iOS/macOS v3.5 Comprehensive Functional Validation*
+*Researched: 2026-02-25*

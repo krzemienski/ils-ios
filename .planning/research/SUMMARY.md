@@ -1,89 +1,91 @@
-# Project Research Summary
+# Research Summary: v3.5 Comprehensive Functional Validation (iOS & iPad)
 
-**Project:** ILS iOS/macOS — v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
-**Domain:** Product quality overhaul — config sync, GitHub browse/install, Host Profiles, navigation/UX
-**Researched:** 2026-02-24
-**Confidence:** HIGH (all findings grounded in direct codebase inspection)
-
----
+**Domain:** Functional validation workflow for an existing SwiftUI iOS/iPad app
+**Researched:** 2026-02-25
+**Overall confidence:** HIGH
 
 ## Executive Summary
 
-The v3.1 milestone shifts from code health to product quality. Research across Stack, Features, Architecture, and Pitfalls reveals the codebase is far more ready than expected — **no new packages needed**, **backend endpoints are 70-80% complete**, and **most UI patterns already exist** but need broader application. The highest-risk item is Host Profile activation, which is architecturally broken for multi-host switching.
+v3.5 is the first true functional validation milestone -- no new features, no code-level audits, just launching every screen on real simulators, capturing screenshot evidence, fixing anything broken on the spot, and having two independent agents confirm the results. Five prior milestones (v1.0 through v3.1) hardened the codebase; v3.5 answers the question "does it actually work from a user's perspective?"
 
----
+Research confirms the existing tooling is complete. No new software, packages, or build targets are needed. The iPhone simulator exists and has been used for 5+ milestones. The iPad simulator ("iPad Pro 13 ILS", UDID `C074375B-2CB2-4F95-A55C-972F2FF35041`) already exists from Phase 8 but has never been used for a comprehensive validation pass. All 13 deep link routes are registered and tested. The ios-validation-runner protocol (SETUP-RECORD-ACT-COLLECT-VERIFY) has been proven across Phases 8, 9, and 10 with 86+ evidence files and 49/49 screen passes.
 
-## Key Findings (Cross-Research Synthesis)
+The critical architectural decision is **sequential iPhone-then-iPad validation** (not parallel). The fix-as-you-go mandate means code changes during iPhone validation would invalidate a concurrent iPad pass. iPad runs second against the already-fixed binary, minimizing duplicate work. Only the evidence gate (Phase 43) runs agents in parallel since it is read-only.
 
-### 1. No New Dependencies Required
-All four feature areas are implementable with the existing stack. GitHubService, ConfigFileService, CitadelSSHService, FleetController, and NavigationStack patterns all exist. (STACK.md)
+The highest-risk pitfall is **stale DerivedData binaries** -- Quick Task 5 already proved this can silently invalidate an entire validation session. The mitigation (newest-binary-by-timestamp install pattern) is documented and must be enforced from Phase 40 onward.
 
-### 2. Backend Is More Complete Than Expected
-- Skills: `GET /skills/search`, `POST /skills/install` — fully implemented
-- Plugins: `POST /plugins/install`, enable/disable/uninstall — fully implemented
-- Config: `GET /config?scope=user` reads host's `~/.claude/settings.json`
-- Fleet: CRUD + atomic `POST /fleet/:id/activate`
-- **Only 2 new endpoints needed:** `GET /config/defaults` (merged config) and `GET /fleet/:id/config` (remote host config proxy)
-(ARCHITECTURE.md)
+## Key Findings
 
-### 3. Host Profile Activation Is Architecturally Broken (CRITICAL)
-`HostProfilesViewModel` creates its own `APIClient()` disconnected from `AppState`. Activating a profile never updates `appState.serverURL`. All other screens silently continue hitting the previous host. **This must be fixed before any other feature work.** (PITFALLS.md, FEATURES.md)
+**Stack:** No new tools needed. `xcrun simctl` (screenshot, openurl, install, launch, log stream) + `idb` (describe, tap, swipe) + shell scripts cover everything. (STACK.md)
 
-### 4. Config Sync Write-Back Will Delete CLI Fields
-`SettingsViewModel.saveConfig()` does a full struct round-trip PUT. Optional fields like `hooks`, `env`, `permissions` round-trip as JSON omission — the app will silently drop them. **Write allowlist mandatory before any config save UI ships.** (PITFALLS.md)
+**Architecture:** Sequential 4-phase pipeline: Environment Setup (40) -> iPhone Validation with fix loop (41) -> iPad Validation with fix loop (42) -> Dual-Agent Evidence Gate (43). iPad uses the same `Debug-iphonesimulator` binary as iPhone. (ARCHITECTURE.md)
 
-### 5. Chat Back Button Requires Architectural Change
-`ActiveScreen` is a flat enum swap, not a NavigationPath push. Adding a back button conflicts with `@SceneStorage("lastChatSessionId")`. This should be its own phase. (FEATURES.md)
+**Critical pitfall:** Stale DerivedData binary silently installed -- 40+ `ILSApp-*` directories exist, `find | head -1` grabs wrong build. Use `ls -td | head -1` for newest. (PITFALLS.md)
 
-### 6. GitHub Integration Has Three Known Bugs
-- Hardcoded `main` branch in `fetchRawContent()` — fails on `master` repos
-- Global `isLoading` in SkillsViewModel blocks list during install (PluginsVM already solved this)
-- Rate limit 429 surfaces as opaque error with no guidance
-(PITFALLS.md)
+## Implications for Roadmap
 
-### 7. Navigation Fix Is Simpler Than Expected
-The hamburger is already at the NavigationStack level. The issue is child views adding conflicting `.topBarLeading` items. Fix = audit and remove conflicts. (ARCHITECTURE.md)
+Based on research, suggested phase structure:
 
----
+1. **Phase 40: Environment Setup & Screen Inventory** - Lowest risk, highest dependency
+   - Addresses: iPad simulator boot, backend verification, evidence directory creation, PASS criteria definition
+   - Avoids: Stale binary pitfall (PITFALLS P1), wrong backend pitfall (P6)
+   - Duration: ~15 minutes
+   - Creates: Screen inventory document with numbered PASS criteria per device
 
-## Recommended Phase Order
+2. **Phase 41: iPhone Full Validation** - Core deliverable, largest fix surface
+   - Addresses: 12+ iPhone screens with fix-as-you-go, deep link testing, log capture
+   - Avoids: Screenshot timing pitfall (P2), UUID case pitfall (P10)
+   - Duration: ~30-45 minutes
+   - Creates: Numbered iPhone screenshots, VERDICT-iphone.md, FIX-NNN.md files
 
-Based on dependency analysis across all four research documents:
+3. **Phase 42: iPad Full Validation** - iPad-specific layout verification
+   - Addresses: NavigationSplitView persistent sidebar, split-view proportions, all 12+ screens
+   - Avoids: iPhone coordinates on iPad (P3), layout-only-detail-checked (P4), multitasking size class (P9)
+   - Duration: ~20-30 minutes (shared code already fixed in Phase 41)
+   - MUST install same binary that passed Phase 41
 
-| Order | Phase | Rationale |
-|-------|-------|-----------|
-| 1 | Navigation & UX Overhaul | Zero backend risk, unblocks comfortable development |
-| 2 | Host Profiles Fix + Redesign | CRITICAL prerequisite — broken activation blocks all other features |
-| 3 | Settings & Config Sync | Lowest-risk feature; patterns exist, needs broader application |
-| 4 | Browse, Skills & Plugins | Backend complete; pure iOS UI work against existing endpoints |
-| 5 | System Monitor & Themes | Restoration work, lower dependency on other phases |
-| 6 | Cross-Platform Validation | Final gate — iOS, iPadOS, macOS parity check |
+4. **Phase 43: Evidence Gate** - Dual-agent confirmation, final verdict
+   - Addresses: Two independent agents verify all screenshots, cross-device comparison
+   - Avoids: Single-agent confirmation bias (documented in MEMORY.md)
+   - Duration: ~15-20 minutes
+   - Two agents run in PARALLEL (read-only)
 
-**Key constraint:** Phase 2 (Host Profiles) MUST complete before Phase 3-4 can be validated, because config sync and GitHub install both depend on targeting the correct host.
+**Phase ordering rationale:**
+- Phase 40 must be first (all other phases depend on booted simulators, installed app, verified backend)
+- Phase 41 before 42 because fix-as-you-go on iPhone changes the binary; iPad must test the post-fix version
+- Phase 42 cannot start until 41 is COMPLETE (not just started)
+- Phase 43 must wait for both 41 and 42 to finish (needs all screenshots)
 
----
+**Research flags for phases:**
+- Phase 41: May need deeper investigation if chat streaming fails (env var stripping for Claude CLI)
+- Phase 42: iPad NavigationSplitView sidebar selection sync after deep links is a known SwiftUI limitation -- may need workaround
+- Phase 43: Standard pattern, unlikely to need research
 
-## Risk Matrix
+## Confidence Assessment
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| Host switch doesn't propagate to AppState | CRITICAL | Fix HostProfilesViewModel injection in Phase 2 |
-| Config save drops CLI fields | HIGH | Implement write allowlist before any save UI |
-| GitHub install orphaned on navigation | MEDIUM | Lift SkillsVM to SidebarRootView or use Task tracking |
-| Chat back button conflicts with @SceneStorage | MEDIUM | Separate phase; design before implementation |
-| macOS build breaks from iOS-only APIs | LOW | Every phase DOD includes `xcodebuild ILSMacApp` |
+| Area | Confidence | Notes |
+|------|------------|-------|
+| Stack | HIGH | All tools verified present on machine via `which`, `--help`, `simctl list` |
+| Features | HIGH | Screen inventory derived from ActiveScreen enum + AppState deep link routes |
+| Architecture | HIGH | Sequential pipeline proven in 5 prior milestones; iPad simulator confirmed existing |
+| Pitfalls | HIGH | 6 critical + 6 moderate + 4 minor pitfalls catalogued from real project incidents |
 
----
+## Gaps to Address
+
+- **iPad sidebar selection sync:** NavigationSplitView may not highlight the correct sidebar item after programmatic deep link navigation. Needs testing during Phase 42; may require a code fix.
+- **Chat streaming validation:** Requires Claude CLI with env var stripping. If CLI is not available in the validation environment, chat rendering (message display, back button) can still be validated but message sending cannot.
+- **iPad portrait vs landscape:** Research recommends both orientations but only for key screens. Full dual-orientation validation could be a future differentiator.
+- **iPad mini compact edge case:** iPad mini in 1/3 Split View may trigger compact size class, switching to iPhone layout. Not in scope for v3.5 but flagged.
 
 ## Research Files
 
-| File | Lines | Focus |
-|------|-------|-------|
-| STACK.md | 236 | Technology recommendations — what exists, what to build, what NOT to add |
-| FEATURES.md | 334 | Feature landscape — table stakes, differentiators, anti-features, priority matrix |
-| ARCHITECTURE.md | 411 | Integration analysis — components, data flows, build order |
-| PITFALLS.md | 431 | Codebase-specific pitfall catalog — 15 pitfalls with prevention strategies |
+| File | Purpose |
+|------|---------|
+| `.planning/research/SUMMARY.md` | This file -- executive summary with roadmap implications |
+| `.planning/research/STACK.md` | Validation tooling inventory -- what exists, what NOT to add |
+| `.planning/research/FEATURES.md` | What to validate -- table stakes, differentiators, anti-features, priority order |
+| `.planning/research/ARCHITECTURE.md` | System structure -- data flow, evidence dirs, fix loop, agent gate, build order |
+| `.planning/research/PITFALLS.md` | 16 catalogued pitfalls with prevention and detection strategies |
 
 ---
-
-*Research complete. Ready for requirements definition.*
+*Research complete. Ready for requirements definition and phase planning.*
