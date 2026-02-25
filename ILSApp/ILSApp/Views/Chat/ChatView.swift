@@ -250,13 +250,13 @@ struct ChatView: View {
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
-            StreamingStatusBanner(
-                statusText: statusText,
-                connectionState: viewModel.connectionState,
+            AsyncOperationBanner(
+                message: statusText,
+                state: viewModel.connectionState.asAsyncOperationState,
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
             )
-            .transition(.move(edge: .top).combined(with: .opacity))
+            .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
         }
     }
 
@@ -538,65 +538,6 @@ struct ChatView: View {
         )
         actions.isExporting = false
         sheets.showExportSheet = true
-    }
-}
-
-// MARK: - Streaming Status Banner
-
-/// A banner displayed at the top of the chat view showing real-time streaming status.
-///
-/// Adapts its icon and color to reflect the current SSE connection state, and optionally
-/// shows token count and elapsed time when a stream is actively receiving tokens.
-struct StreamingStatusBanner: View {
-    /// The human-readable status string describing the current connection or streaming state.
-    let statusText: String
-    /// The current SSE connection state, used to select the appropriate icon and color.
-    let connectionState: SSEClient.ConnectionState
-    /// Number of tokens received in the current stream. Shown when greater than zero.
-    var tokenCount: Int = 0
-    /// Elapsed time in seconds for the current stream. Shown alongside token count.
-    var elapsedSeconds: Double = 0
-
-    @Environment(\.theme) private var theme: ThemeSnapshot
-
-    var body: some View {
-        HStack(spacing: theme.spacingSM) {
-            Group {
-                switch connectionState {
-                case .connecting, .connected:
-                    ProgressView()
-                        .scaleEffect(0.7)
-                        .tint(theme.accent)
-                        .accessibilityIdentifier("streaming-indicator")
-                case .reconnecting:
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundStyle(theme.warning)
-                case .disconnected:
-                    Image(systemName: "wifi.slash")
-                        .foregroundStyle(theme.error)
-                }
-            }
-            .frame(width: 16, height: 16)
-
-            Text(statusText)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textSecondary)
-                .accessibilityIdentifier("streaming-status-text")
-
-            Spacer()
-
-            if tokenCount > 0 {
-                Text("~\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
-                    .foregroundStyle(theme.textTertiary)
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                    .accessibilityIdentifier("streaming-stats-text")
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, theme.spacingXS)
-        .background(theme.bgSecondary)
-        .accessibilityIdentifier("streaming-status-banner")
     }
 }
 
