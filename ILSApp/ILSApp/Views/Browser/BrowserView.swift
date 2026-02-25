@@ -130,6 +130,12 @@ struct BrowserView: View {
                 Task { await loadAll() }
             }
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            mcpVM.configure(client: appState.apiClient)
+            skillsVM.configure(client: appState.apiClient)
+            pluginsVM.configure(client: appState.apiClient)
+            Task { await loadAll() }
+        }
     }
 
     // MARK: - Segmented Control

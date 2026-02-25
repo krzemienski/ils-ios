@@ -100,6 +100,10 @@ struct HomeView: View {
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            dashboardVM.configure(client: appState.apiClient)
+            Task { await dashboardVM.loadAll() }
+        }
     }
 
     // MARK: - Welcome Section

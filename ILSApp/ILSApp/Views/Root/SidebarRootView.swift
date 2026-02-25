@@ -197,6 +197,13 @@ struct SidebarRootView: View {
                 }
             }
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            sessionsVM.configure(client: appState.apiClient)
+            Task {
+                await sessionsVM.loadSessions(refresh: true)
+                await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
+            }
+        }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)

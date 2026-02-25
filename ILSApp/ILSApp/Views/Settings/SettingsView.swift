@@ -77,6 +77,11 @@ struct SettingsView: View {
         .onChange(of: colorSchemePreference) { _, newValue in
             saveColorScheme(newValue)
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            viewModel.configure(client: appState.apiClient)
+            serverURL = appState.serverURL
+            Task { await viewModel.loadAll() }
+        }
     }
 
     // MARK: - Section Wrappers
