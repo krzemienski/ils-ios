@@ -4,10 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class PluginsViewModel {
+class PluginsViewModel: BaseViewModel {
     var plugins: [Plugin] = []
-    var isLoading = false
-    var error: Error?
     var searchText = ""
     var marketplaceSearchText = ""
     var selectedCategory: String = "All"
@@ -23,19 +21,13 @@ class PluginsViewModel {
     var lastUpdated: Date?
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
-    private var client: APIClient?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
-
-    init() {}
 
     deinit {
         searchTask?.cancel()
         countdownTask?.cancel()
     }
 
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
