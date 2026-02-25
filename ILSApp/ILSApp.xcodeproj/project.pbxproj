@@ -430,6 +430,7 @@
 		FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
+		A0A1A2A3A4A5A6A7A8A9B0B1 /* SnapshotTestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -678,6 +679,7 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -735,6 +737,7 @@
 				25A5043B3EC7F706809ABA54 /* ValidationGateTests.swift */,
 				A003D095C6781ADED158D42A /* PerformanceTests */,
 				91050CDEDE0DCD61DBD1E463 /* RegressionTests */,
+				C0C1C2C3C4C5C6C7C8C9D0D1 /* SnapshotTests */,
 				AD6B8511C660DB452E4657EA /* TestHelpers */,
 			);
 			path = ILSAppUITests;
@@ -1050,6 +1053,14 @@
 				76FDB1104B5B9E3B5D9FE637 /* XCUITestBase.swift */,
 			);
 			path = TestHelpers;
+			sourceTree = "<group>";
+		};
+		C0C1C2C3C4C5C6C7C8C9D0D1 /* SnapshotTests */ = {
+			isa = PBXGroup;
+			children = (
+				B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */,
+			);
+			path = SnapshotTests;
 			sourceTree = "<group>";
 		};
 		B054CBE53D1498EAF28925EC /* Tips */ = {
@@ -1508,6 +1519,7 @@
 				D442F47EAA2CCE0D5ADD20DA /* Scenario10_DashboardAndAnalytics.swift in Sources */,
 				7325F9F731AFB7AC98F31B02 /* Scenario11_ExtendedChatConversation.swift in Sources */,
 				1F0E75F4FE9FA0A116F87AB5 /* ScrollPerformanceTests.swift in Sources */,
+				A0A1A2A3A4A5A6A7A8A9B0B1 /* SnapshotTestBase.swift in Sources */,
 				C667EB1D3AB02FA788C54E3E /* ValidationGateTests.swift in Sources */,
 				628238328AD8C5BBC73E21D4 /* XCUITestBase.swift in Sources */,
 			);
