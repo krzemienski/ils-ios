@@ -82,6 +82,11 @@ struct SettingsView: View {
             serverURL = appState.serverURL
             Task { await viewModel.loadAll() }
         }
+        .onChange(of: appState.isConnected) { _, connected in
+            if connected {
+                Task { await viewModel.loadAll() }
+            }
+        }
     }
 
     // MARK: - Section Wrappers
