@@ -24,12 +24,12 @@ Requirements for v3.5 milestone (Comprehensive Functional Validation -- iOS & iP
 - [x] **IPH-04**: Browser MCP tab -- MCP servers list with health status indicators
 - [x] **IPH-05**: Browser Skills tab -- skills list with install/enable states, GitHub browse
 - [x] **IPH-06**: Browser Plugins tab -- plugins list with enable/disable, GitHub browse
-- [ ] **IPH-07**: System Monitor -- live metrics (CPU, memory, disk, network), process list, WebSocket connected
-- [ ] **IPH-08**: Settings -- all sections render, inheritance badges visible, tooltips functional
-- [ ] **IPH-09**: Host Profiles -- profile list, active indicator, health badges
-- [ ] **IPH-10**: Themes -- theme list with preview, theme editor form
-- [ ] **IPH-11**: Sidebar navigation -- accessible from all screens, active item highlighted
-- [ ] **IPH-12**: Connection states -- connected banner, disconnected banner, reconnection behavior
+- [x] **IPH-07**: System Monitor -- live metrics (CPU, memory, disk, network), process list, WebSocket connected
+- [x] **IPH-08**: Settings -- all sections render, inheritance badges visible, tooltips functional
+- [x] **IPH-09**: Host Profiles -- profile list, active indicator, health badges
+- [x] **IPH-10**: Themes -- theme list with preview, theme editor form
+- [x] **IPH-11**: Sidebar navigation -- accessible from all screens, active item highlighted
+- [x] **IPH-12**: Connection states -- connected banner, disconnected banner, reconnection behavior
 - [x] **IPH-13**: Any issue found during validation is fixed immediately, rebuilt, and re-validated
 
 ### Deep Link Testing
@@ -100,12 +100,12 @@ Evidence gate requirements are distributed across phases rather than concentrate
 | IPH-04 | 41 | Complete |
 | IPH-05 | 41 | Complete |
 | IPH-06 | 41 | Complete |
-| IPH-07 | 41 | Pending |
-| IPH-08 | 41 | Pending |
-| IPH-09 | 41 | Pending |
-| IPH-10 | 41 | Pending |
-| IPH-11 | 41 | Pending |
-| IPH-12 | 41 | Pending |
+| IPH-07 | 41 | Complete |
+| IPH-08 | 41 | Complete |
+| IPH-09 | 41 | Complete |
+| IPH-10 | 41 | Complete |
+| IPH-11 | 41 | Complete |
+| IPH-12 | 41 | Complete |
 | IPH-13 | 41 | Complete |
 | DL-01 | 41 | Pending |
 | DL-02 | 41 | Pending |

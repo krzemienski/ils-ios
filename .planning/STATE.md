@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 41 of 42 (iPhone Full Validation + Deep Links) -- IN PROGRESS
-Plan: 1 of 5 complete (41-01)
-Status: Plan 41-01 complete (6 core screens validated), Plan 41-02 next
-Last activity: 2026-02-25 -- Plan 41-01 executed: 6 iPhone screens validated (Home, Sessions, Chat, Browser MCP/Skills/Plugins), displayName ## stripping fix committed
+Plan: 2 of 5 complete (41-01, 41-02)
+Status: Plan 41-02 complete (screens 07-13 validated), Plan 41-03 next
+Last activity: 2026-02-25 -- Plan 41-02 executed: 7 iPhone screens validated (System Monitor, Settings, Host Profiles, Agent Teams, Themes, Hooks, Sidebar) -- all 13 screens PASS
 
 Progress: [████░░░░░░] 40%
 
@@ -37,6 +37,8 @@ Progress: [████░░░░░░] 40%
 - [41-01]: Added displayName computed property to ChatSession for client-side ## prefix stripping (no backend migration needed)
 - [41-01]: Use session.displayName everywhere instead of session.name for UI rendering
 - [41-01]: External sessions not fetchable by /sessions/:id -- use tap navigation for chat screenshots instead of deep links
+- [41-02]: ils://themes routes to Custom Themes editor; built-in theme picker accessed via Settings > Appearance > Theme
+- [41-02]: Theme left as Ember after validation (was Cyberpunk) -- cosmetic only
 
 ### Pending Todos
 
@@ -55,8 +57,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 41-01-PLAN.md (6 core screens validated). Plan 41-02 next (Screens 07-10: System, Settings, Fleet, Teams).
+Stopped at: Completed 41-02-PLAN.md (all 13 iPhone screens validated). Plan 41-03 next (deep link validation).
 Resume file: None
-Key artifacts: /tmp/v3.5-evidence/iphone/ (7 screenshots: 01-home through 06-browser-plugins + 02b-session-tap-to-chat)
+Key artifacts: /tmp/v3.5-evidence/iphone/ (16 screenshots: 01-home through 13-sidebar including variants)
 Screenshot workaround: xcrun simctl io screenshot has "Timeout waiting for screen surfaces" error; use `screencapture -l 930` (Simulator window ID)
 Binary freshness: Rebuilt and installed at 17:42 on 2026-02-25, all displayName changes included
+Active theme: Ember (changed from Cyberpunk during theme-switch validation)
