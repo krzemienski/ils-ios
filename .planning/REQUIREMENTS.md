@@ -47,8 +47,8 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 ### System Monitor & Themes
 
 - [x] **SYS-01**: System monitor displays real-time metrics from connected host
-- [ ] **SYS-02**: Theme default loading works on fresh app launch
-- [ ] **SYS-03**: Cross-platform theme consistency (iOS, iPadOS, macOS)
+- [x] **SYS-02**: Theme default loading works on fresh app launch
+- [x] **SYS-03**: Cross-platform theme consistency (iOS, iPadOS, macOS)
 
 ### Cross-Platform Validation
 

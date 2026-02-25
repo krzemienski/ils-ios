@@ -70,6 +70,8 @@ Last activity: 2026-02-25 — Plan 02 (theme default & cross-platform parity) ve
 - [37-01]: Kept init default parameter as localhost:9999 for previews; only runtime baseURL is mutable via updateBaseURL()
 - [37-01]: updateBaseURL is a no-op when URL unchanged (guard) -- safe to call on every onAppear
 - [37-01]: Removed redundant loadProcesses from onAppear since connect() already calls startProcessAutoRefresh which does initial load
+- [37-02]: No code changes needed -- all theme verification checks passed without gaps
+- [37-02]: Legacy ILSTheme.swift platform-adaptive colors confirmed out of scope (not a built-in AppTheme)
 
 ### Pending Todos
 
@@ -82,5 +84,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 37-01-PLAN.md (System Monitor host fix)
+Stopped at: Completed 37-02-PLAN.md (theme default & cross-platform parity) -- Phase 37 complete
 Resume file: None
