@@ -228,3 +228,13 @@ extension UsageInfo: Content {}
 extension PermissionRequest: Content {}
 extension StreamError: Content {}
 extension AnyCodable: Content {}
+
+// MARK: - Analytics DTOs
+extension ActivityDataPoint: Content {}
+extension ActivityTimelineResponse: Content {}
+extension ModelUsageStat: Content {}
+extension SessionMetricsResponse: Content {}
+extension SkillUsageStat: Content {}
+extension SkillAnalyticsResponse: Content {}
+extension AnalyticsSummary: Content {}
+extension AnalyticsExportData: Content {}
