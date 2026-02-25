@@ -62,6 +62,9 @@ struct HooksManagementView: View {
                 ForEach(eventSections(hooks), id: \.0) { eventType, groups in
                     hookEventSection(eventType: eventType, groups: groups)
                 }
+
+                configActionButtons
+                    .padding(.top, theme.spacingSM)
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingLG)
@@ -221,9 +224,75 @@ struct HooksManagementView: View {
         }
     }
 
-    // MARK: - Empty State
+    // MARK: - Config Action Buttons (shared between hooksList and emptyState)
 
     @State private var showCopiedConfirmation = false
+
+    @ViewBuilder
+    private var configActionButtons: some View {
+        HStack(spacing: theme.spacingSM) {
+            NavigationLink {
+                ConfigEditorView(scope: "user")
+            } label: {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "doc.text")
+                        .accessibilityHidden(true)
+                    Text("Edit Config")
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingSM)
+                .background(theme.accent)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+
+            Button {
+                #if os(iOS)
+                UIPasteboard.general.string = "~/.claude/settings.json"
+                #elseif os(macOS)
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString("~/.claude/settings.json", forType: .string)
+                #endif
+                if reduceMotion {
+                    showCopiedConfirmation = true
+                } else {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showCopiedConfirmation = true
+                    }
+                }
+            } label: {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                        .accessibilityHidden(true)
+                    Text(showCopiedConfirmation ? "Copied" : "Copy Path")
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                }
+                .foregroundStyle(showCopiedConfirmation ? theme.success : theme.accent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingSM)
+                .background((showCopiedConfirmation ? theme.success : theme.accent).opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+            .buttonStyle(.plain)
+            .onChange(of: showCopiedConfirmation) { _, copied in
+                if copied {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(2))
+                        if reduceMotion {
+                            showCopiedConfirmation = false
+                        } else {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                showCopiedConfirmation = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Empty State
 
     private var emptyState: some View {
         VStack(spacing: theme.spacingMD) {
@@ -254,66 +323,7 @@ struct HooksManagementView: View {
                     .background(theme.bgTertiary)
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
-                HStack(spacing: theme.spacingSM) {
-                    NavigationLink {
-                        ConfigEditorView(scope: "user")
-                    } label: {
-                        HStack(spacing: theme.spacingSM) {
-                            Image(systemName: "doc.text")
-                                .accessibilityHidden(true)
-                            Text("Edit Config")
-                                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                        }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, theme.spacingSM)
-                        .background(theme.accent)
-                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-                    }
-
-                    Button {
-                        #if os(iOS)
-                        UIPasteboard.general.string = "~/.claude/settings.json"
-                        #elseif os(macOS)
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString("~/.claude/settings.json", forType: .string)
-                        #endif
-                        if reduceMotion {
-                            showCopiedConfirmation = true
-                        } else {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showCopiedConfirmation = true
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: theme.spacingSM) {
-                            Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
-                                .accessibilityHidden(true)
-                            Text(showCopiedConfirmation ? "Copied" : "Copy Path")
-                                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                        }
-                        .foregroundStyle(showCopiedConfirmation ? theme.success : theme.accent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, theme.spacingSM)
-                        .background((showCopiedConfirmation ? theme.success : theme.accent).opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-                    }
-                    .buttonStyle(.plain)
-                    .onChange(of: showCopiedConfirmation) { _, copied in
-                        if copied {
-                            Task { @MainActor in
-                                try? await Task.sleep(for: .seconds(2))
-                                if reduceMotion {
-                                    showCopiedConfirmation = false
-                                } else {
-                                    withAnimation(.easeOut(duration: 0.3)) {
-                                        showCopiedConfirmation = false
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                configActionButtons
 
                 Text("Supported event types: PreToolUse, PostToolUse, UserPromptSubmit, SessionStart, SubagentStart")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))

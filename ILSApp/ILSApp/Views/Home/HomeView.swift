@@ -41,6 +41,8 @@ struct HomeView: View {
     @State private var isRefreshing = false
     /// Controls presentation of the New Session sheet.
     @State private var showNewSessionSheet = false
+    /// Text entered in the sessions search bar.
+    @State private var sessionSearchText: String = ""
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -74,6 +76,7 @@ struct HomeView: View {
             .animation(.easeInOut(duration: 0.3), value: isRefreshing)
         }
         .background(theme.bgPrimary)
+        .navigationTitle("Home")
         .sheet(isPresented: $showNewSessionSheet) {
             NewSessionView { session in
                 showNewSessionSheet = false
@@ -97,6 +100,7 @@ struct HomeView: View {
             await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
             isRefreshing = false
         }
+        .searchable(text: $sessionSearchText, prompt: "Search sessions")
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
         }
@@ -204,23 +208,32 @@ struct HomeView: View {
 
     @ViewBuilder
     private var recentSessionsSection: some View {
-        let recent = Array(sessionsVM.sessions.prefix(5))
+        let isSearching = !sessionSearchText.isEmpty
+        let displaySessions: [ChatSession] = {
+            if isSearching {
+                return sessionsVM.sessions.filter {
+                    $0.displayName.localizedCaseInsensitiveContains(sessionSearchText)
+                }
+            } else {
+                return Array(sessionsVM.sessions.prefix(5))
+            }
+        }()
 
-        if !recent.isEmpty {
+        if !displaySessions.isEmpty {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack {
-                    Text("Recent Sessions")
+                    Text(isSearching ? "Results" : "Recent Sessions")
                         .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Spacer()
 
-                    Text("\(sessionsVM.totalCount)")
+                    Text("\(isSearching ? displaySessions.count : sessionsVM.totalCount)")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
 
-                ForEach(recent, id: \.id) { session in
+                ForEach(displaySessions, id: \.id) { session in
                     Button {
                         onSessionSelected?(session)
                     } label: {
@@ -230,6 +243,17 @@ struct HomeView: View {
                     .shimmerIfActive(isRefreshing)
                 }
             }
+        } else if isSearching {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 24, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text("No sessions matching \"\(sessionSearchText)\"")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingMD)
         } else if !appState.isConnected {
             // Empty state handled by connection banner
             EmptyView()

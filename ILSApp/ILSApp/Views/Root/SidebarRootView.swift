@@ -406,7 +406,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private var themesScreen: some View {
-        ThemesListView()
+        ThemePickerView()
     }
 
     @ViewBuilder
