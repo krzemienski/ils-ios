@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 34 — Host Profiles Fix & Redesign -- IN PROGRESS
-Plan: 1/3 documented — 34-01 SUMMARY created (code for all 3 plans committed in prior session)
-Status: Plan 01 SUMMARY documented. Plans 02 and 03 need SUMMARY documentation.
-Last activity: 2026-02-25 — Documented 34-01 (host activation architecture fix)
+Phase: 34 — Host Profiles Fix & Redesign -- COMPLETE
+Plan: 3/3 complete — All summaries documented
+Status: All 3 plans executed and documented. Phase 34 complete.
+Last activity: 2026-02-25 — Completed 34-02 (ViewModel reactive reconfiguration on host switch)
 
 ## Previous Milestones
 
@@ -43,6 +43,10 @@ Last activity: 2026-02-25 — Documented 34-01 (host activation architecture fix
 - [34-01]: hostProfileRow receives unwrapped viewModel as parameter rather than optional chaining throughout
 - [34-01]: Health polling uses silent catch (best-effort) while user-facing operations surface errors via loadError
 - [34-03]: Fixed HostProfilesView optional viewModel pattern to match updated init(appState:) signature
+- [34-02]: SidebarRootView onChange also reloads custom themes via themeManager to keep theme picker in sync with new host
+- [34-02]: SettingsView onChange updates local serverURL @State so connection section reflects new host URL immediately
+- [34-02]: ConfigEditorView onChange resets both configText and originalConfigText to prevent false unsaved-changes warnings
+- [34-02]: ChatView only reconfigures clients without reloading -- preserves visible conversation
 
 ### Pending Todos
 
@@ -55,5 +59,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 34-01-PLAN.md documentation — SUMMARY created, verified all plan requirements met
+Stopped at: Completed 34-02-PLAN.md — 8 views gain reactive ViewModel reconfiguration on host switch
 Resume file: None

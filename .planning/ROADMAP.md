@@ -502,7 +502,7 @@ Plans:
 **Key Constraint:** Phase 34 (Host Profiles) MUST complete before Phases 35-36 can be validated — config sync and GitHub install depend on targeting the correct host.
 
 - [x] **Phase 33: Navigation & UX Overhaul** — Side menu accessibility, chat back button, home layout, sidebar host indicator, deep link consistency (completed 2026-02-25)
-- [ ] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename
+- [x] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename (completed 2026-02-25)
 - [ ] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips
 - [ ] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX
 - [ ] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency
@@ -541,9 +541,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 34-01-PLAN.md — Core AppState injection into HostProfilesViewModel, activate() propagation, activeHostName persistence (HP-01, HP-03, HP-04)
-- [ ] 34-02-PLAN.md — Reactive ViewModel reconfiguration via .onChange(of: appState.serverURL) on all views (HP-02)
-- [ ] 34-03-PLAN.md — Delete dead Fleet* files, update doc comments for naming consistency (HP-05)
+- [x] 34-01-PLAN.md — Core AppState injection into HostProfilesViewModel, activate() propagation, activeHostName persistence (HP-01, HP-03, HP-04)
+- [x] 34-02-PLAN.md — Reactive ViewModel reconfiguration via .onChange(of: appState.serverURL) on all views (HP-02)
+- [x] 34-03-PLAN.md — Delete dead Fleet* files, update doc comments for naming consistency (HP-05)
 
 ---
 
@@ -636,7 +636,7 @@ Plans:
 | 31. Swift 6 Preparation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
-| 34. Host Profiles Fix + Redesign | 2/3 | In Progress|  | — |
+| 34. Host Profiles Fix + Redesign | 3/3 | Complete | 2026-02-25 | — |
 | 35. Settings & Config Sync | v3.1 | 0/? | Planned | — |
 | 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |
 | 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |

@@ -18,7 +18,7 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 ### Host Profiles
 
 - [x] **HP-01**: Host activation propagates to `AppState.serverURL` — `HostProfilesViewModel` uses `AppState` injection, not standalone `APIClient()` (CRITICAL)
-- [ ] **HP-02**: All ViewModels reload data on host switch — reactive invalidation via `AppState` observable change
+- [x] **HP-02**: All ViewModels reload data on host switch — reactive invalidation via `AppState` observable change
 - [x] **HP-03**: Active profile indicator visible on list row and sidebar
 - [x] **HP-04**: Health status badges per host with colored dot
 - [x] **HP-05**: Fleet → Host Profiles naming consistency in all UI strings and navigation
