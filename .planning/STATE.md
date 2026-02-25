@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 36 — Browse, Skills & Plugins -- IN PROGRESS (1/3 plans complete)
-Plan: 3 plans in 2 waves (36-01 backend W1 DONE, 36-02 skills UI W2, 36-03 plugins UI W2)
-Status: 36-01 backend infrastructure complete; 36-02 and 36-03 ready for execution
-Last activity: 2026-02-25 — Completed 36-01 backend plan (branch detection, plugin search, skill enable/disable)
+Phase: 36 — Browse, Skills & Plugins -- IN PROGRESS (2/3 plans complete)
+Plan: 3 plans in 2 waves (36-01 backend W1 DONE, 36-02 skills UI W2 DONE, 36-03 plugins UI W2)
+Status: 36-02 skills UI complete; 36-03 plugins UI ready for execution
+Last activity: 2026-02-25 — Completed 36-02 skills UI plan (per-item spinners, badges, context menus, rate limit banner)
 
 ### Planning Summary (Phases 36-38)
 - Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
@@ -61,6 +61,9 @@ Last activity: 2026-02-25 — Completed 36-01 backend plan (branch detection, pl
 - [36-01]: getDefaultBranch falls back to "main" on any error (best-effort, no crash)
 - [36-01]: Skills enable/disable uses .skills-config.json in ~/.claude/skills/ (isolated from main settings)
 - [36-01]: searchPlugins reuses GitHubSearchResult DTO (skillPath field holds plugin.json path)
+- [36-02]: isInstalled checks both skill.name and skill.path against repo name for robust matching
+- [36-02]: Rate limit errors routed to gitHubError (inline banner) while other errors go to generic error property
+- [36-02]: Context menu Enable/Disable placed before Remove for safer default action ordering
 
 ### Pending Todos
 
@@ -73,5 +76,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 36-01-PLAN.md — backend infrastructure for browse improvements (branch detection, plugin search, skill enable/disable)
+Stopped at: Completed 36-02-PLAN.md — skills UI improvements (per-item spinners, badges, context menus, rate limit banner)
 Resume file: None

@@ -580,7 +580,7 @@ Plans:
   6. `fetchRawContent` tries the repo's default branch (not hardcoded `main`)
   7. Rate limit 429 shows: "GitHub search limit reached. Set GITHUB_TOKEN on host to increase limits."
   8. Installed items can be uninstalled via `.contextMenu` "Remove" action from browse tab
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 36-01-PLAN.md — Backend: branch detection, rate limit messaging, skill enable/disable routes, plugin GitHub search endpoint
@@ -658,6 +658,6 @@ Plans:
 | 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
 | 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
 | 35. Settings & Config Sync | 2/2 | Complete    | 2026-02-25 | — |
-| 36. Browse, Skills & Plugins | 1/3 | In Progress|  | — |
+| 36. Browse, Skills & Plugins | 2/3 | In Progress|  | — |
 | 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
 | 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |

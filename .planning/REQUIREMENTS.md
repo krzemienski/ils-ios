@@ -35,14 +35,14 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 
 ### Browse, Skills & Plugins
 
-- [ ] **BRW-01**: GitHub skill search returns results with name, description, stars, repo path
-- [ ] **BRW-02**: Per-item install progress indicator (not global `isLoading` blocking entire list)
-- [ ] **BRW-03**: Installed state badge on GitHub search result rows
+- [x] **BRW-01**: GitHub skill search returns results with name, description, stars, repo path
+- [x] **BRW-02**: Per-item install progress indicator (not global `isLoading` blocking entire list)
+- [x] **BRW-03**: Installed state badge on GitHub search result rows
 - [x] **BRW-04**: Plugin GitHub browse UI in Plugins tab (symmetry with skills tab)
 - [x] **BRW-05**: Enable/disable toggle inline on installed skill and plugin rows
 - [x] **BRW-06**: GitHub `fetchRawContent` branch detection — not hardcoded to `main`; try default branch
 - [x] **BRW-07**: Rate limit 429 shows actionable error: "GitHub limit reached. Set GITHUB_TOKEN on host."
-- [ ] **BRW-08**: Uninstall from browse tab via context menu on installed items
+- [x] **BRW-08**: Uninstall from browse tab via context menu on installed items
 
 ### System Monitor & Themes
 
