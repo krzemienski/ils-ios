@@ -9,10 +9,15 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 35 — Settings & Config Sync -- COMPLETE
-Plan: 2/2 complete — All summaries documented
-Status: All 2 plans executed and documented. Phase 35 complete.
-Last activity: 2026-02-25 — Completed 35-02 (annotation badges, tooltips, system prompt section)
+Phase: 36 — Browse, Skills & Plugins -- PLANNED (ready for execution)
+Plan: 3 plans in 2 waves (36-01 backend W1, 36-02 skills UI W2, 36-03 plugins UI W2)
+Status: Research + planning + verification complete for phases 36, 37, 38
+Last activity: 2026-02-25 — All 3 remaining phases researched, planned, and verified
+
+### Planning Summary (Phases 36-38)
+- Phase 36: 3 plans / 2 waves / 8 reqs (BRW-01..08) — GitHub browse & install for skills + plugins
+- Phase 37: 2 plans / 1 wave / 3 reqs (SYS-01..03) — System monitor host fix + theme verification
+- Phase 38: 2 plans / 2 waves / 3 reqs (XP-01..03) — Cross-platform build + parity validation
 
 ## Previous Milestones
 
