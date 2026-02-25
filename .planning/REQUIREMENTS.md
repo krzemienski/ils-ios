@@ -1,9 +1,69 @@
-# Requirements: ILS iOS/macOS v1.5
+# Requirements: ILS iOS/macOS v3.1
 
 **Defined:** 2026-02-24
-**Core Value:** Ship-ready code quality — every audit finding resolved, tests reliable and meaningful, Swift 6 concurrency on a clear migration path
+**Core Value:** Every screen works correctly, reflects the connected host's configuration, and provides a polished native experience
 
-## v1.5 Requirements
+## v3.1 Requirements
+
+Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Each maps to roadmap phases starting at Phase 33. Source: `.planning/research/` (4 research files, 109KB, from 2026-02-24).
+
+### Navigation & UX
+
+- [ ] **NAV-01**: Hamburger/side menu accessible from ALL screens — child views must not add conflicting `.topBarLeading` toolbar items
+- [ ] **NAV-02**: Chat session has a back button to return to sessions list — requires ActiveScreen push/pop instead of flat enum swap
+- [ ] **NAV-03**: Home screen layout polish — stats cards, quick actions ordering, consistent spacing
+- [ ] **NAV-04**: Sidebar shows active host name indicator below header
+- [ ] **NAV-05**: Deep link navigation works consistently across all registered `ils://` routes
+
+### Host Profiles
+
+- [ ] **HP-01**: Host activation propagates to `AppState.serverURL` — `HostProfilesViewModel` uses `AppState` injection, not standalone `APIClient()` (CRITICAL)
+- [ ] **HP-02**: All ViewModels reload data on host switch — reactive invalidation via `AppState` observable change
+- [ ] **HP-03**: Active profile indicator visible on list row and sidebar
+- [ ] **HP-04**: Health status badges per host with colored dot
+- [ ] **HP-05**: Fleet → Host Profiles naming consistency in all UI strings and navigation
+
+### Settings & Config Sync
+
+- [ ] **CFG-01**: Display effective config values pulled from connected host CLI (`~/.claude/settings.json`)
+- [ ] **CFG-02**: `InheritanceBadge` (Host Default / Custom) applied to ALL settings fields, not just model and two toggles
+- [ ] **CFG-03**: Config auto-refresh on reconnect and host switch (`onChange(appState.isConnected)`)
+- [ ] **CFG-04**: Explanatory tooltip (`SettingsInfoButton`) on every settings field — full coverage
+- [ ] **CFG-05**: Write allowlist prevents CLI field deletion — `hooks`, `env`, `permissions`, `statusLine` never included in write payloads
+- [ ] **CFG-06**: System prompt field displayed (read-only if inherited from host)
+- [ ] **CFG-07**: Inline edit uses read-then-patch pattern — load fresh config, apply minimal delta, PUT back
+
+### Browse, Skills & Plugins
+
+- [ ] **BRW-01**: GitHub skill search returns results with name, description, stars, repo path
+- [ ] **BRW-02**: Per-item install progress indicator (not global `isLoading` blocking entire list)
+- [ ] **BRW-03**: Installed state badge on GitHub search result rows
+- [ ] **BRW-04**: Plugin GitHub browse UI in Plugins tab (symmetry with skills tab)
+- [ ] **BRW-05**: Enable/disable toggle inline on installed skill and plugin rows
+- [ ] **BRW-06**: GitHub `fetchRawContent` branch detection — not hardcoded to `main`; try default branch
+- [ ] **BRW-07**: Rate limit 429 shows actionable error: "GitHub limit reached. Set GITHUB_TOKEN on host."
+- [ ] **BRW-08**: Uninstall from browse tab via context menu on installed items
+
+### System Monitor & Themes
+
+- [ ] **SYS-01**: System monitor displays real-time metrics from connected host
+- [ ] **SYS-02**: Theme default loading works on fresh app launch
+- [ ] **SYS-03**: Cross-platform theme consistency (iOS, iPadOS, macOS)
+
+### Cross-Platform Validation
+
+- [ ] **XP-01**: macOS builds with zero errors after all v3.1 changes
+- [ ] **XP-02**: All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
+- [ ] **XP-03**: iOS/iPadOS/macOS feature parity verified for all v3.1 changes
+
+---
+
+## v1.5 Requirements (COMPLETE)
+
+<details>
+<summary>v1.5 — All 50 requirements PASS (shipped 2026-02-24)</summary>
+
+### v1.5 Requirements Detail
 
 Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 25. Source: `scratch/audit-findings-2026-02-24.md` (70 issues from 16 parallel agents, 10 already fixed in commit c57690f).
 
@@ -78,87 +138,64 @@ Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 2
 - [x] **SWIFT6-02**: TeamsExecutorService.shutdownTeammate non-Sendable Process crossing resolved
 - [x] **SWIFT6-03**: Build verified with -strict-concurrency=targeted (no new errors introduced)
 
-## Future Requirements
+**v1.5 Coverage:** 50/50 requirements complete (shipped 2026-02-24)
 
-### Deferred from v2.0
+</details>
 
-- **PERF-02**: Memory usage stays under 100MB for typical sessions
-- **PERF-06**: Battery impact rated "Low" by iOS Energy Organizer
-
-## Out of Scope
+## Out of Scope (v3.1)
 
 | Feature | Reason |
 |---------|--------|
-| New feature development | Code health only — no new capabilities |
-| App Store submission | Separate milestone after quality gate |
-| Full Swift 6 strict mode | Target `targeted` level, not `complete` |
-| UI/UX redesign | No visual changes — internal code quality |
+| App Store submission | Separate milestone |
+| Android/web platform support | Not applicable |
+| Full Swift 6 strict mode | Already at `targeted` level |
+| Backend rewrite | Incremental changes only as needed |
+| Scope waterfall visualiser | Deferred to v3.2+ (needs significant new API) |
+| GitHub README preview before install | Deferred to v3.1.x (needs new endpoint) |
+| Install progress with backend log streaming | Deferred to v3.2+ (needs SSE endpoint) |
 
-## Traceability
+## Traceability (v3.1)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONC-01 | 25 | Complete |
-| CONC-02 | 25 | Complete |
-| CONC-07 | 25 | Complete |
-| CONC-10 | 25 | Complete |
-| SWIFT6-01 | 25, 31 | Complete |
-| SWIFT6-02 | 25, 31 | Complete |
-| CONC-03 | 26 | Complete |
-| CONC-04 | 26 | Complete |
-| CONC-05 | 26 | Complete |
-| CONC-06 | 26 | Complete |
-| CONC-08 | 26 | Complete |
-| CONC-09 | 26 | Complete |
-| CONC-11 | 26 | Complete |
-| CONC-12 | 26 | Complete |
-| CONC-13 | 26 | Complete |
-| CONC-14 | 26 | Complete |
-| CONC-15 | 26 | Complete |
-| CONC-16 | 26 | Complete |
-| CONC-17 | 26 | Complete |
-| ENRG-01 | 27 | Complete |
-| ENRG-02 | 27 | Complete |
-| ENRG-03 | 27 | Complete |
-| ENRG-04 | 27 | Complete |
-| ENRG-05 | 27 | Complete |
-| ENRG-06 | 27 | Complete |
-| ENRG-07 | 27 | Complete |
-| ENRG-08 | 27 | Complete |
-| MEM-01 | 27 | Complete |
-| MEM-02 | 27 | Complete |
-| MEM-03 | 27 | Complete |
-| MEM-04 | 27 | Complete |
-| MEM-05 | 27 | Complete |
-| MEM-06 | 27 | Complete |
-| MEM-07 | 27 | Complete |
-| MEM-08 | 27 | Complete |
-| UIPERF-01 | 28 | Complete |
-| UIPERF-02 | 28 | Complete |
-| UIPERF-03 | 28 | Complete |
-| UIPERF-04 | 28 | Complete |
-| UIPERF-05 | 28 | Complete |
-| UIPERF-06 | 28 | Complete |
-| TEST-01 | 29 | Complete |
-| TEST-02 | 29 | Complete |
-| TEST-03 | 29 | Complete |
-| TEST-04 | 29 | Complete |
-| TEST-05 | 30 | Complete |
-| TEST-06 | 30 | Complete |
-| TEST-07 | 30 | Complete |
-| TEST-08 | 30 | Complete |
-| TEST-09 | 30 | Complete |
-| TEST-10 | 30 | Complete |
-| TEST-11 | 30 | Complete |
-| SWIFT6-03 | 31 | Complete |
+| NAV-01 | 33 | Open |
+| NAV-02 | 33 | Open |
+| NAV-03 | 33 | Open |
+| NAV-04 | 33 | Open |
+| NAV-05 | 33 | Open |
+| HP-01 | 34 | Open |
+| HP-02 | 34 | Open |
+| HP-03 | 34 | Open |
+| HP-04 | 34 | Open |
+| HP-05 | 34 | Open |
+| CFG-01 | 35 | Open |
+| CFG-02 | 35 | Open |
+| CFG-03 | 35 | Open |
+| CFG-04 | 35 | Open |
+| CFG-05 | 35 | Open |
+| CFG-06 | 35 | Open |
+| CFG-07 | 35 | Open |
+| BRW-01 | 36 | Open |
+| BRW-02 | 36 | Open |
+| BRW-03 | 36 | Open |
+| BRW-04 | 36 | Open |
+| BRW-05 | 36 | Open |
+| BRW-06 | 36 | Open |
+| BRW-07 | 36 | Open |
+| BRW-08 | 36 | Open |
+| SYS-01 | 37 | Open |
+| SYS-02 | 37 | Open |
+| SYS-03 | 37 | Open |
+| XP-01 | 38 | Open |
+| XP-02 | 38 | Open |
+| XP-03 | 38 | Open |
 
 **Coverage:**
-- v1.5 requirements: 50 total (+ 2 shared: SWIFT6-01/02 in Phase 25 and 31)
-- Mapped to phases: 50/50 (100%)
-- Complete: 50
-- Documented: 0
-- Open: 0
+- v3.1 requirements: 31 total
+- Mapped to phases: 31/31 (100%)
+- Complete: 0
+- Open: 31
 
 ---
 *Requirements defined: 2026-02-24*
-*Last updated: 2026-02-24 — v1.5 milestone closed, all 50 requirements complete*
+*Last updated: 2026-02-24 — v3.1 milestone started*

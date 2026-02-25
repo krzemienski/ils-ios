@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: Research complete, defining requirements
-Plan: —
-Status: Research complete — 4 research files (1,412 lines) synthesized. Next: define REQ-IDs, create roadmap.
-Last activity: 2026-02-24 — Research phase complete (Stack, Features, Architecture, Pitfalls)
+Phase: 33 — Navigation & UX Overhaul
+Plan: Planning in progress
+Status: v3.1 requirements defined (31 REQ-IDs), roadmap created (Phases 33-38). Now planning Phase 33.
+Last activity: 2026-02-24 — Requirements + roadmap defined, planning Phase 33
 
 ## Previous Milestones
 
