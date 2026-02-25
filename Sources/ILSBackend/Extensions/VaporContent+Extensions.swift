@@ -109,6 +109,9 @@ extension UpdateConfigRequest: Content {}
 extension ValidateConfigRequest: Content {}
 extension CreateCustomThemeRequest: Content {}
 extension UpdateCustomThemeRequest: Content {}
+extension CreateTemplateRequest: Content {}
+extension UpdateTemplateRequest: Content {}
+extension BulkDeleteTemplatesRequest: Content {}
 
 // MARK: - Paginated Response
 extension PaginatedResponse: AsyncResponseEncodable where T: Content {
@@ -178,6 +181,7 @@ extension GitHubRepoPreview: Content {}
 extension GitHubFileEntry: Content {}
 
 // MARK: - Model Types
+extension SessionTemplate: Content {}
 extension Project: Content {}
 extension ChatSession: Content {}
 extension Message: Content {}

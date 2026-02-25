@@ -81,6 +81,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddDatabaseIndexes())
     // v4.0 — Ecosystem polish
     app.migrations.add(AddMeshGradientToThemes())
+    // v5.0 — Session templates
+    app.migrations.add(CreateTemplates())
 
     // Run migrations
     try await app.autoMigrate()
