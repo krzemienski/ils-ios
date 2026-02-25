@@ -193,10 +193,10 @@ struct SettingsConfigSection: View {
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
-                    HStack {
-                        Spacer()
-                        SettingsInfoButton(text: "Your Anthropic API key for authenticating with the Claude API. For security, API keys cannot be edited through the iOS app.")
-                    }
+                    settingAnnotation(
+                        isInherited: true,
+                        tooltip: "Your Anthropic API key. Managed on the host via environment variables or `claude config set apiKey`. Cannot be edited from the iOS app for security."
+                    )
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -241,6 +241,10 @@ struct SettingsConfigSection: View {
                     } else {
                         settingsRow("Allowed", value: "None")
                     }
+                    settingAnnotation(
+                        isInherited: permissions.allow == nil,
+                        tooltip: "Tools and patterns explicitly allowed to run without confirmation. Configured in host CLI settings."
+                    )
 
                     if let denied = permissions.deny, !denied.isEmpty {
                         DisclosureGroup {
@@ -256,6 +260,10 @@ struct SettingsConfigSection: View {
                     } else {
                         settingsRow("Denied", value: "None")
                     }
+                    settingAnnotation(
+                        isInherited: permissions.deny == nil,
+                        tooltip: "Tools and patterns explicitly blocked from running. Configured in host CLI settings."
+                    )
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -314,14 +322,30 @@ struct SettingsConfigSection: View {
                     } else {
                         settingsRow("Enabled Plugins", value: "0")
                     }
+                    settingAnnotation(
+                        isInherited: config.enabledPlugins == nil,
+                        tooltip: "Plugins installed and enabled on the host. Manage plugins from the Browse tab."
+                    )
 
                     if let statusLine = config.statusLine {
                         settingsRow("Status Line", value: statusLine.type ?? "disabled")
+                    } else {
+                        settingsRow("Status Line", value: "Not configured")
                     }
+                    settingAnnotation(
+                        isInherited: config.statusLine == nil,
+                        tooltip: "Custom status line displayed in the Claude Code terminal. Configured on the host."
+                    )
 
                     if let env = config.env, !env.isEmpty {
                         settingsRow("Environment Vars", value: "\(env.count)")
+                    } else {
+                        settingsRow("Environment Vars", value: "0")
                     }
+                    settingAnnotation(
+                        isInherited: config.env == nil,
+                        tooltip: "Environment variables passed to Claude Code sessions. Configured on the host."
+                    )
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -388,6 +412,10 @@ struct SettingsConfigSection: View {
                         }
                     }
                     .tint(theme.accent)
+                    settingAnnotation(
+                        isInherited: false,
+                        tooltip: "Experimental feature: coordinate multiple AI agents working together. This setting is stored locally on your device."
+                    )
                 }
                 .padding(theme.spacingMD)
                 .modifier(GlassCard())
