@@ -211,6 +211,11 @@ extension SpacingTokens: Content {}
 extension CornerRadiusTokens: Content {}
 extension ShadowTokens: Content {}
 
+// MARK: - Suggestion Types
+extension SessionSuggestion: Content {}
+extension SkillSuggestion: Content {}
+extension SuggestionFeedbackRequest: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}
