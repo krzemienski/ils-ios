@@ -791,3 +791,29 @@ public struct UpdateCustomThemeRequest: Codable, Sendable {
     }
 }
 
+// MARK: - Suggestion Requests
+
+/// Feedback event recording user interaction with a suggestion.
+public struct SuggestionFeedbackRequest: Codable, Sendable {
+    /// Session context in which the suggestion was shown (optional).
+    public let sessionId: UUID?
+    /// User action taken (e.g., "click", "dismiss", "view").
+    public let action: String
+    /// Type of suggestion (e.g., "session", "skill").
+    public let suggestionType: String
+    /// Identifier of the suggested resource.
+    public let targetId: String
+
+    public init(
+        sessionId: UUID? = nil,
+        action: String,
+        suggestionType: String,
+        targetId: String
+    ) {
+        self.sessionId = sessionId
+        self.action = action
+        self.suggestionType = suggestionType
+        self.targetId = targetId
+    }
+}
+

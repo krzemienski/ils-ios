@@ -352,3 +352,53 @@ public struct MCPPresetListResponse: Codable, Sendable {
         self.presets = presets
     }
 }
+
+// MARK: - Suggestion Responses
+
+/// A suggested past session relevant to the current context.
+public struct SessionSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested session.
+    public let session: ChatSession
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        session: ChatSession,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.session = session
+        self.score = score
+        self.reason = reason
+    }
+}
+
+/// A suggested skill relevant to the current project or context.
+public struct SkillSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested skill.
+    public let skill: Skill
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        skill: Skill,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.skill = skill
+        self.score = score
+        self.reason = reason
+    }
+}
