@@ -595,8 +595,8 @@ Plans:
 **Requirements**: SYS-01, SYS-02, SYS-03
 **Plans:** 2/2 plans complete
 Plans:
-- [ ] 37-01-PLAN.md — Fix system monitor to use active host URL for WebSocket + REST
-- [ ] 37-02-PLAN.md — Verify theme default loading and cross-platform injection parity
+- [x] 37-01-PLAN.md — Fix system monitor to use active host URL for WebSocket + REST
+- [x] 37-02-PLAN.md — Verify theme default loading and cross-platform injection parity
 **Success Criteria** (what must be TRUE):
   1. System monitor screen displays real-time CPU, memory, disk, and network metrics from the connected host
   2. Default theme loads correctly on fresh app installation (no blank/broken theme state)
@@ -612,10 +612,10 @@ Plans:
   1. `xcodebuild` for ILSApp and ILSMacApp both exit 0 with zero errors; `swift build` for backend exits 0
   2. All 15 v1.0 audit REQs (REQ-01 through REQ-15) re-validated as PASS
   3. Feature parity verified across iOS, iPadOS, and macOS for all v3.1 changes (navigation, host profiles, settings, browse, system monitor, themes)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 38-01-PLAN.md — Build all three targets, fix compilation errors, platform guard audit (XP-01)
+- [x] 38-01-PLAN.md — Build all three targets, fix compilation errors, platform guard audit (XP-01)
 - [ ] 38-02-PLAN.md — Fix macOS parity gaps, re-validate 15 v1.0 REQs, document feature parity (XP-02, XP-03)
 
 ---
@@ -660,4 +660,4 @@ Plans:
 | 35. Settings & Config Sync | 2/2 | Complete    | 2026-02-25 | — |
 | 36. Browse, Skills & Plugins | 3/3 | Complete    | 2026-02-25 | — |
 | 37. System Monitor & Themes | 2/2 | Complete    | 2026-02-25 | — |
-| 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |
+| 38. Cross-Platform Validation | 1/2 | In Progress|  | — |

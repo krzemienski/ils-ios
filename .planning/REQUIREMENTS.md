@@ -52,7 +52,7 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 
 ### Cross-Platform Validation
 
-- [ ] **XP-01**: macOS builds with zero errors after all v3.1 changes
+- [x] **XP-01**: macOS builds with zero errors after all v3.1 changes
 - [ ] **XP-02**: All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
 - [ ] **XP-03**: iOS/iPadOS/macOS feature parity verified for all v3.1 changes
 
