@@ -142,12 +142,21 @@ struct SidebarRootView: View {
         }
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
+
+            // Handle browser segment intent for deep links
+            if case .browser = screen, let segmentIntent = appState.browserSegmentIntent {
+                browserSegment = segmentIntent
+                appState.browserSegmentIntent = nil
+            }
+
+            // Handle chat deep links through navigateToChat for back button support
             if case .chat(let session) = screen {
                 navigateToChat(session)
             } else {
-                previousScreen = nil
+                previousScreen = nil  // Non-chat deep links clear back history
                 activeScreen = screen
             }
+
             appState.navigationIntent = nil
             if !isRegularWidth {
                 closeSidebar()
