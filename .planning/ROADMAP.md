@@ -580,6 +580,12 @@ Plans:
   6. `fetchRawContent` tries the repo's default branch (not hardcoded `main`)
   7. Rate limit 429 shows: "GitHub search limit reached. Set GITHUB_TOKEN on host to increase limits."
   8. Installed items can be uninstalled via `.contextMenu` "Remove" action from browse tab
+**Plans:** 3 plans
+
+Plans:
+- [ ] 36-01-PLAN.md — Backend: branch detection, rate limit messaging, skill enable/disable routes, plugin GitHub search endpoint
+- [ ] 36-02-PLAN.md — Frontend: per-item install tracking, installed badges, context menus, rate limit error banner
+- [ ] 36-03-PLAN.md — Frontend: plugin GitHub browse section, inline enable/disable toggles
 
 ---
 
