@@ -516,7 +516,7 @@ Plans:
 **Requirements**: NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
 **Plans:** 3 plans
 Plans:
-- [ ] 33-01-PLAN.md — Inline nav titles on 4 missing screens + Home layout polish (NAV-01, NAV-03)
+- [x] 33-01-PLAN.md — Inline nav titles on 4 missing screens + Home layout polish (NAV-01, NAV-03)
 - [ ] 33-02-PLAN.md — Chat back button via previousScreen tracking + sidebar host indicator (NAV-02, NAV-04)
 - [ ] 33-03-PLAN.md — Deep link browser segment routing + back button integration (NAV-05)
 **Success Criteria** (what must be TRUE):
@@ -629,7 +629,7 @@ Plans:
 | 30. Testing Infrastructure | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 31. Swift 6 Preparation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
-| 33. Navigation & UX Overhaul | v3.1 | 0/? | Planned | — |
+| 33. Navigation & UX Overhaul | v3.1 | 1/3 | In Progress | — |
 | 34. Host Profiles Fix + Redesign | v3.1 | 0/? | Planned | — |
 | 35. Settings & Config Sync | v3.1 | 0/? | Planned | — |
 | 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |

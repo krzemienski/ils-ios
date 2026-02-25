@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 ## Current Position
 
 Phase: 33 — Navigation & UX Overhaul
-Plan: Planning in progress
-Status: v3.1 requirements defined (31 REQ-IDs), roadmap created (Phases 33-38). Now planning Phase 33.
-Last activity: 2026-02-24 — Requirements + roadmap defined, planning Phase 33
+Plan: 1/3 complete — executing plan 02 next
+Status: Plan 01 complete (inline nav titles + Home layout polish). 2 remaining plans in phase.
+Last activity: 2026-02-25 — Completed 33-01 (nav titles + Home spacing)
 
 ## Previous Milestones
 
@@ -30,17 +30,19 @@ Last activity: 2026-02-24 — Requirements + roadmap defined, planning Phase 33
 - [v3.1]: Host CLI config sync required — app must reflect connected host defaults
 - [v3.1]: Phase numbering continues from 33 (v1.5 ended at Phase 32)
 - [v3.1]: Scope includes new features (GitHub browse/install, host sync) unlike previous code-health milestones
+- [33-01]: Sub-token spacing (1pt, 2pt) retained for tight label pairs -- below spacingXS threshold by design
+- [33-01]: HomeView section ordering verified correct as-is -- no reordering needed
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-None yet — milestone requirements being defined.
+None.
 
 ## Session Continuity
 
-Last session: 2026-02-24
-Stopped at: Milestone v3.1 setup — defining requirements
+Last session: 2026-02-25
+Stopped at: Completed 33-01-PLAN.md
 Resume file: None

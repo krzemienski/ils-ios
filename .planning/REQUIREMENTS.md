@@ -9,9 +9,9 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 
 ### Navigation & UX
 
-- [ ] **NAV-01**: Hamburger/side menu accessible from ALL screens — child views must not add conflicting `.topBarLeading` toolbar items
+- [x] **NAV-01**: Hamburger/side menu accessible from ALL screens — child views must not add conflicting `.topBarLeading` toolbar items
 - [ ] **NAV-02**: Chat session has a back button to return to sessions list — requires ActiveScreen push/pop instead of flat enum swap
-- [ ] **NAV-03**: Home screen layout polish — stats cards, quick actions ordering, consistent spacing
+- [x] **NAV-03**: Home screen layout polish — stats cards, quick actions ordering, consistent spacing
 - [ ] **NAV-04**: Sidebar shows active host name indicator below header
 - [ ] **NAV-05**: Deep link navigation works consistently across all registered `ils://` routes
 
