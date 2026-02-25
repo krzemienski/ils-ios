@@ -42,6 +42,7 @@ struct AgentTeamsListView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Agent Teams")
+        .inlineNavigationBarTitle()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

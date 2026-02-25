@@ -85,6 +85,7 @@ struct HostProfilesView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Host Profiles")
+        .inlineNavigationBarTitle()
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
