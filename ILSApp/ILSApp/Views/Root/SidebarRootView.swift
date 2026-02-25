@@ -143,8 +143,9 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
 
-            // Handle browser segment intent for deep links
-            if case .browser = screen, let segmentIntent = appState.browserSegmentIntent {
+            // Consume browser segment intent BEFORE setting activeScreen so that
+            // BrowserView receives the correct initialSegment and a fresh .id().
+            if screen == .browser, let segmentIntent = appState.browserSegmentIntent {
                 browserSegment = segmentIntent
                 appState.browserSegmentIntent = nil
             }
@@ -390,6 +391,7 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var browserScreen: some View {
         BrowserView(initialSegment: browserSegment)
+            .id(browserSegment)
     }
 
     @ViewBuilder

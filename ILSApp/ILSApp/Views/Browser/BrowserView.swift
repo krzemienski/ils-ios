@@ -119,11 +119,23 @@ struct BrowserView: View {
         .inlineNavigationBarTitle()
         #endif
         .task {
-            segment = initialSegment
+            // Consume deep link segment intent if present; otherwise use initialSegment
+            if let intent = appState.browserSegmentIntent {
+                segment = intent
+                appState.browserSegmentIntent = nil
+            } else {
+                segment = initialSegment
+            }
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)
             await loadAll()
+        }
+        .onChange(of: appState.browserSegmentIntent) { _, intent in
+            // React to deep links when BrowserView is already on screen
+            guard let intent else { return }
+            segment = intent
+            appState.browserSegmentIntent = nil
         }
         .onChange(of: appState.isConnected) { _, connected in
             if connected {

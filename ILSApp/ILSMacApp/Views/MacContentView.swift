@@ -370,6 +370,7 @@ struct MacContentView: View {
             SettingsView()
         case .browser:
             BrowserView(initialSegment: browserSegment)
+                .id(browserSegment)
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
         case .hostProfiles:
@@ -601,8 +602,9 @@ struct MacContentView: View {
     }
 
     private func handleNavigationIntent(_ intent: ActiveScreen) {
-        // Handle browser segment intent for deep links
-        if case .browser = intent, let segmentIntent = appState.browserSegmentIntent {
+        // Consume browser segment intent BEFORE setting activeScreen so that
+        // BrowserView receives the correct initialSegment and a fresh .id().
+        if intent == .browser, let segmentIntent = appState.browserSegmentIntent {
             browserSegment = segmentIntent
             appState.browserSegmentIntent = nil
         }
