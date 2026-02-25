@@ -647,7 +647,7 @@ Plans:
 **Embedded Evidence Gates:** Each phase includes its own dual-agent verification gate. Issues are caught and fixed in the phase where they belong -- no pile-up of rework at the end.
 
 - [x] **Phase 40: Environment Setup & Screen Inventory** -- Simulators booted, app installed, backend verified, evidence directories created, PASS criteria defined, dual-agent verification of setup correctness (DONE 2026-02-25)
-- [ ] **Phase 41: iPhone Full Validation + Deep Links** -- All 12+ screens validated with fix-as-you-go, deep links tested, screenshots organized, dual-agent review of all iPhone evidence before proceeding
+- [x] **Phase 41: iPhone Full Validation + Deep Links** -- All 12+ screens validated with fix-as-you-go, deep links tested, screenshots organized, dual-agent review of all iPhone evidence before proceeding (completed 2026-02-25)
 - [ ] **Phase 42: iPad Full Validation** -- All screens validated in split-view layout, sidebar sync verified, screenshots organized, dual-agent review of all iPad evidence, cross-device comparison
 
 ---
@@ -744,5 +744,5 @@ Plans:
 | 38. Cross-Platform Validation | v3.1 | 2/2 | Complete | 2026-02-25 |
 | 39. Gap Closure | v3.1 | 0/0 | Complete | 2026-02-25 |
 | 40. Environment Setup & Screen Inventory | v3.5 | 0/0 | Not started | - |
-| 41. iPhone Full Validation + Deep Links | 4/5 | In Progress|  | - |
+| 41. iPhone Full Validation + Deep Links | 5/5 | Complete   | 2026-02-25 | - |
 | 42. iPad Full Validation | v3.5 | 0/0 | Not started | - |

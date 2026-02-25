@@ -58,8 +58,8 @@ Evidence gate requirements are distributed across phases rather than concentrate
 - [x] **GATE-01**: All iPhone screenshots organized with numbered naming in evidence directory (Phase 41)
 - [ ] **GATE-02**: All iPad screenshots organized with numbered naming in evidence directory (Phase 42)
 - [x] **GATE-03**: Agent A independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
-- [ ] **GATE-04**: Agent B independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
-- [ ] **GATE-05**: PASS requires 2/2 agent agreement -- applied as gate principle in every phase (Phase 40 for setup, Phase 41 for iPhone, Phase 42 for iPad)
+- [x] **GATE-04**: Agent B independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
+- [x] **GATE-05**: PASS requires 2/2 agent agreement -- applied as gate principle in every phase (Phase 40 for setup, Phase 41 for iPhone, Phase 42 for iPad)
 
 ## Future Requirements
 
@@ -123,8 +123,8 @@ Evidence gate requirements are distributed across phases rather than concentrate
 | GATE-01 | 41 | Complete |
 | GATE-02 | 42 | Pending |
 | GATE-03 | 41 | Complete |
-| GATE-04 | 42 | Pending |
-| GATE-05 | 40 | Pending |
+| GATE-04 | 42 | Complete |
+| GATE-05 | 40 | Complete |
 
 **Coverage:**
 - v3.5 requirements: 37 total
