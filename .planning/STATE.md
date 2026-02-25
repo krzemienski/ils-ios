@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 40 of 42 (Environment Setup & Screen Inventory) -- COMPLETE
-Plan: 3 of 3 complete (40-01, 40-02, 40-03)
-Status: Phase 40 complete, Phase 41 ready to begin
-Last activity: 2026-02-25 -- Phase 40 executed: environment setup, PASS criteria authored, dual-agent gate PASSED (7/7 checks, 2/2 agreement)
+Phase: 41 of 42 (iPhone Full Validation + Deep Links) -- IN PROGRESS
+Plan: 1 of 5 complete (41-01)
+Status: Plan 41-01 complete (6 core screens validated), Plan 41-02 next
+Last activity: 2026-02-25 -- Plan 41-01 executed: 6 iPhone screens validated (Home, Sessions, Chat, Browser MCP/Skills/Plugins), displayName ## stripping fix committed
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 40%
 
 ## Previous Milestones
 
@@ -34,6 +34,9 @@ Progress: [███░░░░░░░] 33%
 - [v3.5]: iPad simulator C074375B-2CB2-4F95-A55C-972F2FF35041 (iPad Pro 13) -- exists from Phase 8 but never used for comprehensive validation
 - [v3.5]: Newest DerivedData binary via `ls -td | head -1` (not `find | head -1`) to avoid stale binary pitfall
 - [v3.5]: GATE-01..05 redistributed: GATE-05 in Phase 40, GATE-01/03 in Phase 41, GATE-02/04 in Phase 42
+- [41-01]: Added displayName computed property to ChatSession for client-side ## prefix stripping (no backend migration needed)
+- [41-01]: Use session.displayName everywhere instead of session.name for UI rendering
+- [41-01]: External sessions not fetchable by /sessions/:id -- use tap navigation for chat screenshots instead of deep links
 
 ### Pending Todos
 
@@ -52,7 +55,8 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Phase 40 complete. Phase 41 (iPhone Full Validation + Deep Links) ready to begin. Simulators booted, backend running, PASS criteria defined.
+Stopped at: Completed 41-01-PLAN.md (6 core screens validated). Plan 41-02 next (Screens 07-10: System, Settings, Fleet, Teams).
 Resume file: None
-Key artifacts: /tmp/v3.5-evidence/ (evidence tree), gate/session-uuid.txt (eeba4856-c40c-47cc-9029-95599704c82f)
-Screenshot workaround: xcrun simctl io screenshot has "Timeout waiting for screen surfaces" error; use `screencapture -l <windowID>` via Quartz CGWindowListCopyWindowInfo instead
+Key artifacts: /tmp/v3.5-evidence/iphone/ (7 screenshots: 01-home through 06-browser-plugins + 02b-session-tap-to-chat)
+Screenshot workaround: xcrun simctl io screenshot has "Timeout waiting for screen surfaces" error; use `screencapture -l 930` (Simulator window ID)
+Binary freshness: Rebuilt and installed at 17:42 on 2026-02-25, all displayName changes included

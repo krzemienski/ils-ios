@@ -744,5 +744,5 @@ Plans:
 | 38. Cross-Platform Validation | v3.1 | 2/2 | Complete | 2026-02-25 |
 | 39. Gap Closure | v3.1 | 0/0 | Complete | 2026-02-25 |
 | 40. Environment Setup & Screen Inventory | v3.5 | 0/0 | Not started | - |
-| 41. iPhone Full Validation + Deep Links | v3.5 | 0/0 | Not started | - |
+| 41. iPhone Full Validation + Deep Links | 1/5 | In Progress|  | - |
 | 42. iPad Full Validation | v3.5 | 0/0 | Not started | - |

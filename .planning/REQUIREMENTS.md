@@ -18,19 +18,19 @@ Requirements for v3.5 milestone (Comprehensive Functional Validation -- iOS & iP
 
 ### iPhone Validation
 
-- [ ] **IPH-01**: Home screen -- stats cards, quick actions, recent sessions, sparklines render correctly
-- [ ] **IPH-02**: Sessions list -- sessions load, row tap opens chat, session count matches
-- [ ] **IPH-03**: Chat view -- messages display, back button returns to sessions, toolbar actions visible
-- [ ] **IPH-04**: Browser MCP tab -- MCP servers list with health status indicators
-- [ ] **IPH-05**: Browser Skills tab -- skills list with install/enable states, GitHub browse
-- [ ] **IPH-06**: Browser Plugins tab -- plugins list with enable/disable, GitHub browse
+- [x] **IPH-01**: Home screen -- stats cards, quick actions, recent sessions, sparklines render correctly
+- [x] **IPH-02**: Sessions list -- sessions load, row tap opens chat, session count matches
+- [x] **IPH-03**: Chat view -- messages display, back button returns to sessions, toolbar actions visible
+- [x] **IPH-04**: Browser MCP tab -- MCP servers list with health status indicators
+- [x] **IPH-05**: Browser Skills tab -- skills list with install/enable states, GitHub browse
+- [x] **IPH-06**: Browser Plugins tab -- plugins list with enable/disable, GitHub browse
 - [ ] **IPH-07**: System Monitor -- live metrics (CPU, memory, disk, network), process list, WebSocket connected
 - [ ] **IPH-08**: Settings -- all sections render, inheritance badges visible, tooltips functional
 - [ ] **IPH-09**: Host Profiles -- profile list, active indicator, health badges
 - [ ] **IPH-10**: Themes -- theme list with preview, theme editor form
 - [ ] **IPH-11**: Sidebar navigation -- accessible from all screens, active item highlighted
 - [ ] **IPH-12**: Connection states -- connected banner, disconnected banner, reconnection behavior
-- [ ] **IPH-13**: Any issue found during validation is fixed immediately, rebuilt, and re-validated
+- [x] **IPH-13**: Any issue found during validation is fixed immediately, rebuilt, and re-validated
 
 ### Deep Link Testing
 
@@ -94,19 +94,19 @@ Evidence gate requirements are distributed across phases rather than concentrate
 | ENV-04 | 40 | Pending |
 | ENV-05 | 40 | Pending |
 | ENV-06 | 40 | Pending |
-| IPH-01 | 41 | Pending |
-| IPH-02 | 41 | Pending |
-| IPH-03 | 41 | Pending |
-| IPH-04 | 41 | Pending |
-| IPH-05 | 41 | Pending |
-| IPH-06 | 41 | Pending |
+| IPH-01 | 41 | Complete |
+| IPH-02 | 41 | Complete |
+| IPH-03 | 41 | Complete |
+| IPH-04 | 41 | Complete |
+| IPH-05 | 41 | Complete |
+| IPH-06 | 41 | Complete |
 | IPH-07 | 41 | Pending |
 | IPH-08 | 41 | Pending |
 | IPH-09 | 41 | Pending |
 | IPH-10 | 41 | Pending |
 | IPH-11 | 41 | Pending |
 | IPH-12 | 41 | Pending |
-| IPH-13 | 41 | Pending |
+| IPH-13 | 41 | Complete |
 | DL-01 | 41 | Pending |
 | DL-02 | 41 | Pending |
 | DL-03 | 41 | Pending |
