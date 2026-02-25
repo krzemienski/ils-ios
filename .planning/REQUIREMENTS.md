@@ -34,12 +34,12 @@ Requirements for v3.5 milestone (Comprehensive Functional Validation -- iOS & iP
 
 ### Deep Link Testing
 
-- [ ] **DL-01**: `ils://home` navigates to Home screen on both devices
-- [ ] **DL-02**: `ils://sessions` navigates to Sessions list on both devices
-- [ ] **DL-03**: `ils://sessions/{uuid}` opens specific chat session on both devices
-- [ ] **DL-04**: `ils://browser`, `ils://mcp`, `ils://skills`, `ils://plugins` navigate to correct Browser tabs
-- [ ] **DL-05**: `ils://settings`, `ils://system`, `ils://fleet`, `ils://themes` navigate correctly
-- [ ] **DL-06**: Console logs captured during deep link testing -- zero crashes, zero unhandled errors
+- [x] **DL-01**: `ils://home` navigates to Home screen on both devices
+- [x] **DL-02**: `ils://sessions` navigates to Sessions list on both devices
+- [x] **DL-03**: `ils://sessions/{uuid}` opens specific chat session on both devices
+- [x] **DL-04**: `ils://browser`, `ils://mcp`, `ils://skills`, `ils://plugins` navigate to correct Browser tabs
+- [x] **DL-05**: `ils://settings`, `ils://system`, `ils://fleet`, `ils://themes` navigate correctly
+- [x] **DL-06**: Console logs captured during deep link testing -- zero crashes, zero unhandled errors
 
 ### iPad Validation
 
@@ -55,7 +55,7 @@ Requirements for v3.5 milestone (Comprehensive Functional Validation -- iOS & iP
 
 Evidence gate requirements are distributed across phases rather than concentrated in a single final gate. Each phase runs its own dual-agent verification before proceeding to the next.
 
-- [ ] **GATE-01**: All iPhone screenshots organized with numbered naming in evidence directory (Phase 41)
+- [x] **GATE-01**: All iPhone screenshots organized with numbered naming in evidence directory (Phase 41)
 - [ ] **GATE-02**: All iPad screenshots organized with numbered naming in evidence directory (Phase 42)
 - [ ] **GATE-03**: Agent A independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
 - [ ] **GATE-04**: Agent B independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
@@ -107,12 +107,12 @@ Evidence gate requirements are distributed across phases rather than concentrate
 | IPH-11 | 41 | Complete |
 | IPH-12 | 41 | Complete |
 | IPH-13 | 41 | Complete |
-| DL-01 | 41 | Pending |
-| DL-02 | 41 | Pending |
-| DL-03 | 41 | Pending |
-| DL-04 | 41 | Pending |
-| DL-05 | 41 | Pending |
-| DL-06 | 41 | Pending |
+| DL-01 | 41 | Complete |
+| DL-02 | 41 | Complete |
+| DL-03 | 41 | Complete |
+| DL-04 | 41 | Complete |
+| DL-05 | 41 | Complete |
+| DL-06 | 41 | Complete |
 | IPAD-01 | 42 | Pending |
 | IPAD-02 | 42 | Pending |
 | IPAD-03 | 42 | Pending |
@@ -120,7 +120,7 @@ Evidence gate requirements are distributed across phases rather than concentrate
 | IPAD-05 | 42 | Pending |
 | IPAD-06 | 42 | Pending |
 | IPAD-07 | 42 | Pending |
-| GATE-01 | 41 | Pending |
+| GATE-01 | 41 | Complete |
 | GATE-02 | 42 | Pending |
 | GATE-03 | 41 | Pending |
 | GATE-04 | 42 | Pending |
