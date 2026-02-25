@@ -501,7 +501,7 @@ Plans:
 **Research:** `.planning/research/` (STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md — 109KB)
 **Key Constraint:** Phase 34 (Host Profiles) MUST complete before Phases 35-36 can be validated — config sync and GitHub install depend on targeting the correct host.
 
-- [ ] **Phase 33: Navigation & UX Overhaul** — Side menu accessibility, chat back button, home layout, sidebar host indicator, deep link consistency
+- [x] **Phase 33: Navigation & UX Overhaul** — Side menu accessibility, chat back button, home layout, sidebar host indicator, deep link consistency (completed 2026-02-25)
 - [ ] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename
 - [ ] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips
 - [ ] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX
@@ -514,7 +514,7 @@ Plans:
 **Goal**: Side menu is accessible from every screen, chat has a back button, home screen is polished, sidebar shows active host, and deep links work consistently
 **Depends on**: Nothing (first phase of v3.1; zero backend risk)
 **Requirements**: NAV-01, NAV-02, NAV-03, NAV-04, NAV-05
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 33-01-PLAN.md — Inline nav titles on 4 missing screens + Home layout polish (NAV-01, NAV-03)
 - [ ] 33-02-PLAN.md — Chat back button via previousScreen tracking + sidebar host indicator (NAV-02, NAV-04)
@@ -629,7 +629,7 @@ Plans:
 | 30. Testing Infrastructure | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 31. Swift 6 Preparation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
-| 33. Navigation & UX Overhaul | 2/3 | In Progress|  | — |
+| 33. Navigation & UX Overhaul | 3/3 | Complete   | 2026-02-25 | — |
 | 34. Host Profiles Fix + Redesign | v3.1 | 0/? | Planned | — |
 | 35. Settings & Config Sync | v3.1 | 0/? | Planned | — |
 | 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |

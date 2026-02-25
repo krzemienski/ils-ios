@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 33 — Navigation & UX Overhaul
-Plan: 2/3 complete — executing plan 03 next
-Status: Plan 02 complete (chat back button + host indicator). 1 remaining plan in phase.
-Last activity: 2026-02-25 — Completed 33-02 (previousScreen tracking, chat back button, sidebar host indicator)
+Phase: 33 — Navigation & UX Overhaul -- COMPLETE
+Plan: 3/3 complete — all plans in phase done
+Status: Phase 33 complete. All 3 plans shipped (design tokens, back button, deep links).
+Last activity: 2026-02-25 — Completed 33-03 (deep link browser segments + chat back button integration)
 
 ## Previous Milestones
 
@@ -35,6 +35,9 @@ Last activity: 2026-02-25 — Completed 33-02 (previousScreen tracking, chat bac
 - [33-02]: Used lightweight previousScreen @State instead of NavigationPath to avoid breaking @SceneStorage chat restoration
 - [33-02]: Back button replaces hamburger via topBarLeading placement; sidebar remains accessible via edge swipe
 - [33-02]: activeHostName defaults to nil; wired by Phase 34 HostProfilesViewModel.activate()
+- [33-03]: Used BrowserSegment type (not String) for browserSegmentIntent since enum is top-level and target-accessible
+- [33-03]: ils://projects grouped with ils://browser (no .projects case in BrowserSegment); mcp/skills/plugins get individual segment intents
+- [33-03]: Non-chat deep links clear previousScreen to prevent stale back destinations
 
 ### Pending Todos
 
@@ -47,5 +50,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 33-02-PLAN.md
+Stopped at: Completed 33-03-PLAN.md — Phase 33 fully complete
 Resume file: None

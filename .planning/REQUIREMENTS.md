@@ -13,7 +13,7 @@ Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Ea
 - [x] **NAV-02**: Chat session has a back button to return to sessions list — requires ActiveScreen push/pop instead of flat enum swap
 - [x] **NAV-03**: Home screen layout polish — stats cards, quick actions ordering, consistent spacing
 - [x] **NAV-04**: Sidebar shows active host name indicator below header
-- [ ] **NAV-05**: Deep link navigation works consistently across all registered `ils://` routes
+- [x] **NAV-05**: Deep link navigation works consistently across all registered `ils://` routes
 
 ### Host Profiles
 
