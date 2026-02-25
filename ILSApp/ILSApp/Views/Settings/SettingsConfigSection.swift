@@ -46,9 +46,40 @@ struct SettingsConfigSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             generalSettingsSection
+            systemPromptSection
             apiKeySection
             permissionsSection
             advancedSection
+        }
+    }
+
+    // MARK: - System Prompt
+
+    @ViewBuilder
+    var systemPromptSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("System Prompt")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "doc.text")
+                        .foregroundStyle(theme.accent)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Configured via CLAUDE.md")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("System prompts are set using CLAUDE.md files on your host, not in settings.json. Per-session prompts can be set when creating a new session.")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                settingAnnotation(
+                    isInherited: true,
+                    tooltip: "Claude Code uses CLAUDE.md files at user, project, and local scopes for system prompts. Edit these files on your host to customize Claude's behavior. Per-session system prompts can also be set via the New Session screen."
+                )
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
         }
     }
 
