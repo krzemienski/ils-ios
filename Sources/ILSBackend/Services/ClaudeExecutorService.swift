@@ -182,6 +182,10 @@ actor ClaudeExecutorService {
                 Self.logger.debug("SDK process started (PID: \(process.processIdentifier))")
             } catch {
                 Self.logger.debug("Failed to start SDK process: \(error)")
+                // MEM-FD: Close pipes to prevent file descriptor leak on process launch failure.
+                // readStdout (which normally closes them via defer) is never reached in this path.
+                outputPipe.fileHandleForReading.closeFile()
+                errorPipe.fileHandleForReading.closeFile()
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch Agent SDK wrapper: \(error.localizedDescription)"
@@ -277,6 +281,10 @@ actor ClaudeExecutorService {
                 Self.logger.debug("CLI process started (PID: \(process.processIdentifier))")
             } catch {
                 Self.logger.debug("Failed to start CLI process: \(error)")
+                // MEM-FD: Close pipes to prevent file descriptor leak on process launch failure.
+                // readStdout (which normally closes them via defer) is never reached in this path.
+                outputPipe.fileHandleForReading.closeFile()
+                errorPipe.fileHandleForReading.closeFile()
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch claude: \(error.localizedDescription)"
