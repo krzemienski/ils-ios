@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-24)
 
 ## Current Position
 
-Phase: 35 — Settings & Config Sync -- IN PROGRESS
-Plan: 1/2 complete — 35-01 (safe config writes + reconnect refresh) done
-Status: Plan 01 executed. Plan 02 (annotation badges and tooltips) remaining.
-Last activity: 2026-02-25 — Completed 35-01 (read-then-patch config writes + reconnect auto-refresh)
+Phase: 35 — Settings & Config Sync -- COMPLETE
+Plan: 2/2 complete — All summaries documented
+Status: All 2 plans executed and documented. Phase 35 complete.
+Last activity: 2026-02-25 — Completed 35-02 (annotation badges, tooltips, system prompt section)
 
 ## Previous Milestones
 
@@ -49,6 +49,10 @@ Last activity: 2026-02-25 — Completed 35-01 (read-then-patch config writes + r
 - [34-02]: ChatView only reconfigures clients without reloading -- preserves visible conversation
 - [35-01]: Closure-based delta pattern for saveWithPatch instead of KeyPath -- supports compound mutations (model + theme)
 - [35-01]: PUT full config back (not stripped) because server writes payload verbatim; stripping would also drop CLI fields
+- [35-02]: API Key always shows Host Default badge -- cannot be set from iOS app
+- [35-02]: Agent Teams always shows Custom badge -- device-local @AppStorage setting
+- [35-02]: System Prompt section is read-only informational -- systemPrompt is NOT a settings.json field
+- [35-02]: Advanced fields (statusLine, env) show fallback rows when nil so badges are always visible
 
 ### Pending Todos
 
@@ -61,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 35-01-PLAN.md — safe read-then-patch config writes + reconnect auto-refresh
+Stopped at: Completed 35-02-PLAN.md — full annotation badge + tooltip coverage on all settings fields
 Resume file: None

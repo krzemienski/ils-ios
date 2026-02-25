@@ -503,7 +503,7 @@ Plans:
 
 - [x] **Phase 33: Navigation & UX Overhaul** — Side menu accessibility, chat back button, home layout, sidebar host indicator, deep link consistency (completed 2026-02-25)
 - [x] **Phase 34: Host Profiles Fix + Redesign** — CRITICAL AppState propagation, ViewModel reload on switch, Fleet→Host Profiles rename (completed 2026-02-25)
-- [ ] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips
+- [x] **Phase 35: Settings & Config Sync** — Host CLI inheritance display, InheritanceBadge full coverage, write allowlist, system prompt, tooltips (completed 2026-02-25)
 - [ ] **Phase 36: Browse, Skills & Plugins** — GitHub search/install, per-item progress, plugin browse UI, branch detection, rate limit UX
 - [ ] **Phase 37: System Monitor & Themes** — Real-time metrics restoration, theme loading fixes, cross-platform consistency
 - [ ] **Phase 38: Cross-Platform Validation** — macOS build, v1.0 REQ regression, iOS/iPadOS/macOS parity
@@ -559,7 +559,7 @@ Plans:
   5. Config write operations use a read-then-patch pattern with an allowlist — `hooks`, `env`, `permissions`, `statusLine` are never included in write payloads
   6. System prompt field is displayed (read-only if inherited from host default)
   7. Inline edits of user-scope settings save immediately via minimal-delta PUT
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 35-01-PLAN.md -- Safe config write (read-then-patch) and reconnect auto-refresh
@@ -642,7 +642,7 @@ Plans:
 | 32. Final Validation | v1.5 | 2/2 | Complete | 2026-02-24 |
 | 33. Navigation & UX Overhaul | 3/3 | Complete    | 2026-02-25 | — |
 | 34. Host Profiles Fix + Redesign | 3/3 | Complete    | 2026-02-25 | — |
-| 35. Settings & Config Sync | 1/2 | In Progress|  | — |
+| 35. Settings & Config Sync | 2/2 | Complete   | 2026-02-25 | — |
 | 36. Browse, Skills & Plugins | v3.1 | 0/? | Planned | — |
 | 37. System Monitor & Themes | v3.1 | 0/? | Planned | — |
 | 38. Cross-Platform Validation | v3.1 | 0/? | Planned | — |
