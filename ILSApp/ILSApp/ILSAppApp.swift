@@ -35,7 +35,7 @@ struct ILSAppApp: App {
                         appState.handleURL(url)
                     }
                     .task {
-                        withAnimation(.easeOut(duration: 0.4)) {
+                        withAnimation(.easeOut(duration: 0.2)) {
                             showLaunchScreen = false
                         }
                         Task.detached(priority: .background) {

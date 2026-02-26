@@ -415,9 +415,15 @@ struct BrowserView: View {
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(theme.warning)
-                    Text(gitHubError)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textSecondary)
+                    if skillsVM.rateLimitCountdown > 0 {
+                        Text("Try again in \(skillsVM.rateLimitCountdown) seconds")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    } else {
+                        Text(gitHubError)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
                 }
                 .padding(theme.spacingMD)
                 .background(theme.warning.opacity(0.1))
@@ -675,9 +681,15 @@ struct BrowserView: View {
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(theme.warning)
-                    Text(gitHubError)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textSecondary)
+                    if pluginsVM.rateLimitCountdown > 0 {
+                        Text("Try again in \(pluginsVM.rateLimitCountdown) seconds")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    } else {
+                        Text(gitHubError)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
                 }
                 .padding(theme.spacingMD)
                 .background(theme.warning.opacity(0.1))

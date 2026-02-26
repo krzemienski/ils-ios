@@ -14,6 +14,8 @@ class SkillsViewModel {
     var gitHubSearchText = ""
     var installingSkills: Set<String> = []
     var gitHubError: String?
+    var rateLimitCountdown: Int = 0
+    @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
     /// Update GitHub search text and trigger debounced search.
     /// Call this instead of assigning `gitHubSearchText` directly.
@@ -46,6 +48,7 @@ class SkillsViewModel {
 
     deinit {
         searchTask?.cancel()
+        countdownTask?.cancel()
     }
 
     func configure(client: APIClient) {
@@ -186,6 +189,21 @@ class SkillsViewModel {
         return skills.contains { $0.name == repoName || $0.path.contains(repoName) }
     }
 
+    private func startCountdown() {
+        countdownTask?.cancel()
+        rateLimitCountdown = 60
+        countdownTask = Task { @MainActor [weak self] in
+            while let self, self.rateLimitCountdown > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self.rateLimitCountdown -= 1
+            }
+            guard let self, !Task.isCancelled else { return }
+            self.gitHubError = nil
+            self.rateLimitCountdown = 0
+        }
+    }
+
     func searchGitHub(query: String) async {
         guard let client, !query.isEmpty else {
             gitHubResults = []
@@ -202,7 +220,8 @@ class SkillsViewModel {
         } catch {
             let desc = error.localizedDescription.lowercased()
             if desc.contains("rate limit") || desc.contains("429") || desc.contains("limit reached") {
-                gitHubError = error.localizedDescription
+                gitHubError = "GitHub rate limit reached"
+                startCountdown()
             } else {
                 self.error = error
             }

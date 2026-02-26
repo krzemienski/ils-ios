@@ -18,6 +18,8 @@ class PluginsViewModel {
     var gitHubResults: [GitHubSearchResult] = []
     var isSearchingGitHub = false
     var gitHubError: String?
+    var rateLimitCountdown: Int = 0
+    @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
     private var client: APIClient?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
@@ -26,6 +28,7 @@ class PluginsViewModel {
 
     deinit {
         searchTask?.cancel()
+        countdownTask?.cancel()
     }
 
     func configure(client: APIClient) {
@@ -206,6 +209,21 @@ class PluginsViewModel {
         }
     }
 
+    private func startCountdown() {
+        countdownTask?.cancel()
+        rateLimitCountdown = 60
+        countdownTask = Task { @MainActor [weak self] in
+            while let self, self.rateLimitCountdown > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self.rateLimitCountdown -= 1
+            }
+            guard let self, !Task.isCancelled else { return }
+            self.gitHubError = nil
+            self.rateLimitCountdown = 0
+        }
+    }
+
     /// Search GitHub for plugins matching the query.
     func searchGitHub(query: String) async {
         guard let client, !query.isEmpty else {
@@ -223,7 +241,8 @@ class PluginsViewModel {
         } catch {
             let desc = error.localizedDescription.lowercased()
             if desc.contains("rate limit") || desc.contains("429") || desc.contains("limit reached") {
-                gitHubError = error.localizedDescription
+                gitHubError = "GitHub rate limit reached"
+                startCountdown()
             } else {
                 self.error = error
             }
