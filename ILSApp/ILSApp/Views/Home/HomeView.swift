@@ -351,16 +351,8 @@ struct HomeView: View {
                 GridItem(.flexible(), spacing: theme.spacingSM)
             ], spacing: theme.spacingSM) {
                 quickActionCard(
-                    icon: "plus.bubble.fill",
-                    title: "New Session",
-                    color: theme.entitySession
-                ) {
-                    showNewSessionSheet = true
-                }
-
-                quickActionCard(
                     icon: "sparkles",
-                    title: "Skills",
+                    title: "Discover Skills",
                     subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
                     color: theme.entitySkill
                 ) {
@@ -369,7 +361,7 @@ struct HomeView: View {
 
                 quickActionCard(
                     icon: "server.rack",
-                    title: "MCP Servers",
+                    title: "Configure MCP",
                     subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
                     color: theme.entityMCP
                 ) {
@@ -378,11 +370,19 @@ struct HomeView: View {
 
                 quickActionCard(
                     icon: "puzzlepiece.extension.fill",
-                    title: "Plugins",
+                    title: "Browse Plugins",
                     subtitle: statsSubtitle(dashboardVM.stats?.plugins.total),
                     color: theme.entityPlugin
                 ) {
                     onNavigateToBrowser?(.plugins)
+                }
+
+                quickActionCard(
+                    icon: "gearshape.fill",
+                    title: "Edit Settings",
+                    color: theme.textSecondary
+                ) {
+                    onNavigate?(.settings)
                 }
             }
             .shimmerIfActive(isRefreshing)
