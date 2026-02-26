@@ -79,11 +79,11 @@ Phases 40-42: iPhone validation 23/23 PASS. iPad deferred to v4.0 audit phase.
   3. BrowserView skill search includes a "Discovered from GitHub" section with Install buttons that trigger real installs
   4. ChatView session overflow menu offers Rename, Export, Fork, and Delete operations that complete successfully
   5. GitHub rate limit errors display a user-facing "try again in X seconds" countdown instead of a generic error
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 43-01: TBD
-- [ ] 43-02: TBD
+- [ ] 43-01-PLAN.md -- Implement Quick Actions labels + Edit Settings card, rate limit countdown timer, animation timing fix (UI-01, UI-05, UI-06)
+- [ ] 43-02-PLAN.md -- Functional validation of all 6 UI requirements with screenshot evidence (UI-01 through UI-06)
 
 ### Phase 44: Platform & Performance Compliance
 **Goal**: Platform-specific capabilities (Live Activity, TipKit, render optimization) work correctly and match spec expectations
@@ -172,7 +172,7 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 43. iOS UI Gap Remediation | v4.0 | 0/? | Not started | - |
+| 43. iOS UI Gap Remediation | v4.0 | 0/2 | Planned | - |
 | 44. Platform & Performance Compliance | v4.0 | 0/? | Not started | - |
 | 45. Data & Backend Hardening | v4.0 | 0/? | Not started | - |
 | 46. Security & Compliance | v4.0 | 0/? | Not started | - |
