@@ -47,6 +47,7 @@ struct HomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let createSessionTip = CreateSessionTip()
+    private let commandPaletteTip = CommandPaletteTip()
 
     /// Shared sessions view model owned by SidebarRootView.
     var sessionsVM: SessionsViewModel
@@ -65,6 +66,9 @@ struct HomeView: View {
                 connectionBanner
 
                 TipView(createSessionTip)
+                    .tipBackground(theme.bgSecondary)
+
+                TipView(commandPaletteTip)
                     .tipBackground(theme.bgSecondary)
 
                 quickActionsGrid

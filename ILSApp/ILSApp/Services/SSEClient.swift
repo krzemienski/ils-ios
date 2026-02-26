@@ -51,6 +51,8 @@ class SSEClient {
         // ENRG-02: Intentionally false — SSE streaming should not consume metered data in Low Data Mode.
         // Users can still use the app with cached data; streaming resumes when Low Data Mode is disabled.
         config.allowsConstrainedNetworkAccess = false
+        // PLAT-04: Respect user preference for cellular data access (defaults to true).
+        config.allowsCellularAccess = UserDefaults.standard.object(forKey: "allowsCellularAccess") as? Bool ?? true
         self.session = URLSession(configuration: config)
 
         // ENRG-05: Cancel active SSE stream on background to save battery radio.

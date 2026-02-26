@@ -43,6 +43,11 @@ struct ILSAppApp: App {
                                 .displayFrequency(.daily),
                                 .datastoreLocation(.applicationDefault)
                             ])
+                            // Donate app open count for TipKit sequential unlock
+                            let currentCount = UserDefaults.standard.integer(forKey: "appOpenCount") + 1
+                            UserDefaults.standard.set(currentCount, forKey: "appOpenCount")
+                            ThemeTip.appOpenCount = currentCount
+                            MCPBrowserTip.appOpenCount = currentCount
                             await CacheService.shared.initialize()
                         }
                         #if os(iOS)

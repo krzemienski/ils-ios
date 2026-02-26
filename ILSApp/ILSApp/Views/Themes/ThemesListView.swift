@@ -1,6 +1,7 @@
 import SwiftUI
 import ILSShared
 import UniformTypeIdentifiers
+import TipKit
 
 /// Navigation root for browsing, creating, importing, and deleting custom themes.
 ///
@@ -42,8 +43,15 @@ struct ThemesListView: View {
     @State private var importErrorMessage: String?
     @State private var showImportError = false
 
+    private let themeTip = ThemeTip()
+
     var body: some View {
         List {
+            TipView(themeTip)
+                .tipBackground(theme.bgSecondary)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+
             if let error = viewModel.error {
                 ErrorStateView(error: error) {
                     await viewModel.retryLoadThemes()

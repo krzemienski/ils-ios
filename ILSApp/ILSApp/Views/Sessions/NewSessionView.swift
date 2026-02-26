@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import TipKit
 
 // MARK: - Entry Mode
 
@@ -794,6 +795,9 @@ struct NewSessionView: View {
                 maxBudget: maxBudget,
                 maxTurns: maxTurns
             ) {
+                // Donate session creation for TipKit sequential unlock
+                CommandPaletteTip.hasCreatedSession = true
+                MCPBrowserTip.hasCreatedSession = true
                 onCreated(session)
                 dismiss()
             }

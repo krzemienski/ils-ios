@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import TipKit
 
 /// List view displaying all agent teams with navigation to team details.
 ///
@@ -23,6 +24,9 @@ struct AgentTeamsListView: View {
     /// Whether the create-team sheet is currently presented.
     @State private var showCreateSheet = false
 
+    /// TipKit tip introducing Agent Teams after the user has browsed MCP servers.
+    private let teamsTip = TeamsTip()
+
     init(apiClient: APIClient) {
         _viewModel = State(wrappedValue: TeamsViewModel(apiClient: apiClient))
     }
@@ -30,6 +34,9 @@ struct AgentTeamsListView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: theme.spacingMD) {
+                TipView(teamsTip)
+                    .tipBackground(theme.bgSecondary)
+
                 if viewModel.teams.isEmpty {
                     emptyState
                 } else {

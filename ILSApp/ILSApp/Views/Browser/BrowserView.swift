@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import TipKit
 
 // MARK: - Browser Segment
 
@@ -79,6 +80,9 @@ struct BrowserView: View {
     @State private var mcpScope: String = "all"
     /// Tracks keyboard focus on the search bar to render the themed focus ring.
     @FocusState private var isSearchFocused: Bool
+
+    /// TipKit tip surfacing the MCP browser after session creation.
+    private let mcpBrowserTip = MCPBrowserTip()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -237,6 +241,12 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var mcpContent: some View {
+        TipView(mcpBrowserTip)
+            .tipBackground(theme.bgSecondary)
+            .onAppear {
+                TeamsTip.hasViewedMCP = true
+            }
+
         // Scope segmented control
         VStack(spacing: theme.spacingSM) {
             HStack(spacing: 0) {

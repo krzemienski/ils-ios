@@ -79,6 +79,8 @@ actor APIClient {
         config.waitsForConnectivity = true
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = true
+        // PLAT-04: Respect user preference for cellular data access (defaults to true).
+        config.allowsCellularAccess = UserDefaults.standard.object(forKey: "allowsCellularAccess") as? Bool ?? true
         self.session = URLSession(configuration: config)
 
         self.decoder = JSONDecoder()
