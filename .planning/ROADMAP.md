@@ -60,7 +60,7 @@ Phases 40-42: iPhone validation 23/23 PASS. iPad deferred to v4.0 audit phase.
 
 **FIX_PROTOCOL:** Every fix goes through axiom skill -> axiom:ask -> implement -> rebuild -> evidence.
 
-- [ ] **Phase 43: iOS UI Gap Remediation** - Close all 6 UI gaps: Quick Actions, Quick Settings, GitHub search, session overflow, rate limit UX, animation timing
+- [x] **Phase 43: iOS UI Gap Remediation** - Close all 6 UI gaps: Quick Actions, Quick Settings, GitHub search, session overflow, rate limit UX, animation timing ✓ 2026-02-25
 - [ ] **Phase 44: Platform & Performance Compliance** - Live Activity, concurrency modernization, render optimization, TipKit tips
 - [ ] **Phase 45: Data & Backend Hardening** - Type-safe DTOs, caching verification, offline indicators, input validation
 - [ ] **Phase 46: Security & Compliance** - Per-route auth, request limits, GDPR deletion, StoreKit verification
@@ -172,7 +172,7 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 43. iOS UI Gap Remediation | v4.0 | 0/2 | Planned | - |
+| 43. iOS UI Gap Remediation | v4.0 | 2/2 | Complete ✓ | 2026-02-25 |
 | 44. Platform & Performance Compliance | v4.0 | 0/? | Not started | - |
 | 45. Data & Backend Hardening | v4.0 | 0/? | Not started | - |
 | 46. Security & Compliance | v4.0 | 0/? | Not started | - |
