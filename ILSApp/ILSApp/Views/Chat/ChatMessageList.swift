@@ -152,6 +152,7 @@ struct ChatMessageList: View {
                         message: message,
                         onDelete: onDeleteMessage
                     )
+                    .equatable()
                     .padding(.horizontal, 16)
                     .padding(.top, isSameSender ? 8 : 24)
                 } else {
@@ -162,6 +163,7 @@ struct ChatMessageList: View {
                         },
                         onDelete: onDeleteMessage
                     )
+                    .equatable()
                     .padding(.horizontal, 16)
                     .padding(.top, isSameSender ? 8 : 24)
                 }

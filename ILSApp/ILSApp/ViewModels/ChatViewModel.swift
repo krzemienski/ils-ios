@@ -75,6 +75,11 @@ class ChatViewModel {
     /// For external sessions: the claude session ID string
     var claudeSessionId: String?
 
+    /// Display name for the session, used by Live Activity.
+    var sessionDisplayName: String?
+    /// Model name for the session, used by Live Activity.
+    var sessionModel: String?
+
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
     @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
@@ -179,10 +184,24 @@ class ChatViewModel {
                         self.streamElapsedSeconds = 0
                         self.streamStartTime = Date()
                         lastMessageCount = 0
+                        // Start Live Activity for Dynamic Island
+                        #if os(iOS)
+                        if #available(iOS 16.2, *) {
+                            let sessionName = self.sessionDisplayName ?? "Chat Session"
+                            let model = self.sessionModel ?? "claude"
+                            self.startLiveActivity(sessionName: sessionName, model: model)
+                        }
+                        #endif
                     } else {
                         self.flushPendingMessages()
                         self.stopBatchTimer()
                         self.lastProcessedMessageIndex = 0
+                        // End Live Activity
+                        #if os(iOS)
+                        if #available(iOS 16.2, *) {
+                            self.endLiveActivity()
+                        }
+                        #endif
                         self.streamStartTime = nil
                         lastMessageCount = 0
                     }
@@ -215,6 +234,22 @@ class ChatViewModel {
                         self.pendingStreamMessages.append(contentsOf: newMessages)
                         self.lastProcessedMessageIndex = msgs.count
                         self.startBatchTimer()
+                        // Update Live Activity with latest message preview
+                        #if os(iOS)
+                        if #available(iOS 16.2, *) {
+                            let preview: String
+                            if let lastMsg = self.messages.last, !lastMsg.isUser {
+                                preview = String(lastMsg.text.prefix(100))
+                            } else {
+                                preview = ""
+                            }
+                            self.updateLiveActivity(
+                                preview: preview,
+                                tokens: self.streamTokenCount,
+                                cost: 0.0
+                            )
+                        }
+                        #endif
                     }
                     lastMessageCount = msgs.count
                 }

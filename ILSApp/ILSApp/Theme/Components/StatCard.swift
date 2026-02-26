@@ -55,6 +55,7 @@ struct StatCard: View {
                 .stroke(entityColor.opacity(0.15), lineWidth: 0.5)
         )
         .shadow(color: entityColor.opacity(0.10), radius: 8, x: 0, y: 4)
+        .drawingGroup() // Offload shadow compositing to Metal
         .scaleEffect(isPressed ? 0.96 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isPressed)
         .simultaneousGesture(

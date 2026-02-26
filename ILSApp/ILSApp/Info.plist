@@ -36,6 +36,8 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID is used to protect your server credentials stored in the Keychain.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>

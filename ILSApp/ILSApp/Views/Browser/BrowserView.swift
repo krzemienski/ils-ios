@@ -814,12 +814,184 @@ struct BrowserView: View {
         }
     }
 
-    // MARK: - Plugin Row (enhanced with status indicators)
+    // MARK: - Plugin Row (delegates to PluginRowView)
 
     private func pluginRow(_ plugin: Plugin) -> some View {
         let isInstalling = pluginsVM.installingPlugins.contains(plugin.name)
+        return PluginRowView(plugin: plugin, isInstalling: isInstalling)
+            .equatable()
+    }
 
-        return HStack(spacing: theme.spacingMD) {
+    // MARK: - Shared Row (delegates to BrowserRowView)
+
+    private func browserRow(
+        name: String,
+        subtitle: String,
+        status: String,
+        statusColor: Color,
+        entityColor: Color,
+        badge: String?
+    ) -> some View {
+        BrowserRowView(
+            name: name,
+            subtitle: subtitle,
+            status: status,
+            statusColor: statusColor,
+            entityColor: entityColor,
+            badge: badge
+        )
+        .equatable()
+    }
+
+    // MARK: - Empty State
+
+    private func emptyState(icon: String, title: String, subtitle: String) -> some View {
+        VStack(spacing: theme.spacingMD) {
+            Image(systemName: icon)
+                .font(.system(size: 40, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+            Text(title)
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+            Text(subtitle)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, theme.spacingXL)
+    }
+
+    // MARK: - Loading
+
+    private var loadingRows: some View {
+        SkeletonListView()
+    }
+
+    // MARK: - Helpers
+
+    private func entityColor(for seg: BrowserSegment) -> Color {
+        switch seg {
+        case .mcp: return theme.entityMCP
+        case .skills: return theme.entitySkill
+        case .plugins: return theme.entityPlugin
+        }
+    }
+
+    private func countFor(_ seg: BrowserSegment) -> Int {
+        switch seg {
+        case .mcp: return mcpVM.servers.count
+        case .skills: return skillsVM.skills.count
+        case .plugins: return pluginsVM.plugins.count
+        }
+    }
+
+    private func loadAll() async {
+        async let m: () = mcpVM.loadServers()
+        async let s: () = skillsVM.loadSkills()
+        async let p: () = pluginsVM.loadPlugins()
+        _ = await (m, s, p)
+    }
+
+    private func refreshCurrentSegment() async {
+        switch segment {
+        case .mcp: await mcpVM.refreshServers()
+        case .skills: await skillsVM.refreshSkills()
+        case .plugins: await pluginsVM.loadPlugins()
+        }
+    }
+}
+
+// MARK: - Extracted Equatable Row Views
+
+/// Extracted row view for MCP servers and skills with Equatable conformance for render skipping.
+struct BrowserRowView: View, Equatable {
+    let name: String
+    let subtitle: String
+    let status: String
+    let statusColor: Color
+    let entityColor: Color
+    let badge: String?
+
+    @Environment(\.theme) private var theme: ThemeSnapshot
+
+    static func == (lhs: BrowserRowView, rhs: BrowserRowView) -> Bool {
+        lhs.name == rhs.name &&
+        lhs.subtitle == rhs.subtitle &&
+        lhs.status == rhs.status &&
+        lhs.badge == rhs.badge
+    }
+
+    var body: some View {
+        HStack(spacing: theme.spacingMD) {
+            // Entity dot
+            Circle()
+                .fill(entityColor)
+                .frame(width: 10, height: 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(name)
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    // Status dot + text
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(statusColor)
+                            .frame(width: 6, height: 6)
+                        Text(status)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(statusColor)
+                    }
+                }
+
+                Text(subtitle)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .lineLimit(1)
+
+                if let badge, !badge.isEmpty {
+                    Text(badge)
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(theme.bgTertiary)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(name), \(status)")
+    }
+}
+
+/// Extracted plugin row view with Equatable conformance for render skipping.
+struct PluginRowView: View, Equatable {
+    let plugin: Plugin
+    let isInstalling: Bool
+
+    @Environment(\.theme) private var theme: ThemeSnapshot
+
+    static func == (lhs: PluginRowView, rhs: PluginRowView) -> Bool {
+        lhs.plugin.id == rhs.plugin.id &&
+        lhs.plugin.name == rhs.plugin.name &&
+        lhs.plugin.isEnabled == rhs.plugin.isEnabled &&
+        lhs.plugin.description == rhs.plugin.description &&
+        lhs.isInstalling == rhs.isInstalling
+    }
+
+    var body: some View {
+        HStack(spacing: theme.spacingMD) {
             // Entity dot
             Circle()
                 .fill(theme.entityPlugin)
@@ -903,124 +1075,5 @@ struct BrowserView: View {
             .padding(.vertical, 2)
             .background(color.opacity(0.12))
             .clipShape(RoundedRectangle(cornerRadius: 4))
-    }
-
-    // MARK: - Shared Row
-
-    private func browserRow(
-        name: String,
-        subtitle: String,
-        status: String,
-        statusColor: Color,
-        entityColor: Color,
-        badge: String?
-    ) -> some View {
-        HStack(spacing: theme.spacingMD) {
-            // Entity dot
-            Circle()
-                .fill(entityColor)
-                .frame(width: 10, height: 10)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(name)
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                        .lineLimit(1)
-
-                    Spacer()
-
-                    // Status dot + text
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(statusColor)
-                            .frame(width: 6, height: 6)
-                        Text(status)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(statusColor)
-                    }
-                }
-
-                Text(subtitle)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-
-                if let badge, !badge.isEmpty {
-                    Text(badge)
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(theme.bgTertiary)
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
-                }
-            }
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-        }
-        .padding(theme.spacingMD)
-        .modifier(GlassCard())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(name), \(status)")
-    }
-
-    // MARK: - Empty State
-
-    private func emptyState(icon: String, title: String, subtitle: String) -> some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: icon)
-                .font(.system(size: 40, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-            Text(title)
-                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-            Text(subtitle)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textSecondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, theme.spacingXL)
-    }
-
-    // MARK: - Loading
-
-    private var loadingRows: some View {
-        SkeletonListView()
-    }
-
-    // MARK: - Helpers
-
-    private func entityColor(for seg: BrowserSegment) -> Color {
-        switch seg {
-        case .mcp: return theme.entityMCP
-        case .skills: return theme.entitySkill
-        case .plugins: return theme.entityPlugin
-        }
-    }
-
-    private func countFor(_ seg: BrowserSegment) -> Int {
-        switch seg {
-        case .mcp: return mcpVM.servers.count
-        case .skills: return skillsVM.skills.count
-        case .plugins: return pluginsVM.plugins.count
-        }
-    }
-
-    private func loadAll() async {
-        async let m: () = mcpVM.loadServers()
-        async let s: () = skillsVM.loadSkills()
-        async let p: () = pluginsVM.loadPlugins()
-        _ = await (m, s, p)
-    }
-
-    private func refreshCurrentSegment() async {
-        switch segment {
-        case .mcp: await mcpVM.refreshServers()
-        case .skills: await skillsVM.refreshSkills()
-        case .plugins: await pluginsVM.loadPlugins()
-        }
     }
 }

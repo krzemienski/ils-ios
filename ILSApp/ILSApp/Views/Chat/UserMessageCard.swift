@@ -18,12 +18,17 @@ import SwiftUI
 /// ### Callbacks
 /// - ``onDelete`` - Optional closure called with the message when the user selects "Delete"
 ///   from the context menu; omit to hide the delete option
-struct UserMessageCard: View {
+struct UserMessageCard: View, Equatable {
     /// The user message to display, including its text, optional timestamp, and identity.
     let message: ChatMessage
     /// Called with the message when the user selects "Delete" from the context menu.
     /// When `nil`, the delete option is omitted from the menu.
     var onDelete: ((ChatMessage) -> Void)?
+
+    static func == (lhs: UserMessageCard, rhs: UserMessageCard) -> Bool {
+        lhs.message.id == rhs.message.id &&
+        lhs.message.text == rhs.message.text
+    }
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var showCopyConfirmation = false
