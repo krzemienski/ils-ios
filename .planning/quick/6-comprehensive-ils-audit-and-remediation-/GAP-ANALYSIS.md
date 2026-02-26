@@ -11,14 +11,14 @@
 
 | Spec Document | Total Items | PASS | EXCEEDED | EVOLVED | PARTIAL | MISSING | DEFERRED | N/A | Compliance % |
 |---------------|-------------|------|----------|---------|---------|---------|----------|-----|-------------|
-| Spec A: ils-complete-rebuild (FR-1..FR-42) | 42 | 20 | 5 | 4 | 7 | 4 | 2 | 0 | 69% |
-| Spec A: ils-complete-rebuild (US-1..US-18) | 18 | 5 | 3 | 4 | 4 | 1 | 1 | 0 | 67% |
-| Spec B: rebuild-ground-up (US-1..US-19) | 19 | 10 | 3 | 1 | 3 | 0 | 2 | 0 | 74% |
-| Spec B: rebuild-ground-up (FR-1..FR-24) | 24 | 15 | 3 | 1 | 3 | 0 | 2 | 0 | 79% |
+| Spec A: ils-complete-rebuild (FR-1..FR-42) | 42 | 28 | 2 | 2 | 7 | 2 | 1 | 0 | 76% |
+| Spec A: ils-complete-rebuild (US-1..US-18) | 18 | 7 | 3 | 2 | 5 | 1 | 0 | 0 | 67% |
+| Spec B: rebuild-ground-up (US-1..US-19) | 19 | 14 | 3 | 0 | 2 | 0 | 0 | 0 | 89% |
+| Spec B: rebuild-ground-up (FR-1..FR-24) | 24 | 20 | 3 | 0 | 1 | 0 | 0 | 0 | 96% |
 | Spec C: MASTER_ROADMAP (Phases 0-13) | 14 phases (130+ items) | 4 | 2 | 0 | 6 | 0 | 2 | 0 | 43% |
-| **TOTALS** | **103 top-level + 130 sub-items** | **54** | **16** | **10** | **23** | **5** | **9** | **0** | **~69%** |
+| **TOTALS** | **103 top-level + 130 sub-items** | **73** | **13** | **4** | **21** | **3** | **3** | **0** | **~78%** |
 
-**Overall Status:** The project has **evolved far beyond** all three specs in many areas (chat/SSE, themes, agent teams, system monitoring, live activities, widgets) while leaving some spec-specific features as partial implementations (GitHub search UI wiring, SSH auth form specifics, raw JSON config editor polish, custom marketplace registration).
+**Overall Status:** The project has **evolved far beyond** all three specs in many areas (chat/SSE, themes, agent teams, system monitoring, live activities, widgets) while leaving some spec-specific features as partial implementations (GitHub search UI wiring, SSH auth form specifics, raw JSON config editor polish, custom marketplace registration). Strict compliance across top-level requirements is ~78%, and when accounting for EVOLVED and EXCEEDED items (where implementation equals or surpasses spec), **effective compliance is ~87%**.
 
 **Key Finding:** The gap between "spec compliance" and "actual product quality" is small. Most PARTIAL items are cases where the app implements the spirit of the requirement via a superior architecture (sidebar vs tabs, multi-theme system vs single dark theme, etc.) but lacks specific sub-features from the spec (e.g., a scope-filtered MCP creation form or a "Quick Settings" toggles panel below the JSON editor).
 
@@ -664,7 +664,7 @@ These features exist in the codebase but were **not required** by any of the thr
 
 ### Summary
 
-The project is **~69% spec-compliant** when measured strictly against all three spec documents combined. However, when accounting for EVOLVED and EXCEEDED items (where the implementation is equal or superior to spec requirements), **effective compliance is ~85-90%**. The remaining gaps are concentrated in:
+The project is **~78% spec-compliant** when measured strictly against all three spec documents combined (top-level requirements). When accounting for EVOLVED and EXCEEDED items (where the implementation is equal or superior to spec requirements), **effective compliance is ~87%**. The remaining gaps are concentrated in:
 
 1. **iOS UI polish** (3 items, ~8 hours): Quick Actions, GitHub search UI wiring, Quick Settings toggles
 2. **macOS features** (5 items, ~20 hours): Drag-drop, Handoff, menus, AppleScript, Share Extension
