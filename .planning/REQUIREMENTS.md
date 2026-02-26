@@ -7,7 +7,7 @@
 
 Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediation). Each maps to roadmap phases starting at Phase 43. Source: `.planning/quick/6-comprehensive-ils-audit-and-remediation-/GAP-ANALYSIS.md` (673 lines).
 
-**FIX_PROTOCOL:** Every fix follows: axiom skill → `/axiom:ask` → implement → rebuild → screenshot/cURL → document.
+**FIX_PROTOCOL:** Every fix follows: axiom skill -> `/axiom:ask` -> implement -> rebuild -> screenshot/cURL -> document.
 
 ### iOS UI Gaps
 
@@ -33,9 +33,9 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 
 - [ ] **DATA-01**: ConfigScope enum in ILSShared replacing string-based scope handling for MCP servers
 - [ ] **DATA-02**: DashboardStats standalone DTO in ILSShared for type-safe stats responses
-- [ ] **DATA-03**: Message caching depth verified in CacheService — messages cached alongside sessions
+- [ ] **DATA-03**: Message caching depth verified in CacheService -- messages cached alongside sessions
 - [ ] **DATA-04**: "Last updated X ago" indicator visible in offline-capable views (Home, Sessions, Browser)
-- [ ] **DATA-05**: Message draft queue depth verified in SyncCoordinator — queued messages survive app restart
+- [ ] **DATA-05**: Message draft queue depth verified in SyncCoordinator -- queued messages survive app restart
 - [ ] **DATA-06**: Input validation in model initializers across ILSShared models
 
 ### Security & Compliance
@@ -55,11 +55,11 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 
 ### Verification & Audit
 
-- [ ] **AUDIT-01**: Visual audit — iPhone and iPad screens with numbered screenshot evidence (20+ artifacts)
-- [ ] **AUDIT-02**: Functional audit — real data verification on iPhone and iPad with evidence
-- [ ] **AUDIT-03**: Backend audit — cURL every endpoint, verify JSON structure matches spec contract
-- [ ] **AUDIT-04**: Integration validation — correlated backend+frontend evidence showing data flows
-- [ ] **AUDIT-05**: Proactive bug hunt — edge cases, offline behavior, accessibility, memory profiling
+- [ ] **AUDIT-01**: Visual audit -- iPhone and iPad screens with numbered screenshot evidence (20+ artifacts)
+- [ ] **AUDIT-02**: Functional audit -- real data verification on iPhone and iPad with evidence
+- [ ] **AUDIT-03**: Backend audit -- cURL every endpoint, verify JSON structure matches spec contract
+- [ ] **AUDIT-04**: Integration validation -- correlated backend+frontend evidence showing data flows
+- [ ] **AUDIT-05**: Proactive bug hunt -- edge cases, offline behavior, accessibility, memory profiling
 
 ## Future Requirements
 
@@ -87,10 +87,10 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 
 | Feature | Reason |
 |---------|--------|
-| macOS feature parity | Deferred to v4.1 — user decision during milestone init |
+| macOS feature parity | Deferred to v4.1 -- user decision during milestone init |
 | RTL/Arabic layout | Low user demand; English + 3 languages sufficient for launch |
 | Public API documentation | Polish item with low user impact |
-| Certificate pinning | Deferred — local-first usage model makes this unnecessary |
+| Certificate pinning | Deferred -- local-first usage model makes this unnecessary |
 | Testing infrastructure | Per project rules: no mocks, stubs, test doubles, or unit tests |
 | New features beyond spec | v4.0 is compliance, not innovation |
 
@@ -98,46 +98,46 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01 | Pending | Pending |
-| UI-02 | Pending | Pending |
-| UI-03 | Pending | Pending |
-| UI-04 | Pending | Pending |
-| UI-05 | Pending | Pending |
-| UI-06 | Pending | Pending |
-| PLAT-01 | Pending | Pending |
-| PLAT-02 | Pending | Pending |
-| PLAT-03 | Pending | Pending |
-| PLAT-04 | Pending | Pending |
-| PLAT-05 | Pending | Pending |
-| PLAT-06 | Pending | Pending |
-| PLAT-07 | Pending | Pending |
-| PLAT-08 | Pending | Pending |
-| DATA-01 | Pending | Pending |
-| DATA-02 | Pending | Pending |
-| DATA-03 | Pending | Pending |
-| DATA-04 | Pending | Pending |
-| DATA-05 | Pending | Pending |
-| DATA-06 | Pending | Pending |
-| SEC-01 | Pending | Pending |
-| SEC-02 | Pending | Pending |
-| SEC-03 | Pending | Pending |
-| SEC-04 | Pending | Pending |
-| SEC-05 | Pending | Pending |
-| ECO-01 | Pending | Pending |
-| ECO-02 | Pending | Pending |
-| ECO-03 | Pending | Pending |
-| ECO-04 | Pending | Pending |
-| AUDIT-01 | Pending | Pending |
-| AUDIT-02 | Pending | Pending |
-| AUDIT-03 | Pending | Pending |
-| AUDIT-04 | Pending | Pending |
-| AUDIT-05 | Pending | Pending |
+| UI-01 | Phase 43 | Pending |
+| UI-02 | Phase 43 | Pending |
+| UI-03 | Phase 43 | Pending |
+| UI-04 | Phase 43 | Pending |
+| UI-05 | Phase 43 | Pending |
+| UI-06 | Phase 43 | Pending |
+| PLAT-01 | Phase 44 | Pending |
+| PLAT-02 | Phase 44 | Pending |
+| PLAT-03 | Phase 44 | Pending |
+| PLAT-04 | Phase 44 | Pending |
+| PLAT-05 | Phase 44 | Pending |
+| PLAT-06 | Phase 44 | Pending |
+| PLAT-07 | Phase 44 | Pending |
+| PLAT-08 | Phase 44 | Pending |
+| DATA-01 | Phase 45 | Pending |
+| DATA-02 | Phase 45 | Pending |
+| DATA-03 | Phase 45 | Pending |
+| DATA-04 | Phase 45 | Pending |
+| DATA-05 | Phase 45 | Pending |
+| DATA-06 | Phase 45 | Pending |
+| SEC-01 | Phase 46 | Pending |
+| SEC-02 | Phase 46 | Pending |
+| SEC-03 | Phase 46 | Pending |
+| SEC-04 | Phase 46 | Pending |
+| SEC-05 | Phase 46 | Pending |
+| ECO-01 | Phase 47 | Pending |
+| ECO-02 | Phase 47 | Pending |
+| ECO-03 | Phase 47 | Pending |
+| ECO-04 | Phase 47 | Pending |
+| AUDIT-01 | Phase 48 | Pending |
+| AUDIT-02 | Phase 48 | Pending |
+| AUDIT-03 | Phase 48 | Pending |
+| AUDIT-04 | Phase 48 | Pending |
+| AUDIT-05 | Phase 48 | Pending |
 
 **Coverage:**
 - v4.0 requirements: 34 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 34
+- Mapped to phases: 34/34 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after milestone v4.0 initialization*
+*Last updated: 2026-02-25 after roadmap creation (phases 43-48)*
