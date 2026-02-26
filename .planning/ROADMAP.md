@@ -98,9 +98,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 44-01-PLAN.md -- Wire Live Activity into ChatViewModel SSE lifecycle, add NSSupportsLiveActivities to Info.plist, apply drawingGroup() to GlassCard/StatCard, apply .equatable() to chat leaf views (PLAT-01, PLAT-02, PLAT-05, PLAT-06)
-- [ ] 44-02-PLAN.md -- Complete TipKit tips for Theme/MCP/Teams with sequential unlock rules, add cellular data preference to Settings wired to APIClient, verify PLAT-03 asyncAfter elimination (PLAT-03, PLAT-04, PLAT-07, PLAT-08)
-- [ ] 44-03-PLAN.md -- Functional validation of all 8 PLAT requirements with build verification and evidence (PLAT-01 through PLAT-08)
+- [x] 44-01-PLAN.md -- Wire Live Activity into ChatViewModel SSE lifecycle, add NSSupportsLiveActivities to Info.plist, apply drawingGroup() to GlassCard/StatCard, apply .equatable() to chat leaf views (PLAT-01, PLAT-02, PLAT-05, PLAT-06) ✓
+- [x] 44-02-PLAN.md -- Complete TipKit tips for Theme/MCP/Teams with sequential unlock rules, add cellular data preference to Settings wired to APIClient, verify PLAT-03 asyncAfter elimination (PLAT-03, PLAT-04, PLAT-07, PLAT-08) ✓
+- [x] 44-03-PLAN.md -- Functional validation of all 8 PLAT requirements with build verification and evidence (PLAT-01 through PLAT-08) ✓ 8/8 PASS
 
 ### Phase 45: Data & Backend Hardening
 **Goal**: Backend DTOs are type-safe, caching behaves correctly, and offline state is clearly communicated to users
@@ -174,7 +174,7 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 43. iOS UI Gap Remediation | v4.0 | 2/2 | Complete ✓ | 2026-02-25 |
-| 44. Platform & Performance Compliance | v4.0 | 0/? | Not started | - |
+| 44. Platform & Performance Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-25 |
 | 45. Data & Backend Hardening | v4.0 | 0/? | Not started | - |
 | 46. Security & Compliance | v4.0 | 0/? | Not started | - |
 | 47. Ecosystem Polish | v4.0 | 0/? | Not started | - |
