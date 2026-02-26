@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Performance Optimization Suite
-status: unknown
-last_updated: "2026-02-25T23:21:43.803Z"
+milestone: v4.0
+milestone_name: Comprehensive Spec Compliance Audit & Remediation
+status: not_started
+last_updated: "2026-02-26T00:30:00.000Z"
 progress:
-  total_phases: 40
-  completed_phases: 28
-  total_plans: 78
-  completed_plans: 72
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v3.5 Comprehensive Functional Validation (iOS & iPad)
+**Current focus:** v4.0 Comprehensive Spec Compliance Audit & Remediation
 
 ## Current Position
 
-Phase: 41 of 42 (iPhone Full Validation + Deep Links) -- COMPLETE (gaps closed)
-Plan: 7 of 7 complete (41-01, 41-02, 41-03, 41-04, 41-05, 41-06, 41-07)
-Status: Phase 41 COMPLETE. All 4 verification gaps closed (commit cf5a738). VERIFICATION.md updated to 23/23 must-haves. Phase 42 (iPad) authorized.
-Last activity: 2026-02-25 -- Plans 41-06 (code fixes) and 41-07 (re-validation evidence) executed. 4/4 gaps closed.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-25 — Milestone v4.0 started
 
-Progress: [█████████░] 90%
+Progress: [░░░░░░░░░░] 0%
 
 ## Previous Milestones
 
@@ -36,33 +36,24 @@ Progress: [█████████░] 90%
 - v3.0 (Phases 18-24): Comprehensive Audit Remediation -- COMPLETE 2026-02-23 | 165/165 issues resolved
 - v1.5 (Phases 25-32): All Audit Fixes -- SHIPPED 2026-02-24 | 50 REQs | 70/70 findings resolved
 - v3.1 (Phases 33-39): Comprehensive Audit, Bug Fix & UX Overhaul -- SHIPPED 2026-02-25 | 31/31 REQs
+- v3.5 (Phases 40-42): Comprehensive Functional Validation -- iPhone 23/23 PASS | iPad deferred to v4.0
 
 ## Accumulated Context
 
 ### Decisions
 
-- [v3.5]: Sequential iPhone-then-iPad validation (not parallel) -- fix-as-you-go changes binary, iPad must test post-fix version
-- [v3.5]: Embedded evidence gates per phase (not standalone final gate) -- prevents rework pile-up, issues caught where they belong
-- [v3.5]: Phase numbering continues from 40 (v3.1 ended at Phase 39), 3 phases total (40-42)
-- [v3.5]: iPad simulator C074375B-2CB2-4F95-A55C-972F2FF35041 (iPad Pro 13) -- exists from Phase 8 but never used for comprehensive validation
-- [v3.5]: Newest DerivedData binary via `ls -td | head -1` (not `find | head -1`) to avoid stale binary pitfall
-- [v3.5]: GATE-01..05 redistributed: GATE-05 in Phase 40, GATE-01/03 in Phase 41, GATE-02/04 in Phase 42
-- [41-01]: Added displayName computed property to ChatSession for client-side ## prefix stripping (no backend migration needed)
-- [41-01]: Use session.displayName everywhere instead of session.name for UI rendering
-- [41-01]: External sessions not fetchable by /sessions/:id -- use tap navigation for chat screenshots instead of deep links
-- [41-02]: ils://themes routes to Custom Themes editor; built-in theme picker accessed via Settings > Appearance > Theme
-- [41-02]: Theme left as Ember after validation (was Cyberpunk) -- cosmetic only
-- [41-03]: All 619 error log lines categorized as benign OS-level noise (network retries, SecTrust, accessibility) -- zero real errors
-- [41-03]: No per-task commits for validation-only plan -- all evidence in /tmp/v3.5-evidence/
-- [41-04]: Agent A verdict: 13/13 screens PASS, 5/5 deep links PASS, logs PASS (zero crashes, 619 benign OS log lines)
-- [41-04]: 02-sessions.png byte-identical to 01-home.png accepted (sessions embedded in Home view per ActiveScreen .home)
-- [41-04]: Skills count 58 meets criteria threshold (> 0); 1000+ was guidance not hard requirement
-- [41-05]: Agent B independently reviewed all 13 screens: 13/13 PASS, matching Agent A's 13/13 PASS
-- [41-05]: GATE RESULT: PASS -- 2/2 agent agreement on all screens, 10/15 deep links verified (5 per agent, no overlap)
-- [41-05]: Minor observation differences between agents (chat input area visibility, process count 50 vs 58) do not affect verdicts
-- [Phase 41]: GATE RESULT: PASS -- 2/2 agents agree 13/13 screens PASS, Phase 42 authorized
-- [41-06]: Gap closure: HooksManagementView configActionButtons shared @ViewBuilder, HomeView .navigationTitle + .searchable, SidebarRootView ThemePickerView routing
-- [41-07]: Re-validation evidence: 4 screenshots re-captured after gap fixes, all 4 criteria now satisfied, VERIFICATION.md updated to 23/23
+- [v4.0]: Start v4.0 with v3.5 iPad validation still pending -- iPad covered in v4.0 visual audit phase
+- [v4.0]: Skip research -- Gap Analysis (Quick Task 6) already provides comprehensive spec mapping
+- [v4.0]: FIX_PROTOCOL mandatory -- every fix through axiom skill → axiom:ask → implement → evidence
+- [v4.0]: Phase numbering starts at 43 (v3.5 ended at Phase 42)
+- [v4.0]: Coding guidelines -- minimum complexity, no over-engineering, no mocks/tests
+
+### Carried Forward (from v3.5)
+
+- iPad simulator: C074375B-2CB2-4F95-A55C-972F2FF35041 (iPad Pro 13, iOS 18.6)
+- Screenshot workaround: xcrun simctl io has "Timeout waiting for screen surfaces" error; use `screencapture -l` with Simulator window ID
+- Active theme: Ember (changed from Cyberpunk during v3.5 validation)
+- Evidence location: /tmp/v3.5-evidence/ (iphone/ screenshots + gate/ verdicts)
 
 ### Pending Todos
 
@@ -81,11 +72,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-26
-Stopped at: Completed quick task 6 (comprehensive gap analysis). 673-line GAP-ANALYSIS.md produced. Phase 42 (iPad Validation) still next.
+Last session: 2026-02-25
+Stopped at: Initialized v4.0 milestone. Defining requirements.
 Resume file: None
-Key artifacts: /tmp/v3.5-evidence/ (iphone/ screenshots + gate/ verdicts)
-Gate verdicts: VERDICT-AGENT-A.md (13/13 PASS), VERDICT-AGENT-B.md (13/13 PASS, 151 lines)
-iPad simulator: C074375B-2CB2-4F95-A55C-972F2FF35041 (iPad Pro 13, iOS 18.6) -- same binary from iPhone validation
-Screenshot workaround: xcrun simctl io screenshot has "Timeout waiting for screen surfaces" error; use `screencapture -l` with Simulator window ID
-Active theme: Ember (changed from Cyberpunk during theme-switch validation)
+Key artifacts: .planning/quick/6-comprehensive-ils-audit-and-remediation-/GAP-ANALYSIS.md (673 lines), .planning/MILESTONE-CONTEXT.md (consumed)
