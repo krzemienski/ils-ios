@@ -1,136 +1,143 @@
-# Requirements: ILS iOS/macOS v3.5
+# Requirements: ILS iOS/macOS v4.0
 
 **Defined:** 2026-02-25
 **Core Value:** Every screen works correctly, reflects the connected host's configuration, and provides a polished native experience
 
-## v3.5 Requirements
+## v4.0 Requirements
 
-Requirements for v3.5 milestone (Comprehensive Functional Validation -- iOS & iPad). Each maps to roadmap phases starting at Phase 40. Source: `.planning/research/` (5 research files from 2026-02-25).
+Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediation). Each maps to roadmap phases starting at Phase 43. Source: `.planning/quick/6-comprehensive-ils-audit-and-remediation-/GAP-ANALYSIS.md` (673 lines).
 
-### Environment & Infrastructure
+**FIX_PROTOCOL:** Every fix follows: axiom skill → `/axiom:ask` → implement → rebuild → screenshot/cURL → document.
 
-- [ ] **ENV-01**: iPhone simulator (50523130) booted with app installed from newest DerivedData binary
-- [ ] **ENV-02**: iPad simulator (C074375B) booted with same binary as iPhone
-- [ ] **ENV-03**: Backend verified running from `ils-ios/` path on port 9999 with health check
-- [ ] **ENV-04**: Evidence directories created (`/tmp/v3.5-evidence/{iphone,ipad}/`)
-- [ ] **ENV-05**: Status bar overridden to 9:41 on both simulators for clean screenshots
-- [ ] **ENV-06**: PASS criteria document created listing all screens and their verification points
+### iOS UI Gaps
 
-### iPhone Validation
+- [ ] **UI-01**: HomeView has Quick Actions row with navigation shortcuts (Discover Skills, Browse Plugins, Configure MCP, Edit Settings)
+- [ ] **UI-02**: Quick Settings toggles below config editor (Model picker, Extended Thinking toggle, Co-authored-by toggle)
+- [ ] **UI-03**: GitHub skill search UI wired in BrowserView with "Discovered from GitHub" section and Install buttons
+- [ ] **UI-04**: Session management overflow menu wired for all operations (rename, export, fork, delete) in ChatView
+- [ ] **UI-05**: GitHub rate limit user-facing "try again in X seconds" message in BrowserView skill/plugin search
+- [ ] **UI-06**: Animation timing values verified against spec values (0.25s spring, 0.2s easeOut) and corrected where needed
 
-- [x] **IPH-01**: Home screen -- stats cards, quick actions, recent sessions, sparklines render correctly
-- [x] **IPH-02**: Sessions list -- sessions load, row tap opens chat, session count matches
-- [x] **IPH-03**: Chat view -- messages display, back button returns to sessions, toolbar actions visible
-- [x] **IPH-04**: Browser MCP tab -- MCP servers list with health status indicators
-- [x] **IPH-05**: Browser Skills tab -- skills list with install/enable states, GitHub browse
-- [x] **IPH-06**: Browser Plugins tab -- plugins list with enable/disable, GitHub browse
-- [x] **IPH-07**: System Monitor -- live metrics (CPU, memory, disk, network), process list, WebSocket connected
-- [x] **IPH-08**: Settings -- all sections render, inheritance badges visible, tooltips functional
-- [x] **IPH-09**: Host Profiles -- profile list, active indicator, health badges
-- [x] **IPH-10**: Themes -- theme list with preview, theme editor form
-- [x] **IPH-11**: Sidebar navigation -- accessible from all screens, active item highlighted
-- [x] **IPH-12**: Connection states -- connected banner, disconnected banner, reconnection behavior
-- [x] **IPH-13**: Any issue found during validation is fixed immediately, rebuilt, and re-validated
+### iOS Platform Gaps
 
-### Deep Link Testing
+- [ ] **PLAT-01**: Dynamic Island compact/expanded views verified and functional with Live Activity
+- [ ] **PLAT-02**: Live Activity SSE integration for active chat sessions
+- [ ] **PLAT-03**: Remaining DispatchQueue.main.asyncAfter calls replaced with Task-based equivalents
+- [ ] **PLAT-04**: URLSession cellular constraints fully applied in APIClient
+- [ ] **PLAT-05**: .equatable() applied to complex views (ChatView, BrowserView) for render performance
+- [ ] **PLAT-06**: drawingGroup() applied for shadow-heavy views to offload GPU compositing
+- [ ] **PLAT-07**: TipKit tips complete for Theme, MCP, Teams (extending existing Server Setup, Create Session, Command Palette tips)
+- [ ] **PLAT-08**: Tip display rules with sequential unlock and after-N-opens triggers
 
-- [x] **DL-01**: `ils://home` navigates to Home screen on both devices
-- [x] **DL-02**: `ils://sessions` navigates to Sessions list on both devices
-- [x] **DL-03**: `ils://sessions/{uuid}` opens specific chat session on both devices
-- [x] **DL-04**: `ils://browser`, `ils://mcp`, `ils://skills`, `ils://plugins` navigate to correct Browser tabs
-- [x] **DL-05**: `ils://settings`, `ils://system`, `ils://fleet`, `ils://themes` navigate correctly
-- [x] **DL-06**: Console logs captured during deep link testing -- zero crashes, zero unhandled errors
+### Data & Backend Gaps
 
-### iPad Validation
+- [ ] **DATA-01**: ConfigScope enum in ILSShared replacing string-based scope handling for MCP servers
+- [ ] **DATA-02**: DashboardStats standalone DTO in ILSShared for type-safe stats responses
+- [ ] **DATA-03**: Message caching depth verified in CacheService — messages cached alongside sessions
+- [ ] **DATA-04**: "Last updated X ago" indicator visible in offline-capable views (Home, Sessions, Browser)
+- [ ] **DATA-05**: Message draft queue depth verified in SyncCoordinator — queued messages survive app restart
+- [ ] **DATA-06**: Input validation in model initializers across ILSShared models
 
-- [ ] **IPAD-01**: NavigationSplitView persistent sidebar renders with correct items
-- [ ] **IPAD-02**: All 12+ screens render correctly in iPad split-view layout
-- [ ] **IPAD-03**: Sidebar selection highlights sync with active screen
-- [ ] **IPAD-04**: Home screen adapts to wider iPad layout (no stretched/compressed elements)
-- [ ] **IPAD-05**: Chat view uses full width appropriately in detail column
-- [ ] **IPAD-06**: Browser tabs render correctly in wider detail view
-- [ ] **IPAD-07**: Any iPad-specific layout issue found is fixed immediately and re-validated
+### Security & Compliance
 
-### Evidence Gate (embedded in each phase)
+- [ ] **SEC-01**: Per-route authorization (admin vs user distinction) beyond global API key middleware
+- [ ] **SEC-02**: Request size limits explicitly configured in Vapor middleware
+- [ ] **SEC-03**: GDPR single "delete all my data" endpoint aggregating all user data deletion
+- [ ] **SEC-04**: Free trial StoreKit configuration verified and functional
+- [ ] **SEC-05**: Receipt validation flow verified with StoreKit 2 server-side
 
-Evidence gate requirements are distributed across phases rather than concentrated in a single final gate. Each phase runs its own dual-agent verification before proceeding to the next.
+### Ecosystem Gaps
 
-- [x] **GATE-01**: All iPhone screenshots organized with numbered naming in evidence directory (Phase 41)
-- [ ] **GATE-02**: All iPad screenshots organized with numbered naming in evidence directory (Phase 42)
-- [x] **GATE-03**: Agent A independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
-- [x] **GATE-04**: Agent B independently reviews screenshots and produces verdicts (Phase 41 for iPhone, Phase 42 for iPad)
-- [x] **GATE-05**: PASS requires 2/2 agent agreement -- applied as gate principle in every phase (Phase 40 for setup, Phase 41 for iPhone, Phase 42 for iPad)
+- [ ] **ECO-01**: Plugin versioning with auto-update availability check
+- [ ] **ECO-02**: Plugin dependency management (detect conflicts, warn on missing deps)
+- [ ] **ECO-03**: MeshGradient theme support verification in theme system
+- [ ] **ECO-04**: String Catalog (.xcstrings) migration from .lproj format
+
+### Verification & Audit
+
+- [ ] **AUDIT-01**: Visual audit — iPhone and iPad screens with numbered screenshot evidence (20+ artifacts)
+- [ ] **AUDIT-02**: Functional audit — real data verification on iPhone and iPad with evidence
+- [ ] **AUDIT-03**: Backend audit — cURL every endpoint, verify JSON structure matches spec contract
+- [ ] **AUDIT-04**: Integration validation — correlated backend+frontend evidence showing data flows
+- [ ] **AUDIT-05**: Proactive bug hunt — edge cases, offline behavior, accessibility, memory profiling
 
 ## Future Requirements
 
-### Extended Validation (v3.6+)
+### macOS Feature Parity (v4.1)
 
-- **EXT-01**: Dark mode screenshot captures for all screens on both devices
-- **EXT-02**: iPad portrait vs landscape dual-orientation validation
-- **EXT-03**: iPad mini compact size class edge case testing
-- **EXT-04**: Chat streaming E2E validation (requires Claude CLI availability)
+- **MAC-01**: Drag-and-drop support for sessions, files into chat
+- **MAC-02**: Handoff (NSUserActivity) for cross-device session continuation
+- **MAC-03**: Menu bar completeness (File, Edit, View, Session menus)
+- **MAC-04**: Inspector panel for session/entity details
+- **MAC-05**: AppleScript/Automator support
+- **MAC-06**: Share Extension
+- **MAC-07**: Stage Manager window optimization
+- **MAC-08**: Additional keyboard shortcuts beyond existing 16
+
+### Extended Validation (v4.2+)
+
+- **EXT-01**: RTL layout (Arabic) support
+- **EXT-02**: Dark mode screenshot captures for all screens
+- **EXT-03**: iPad mini compact size class testing
+- **EXT-04**: Chat streaming E2E validation (requires Claude CLI)
 - **EXT-05**: Premium vs free tier state validation on both devices
-- **EXT-06**: macOS full functional validation pass
+- **EXT-06**: Public API documentation for all ILSShared models
 
-## Out of Scope (v3.5)
+## Out of Scope (v4.0)
 
 | Feature | Reason |
 |---------|--------|
-| macOS validation | Separate milestone -- different window management paradigm |
-| Dark mode captures | Scope contained to light mode for v3.5; dark mode deferred to v3.6+ |
-| Chat message sending | Requires Claude CLI in environment; chat rendering still validated |
-| iPad mini testing | Edge case -- v3.5 covers iPad Pro 13" as canonical iPad |
-| Rotation/orientation | Portrait only for v3.5; landscape deferred |
-| Performance profiling | Already covered in v2.0 milestone |
-| New feature development | v3.5 is validation only -- no new features |
+| macOS feature parity | Deferred to v4.1 — user decision during milestone init |
+| RTL/Arabic layout | Low user demand; English + 3 languages sufficient for launch |
+| Public API documentation | Polish item with low user impact |
+| Certificate pinning | Deferred — local-first usage model makes this unnecessary |
+| Testing infrastructure | Per project rules: no mocks, stubs, test doubles, or unit tests |
+| New features beyond spec | v4.0 is compliance, not innovation |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENV-01 | 40 | Pending |
-| ENV-02 | 40 | Pending |
-| ENV-03 | 40 | Pending |
-| ENV-04 | 40 | Pending |
-| ENV-05 | 40 | Pending |
-| ENV-06 | 40 | Pending |
-| IPH-01 | 41 | Complete |
-| IPH-02 | 41 | Complete |
-| IPH-03 | 41 | Complete |
-| IPH-04 | 41 | Complete |
-| IPH-05 | 41 | Complete |
-| IPH-06 | 41 | Complete |
-| IPH-07 | 41 | Complete |
-| IPH-08 | 41 | Complete |
-| IPH-09 | 41 | Complete |
-| IPH-10 | 41 | Complete |
-| IPH-11 | 41 | Complete |
-| IPH-12 | 41 | Complete |
-| IPH-13 | 41 | Complete |
-| DL-01 | 41 | Complete |
-| DL-02 | 41 | Complete |
-| DL-03 | 41 | Complete |
-| DL-04 | 41 | Complete |
-| DL-05 | 41 | Complete |
-| DL-06 | 41 | Complete |
-| IPAD-01 | 42 | Pending |
-| IPAD-02 | 42 | Pending |
-| IPAD-03 | 42 | Pending |
-| IPAD-04 | 42 | Pending |
-| IPAD-05 | 42 | Pending |
-| IPAD-06 | 42 | Pending |
-| IPAD-07 | 42 | Pending |
-| GATE-01 | 41 | Complete |
-| GATE-02 | 42 | Pending |
-| GATE-03 | 41 | Complete |
-| GATE-04 | 42 | Complete |
-| GATE-05 | 40 | Complete |
+| UI-01 | Pending | Pending |
+| UI-02 | Pending | Pending |
+| UI-03 | Pending | Pending |
+| UI-04 | Pending | Pending |
+| UI-05 | Pending | Pending |
+| UI-06 | Pending | Pending |
+| PLAT-01 | Pending | Pending |
+| PLAT-02 | Pending | Pending |
+| PLAT-03 | Pending | Pending |
+| PLAT-04 | Pending | Pending |
+| PLAT-05 | Pending | Pending |
+| PLAT-06 | Pending | Pending |
+| PLAT-07 | Pending | Pending |
+| PLAT-08 | Pending | Pending |
+| DATA-01 | Pending | Pending |
+| DATA-02 | Pending | Pending |
+| DATA-03 | Pending | Pending |
+| DATA-04 | Pending | Pending |
+| DATA-05 | Pending | Pending |
+| DATA-06 | Pending | Pending |
+| SEC-01 | Pending | Pending |
+| SEC-02 | Pending | Pending |
+| SEC-03 | Pending | Pending |
+| SEC-04 | Pending | Pending |
+| SEC-05 | Pending | Pending |
+| ECO-01 | Pending | Pending |
+| ECO-02 | Pending | Pending |
+| ECO-03 | Pending | Pending |
+| ECO-04 | Pending | Pending |
+| AUDIT-01 | Pending | Pending |
+| AUDIT-02 | Pending | Pending |
+| AUDIT-03 | Pending | Pending |
+| AUDIT-04 | Pending | Pending |
+| AUDIT-05 | Pending | Pending |
 
 **Coverage:**
-- v3.5 requirements: 37 total
-- Mapped to phases: 37
-- Unmapped: 0
+- v4.0 requirements: 34 total
+- Mapped to phases: 0 (pending roadmap creation)
+- Unmapped: 34
 
 ---
 *Requirements defined: 2026-02-25*
-*Last updated: 2026-02-25 after roadmap revision (embedded evidence gates)*
+*Last updated: 2026-02-25 after milestone v4.0 initialization*
