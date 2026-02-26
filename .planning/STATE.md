@@ -74,10 +74,10 @@ None.
 
 ### Quick Tasks Completed
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 5 | Cross-milestone audit session 1: deep link fix + 7/12 screens PASS | 2026-02-25 | d351068 | [5-cross-milestone-reflection-audit-with-fu](./quick/5-cross-milestone-reflection-audit-with-fu/) |
-| 6 | Comprehensive gap analysis: 3 specs, 103 reqs + 130 items, ~78% strict / ~87% effective compliance | 2026-02-26 | 9d49003 | [6-comprehensive-ils-audit-and-remediation-](./quick/6-comprehensive-ils-audit-and-remediation-/) |
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 5 | Cross-milestone audit session 1: deep link fix + 7/12 screens PASS | 2026-02-25 | d351068 | | [5-cross-milestone-reflection-audit-with-fu](./quick/5-cross-milestone-reflection-audit-with-fu/) |
+| 6 | Comprehensive gap analysis: 3 specs, 103 reqs + 130 items, ~78% strict / ~87% effective compliance | 2026-02-26 | 9d49003 | Verified | [6-comprehensive-ils-audit-and-remediation-](./quick/6-comprehensive-ils-audit-and-remediation-/) |
 
 ## Session Continuity
 
