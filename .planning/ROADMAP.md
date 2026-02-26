@@ -95,11 +95,12 @@ Plans:
   3. ChatView and BrowserView use .equatable() and shadow-heavy views use drawingGroup() for measurably smoother scrolling
   4. TipKit tips appear for Theme, MCP, and Teams features with sequential unlock rules and after-N-opens triggers
   5. URLSession cellular constraints are applied in APIClient, observable in Settings as a data usage preference
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 44-01: TBD
-- [ ] 44-02: TBD
+- [ ] 44-01-PLAN.md -- Wire Live Activity into ChatViewModel SSE lifecycle, add NSSupportsLiveActivities to Info.plist, apply drawingGroup() to GlassCard/StatCard, apply .equatable() to chat leaf views (PLAT-01, PLAT-02, PLAT-05, PLAT-06)
+- [ ] 44-02-PLAN.md -- Complete TipKit tips for Theme/MCP/Teams with sequential unlock rules, add cellular data preference to Settings wired to APIClient, verify PLAT-03 asyncAfter elimination (PLAT-03, PLAT-04, PLAT-07, PLAT-08)
+- [ ] 44-03-PLAN.md -- Functional validation of all 8 PLAT requirements with build verification and evidence (PLAT-01 through PLAT-08)
 
 ### Phase 45: Data & Backend Hardening
 **Goal**: Backend DTOs are type-safe, caching behaves correctly, and offline state is clearly communicated to users
