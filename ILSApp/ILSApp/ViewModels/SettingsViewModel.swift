@@ -124,7 +124,7 @@ class SettingsViewModel {
             delta(&freshConfig)
 
             // Step 3: PUT the FULL config back (preserving hooks, env, permissions, etc.)
-            let scope = freshResponse.data?.scope ?? "user"
+            let scope = freshResponse.data?.scope ?? .user
             let request = UpdateConfigRequest(scope: scope, content: freshConfig)
             let putResponse: APIResponse<ConfigInfo> = try await client.put("/config", body: request)
             if let updatedConfig = putResponse.data {

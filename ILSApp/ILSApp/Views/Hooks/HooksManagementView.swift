@@ -232,7 +232,7 @@ struct HooksManagementView: View {
     private var configActionButtons: some View {
         HStack(spacing: theme.spacingSM) {
             NavigationLink {
-                ConfigEditorView(scope: "user")
+                ConfigEditorView(scope: .user)
             } label: {
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: "doc.text")

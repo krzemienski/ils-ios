@@ -179,7 +179,7 @@ struct SettingsConfigSection: View {
             .modifier(GlassCard())
 
             if let config = viewModel.config {
-                Text("Scope: \(config.scope) • \(config.path)")
+                Text("Scope: \(config.scope.rawValue) • \(config.path)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
@@ -386,7 +386,7 @@ struct SettingsConfigSection: View {
                 Divider().background(theme.bgTertiary)
 
                 NavigationLink {
-                    ConfigEditorView(scope: "user")
+                    ConfigEditorView(scope: .user)
                 } label: {
                     HStack {
                         Text("Edit User Settings")
@@ -400,7 +400,7 @@ struct SettingsConfigSection: View {
                 }
 
                 NavigationLink {
-                    ConfigEditorView(scope: "project")
+                    ConfigEditorView(scope: .project)
                 } label: {
                     HStack {
                         Text("Edit Project Settings")

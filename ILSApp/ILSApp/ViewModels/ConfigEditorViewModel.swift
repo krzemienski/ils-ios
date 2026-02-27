@@ -17,11 +17,11 @@ class ConfigEditorViewModel {
         self.client = client
     }
 
-    func loadConfig(scope: String) async {
+    func loadConfig(scope: ConfigScope) async {
         guard let client else { return }
         isLoading = true
         do {
-            let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope)")
+            let response: APIResponse<ConfigInfo> = try await client.get("/config?scope=\(scope.rawValue)")
             if let config = response.data {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -40,7 +40,7 @@ class ConfigEditorViewModel {
         isLoading = false
     }
 
-    func saveConfig(scope: String, json: String) async -> [String] {
+    func saveConfig(scope: ConfigScope, json: String) async -> [String] {
         guard let client else { return ["Client not configured"] }
         guard let data = json.data(using: .utf8) else {
             return ["Invalid JSON format"]

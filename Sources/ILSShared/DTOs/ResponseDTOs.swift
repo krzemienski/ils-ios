@@ -1,86 +1,7 @@
 import Foundation
 
-// MARK: - Stats Response
-
-/// Dashboard statistics response.
-public struct StatsResponse: Codable, Sendable {
-    /// Project statistics.
-    public let projects: CountStat
-    /// Session statistics.
-    public let sessions: SessionStat
-    /// Skill statistics.
-    public let skills: CountStat
-    /// MCP server statistics.
-    public let mcpServers: MCPStat
-    /// Plugin statistics.
-    public let plugins: PluginStat
-
-    public init(
-        projects: CountStat,
-        sessions: SessionStat,
-        skills: CountStat,
-        mcpServers: MCPStat,
-        plugins: PluginStat
-    ) {
-        self.projects = projects
-        self.sessions = sessions
-        self.skills = skills
-        self.mcpServers = mcpServers
-        self.plugins = plugins
-    }
-}
-
-/// Basic count statistic with optional active count.
-public struct CountStat: Codable, Sendable {
-    /// Total count.
-    public let total: Int
-    /// Active count.
-    public let active: Int?
-
-    public init(total: Int, active: Int? = nil) {
-        self.total = total
-        self.active = active
-    }
-}
-
-/// Session count statistics.
-public struct SessionStat: Codable, Sendable {
-    /// Total sessions.
-    public let total: Int
-    /// Currently active sessions.
-    public let active: Int
-
-    public init(total: Int, active: Int) {
-        self.total = total
-        self.active = active
-    }
-}
-
-/// MCP server health statistics.
-public struct MCPStat: Codable, Sendable {
-    /// Total MCP servers.
-    public let total: Int
-    /// Healthy MCP servers.
-    public let healthy: Int
-
-    public init(total: Int, healthy: Int) {
-        self.total = total
-        self.healthy = healthy
-    }
-}
-
-/// Plugin installation statistics.
-public struct PluginStat: Codable, Sendable {
-    /// Total plugins.
-    public let total: Int
-    /// Enabled plugins.
-    public let enabled: Int
-
-    public init(total: Int, enabled: Int) {
-        self.total = total
-        self.enabled = enabled
-    }
-}
+/// Backward-compatible alias. Prefer `DashboardStats` in new code.
+public typealias StatsResponse = DashboardStats
 
 // MARK: - Project Group Info
 
@@ -244,7 +165,7 @@ public struct ConfigOverride: Codable, Sendable {
     /// Configuration key
     public let key: String
     /// Which scope won the cascade
-    public let winningScope: String
+    public let winningScope: ConfigScope
     /// The winning value
     public let winningValue: String
     /// Value from user scope
@@ -256,12 +177,13 @@ public struct ConfigOverride: Codable, Sendable {
 
     public init(
         key: String,
-        winningScope: String,
+        winningScope: ConfigScope,
         winningValue: String,
         userValue: String?,
         projectValue: String?,
         localValue: String?
     ) {
+        precondition(!key.isEmpty, "ConfigOverride key must not be empty")
         self.key = key
         self.winningScope = winningScope
         self.winningValue = winningValue
@@ -275,12 +197,12 @@ public struct ConfigOverride: Codable, Sendable {
 
 /// Request to update Claude Code configuration.
 public struct UpdateConfigRequest: Codable, Sendable {
-    /// Configuration scope (e.g., "user", "project").
-    public let scope: String
+    /// Configuration scope (user, project, or local).
+    public let scope: ConfigScope
     /// Configuration content.
     public let content: ClaudeConfig
 
-    public init(scope: String, content: ClaudeConfig) {
+    public init(scope: ConfigScope, content: ClaudeConfig) {
         self.scope = scope
         self.content = content
     }

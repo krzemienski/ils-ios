@@ -180,8 +180,8 @@ public struct HookDefinition: Codable, Hashable, Sendable {
 
 /// Config scope information including source file and validation state.
 public struct ConfigInfo: Codable, Hashable, Sendable {
-    /// Configuration scope: "user", "project", or "local"
-    public let scope: String
+    /// Configuration scope (user, project, or local).
+    public let scope: ConfigScope
     /// File path where config was loaded from
     public let path: String
     /// Parsed configuration content
@@ -192,12 +192,13 @@ public struct ConfigInfo: Codable, Hashable, Sendable {
     public var errors: [String]?
 
     public init(
-        scope: String,
+        scope: ConfigScope,
         path: String,
         content: ClaudeConfig,
         isValid: Bool = true,
         errors: [String]? = nil
     ) {
+        precondition(!path.isEmpty, "ConfigInfo path must not be empty")
         self.scope = scope
         self.path = path
         self.content = content

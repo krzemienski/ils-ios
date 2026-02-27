@@ -29,19 +29,17 @@ struct ConfigFileService {
     // MARK: - Config
 
     /// Read Claude settings for a specific scope.
-    /// - Parameter scope: Scope name ("user", "project", or "local")
+    /// - Parameter scope: Configuration scope (user, project, or local)
     /// - Returns: ConfigInfo with settings content and metadata
-    func readConfig(scope: String) throws -> ConfigInfo {
+    func readConfig(scope: ConfigScope) throws -> ConfigInfo {
         let path: String
         switch scope {
-        case "user":
+        case .user:
             path = userSettingsPath
-        case "project":
+        case .project:
             path = ".claude/settings.json"
-        case "local":
+        case .local:
             path = ".claude/settings.local.json"
-        default:
-            throw Abort(.badRequest, reason: "Invalid scope")
         }
 
         var config = ClaudeConfig()
@@ -62,18 +60,18 @@ struct ConfigFileService {
 
     /// Write Claude settings to a specific scope.
     /// - Parameters:
-    ///   - scope: Scope name ("user" only currently supported)
+    ///   - scope: Configuration scope (currently only .user is supported for writes)
     ///   - content: ClaudeConfig object to write
     /// - Returns: ConfigInfo with updated content
-    func writeConfig(scope: String, content: ClaudeConfig) throws -> ConfigInfo {
+    func writeConfig(scope: ConfigScope, content: ClaudeConfig) throws -> ConfigInfo {
         let path: String
         switch scope {
-        case "user":
+        case .user:
             path = userSettingsPath
             // Ensure directory exists
             try fileManager.createDirectory(atPath: claudeDirectory, withIntermediateDirectories: true)
-        default:
-            throw Abort(.badRequest, reason: "Invalid scope for writing")
+        case .project, .local:
+            throw Abort(.badRequest, reason: "Writing to \(scope.rawValue) scope is not currently supported")
         }
 
         let encoder = JSONEncoder()

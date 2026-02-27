@@ -53,6 +53,9 @@ public struct Message: Codable, Identifiable, Hashable, Sendable {
     ///   - toolResults: Optional JSON-encoded tool results.
     ///   - createdAt: Creation timestamp (defaults to now).
     ///   - updatedAt: Last update timestamp (defaults to now).
+    // Note: content may be empty for system messages; no precondition applied.
+    // All fields are either UUID (always valid), enum (type-safe), String (empty is valid),
+    // or optional — no meaningful invariant to enforce.
     public init(
         id: UUID = UUID(),
         sessionId: UUID,

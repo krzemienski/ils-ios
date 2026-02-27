@@ -19,7 +19,10 @@ struct ConfigController: RouteCollection {
     /// GET /config - Get configuration for a scope
     @Sendable
     func get(req: Request) async throws -> APIResponse<ConfigInfo> {
-        let scope = req.query[String.self, at: "scope"] ?? "user"
+        let scopeString = req.query[String.self, at: "scope"] ?? "user"
+        guard let scope = ConfigScope(rawValue: scopeString) else {
+            throw Abort(.badRequest, reason: "Invalid scope '\(scopeString)'. Must be one of: user, project, local")
+        }
 
         let config = try fileSystem.readConfig(scope: scope)
 
@@ -34,12 +37,7 @@ struct ConfigController: RouteCollection {
     func update(req: Request) async throws -> APIResponse<ConfigInfo> {
         let input = try req.content.decode(UpdateConfigRequest.self)
 
-        // Validate scope
-        let validScopes = ["user", "project", "local"]
-        guard validScopes.contains(input.scope) else {
-            throw Abort(.badRequest, reason: "Invalid scope. Must be one of: \(validScopes.joined(separator: ", "))")
-        }
-
+        // Scope is already type-safe via ConfigScope enum in UpdateConfigRequest
         let config = try fileSystem.writeConfig(scope: input.scope, content: input.content)
 
         return APIResponse(

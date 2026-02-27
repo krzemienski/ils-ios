@@ -75,7 +75,7 @@ struct PluginsController: RouteCollection {
     @Sendable
     func marketplace(req: Request) async throws -> APIResponse<[PluginMarketplace]> {
         // Read known marketplaces from config
-        let config = try? fileSystem.readConfig(scope: "user")
+        let config = try? fileSystem.readConfig(scope: .user)
         var marketplaces: [PluginMarketplace] = []
 
         // Add official marketplace
@@ -178,12 +178,12 @@ struct PluginsController: RouteCollection {
         }
 
         // Add to config's extraKnownMarketplaces
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        var config = (try? fileSystem.readConfig(scope: .user))?.content ?? ClaudeConfig()
         var marketplaces = config.extraKnownMarketplaces ?? [:]
         marketplaces[input.repo] = input.source
         config.extraKnownMarketplaces = marketplaces
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try fileSystem.writeConfig(scope: .user, content: config)
 
         let marketplace = Marketplace(
             name: String(parts[1]),
@@ -321,12 +321,12 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        var config = (try? fileSystem.readConfig(scope: .user))?.content ?? ClaudeConfig()
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = true
         config.enabledPlugins = enabled
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try fileSystem.writeConfig(scope: .user, content: config)
 
         // Invalidate cache so enabled status change is reflected
         await fileSystem.invalidatePluginsCache()
@@ -350,12 +350,12 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        var config = (try? fileSystem.readConfig(scope: .user))?.content ?? ClaudeConfig()
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = false
         config.enabledPlugins = enabled
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try fileSystem.writeConfig(scope: .user, content: config)
 
         // Invalidate cache so enabled status change is reflected
         await fileSystem.invalidatePluginsCache()

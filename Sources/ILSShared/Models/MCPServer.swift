@@ -1,7 +1,7 @@
 import Foundation
 
-/// Scope of MCP server configuration.
-public enum MCPScope: String, Codable, Sendable {
+/// Scope of configuration: user-level, project-level, or local override.
+public enum ConfigScope: String, Codable, Sendable {
     /// User-level configuration (~/.claude/).
     case user
     /// Project-level configuration.
@@ -16,13 +16,16 @@ public enum MCPScope: String, Codable, Sendable {
             throw DecodingError.dataCorrupted(
                 DecodingError.Context(
                     codingPath: decoder.codingPath,
-                    debugDescription: "Unrecognized MCPScope: '\(raw)'. Expected: user, project, local"
+                    debugDescription: "Unrecognized ConfigScope: '\(raw)'. Expected: user, project, local"
                 )
             )
         }
         self = value
     }
 }
+
+/// Backward-compatible alias. Prefer `ConfigScope` in new code.
+public typealias MCPScope = ConfigScope
 
 /// Health status of an MCP server.
 public enum MCPStatus: String, Codable, Sendable {

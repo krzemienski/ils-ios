@@ -252,18 +252,18 @@ struct FileSystemService {
     // MARK: - Claude Config Settings
 
     /// Read Claude configuration for a given scope.
-    /// - Parameter scope: Configuration scope ("user", "project", or "local")
+    /// - Parameter scope: Configuration scope (user, project, or local)
     /// - Returns: ConfigInfo with content and metadata
-    func readConfig(scope: String) throws -> ConfigInfo {
+    func readConfig(scope: ConfigScope) throws -> ConfigInfo {
         try config.readConfig(scope: scope)
     }
 
     /// Write Claude configuration to a given scope.
     /// - Parameters:
-    ///   - scope: Configuration scope ("user" only currently supported for writes)
+    ///   - scope: Configuration scope (currently only .user is supported for writes)
     ///   - content: ClaudeConfig object to write
     /// - Returns: ConfigInfo with updated content
-    func writeConfig(scope: String, content: ClaudeConfig) throws -> ConfigInfo {
+    func writeConfig(scope: ConfigScope, content: ClaudeConfig) throws -> ConfigInfo {
         try config.writeConfig(scope: scope, content: content)
     }
 
