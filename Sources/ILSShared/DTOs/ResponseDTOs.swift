@@ -230,3 +230,40 @@ public struct ConfigValidationResult: Codable, Sendable {
         self.errors = errors
     }
 }
+
+// MARK: - Data Erasure
+
+/// Response from the GDPR "delete all my data" endpoint.
+///
+/// Reports per-table deletion counts so the caller can verify
+/// exactly what was removed.
+public struct DataErasureResponse: Codable, Sendable, Hashable {
+    /// Number of chat messages deleted.
+    public var messagesDeleted: Int
+    /// Number of chat sessions deleted.
+    public var sessionsDeleted: Int
+    /// Number of projects deleted.
+    public var projectsDeleted: Int
+    /// Number of custom themes deleted.
+    public var themesDeleted: Int
+    /// Number of fleet host configurations deleted.
+    public var fleetHostsDeleted: Int
+    /// Number of cached search results deleted.
+    public var cacheEntriesDeleted: Int
+
+    public init(
+        messagesDeleted: Int = 0,
+        sessionsDeleted: Int = 0,
+        projectsDeleted: Int = 0,
+        themesDeleted: Int = 0,
+        fleetHostsDeleted: Int = 0,
+        cacheEntriesDeleted: Int = 0
+    ) {
+        self.messagesDeleted = messagesDeleted
+        self.sessionsDeleted = sessionsDeleted
+        self.projectsDeleted = projectsDeleted
+        self.themesDeleted = themesDeleted
+        self.fleetHostsDeleted = fleetHostsDeleted
+        self.cacheEntriesDeleted = cacheEntriesDeleted
+    }
+}

@@ -1,0 +1,60 @@
+import Vapor
+import Fluent
+import ILSShared
+
+/// GDPR Article 17 "Right to Erasure" controller.
+///
+/// Provides a single endpoint that deletes all user data in a database
+/// transaction. Deletion order respects foreign key constraints:
+/// messages (FK -> sessions) are deleted before sessions.
+///
+/// Registered on the admin-protected route group in `routes.swift`.
+struct DataErasureController: RouteCollection {
+    func boot(routes: RoutesBuilder) throws {
+        let data = routes.grouped("data")
+        data.delete("all", use: deleteAllData)
+    }
+
+    /// Deletes all user data across all tables in a single transaction.
+    ///
+    /// - Returns: `APIResponse<DataErasureResponse>` with per-table deletion counts.
+    @Sendable
+    func deleteAllData(req: Request) async throws -> Response {
+        var counts = DataErasureResponse()
+
+        try await req.db.transaction { db in
+            // Delete in FK-safe order: children before parents
+            // 1. Messages (FK -> sessions.id)
+            counts.messagesDeleted = try await MessageModel.query(on: db).count()
+            try await MessageModel.query(on: db).delete()
+
+            // 2. Sessions (parent of messages)
+            counts.sessionsDeleted = try await SessionModel.query(on: db).count()
+            try await SessionModel.query(on: db).delete()
+
+            // 3. Projects (no FK dependencies)
+            counts.projectsDeleted = try await ProjectModel.query(on: db).count()
+            try await ProjectModel.query(on: db).delete()
+
+            // 4. Themes (no FK dependencies)
+            counts.themesDeleted = try await ThemeModel.query(on: db).count()
+            try await ThemeModel.query(on: db).delete()
+
+            // 5. Fleet hosts (no FK dependencies)
+            counts.fleetHostsDeleted = try await FleetHostModel.query(on: db).count()
+            try await FleetHostModel.query(on: db).delete()
+
+            // 6. Cached results (no FK dependencies)
+            counts.cacheEntriesDeleted = try await CachedResult.query(on: db).count()
+            try await CachedResult.query(on: db).delete()
+        }
+
+        req.logger.info("GDPR data erasure complete: \(counts.messagesDeleted) messages, \(counts.sessionsDeleted) sessions, \(counts.projectsDeleted) projects, \(counts.themesDeleted) themes, \(counts.fleetHostsDeleted) fleet hosts, \(counts.cacheEntriesDeleted) cache entries deleted")
+
+        let body = APIResponse(success: true, data: counts)
+        let response = Response(status: .ok)
+        try response.content.encode(body)
+        response.headers.contentType = .json
+        return response
+    }
+}

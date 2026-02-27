@@ -166,6 +166,7 @@ extension SessionStat: Content {}
 extension MCPStat: Content {}
 extension PluginStat: Content {}
 extension DeletedResponse: Content {}
+extension DataErasureResponse: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}

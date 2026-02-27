@@ -10,18 +10,22 @@ func routes(_ app: Application) throws {
     // Shared services
     let fileSystem = FileSystemService()
 
-    // Register controllers
+    // Public routes (require API key only via global middleware)
     try api.register(collection: ProjectsController(fileSystem: fileSystem))
     try api.register(collection: SessionsController(fileSystem: fileSystem))
     try api.register(collection: ChatController())
     try api.register(collection: SkillsController(fileSystem: fileSystem))
     try api.register(collection: MCPController(fileSystem: fileSystem))
     try api.register(collection: PluginsController(fileSystem: fileSystem))
-    try api.register(collection: ConfigController(fileSystem: fileSystem))
     try api.register(collection: StatsController(fileSystem: fileSystem))
     try api.register(collection: ThemesController())
-    try api.register(collection: SystemController())
     try api.register(collection: TeamsController(fileService: TeamsFileService(), executorService: TeamsExecutorService()))
-    try api.register(collection: TunnelController())
-    try api.register(collection: FleetController())
+
+    // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
+    let admin = api.grouped(AdminMiddleware())
+    try admin.register(collection: ConfigController(fileSystem: fileSystem))
+    try admin.register(collection: SystemController())
+    try admin.register(collection: FleetController())
+    try admin.register(collection: TunnelController())
+    try admin.register(collection: DataErasureController())
 }
