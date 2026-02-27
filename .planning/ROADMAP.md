@@ -64,7 +64,7 @@ Phases 40-42: iPhone validation 23/23 PASS. iPad deferred to v4.0 audit phase.
 - [x] **Phase 44: Platform & Performance Compliance** - Live Activity, concurrency modernization, render optimization, TipKit tips ✓ 2026-02-25
 - [x] **Phase 45: Data & Backend Hardening** - Type-safe DTOs, caching verification, offline indicators, input validation ✓ 2026-02-27
 - [x] **Phase 46: Security & Compliance** - Per-route auth, request limits, GDPR deletion, StoreKit verification (completed 2026-02-27)
-- [ ] **Phase 47: Ecosystem Polish** - Plugin versioning, dependency management, MeshGradient themes, String Catalog migration
+- [x] **Phase 47: Ecosystem Polish** - Plugin versioning, dependency management, MeshGradient themes, String Catalog migration ✓ 2026-02-27
 - [ ] **Phase 48: Comprehensive Audit & Verification** - Visual/functional/backend/integration audits on iPhone+iPad, proactive bug hunt
 
 ## Phase Details
@@ -151,7 +151,7 @@ Plans:
 Plans:
 - [x] 47-01-PLAN.md -- Plugin versioning with check-update endpoint, dependency extraction from manifests, PluginConfigView real update check + dependency section (ECO-01, ECO-02) ✓
 - [x] 47-02-PLAN.md -- MeshGradientConfig in CustomTheme/ThemeSnapshot, ThemeEditor MeshGradient section with 3x3 color grid, String Catalog migration from .lproj to .xcstrings (ECO-03, ECO-04) ✓
-- [ ] 47-03-PLAN.md -- Cross-target verification of all 4 ECO requirements with build evidence (ECO-01 through ECO-04)
+- [x] 47-03-PLAN.md -- Cross-target verification of all 4 ECO requirements with build evidence (ECO-01 through ECO-04) ✓ 4/4 PASS
 
 ### Phase 48: Comprehensive Audit & Verification
 **Goal**: Every screen on iPhone and iPad is visually verified, every backend endpoint returns spec-compliant JSON, and no edge-case bugs remain
@@ -181,5 +181,5 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 | 44. Platform & Performance Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-25 |
 | 45. Data & Backend Hardening | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
 | 46. Security & Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
-| 47. Ecosystem Polish | v4.0 | 2/3 | In Progress | - |
+| 47. Ecosystem Polish | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
 | 48. Comprehensive Audit & Verification | v4.0 | 0/? | Not started | - |
