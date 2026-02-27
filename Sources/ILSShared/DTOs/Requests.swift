@@ -602,6 +602,7 @@ public struct CreateCustomThemeRequest: Codable, Sendable {
     public let spacing: SpacingTokens?
     public let cornerRadius: CornerRadiusTokens?
     public let shadows: ShadowTokens?
+    public let meshGradient: MeshGradientConfig?
 
     public init(
         name: String,
@@ -612,7 +613,8 @@ public struct CreateCustomThemeRequest: Codable, Sendable {
         typography: TypographyTokens? = nil,
         spacing: SpacingTokens? = nil,
         cornerRadius: CornerRadiusTokens? = nil,
-        shadows: ShadowTokens? = nil
+        shadows: ShadowTokens? = nil,
+        meshGradient: MeshGradientConfig? = nil
     ) {
         self.name = name
         self.description = description
@@ -623,6 +625,7 @@ public struct CreateCustomThemeRequest: Codable, Sendable {
         self.spacing = spacing
         self.cornerRadius = cornerRadius
         self.shadows = shadows
+        self.meshGradient = meshGradient
     }
 }
 
@@ -636,6 +639,7 @@ public struct UpdateCustomThemeRequest: Codable, Sendable {
     public let spacing: SpacingTokens?
     public let cornerRadius: CornerRadiusTokens?
     public let shadows: ShadowTokens?
+    public let meshGradient: MeshGradientConfig?
 
     public init(
         name: String? = nil,
@@ -646,7 +650,8 @@ public struct UpdateCustomThemeRequest: Codable, Sendable {
         typography: TypographyTokens? = nil,
         spacing: SpacingTokens? = nil,
         cornerRadius: CornerRadiusTokens? = nil,
-        shadows: ShadowTokens? = nil
+        shadows: ShadowTokens? = nil,
+        meshGradient: MeshGradientConfig? = nil
     ) {
         self.name = name
         self.description = description
@@ -657,6 +662,7 @@ public struct UpdateCustomThemeRequest: Codable, Sendable {
         self.spacing = spacing
         self.cornerRadius = cornerRadius
         self.shadows = shadows
+        self.meshGradient = meshGradient
     }
 }
 

@@ -79,6 +79,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateFleetHosts())
     // v3.0 — Performance indexes
     app.migrations.add(AddDatabaseIndexes())
+    // v4.0 — Ecosystem polish
+    app.migrations.add(AddMeshGradientToThemes())
 
     // Run migrations
     try await app.autoMigrate()

@@ -96,6 +96,7 @@ struct ThemeEditorView: View {
             ThemeSpacingSection(editorVM: editorVM)
             ThemeCornerRadiusSection(editorVM: editorVM)
             ThemeShadowSection(editorVM: editorVM)
+            ThemeMeshGradientSection(editorVM: editorVM)
         }
     }
 }

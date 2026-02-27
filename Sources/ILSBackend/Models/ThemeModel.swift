@@ -42,6 +42,9 @@ final class ThemeModel: Model, Content, @unchecked Sendable {
     @OptionalField(key: "shadows")
     var shadows: ShadowTokens?
 
+    @OptionalField(key: "mesh_gradient")
+    var meshGradient: MeshGradientConfig?
+
     init() {}
 
     init(
@@ -54,7 +57,8 @@ final class ThemeModel: Model, Content, @unchecked Sendable {
         typography: TypographyTokens? = nil,
         spacing: SpacingTokens? = nil,
         cornerRadius: CornerRadiusTokens? = nil,
-        shadows: ShadowTokens? = nil
+        shadows: ShadowTokens? = nil,
+        meshGradient: MeshGradientConfig? = nil
     ) {
         self.id = id
         self.name = name
@@ -66,6 +70,7 @@ final class ThemeModel: Model, Content, @unchecked Sendable {
         self.spacing = spacing
         self.cornerRadius = cornerRadius
         self.shadows = shadows
+        self.meshGradient = meshGradient
     }
 
     /// Convert to shared CustomTheme type
@@ -82,7 +87,8 @@ final class ThemeModel: Model, Content, @unchecked Sendable {
             typography: typography,
             spacing: spacing,
             cornerRadius: cornerRadius,
-            shadows: shadows
+            shadows: shadows,
+            meshGradient: meshGradient
         )
     }
 
@@ -98,7 +104,8 @@ final class ThemeModel: Model, Content, @unchecked Sendable {
             typography: theme.typography,
             spacing: theme.spacing,
             cornerRadius: theme.cornerRadius,
-            shadows: theme.shadows
+            shadows: theme.shadows,
+            meshGradient: theme.meshGradient
         )
     }
 }

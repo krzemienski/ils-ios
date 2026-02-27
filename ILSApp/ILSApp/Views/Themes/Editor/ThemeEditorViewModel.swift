@@ -112,6 +112,20 @@ class ThemeEditorViewModel {
     var shadowHeavyOffsetX: String
     var shadowHeavyOffsetY: String
 
+    // MARK: - MeshGradient Properties
+
+    var meshGradientEnabled: Bool
+    var meshGradientAnimated: Bool
+    var meshGradientColor0: Color
+    var meshGradientColor1: Color
+    var meshGradientColor2: Color
+    var meshGradientColor3: Color
+    var meshGradientColor4: Color
+    var meshGradientColor5: Color
+    var meshGradientColor6: Color
+    var meshGradientColor7: Color
+    var meshGradientColor8: Color
+
     // MARK: - UI State Properties
 
     var isSaving = false
@@ -224,6 +238,20 @@ class ThemeEditorViewModel {
         shadowHeavyRadius = theme?.shadows?.shadowHeavyRadius?.description ?? ""
         shadowHeavyOffsetX = theme?.shadows?.shadowHeavyOffsetX?.description ?? ""
         shadowHeavyOffsetY = theme?.shadows?.shadowHeavyOffsetY?.description ?? ""
+
+        // Initialize mesh gradient properties
+        meshGradientEnabled = theme?.meshGradient?.enabled ?? false
+        meshGradientAnimated = theme?.meshGradient?.animated ?? false
+        let meshColors = theme?.meshGradient?.colors ?? []
+        meshGradientColor0 = hexToColor(meshColors.count > 0 ? meshColors[0] : nil)
+        meshGradientColor1 = hexToColor(meshColors.count > 1 ? meshColors[1] : nil)
+        meshGradientColor2 = hexToColor(meshColors.count > 2 ? meshColors[2] : nil)
+        meshGradientColor3 = hexToColor(meshColors.count > 3 ? meshColors[3] : nil)
+        meshGradientColor4 = hexToColor(meshColors.count > 4 ? meshColors[4] : nil)
+        meshGradientColor5 = hexToColor(meshColors.count > 5 ? meshColors[5] : nil)
+        meshGradientColor6 = hexToColor(meshColors.count > 6 ? meshColors[6] : nil)
+        meshGradientColor7 = hexToColor(meshColors.count > 7 ? meshColors[7] : nil)
+        meshGradientColor8 = hexToColor(meshColors.count > 8 ? meshColors[8] : nil)
     }
 
     // MARK: - Computed Properties
@@ -310,8 +338,28 @@ class ThemeEditorViewModel {
                 shadowHeavyRadius: Double(shadowHeavyRadius),
                 shadowHeavyOffsetX: Double(shadowHeavyOffsetX),
                 shadowHeavyOffsetY: Double(shadowHeavyOffsetY)
-            )
+            ),
+            meshGradient: meshGradientEnabled ? MeshGradientConfig(
+                enabled: true,
+                colors: meshGradientColorHexArray,
+                animated: meshGradientAnimated
+            ) : nil
         )
+    }
+
+    /// Returns the 9 mesh gradient colors as hex strings for the 3x3 grid.
+    var meshGradientColorHexArray: [String] {
+        [
+            hexFromColor(meshGradientColor0),
+            hexFromColor(meshGradientColor1),
+            hexFromColor(meshGradientColor2),
+            hexFromColor(meshGradientColor3),
+            hexFromColor(meshGradientColor4),
+            hexFromColor(meshGradientColor5),
+            hexFromColor(meshGradientColor6),
+            hexFromColor(meshGradientColor7),
+            hexFromColor(meshGradientColor8)
+        ]
     }
 
     // MARK: - Palette Application
@@ -528,6 +576,13 @@ class ThemeEditorViewModel {
             shadowHeavyOffsetY: Double(shadowHeavyOffsetY)
         )
 
+        // Build mesh gradient config
+        let meshGradient: MeshGradientConfig? = meshGradientEnabled ? MeshGradientConfig(
+            enabled: true,
+            colors: meshGradientColorHexArray,
+            animated: meshGradientAnimated
+        ) : nil
+
         let result: CustomTheme?
         if let theme = theme {
             // Update existing theme
@@ -541,7 +596,8 @@ class ThemeEditorViewModel {
                 typography: typography,
                 spacing: spacing,
                 cornerRadius: cornerRadius,
-                shadows: shadows
+                shadows: shadows,
+                meshGradient: meshGradient
             )
         } else {
             // Create new theme
@@ -554,7 +610,8 @@ class ThemeEditorViewModel {
                 typography: typography,
                 spacing: spacing,
                 cornerRadius: cornerRadius,
-                shadows: shadows
+                shadows: shadows,
+                meshGradient: meshGradient
             )
         }
 
