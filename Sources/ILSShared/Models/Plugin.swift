@@ -50,6 +50,12 @@ public struct Plugin: Codable, Identifiable, Hashable, Sendable {
     public var source: PluginSource?
     /// Category for organizing plugins (e.g., "productivity", "testing").
     public var category: String?
+    /// Plugin dependency names (from plugin.json manifest).
+    public var dependencies: [String]?
+    /// Latest available version from remote registry (populated on update check).
+    public var latestVersion: String?
+    /// Whether an update is available (populated on update check).
+    public var updateAvailable: Bool?
 
     /// Creates a new plugin entry.
     /// - Parameters:
@@ -66,6 +72,9 @@ public struct Plugin: Codable, Identifiable, Hashable, Sendable {
     ///   - stars: Optional GitHub star count.
     ///   - source: Optional plugin source.
     ///   - category: Optional category for organization.
+    ///   - dependencies: Optional list of dependency plugin names.
+    ///   - latestVersion: Optional latest available version from remote.
+    ///   - updateAvailable: Optional flag indicating update availability.
     public init(
         id: UUID = UUID(),
         name: String,
@@ -79,7 +88,10 @@ public struct Plugin: Codable, Identifiable, Hashable, Sendable {
         path: String? = nil,
         stars: Int? = nil,
         source: PluginSource? = nil,
-        category: String? = nil
+        category: String? = nil,
+        dependencies: [String]? = nil,
+        latestVersion: String? = nil,
+        updateAvailable: Bool? = nil
     ) {
         precondition(!name.isEmpty, "Plugin name must not be empty")
         self.id = id
@@ -95,6 +107,9 @@ public struct Plugin: Codable, Identifiable, Hashable, Sendable {
         self.stars = stars
         self.source = source
         self.category = category
+        self.dependencies = dependencies
+        self.latestVersion = latestVersion
+        self.updateAvailable = updateAvailable
     }
 }
 

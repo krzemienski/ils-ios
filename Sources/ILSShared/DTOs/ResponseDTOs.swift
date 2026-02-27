@@ -231,6 +231,36 @@ public struct ConfigValidationResult: Codable, Sendable {
     }
 }
 
+// MARK: - Plugin Update Info
+
+/// Response for plugin update availability check.
+public struct PluginUpdateInfo: Codable, Sendable {
+    /// Plugin name that was checked.
+    public let pluginName: String
+    /// Currently installed version.
+    public let currentVersion: String
+    /// Latest available version from remote.
+    public let latestVersion: String
+    /// Whether the latest version is newer than current.
+    public let updateAvailable: Bool
+    /// List of dependency names that are not installed locally.
+    public let unmetDependencies: [String]
+
+    public init(
+        pluginName: String,
+        currentVersion: String,
+        latestVersion: String,
+        updateAvailable: Bool,
+        unmetDependencies: [String] = []
+    ) {
+        self.pluginName = pluginName
+        self.currentVersion = currentVersion
+        self.latestVersion = latestVersion
+        self.updateAvailable = updateAvailable
+        self.unmetDependencies = unmetDependencies
+    }
+}
+
 // MARK: - Data Erasure
 
 /// Response from the GDPR "delete all my data" endpoint.
