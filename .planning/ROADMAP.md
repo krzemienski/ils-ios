@@ -115,8 +115,8 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 45-01-PLAN.md -- ConfigScope enum unification (MCPScope→ConfigScope), DashboardStats standalone DTO, precondition validation on stat structs + ConfigInfo/ConfigOverride (DATA-01, DATA-02, DATA-06)
-- [ ] 45-02-PLAN.md -- Cache freshness indicators in Home/Browser/Sessions, message caching in ChatViewModel, chat draft persistence via UserDefaults (DATA-03, DATA-04, DATA-05)
+- [x] 45-01-PLAN.md -- ConfigScope enum unification (MCPScope→ConfigScope), DashboardStats standalone DTO, precondition validation on stat structs + ConfigInfo/ConfigOverride (DATA-01, DATA-02, DATA-06) ✓
+- [x] 45-02-PLAN.md -- Cache freshness indicators in Home/Browser/Sessions, message caching in ChatViewModel, chat draft persistence via UserDefaults (DATA-03, DATA-04, DATA-05) ✓
 - [ ] 45-03-PLAN.md -- Functional validation of all 6 DATA requirements with build verification and evidence (DATA-01 through DATA-06)
 
 ### Phase 46: Security & Compliance
@@ -176,7 +176,7 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 |-------|-----------|----------------|--------|-----------|
 | 43. iOS UI Gap Remediation | v4.0 | 2/2 | Complete ✓ | 2026-02-25 |
 | 44. Platform & Performance Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-25 |
-| 45. Data & Backend Hardening | 1/3 | In Progress|  | - |
+| 45. Data & Backend Hardening | v4.0 | 2/3 | In Progress | - |
 | 46. Security & Compliance | v4.0 | 0/? | Not started | - |
 | 47. Ecosystem Polish | v4.0 | 0/? | Not started | - |
 | 48. Comprehensive Audit & Verification | v4.0 | 0/? | Not started | - |
