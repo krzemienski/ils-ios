@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v4.0
+milestone_name: Comprehensive Spec Compliance Audit & Remediation
+status: unknown
+last_updated: "2026-02-27T21:44:15.880Z"
+progress:
+  total_phases: 44
+  completed_phases: 31
+  total_plans: 91
+  completed_plans: 84
+---
+
 # Project State
 
 ## Project Reference
@@ -5,16 +18,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v4.0 Phase 44 COMPLETE, ready for Phase 45
+**Current focus:** v4.0 Phase 46 COMPLETE, ready for Phase 47
 
 ## Current Position
 
-Phase: 44 COMPLETE, ready for Phase 45
-Plan: All plans complete (44-01 Live Activity + render opts, 44-02 TipKit + cellular, 44-03 validation 8/8 PASS)
-Status: Ready to plan Phase 45
-Last activity: 2026-02-25 -- Phase 44 complete. All 8 PLAT requirements closed (PLAT-01..PLAT-08)
+Phase: 46 COMPLETE, ready for Phase 47
+Plan: All plans complete (46-01 AdminMiddleware + GDPR erasure, 46-02 StoreKit trial + deletion UI, 46-03 verification 5/5 PASS)
+Status: Ready to plan Phase 47
+Last activity: 2026-02-27 -- Phase 46 complete. All 5 SEC requirements closed (SEC-01..SEC-05)
 
-Progress: [████░░░░░░] 33%
+Progress: [████████░░] 67%
 
 ## Previous Milestones
 

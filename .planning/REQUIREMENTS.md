@@ -40,11 +40,11 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 
 ### Security & Compliance
 
-- [ ] **SEC-01**: Per-route authorization (admin vs user distinction) beyond global API key middleware
-- [ ] **SEC-02**: Request size limits explicitly configured in Vapor middleware
-- [ ] **SEC-03**: GDPR single "delete all my data" endpoint aggregating all user data deletion
-- [ ] **SEC-04**: Free trial StoreKit configuration verified and functional
-- [ ] **SEC-05**: Receipt validation flow verified with StoreKit 2 server-side
+- [x] **SEC-01**: Per-route authorization (admin vs user distinction) beyond global API key middleware ✓ 2026-02-27
+- [x] **SEC-02**: Request size limits explicitly configured in Vapor middleware ✓ 2026-02-27
+- [x] **SEC-03**: GDPR single "delete all my data" endpoint aggregating all user data deletion ✓ 2026-02-27
+- [x] **SEC-04**: Free trial StoreKit configuration verified and functional ✓ 2026-02-27
+- [x] **SEC-05**: Receipt validation flow verified with StoreKit 2 server-side ✓ 2026-02-27
 
 ### Ecosystem Gaps
 
@@ -118,11 +118,11 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 | DATA-04 | Phase 45 | Pending |
 | DATA-05 | Phase 45 | Pending |
 | DATA-06 | Phase 45 | Pending |
-| SEC-01 | Phase 46 | Pending |
-| SEC-02 | Phase 46 | Pending |
-| SEC-03 | Phase 46 | Pending |
-| SEC-04 | Phase 46 | Pending |
-| SEC-05 | Phase 46 | Pending |
+| SEC-01 | Phase 46 | Complete ✓ |
+| SEC-02 | Phase 46 | Complete ✓ |
+| SEC-03 | Phase 46 | Complete ✓ |
+| SEC-04 | Phase 46 | Complete ✓ |
+| SEC-05 | Phase 46 | Complete ✓ |
 | ECO-01 | Phase 47 | Pending |
 | ECO-02 | Phase 47 | Pending |
 | ECO-03 | Phase 47 | Pending |

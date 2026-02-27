@@ -61,9 +61,9 @@ Phases 40-42: iPhone validation 23/23 PASS. iPad deferred to v4.0 audit phase.
 **FIX_PROTOCOL:** Every fix goes through axiom skill -> axiom:ask -> implement -> rebuild -> evidence.
 
 - [x] **Phase 43: iOS UI Gap Remediation** - Close all 6 UI gaps: Quick Actions, Quick Settings, GitHub search, session overflow, rate limit UX, animation timing ✓ 2026-02-25
-- [ ] **Phase 44: Platform & Performance Compliance** - Live Activity, concurrency modernization, render optimization, TipKit tips
+- [x] **Phase 44: Platform & Performance Compliance** - Live Activity, concurrency modernization, render optimization, TipKit tips ✓ 2026-02-25
 - [x] **Phase 45: Data & Backend Hardening** - Type-safe DTOs, caching verification, offline indicators, input validation ✓ 2026-02-27
-- [ ] **Phase 46: Security & Compliance** - Per-route auth, request limits, GDPR deletion, StoreKit verification
+- [x] **Phase 46: Security & Compliance** - Per-route auth, request limits, GDPR deletion, StoreKit verification (completed 2026-02-27)
 - [ ] **Phase 47: Ecosystem Polish** - Plugin versioning, dependency management, MeshGradient themes, String Catalog migration
 - [ ] **Phase 48: Comprehensive Audit & Verification** - Visual/functional/backend/integration audits on iPhone+iPad, proactive bug hunt
 
@@ -129,11 +129,13 @@ Plans:
   3. A single "Delete All My Data" endpoint exists and aggregates deletion across sessions, messages, config, and cache
   4. StoreKit free trial configuration loads correctly in sandbox -- trial period is displayed on the paywall
   5. Receipt validation completes via StoreKit 2 server-side flow -- premium status updates immediately after purchase
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 46-01: TBD
-- [ ] 46-02: TBD
+- [x] 46-01-PLAN.md -- AdminMiddleware for per-route auth, configurable body size limit with PAYLOAD_TOO_LARGE error code, DataErasureController with GDPR transactional deletion endpoint (SEC-01, SEC-02, SEC-03) ✓
+- [x] 46-02-PLAN.md -- Products.storekit config with free trial offers, SubscriptionManager trial eligibility detection, PremiumView dynamic trial display, Settings GDPR deletion UI (SEC-04, SEC-05) ✓
+- [x] 46-03-PLAN.md -- Cross-target verification of all 5 SEC requirements with build evidence (SEC-01 through SEC-05) ✓ 5/5 PASS
+- [ ] 46-03-PLAN.md -- Functional validation of all 5 SEC requirements with build verification and evidence (SEC-01 through SEC-05)
 
 ### Phase 47: Ecosystem Polish
 **Goal**: Plugins show version info with update availability, dependencies are validated, themes support MeshGradient, and strings use String Catalog format
@@ -177,6 +179,6 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 | 43. iOS UI Gap Remediation | v4.0 | 2/2 | Complete ✓ | 2026-02-25 |
 | 44. Platform & Performance Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-25 |
 | 45. Data & Backend Hardening | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
-| 46. Security & Compliance | v4.0 | 0/? | Not started | - |
+| 46. Security & Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
 | 47. Ecosystem Polish | v4.0 | 0/? | Not started | - |
 | 48. Comprehensive Audit & Verification | v4.0 | 0/? | Not started | - |
