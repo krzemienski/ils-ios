@@ -99,6 +99,10 @@ protocol AppTheme {
 
     // Light/dark detection for glass inversion
     var isLight: Bool { get }
+
+    // MeshGradient (optional, only custom themes)
+    var meshGradientColors: [String]? { get }
+    var meshGradientAnimated: Bool { get }
 }
 
 // MARK: - Default Entity Colors (consistent across ALL themes)
@@ -128,6 +132,8 @@ extension AppTheme {
 
     var fontDesign: Font.Design { .default }
     var isLight: Bool { false }
+    var meshGradientColors: [String]? { nil }
+    var meshGradientAnimated: Bool { false }
 }
 
 // MARK: - Theme Environment Key
