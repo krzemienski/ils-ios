@@ -614,6 +614,7 @@ struct BrowserView: View {
                                 await pluginsVM.uninstallPlugin(p)
                             }
                         )
+                        .environment(pluginsVM)
                     } label: {
                         pluginRow(plugin)
                     }

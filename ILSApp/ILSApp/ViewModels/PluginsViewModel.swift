@@ -271,6 +271,26 @@ class PluginsViewModel {
         }
     }
 
+    /// Check for updates for a specific plugin via the backend API.
+    func checkForUpdate(pluginName: String) async -> PluginUpdateInfo? {
+        guard let client else { return nil }
+        do {
+            let encoded = pluginName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? pluginName
+            let response: APIResponse<PluginUpdateInfo> = try await client.get("/plugins/\(encoded)/check-update")
+            return response.data
+        } catch {
+            AppLogger.shared.error("Failed to check update for '\(pluginName)': \(error.localizedDescription)", category: "plugins")
+            return nil
+        }
+    }
+
+    /// Check if a plugin has unmet dependencies by comparing against installed plugins.
+    func getUnmetDependencies(for plugin: Plugin) -> [String] {
+        guard let deps = plugin.dependencies, !deps.isEmpty else { return [] }
+        let installedNames = Set(plugins.map { $0.name })
+        return deps.filter { !installedNames.contains($0) }
+    }
+
     /// Check if a GitHub search result is already installed locally.
     func isInstalled(result: GitHubSearchResult) -> Bool {
         let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.repository
