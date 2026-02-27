@@ -185,6 +185,7 @@ extension Skill: Content {}
 extension Plugin: Content {}
 extension PluginMarketplace: Content {}
 extension PluginInfo: Content {}
+extension PluginUpdateInfo: Content {}
 extension MCPServer: Content {}
 extension MCPHealthResponse: Content {}
 extension MCPLogEntry: Content {}

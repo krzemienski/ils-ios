@@ -215,6 +215,40 @@ struct GitHubService: Sendable {
         }
     }
 
+    /// Fetch the latest release tag for a GitHub repository.
+    /// Returns the tag name (e.g., "v1.2.3" or "1.2.3"), or nil if no releases found.
+    func getLatestRelease(owner: String, repo: String) async -> String? {
+        let uri = URI(string: "https://api.github.com/repos/\(owner)/\(repo)/releases/latest")
+
+        var headers = HTTPHeaders()
+        headers.add(name: .accept, value: "application/vnd.github.v3+json")
+        headers.add(name: .userAgent, value: "ILS-Backend/1.0")
+        if let token = token {
+            headers.add(name: .authorization, value: "Bearer \(token)")
+        }
+
+        do {
+            let response = try await client.get(uri, headers: headers)
+            guard response.status == .ok else {
+                Self.logger.info("No releases found for \(owner)/\(repo): HTTP \(response.status)")
+                return nil
+            }
+
+            struct ReleaseInfo: Codable {
+                let tagName: String
+                enum CodingKeys: String, CodingKey {
+                    case tagName = "tag_name"
+                }
+            }
+
+            let release = try response.content.decode(ReleaseInfo.self)
+            return release.tagName
+        } catch {
+            Self.logger.warning("Failed to fetch latest release for \(owner)/\(repo): \(error)")
+            return nil
+        }
+    }
+
     /// Fetch raw file content from GitHub
     func fetchRawContent(owner: String, repo: String, path: String) async throws -> String {
         let branch = await getDefaultBranch(owner: owner, repo: repo)

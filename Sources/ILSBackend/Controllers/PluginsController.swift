@@ -35,6 +35,7 @@ struct PluginsController: RouteCollection {
         plugins.post(":name", "enable", use: enable)
         plugins.post(":name", "disable", use: disable)
         plugins.delete(":name", use: uninstall)
+        plugins.get(":name", "check-update", use: checkUpdate)
     }
 
     /// List all installed plugins.
@@ -364,6 +365,54 @@ struct PluginsController: RouteCollection {
             success: true,
             data: EnabledResponse(enabled: false)
         )
+    }
+
+    /// Check if a plugin has an available update by comparing local version against GitHub latest release.
+    ///
+    /// Also returns unmet dependencies for the plugin.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with PluginUpdateInfo
+    @Sendable
+    func checkUpdate(req: Request) async throws -> APIResponse<PluginUpdateInfo> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid plugin name")
+        }
+
+        let plugins = try await fileSystem.listPlugins(bypassCache: false)
+        guard let plugin = plugins.first(where: { $0.name == name }) else {
+            throw Abort(.notFound, reason: "Plugin '\(name)' not found")
+        }
+
+        let currentVersion = plugin.version ?? "0.0.0"
+        var latestVersion = currentVersion
+        var updateAvailable = false
+
+        if let marketplace = plugin.marketplace {
+            let parts = marketplace.split(separator: "/")
+            if parts.count == 2 {
+                let owner = String(parts[0])
+                let repo = String(parts[1])
+                if let tagName = await req.application.githubService.getLatestRelease(owner: owner, repo: repo) {
+                    latestVersion = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
+                    updateAvailable = latestVersion.compare(currentVersion, options: .numeric) == .orderedDescending
+                }
+            }
+        }
+
+        var unmetDependencies: [String] = []
+        if let deps = plugin.dependencies, !deps.isEmpty {
+            let installedNames = Set(plugins.map { $0.name })
+            unmetDependencies = deps.filter { !installedNames.contains($0) }
+        }
+
+        return APIResponse(success: true, data: PluginUpdateInfo(
+            pluginName: name,
+            currentVersion: currentVersion,
+            latestVersion: latestVersion,
+            updateAvailable: updateAvailable,
+            unmetDependencies: unmetDependencies
+        ))
     }
 
     /// Uninstall a plugin by removing its directory.
