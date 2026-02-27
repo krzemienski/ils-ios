@@ -73,6 +73,8 @@ struct ChatView: View {
     @State private var showJumpToBottom = false
     /// Configuration for advanced chat options applied to the next outgoing message.
     @State private var chatOptionsConfig = ChatOptionsConfig()
+    /// Debounced task for persisting draft text to UserDefaults (DATA-05).
+    @State private var draftPersistTask: Task<Void, Never>?
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -191,6 +193,23 @@ struct ChatView: View {
         }
         .onChange(of: appState.serverURL) { _, _ in
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
+        }
+        .onChange(of: inputText) { _, newValue in
+            // Persist draft to UserDefaults with 500ms debounce (DATA-05)
+            draftPersistTask?.cancel()
+            draftPersistTask = Task {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                guard !Task.isCancelled else { return }
+                let key = "chatDraft_\(session.id.uuidString)"
+                if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    UserDefaults.standard.removeObject(forKey: key)
+                } else {
+                    UserDefaults.standard.set(newValue, forKey: key)
+                }
+            }
+        }
+        .onDisappear {
+            draftPersistTask?.cancel()
         }
     }
 
@@ -352,6 +371,12 @@ struct ChatView: View {
 
     /// Configure the view model and load message history.
     private func setupChatView() async {
+        // Restore draft from UserDefaults (DATA-05)
+        let draftKey = "chatDraft_\(session.id.uuidString)"
+        if let saved = UserDefaults.standard.string(forKey: draftKey), !saved.isEmpty {
+            inputText = saved
+        }
+
         viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
         viewModel.sessionId = session.id
         viewModel.encodedProjectPath = session.encodedProjectPath
@@ -375,6 +400,10 @@ struct ChatView: View {
 
         let prompt = inputText
         inputText = ""
+
+        // Clear persisted draft on send (DATA-05)
+        UserDefaults.standard.removeObject(forKey: "chatDraft_\(session.id.uuidString)")
+        draftPersistTask?.cancel()
 
         viewModel.addUserMessage(prompt)
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())

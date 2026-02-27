@@ -338,6 +338,12 @@ class ChatViewModel {
                     }
                     messages = loadedMessages
 
+                    // Cache messages for offline access (DATA-03)
+                    if let sessionId = sessionId {
+                        let messagesToCache = finalItems
+                        Task { await CacheService.shared.cacheMessages(messagesToCache, forSession: sessionId) }
+                    }
+
                     if messages.isEmpty {
                         showEmptyTranscriptMessage()
                     }
@@ -378,6 +384,10 @@ class ChatViewModel {
 
                     messages = loadedMessages
 
+                    // Cache messages for offline access (DATA-03)
+                    let messagesToCache = finalItems
+                    Task { await CacheService.shared.cacheMessages(messagesToCache, forSession: sessionId) }
+
                     if messages.isEmpty {
                         showWelcomeMessage()
                     }
@@ -390,6 +400,25 @@ class ChatViewModel {
                 self.error = error
             }
             AppLogger.shared.error("Failed to load message history: \(error)", category: "chat")
+
+            // Offline fallback: load cached messages (DATA-03)
+            if let sessionId = sessionId {
+                let cached = await CacheService.shared.getCachedMessages(forSession: sessionId)
+                if !cached.isEmpty {
+                    messages = cached.map { message in
+                        ChatMessage(
+                            id: message.id,
+                            isUser: message.role == .user,
+                            text: message.content,
+                            toolCalls: parseToolCalls(from: message.toolCalls),
+                            timestamp: message.createdAt,
+                            isFromHistory: true
+                        )
+                    }
+                    AppLogger.shared.info("Loaded \(cached.count) cached messages for session \(sessionId)", category: "chat")
+                }
+            }
+
             if messages.isEmpty {
                 if encodedProjectPath != nil {
                     showEmptyTranscriptMessage()

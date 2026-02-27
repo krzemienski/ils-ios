@@ -14,6 +14,7 @@ class SkillsViewModel {
     var gitHubSearchText = ""
     var installingSkills: Set<String> = []
     var gitHubError: String?
+    var lastUpdated: Date?
     var rateLimitCountdown: Int = 0
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
@@ -100,6 +101,7 @@ class SkillsViewModel {
             if let data = response.data {
                 skills = data.items
                 rebuildSearchCache()
+                lastUpdated = Date()
             }
         } catch {
             self.error = error

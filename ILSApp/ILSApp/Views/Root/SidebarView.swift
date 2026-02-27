@@ -237,6 +237,14 @@ struct SidebarView: View {
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 
+            // Cache freshness indicator
+            HStack {
+                Spacer()
+                CacheStatusView(lastUpdated: sessionsViewModel.lastUpdated)
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.bottom, theme.spacingSM)
+
             // Session list — List provides view recycling (UICollectionView-backed)
             // Section headers inside List are automatically pinned (sticky).
             List {

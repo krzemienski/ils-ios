@@ -14,6 +14,7 @@ class MCPViewModel {
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
+    var lastUpdated: Date?
     @ObservationIgnored private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
@@ -83,6 +84,7 @@ class MCPViewModel {
             if let data = response.data {
                 servers = data.items
                 rebuildSearchCache()
+                lastUpdated = Date()
             }
         } catch {
             self.error = error
@@ -146,6 +148,7 @@ class MCPViewModel {
             if let data = response.data {
                 servers = data.items
                 rebuildSearchCache()
+                lastUpdated = Date()
             }
         } catch {
             self.error = error

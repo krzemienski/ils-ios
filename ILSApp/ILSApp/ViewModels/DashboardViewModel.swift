@@ -10,6 +10,7 @@ class DashboardViewModel {
     var isLoading = false
     var error: Error?
     var totalCost: Double = 0.0
+    var lastUpdated: Date?
 
     private var client: APIClient?
 
@@ -82,6 +83,7 @@ class DashboardViewModel {
             let response: APIResponse<StatsResponse> = try await client.get("/stats")
             if let data = response.data {
                 stats = data
+                lastUpdated = Date()
             }
         } catch {
             self.error = error

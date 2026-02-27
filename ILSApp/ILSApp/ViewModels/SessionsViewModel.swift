@@ -44,6 +44,8 @@ class SessionsViewModel {
     var searchQuery: String?
     /// Client-side search text for filtering.
     var searchText: String = ""
+    /// Timestamp of most recent successful data load from API.
+    var lastUpdated: Date?
 
     /// Project groups for sidebar navigation.
     var projectGroups: [ProjectGroupInfo] = []
@@ -212,6 +214,7 @@ class SessionsViewModel {
             let response: APIResponse<[ProjectGroupInfo]> = try await client.get("/sessions/projects")
             projectGroups = response.data ?? []
             totalCount = projectGroups.reduce(0) { $0 + $1.sessionCount }
+            lastUpdated = Date()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load project groups: \(error.localizedDescription)", category: "sessions")
@@ -299,6 +302,7 @@ class SessionsViewModel {
             if currentPage == 1 {
                 sessions = newItems
                 rebuildSearchCache()
+                lastUpdated = Date()
                 // Update cache with fresh data in background
                 Task.detached {
                     await CacheService.shared.cacheSessions(newItems)

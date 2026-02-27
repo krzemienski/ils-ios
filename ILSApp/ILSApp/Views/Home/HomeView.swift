@@ -475,6 +475,11 @@ struct HomeView: View {
                 }
                 .shimmerIfActive(isRefreshing)
 
+                HStack {
+                    Spacer()
+                    CacheStatusView(lastUpdated: dashboardVM.lastUpdated)
+                }
+
                 // Secondary stats row: plugins + active counts
                 HStack(spacing: theme.spacingSM) {
                     secondaryStat(

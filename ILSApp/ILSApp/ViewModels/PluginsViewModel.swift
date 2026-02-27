@@ -19,6 +19,7 @@ class PluginsViewModel {
     var isSearchingGitHub = false
     var gitHubError: String?
     var rateLimitCountdown: Int = 0
+    var lastUpdated: Date?
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
     private var client: APIClient?
@@ -84,6 +85,7 @@ class PluginsViewModel {
             let response: APIResponse<ListResponse<Plugin>> = try await client.get("/plugins")
             if let data = response.data {
                 plugins = data.items
+                lastUpdated = Date()
             }
         } catch {
             self.error = error
