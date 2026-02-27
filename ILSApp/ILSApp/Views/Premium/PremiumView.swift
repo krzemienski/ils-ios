@@ -191,31 +191,35 @@ struct PremiumView: View {
 
     // MARK: - Trial Callout
 
+    @ViewBuilder
     private var trialCallout: some View {
-        HStack(spacing: theme.spacingSM) {
-            Image(systemName: "gift.fill")
-                .font(.system(size: theme.fontTitle3))
-                .foregroundStyle(theme.accent)
+        if subscriptionManager.trialEligible, let days = subscriptionManager.trialDurationDays {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "gift.fill")
+                    .font(.system(size: theme.fontTitle3))
+                    .foregroundStyle(theme.accent)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("7-day free trial")
-                    .font(.system(size: theme.fontBody, weight: .semibold))
-                    .foregroundStyle(theme.textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(days)-day free trial")
+                        .font(.system(size: theme.fontBody, weight: .semibold))
+                        .foregroundStyle(theme.textPrimary)
 
-                Text("Try all premium features risk-free. Cancel anytime.")
-                    .font(.system(size: theme.fontCaption))
-                    .foregroundStyle(theme.textSecondary)
+                    Text("Try all premium features risk-free. Cancel anytime.")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
+                }
+
+                Spacer()
             }
-
-            Spacer()
+            .padding(theme.spacingMD)
+            .background(theme.accent.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
+                    .stroke(theme.accent.opacity(0.3), lineWidth: 1)
+            )
         }
-        .padding(theme.spacingMD)
-        .background(theme.accent.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: theme.cornerRadius)
-                .stroke(theme.accent.opacity(0.3), lineWidth: 1)
-        )
+        // When not eligible, trial callout is hidden entirely
     }
 
     // MARK: - Purchase Button
@@ -234,7 +238,7 @@ struct PremiumView: View {
                     ProgressView()
                         .tint(theme.textOnAccent)
                 } else {
-                    Text(featureGate.isPremium ? "Already Subscribed" : "Start Free Trial")
+                    Text(purchaseButtonTitle)
                         .font(.system(size: theme.fontBody, weight: .bold))
                 }
             }
@@ -246,6 +250,17 @@ struct PremiumView: View {
         }
         .disabled(subscriptionManager.isLoading || featureGate.isPremium)
         .opacity(featureGate.isPremium ? 0.6 : 1.0)
+    }
+
+    /// Dynamic purchase button title based on subscription and trial state.
+    private var purchaseButtonTitle: String {
+        if featureGate.isPremium {
+            return "Already Subscribed"
+        } else if subscriptionManager.trialEligible {
+            return "Start Free Trial"
+        } else {
+            return "Subscribe Now"
+        }
     }
 
     // MARK: - Restore Link

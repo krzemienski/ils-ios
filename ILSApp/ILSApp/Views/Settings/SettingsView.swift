@@ -36,6 +36,9 @@ struct SettingsView: View {
     @State private var serverURL: String = ""
     /// The user's preferred color scheme, kept in sync with the remote config on load.
     @State private var colorSchemePreference: String = "system"
+    @State private var showDeleteConfirmation: Bool = false
+    @State private var isDeleting: Bool = false
+    @State private var deleteResult: String?
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -51,6 +54,8 @@ struct SettingsView: View {
                 configSection
 
                 statisticsSection
+
+                dataPrivacySection
 
                 SettingsAboutSection(
                     viewModel: viewModel,
@@ -127,6 +132,89 @@ struct SettingsView: View {
             availableColorSchemes: availableColorSchemes,
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
+    }
+
+    private var dataPrivacySection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("DATA & PRIVACY")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                Button {
+                    showDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "trash.fill")
+                            .foregroundStyle(theme.error)
+                        Text("Delete All My Data")
+                            .foregroundStyle(theme.error)
+                        Spacer()
+                        if isDeleting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .disabled(isDeleting)
+
+                if let result = deleteResult {
+                    Divider().background(theme.borderSubtle)
+                    Text(result)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(theme.spacingMD)
+                }
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            Text("Permanently deletes all sessions, messages, projects, themes, fleet hosts, and cached data from the server.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
+        .alert("Delete All Data?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete Everything", role: .destructive) {
+                Task { await performDataDeletion() }
+            }
+        } message: {
+            Text("This will permanently delete all your sessions, messages, projects, themes, and cached data. This action cannot be undone.")
+        }
+    }
+
+    // MARK: - Data Deletion
+
+    /// Calls the GDPR "delete all my data" endpoint and updates the UI with results.
+    private func performDataDeletion() async {
+        isDeleting = true
+        deleteResult = nil
+
+        do {
+            let response: APIResponse<DataErasureResponse> = try await appState.apiClient.delete("/data/all")
+            if let data = response.data {
+                let total = data.messagesDeleted + data.sessionsDeleted +
+                            data.projectsDeleted + data.themesDeleted +
+                            data.fleetHostsDeleted + data.cacheEntriesDeleted
+                deleteResult = "Deleted \(total) items (\(data.sessionsDeleted) sessions, \(data.messagesDeleted) messages, \(data.projectsDeleted) projects)"
+                HapticManager.notification(.success)
+            } else {
+                deleteResult = "Failed to delete data. Server returned no data."
+                HapticManager.notification(.error)
+            }
+        } catch {
+            deleteResult = "Failed to delete data. Check server connection."
+            HapticManager.notification(.error)
+        }
+
+        isDeleting = false
     }
 
     // MARK: - Server URL Management
