@@ -153,8 +153,8 @@ struct ChatMessageList: View {
                         onDelete: onDeleteMessage
                     )
                     .equatable()
-                    .padding(.horizontal, 16)
-                    .padding(.top, isSameSender ? 8 : 24)
+                    .padding(.horizontal, messageSpacing)
+                    .padding(.top, isSameSender ? sameSenderGap : senderGap)
                 } else {
                     AssistantCard(
                         message: message,
@@ -164,15 +164,15 @@ struct ChatMessageList: View {
                         onDelete: onDeleteMessage
                     )
                     .equatable()
-                    .padding(.horizontal, 16)
-                    .padding(.top, isSameSender ? 8 : 24)
+                    .padding(.horizontal, messageSpacing)
+                    .padding(.top, isSameSender ? sameSenderGap : senderGap)
                 }
             }
 
             if shouldShowTypingIndicator() {
                 TypingIndicatorBubble()
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    .padding(.horizontal, messageSpacing)
+                    .padding(.top, messageSpacing)
                     .id("typing-indicator")
             }
 
@@ -180,7 +180,7 @@ struct ChatMessageList: View {
                 .frame(height: 1)
                 .id("bottom")
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, messageSpacing)
     }
 
     /// Returns `true` while Claude is streaming but no tokens have been received yet,
