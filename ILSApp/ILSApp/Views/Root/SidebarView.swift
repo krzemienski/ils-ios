@@ -182,6 +182,7 @@ struct SidebarView: View {
             sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
             sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
             sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
+            sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
             sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
         }
         .padding(.horizontal, theme.spacingSM)
@@ -450,7 +451,7 @@ struct SidebarView: View {
         switch (activeScreen, screen) {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
-             (.themes, .themes), (.hooks, .hooks):
+             (.themes, .themes), (.hooks, .hooks), (.analytics, .analytics):
             return true
         case (.chat, .chat):
             return true
