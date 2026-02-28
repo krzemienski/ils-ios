@@ -105,7 +105,7 @@ ILSBackend/
 │   ├── entrypoint.swift     # @main entry
 │   ├── configure.swift      # Middleware, DB, routes setup
 │   └── routes.swift         # Route registration
-├── Controllers/             # 12 REST controllers
+├── Controllers/             # 15 REST controllers
 │   ├── ChatController       # SSE streaming + WebSocket chat
 │   ├── SessionsController   # CRUD + scan + fork + transcript
 │   ├── ProjectsController   # List + detail + project sessions
@@ -117,8 +117,11 @@ ILSBackend/
 │   ├── SystemController     # Metrics + processes + files + live WS
 │   ├── ThemesController     # Custom theme CRUD
 │   ├── TeamsController      # Team + member + task + message CRUD
-│   └── TunnelController     # Start/stop/status Cloudflare tunnel
-├── Services/                # 16 business logic services
+│   ├── TunnelController     # Start/stop/status Cloudflare tunnel
+│   ├── DataErasureController # GDPR right-to-erasure (delete all user data)
+│   ├── HealthController     # Health checks (detailed/ready/live probes)
+│   └── HostProfileController # Host profile CRUD + activate + health (/fleet aliases)
+├── Services/                # 18 business logic services
 │   ├── ClaudeExecutorService   # Spawns Claude CLI subprocess
 │   ├── StreamingService        # SSE event formatting
 │   ├── WebSocketService        # WS connection management
@@ -134,13 +137,15 @@ ILSBackend/
 │   ├── TeamsExecutorService    # Team agent orchestration
 │   ├── TeamsFileService        # Team config file management
 │   ├── CLIMessageConverter     # Parse CLI output to StreamMessage
-│   └── ExecutionOptions        # Chat execution configuration
+│   ├── ExecutionOptions        # Chat execution configuration
+│   ├── PaginationParams        # Pagination helpers for list endpoints
+│   └── PathSanitizer           # Path traversal prevention utility
 ├── Models/                  # Fluent ORM models
 │   ├── SessionModel         # DB sessions table
 │   ├── MessageModel         # DB messages table
 │   ├── ProjectModel         # DB projects table
 │   ├── ThemeModel           # DB custom themes table
-│   └── FleetHostModel       # DB fleet hosts table
+│   └── HostProfileModel     # DB host profiles table (schema: fleet_hosts)
 ├── Migrations/              # Database schema
 ├── Middleware/
 │   └── ILSErrorMiddleware   # Consistent error responses
