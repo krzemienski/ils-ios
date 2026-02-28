@@ -735,6 +735,15 @@ struct NewSessionView: View {
         }
     }
 
+    // MARK: - Configuration Summary
+
+    var configurationSummary: String {
+        let modelPart = selectedModel.capitalized
+        let permissionPart = formattedMode(permissionMode)
+        let budgetPart = maxBudget.isEmpty ? "No limit" : "$\(maxBudget)"
+        return "\(modelPart) \u{00b7} \(permissionPart) \u{00b7} \(budgetPart)"
+    }
+
     private var permissionDescription: String {
         switch permissionMode {
         case "default":
