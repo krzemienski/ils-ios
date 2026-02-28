@@ -8,7 +8,7 @@ final class HostProfilesViewModel {
     var hosts: [HostProfile] = []
     var activeHostId: UUID?
     var isLoading = false
-    var loadError: String?
+    var error: Error?
     /// Name of the most recently activated host, used to trigger the success banner.
     /// Set by activate() and cleared by the view after the banner auto-dismisses.
     var lastActivatedHostName: String?
@@ -26,7 +26,7 @@ final class HostProfilesViewModel {
 
     func loadHosts() async {
         isLoading = true
-        loadError = nil
+        error = nil
         defer { isLoading = false }
 
         do {
@@ -35,7 +35,7 @@ final class HostProfilesViewModel {
             hosts = fleet.hosts
             activeHostId = fleet.activeHostId
         } catch {
-            loadError = "Failed to load host profiles: \(error.localizedDescription)"
+            self.error = error
         }
     }
 
@@ -49,7 +49,7 @@ final class HostProfilesViewModel {
             hosts.append(newHost)
             if hosts.count == 1 { activeHostId = newHost.id }
         } catch {
-            loadError = "Failed to register host: \(error.localizedDescription)"
+            self.error = error
         }
     }
 
@@ -68,7 +68,7 @@ final class HostProfilesViewModel {
                 UserDefaults.standard.set(host.name, forKey: "activeHostName")
                 self.lastActivatedHostName = host.name
             } catch {
-                loadError = "Failed to activate host '\(host.name)': \(error.localizedDescription)"
+                self.error = error
             }
         }
     }
@@ -85,7 +85,7 @@ final class HostProfilesViewModel {
                     UserDefaults.standard.removeObject(forKey: "activeHostName")
                 }
             } catch {
-                loadError = "Failed to remove host: \(error.localizedDescription)"
+                self.error = error
             }
         }
     }
