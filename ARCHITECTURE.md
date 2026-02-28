@@ -1315,3 +1315,43 @@ After dedup:
 - Session pagination (50 per page) with server-side deduplication
 - External session scan results cached (bypass with `?refresh=true`)
 - Skeleton loading with `ShimmerModifier` for perceived performance
+
+## Common Pitfalls Explained
+
+This section explains the architectural root cause behind each recurring pitfall documented in CLAUDE.md.
+
+### 1. Wrong Backend Binary
+
+**Symptom:** API returns raw/unexpected data despite code changes.
+
+**Root cause:** Two compiled ILSBackend binaries can exist on the same machine — the original prototype at `~/ils/ILSBackend/` and the current codebase at `~/Desktop/ils-ios/`. Swift Package Manager stores each binary in a separate `.build/` directory scoped to the package root, so changes to one package never affect the other binary. Both binaries bind to their configured port and respond to requests; if the old binary happens to be running on port 9999 the current code is never exercised. Always verify the running binary path with `lsof -i :9999 -P -n` before debugging API behaviour.
+
+### 2. Deep Link UUIDs Must Be Lowercase
+
+**Symptom:** Deep links of the form `ils://session/<UUID>` silently fail to navigate.
+
+**Root cause:** The iOS deep link handler uses Swift's `UUID(uuidString:)` initialiser to parse the path component, and this initialiser is case-insensitive — but the Vapor backend routes use string comparison after extracting the path parameter. UUID RFC 4122 specifies lowercase hexadecimal digits for the canonical string representation. When the URL contains uppercase hex characters (e.g. copied from Xcode's debugger), the string does not match the lowercase UUID stored in the SQLite primary key, so the `find(id:)` query returns `nil`. The fix is to always lowercase UUIDs before embedding them in `ils://` URLs.
+
+### 3. `import Crypto` vs `import CryptoKit`
+
+**Symptom:** SHA256 hashing produces the wrong digest or fails to compile in the Vapor target.
+
+**Root cause:** Vapor's dependency tree includes the open-source `swift-crypto` package, which registers the module name `Crypto`. When you write `import Crypto` inside `Sources/ILSBackend/`, the compiler resolves it to `swift-crypto`'s `Crypto` module — not Apple's `CryptoKit` framework. The two modules expose a `SHA256` type with a nearly identical surface area but different internal implementations and, critically, different wire-compatible digest outputs. `ILSBackend` generates deterministic project UUIDs from SHA256 hashes of filesystem paths; using the wrong SHA256 implementation produces different UUIDs across compilation contexts. Always `import CryptoKit` in backend source files to guarantee the Apple-native implementation is used.
+
+### 4. DerivedData Path
+
+**Symptom:** Attempting to run or inspect the built app binary at `ILSApp/build/` fails; the directory does not exist.
+
+**Root cause:** Xcode does not write build products into the source tree. By default it writes them to `~/Library/Developer/Xcode/DerivedData/<scheme>-<hash>/Build/Products/<config>-<platform>/`. The hash suffix is derived from the project's absolute path, so it changes if the project is moved. There is no `ILSApp/build/` directory created by `xcodebuild` unless explicitly configured with `-derivedDataPath`. When automating simulator launches or inspecting `.app` bundles, use the glob pattern `~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/` to locate the correct path.
+
+### 5. ClaudeCodeSDK RunLoop Incompatibility in Vapor
+
+**Symptom:** Using `ClaudeCodeSDK` inside the Vapor server causes the process to hang or never receive SDK callbacks.
+
+**Root cause:** `ClaudeCodeSDK` schedules its work on the Foundation `RunLoop`. A standard Vapor server runs entirely on SwiftNIO's `NIOEventLoopGroup` — a pool of `EventLoop` threads that each spin their own select/epoll/kqueue loop. NIO event loops **do not** pump the Foundation `RunLoop`; they have no call to `RunLoop.current.run()` or `CFRunLoopRunInMode`. As a result, `RunLoop`-scheduled callbacks from the SDK are enqueued but never executed, and the process appears to hang waiting for a response that will never arrive. The solution is to bypass `ClaudeCodeSDK` entirely and spawn `node scripts/sdk-wrapper.mjs` (or `claude -p`) as a child `Process`, reading stdout on a `DispatchQueue` — both of which integrate with NIO's threading model without requiring a RunLoop pump.
+
+### 6. `process.waitUntilExit()` Required Before `terminationStatus`
+
+**Symptom:** Accessing `process.terminationStatus` throws `NSInvalidArgumentException` or returns a meaningless value.
+
+**Root cause:** Darwin's `Process` (née `NSTask`) exposes `terminationStatus` as a property whose contract — per the Foundation documentation — states it must only be read **after** the process has exited. Reading `terminationStatus` while the process is still running violates this contract and raises `NSInvalidArgumentException` on Darwin. The `waitUntilExit()` call blocks the calling thread until the subprocess's wait-4 syscall returns, guaranteeing that the exit status is populated and valid. In `ClaudeExecutorService` and any other code that spawns child processes, always call `process.waitUntilExit()` on a background `DispatchQueue` before inspecting `terminationStatus` or `terminationReason`.
