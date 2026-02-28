@@ -163,12 +163,12 @@ Plans:
   3. cURL evidence for every backend endpoint shows JSON structure matching the spec contract (field names, types, nesting)
   4. Correlated backend+frontend evidence pairs demonstrate data flows end-to-end (e.g., POST session -> session appears in list)
   5. Proactive bug hunt documents edge cases tested (offline, empty states, accessibility, memory) with evidence for each
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 48-01: TBD
-- [ ] 48-02: TBD
-- [ ] 48-03: TBD
+- [ ] 48-01-PLAN.md -- iPhone visual + functional audit: environment setup, 20+ numbered screenshots, v4.0 element verification, real data confirmation (AUDIT-01 iPhone, AUDIT-02 iPhone)
+- [ ] 48-02-PLAN.md -- iPad visual audit + backend cURL audit: boot iPad sim, capture NavigationSplitView screenshots, cURL 50+ endpoints with JSON validation (AUDIT-01 iPad, AUDIT-02 iPad, AUDIT-03)
+- [ ] 48-03-PLAN.md -- Integration correlation + proactive bug hunt + gate verdict: 10 backend+frontend evidence pairs, edge case testing (offline, accessibility, memory), final gate document (AUDIT-04, AUDIT-05)
 
 ## Progress
 
@@ -182,4 +182,4 @@ Phases 43, 44, 45 can partially overlap (independent). Phase 46 depends on 45. P
 | 45. Data & Backend Hardening | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
 | 46. Security & Compliance | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
 | 47. Ecosystem Polish | v4.0 | 3/3 | Complete ✓ | 2026-02-27 |
-| 48. Comprehensive Audit & Verification | v4.0 | 0/? | Not started | - |
+| 48. Comprehensive Audit & Verification | v4.0 | 0/3 | Planned | - |
