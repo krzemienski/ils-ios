@@ -434,6 +434,7 @@
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
 		A0A1A2A3A4A5A6A7A8A9B0B1 /* SnapshotTestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */; };
+		D0D1D2D3D4D5D6D7D8D9E0E1 /* ScreenSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -694,6 +695,7 @@
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
+		E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSnapshotTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1075,6 +1077,7 @@
 			isa = PBXGroup;
 			children = (
 				B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */,
+				E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */,
 			);
 			path = SnapshotTests;
 			sourceTree = "<group>";
@@ -1570,6 +1573,7 @@
 				7325F9F731AFB7AC98F31B02 /* Scenario11_ExtendedChatConversation.swift in Sources */,
 				1F0E75F4FE9FA0A116F87AB5 /* ScrollPerformanceTests.swift in Sources */,
 				A0A1A2A3A4A5A6A7A8A9B0B1 /* SnapshotTestBase.swift in Sources */,
+				D0D1D2D3D4D5D6D7D8D9E0E1 /* ScreenSnapshotTests.swift in Sources */,
 				C667EB1D3AB02FA788C54E3E /* ValidationGateTests.swift in Sources */,
 				628238328AD8C5BBC73E21D4 /* XCUITestBase.swift in Sources */,
 			);
