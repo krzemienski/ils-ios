@@ -517,13 +517,7 @@ struct SettingsConfigSection: View {
     // MARK: - Helpers
 
     func countHooks(_ hooks: HooksConfig) -> Int {
-        var count = 0
-        if let h = hooks.sessionStart { count += h.count }
-        if let h = hooks.subagentStart { count += h.count }
-        if let h = hooks.userPromptSubmit { count += h.count }
-        if let h = hooks.preToolUse { count += h.count }
-        if let h = hooks.postToolUse { count += h.count }
-        return count
+        hooks.events.values.reduce(0) { $0 + $1.count }
     }
 
     /// Reads pre-computed hook event breakdown from ViewModel

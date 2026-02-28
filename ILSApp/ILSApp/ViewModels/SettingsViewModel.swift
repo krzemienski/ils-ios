@@ -140,13 +140,10 @@ class SettingsViewModel {
     /// Avoids rebuilding the filtered array on every view body evaluation.
     var hookEventBreakdown: [(String, Int)] {
         guard let hooks = config?.content.hooks else { return [] }
-        return [
-            ("SessionStart", hooks.sessionStart?.count ?? 0),
-            ("SubagentStart", hooks.subagentStart?.count ?? 0),
-            ("UserPromptSubmit", hooks.userPromptSubmit?.count ?? 0),
-            ("PreToolUse", hooks.preToolUse?.count ?? 0),
-            ("PostToolUse", hooks.postToolUse?.count ?? 0)
-        ].filter { $0.1 > 0 }
+        return hooks.events
+            .map { ($0.key, $0.value.count) }
+            .filter { $0.1 > 0 }
+            .sorted { $0.0 < $1.0 }
     }
 
     // MARK: - Safe Config Write (read-then-patch)

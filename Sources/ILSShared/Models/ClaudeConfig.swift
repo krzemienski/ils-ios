@@ -117,39 +117,40 @@ public struct StatusLineConfig: Codable, Hashable, Sendable {
 }
 
 /// Hooks configuration for Claude Code lifecycle events.
+/// Uses a dictionary keyed by PascalCase event type names (e.g., "PreToolUse", "Stop").
+/// This approach naturally handles all current and future event types without silent data loss.
 public struct HooksConfig: Codable, Hashable, Sendable {
-    /// Hooks triggered at session start
-    public var sessionStart: [HookGroup]?
-    /// Hooks triggered when subagent starts
-    public var subagentStart: [HookGroup]?
-    /// Hooks triggered when user submits a prompt
-    public var userPromptSubmit: [HookGroup]?
-    /// Hooks triggered before tool execution
-    public var preToolUse: [HookGroup]?
-    /// Hooks triggered after tool execution
-    public var postToolUse: [HookGroup]?
+    /// All hooks keyed by event type name (e.g., "PreToolUse", "Stop", "SessionEnd").
+    public var events: [String: [HookGroup]]
 
-    enum CodingKeys: String, CodingKey {
-        case sessionStart = "SessionStart"
-        case subagentStart = "SubagentStart"
-        case userPromptSubmit = "UserPromptSubmit"
-        case preToolUse = "PreToolUse"
-        case postToolUse = "PostToolUse"
+    public init(events: [String: [HookGroup]] = [:]) {
+        self.events = events
     }
 
-    public init(
-        sessionStart: [HookGroup]? = nil,
-        subagentStart: [HookGroup]? = nil,
-        userPromptSubmit: [HookGroup]? = nil,
-        preToolUse: [HookGroup]? = nil,
-        postToolUse: [HookGroup]? = nil
-    ) {
-        self.sessionStart = sessionStart
-        self.subagentStart = subagentStart
-        self.userPromptSubmit = userPromptSubmit
-        self.preToolUse = preToolUse
-        self.postToolUse = postToolUse
+    // Custom Codable: encode/decode directly as {"PreToolUse": [...], "PostToolUse": [...]}
+    // This preserves the exact JSON structure Claude Code expects.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        events = try container.decode([String: [HookGroup]].self)
     }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(events)
+    }
+
+    // MARK: - Backward-compatible computed accessors
+
+    /// Hooks triggered before tool execution.
+    public var preToolUse: [HookGroup]? { events["PreToolUse"] }
+    /// Hooks triggered after tool execution.
+    public var postToolUse: [HookGroup]? { events["PostToolUse"] }
+    /// Hooks triggered when user submits a prompt.
+    public var userPromptSubmit: [HookGroup]? { events["UserPromptSubmit"] }
+    /// Hooks triggered at session start.
+    public var sessionStart: [HookGroup]? { events["SessionStart"] }
+    /// Hooks triggered when subagent starts.
+    public var subagentStart: [HookGroup]? { events["SubagentStart"] }
 }
 
 /// Group of hooks with optional matcher pattern.
@@ -165,16 +166,74 @@ public struct HookGroup: Codable, Hashable, Sendable {
     }
 }
 
-/// Individual hook definition with type and command.
+/// Individual hook definition supporting all 4 Claude Code handler types.
+/// Handler types: "command" (shell), "http" (webhook), "prompt" (LLM eval), "agent" (LLM with tools).
 public struct HookDefinition: Codable, Hashable, Sendable {
-    /// Hook type: "command", "script", etc.
+    /// Handler type: "command", "http", "prompt", or "agent"
     public var type: String?
-    /// Shell command or script to execute
-    public var command: String?
 
-    public init(type: String? = nil, command: String? = nil) {
+    // MARK: - Command handler fields
+
+    /// Shell command to execute (command handler).
+    public var command: String?
+    /// If true, runs in background without blocking Claude (command handler).
+    public var isAsync: Bool?
+
+    // MARK: - HTTP handler fields
+
+    /// URL to send POST request to (http handler).
+    public var url: String?
+    /// Additional HTTP headers (http handler).
+    public var headers: [String: String]?
+    /// Environment variables allowed in header value interpolation (http handler).
+    public var allowedEnvVars: [String]?
+
+    // MARK: - Prompt/Agent handler fields
+
+    /// Prompt text for LLM evaluation (prompt/agent handler).
+    public var prompt: String?
+    /// Model to use for LLM evaluation (prompt/agent handler).
+    public var model: String?
+
+    // MARK: - Common optional fields
+
+    /// Seconds before timeout cancellation.
+    public var timeout: Int?
+    /// Custom spinner message shown during execution.
+    public var statusMessage: String?
+    /// If true, runs only once per session (skills-based hooks).
+    public var once: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case type, command, url, headers, allowedEnvVars, prompt, model
+        case timeout, statusMessage, once
+        case isAsync = "async"  // "async" is a Swift keyword but valid JSON key
+    }
+
+    public init(
+        type: String? = nil,
+        command: String? = nil,
+        isAsync: Bool? = nil,
+        url: String? = nil,
+        headers: [String: String]? = nil,
+        allowedEnvVars: [String]? = nil,
+        prompt: String? = nil,
+        model: String? = nil,
+        timeout: Int? = nil,
+        statusMessage: String? = nil,
+        once: Bool? = nil
+    ) {
         self.type = type
         self.command = command
+        self.isAsync = isAsync
+        self.url = url
+        self.headers = headers
+        self.allowedEnvVars = allowedEnvVars
+        self.prompt = prompt
+        self.model = model
+        self.timeout = timeout
+        self.statusMessage = statusMessage
+        self.once = once
     }
 }
 

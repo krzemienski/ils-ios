@@ -43,13 +43,10 @@ struct HooksManagementView: View {
     }
 
     private func eventSections(_ hooks: HooksConfig) -> [(String, [HookGroup])] {
-        [
-            ("PreToolUse", hooks.preToolUse ?? []),
-            ("PostToolUse", hooks.postToolUse ?? []),
-            ("UserPromptSubmit", hooks.userPromptSubmit ?? []),
-            ("SessionStart", hooks.sessionStart ?? []),
-            ("SubagentStart", hooks.subagentStart ?? [])
-        ].filter { !$0.1.isEmpty }
+        hooks.events
+            .filter { !$0.value.isEmpty }
+            .sorted { $0.key < $1.key }
+            .map { ($0.key, $0.value) }
     }
 
     // MARK: - Hooks List
@@ -74,13 +71,7 @@ struct HooksManagementView: View {
     // MARK: - Summary Header
 
     private func countTotalHooks(_ hooks: HooksConfig) -> Int {
-        var count = 0
-        count += hooks.sessionStart?.count ?? 0
-        count += hooks.subagentStart?.count ?? 0
-        count += hooks.userPromptSubmit?.count ?? 0
-        count += hooks.preToolUse?.count ?? 0
-        count += hooks.postToolUse?.count ?? 0
-        return count
+        hooks.events.values.reduce(0) { $0 + $1.count }
     }
 
     @ViewBuilder
