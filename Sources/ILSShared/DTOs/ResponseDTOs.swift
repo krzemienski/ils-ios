@@ -324,3 +324,31 @@ public struct DataErasureResponse: Codable, Sendable, Hashable {
         self.cacheEntriesDeleted = cacheEntriesDeleted
     }
 }
+
+// MARK: - MCP Validation & Presets
+
+/// Result of validating an MCP server configuration before applying it.
+public struct MCPValidationResult: Codable, Sendable {
+    /// Whether the configuration is valid and safe to apply.
+    public let isValid: Bool
+    /// Validation error messages that must be resolved.
+    public let errors: [String]
+    /// Non-blocking warnings about the configuration.
+    public let warnings: [String]
+
+    public init(isValid: Bool, errors: [String] = [], warnings: [String] = []) {
+        self.isValid = isValid
+        self.errors = errors
+        self.warnings = warnings
+    }
+}
+
+/// Response containing the list of preset MCP server configurations.
+public struct MCPPresetListResponse: Codable, Sendable {
+    /// Available preset configurations grouped for display.
+    public let presets: [MCPPreset]
+
+    public init(presets: [MCPPreset]) {
+        self.presets = presets
+    }
+}
