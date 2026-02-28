@@ -152,7 +152,7 @@ final class SystemMetricsViewModel {
 
     // MARK: - Process Auto-Refresh
 
-    /// Start polling processes every 5 seconds while the view is visible.
+    /// Start polling processes every 15 seconds while the view is visible (30s in Low Power Mode).
     func startProcessAutoRefresh() {
         stopProcessAutoRefresh()
         processRefreshTask = Task { [weak self] in
