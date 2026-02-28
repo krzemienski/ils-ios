@@ -267,6 +267,7 @@
 		A0215E5E1541D648707ADB25 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA08AF75B109E531A23DCAD /* EmberTheme.swift */; };
 		A2503FA67B49A02492C78369 /* LowPowerModeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */; };
+		C436642F1E2E4EAA99EC831E /* ConnectionQualityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */; };
 		A2CD3C1A6CDF29B50C78F3F5 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */; };
 		A477E3BBA09753A405318DBC /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B579302585432A18086CAF11 /* ServerSetupSheet.swift */; };
 		A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B921611379A5927C0729DD0A /* MCPServerDetailView.swift */; };
@@ -291,6 +292,7 @@
 		AF776B6CC6CDA97E71F1466C /* GetSessionInfoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */; };
 		AFB2F0196A4B23CDC4E2AA58 /* SettingsAppearanceSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */; };
 		AFD18292F620F2F1328B803F /* LowPowerModeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */; };
+		9491F0DDF2C546E59F31D407 /* ConnectionQualityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */; };
 		B0724A065B4366563281BDFE /* NeonNoirTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */; };
 		B1AEB28346BBEA6D4FA0E645 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA55E17AA6947D058AB87FA /* MarkdownUI */; };
 		B2D22D2ABF27C0FB36F9FB2B /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE193B8BF8C7258B6DDE90D /* MidnightTheme.swift */; };
@@ -503,6 +505,7 @@
 		40AE3C8E1ADD87D38B3BE116 /* ThemeMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMarketplaceView.swift; sourceTree = "<group>"; };
 		40BB4C233B48361C8E553661 /* ScrollPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollPerformanceTests.swift; sourceTree = "<group>"; };
 		46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowPowerModeMonitor.swift; sourceTree = "<group>"; };
+		B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionQualityService.swift; sourceTree = "<group>"; };
 		482028C3E3B35A6E9FF0920C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
 		4DE91C54AFE11600E242220A /* ThemeMeshGradientSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMeshGradientSection.swift; sourceTree = "<group>"; };
@@ -1118,6 +1121,7 @@
 				7C748DE91CEA4C3A823DD3A8 /* KeychainService.swift */,
 				AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */,
 				46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */,
+				B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */,
 				086281B052347B8C9884124C /* MetricsWebSocketClient.swift */,
 				E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */,
 				0D259013682B0E76D248995F /* PerformanceMonitor.swift */,
@@ -1586,6 +1590,7 @@
 				46A28AD0491373CD08B47A82 /* LocalDatabase.swift in Sources */,
 				81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */,
 				AFD18292F620F2F1328B803F /* LowPowerModeMonitor.swift in Sources */,
+				9491F0DDF2C546E59F31D407 /* ConnectionQualityService.swift in Sources */,
 				78D2DCBE8119FCE195105244 /* MCPServerDetailView.swift in Sources */,
 				C45D62C8ACFEA7C4E3750E14 /* MCPViewModel.swift in Sources */,
 				BA4690875BCC009661B3AFAF /* MarkdownParser.swift in Sources */,
@@ -1778,6 +1783,7 @@
 				8DC8290512BF30B7D1574021 /* LocalDatabase.swift in Sources */,
 				1EA9202F785FC72DF260B40F /* LogViewerView.swift in Sources */,
 				A2503FA67B49A02492C78369 /* LowPowerModeMonitor.swift in Sources */,
+				C436642F1E2E4EAA99EC831E /* ConnectionQualityService.swift in Sources */,
 				A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */,
 				BCFCBE145C3FD9264131AA00 /* MCPViewModel.swift in Sources */,
 				0221D6435E5A81ABB9009818 /* MacChatView.swift in Sources */,

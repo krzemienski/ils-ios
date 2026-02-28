@@ -29,6 +29,7 @@ class AppState {
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
     let networkMonitor: NetworkMonitor
+    let connectionQualityService: ConnectionQualityService
 
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
@@ -42,26 +43,32 @@ class AppState {
         get { connectionManager.showOnboarding }
         set { connectionManager.showOnboarding = newValue }
     }
+    var connectionQuality: ConnectionQuality { connectionQualityService.quality }
 
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
         self.networkMonitor = NetworkMonitor.shared
+        self.connectionQualityService = ConnectionQualityService.shared
         self.activeHostName = UserDefaults.standard.string(forKey: "activeHostName")
 
+        connectionQualityService.serverURL = cm.serverURL
         pollingManager.checkConnection()
     }
 
     func updateServerURL(_ url: String) {
         connectionManager.updateServerURL(url)
+        connectionQualityService.serverURL = url
         pollingManager.checkConnection()
     }
 
     func connectToServer(url: String) async throws {
         try await connectionManager.connectToServer(url: url)
+        connectionQualityService.serverURL = url
         pollingManager.stopRetryPolling()
         pollingManager.startHealthPolling()
+        connectionQualityService.startPolling()
     }
 
     func checkConnection() {
