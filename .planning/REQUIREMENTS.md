@@ -21,10 +21,10 @@ Requirements for v5.0 milestone (Cross-Platform Feature Completion & 30-Gate Aud
 
 ### Skills, Plugins & Hooks
 
-- [ ] **SKILL-01**: User can browse GitHub for skills with search, category filtering, and preview
-- [ ] **SKILL-02**: User can install skills from GitHub with progress indication and error handling
-- [ ] **SKILL-03**: User can browse GitHub for plugins with search, category filtering, and preview
-- [ ] **SKILL-04**: User can install plugins from GitHub with progress indication and error handling
+- [x] **SKILL-01**: User can browse GitHub for skills with search, category filtering, and preview
+- [x] **SKILL-02**: User can install skills from GitHub with progress indication and error handling
+- [x] **SKILL-03**: User can browse GitHub for plugins with search, category filtering, and preview
+- [x] **SKILL-04**: User can install plugins from GitHub with progress indication and error handling
 - [x] **SKILL-05**: Hooks management screen supports all 16 Claude Code event types (expanded from 5)
 - [x] **SKILL-06**: User can create, edit, and delete hooks with 4 handler types (command, prompt, agent, http)
 - [x] **SKILL-07**: Skills and plugins display active/inactive status indicators with toggle capability
@@ -106,10 +106,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-01 | Phase 51 | Complete |
 | CFG-02 | Phase 51 | Complete |
 | CFG-03 | Phase 51 | Complete |
-| SKILL-01 | Phase 53 | Pending |
-| SKILL-02 | Phase 53 | Pending |
-| SKILL-03 | Phase 53 | Pending |
-| SKILL-04 | Phase 53 | Pending |
+| SKILL-01 | Phase 53 | Complete |
+| SKILL-02 | Phase 53 | Complete |
+| SKILL-03 | Phase 53 | Complete |
+| SKILL-04 | Phase 53 | Complete |
 | SKILL-05 | Phase 52 | Complete |
 | SKILL-06 | Phase 52 | Complete |
 | SKILL-07 | Phase 52 | Complete |

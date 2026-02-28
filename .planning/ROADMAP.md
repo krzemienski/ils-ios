@@ -177,7 +177,7 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 50. Backend API -- Config Endpoint & Audit | v5.0 | Complete    | 2026-02-28 | - |
 | 51. Settings & Config Inheritance | 2/2 | Complete    | 2026-02-28 | - |
 | 52. Hooks & Status Management | 2/2 | Complete    | 2026-02-28 | - |
-| 53. GitHub Browse & Install | v5.0 | 0/TBD | Not started | - |
+| 53. GitHub Browse & Install | 1/2 | In Progress|  | - |
 | 54. Navigation, Profiles & Polish | v5.0 | 0/TBD | Not started | - |
 | 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/TBD | Not started | - |
 | 56. Functional Audit & Bug Hunt | v5.0 | 0/TBD | Not started | - |
