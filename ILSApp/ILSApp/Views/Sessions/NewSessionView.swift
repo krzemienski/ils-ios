@@ -23,6 +23,11 @@ struct NewSessionView: View {
     // search/filter state for project selection without affecting the main projects list.
     @State private var projectsViewModel = ProjectsViewModel()
     @State private var sessionViewModel = NewSessionViewModel()
+    /// View model for fetching contextually relevant session suggestions.
+    @State private var suggestionsVM = SuggestionsViewModel()
+    /// Whether to show related session suggestions (persisted across launches).
+    @AppStorage("showSessionSuggestions") private var showSessionSuggestions = true
+    /// The currently active creation mode; drives which form section is rendered.
     @State private var selectedMode: NewSessionMode = .project
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"
@@ -102,6 +107,7 @@ struct NewSessionView: View {
                     switch selectedMode {
                     case .project:
                         projectPickerSection
+                        relatedSessionsSection
                     case .fork:
                         forkSessionSection
                     case .newProject:
@@ -132,7 +138,14 @@ struct NewSessionView: View {
         .task {
             projectsViewModel.configure(client: appState.apiClient)
             sessionViewModel.configure(client: appState.apiClient)
+            suggestionsVM.configure(client: appState.apiClient)
             await projectsViewModel.loadProjects()
+        }
+        .task(id: selectedProject?.id) {
+            await suggestionsVM.loadSessionSuggestions(
+                context: sessionName,
+                projectName: selectedProject?.name
+            )
         }
         .task {
             await sessionViewModel.loadRecentSessions()
@@ -337,6 +350,61 @@ struct NewSessionView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(project.name), \(project.path)")
+    }
+
+    // MARK: - Related Sessions Section
+
+    /// Contextually relevant past sessions shown in `.project` mode to help reuse prior work.
+    ///
+    /// Only rendered when `showSessionSuggestions` is enabled and at least one session
+    /// suggestion has been fetched from the backend. Each row shows the session name,
+    /// project name, and a "Use" button that navigates directly into that session.
+    @ViewBuilder
+    private var relatedSessionsSection: some View {
+        if showSessionSuggestions && !suggestionsVM.sessionSuggestions.isEmpty {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                sectionLabel("Related Sessions")
+
+                ForEach(Array(suggestionsVM.sessionSuggestions.prefix(3))) { suggestion in
+                    HStack(spacing: theme.spacingSM) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(suggestion.session.name ?? "Unnamed Session")
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+
+                            if let projectName = suggestion.session.projectName {
+                                Text(projectName)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                                    .lineLimit(1)
+                            }
+                        }
+
+                        Spacer()
+
+                        Button("Use") {
+                            Task {
+                                await suggestionsVM.recordFeedback(
+                                    action: "click",
+                                    suggestionType: "session",
+                                    targetId: suggestion.session.id.uuidString
+                                )
+                                onCreated(suggestion.session)
+                                dismiss()
+                            }
+                        }
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                        .buttonStyle(.plain)
+                    }
+                    .padding(theme.spacingSM)
+                    .background(theme.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+            }
+            .accessibilityIdentifier("related-sessions")
+        }
     }
 
     // MARK: - Fork Session Section
