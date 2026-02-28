@@ -54,18 +54,86 @@ enum SystemEventType {
     }
 }
 
+// MARK: - SystemEventKind
+
+/// Classifies a system event message into a visual category.
+///
+/// Each case provides an SF Symbol icon name and a semantic theme color so that
+/// `SystemMessageView` can render contextually appropriate visual treatments for
+/// different kinds of system events (lifecycle, structural, mode changes, etc.)
+/// without requiring callers to annotate messages explicitly.
+///
+/// ## Topics
+/// ### Detection
+/// - ``detect(from:)`` - Infers the kind by scanning message text for keywords
+///
+/// ### Presentation
+/// - ``iconName`` - SF Symbol name for this event kind
+/// - ``color(theme:)`` - Semantic theme color for icon, text, and tinted background
+enum SystemEventKind {
+    case sessionStarted
+    case sessionEnded
+    case sessionForked
+    case planMode
+    case warning
+    case error
+    case info
+
+    /// Infers the event kind by scanning `message` for characteristic keywords.
+    ///
+    /// Checks are ordered from most-specific to least-specific so that compound
+    /// strings (e.g. "Forked session started") resolve to the most meaningful kind.
+    static func detect(from message: String) -> SystemEventKind {
+        let lower = message.lowercased()
+        if lower.contains("fork") || lower.contains("branch") { return .sessionForked }
+        if lower.contains("started") || lower.contains("created") || lower.contains("connected") { return .sessionStarted }
+        if lower.contains("ended") || lower.contains("closed") || lower.contains("disconnected") || lower.contains("terminated") { return .sessionEnded }
+        if lower.contains("plan mode") { return .planMode }
+        if lower.contains("error") || lower.contains("failed") { return .error }
+        if lower.contains("warning") || lower.contains("warn") { return .warning }
+        return .info
+    }
+
+    /// SF Symbol name representing this event kind.
+    var iconName: String {
+        switch self {
+        case .sessionStarted: return "play.circle.fill"
+        case .sessionEnded:   return "stop.circle.fill"
+        case .sessionForked:  return "arrow.branch"
+        case .planMode:       return "pencil.circle.fill"
+        case .warning:        return "exclamationmark.circle.fill"
+        case .error:          return "exclamationmark.triangle.fill"
+        case .info:           return "info.circle.fill"
+        }
+    }
+
+    /// Semantic color from the active theme for icon, text, and tinted background.
+    func color(theme: ThemeSnapshot) -> Color {
+        switch self {
+        case .sessionStarted: return theme.success
+        case .sessionEnded:   return theme.textTertiary
+        case .sessionForked:  return theme.info
+        case .planMode:       return theme.info
+        case .warning:        return theme.warning
+        case .error:          return theme.error
+        case .info:           return theme.entitySystem
+        }
+    }
+}
+
 // MARK: - SystemMessageView
 
-/// Horizontally centered pill that surfaces system-level events within the chat timeline.
+/// Horizontally centered card that surfaces system-level events within the chat timeline.
 ///
 /// Used for non-conversational status lines such as "Session started", "Session forked",
-/// or "Context window cleared". An SF Symbol icon and subtle tinted background visually
-/// distinguish event types — green for lifecycle starts, amber for context resets — so
-/// users scanning long histories can identify important system events at a glance.
+/// or "Entered plan mode". The message text is scanned by ``SystemEventKind/detect(from:)``
+/// to pick an appropriate SF Symbol icon and semantic theme color; the card background is
+/// tinted at 10 % opacity with a 0.5 pt stroke at 30 % opacity — matching the visual
+/// language established by `ErrorMessageView` while remaining appropriately subtle.
 ///
-/// When `eventType` is omitted it defaults to `.generic`, rendering a neutral info icon
-/// as a fallback for unclassified messages, preserving backward compatibility with existing
-/// call sites that pass only a `message` string.
+/// The `eventType` parameter is accepted for call-site compatibility with existing callers
+/// that supply a `SystemEventType`; visual rendering uses keyword-based ``SystemEventKind``
+/// auto-detection for richer per-word classification.
 ///
 /// The view carries no interactive elements; its accessibility label prefixes the raw
 /// string with "System message:" to distinguish it from user or assistant content when
@@ -74,39 +142,40 @@ enum SystemEventType {
 /// ## Topics
 /// ### Input Properties
 /// - ``message`` - The system event string to display (e.g. "Session started")
-/// - ``eventType`` - Semantic classification that determines the icon and tint colour
+/// - ``eventType`` - Semantic classification accepted for call-site compatibility
 struct SystemMessageView: View {
     /// The system event string to display in the timeline (e.g. "Session started").
     let message: String
-    /// Semantic classification controlling the icon and tint colour. Defaults to `.generic`.
+    /// Semantic classification accepted for call-site compatibility. Visual rendering
+    /// uses keyword-based ``SystemEventKind`` auto-detection for richer classification.
     var eventType: SystemEventType = .generic
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
+        let kind = SystemEventKind.detect(from: message)
+        let color = kind.color(theme: theme)
+
         HStack {
             Spacer()
-
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: eventType.iconName)
+            HStack(spacing: theme.spacingXS) {
+                Image(systemName: kind.iconName)
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(eventType.color(from: theme))
-                    .frame(width: 16)
+                    .foregroundStyle(color)
 
                 Text(message)
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(eventType.color(from: theme))
+                    .foregroundStyle(color)
                     .multilineTextAlignment(.center)
             }
-            .padding(.vertical, theme.spacingXS)
             .padding(.horizontal, theme.spacingSM)
-            .background(eventType.color(from: theme).opacity(0.1))
-            .clipShape(Capsule())
+            .padding(.vertical, theme.spacingXS)
+            .background(color.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             .overlay(
-                Capsule()
-                    .strokeBorder(eventType.color(from: theme).opacity(0.3), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
+                    .strokeBorder(color.opacity(0.3), lineWidth: 0.5)
             )
-
             Spacer()
         }
         .accessibilityElement(children: .combine)
