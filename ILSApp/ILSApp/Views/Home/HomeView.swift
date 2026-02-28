@@ -390,7 +390,8 @@ struct HomeView: View {
                 quickActionCard(
                     icon: "server.rack",
                     title: "Configure MCP",
-                    subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
+                    subtitle: mcpHealthSubtitle(),
+                    subtitleColor: mcpHealthSubtitleColor(),
                     color: theme.entityMCP
                 ) {
                     onNavigateToBrowser?(.mcp)
@@ -430,6 +431,7 @@ struct HomeView: View {
         icon: String,
         title: String,
         subtitle: String? = nil,
+        subtitleColor: Color? = nil,
         color: Color,
         action: @escaping () -> Void
     ) -> some View {
@@ -446,7 +448,7 @@ struct HomeView: View {
                 if let subtitle {
                     Text(subtitle)
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                        .foregroundStyle(subtitleColor ?? theme.textTertiary)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -461,6 +463,25 @@ struct HomeView: View {
     private func statsSubtitle(_ count: Int?) -> String? {
         guard let count else { return nil }
         return "\(count)"
+    }
+
+    /// Returns a health-aware subtitle for the Configure MCP quick action card.
+    /// Shows "X/Y healthy" with a warning color when servers are unhealthy,
+    /// or the plain total count when all servers are healthy.
+    private func mcpHealthSubtitle() -> String? {
+        guard let mcpStats = dashboardVM.stats?.mcpServers else { return nil }
+        if mcpStats.healthy < mcpStats.total {
+            return "\(mcpStats.healthy)/\(mcpStats.total) healthy"
+        }
+        return "\(mcpStats.total)"
+    }
+
+    /// Returns `theme.warning` when any MCP server is unhealthy, otherwise `nil`
+    /// so the card falls back to the default `theme.textTertiary` subtitle color.
+    private func mcpHealthSubtitleColor() -> Color? {
+        guard let mcpStats = dashboardVM.stats?.mcpServers,
+              mcpStats.healthy < mcpStats.total else { return nil }
+        return theme.warning
     }
 
     // MARK: - Stats Section
