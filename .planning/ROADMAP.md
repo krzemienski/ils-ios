@@ -72,7 +72,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
 - [x] **Phase 52: Hooks & Status Management** - Expand hooks to all 16 event types with CRUD editor (4 handler types); add active/inactive toggles for skills and plugins (completed 2026-02-28)
 - [ ] **Phase 53: GitHub Browse & Install** - GitHub skill/plugin browsing with search, category filtering, and preview; one-tap install with progress and error handling
 - [x] **Phase 54: Navigation, Profiles & Polish** - Home quick actions, recent sessions data consistency, profile switching with visual feedback, real-time system metrics, node_modules filtering (completed 2026-02-28)
-- [ ] **Phase 55: Visual Audit -- iPhone, iPad & Mac** - Screenshot evidence across all 3 platforms with numbered artifacts (15+ iPhone, 15+ iPad, 10+ Mac)
+- [x] **Phase 55: Visual Audit -- iPhone, iPad & Mac** - Screenshot evidence across all 3 platforms with numbered artifacts (15+ iPhone, 15+ iPad, 10+ Mac) (completed 2026-02-28, GATE-03 Mac deferred — screen recording permission)
 - [ ] **Phase 56: Functional Audit & Bug Hunt** - End-to-end feature verification across platforms; 20+ edge case scenarios tested
 
 ## Phase Details
@@ -156,9 +156,9 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
   3. 10+ numbered screenshot artifacts exist for Mac showing proper macOS chrome, menu bar, and keyboard shortcut indicators
   4. All screenshots show real data (not empty states) and correct theming
 **Plans**: 3 plans
-- [ ] 55-01-PLAN.md -- iPhone visual audit: pre-flight + 15+ numbered screenshots via deep links and idb automation
-- [ ] 55-02-PLAN.md -- iPad visual audit: NavigationSplitView layout evidence with 15+ numbered screenshots
-- [ ] 55-03-PLAN.md -- Mac visual audit: 3-column layout + menu bar evidence with 10+ numbered screenshots
+- [x] 55-01-PLAN.md -- iPhone visual audit: pre-flight + 15+ numbered screenshots via deep links and idb automation
+- [x] 55-02-PLAN.md -- iPad visual audit: NavigationSplitView layout evidence with 15+ numbered screenshots
+- [ ] 55-03-PLAN.md -- Mac visual audit: deferred (screen recording permission blocked automated capture)
 
 ### Phase 56: Functional Audit & Bug Hunt
 **Goal**: Every feature area works end-to-end across platforms, and edge cases are systematically tested and documented
@@ -184,5 +184,5 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 52. Hooks & Status Management | 2/2 | Complete    | 2026-02-28 | - |
 | 53. GitHub Browse & Install | 2/2 | Complete    | 2026-02-28 | - |
 | 54. Navigation, Profiles & Polish | 2/2 | Complete    | 2026-02-28 | - |
-| 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/3 | Plans complete | - |
+| 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 2/3 | Partial (Mac deferred) | 2026-02-28 |
 | 56. Functional Audit & Bug Hunt | v5.0 | 0/TBD | Not started | - |
