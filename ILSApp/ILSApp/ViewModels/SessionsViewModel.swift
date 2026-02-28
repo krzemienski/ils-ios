@@ -387,7 +387,7 @@ class SessionsViewModel: BaseViewModel {
         do {
             let response: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
             if let updated = response.data {
-                // Incremental in-place update — avoids O(n) full reload
+                // O(1) incremental update — avoids O(n) full rebuild
                 if let idx = sessions.firstIndex(where: { $0.id == updated.id }) {
                     sessions[idx] = updated
                 }
@@ -395,6 +395,9 @@ class SessionsViewModel: BaseViewModel {
                     searchCache[idx] = makeSearchEntry(for: updated)
                 }
                 sessionsMutationVersion += 1
+            } else {
+                // Fall back to full reload if API returns no data
+                await loadSessions(refresh: true)
             }
         } catch {
             self.error = error
