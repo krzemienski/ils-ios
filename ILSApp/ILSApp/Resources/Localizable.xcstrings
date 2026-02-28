@@ -175,6 +175,17 @@
         }
       }
     },
+    "hostProfiles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host Profiles"
+          }
+        }
+      }
+    },
     "recent_sessions" : {
       "extractionState" : "manual",
       "localizations" : {

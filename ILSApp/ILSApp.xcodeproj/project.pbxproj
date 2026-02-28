@@ -1060,7 +1060,7 @@
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
 				3FCDD95699E33E1A571D74BB /* Components */,
-				E1520F4DB797447E8DE6B28C /* Fleet */,
+				E1520F4DB797447E8DE6B28C /* HostProfiles */,
 				4C557C8746D41751E699EBCA /* Home */,
 				49504EDF5094AD1D30ECB653 /* Hooks */,
 				A26331969E617ADEC2F8E701 /* Onboarding */,
@@ -1157,13 +1157,13 @@
 			path = Widgets;
 			sourceTree = "<group>";
 		};
-		E1520F4DB797447E8DE6B28C /* Fleet */ = {
+		E1520F4DB797447E8DE6B28C /* HostProfiles */ = {
 			isa = PBXGroup;
 			children = (
 				098E80215E85FB8A1E0AA102 /* HostProfileDetailView.swift */,
 				C76CA461FA91B6D9BD8E4BB0 /* HostProfilesView.swift */,
 			);
-			path = Fleet;
+			path = HostProfiles;
 			sourceTree = "<group>";
 		};
 		E5193BAF30A537CA8DEC338C /* sessions */ = {

@@ -5,7 +5,7 @@ import ILSShared
 @MainActor
 @Observable
 final class HostProfilesViewModel {
-    var hosts: [FleetHost] = []
+    var hosts: [HostProfile] = []
     var activeHostId: UUID?
     var isLoading = false
     var loadError: String?
@@ -27,7 +27,7 @@ final class HostProfilesViewModel {
         defer { isLoading = false }
 
         do {
-            let response: APIResponse<FleetListResponse> = try await appState.apiClient.get("/fleet")
+            let response: APIResponse<HostProfileListResponse> = try await appState.apiClient.get("/host-profiles")
             guard let fleet = response.data else { return }
             hosts = fleet.hosts
             activeHostId = fleet.activeHostId
@@ -37,12 +37,12 @@ final class HostProfilesViewModel {
     }
 
     func register(name: String, host: String, port: Int, backendPort: Int, username: String?, authMethod: String?, credential: String?) async {
-        let request = RegisterFleetHostRequest(
+        let request = RegisterHostProfileRequest(
             name: name, host: host, port: port, backendPort: backendPort,
             username: username, authMethod: authMethod, credential: credential
         )
         do {
-            let newHost: FleetHost = try await appState.apiClient.post("/fleet/register", body: request)
+            let newHost: HostProfile = try await appState.apiClient.post("/host-profiles/register", body: request)
             hosts.append(newHost)
             if hosts.count == 1 { activeHostId = newHost.id }
         } catch {
@@ -55,7 +55,7 @@ final class HostProfilesViewModel {
             guard let self else { return }
             guard let host = hosts.first(where: { $0.id == id }) else { return }
             do {
-                let _: FleetHost = try await appState.apiClient.post("/fleet/\(id)/activate", body: EmptyBody())
+                let _: HostProfile = try await appState.apiClient.post("/host-profiles/\(id)/activate", body: EmptyBody())
                 activeHostId = id
                 for i in hosts.indices { hosts[i].isActive = hosts[i].id == id }
                 let scheme = host.backendPort == 443 ? "https" : "http"
@@ -73,7 +73,7 @@ final class HostProfilesViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let _: DeletedResponse = try await appState.apiClient.delete("/fleet/\(id)")
+                let _: DeletedResponse = try await appState.apiClient.delete("/host-profiles/\(id)")
                 hosts.removeAll { $0.id == id }
                 if activeHostId == id {
                     activeHostId = nil
@@ -108,7 +108,7 @@ final class HostProfilesViewModel {
     private func refreshAllHealth() async {
         for i in hosts.indices {
             do {
-                let health: FleetHealthResponse = try await appState.apiClient.get("/fleet/\(hosts[i].id)/health")
+                let health: HostProfileHealthResponse = try await appState.apiClient.get("/host-profiles/\(hosts[i].id)/health")
                 hosts[i].healthStatus = health.status
                 hosts[i].lastHealthCheck = health.lastChecked
             } catch {

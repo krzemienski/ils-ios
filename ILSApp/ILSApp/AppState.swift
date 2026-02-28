@@ -120,7 +120,7 @@ class AppState {
             navigationIntent = .settings
         case "system":
             navigationIntent = .system
-        case "fleet", "profiles":
+        case "fleet", "profiles", "host-profiles":
             navigationIntent = .hostProfiles
         case "themes":
             navigationIntent = .themes

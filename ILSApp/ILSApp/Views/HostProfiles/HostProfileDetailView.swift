@@ -219,13 +219,13 @@ struct HostProfileDetailView: View {
 
     private func performLifecycle(_ action: LifecycleRequest.LifecycleAction) async {
         let request = LifecycleRequest(action: action, hostId: host.id)
-        let _: LifecycleResponse? = try? await appState.apiClient.post("/fleet/\(host.id)/lifecycle", body: request)
+        let _: LifecycleResponse? = try? await appState.apiClient.post("/host-profiles/\(host.id)/lifecycle", body: request)
     }
 
     private func loadLogs() async {
         isLoadingLogs = true
         defer { isLoadingLogs = false }
-        if let response: RemoteLogsResponse = try? await appState.apiClient.get("/fleet/\(host.id)/logs") {
+        if let response: RemoteLogsResponse = try? await appState.apiClient.get("/host-profiles/\(host.id)/logs") {
             logs = response.lines
         }
     }

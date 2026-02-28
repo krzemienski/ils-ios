@@ -175,7 +175,7 @@ struct SettingsView: View {
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
 
-            Text("Permanently deletes all sessions, messages, projects, themes, fleet hosts, and cached data from the server.")
+            Text("Permanently deletes all sessions, messages, projects, themes, host profiles, and cached data from the server.")
                 .font(.system(size: theme.fontCaption))
                 .foregroundStyle(theme.textTertiary)
                 .padding(.horizontal, theme.spacingXS)
