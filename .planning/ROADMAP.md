@@ -142,7 +142,9 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
   3. Switching host profiles updates the settings context and a visual indicator (banner or badge) confirms which host's configuration is currently active
   4. System monitor displays real-time CPU, memory, disk, and network metrics from the connected host -- values update while the screen is visible
   5. Skills file scanning confirmed to exclude `node_modules` directories -- installing a JS-based skill does not surface thousands of dependency files
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 54-01-PLAN.md -- Home quick actions (New Session + System Monitor cards), View All sessions link, verify PROF-02 and FOUND-02
+- [ ] 54-02-PLAN.md -- Profile switch confirmation banner with auto-dismiss in HostProfilesView
 
 ### Phase 55: Visual Audit -- iPhone, iPad & Mac
 **Goal**: Every screen on every platform has numbered screenshot evidence confirming correct layout and content
@@ -178,6 +180,6 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 51. Settings & Config Inheritance | 2/2 | Complete    | 2026-02-28 | - |
 | 52. Hooks & Status Management | 2/2 | Complete    | 2026-02-28 | - |
 | 53. GitHub Browse & Install | 2/2 | Complete    | 2026-02-28 | - |
-| 54. Navigation, Profiles & Polish | v5.0 | 0/TBD | Not started | - |
+| 54. Navigation, Profiles & Polish | v5.0 | 0/2 | Not started | - |
 | 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/TBD | Not started | - |
 | 56. Functional Audit & Bug Hunt | v5.0 | 0/TBD | Not started | - |
