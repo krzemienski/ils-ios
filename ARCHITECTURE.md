@@ -866,6 +866,124 @@ When Claude needs to execute a tool in `delegate` permission mode, it pauses exe
 | Process-gone handling | If `activeStdinHandles[sessionId]` has no entry (process already exited), `sendPermissionResponse` returns `false` and `ChatController` throws `HTTP 410 Gone` |
 | Concurrent sessions | Each session has its own stdin handle keyed by session ID — multiple simultaneous sessions each route independently |
 
+### WebSocket Live Metrics Flow
+
+The system monitoring screen uses a persistent WebSocket connection to stream real-time CPU, memory, disk, and network metrics from the backend to the iOS client. Unlike the SSE chat stream, this channel is server-push only — the client never sends messages after the initial upgrade.
+
+```
+┌─────────────────────────────── iOS CLIENT ───────────────────────────────────┐
+│                                                                               │
+│  1. SystemView appears                                                        │
+│     SwiftUI onAppear calls viewModel.connectLiveMetrics()                     │
+│          │                                                                    │
+│          ▼                                                                    │
+│  2. SystemMetricsViewModel.connectLiveMetrics()           [MainActor]         │
+│     Creates URLSessionWebSocketTask to                                        │
+│     ws://localhost:9999/api/v1/system/metrics/live                            │
+│     Optional: appends ?interval=N (seconds) to request faster updates        │
+│     Calls task.resume() — triggers HTTP Upgrade handshake                    │
+│          │                                                                    │
+│          ▼                                                                    │
+│  3. receiveLoop() — recursive async receive                                   │
+│     Awaits task.receive() for each incoming text frame                        │
+│     JSONDecoder decodes frame → SystemMetricsResponse                         │
+│     Updates @Published metrics properties on MainActor                        │
+│     Triggers SwiftUI gauge/chart re-renders                                   │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ WebSocket Upgrade (HTTP → WS)
+┌───────────────────────────────────┼──────────────────────── VAPOR BACKEND ───┐
+│                                   ▼                                           │
+│  4. SystemController.liveMetrics(req:ws:)                                     │
+│     Registered as: system.webSocket("metrics", "live", onUpgrade: ...)        │
+│     Reads optional ?interval=N query param (String → Double)                 │
+│     Clamps to valid range: max(2, min(N, 60)) seconds. Default: 5s            │
+│          │                                                                    │
+│          ▼                                                                    │
+│  5. WebSocketCancellation actor created                                       │
+│     Owns a single Bool flag (cancelled = false)                               │
+│     Actor isolation guarantees safe reads/writes across concurrent contexts   │
+│          │                                                                    │
+│          ▼                                                                    │
+│  6. Task { streamTask } spawned                                               │
+│     Loop: while !Task.isCancelled && !cancellation.isCancelled()              │
+│          │                                                                    │
+│          ▼                                                                    │
+│  7. SystemMetricsService.getMetrics()       (each iteration)                  │
+│     Reads CPU (host_statistics64), memory (task_vm_info),                    │
+│     disk (statvfs), network (getifaddrs) via Darwin syscalls                  │
+│          │                                                                    │
+│          ▼                                                                    │
+│  8. Assemble SystemMetricsResponse                                            │
+│     { cpu: Double, memory: {used,total,percentage},                           │
+│       disk: {used,total,percentage},                                          │
+│       network: {bytesIn,bytesOut}, loadAverage: [Double] }                    │
+│          │                                                                    │
+│          ▼                                                                    │
+│  9. JSONEncoder.encode(response) → UTF-8 text frame                           │
+│     ws.send(text)  — single WebSocket text frame per interval                 │
+│          │                                                                    │
+│          ▼                                                                    │
+│  10. Task.sleep(nanoseconds: pushInterval × 1_000_000_000)                    │
+│      Waits configured interval before next metrics sample                     │
+│      Loop repeats from step 7                                                 │
+│                                                                               │
+│  ┌─ Shutdown path ──────────────────────────────────────────────────────┐    │
+│  │  ws.onClose.whenComplete { _ in                                       │    │
+│  │      Task { await cancellation.cancel() }  ← sets cancelled = true   │    │
+│  │      streamTask.cancel()                   ← sets Task.isCancelled    │    │
+│  │  }                                                                    │    │
+│  │  Next loop iteration observes both flags and breaks cleanly           │    │
+│  └──────────────────────────────────────────────────────────────────────┘    │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ WebSocket text frames (JSON)
+┌───────────────────────────────────┼──────────────────────── iOS CLIENT ───────┐
+│                                   ▼                                            │
+│  11. receiveLoop() gets SystemMetricsResponse frame                            │
+│      Decodes JSON → updates ViewModel @Published properties:                   │
+│        cpuUsage, memoryUsed, memoryTotal, diskUsed, diskTotal,                 │
+│        networkBytesIn, networkBytesOut, loadAverage                            │
+│          │                                                                     │
+│          ▼                                                                     │
+│  12. SwiftUI re-renders gauges and charts                                      │
+│      CircularGaugeView shows CPU %                                             │
+│      MemoryBarView shows used / total memory                                   │
+│      NetworkSparklineView shows bytes in/out over time                         │
+│          │                                                                     │
+│          ▼                                                                     │
+│  13. SystemView disappears (e.g. user navigates away)                          │
+│      viewModel.disconnectLiveMetrics()                                         │
+│      task.cancel(with: .normalClosure, reason: nil)                            │
+│      Backend ws.onClose fires → WebSocketCancellation.cancel() + streamTask   │
+│      Stream loop exits; connection fully torn down                             │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Wire format — each server push is a single WebSocket text frame containing JSON:**
+
+```json
+{
+  "cpu": 12.4,
+  "memory": { "used": 8589934592, "total": 17179869184, "percentage": 50.0 },
+  "disk":   { "used": 214748364800, "total": 499963174912, "percentage": 43.0 },
+  "network": { "bytesIn": 1024000, "bytesOut": 512000 },
+  "loadAverage": [1.2, 0.9, 0.8]
+}
+```
+
+**Key implementation details:**
+
+| Aspect | Detail |
+|--------|--------|
+| Endpoint | `WS /api/v1/system/metrics/live` — registered in `SystemController.boot(routes:)` via `routes.webSocket("metrics", "live", onUpgrade:)` |
+| Push interval | Default 5 s; client may request faster via `?interval=N`; clamped to 2–60 s |
+| `WebSocketCancellation` actor | Swift `actor` wrapper around a single `Bool` flag; actor isolation provides safe concurrent access without locks when the NIO event loop and Task concurrency both touch the flag |
+| Shutdown race-free design | Two cancellation signals used together: `cancellation.cancel()` (actor flag) checked at loop start, and `streamTask.cancel()` which sets `Task.isCancelled`; checking both ensures the loop exits even if one signal arrives mid-sleep |
+| No client→server messages | Unlike the chat WebSocket (`WebSocketService`), this endpoint never reads incoming frames — `ws.onText` is not registered. All traffic is server→client only |
+| `SystemMetricsService` | Reads OS-level stats via Darwin APIs. Shared instance on `SystemController`; all access is `await metricsService.getMetrics()` (async actor-safe) |
+
 ### SSE Wire Protocol
 
 All streaming responses from `StreamingService` use the standard SSE (Server-Sent Events) wire format over HTTP/1.1 chunked transfer encoding.
