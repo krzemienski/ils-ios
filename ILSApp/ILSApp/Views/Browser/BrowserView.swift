@@ -413,6 +413,7 @@ struct BrowserView: View {
                     HStack(spacing: theme.spacingSM) {
                         ForEach(pluginsVM.pluginCategories, id: \.self) { category in
                             Button {
+                                HapticManager.selection()
                                 pluginsVM.selectedCategory = category
                             } label: {
                                 Text(category)
