@@ -43,6 +43,8 @@ The ILS (Intelligent Learning System) Backend provides a RESTful API for managin
 - Theme customization
 - Agent teams coordination
 - Cloudflare tunnel management
+- Host profile management
+- GDPR data erasure
 
 ---
 
