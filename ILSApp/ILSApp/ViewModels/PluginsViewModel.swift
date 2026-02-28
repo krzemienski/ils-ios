@@ -82,11 +82,24 @@ class PluginsViewModel {
         isLoading = true
         error = nil
 
+        // Cache-first: show cached data immediately while fetching from API
+        if plugins.isEmpty {
+            let cached = await CacheService.shared.getCachedPlugins()
+            if !cached.isEmpty {
+                plugins = cached
+                AppLogger.shared.info("Loaded \(cached.count) plugins from cache", category: "plugins")
+            }
+        }
+
         do {
             let response: APIResponse<ListResponse<Plugin>> = try await client.get("/plugins")
             if let data = response.data {
                 plugins = data.items
                 lastUpdated = Date()
+                // CONC-03: Use Task instead of Task.detached — CacheService actor handles isolation.
+                Task {
+                    await CacheService.shared.cachePlugins(data.items)
+                }
             }
         } catch {
             self.error = error
