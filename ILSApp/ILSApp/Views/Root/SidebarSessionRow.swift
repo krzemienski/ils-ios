@@ -89,9 +89,8 @@ struct SidebarSessionRow: View {
             }
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS + 2)
-            .background(isActive ? theme.accent.opacity(0.1) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
+        .buttonStyle(RowButtonStyle(isActive: isActive, theme: theme))
         .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? ""), \(relativeTime)")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
@@ -117,6 +116,35 @@ struct SidebarSessionRow: View {
             return theme.warning
         case .error:
             return theme.error
+        }
+    }
+}
+
+// MARK: - RowButtonStyle
+
+private struct RowButtonStyle: ButtonStyle {
+    let isActive: Bool
+    let theme: ThemeSnapshot
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(backgroundColor(isPressed: configuration.isPressed))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            .scaleEffect(reduceMotion ? 1.0 : (configuration.isPressed ? 0.98 : 1.0))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+
+    private func backgroundColor(isPressed: Bool) -> Color {
+        if isActive && isPressed {
+            return theme.accent.opacity(0.18)
+        } else if isActive {
+            return theme.accent.opacity(0.12)
+        } else if isPressed {
+            return theme.accent.opacity(0.07)
+        } else {
+            return Color.clear
         }
     }
 }
