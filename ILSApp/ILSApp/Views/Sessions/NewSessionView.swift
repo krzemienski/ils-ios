@@ -108,6 +108,7 @@ struct NewSessionView: View {
                     case .project:
                         projectPickerSection
                         relatedSessionsSection
+                        skillSuggestionsSection
                     case .fork:
                         forkSessionSection
                     case .newProject:
@@ -145,6 +146,10 @@ struct NewSessionView: View {
             await suggestionsVM.loadSessionSuggestions(
                 context: sessionName,
                 projectName: selectedProject?.name
+            )
+            await suggestionsVM.loadSkillSuggestions(
+                projectName: selectedProject?.name,
+                context: sessionName
             )
         }
         .task {
@@ -404,6 +409,57 @@ struct NewSessionView: View {
                 }
             }
             .accessibilityIdentifier("related-sessions")
+        }
+    }
+
+    /// Recommended skills shown in `.project` mode to help users discover useful capabilities.
+    ///
+    /// Only rendered when `showSessionSuggestions` is enabled and at least one skill
+    /// suggestion has been fetched from the backend. Each row shows the skill name,
+    /// optional description, and a "View" button that records feedback.
+    @ViewBuilder
+    private var skillSuggestionsSection: some View {
+        if showSessionSuggestions && !suggestionsVM.skillSuggestions.isEmpty {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                sectionLabel("Recommended Skills")
+
+                ForEach(Array(suggestionsVM.skillSuggestions.prefix(3))) { suggestion in
+                    HStack(spacing: theme.spacingSM) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(suggestion.skill.name)
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+
+                            if let description = suggestion.skill.description {
+                                Text(description)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                                    .lineLimit(2)
+                            }
+                        }
+
+                        Spacer()
+
+                        Button("View") {
+                            Task {
+                                await suggestionsVM.recordFeedback(
+                                    action: "click",
+                                    suggestionType: "skill",
+                                    targetId: suggestion.skill.name
+                                )
+                            }
+                        }
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                        .buttonStyle(.plain)
+                    }
+                    .padding(theme.spacingSM)
+                    .background(theme.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+            }
+            .accessibilityIdentifier("skill-suggestions")
         }
     }
 
