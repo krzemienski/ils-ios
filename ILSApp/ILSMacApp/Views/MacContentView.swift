@@ -209,6 +209,9 @@ struct MacContentView: View {
                             .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Connection status")
+                    .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
 
                     // Active host indicator
                     if let hostName = appState.activeHostName {
