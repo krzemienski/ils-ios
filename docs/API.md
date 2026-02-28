@@ -21,6 +21,8 @@
 - [Themes](#themes)
 - [Teams](#teams)
 - [Tunnel](#tunnel)
+- [Host Profiles](#host-profiles)
+- [Data Erasure](#data-erasure)
 - [WebSocket Protocol](#websocket-protocol)
 - [Error Handling](#error-handling)
 
