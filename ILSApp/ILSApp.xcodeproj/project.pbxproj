@@ -164,6 +164,7 @@
 		5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A407AD5B2B5CE78C2E654FD /* BrowserView.swift */; };
 		5FD3729463DD124E8AF5D8C5 /* GrammarRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A739B55CE00235EB978045C4 /* GrammarRegistry.swift */; };
 		6010F25359C148A4CF2D04E3 /* CarbonTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D5049476821865BC65876F /* CarbonTheme.swift */; };
+		614ADE90776981AC136C0148 /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
 		628238328AD8C5BBC73E21D4 /* XCUITestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76FDB1104B5B9E3B5D9FE637 /* XCUITestBase.swift */; };
 		6288CA8E4CB2C16EF82AB4DA /* ILSShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */; };
 		641164270E6BB7627B69ADC0 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */; };
@@ -241,6 +242,7 @@
 		966812B5294CDA773D94B897 /* ThemeCornerRadiusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEAC8111CFAB3AEB8A35D89 /* ThemeCornerRadiusSection.swift */; };
 		96A01212B905EA97DB11D3D2 /* hud-state.json in Resources */ = {isa = PBXBuildFile; fileRef = 6157A63376D8A574079B8194 /* hud-state.json */; };
 		979673D0041CADA6053FE6E6 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086281B052347B8C9884124C /* MetricsWebSocketClient.swift */; };
+		97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
 		99E148F9DFA37DFE3B2FA1E8 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */; };
 		9A2ABF790EE467BD4168A9C8 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */; };
 		9A917B9E5079DECF9C116276 /* CreateSessionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */; };
@@ -486,6 +488,7 @@
 		3BE41ED8B341B393213181A2 /* AgentTeamsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentTeamsListView.swift; sourceTree = "<group>"; };
 		3C2F8DC36FBB97D75857CC6B /* ThemeSpacingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSpacingSection.swift; sourceTree = "<group>"; };
 		3CB16994516471A2241BCCC2 /* ILSMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSMacApp.swift; sourceTree = "<group>"; };
+		3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubPreviewView.swift; sourceTree = "<group>"; };
 		3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetSessionInfoIntent.swift; sourceTree = "<group>"; };
 		3FD667CEB54A3977A624A32D /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
 		402B977AA6C4850AA23BDB0E /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
@@ -1128,6 +1131,7 @@
 			isa = PBXGroup;
 			children = (
 				5A407AD5B2B5CE78C2E654FD /* BrowserView.swift */,
+				3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */,
 				B921611379A5927C0729DD0A /* MCPServerDetailView.swift */,
 				0617F20B854A6A31E51BE659 /* SkillDetailView.swift */,
 			);
@@ -1539,6 +1543,7 @@
 				3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */,
 				436203F1ECBB5A3566E37C71 /* GetSessionInfoIntent.swift in Sources */,
 				1AD445E68A4CE66079ED20C3 /* GhostProtocolTheme.swift in Sources */,
+				97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */,
 				6A1E87A92394F16EFC6DDA1D /* GlassCard.swift in Sources */,
 				3E116A9F7F4A11446DC574BD /* GrammarConfig.swift in Sources */,
 				6BB6DB9CD14FC1D904F30259 /* GrammarDefinitions.swift in Sources */,
@@ -1725,6 +1730,7 @@
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AF776B6CC6CDA97E71F1466C /* GetSessionInfoIntent.swift in Sources */,
 				021CE9A40CA38D09371544DD /* GhostProtocolTheme.swift in Sources */,
+				614ADE90776981AC136C0148 /* GitHubPreviewView.swift in Sources */,
 				37966728A2EB40050DC24223 /* GlassCard.swift in Sources */,
 				C18516CBE323057F964BE25B /* GrammarConfig.swift in Sources */,
 				409F0C523D14F33C1143F23E /* GrammarDefinitions.swift in Sources */,

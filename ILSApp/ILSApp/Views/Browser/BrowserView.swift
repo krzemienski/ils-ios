@@ -8,6 +8,12 @@ enum BrowserSegment: String, CaseIterable {
     case mcp = "MCP"
     case skills = "Skills"
     case plugins = "Plugins"
+    case discover = "Discover"
+}
+
+enum DiscoverType: String, CaseIterable {
+    case skills = "Skills"
+    case plugins = "Plugins"
 }
 
 // MARK: - Browser View
@@ -80,6 +86,8 @@ struct BrowserView: View {
     @State private var mcpScope: String = "all"
     /// Tracks keyboard focus on the search bar to render the themed focus ring.
     @FocusState private var isSearchFocused: Bool
+    /// Sub-segment within the Discover tab: search skills or plugins
+    @State private var discoverType: DiscoverType = .skills
 
     /// TipKit tip surfacing the MCP browser after session creation.
     private let mcpBrowserTip = MCPBrowserTip()
@@ -110,6 +118,8 @@ struct BrowserView: View {
                             CacheStatusView(lastUpdated: skillsVM.lastUpdated)
                         case .plugins:
                             CacheStatusView(lastUpdated: pluginsVM.lastUpdated)
+                        case .discover:
+                            EmptyView()
                         }
                     }
 
@@ -120,6 +130,8 @@ struct BrowserView: View {
                         skillsContent
                     case .plugins:
                         pluginsContent
+                    case .discover:
+                        discoverContent
                     }
                 }
                 .padding(.horizontal, theme.spacingMD)
@@ -388,188 +400,6 @@ struct BrowserView: View {
                 }
             }
         }
-
-        // GitHub Browse Section
-        githubBrowseSection
-    }
-
-    // MARK: - GitHub Browse Section
-
-    @ViewBuilder
-    private var githubBrowseSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            // Section header
-            HStack {
-                Image(systemName: "globe")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                Text("BROWSE GITHUB")
-                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                    .tracking(1)
-                Spacer()
-            }
-            .padding(.top, theme.spacingMD)
-
-            // GitHub search field
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                TextField("Search GitHub for skills...", text: $skillsVM.gitHubSearchText)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
-                    .onChange(of: skillsVM.gitHubSearchText) { _, text in
-                        skillsVM.updateGitHubSearchText(text)
-                    }
-                if !skillsVM.gitHubSearchText.isEmpty {
-                    Button {
-                        skillsVM.gitHubSearchText = ""
-                        skillsVM.gitHubResults = []
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(theme.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                if skillsVM.isSearchingGitHub {
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .scaleEffect(0.7)
-                        .tint(theme.accent)
-                }
-            }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.vertical, theme.spacingSM)
-            .background(theme.bgSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            // Rate limit error banner
-            if let gitHubError = skillsVM.gitHubError {
-                HStack(spacing: theme.spacingSM) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(theme.warning)
-                    if skillsVM.rateLimitCountdown > 0 {
-                        Text("Try again in \(skillsVM.rateLimitCountdown) seconds")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                    } else {
-                        Text(gitHubError)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                    }
-                }
-                .padding(theme.spacingMD)
-                .background(theme.warning.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            }
-
-            // GitHub results
-            if !skillsVM.gitHubResults.isEmpty {
-                VStack(spacing: theme.spacingSM) {
-                    ForEach(skillsVM.gitHubResults, id: \.repository) { result in
-                        gitHubResultRow(result)
-                    }
-                }
-            } else if !skillsVM.gitHubSearchText.isEmpty && !skillsVM.isSearchingGitHub {
-                Text("No skills found on GitHub for \"\(skillsVM.gitHubSearchText)\"")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingSM)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func gitHubResultRow(_ result: GitHubSearchResult) -> some View {
-        HStack(spacing: theme.spacingMD) {
-            // Entity dot
-            Circle()
-                .fill(theme.entitySkill.opacity(0.6))
-                .frame(width: 10, height: 10)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(result.name.isEmpty ? result.repository : result.name)
-                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                        .lineLimit(1)
-
-                    Spacer()
-
-                    if skillsVM.isInstalled(result: result) {
-                        Text("Installed")
-                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                            .foregroundStyle(theme.success)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(theme.success.opacity(0.15))
-                            .clipShape(Capsule())
-                    }
-
-                    if result.stars > 0 {
-                        HStack(spacing: 3) {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.warning)
-                            Text("\(result.stars)")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textSecondary)
-                        }
-                    }
-                }
-
-                if let description = result.description {
-                    Text(description)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textSecondary)
-                        .lineLimit(2)
-                }
-
-                Text(result.repository)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                    .lineLimit(1)
-            }
-
-            // Install button / installed indicator
-            if skillsVM.isInstalled(result: result) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(theme.success)
-                    .frame(width: 60)
-            } else if skillsVM.installingSkills.contains(result.repository) {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .scaleEffect(0.7)
-                    .tint(theme.accent)
-                    .frame(width: 60)
-            } else {
-                Button {
-                    Task {
-                        let installed = await skillsVM.installFromGitHub(result: result)
-                        if installed {
-                            HapticManager.impact(.medium)
-                        }
-                    }
-                } label: {
-                    Text("Install")
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textOnAccent)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(theme.accent)
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(theme.spacingMD)
-        .modifier(GlassCard())
     }
 
     // MARK: - Plugins Content
@@ -655,109 +485,252 @@ struct BrowserView: View {
                 }
             }
 
-            // GitHub Browse Section
-            pluginGitHubBrowseSection
         }
     }
 
-    // MARK: - Plugin GitHub Browse Section
+    // MARK: - Discover Content
 
     @ViewBuilder
-    private var pluginGitHubBrowseSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            // Section header
-            HStack {
-                Image(systemName: "globe")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                Text("BROWSE GITHUB")
-                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                    .tracking(1)
-                Spacer()
+    private var discoverContent: some View {
+        VStack(spacing: theme.spacingSM) {
+            // Sub-segment picker: Skills vs Plugins
+            Picker("Type", selection: $discoverType) {
+                ForEach(DiscoverType.allCases, id: \.self) { type in
+                    Text(type.rawValue).tag(type)
+                }
             }
-            .padding(.top, theme.spacingMD)
+            .pickerStyle(.segmented)
+            .padding(.bottom, theme.spacingSM)
 
-            // GitHub search field
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(theme.textTertiary)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                TextField("Search GitHub for plugins...", text: $pluginsVM.gitHubSearchText)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
-                    .onChange(of: pluginsVM.gitHubSearchText) { _, text in
-                        pluginsVM.updateGitHubSearchText(text)
+            // Search field
+            discoverSearchField
+
+            // Rate limit banner
+            discoverRateLimitBanner
+
+            // Results
+            if discoverType == .skills {
+                discoverSkillResults
+            } else {
+                discoverPluginResults
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var discoverSearchField: some View {
+        let searchBinding = discoverType == .skills ? $skillsVM.gitHubSearchText : $pluginsVM.gitHubSearchText
+        let isSearching = discoverType == .skills ? skillsVM.isSearchingGitHub : pluginsVM.isSearchingGitHub
+
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(theme.textTertiary)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+
+            TextField(
+                discoverType == .skills ? "Search GitHub for skills..." : "Search GitHub for plugins...",
+                text: searchBinding
+            )
+            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+            .foregroundStyle(theme.textPrimary)
+            .autocorrectionDisabled()
+            #if os(iOS)
+            .textInputAutocapitalization(.never)
+            #endif
+            .onChange(of: skillsVM.gitHubSearchText) { _, text in
+                guard discoverType == .skills, text.count >= 3 else {
+                    if discoverType == .skills && text.isEmpty {
+                        skillsVM.gitHubResults = []
                     }
-                if !pluginsVM.gitHubSearchText.isEmpty {
-                    Button {
+                    return
+                }
+                skillsVM.updateGitHubSearchText(text)
+            }
+            .onChange(of: pluginsVM.gitHubSearchText) { _, text in
+                guard discoverType == .plugins, text.count >= 3 else {
+                    if discoverType == .plugins && text.isEmpty {
+                        pluginsVM.gitHubResults = []
+                    }
+                    return
+                }
+                pluginsVM.updateGitHubSearchText(text)
+            }
+
+            if !(discoverType == .skills ? skillsVM.gitHubSearchText : pluginsVM.gitHubSearchText).isEmpty {
+                Button {
+                    if discoverType == .skills {
+                        skillsVM.gitHubSearchText = ""
+                        skillsVM.gitHubResults = []
+                    } else {
                         pluginsVM.gitHubSearchText = ""
                         pluginsVM.gitHubResults = []
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if isSearching {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(0.7)
+                    .tint(theme.accent)
+            }
+        }
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.vertical, theme.spacingSM)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+    }
+
+    @ViewBuilder
+    private var discoverRateLimitBanner: some View {
+        let gitHubError = discoverType == .skills ? skillsVM.gitHubError : pluginsVM.gitHubError
+        let countdown = discoverType == .skills ? skillsVM.rateLimitCountdown : pluginsVM.rateLimitCountdown
+
+        if let errorMsg = gitHubError {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(theme.warning)
+                if countdown > 0 {
+                    Text("Try again in \(countdown) seconds")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                } else {
+                    Text(errorMsg)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+            }
+            .padding(theme.spacingMD)
+            .background(theme.warning.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        }
+    }
+
+    @ViewBuilder
+    private var discoverSkillResults: some View {
+        let searchText = skillsVM.gitHubSearchText
+
+        if !skillsVM.gitHubResults.isEmpty {
+            VStack(spacing: theme.spacingSM) {
+                ForEach(skillsVM.gitHubResults, id: \.repository) { result in
+                    NavigationLink {
+                        GitHubPreviewView(
+                            result: result,
+                            entityType: .skill,
+                            skillsVM: skillsVM,
+                            pluginsVM: pluginsVM
+                        )
                     } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(theme.textTertiary)
+                        discoverResultRow(
+                            result: result,
+                            entityColor: theme.entitySkill,
+                            isInstalled: skillsVM.isInstalled(result: result),
+                            isInstalling: skillsVM.installingSkills.contains(result.repository)
+                        )
                     }
                     .buttonStyle(.plain)
                 }
-                if pluginsVM.isSearchingGitHub {
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .scaleEffect(0.7)
-                        .tint(theme.accent)
-                }
             }
-            .padding(.horizontal, theme.spacingMD)
-            .padding(.vertical, theme.spacingSM)
-            .background(theme.bgSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            // Rate limit error banner
-            if let gitHubError = pluginsVM.gitHubError {
-                HStack(spacing: theme.spacingSM) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(theme.warning)
-                    if pluginsVM.rateLimitCountdown > 0 {
-                        Text("Try again in \(pluginsVM.rateLimitCountdown) seconds")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                    } else {
-                        Text(gitHubError)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                    }
-                }
-                .padding(theme.spacingMD)
-                .background(theme.warning.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            }
-
-            // GitHub results
-            if !pluginsVM.gitHubResults.isEmpty {
-                VStack(spacing: theme.spacingSM) {
-                    ForEach(pluginsVM.gitHubResults, id: \.repository) { result in
-                        pluginGitHubResultRow(result)
-                    }
-                }
-            } else if !pluginsVM.gitHubSearchText.isEmpty && !pluginsVM.isSearchingGitHub {
-                Text("No plugins found on GitHub for \"\(pluginsVM.gitHubSearchText)\"")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+        } else if searchText.count >= 3 && !skillsVM.isSearchingGitHub {
+            Text("No skills found on GitHub for \"\(searchText)\"")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+        } else if searchText.count > 0 && searchText.count < 3 {
+            Text("Type at least 3 characters to search")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+        } else {
+            // Empty state -- show browsing hint
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: "globe.americas")
+                    .font(.system(size: 40))
+                    .foregroundStyle(theme.textTertiary.opacity(0.5))
+                Text("Search GitHub for Claude Code skills")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingSM)
+                Text("Find and install community skills with search")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary.opacity(0.7))
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingXL)
         }
     }
 
     @ViewBuilder
-    private func pluginGitHubResultRow(_ result: GitHubSearchResult) -> some View {
+    private var discoverPluginResults: some View {
+        let searchText = pluginsVM.gitHubSearchText
+
+        if !pluginsVM.gitHubResults.isEmpty {
+            VStack(spacing: theme.spacingSM) {
+                ForEach(pluginsVM.gitHubResults, id: \.repository) { result in
+                    NavigationLink {
+                        GitHubPreviewView(
+                            result: result,
+                            entityType: .plugin,
+                            skillsVM: skillsVM,
+                            pluginsVM: pluginsVM
+                        )
+                    } label: {
+                        discoverResultRow(
+                            result: result,
+                            entityColor: theme.entityPlugin,
+                            isInstalled: pluginsVM.isInstalled(result: result),
+                            isInstalling: pluginsVM.installingPlugins.contains(result.repository)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        } else if searchText.count >= 3 && !pluginsVM.isSearchingGitHub {
+            Text("No plugins found on GitHub for \"\(searchText)\"")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+        } else if searchText.count > 0 && searchText.count < 3 {
+            Text("Type at least 3 characters to search")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+        } else {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: "globe.americas")
+                    .font(.system(size: 40))
+                    .foregroundStyle(theme.textTertiary.opacity(0.5))
+                Text("Search GitHub for Claude Code plugins")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text("Find and install community plugins with search")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingXL)
+        }
+    }
+
+    /// Shared result row used by both skill and plugin discover results.
+    @ViewBuilder
+    private func discoverResultRow(
+        result: GitHubSearchResult,
+        entityColor: Color,
+        isInstalled: Bool,
+        isInstalling: Bool
+    ) -> some View {
         HStack(spacing: theme.spacingMD) {
             // Entity dot
             Circle()
-                .fill(theme.entityPlugin.opacity(0.6))
+                .fill(entityColor.opacity(0.6))
                 .frame(width: 10, height: 10)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -769,7 +742,7 @@ struct BrowserView: View {
 
                     Spacer()
 
-                    if pluginsVM.isInstalled(result: result) {
+                    if isInstalled {
                         Text("Installed")
                             .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(theme.success)
@@ -804,53 +777,23 @@ struct BrowserView: View {
                     .lineLimit(1)
             }
 
-            // Install button / installed indicator
-            if pluginsVM.isInstalled(result: result) {
+            // Status indicator (no install button in row -- install is in preview)
+            if isInstalled {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(theme.success)
-                    .frame(width: 60)
-            } else if pluginsVM.installingPlugins.contains(result.repository) {
+            } else if isInstalling {
                 ProgressView()
                     .progressViewStyle(.circular)
                     .scaleEffect(0.7)
                     .tint(theme.accent)
-                    .frame(width: 60)
             } else {
-                Button {
-                    Task {
-                        let installed = await pluginsVM.installFromGitHub(result: result)
-                        if installed {
-                            HapticManager.impact(.medium)
-                        }
-                    }
-                } label: {
-                    Text("Install")
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textOnAccent)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(theme.accent)
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: theme.fontCaption))
+                    .foregroundStyle(theme.textTertiary)
             }
         }
         .padding(theme.spacingMD)
         .modifier(GlassCard())
-        .contextMenu {
-            if pluginsVM.isInstalled(result: result) {
-                if let matchingPlugin = pluginsVM.plugins.first(where: {
-                    let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.repository
-                    return $0.name == repoName || ($0.path?.contains(repoName) ?? false)
-                }) {
-                    Button(role: .destructive) {
-                        Task { await pluginsVM.uninstallPlugin(matchingPlugin) }
-                    } label: {
-                        Label("Remove", systemImage: "trash")
-                    }
-                }
-            }
-        }
     }
 
     // MARK: - Plugin Row (delegates to PluginRowView)
@@ -925,6 +868,7 @@ struct BrowserView: View {
         case .mcp: return theme.entityMCP
         case .skills: return theme.entitySkill
         case .plugins: return theme.entityPlugin
+        case .discover: return theme.accent
         }
     }
 
@@ -933,6 +877,7 @@ struct BrowserView: View {
         case .mcp: return mcpVM.servers.count
         case .skills: return skillsVM.skills.count
         case .plugins: return pluginsVM.plugins.count
+        case .discover: return skillsVM.gitHubResults.count + pluginsVM.gitHubResults.count
         }
     }
 
@@ -948,6 +893,12 @@ struct BrowserView: View {
         case .mcp: await mcpVM.refreshServers()
         case .skills: await skillsVM.refreshSkills()
         case .plugins: await pluginsVM.loadPlugins()
+        case .discover:
+            if discoverType == .skills {
+                await skillsVM.searchGitHub(query: skillsVM.gitHubSearchText)
+            } else {
+                await pluginsVM.searchGitHub(query: pluginsVM.gitHubSearchText)
+            }
         }
     }
 }
