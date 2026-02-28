@@ -82,6 +82,7 @@ struct ChatView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
 
     // MARK: - Body
 
@@ -286,10 +287,12 @@ struct ChatView: View {
         }
     }
 
-    /// Compact context window usage bar shown when token data is available.
+    /// Compact context window usage bar shown when token data is available and the
+    /// "Show context usage bar" preference is enabled in Settings.
     @ViewBuilder
     private var contextWindowBar: some View {
-        if let usedTokens = viewModel.contextTokensUsed,
+        if showContextWindowBar,
+           let usedTokens = viewModel.contextTokensUsed,
            let windowSize = viewModel.contextWindowSize,
            windowSize > 0 {
             ContextWindowBar(
