@@ -41,7 +41,12 @@ struct HostProfilesView: View {
     var body: some View {
         Group {
             if let viewModel {
-                ScrollView {
+                VStack(spacing: 0) {
+                    if let state = viewModel.operationState, let message = viewModel.operationMessage {
+                        AsyncOperationBanner(message: message, state: state)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    ScrollView {
                     LazyVStack(spacing: theme.spacingMD) {
                         ForEach(viewModel.hosts) { host in
                             NavigationLink {
@@ -87,6 +92,7 @@ struct HostProfilesView: View {
                     .padding(.horizontal, theme.spacingMD)
                     .padding(.top, theme.spacingSM)
                 }
+                } // end VStack
             } else {
                 ProgressView()
                     .tint(theme.accent)
