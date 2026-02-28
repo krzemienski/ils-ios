@@ -300,6 +300,7 @@ struct QuickConnectView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity)
         .disabled(!viewModel.isConnectEnabled)
         .accessibilityIdentifier("connect-button")
     }
