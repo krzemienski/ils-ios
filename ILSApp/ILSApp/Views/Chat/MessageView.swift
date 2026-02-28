@@ -208,14 +208,15 @@ struct ToolResultView: View {
 
 /// Expandable card that renders Claude's extended-thinking block inside a message bubble.
 ///
-/// Displays a brain icon header with a distinctive `theme.info`-tinted background to visually
-/// separate the model's reasoning from its final response. The thinking text is hidden by
+/// Displays a brain icon header with a distinctive gradient background (entityPlugin → info)
+/// to visually separate the model's reasoning from its final response. The brain icon pulses
+/// while the message is streaming and stops once complete. The thinking text is hidden by
 /// default and revealed when the user taps the header row, keeping the conversation readable
 /// for users who do not need to inspect the reasoning trace.
 ///
-/// The view intentionally avoids a pulse animation and reads `accessibilityReduceMotion` so
-/// that any future animation additions are gated behind the system reduce-motion preference,
-/// ensuring the view is safe for users sensitive to motion.
+/// Reads `accessibilityReduceMotion` to skip the pulse animation for users sensitive to
+/// motion. An `onDisappear` handler cancels any in-flight `repeatForever` animation to
+/// avoid unnecessary GPU work after the view leaves the screen.
 ///
 /// ## Topics
 /// ### Input Properties
@@ -272,7 +273,7 @@ struct ThinkingView: View {
         .padding(theme.spacingSM)
         .background(
             LinearGradient(
-                colors: [theme.entityPlugin.opacity(0.12), theme.info.opacity(0.06)],
+                colors: [theme.entityPlugin.opacity(0.18), theme.info.opacity(0.10)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -285,6 +286,12 @@ struct ThinkingView: View {
         .onAppear {
             if !reduceMotion {
                 startPulsing()
+            }
+        }
+        .onDisappear {
+            // H-E1: Cancel repeatForever animation to stop GPU work after navigation.
+            withAnimation(.linear(duration: 0.0)) {
+                pulseScale = 1.0
             }
         }
         .onChange(of: scenePhase) { _, phase in
