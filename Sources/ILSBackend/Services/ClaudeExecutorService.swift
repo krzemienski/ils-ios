@@ -77,6 +77,11 @@ actor ClaudeExecutorService {
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = Pipe()
+            // MEM-FD: Explicitly close pipe FDs — short-lived helpers rely on ARC otherwise.
+            defer {
+                pipe.fileHandleForReading.closeFile()
+                process.standardError = nil
+            }
 
             try process.run()
             process.waitUntilExit()
@@ -97,6 +102,10 @@ actor ClaudeExecutorService {
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
+        // MEM-FD: Explicitly close pipe FD — short-lived helper relies on ARC otherwise.
+        defer {
+            pipe.fileHandleForReading.closeFile()
+        }
 
         try process.run()
         process.waitUntilExit()
