@@ -11,6 +11,8 @@ class TeamsViewModel {
     var messages: [TeamMessage] = []
     var isLoading = false
     var error: Error?
+    var operationState: AsyncOperationState?
+    var operationMessage: String?
 
     private let apiClient: APIClient
     @ObservationIgnored private var pollingTask: Task<Void, Never>?
@@ -98,6 +100,12 @@ class TeamsViewModel {
     func spawnTeammate(teamName: String, request: SpawnTeammateRequest) async {
         isLoading = true
         error = nil
+        operationState = .connecting
+        operationMessage = "Spawning teammate..."
+        defer {
+            operationState = nil
+            operationMessage = nil
+        }
         do {
             let response: APIResponse<TeamMember> = try await apiClient.post( "/teams/\(teamName)/spawn", body: request)
             if response.success {
@@ -114,6 +122,12 @@ class TeamsViewModel {
     func shutdownTeammate(teamName: String, name: String) async {
         isLoading = true
         error = nil
+        operationState = .connecting
+        operationMessage = "Shutting down teammate..."
+        defer {
+            operationState = nil
+            operationMessage = nil
+        }
         do {
             let request = ShutdownTeammateRequest(memberName: name)
             let response: APIResponse<DeletedResponse> = try await apiClient.post( "/teams/\(teamName)/shutdown", body: request)
