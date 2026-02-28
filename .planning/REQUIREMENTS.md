@@ -17,7 +17,7 @@ Requirements for v5.0 milestone (Cross-Platform Feature Completion & 30-Gate Aud
 
 - [ ] **CFG-01**: Config cascade visualization shows "inherited from host" vs "custom override" badges on each setting
 - [ ] **CFG-02**: System prompt and model defaults inherited from connected host CLI configuration, not hardcoded
-- [ ] **CFG-03**: Info tooltips (≥20 words) on tool controls, permissions, and settings sections
+- [ ] **CFG-03**: Info tooltips (>=20 words) on tool controls, permissions, and settings sections
 
 ### Skills, Plugins & Hooks
 
@@ -44,23 +44,23 @@ Requirements for v5.0 milestone (Cross-Platform Feature Completion & 30-Gate Aud
 - [ ] **API-01**: All API endpoints return expected JSON structures with proper HTTP error codes (not 200-with-error)
 - [ ] **API-02**: GET /config/effective endpoint returns merged config with winning-scope annotations per key
 
-### Validation — 30-Gate Audit
+### Validation -- 30-Gate Audit
 
-- [ ] **GATE-01**: Visual audit — iPhone screens with numbered screenshot evidence (≥15 artifacts)
-- [ ] **GATE-02**: Visual audit — iPad screens with numbered screenshot evidence (≥15 artifacts)
-- [ ] **GATE-03**: Visual audit — Mac screens with numbered screenshot evidence (≥10 artifacts)
-- [ ] **GATE-04**: Functional audit — end-to-end verification of all feature areas across platforms
-- [ ] **GATE-05**: Bug hunt — ≥20 edge case scenarios tested (offline, empty states, accessibility, memory)
+- [ ] **GATE-01**: Visual audit -- iPhone screens with numbered screenshot evidence (>=15 artifacts)
+- [ ] **GATE-02**: Visual audit -- iPad screens with numbered screenshot evidence (>=15 artifacts)
+- [ ] **GATE-03**: Visual audit -- Mac screens with numbered screenshot evidence (>=10 artifacts)
+- [ ] **GATE-04**: Functional audit -- end-to-end verification of all feature areas across platforms
+- [ ] **GATE-05**: Bug hunt -- >=20 edge case scenarios tested (offline, empty states, accessibility, memory)
 
 ## Validated (Previous Milestones)
 
-- v1.0: REQ-01 through REQ-15 — All PASS (sidebar nav, settings, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP, backend API, visual consistency, sessions)
-- v2.0: LAUNCH-01/02, NET-01/02/03, MEM-01/02/03, BATT-01/02/03, RENDER-01/02/03, COMPAT-01/02, TEST-01/02/03/04 — Performance optimization complete
+- v1.0: REQ-01 through REQ-15 -- All PASS (sidebar nav, settings, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP, backend API, visual consistency, sessions)
+- v2.0: LAUNCH-01/02, NET-01/02/03, MEM-01/02/03, BATT-01/02/03, RENDER-01/02/03, COMPAT-01/02, TEST-01/02/03/04 -- Performance optimization complete
 - v3.0: 165 audit issues remediated across Phases 18-24
 - v1.5: 70/70 audit findings resolved
-- v3.1: NAV-01..05, HP-01..05, CFG-01..07, BRW-01..08, SYS-01..03, XP-01..03 — 31/31 PASS
-- v3.5: IPH-01..13, DL-01..06, GATE-01/03/04/05 — iPhone 23/23 PASS
-- v4.0: UI-01..06, PLAT-01..08, DATA-01..06, SEC-01..05, ECO-01..04, AUDIT-01..05 — 34/34 PASS, 123 evidence artifacts
+- v3.1: NAV-01..05, HP-01..05, CFG-01..07, BRW-01..08, SYS-01..03, XP-01..03 -- 31/31 PASS
+- v3.5: IPH-01..13, DL-01..06, GATE-01/03/04/05 -- iPhone 23/23 PASS
+- v4.0: UI-01..06, PLAT-01..08, DATA-01..06, SEC-01..05, ECO-01..04, AUDIT-01..05 -- 34/34 PASS, 123 evidence artifacts
 
 ## Future Requirements
 
@@ -100,36 +100,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase — | Pending |
-| FOUND-02 | Phase — | Pending |
-| FOUND-03 | Phase — | Pending |
-| CFG-01 | Phase — | Pending |
-| CFG-02 | Phase — | Pending |
-| CFG-03 | Phase — | Pending |
-| SKILL-01 | Phase — | Pending |
-| SKILL-02 | Phase — | Pending |
-| SKILL-03 | Phase — | Pending |
-| SKILL-04 | Phase — | Pending |
-| SKILL-05 | Phase — | Pending |
-| SKILL-06 | Phase — | Pending |
-| SKILL-07 | Phase — | Pending |
-| PROF-01 | Phase — | Pending |
-| PROF-02 | Phase — | Pending |
-| NAV-01 | Phase — | Pending |
-| NAV-02 | Phase — | Pending |
-| API-01 | Phase — | Pending |
-| API-02 | Phase — | Pending |
-| GATE-01 | Phase — | Pending |
-| GATE-02 | Phase — | Pending |
-| GATE-03 | Phase — | Pending |
-| GATE-04 | Phase — | Pending |
-| GATE-05 | Phase — | Pending |
+| FOUND-01 | Phase 49 | Pending |
+| FOUND-02 | Phase 54 | Pending |
+| FOUND-03 | Phase 49 | Pending |
+| CFG-01 | Phase 51 | Pending |
+| CFG-02 | Phase 51 | Pending |
+| CFG-03 | Phase 51 | Pending |
+| SKILL-01 | Phase 53 | Pending |
+| SKILL-02 | Phase 53 | Pending |
+| SKILL-03 | Phase 53 | Pending |
+| SKILL-04 | Phase 53 | Pending |
+| SKILL-05 | Phase 52 | Pending |
+| SKILL-06 | Phase 52 | Pending |
+| SKILL-07 | Phase 52 | Pending |
+| PROF-01 | Phase 54 | Pending |
+| PROF-02 | Phase 54 | Pending |
+| NAV-01 | Phase 54 | Pending |
+| NAV-02 | Phase 54 | Pending |
+| API-01 | Phase 50 | Pending |
+| API-02 | Phase 50 | Pending |
+| GATE-01 | Phase 55 | Pending |
+| GATE-02 | Phase 55 | Pending |
+| GATE-03 | Phase 55 | Pending |
+| GATE-04 | Phase 56 | Pending |
+| GATE-05 | Phase 56 | Pending |
 
 **Coverage:**
 - v5.0 requirements: 24 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 24
+- Mapped to phases: 24
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after initial definition*
+*Last updated: 2026-02-27 after roadmap creation -- traceability complete*
