@@ -203,6 +203,7 @@
 		785167CB10426EA706CF5506 /* AppIconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DEA312D98D14A52FD03359 /* AppIconGenerator.swift */; };
 		7881297466215E48E11C6D37 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52FFD26C242D9641EFF5D8D /* CodeBlockView.swift */; };
 		78D2DCBE8119FCE195105244 /* MCPServerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B921611379A5927C0729DD0A /* MCPServerDetailView.swift */; };
+		558F17AA6570489889C550FD /* MCPInstallWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A4277E74264B71AD60257C /* MCPInstallWizardView.swift */; };
 		7A188DF0BCF75034655C59B4 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9BBB5C595420740263E95C /* GRDB */; };
 		7D36253FD571FC2C7FA0B757 /* ThemeSpacingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2F8DC36FBB97D75857CC6B /* ThemeSpacingSection.swift */; };
 		7D376024900007C6788CF019 /* PythonGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8832C537298BC59A575FF3 /* PythonGrammar.swift */; };
@@ -270,6 +271,7 @@
 		A2CD3C1A6CDF29B50C78F3F5 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */; };
 		A477E3BBA09753A405318DBC /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B579302585432A18086CAF11 /* ServerSetupSheet.swift */; };
 		A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B921611379A5927C0729DD0A /* MCPServerDetailView.swift */; };
+		AEE621EAB1364DEFAF82C496 /* MCPInstallWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A4277E74264B71AD60257C /* MCPInstallWizardView.swift */; };
 		A4EDEE8198F803F4DF97D6E8 /* MacProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B4BF71D7F947143FA895AC /* MacProjectsListView.swift */; };
 		A500F3C208F7333117667685 /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AD4ECE9770812FE2B0982B /* PremiumView.swift */; };
 		A5205BCDF454A189210B7FBB /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */; };
@@ -609,6 +611,7 @@
 		B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		B921611379A5927C0729DD0A /* MCPServerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerDetailView.swift; sourceTree = "<group>"; };
+		73A4277E74264B71AD60257C /* MCPInstallWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPInstallWizardView.swift; sourceTree = "<group>"; };
 		B9D0872E6BBB1AD89F5F5A33 /* CISmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CISmokeTests.swift; sourceTree = "<group>"; };
 		B9FAA8F733B5F80C36DCC108 /* ChatTouchBarProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTouchBarProvider.swift; sourceTree = "<group>"; };
 		BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHViewModel.swift; sourceTree = "<group>"; };
@@ -1148,6 +1151,7 @@
 				5A407AD5B2B5CE78C2E654FD /* BrowserView.swift */,
 				3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */,
 				B921611379A5927C0729DD0A /* MCPServerDetailView.swift */,
+				73A4277E74264B71AD60257C /* MCPInstallWizardView.swift */,
 				0617F20B854A6A31E51BE659 /* SkillDetailView.swift */,
 			);
 			path = Browser;
@@ -1591,6 +1595,7 @@
 				81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */,
 				AFD18292F620F2F1328B803F /* LowPowerModeMonitor.swift in Sources */,
 				78D2DCBE8119FCE195105244 /* MCPServerDetailView.swift in Sources */,
+				558F17AA6570489889C550FD /* MCPInstallWizardView.swift in Sources */,
 				C45D62C8ACFEA7C4E3750E14 /* MCPViewModel.swift in Sources */,
 				3F85AC71514C49A690026E86 /* MCPMarketplaceViewModel.swift in Sources */,
 				BA4690875BCC009661B3AFAF /* MarkdownParser.swift in Sources */,
@@ -1784,6 +1789,7 @@
 				1EA9202F785FC72DF260B40F /* LogViewerView.swift in Sources */,
 				A2503FA67B49A02492C78369 /* LowPowerModeMonitor.swift in Sources */,
 				A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */,
+				AEE621EAB1364DEFAF82C496 /* MCPInstallWizardView.swift in Sources */,
 				BCFCBE145C3FD9264131AA00 /* MCPViewModel.swift in Sources */,
 				C13AA3662E9D4CDE9C68F711 /* MCPMarketplaceViewModel.swift in Sources */,
 				0221D6435E5A81ABB9009818 /* MacChatView.swift in Sources */,
