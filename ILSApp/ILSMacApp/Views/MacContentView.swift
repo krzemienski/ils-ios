@@ -382,6 +382,8 @@ struct MacContentView: View {
             ThemesListView()
         case .hooks:
             HooksManagementView()
+        case .analytics:
+            AnalyticsView()
         }
     }
 
@@ -622,6 +624,7 @@ struct MacContentView: View {
         case .hostProfiles: selectedSection = .hostProfiles
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
+        case .analytics: selectedSection = .home
         case .chat: selectedSection = .home
         }
         activeScreen = intent

@@ -235,7 +235,7 @@ struct ActivityTimelineView: View {
             }
             .padding()
         }
-        .background(Color(.systemBackground))
+        .background(.background)
     }
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

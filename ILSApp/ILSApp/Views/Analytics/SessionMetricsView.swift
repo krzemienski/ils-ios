@@ -322,7 +322,7 @@ private extension Comparable {
             }
             .padding()
         }
-        .background(Color(.systemBackground))
+        .background(.background)
     }
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }
