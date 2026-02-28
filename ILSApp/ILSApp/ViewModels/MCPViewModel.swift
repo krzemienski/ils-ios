@@ -23,6 +23,38 @@ class MCPViewModel {
 
     var selectedCount: Int { selectedServerIDs.count }
 
+    // MARK: - GitHub Marketplace Discovery
+    var gitHubResults: [GitHubSearchResult] = []
+    var isSearchingGitHub = false
+    var gitHubSearchText = ""
+    var installingMCPServers: Set<String> = []
+    var gitHubError: String?
+    var rateLimitCountdown: Int = 0
+    @ObservationIgnored private var countdownTask: Task<Void, Never>?
+    @ObservationIgnored private var searchTask: Task<Void, Never>?
+
+    /// Update GitHub search text and trigger debounced search.
+    /// Call this instead of assigning `gitHubSearchText` directly.
+    /// For SwiftUI TextField bindings, call from `.onChange(of:)`.
+    func updateGitHubSearchText(_ text: String) {
+        gitHubSearchText = text
+        debouncedGitHubSearch()
+    }
+
+    /// Trigger a debounced GitHub search based on current `gitHubSearchText`.
+    private func debouncedGitHubSearch() {
+        searchTask?.cancel()
+        guard !gitHubSearchText.isEmpty else {
+            gitHubResults = []
+            return
+        }
+        searchTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard let self, !Task.isCancelled else { return }
+            await searchGitHub(query: gitHubSearchText)
+        }
+    }
+
     private var client: APIClient?
 
     /// Precomputed lowercase search strings keyed by server, rebuilt when servers change
@@ -32,6 +64,8 @@ class MCPViewModel {
 
     deinit {
         healthTimer?.cancel()
+        searchTask?.cancel()
+        countdownTask?.cancel()
     }
 
     func configure(client: APIClient) {
@@ -247,5 +281,82 @@ class MCPViewModel {
             AppLogger.shared.error("Failed to update MCP server '\(name)': \(error.localizedDescription)", category: "mcp")
         }
         return nil
+    }
+
+    // MARK: - GitHub Marketplace Methods
+
+    func searchGitHub(query: String) async {
+        guard let client, !query.isEmpty else {
+            gitHubResults = []
+            return
+        }
+        isSearchingGitHub = true
+        gitHubError = nil
+        do {
+            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+            let response: APIResponse<ListResponse<GitHubSearchResult>> = try await client.get("/mcp/search?q=\(encoded)")
+            if let data = response.data {
+                gitHubResults = data.items
+            }
+            gitHubError = nil
+        } catch {
+            let desc = error.localizedDescription.lowercased()
+            if desc.contains("rate limit") || desc.contains("429") || desc.contains("limit reached") {
+                gitHubError = "GitHub rate limit reached"
+                startCountdown()
+            } else {
+                self.error = error
+            }
+            AppLogger.shared.error("GitHub MCP search failed: \(error.localizedDescription)", category: "mcp")
+        }
+        isSearchingGitHub = false
+    }
+
+    /// Install an MCP server from a GitHub marketplace result using the existing POST /mcp endpoint.
+    func installFromMarketplace(result: GitHubSearchResult, command: String, args: [String], env: [String: String]?, scope: String) async -> Bool {
+        guard let client else { return false }
+        installingMCPServers.insert(result.repository)
+        defer { installingMCPServers.remove(result.repository) }
+        do {
+            let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.name
+            let request = CreateMCPRequest(
+                name: repoName,
+                command: command,
+                args: args,
+                env: env,
+                scope: MCPScope(rawValue: scope)
+            )
+            let response: APIResponse<MCPServer> = try await client.post("/mcp", body: request)
+            if let server = response.data {
+                servers.append(server)
+                rebuildSearchCache()
+            }
+            return true
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to install MCP server from marketplace '\(result.repository)': \(error.localizedDescription)", category: "mcp")
+            return false
+        }
+    }
+
+    /// Check if a GitHub search result is already installed as an MCP server.
+    func isInstalled(result: GitHubSearchResult) -> Bool {
+        let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.repository
+        return servers.contains { $0.name == repoName }
+    }
+
+    private func startCountdown() {
+        countdownTask?.cancel()
+        rateLimitCountdown = 60
+        countdownTask = Task { @MainActor [weak self] in
+            while let self, self.rateLimitCountdown > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self.rateLimitCountdown -= 1
+            }
+            guard let self, !Task.isCancelled else { return }
+            self.gitHubError = nil
+            self.rateLimitCountdown = 0
+        }
     }
 }
