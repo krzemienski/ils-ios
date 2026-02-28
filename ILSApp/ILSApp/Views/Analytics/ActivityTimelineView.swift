@@ -207,19 +207,15 @@ struct ActivityTimelineView: View {
 // MARK: - Preview
 
 #Preview {
-    let calendar = Calendar.current
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy-MM-dd"
-
-    let samplePoints = (0..<7).reversed().map { offset -> ActivityDataPoint in
-        let date = calendar.date(byAdding: .day, value: -offset, to: Date()) ?? Date()
-        return ActivityDataPoint(
-            date: dateFormatter.string(from: date),
-            sessionCount: [3, 7, 2, 9, 5, 0, 4][offset],
-            messageCount: [12, 28, 8, 36, 20, 0, 16][offset],
-            tokensUsed: [1200, 2800, 800, 3600, 2000, 0, 1600][offset]
-        )
-    }
+    let samplePoints = [
+        ActivityDataPoint(date: "2024-01-15", sessionCount: 3, messageCount: 12, tokensUsed: 1200),
+        ActivityDataPoint(date: "2024-01-16", sessionCount: 7, messageCount: 28, tokensUsed: 2800),
+        ActivityDataPoint(date: "2024-01-17", sessionCount: 2, messageCount: 8, tokensUsed: 800),
+        ActivityDataPoint(date: "2024-01-18", sessionCount: 9, messageCount: 36, tokensUsed: 3600),
+        ActivityDataPoint(date: "2024-01-19", sessionCount: 5, messageCount: 20, tokensUsed: 2000),
+        ActivityDataPoint(date: "2024-01-20", sessionCount: 0, messageCount: 0, tokensUsed: 0),
+        ActivityDataPoint(date: "2024-01-21", sessionCount: 4, messageCount: 16, tokensUsed: 1600),
+    ]
 
     NavigationStack {
         ScrollView {
@@ -228,8 +224,8 @@ struct ActivityTimelineView: View {
                     data: ActivityTimelineResponse(
                         projectName: "my-project",
                         dataPoints: samplePoints,
-                        startDate: dateFormatter.string(from: calendar.date(byAdding: .day, value: -6, to: Date()) ?? Date()),
-                        endDate: dateFormatter.string(from: Date()),
+                        startDate: "2024-01-15",
+                        endDate: "2024-01-21",
                         granularity: "day"
                     )
                 )

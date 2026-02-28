@@ -421,7 +421,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private var analyticsScreen: some View {
-        AnalyticsDashboardView()
+        AnalyticsView()
     }
 
     // MARK: - Chat Navigation

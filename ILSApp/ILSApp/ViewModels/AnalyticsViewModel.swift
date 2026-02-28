@@ -32,7 +32,7 @@ class AnalyticsViewModel {
     var error: Error?
     var selectedPeriod: AnalyticsPeriod = .week
 
-    @AppStorage("analyticsEnabled") private var analyticsEnabled = true
+    @ObservationIgnored @AppStorage("analyticsEnabled") private var analyticsEnabled = true
 
     private var client: APIClient?
 
