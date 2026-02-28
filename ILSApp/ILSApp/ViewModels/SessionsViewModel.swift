@@ -29,15 +29,11 @@ import ILSShared
 /// - ``renameSession(_:newName:)`` - Rename a session
 @Observable
 @MainActor
-class SessionsViewModel {
+class SessionsViewModel: BaseViewModel {
     /// Array of all loaded chat sessions.
     var sessions: [ChatSession] = []
     /// Total number of sessions available.
     var totalCount: Int = 0
-    /// Whether sessions are currently loading.
-    var isLoading = false
-    /// Current error, if any.
-    var error: Error?
     /// Whether more sessions are available for pagination.
     var hasMore = true
     /// Server-side search query.
@@ -60,8 +56,6 @@ class SessionsViewModel {
     private let pageSize = 50
     private var projectPages: [String: Int] = [:]
 
-    private var client: APIClient?
-
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
     private var searchCache: [(session: ChatSession, searchText: String)] = []
     /// Cached grouped sessions, rebuilt when filteredSessions changes
@@ -80,14 +74,6 @@ class SessionsViewModel {
     private var cachedGroupedByTimeSearchText: String = ""
     /// The session count used to invalidate time-grouped cache
     private var cachedGroupedByTimeSessionCount: Int = -1
-
-    init() {}
-
-    /// Configure the view model with an API client.
-    /// - Parameter client: The API client to use for requests
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Sessions filtered by the local search text using precomputed lowercase cache
     var filteredSessions: [ChatSession] {
