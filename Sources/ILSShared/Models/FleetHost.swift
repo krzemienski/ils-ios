@@ -1,11 +1,11 @@
 import Foundation
 
-/// Typealias for migration path — UI-facing code should use `HostProfile`.
-public typealias HostProfile = FleetHost
+/// Backward-compatible alias — new code should use `HostProfile`.
+public typealias FleetHost = HostProfile
 
 /// Represents a remote host in the ILS fleet for distributed Claude Code execution.
-public struct FleetHost: Codable, Identifiable, Hashable, Sendable {
-    /// Unique identifier for this fleet host.
+public struct HostProfile: Codable, Identifiable, Hashable, Sendable {
+    /// Unique identifier for this host profile.
     public let id: UUID
     /// Human-readable name for the host.
     public var name: String
@@ -28,7 +28,7 @@ public struct FleetHost: Codable, Identifiable, Hashable, Sendable {
     /// Operating system platform (e.g., "macOS", "Linux").
     public var platform: String?
 
-    /// Health status of a fleet host.
+    /// Health status of a host profile.
     public enum HealthStatus: String, Codable, Sendable {
         /// Host is healthy and fully operational.
         case healthy
@@ -54,7 +54,7 @@ public struct FleetHost: Codable, Identifiable, Hashable, Sendable {
         }
     }
 
-    /// Creates a new fleet host entry.
+    /// Creates a new host profile entry.
     /// - Parameters:
     ///   - id: Unique identifier (auto-generated if omitted).
     ///   - name: Display name. Must not be empty.
@@ -80,10 +80,10 @@ public struct FleetHost: Codable, Identifiable, Hashable, Sendable {
         lastHealthCheck: Date? = nil,
         platform: String? = nil
     ) {
-        precondition(!name.isEmpty, "FleetHost name must not be empty")
-        precondition(!host.isEmpty, "FleetHost host must not be empty")
-        precondition(port > 0 && port <= 65535, "FleetHost SSH port must be 1-65535")
-        precondition(backendPort > 0 && backendPort <= 65535, "FleetHost backend port must be 1-65535")
+        precondition(!name.isEmpty, "HostProfile name must not be empty")
+        precondition(!host.isEmpty, "HostProfile host must not be empty")
+        precondition(port > 0 && port <= 65535, "HostProfile SSH port must be 1-65535")
+        precondition(backendPort > 0 && backendPort <= 65535, "HostProfile backend port must be 1-65535")
         self.id = id
         self.name = name
         self.host = host

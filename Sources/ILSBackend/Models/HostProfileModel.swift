@@ -2,8 +2,9 @@ import Fluent
 import Vapor
 import ILSShared
 
-/// Fluent model for Fleet Host
-final class FleetHostModel: Model, Content, @unchecked Sendable {
+/// Fluent model for Host Profile
+final class HostProfileModel: Model, Content, @unchecked Sendable {
+    // DB table name — MUST remain "fleet_hosts" to preserve existing data. Do not rename.
     static let schema = "fleet_hosts"
 
     @ID(key: .id)
@@ -56,7 +57,7 @@ final class FleetHostModel: Model, Content, @unchecked Sendable {
         username: String? = nil,
         authMethod: String? = nil,
         isActive: Bool = false,
-        healthStatus: FleetHost.HealthStatus = .unknown
+        healthStatus: HostProfile.HealthStatus = .unknown
     ) {
         self.id = id
         self.name = name
@@ -69,9 +70,9 @@ final class FleetHostModel: Model, Content, @unchecked Sendable {
         self.healthStatus = healthStatus.rawValue
     }
 
-    /// Convert to shared FleetHost type
-    func toShared() -> FleetHost {
-        FleetHost(
+    /// Convert to shared HostProfile type
+    func toShared() -> HostProfile {
+        HostProfile(
             id: id ?? UUID(),
             name: name,
             host: host,
@@ -80,7 +81,7 @@ final class FleetHostModel: Model, Content, @unchecked Sendable {
             username: username,
             authMethod: authMethod.flatMap { ServerConnection.AuthMethod(rawValue: $0) },
             isActive: isActive,
-            healthStatus: FleetHost.HealthStatus(rawValue: healthStatus) ?? .unknown,
+            healthStatus: HostProfile.HealthStatus(rawValue: healthStatus) ?? .unknown,
             lastHealthCheck: lastHealthCheck,
             platform: platform
         )

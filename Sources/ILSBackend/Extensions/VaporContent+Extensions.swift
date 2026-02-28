@@ -197,11 +197,11 @@ extension HooksConfig: Content {}
 extension HookDefinition: Content {}
 extension ConfigInfo: Content {}
 extension CustomTheme: Content {}
-extension FleetHost: Content {}
-extension FleetHost.HealthStatus: Content {}
-extension FleetListResponse: Content {}
-extension FleetHealthResponse: Content {}
-extension RegisterFleetHostRequest: Content {}
+extension HostProfile: Content {}
+extension HostProfile.HealthStatus: Content {}
+extension HostProfileListResponse: Content {}
+extension HostProfileHealthResponse: Content {}
+extension RegisterHostProfileRequest: Content {}
 extension ColorTokens: Content {}
 extension TypographyTokens: Content {}
 extension SpacingTokens: Content {}

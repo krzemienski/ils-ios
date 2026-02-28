@@ -3,18 +3,29 @@ import Fluent
 import ILSShared
 import Foundation
 
-/// Controller for fleet host management operations.
+/// Controller for host profile management operations.
 ///
-/// Routes match what FleetViewModel.swift expects:
-/// - `GET /fleet`: List all fleet hosts (returns FleetListResponse)
-/// - `POST /fleet/register`: Register a new fleet host
-/// - `POST /fleet/:id/activate`: Set a host as active
-/// - `DELETE /fleet/:id`: Remove a fleet host
-/// - `GET /fleet/:id/health`: Get health status for a host
-struct FleetController: RouteCollection {
+/// Routes match what HostProfilesViewModel.swift expects:
+/// - `GET /host-profiles`: List all host profiles (returns HostProfileListResponse)
+/// - `POST /host-profiles/register`: Register a new host profile
+/// - `POST /host-profiles/:id/activate`: Set a host as active
+/// - `DELETE /host-profiles/:id`: Remove a host profile
+/// - `GET /host-profiles/:id/health`: Get health status for a host
+///
+/// Backward-compatible aliases (satisfy FOUND-01: old /fleet/* routes still work):
+/// - `GET /fleet`, `POST /fleet/register`, etc. — same handlers
+struct HostProfileController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-        let fleet = routes.grouped("fleet")
+        // New canonical routes
+        let hostProfiles = routes.grouped("host-profiles")
+        hostProfiles.get(use: index)
+        hostProfiles.post("register", use: register)
+        hostProfiles.post(":id", "activate", use: activate)
+        hostProfiles.delete(":id", use: delete)
+        hostProfiles.get(":id", "health", use: health)
 
+        // Backward-compatible aliases (satisfy FOUND-01: old /fleet/* routes still work)
+        let fleet = routes.grouped("fleet")
         fleet.get(use: index)
         fleet.post("register", use: register)
         fleet.post(":id", "activate", use: activate)
@@ -22,10 +33,10 @@ struct FleetController: RouteCollection {
         fleet.get(":id", "health", use: health)
     }
 
-    /// List all fleet hosts with the active host ID.
+    /// List all host profiles with the active host ID.
     @Sendable
-    func index(req: Request) async throws -> APIResponse<FleetListResponse> {
-        let hosts = try await FleetHostModel.query(on: req.db)
+    func index(req: Request) async throws -> APIResponse<HostProfileListResponse> {
+        let hosts = try await HostProfileModel.query(on: req.db)
             .sort(\.$isActive, .descending)
             .sort(\.$name, .ascending)
             .all()
@@ -35,19 +46,19 @@ struct FleetController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: FleetListResponse(hosts: shared, activeHostId: activeId)
+            data: HostProfileListResponse(hosts: shared, activeHostId: activeId)
         )
     }
 
-    /// Register a new fleet host.
+    /// Register a new host profile.
     @Sendable
-    func register(req: Request) async throws -> APIResponse<FleetHost> {
-        let input = try req.content.decode(RegisterFleetHostRequest.self)
+    func register(req: Request) async throws -> APIResponse<HostProfile> {
+        let input = try req.content.decode(RegisterHostProfileRequest.self)
 
         try PathSanitizer.validateStringLength(input.name, maxLength: 255, fieldName: "name")
         try PathSanitizer.validateStringLength(input.host, maxLength: 255, fieldName: "host")
 
-        let model = FleetHostModel(
+        let model = HostProfileModel(
             name: input.name,
             host: input.host,
             port: input.port,
@@ -68,18 +79,18 @@ struct FleetController: RouteCollection {
 
     /// Set a host as active (deactivate all others).
     @Sendable
-    func activate(req: Request) async throws -> APIResponse<FleetHost> {
+    func activate(req: Request) async throws -> APIResponse<HostProfile> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
 
-        guard let host = try await FleetHostModel.find(id, on: req.db) else {
+        guard let host = try await HostProfileModel.find(id, on: req.db) else {
             throw Abort(.notFound, reason: "Host not found")
         }
 
         // Wrap activation in a transaction so deactivate-all + activate is atomic
         try await req.db.transaction { db in
-            let allHosts = try await FleetHostModel.query(on: db).all()
+            let allHosts = try await HostProfileModel.query(on: db).all()
             for h in allHosts {
                 if h.isActive {
                     h.isActive = false
@@ -97,14 +108,14 @@ struct FleetController: RouteCollection {
         )
     }
 
-    /// Delete a fleet host by ID.
+    /// Delete a host profile by ID.
     @Sendable
     func delete(req: Request) async throws -> APIResponse<DeletedResponse> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
 
-        guard let host = try await FleetHostModel.find(id, on: req.db) else {
+        guard let host = try await HostProfileModel.find(id, on: req.db) else {
             throw Abort(.notFound, reason: "Host not found")
         }
 
@@ -116,17 +127,17 @@ struct FleetController: RouteCollection {
         )
     }
 
-    /// Get health status for a specific host.
+    /// Get health status for a specific host profile.
     ///
     /// Performs a real HTTP GET to `http(s)://{host}:{backendPort}/health` to verify
     /// the remote backend is reachable. Falls back to `.unknown` on timeout or error.
     @Sendable
-    func health(req: Request) async throws -> APIResponse<FleetHealthResponse> {
+    func health(req: Request) async throws -> APIResponse<HostProfileHealthResponse> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid host ID")
         }
 
-        guard let host = try await FleetHostModel.find(id, on: req.db) else {
+        guard let host = try await HostProfileModel.find(id, on: req.db) else {
             throw Abort(.notFound, reason: "Host not found")
         }
 
@@ -135,7 +146,7 @@ struct FleetController: RouteCollection {
         let scheme = backendPort == 443 ? "https" : "http"
         let healthURL = "\(scheme)://\(host.host):\(backendPort)/health"
 
-        var healthStatus: FleetHost.HealthStatus = .unknown
+        var healthStatus: HostProfile.HealthStatus = .unknown
         var backendVersion = "unknown"
         var claudeAvailable = false
 
@@ -153,7 +164,7 @@ struct FleetController: RouteCollection {
                     do {
                         healthBody = try JSONDecoder().decode(HealthCheckBody.self, from: data)
                     } catch {
-                        req.logger.debug("Fleet health response not JSON-decodable: \(error)")
+                        req.logger.debug("Host profile health response not JSON-decodable: \(error)")
                         healthBody = nil
                     }
                     if let healthBody = healthBody {
@@ -176,7 +187,7 @@ struct FleetController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: FleetHealthResponse(
+            data: HostProfileHealthResponse(
                 hostId: host.id ?? UUID(),
                 status: healthStatus,
                 backendVersion: backendVersion,

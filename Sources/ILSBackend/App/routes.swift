@@ -25,7 +25,7 @@ func routes(_ app: Application) throws {
     let admin = api.grouped(AdminMiddleware())
     try admin.register(collection: ConfigController(fileSystem: fileSystem))
     try admin.register(collection: SystemController())
-    try admin.register(collection: FleetController())
+    try admin.register(collection: HostProfileController())
     try admin.register(collection: TunnelController())
     try admin.register(collection: DataErasureController())
 }

@@ -40,16 +40,16 @@ struct DataErasureController: RouteCollection {
             counts.themesDeleted = try await ThemeModel.query(on: db).count()
             try await ThemeModel.query(on: db).delete()
 
-            // 5. Fleet hosts (no FK dependencies)
-            counts.fleetHostsDeleted = try await FleetHostModel.query(on: db).count()
-            try await FleetHostModel.query(on: db).delete()
+            // 5. Host profiles (no FK dependencies)
+            counts.fleetHostsDeleted = try await HostProfileModel.query(on: db).count()
+            try await HostProfileModel.query(on: db).delete()
 
             // 6. Cached results (no FK dependencies)
             counts.cacheEntriesDeleted = try await CachedResult.query(on: db).count()
             try await CachedResult.query(on: db).delete()
         }
 
-        req.logger.info("GDPR data erasure complete: \(counts.messagesDeleted) messages, \(counts.sessionsDeleted) sessions, \(counts.projectsDeleted) projects, \(counts.themesDeleted) themes, \(counts.fleetHostsDeleted) fleet hosts, \(counts.cacheEntriesDeleted) cache entries deleted")
+        req.logger.info("GDPR data erasure complete: \(counts.messagesDeleted) messages, \(counts.sessionsDeleted) sessions, \(counts.projectsDeleted) projects, \(counts.themesDeleted) themes, \(counts.fleetHostsDeleted) host profiles, \(counts.cacheEntriesDeleted) cache entries deleted")
 
         let body = APIResponse(success: true, data: counts)
         let response = Response(status: .ok)
