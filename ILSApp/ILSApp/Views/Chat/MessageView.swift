@@ -24,7 +24,6 @@ import ILSShared
 /// - `ThinkingView` - Expandable card for the extended thinking block, if present
 struct MessageView: View {
     let message: ChatMessage
-    @State private var showCopyConfirmation = false
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     // Date formatters centralized in DateFormatters.swift
@@ -38,8 +37,7 @@ struct MessageView: View {
                     if !message.text.isEmpty {
                         MessageContentView(
                             text: message.text,
-                            isUser: message.isUser,
-                            showCopyConfirmation: $showCopyConfirmation
+                            isUser: message.isUser
                         )
                     }
 
@@ -99,7 +97,6 @@ struct MessageView: View {
                 if !message.isUser { Spacer() }
             }
         }
-        .toast(isPresented: $showCopyConfirmation, message: "Copied")
     }
 
     /// Format timestamp based on whether it's from today or an earlier date
@@ -325,14 +322,10 @@ struct ThinkingView: View {
 /// ### Input Properties
 /// - ``text`` - The raw message string to parse and render
 /// - ``isUser`` - Controls the accessibility identifier applied to plain-text segments
-///
-/// ### Bindings
-/// - ``showCopyConfirmation`` - Toggled to `true` when the user copies a text segment;
-///   the parent ``MessageView`` owns the confirmation badge display logic
 struct MessageContentView: View {
     let text: String
     let isUser: Bool
-    @Binding var showCopyConfirmation: Bool
+    @State private var showCopyConfirmation = false
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     /// Cached parsed segments — only recomputed when `text` changes,
@@ -384,6 +377,7 @@ struct MessageContentView: View {
                 }
             }
         }
+        .toast(isPresented: $showCopyConfirmation, message: "Copied")
         .task(id: text) {
             segments = MarkdownParser.parse(text)
         }
