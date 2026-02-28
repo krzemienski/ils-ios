@@ -32,6 +32,7 @@ struct SkillsController: RouteCollection {
 
         skills.get(use: list)
         skills.get("search", use: search)
+        skills.get("preview", use: preview)
         skills.post(use: create)
         skills.post("install", use: install)
         skills.get(":name", use: get)
@@ -228,6 +229,47 @@ struct SkillsController: RouteCollection {
             success: true,
             data: ListResponse(items: results)
         )
+    }
+
+    /// Preview a GitHub skill repository showing README and file tree.
+    ///
+    /// Query parameters:
+    /// - `repo`: Repository in "owner/repo" format (required)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with GitHubRepoPreview
+    @Sendable
+    func preview(req: Request) async throws -> APIResponse<GitHubRepoPreview> {
+        guard let repoParam = req.query[String.self, at: "repo"], !repoParam.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'repo' is required in 'owner/repo' format")
+        }
+
+        let parts = repoParam.split(separator: "/")
+        guard parts.count == 2 else {
+            throw Abort(.badRequest, reason: "Repository must be in 'owner/repo' format")
+        }
+        let owner = String(parts[0])
+        let repo = String(parts[1])
+
+        let github = req.application.githubService
+
+        // Fetch README and file tree concurrently
+        async let readmeResult = github.fetchReadme(owner: owner, repo: repo)
+        async let filesResult = github.fetchRepoContents(owner: owner, repo: repo)
+
+        let readme = await readmeResult
+        let files = await filesResult
+
+        let previewData = GitHubRepoPreview(
+            repository: repoParam,
+            name: repo,
+            description: nil,
+            stars: 0,
+            readme: readme,
+            files: files
+        )
+
+        return APIResponse(success: true, data: previewData)
     }
 
     /// Install a skill from a GitHub repository.

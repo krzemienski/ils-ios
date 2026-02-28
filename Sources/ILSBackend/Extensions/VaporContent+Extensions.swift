@@ -174,6 +174,8 @@ extension ProjectGroupInfo: Content {}
 extension ServerStatus: Content {}
 extension Marketplace: Content {}
 extension GitHubSearchResult: Content {}
+extension GitHubRepoPreview: Content {}
+extension GitHubFileEntry: Content {}
 
 // MARK: - Model Types
 extension Project: Content {}
