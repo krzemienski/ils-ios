@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Comprehensive Spec Compliance Audit & Remediation
-status: unknown
-last_updated: "2026-02-27T21:44:15.880Z"
+status: in-progress
+last_updated: "2026-02-28T00:50:56Z"
 progress:
   total_phases: 44
   completed_phases: 31
   total_plans: 91
-  completed_plans: 84
+  completed_plans: 85
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v4.0 Phase 46 COMPLETE, ready for Phase 47
+**Current focus:** v4.0 Phase 48 in progress -- Comprehensive Audit & Verification
 
 ## Current Position
 
-Phase: 46 COMPLETE, ready for Phase 47
-Plan: All plans complete (46-01 AdminMiddleware + GDPR erasure, 46-02 StoreKit trial + deletion UI, 46-03 verification 5/5 PASS)
-Status: Ready to plan Phase 47
-Last activity: 2026-02-27 -- Phase 46 complete. All 5 SEC requirements closed (SEC-01..SEC-05)
+Phase: 48 -- Comprehensive Audit & Verification
+Plan: 48-02 COMPLETE (iPad Visual + Backend cURL Audit), 48-01 in progress (iPhone audit)
+Status: In progress
+Last activity: 2026-02-28 -- Plan 48-02 complete. 12 iPad screenshots, 41 backend cURL transcripts, AUDIT-01/02/03 PASS.
 
-Progress: [████████░░] 67%
+Progress: [█████████░] 93%
 
 ## Previous Milestones
 
@@ -47,6 +47,8 @@ Progress: [████████░░] 67%
 - [v4.0]: FIX_PROTOCOL mandatory -- every fix through axiom skill -> axiom:ask -> implement -> evidence
 - [v4.0]: AUDIT phase (48) comes AFTER all remediation phases (43-47)
 - [v4.0]: iPad validation (deferred from v3.5) covered in AUDIT-01/AUDIT-02
+- [48-02]: iPad screenshot method: simctl io screenshot works AFTER Window > Fit Screen (screencapture -l fails)
+- [48-02]: Backend has 3 response patterns: APIResponse wrapper (CRUD), raw JSON (operational), Vapor error format (errors)
 
 ### Carried Forward (from v3.5)
 
@@ -65,7 +67,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Phase 44 complete. 8/8 PLAT requirements PASS. Ready to plan Phase 45.
+Last session: 2026-02-28
+Stopped at: Completed 48-02-PLAN.md (iPad Visual + Backend cURL Audit)
 Resume file: None
-Key artifacts: .planning/ROADMAP.md (v4.0 phases 43-48), .planning/REQUIREMENTS.md (34 requirements), .planning/phases/44-platform-performance-compliance/44-03-SUMMARY.md (verification)
+Key artifacts: .planning/phases/48-comprehensive-audit-verification/48-02-SUMMARY.md, /tmp/v4.0-audit/ipad/ (12 screenshots), /tmp/v4.0-audit/backend/ (41 transcripts)
