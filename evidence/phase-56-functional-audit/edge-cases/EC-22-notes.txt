@@ -1,0 +1,2 @@
+Invalid deep link ils://nonexistent did not crash. App stayed on previous screen.
+STATUS: PASS

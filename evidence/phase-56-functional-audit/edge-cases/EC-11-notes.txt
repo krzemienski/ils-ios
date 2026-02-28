@@ -1,0 +1,3 @@
+Navigated to sessions then immediately to settings. Settings rendered correctly.
+Previous Task cancelled via Swift structured concurrency.
+STATUS: PASS

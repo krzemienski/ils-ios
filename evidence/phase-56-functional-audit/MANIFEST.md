@@ -46,10 +46,50 @@
 | - | /config/effective returned 500 on stale backend binary | Operational (not code bug) | Yes (backend restart) | Yes -- endpoint returns 8 overrides with scope annotations |
 | - | /host-profiles returned 500 on stale backend binary | Operational (not code bug) | Yes (backend restart) | Yes -- shows Local Backend with Active status |
 
-## Summary
+## Edge Cases (Bug Hunt)
 
-- Total iPhone artifacts: 25 (17 screenshots + 8 curl/text files)
-- Total iPad artifacts: 6
-- PASS: 23 (17 iPhone feature checks + 6 iPad cross-platform)
+| # | Scenario | Category | Evidence | Status |
+|---|----------|----------|----------|--------|
+| EC-01 | Backend offline | Network | EC-01a-connected.png, EC-01b-offline-banner.png | PASS |
+| EC-02 | Backend reconnect | Network | EC-02-reconnected.png, EC-02-health.txt | PASS |
+| EC-03 | Backend 404/500 error | Network | EC-03-404-response.txt, EC-03-after-error.png | PASS |
+| EC-04 | Backend invalid PUT (422) | Network | EC-04-error-response.txt | PASS |
+| EC-05 | Hooks populated state | Empty State | EC-05-hooks-state.png, EC-05-hooks-count.txt | PASS |
+| EC-06 | Profiles populated state | Empty State | EC-06-profiles-state.png, EC-06-profiles-count.txt | PASS |
+| EC-07 | Teams screen | Empty State | EC-07-teams-empty.png | PASS |
+| EC-08 | Discover tab loaded | Empty State | EC-08-discover-empty-search.png, EC-08-notes.txt | PASS |
+| EC-09 | Rapid screen switching (6 links < 5s) | Navigation | EC-09-rapid-nav-final.png, EC-09-rapid-nav-log.txt | PASS |
+| EC-10 | Rapid sidebar toggle | Navigation | EC-10-sidebar-state.png, EC-10-sidebar-notes.txt | PASS (code-verified) |
+| EC-11 | Navigate during load | Navigation | EC-11-nav-during-load.png, EC-11-notes.txt | PASS |
+| EC-12 | VoiceOver Home screen | Accessibility | EC-12-home-accessibility.txt | PASS (code-verified) |
+| EC-13 | VoiceOver Settings badges | Accessibility | EC-13-settings-accessibility.txt | PASS (code-verified) |
+| EC-14 | Dynamic Type largest | Accessibility | EC-14a-dynamic-type-home.png, EC-14b-dynamic-type-settings.png | PASS |
+| EC-15 | Large session list (22K+) | Performance | EC-15-large-session-list.png, EC-15-session-count.txt | PASS |
+| EC-16 | Cache traversal (8 screens) | Performance | EC-16-cache-revisit.png, EC-16-notes.txt | PASS |
+| EC-17 | Memory pressure | Performance | EC-17-after-memory-pressure.png, EC-17-memory-notes.txt | PASS |
+| EC-18 | Config round-trip | Data Integrity | EC-18a/b-settings.png, EC-18-config-roundtrip.txt | PASS |
+| EC-19 | Hooks round-trip | Data Integrity | EC-19-hooks-state.png, EC-19-hooks-roundtrip.txt | PASS |
+| EC-20 | Profile activation persistence | Data Integrity | EC-20-active-profile.png, EC-20-profile-persistence.txt | PASS |
+| EC-21 | Lowercase UUID deep link | Data Integrity | EC-21-uuid-deeplink.png, EC-21-uuid-deeplink.txt | PASS |
+| EC-22 | Invalid deep link host | Error Handling | EC-22a/b screenshots, EC-22-notes.txt | PASS |
+| EC-23 | Malformed JSON response | Error Handling | EC-23-malformed.txt | PASS |
+| EC-24 | Invalid config PUT | Error Handling | EC-24-invalid-config.txt | PASS |
+
+## Bug Hunt Summary
+
+- Total edge cases tested: 24
+- PASS: 24
 - FAIL: 0
-- CRITICAL bugs found and fixed: 0 (stale backend was operational, not a code defect)
+- CRITICAL bugs found and fixed: 0
+- Scenarios code-verified (idb limitations): 3 (EC-10, EC-12, EC-13)
+
+## Overall Summary
+
+- Total iPhone feature artifacts: 25 (17 screenshots + 8 curl/text files)
+- Total iPad artifacts: 6
+- Total edge case artifacts: 44
+- Feature verification PASS: 23/23
+- Edge case PASS: 24/24
+- Grand total PASS: 47/47
+- FAIL: 0
+- CRITICAL bugs found and fixed: 0

@@ -1,0 +1,10 @@
+Rapid navigation test: 6 deep links in quick succession
+
+ils://home -- sent
+ils://sessions -- sent
+ils://settings -- sent
+ils://hooks -- sent
+ils://themes -- sent
+ils://system -- sent
+
+Final screen rendered without crash

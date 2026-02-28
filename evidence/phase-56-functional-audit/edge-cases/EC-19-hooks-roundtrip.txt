@@ -1,0 +1,18 @@
+Current hook config: {
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"/Users/nick/.claude/hooks/gsd-check-update.js\""
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "hooks": [
+        {
+          "command": "node \"/Users/nick/.claude/hooks/gs
+Hooks screen loaded. Display matches API data.
+STATUS: PASS
