@@ -10,6 +10,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case home = "Home"
     case system = "System Monitor"
     case browser = "Browse"
+    case analytics = "Analytics"
     case teams = "Agent Teams"
     case hostProfiles = "Host Profiles"
     case themes = "Themes"
@@ -23,6 +24,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .home: return "house.fill"
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
+        case .analytics: return "chart.bar.fill"
         case .teams: return "person.3.fill"
         case .hostProfiles: return "desktopcomputer"
         case .themes: return "paintpalette.fill"
@@ -36,6 +38,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .home: return .home
         case .system: return .system
         case .browser: return .browser
+        case .analytics: return .analytics
         case .teams: return .teams
         case .hostProfiles: return .hostProfiles
         case .themes: return .themes
@@ -624,7 +627,7 @@ struct MacContentView: View {
         case .hostProfiles: selectedSection = .hostProfiles
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
-        case .analytics: selectedSection = .home
+        case .analytics: selectedSection = .analytics
         case .chat: selectedSection = .home
         }
         activeScreen = intent

@@ -38,6 +38,8 @@ struct SettingsView: View {
     @State private var colorSchemePreference: String = "system"
     @State private var showDeleteConfirmation: Bool = false
     // isDeleting and deleteResult moved to SettingsViewModel
+    /// Whether analytics collection is enabled; persisted in UserDefaults.
+    @AppStorage("analyticsEnabled") private var analyticsEnabled = true
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -55,6 +57,7 @@ struct SettingsView: View {
                 statisticsSection
 
                 dataPrivacySection
+                analyticsSection
 
                 SettingsAboutSection(
                     viewModel: viewModel,
@@ -190,6 +193,43 @@ struct SettingsView: View {
     }
 
     // performDataDeletion() moved to SettingsViewModel
+
+    // MARK: - Analytics Section
+
+    /// Analytics privacy controls section allowing the user to enable or disable
+    /// local analytics data collection.
+    ///
+    /// The toggle is bound directly to `@AppStorage("analyticsEnabled")`, the same
+    /// key read by ``AnalyticsViewModel`` to gate all data loading and export.
+    /// Disabling the toggle immediately stops new analytics loads and causes
+    /// ``AnalyticsView`` to show an informational disabled-state banner.
+    private var analyticsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Analytics")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Toggle(isOn: $analyticsEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Enable Analytics Collection")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("Analytics data is processed locally on your device and never leaves the app.")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                .tint(theme.accent)
+                .accessibilityLabel("Enable Analytics Collection")
+                .accessibilityHint("Toggle to control whether analytics data is collected and displayed")
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
+    }
 
     // MARK: - Server URL Management
 

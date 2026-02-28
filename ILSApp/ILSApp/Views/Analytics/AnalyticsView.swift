@@ -33,6 +33,8 @@ struct AnalyticsView: View {
     @State private var exportJSON: String?
     /// Whether an export fetch is currently in flight; shows a spinner in the toolbar.
     @State private var isExporting = false
+    /// Mirrors the same AppStorage key used by AnalyticsViewModel to gate loading.
+    @AppStorage("analyticsEnabled") private var analyticsEnabled = true
 
     var body: some View {
         ScrollView {
@@ -40,7 +42,10 @@ struct AnalyticsView: View {
                 // Period Picker
                 periodPicker
 
-                if viewModel.isLoading && viewModel.summary == nil {
+                if !analyticsEnabled {
+                    // Analytics disabled — show informational banner
+                    analyticsDisabledBanner
+                } else if viewModel.isLoading && viewModel.summary == nil {
                     // Show shimmer skeleton only on the first load (no cached data yet)
                     loadingSkeleton
                 } else {
@@ -54,6 +59,7 @@ struct AnalyticsView: View {
                     ActivityTimelineView(data: viewModel.activityTimeline)
                     SessionMetricsView(metrics: viewModel.sessionMetrics)
                     SkillUsageView(analytics: viewModel.skillAnalytics)
+                    FileTypeBreakdownView()
                 }
             }
             .padding(.horizontal, theme.spacingMD)
@@ -232,6 +238,49 @@ struct AnalyticsView: View {
             )
             .accessibilityElement(children: .combine)
         }
+    }
+
+    // MARK: - Analytics Disabled Banner
+
+    /// Informational banner shown when the user has disabled analytics collection.
+    ///
+    /// Instructs the user to re-enable analytics via the Settings toggle and provides
+    /// a direct navigation link to the Settings screen via ``AppState/navigationIntent``.
+    private var analyticsDisabledBanner: some View {
+        VStack(spacing: theme.spacingMD) {
+            Image(systemName: "chart.bar.xmark")
+                .font(.system(size: 48, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+
+            Text("Analytics Collection Disabled")
+                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+
+            Text("Analytics data collection is turned off. Enable it in Settings to view activity timelines, session metrics, and skill usage.")
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                appState.navigationIntent = .settings
+            } label: {
+                HStack(spacing: theme.spacingXS) {
+                    Image(systemName: "gearshape.fill")
+                    Text("Open Settings")
+                }
+                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textOnAccent)
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM)
+                .background(theme.accent)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+            .accessibilityLabel("Open Settings to enable analytics")
+        }
+        .frame(maxWidth: .infinity)
+        .padding(theme.spacingLG)
+        .modifier(GlassCard())
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Loading Skeleton
