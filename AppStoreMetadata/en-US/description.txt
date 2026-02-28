@@ -15,6 +15,17 @@ KEY FEATURES
 • Custom Themes — Choose from 12 built-in themes or create your own
 • Cloudflare Tunnel — Securely expose your local backend for remote access with quick tunnels or custom domains
 
+PREMIUM SUBSCRIPTION
+
+Unlock the full ILS experience with ILS Premium:
+
+• All Themes — Access all 12 built-in themes plus the ability to create and save custom themes
+• Export & Share — Export chat sessions and conversation history in Markdown, JSON, or plain text
+• Advanced Monitoring — Enhanced system metrics with historical charts and alerting thresholds
+• Priority Features — Early access to new features as they ship
+
+ILS Premium is available as a monthly or annual auto-renewing subscription via In-App Purchase. A free tier is available with core features at no cost. Subscription management and cancellation available through your Apple ID settings.
+
 ARCHITECTURE
 
 ILS connects to a lightweight Swift backend server that runs on your Mac alongside Claude Code. The backend manages sessions, discovers projects/skills/plugins from your local Claude Code installation, and streams AI responses via Server-Sent Events.
