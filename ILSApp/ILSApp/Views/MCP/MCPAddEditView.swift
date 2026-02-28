@@ -422,6 +422,7 @@ struct MCPAddEditView: View {
         case .user: return "Available across all your projects (~/.claude/)"
         case .project: return "Scoped to the current project's configuration file"
         case .local: return "Scoped to the current working directory only"
+        case .managed: return "Enterprise/system-wide managed configuration"
         }
     }
 
