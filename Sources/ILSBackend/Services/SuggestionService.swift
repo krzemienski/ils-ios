@@ -112,7 +112,7 @@ struct SuggestionService {
 
         for session in sessions {
             // Build a combined token set from session name, firstPrompt, and project name
-            var sessionText = [session.name, session.firstPrompt, session.projectName]
+            let sessionText = [session.name, session.firstPrompt, session.projectName]
                 .compactMap { $0 }
                 .joined(separator: " ")
             let sessionTokens = tokenize(sessionText)
