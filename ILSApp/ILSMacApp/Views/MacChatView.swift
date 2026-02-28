@@ -249,9 +249,9 @@ struct MacChatView: View {
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
-            StreamingStatusBanner(
-                statusText: statusText,
-                connectionState: viewModel.connectionState,
+            AsyncOperationBanner(
+                message: statusText,
+                state: viewModel.connectionState.asAsyncOperationState,
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
             )

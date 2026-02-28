@@ -12,6 +12,8 @@ final class HostProfilesViewModel {
     /// Name of the most recently activated host, used to trigger the success banner.
     /// Set by activate() and cleared by the view after the banner auto-dismisses.
     var lastActivatedHostName: String?
+    var operationState: AsyncOperationState?
+    var operationMessage: String?
 
     private let appState: AppState
     @ObservationIgnored private var healthTask: Task<Void, Never>?
@@ -40,6 +42,12 @@ final class HostProfilesViewModel {
     }
 
     func register(name: String, host: String, port: Int, backendPort: Int, username: String?, authMethod: String?, credential: String?) async {
+        operationState = .connecting
+        operationMessage = "Registering host..."
+        defer {
+            operationState = nil
+            operationMessage = nil
+        }
         let request = RegisterHostProfileRequest(
             name: name, host: host, port: port, backendPort: backendPort,
             username: username, authMethod: authMethod, credential: credential
@@ -57,6 +65,12 @@ final class HostProfilesViewModel {
         Task { [weak self] in
             guard let self else { return }
             guard let host = hosts.first(where: { $0.id == id }) else { return }
+            operationState = .connecting
+            operationMessage = "Activating host..."
+            defer {
+                operationState = nil
+                operationMessage = nil
+            }
             do {
                 let _: HostProfile = try await appState.apiClient.post("/host-profiles/\(id)/activate", body: EmptyBody())
                 activeHostId = id

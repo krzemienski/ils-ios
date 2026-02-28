@@ -44,7 +44,9 @@
 		0EBC9B472715CF5DCC8EDDF4 /* SkeletonRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF8AAD2FE6EFAF610173E82A /* SkeletonRow.swift */; };
 		0EFDA4E7DCAE34C2C86A459A /* PollingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE82C913049A620A077F141 /* PollingManager.swift */; };
 		131E72EAFA534A0191854177 /* ConnectionBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */; };
+		DC39DC41155248D9907904EA /* AsyncOperationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9B5E6B89F44F28BF3AE9AA /* AsyncOperationBanner.swift */; };
 		139C4F2D9EC4EC2D64965BF0 /* ConnectionBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */; };
+		E14B4F1B6A04418FB87A905F /* AsyncOperationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9B5E6B89F44F28BF3AE9AA /* AsyncOperationBanner.swift */; };
 		13CE47CFDFAC732CFBB9EDC1 /* SkillDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0617F20B854A6A31E51BE659 /* SkillDetailView.swift */; };
 		140F5D17040FBC8C181E4FF2 /* SettingsAboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */; };
 		14CA4BF383D513A6B6617243 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D2ABD33FCEA2A3BF7E58F8E /* WindowManager.swift */; };
@@ -549,6 +551,7 @@
 		4DE91C54AFE11600E242220A /* ThemeMeshGradientSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMeshGradientSection.swift; sourceTree = "<group>"; };
 		4DEE8624B9BCC400474F4F46 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
+		4E9B5E6B89F44F28BF3AE9AA /* AsyncOperationBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperationBanner.swift; sourceTree = "<group>"; };
 		5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDashboardView.swift; sourceTree = "<group>"; };
 		50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
 		5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestModal.swift; sourceTree = "<group>"; };
@@ -922,6 +925,7 @@
 			isa = PBXGroup;
 			children = (
 				C28BA8681764816EC21CCA1E /* AccentButton.swift */,
+				4E9B5E6B89F44F28BF3AE9AA /* AsyncOperationBanner.swift */,
 				4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */,
 				E2E8702D461A0CF80E44F404 /* ConnectionSteps.swift */,
 				DF90E9C7F217ECD6D3B94F64 /* EmptyEntityState.swift */,
@@ -1671,6 +1675,7 @@
 				42C80AD52ED864B490D75042 /* CommandPaletteView.swift in Sources */,
 				AE9F57A8598D9A28E1C940DD /* ConfigEditorView.swift in Sources */,
 				D18F6B5DB10E4016BC0C8632 /* ConfigEditorViewModel.swift in Sources */,
+				E14B4F1B6A04418FB87A905F /* AsyncOperationBanner.swift in Sources */,
 				139C4F2D9EC4EC2D64965BF0 /* ConnectionBanner.swift in Sources */,
 				5DE666802AC17A09CD82E7B4 /* ConnectionManager.swift in Sources */,
 				AC29BDF0E2C0CAFC95C70486 /* ConnectionMode.swift in Sources */,
@@ -1878,6 +1883,7 @@
 				A2CD3C1A6CDF29B50C78F3F5 /* CommandPaletteView.swift in Sources */,
 				C0AC294D7A88CB4D0A765EB6 /* ConfigEditorView.swift in Sources */,
 				541CF79CF153E500D4C7A1C7 /* ConfigEditorViewModel.swift in Sources */,
+				DC39DC41155248D9907904EA /* AsyncOperationBanner.swift in Sources */,
 				131E72EAFA534A0191854177 /* ConnectionBanner.swift in Sources */,
 				E7E52735EF407D3032DE9FDE /* ConnectionManager.swift in Sources */,
 				28CA248D91D2DCEDBC2EEB29 /* ConnectionMode.swift in Sources */,
