@@ -344,19 +344,34 @@ struct BrowserView: View {
             )
         } else {
             ForEach(items) { skill in
-                NavigationLink {
-                    SkillDetailView(skill: skill)
-                } label: {
-                    browserRow(
-                        name: skill.name,
-                        subtitle: skill.description ?? "No description",
-                        status: skill.isActive ? "Active" : "Inactive",
-                        statusColor: skill.isActive ? theme.success : theme.textTertiary,
-                        entityColor: theme.entitySkill,
-                        badge: skill.tags.first
-                    )
+                HStack(spacing: 0) {
+                    NavigationLink {
+                        SkillDetailView(skill: skill)
+                    } label: {
+                        browserRow(
+                            name: skill.name,
+                            subtitle: skill.description ?? "No description",
+                            status: skill.isActive ? "Active" : "Inactive",
+                            statusColor: skill.isActive ? theme.success : theme.textTertiary,
+                            entityColor: theme.entitySkill,
+                            badge: skill.tags.first
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    // Visible toggle button for active/inactive status
+                    Button {
+                        Task { await skillsVM.toggleSkillActive(skill) }
+                    } label: {
+                        Image(systemName: skill.isActive ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(skill.isActive ? theme.success : theme.textTertiary)
+                            .font(.system(size: 22))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(skill.isActive ? "Disable \(skill.name)" : "Enable \(skill.name)")
                 }
-                .buttonStyle(.plain)
                 .contextMenu {
                     Button {
                         Task { await skillsVM.toggleSkillActive(skill) }
@@ -842,8 +857,20 @@ struct BrowserView: View {
 
     private func pluginRow(_ plugin: Plugin) -> some View {
         let isInstalling = pluginsVM.installingPlugins.contains(plugin.name)
-        return PluginRowView(plugin: plugin, isInstalling: isInstalling)
-            .equatable()
+        return PluginRowView(
+            plugin: plugin,
+            isInstalling: isInstalling,
+            onToggle: {
+                Task {
+                    if plugin.isEnabled {
+                        await pluginsVM.disablePlugin(plugin)
+                    } else {
+                        await pluginsVM.enablePlugin(plugin)
+                    }
+                }
+            }
+        )
+        .equatable()
     }
 
     // MARK: - Shared Row (delegates to BrowserRowView)
@@ -1003,6 +1030,7 @@ struct BrowserRowView: View, Equatable {
 struct PluginRowView: View, Equatable {
     let plugin: Plugin
     let isInstalling: Bool
+    var onToggle: (() -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
@@ -1081,9 +1109,24 @@ struct PluginRowView: View, Equatable {
                 }
             }
 
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
+            // Visible toggle button
+            if !isInstalling {
+                Button {
+                    onToggle?()
+                } label: {
+                    Image(systemName: plugin.isEnabled ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(plugin.isEnabled ? "Disable \(plugin.name)" : "Enable \(plugin.name)")
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
         }
         .padding(theme.spacingMD)
         .modifier(GlassCard())
