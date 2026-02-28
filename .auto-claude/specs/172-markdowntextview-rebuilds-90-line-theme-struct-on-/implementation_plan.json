@@ -1,0 +1,168 @@
+{
+  "feature": "Cache MarkdownUI Theme to prevent rebuild on every body evaluation",
+  "workflow_type": "simple",
+  "workflow_rationale": "The fix was already applied in commit 82ead44 as part of a comprehensive audit. The chatTheme computed property has been replaced with @State cachedTheme + onChange(of: theme.id) caching. This task requires only verifying the fix is correct and both iOS/macOS builds succeed.",
+  "created_at": "2026-02-28T21:03:20.690Z",
+  "updated_at": "2026-02-28T21:15:30.615Z",
+  "status": "human_review",
+  "planStatus": "review",
+  "spec_file": "spec.md",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "phases": [
+    {
+      "id": "phase-1-verify",
+      "name": "Verification",
+      "type": "implementation",
+      "description": "Verify the existing fix is correct and complete, then confirm both iOS and macOS builds succeed. The primary fix (caching MarkdownUI.Theme via @State) is already applied in commit 82ead44.",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Verify MarkdownTextView.swift has no chatTheme computed property. Confirm @State cachedTheme, @State cachedThemeId, and onChange(of: theme.id, initial: true) are all present. The fix should prevent theme rebuild on every SwiftUI body evaluation — only calling buildChatTheme(from:) when theme.id actually changes.",
+          "service": "ios",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -n 'chatTheme\\|cachedTheme\\|cachedThemeId\\|onChange' ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift",
+            "expected": "Shows cachedTheme, cachedThemeId, and onChange — no 'var chatTheme' computed property"
+          },
+          "status": "completed",
+          "notes": "Verification passed. MarkdownTextView.swift already has the correct implementation: @State cachedTheme, @State cachedThemeId, and onChange(of: theme.id, initial: true). No chatTheme computed property exists. The fix prevents theme rebuild on every SwiftUI body evaluation.",
+          "updated_at": "2026-02-28T21:08:55.199731+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Run iOS build to confirm the caching fix compiles correctly and there are no regressions.",
+          "service": "ios",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet 2>&1 | tail -5",
+            "expected": "** BUILD SUCCEEDED **"
+          },
+          "status": "completed",
+          "notes": "iOS build succeeded. xcodebuild -scheme ILSApp completed with ** BUILD SUCCEEDED **. The MarkdownUI theme caching fix (cachedTheme + onChange(of: theme.id, initial: true)) compiles correctly with no errors.",
+          "updated_at": "2026-02-28T21:12:33.196193+00:00"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Run macOS build to confirm the caching fix compiles correctly and there are no regressions.",
+          "service": "macos",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' -quiet 2>&1 | tail -5",
+            "expected": "** BUILD SUCCEEDED **"
+          },
+          "status": "completed",
+          "notes": "macOS build succeeded with ** BUILD SUCCEEDED ** - caching fix compiles correctly with no regressions",
+          "updated_at": "2026-02-28T21:15:30.275921+00:00"
+        }
+      ]
+    }
+  ],
+  "services_involved": [
+    "ios",
+    "macos"
+  ],
+  "final_acceptance": [
+    "No 'var chatTheme' computed property in MarkdownTextView.swift",
+    "@State cachedTheme and onChange(of: theme.id) present in MarkdownTextView.swift",
+    "iOS build succeeds (exit 0)",
+    "macOS build succeeds (exit 0)"
+  ],
+  "summary": {
+    "total_phases": 1,
+    "total_subtasks": 3,
+    "services_involved": [
+      "ios",
+      "macos"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "N/A — sequential verification tasks"
+    },
+    "startup_command": "No init.sh needed — verification only"
+  },
+  "verification_strategy": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "test_creation_phase": "none",
+    "test_types_required": [],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "iOS build succeeds",
+      "macOS build succeeds",
+      "No chatTheme computed property exists in MarkdownTextView.swift",
+      "@State cachedTheme and onChange handler are present and correct"
+    ],
+    "verification_steps": [
+      {
+        "name": "Code Review",
+        "command": "grep -n 'chatTheme\\|cachedTheme\\|cachedThemeId\\|onChange' ILSApp/ILSApp/Views/Chat/MarkdownTextView.swift",
+        "expected_outcome": "cachedTheme and onChange present, no var chatTheme",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "iOS Build",
+        "command": "xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet 2>&1 | tail -5",
+        "expected_outcome": "** BUILD SUCCEEDED **",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "macOS Build",
+        "command": "xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' -quiet 2>&1 | tail -5",
+        "expected_outcome": "** BUILD SUCCEEDED **",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Low risk — fix is already applied (commit 82ead44), only build verification needed"
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "last_updated": "2026-02-28T21:15:30.275926+00:00",
+  "reviewReason": "completed"
+}
