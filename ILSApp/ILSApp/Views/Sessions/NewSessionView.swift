@@ -602,6 +602,13 @@ struct NewSessionView: View {
             .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             .focusRing(isFocused: focusedField == .systemPrompt, cornerRadius: theme.cornerRadiusSmall)
+
+            if !systemPrompt.isEmpty {
+                Text("\(systemPrompt.count) characters")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
     }
 
