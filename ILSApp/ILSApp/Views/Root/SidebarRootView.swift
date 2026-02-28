@@ -287,6 +287,9 @@ struct SidebarRootView: View {
                     hooksScreen
                 }
             }
+            .id(activeScreen.storageKey)
+            .transition(.opacity)
+            .animation(reduceMotion ? .none : .easeInOut(duration: 0.2), value: activeScreen)
             .safeAreaInset(edge: .top, spacing: 0) {
                 OfflineIndicator(isOffline: appState.isOffline)
                     .animation(
