@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Comprehensive Spec Compliance Audit & Remediation
 status: in-progress
-last_updated: "2026-02-28T00:50:56Z"
+last_updated: "2026-02-28T00:51:07Z"
 progress:
   total_phases: 44
   completed_phases: 31
   total_plans: 91
-  completed_plans: 85
+  completed_plans: 86
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 48 -- Comprehensive Audit & Verification
-Plan: 48-02 COMPLETE (iPad Visual + Backend cURL Audit), 48-01 in progress (iPhone audit)
+Plan: 48-01 COMPLETE (iPhone audit), 48-02 COMPLETE (iPad + Backend cURL), 48-03 next
 Status: In progress
-Last activity: 2026-02-28 -- Plan 48-02 complete. 12 iPad screenshots, 41 backend cURL transcripts, AUDIT-01/02/03 PASS.
+Last activity: 2026-02-28 -- Plan 48-01 complete. 24 iPhone screenshots, all PASS. AUDIT-01/02 (iPhone) PASS.
 
 Progress: [█████████░] 93%
 
@@ -47,6 +47,7 @@ Progress: [█████████░] 93%
 - [v4.0]: FIX_PROTOCOL mandatory -- every fix through axiom skill -> axiom:ask -> implement -> evidence
 - [v4.0]: AUDIT phase (48) comes AFTER all remediation phases (43-47)
 - [v4.0]: iPad validation (deferred from v3.5) covered in AUDIT-01/AUDIT-02
+- [48-01]: xcrun simctl io screenshot works for iPhone (no error 60); MeshGradient ECO-03 code-verified (needs custom theme)
 - [48-02]: iPad screenshot method: simctl io screenshot works AFTER Window > Fit Screen (screencapture -l fails)
 - [48-02]: Backend has 3 response patterns: APIResponse wrapper (CRUD), raw JSON (operational), Vapor error format (errors)
 
@@ -68,6 +69,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 48-02-PLAN.md (iPad Visual + Backend cURL Audit)
+Stopped at: Completed 48-01-PLAN.md (iPhone Visual & Functional Audit)
 Resume file: None
-Key artifacts: .planning/phases/48-comprehensive-audit-verification/48-02-SUMMARY.md, /tmp/v4.0-audit/ipad/ (12 screenshots), /tmp/v4.0-audit/backend/ (41 transcripts)
+Key artifacts: .planning/phases/48-comprehensive-audit-verification/48-01-SUMMARY.md, /tmp/v4.0-audit/iphone/ (24 screenshots), .planning/phases/48-comprehensive-audit-verification/48-02-SUMMARY.md, /tmp/v4.0-audit/ipad/ (12 screenshots), /tmp/v4.0-audit/backend/ (41 transcripts)
