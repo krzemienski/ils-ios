@@ -35,6 +35,8 @@ struct HostProfilesView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     /// View model driving host list data, active host selection, and periodic health polling.
     @State private var viewModel: HostProfilesViewModel?
+    @State private var showSwitchBanner = false
+    @State private var switchBannerText: String = ""
 
     var body: some View {
         Group {
@@ -122,6 +124,42 @@ struct HostProfilesView: View {
         }
         .onAppear { viewModel?.startHealthPolling() }
         .onDisappear { viewModel?.stopHealthPolling() }
+        .overlay(alignment: .top) {
+            if showSwitchBanner {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(theme.success)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    Text("Switched to \(switchBannerText)")
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                }
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.vertical, theme.spacingSM)
+                .background(theme.success.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.top, theme.spacingSM)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .accessibilityLabel("Switched to \(switchBannerText)")
+            }
+        }
+        .onChange(of: viewModel?.lastActivatedHostName) { _, newValue in
+            if let hostName = newValue {
+                switchBannerText = hostName
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showSwitchBanner = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(3))
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showSwitchBanner = false
+                    }
+                    viewModel?.lastActivatedHostName = nil
+                }
+            }
+        }
     }
 
     // MARK: - Host Row

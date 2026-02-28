@@ -9,6 +9,9 @@ final class HostProfilesViewModel {
     var activeHostId: UUID?
     var isLoading = false
     var loadError: String?
+    /// Name of the most recently activated host, used to trigger the success banner.
+    /// Set by activate() and cleared by the view after the banner auto-dismisses.
+    var lastActivatedHostName: String?
 
     private let appState: AppState
     @ObservationIgnored private var healthTask: Task<Void, Never>?
@@ -63,6 +66,7 @@ final class HostProfilesViewModel {
                 appState.updateServerURL(newURL)
                 appState.activeHostName = host.name
                 UserDefaults.standard.set(host.name, forKey: "activeHostName")
+                self.lastActivatedHostName = host.name
             } catch {
                 loadError = "Failed to activate host '\(host.name)': \(error.localizedDescription)"
             }
