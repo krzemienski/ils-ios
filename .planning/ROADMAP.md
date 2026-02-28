@@ -71,7 +71,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
 - [x] **Phase 51: Settings & Config Inheritance** - Config cascade visualization with "inherited from host" vs "custom override" badges; system prompt and model defaults from host CLI; info tooltips on all settings (completed 2026-02-28)
 - [x] **Phase 52: Hooks & Status Management** - Expand hooks to all 16 event types with CRUD editor (4 handler types); add active/inactive toggles for skills and plugins (completed 2026-02-28)
 - [ ] **Phase 53: GitHub Browse & Install** - GitHub skill/plugin browsing with search, category filtering, and preview; one-tap install with progress and error handling
-- [ ] **Phase 54: Navigation, Profiles & Polish** - Home quick actions, recent sessions data consistency, profile switching with visual feedback, real-time system metrics, node_modules filtering
+- [x] **Phase 54: Navigation, Profiles & Polish** - Home quick actions, recent sessions data consistency, profile switching with visual feedback, real-time system metrics, node_modules filtering (completed 2026-02-28)
 - [ ] **Phase 55: Visual Audit -- iPhone, iPad & Mac** - Screenshot evidence across all 3 platforms with numbered artifacts (15+ iPhone, 15+ iPad, 10+ Mac)
 - [ ] **Phase 56: Functional Audit & Bug Hunt** - End-to-end feature verification across platforms; 20+ edge case scenarios tested
 
@@ -180,6 +180,6 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 51. Settings & Config Inheritance | 2/2 | Complete    | 2026-02-28 | - |
 | 52. Hooks & Status Management | 2/2 | Complete    | 2026-02-28 | - |
 | 53. GitHub Browse & Install | 2/2 | Complete    | 2026-02-28 | - |
-| 54. Navigation, Profiles & Polish | v5.0 | 0/2 | Not started | - |
+| 54. Navigation, Profiles & Polish | 2/2 | Complete   | 2026-02-28 | - |
 | 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/TBD | Not started | - |
 | 56. Functional Audit & Bug Hunt | v5.0 | 0/TBD | Not started | - |
