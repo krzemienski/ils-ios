@@ -14,8 +14,9 @@ class SnapshotTestBase: XCUITestBase {
 
     // MARK: - Configuration
 
-    /// Set to true to record new reference images instead of comparing
-    var isRecordingSnapshots = false
+    /// Set to true to record new reference images instead of comparing.
+    /// Controlled via RECORD_SNAPSHOTS=1 environment variable (set by manage-snapshots.sh --record).
+    var isRecordingSnapshots: Bool = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] == "1"
 
     /// Maximum allowed normalized pixel difference (0.0–1.0, default 1%)
     var snapshotTolerance: CGFloat = 0.01

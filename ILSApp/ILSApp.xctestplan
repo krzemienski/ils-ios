@@ -145,6 +145,7 @@
     }
   ],
   "defaultOptions" : {
+    "codeCoverageEnabled" : true,
     "targetForVariableExpansion" : {
       "containerPath" : "container:ILSApp.xcodeproj",
       "identifier" : "ILSApp",
