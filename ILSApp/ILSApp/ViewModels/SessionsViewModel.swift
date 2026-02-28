@@ -358,8 +358,17 @@ class SessionsViewModel {
     func renameSession(_ session: ChatSession, to newName: String) async {
         guard let client else { return }
         do {
-            let _: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
-            await loadSessions(refresh: true)
+            let response: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
+            if let updated = response.data {
+                // Incremental in-place update — avoids O(n) full reload
+                if let idx = sessions.firstIndex(where: { $0.id == updated.id }) {
+                    sessions[idx] = updated
+                }
+                if let idx = searchCache.firstIndex(where: { $0.session.id == updated.id }) {
+                    searchCache[idx] = makeSearchEntry(for: updated)
+                }
+                sessionsMutationVersion += 1
+            }
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to rename session: \(error.localizedDescription)", category: "sessions")
