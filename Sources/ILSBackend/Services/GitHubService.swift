@@ -279,4 +279,100 @@ struct GitHubService: Sendable {
 
         return content
     }
+
+    /// Fetch the README content for a repository using GitHub's README API.
+    /// Uses GET /repos/{owner}/{repo}/readme which automatically finds the README
+    /// regardless of filename casing (README.md, readme.md, README.rst, etc.).
+    /// Returns nil if no README exists. Truncates content to 5000 characters for mobile.
+    func fetchReadme(owner: String, repo: String) async -> String? {
+        let uri = URI(string: "https://api.github.com/repos/\(owner)/\(repo)/readme")
+
+        var headers = HTTPHeaders()
+        headers.add(name: .accept, value: "application/vnd.github.v3+json")
+        headers.add(name: .userAgent, value: "ILS-Backend/1.0")
+        if let token = token {
+            headers.add(name: .authorization, value: "Bearer \(token)")
+        }
+
+        do {
+            let response = try await client.get(uri, headers: headers)
+            guard response.status == .ok else {
+                Self.logger.info("No README found for \(owner)/\(repo): HTTP \(response.status)")
+                return nil
+            }
+
+            // GitHub returns base64-encoded content
+            struct ReadmeResponse: Codable {
+                let content: String?
+                let encoding: String?
+            }
+
+            let readmeInfo = try response.content.decode(ReadmeResponse.self)
+            guard let base64Content = readmeInfo.content,
+                  readmeInfo.encoding == "base64" else {
+                Self.logger.warning("README for \(owner)/\(repo) has unexpected encoding")
+                return nil
+            }
+
+            // Remove newlines from base64 (GitHub splits into lines)
+            let cleanBase64 = base64Content.replacingOccurrences(of: "\n", with: "")
+            guard let data = Data(base64Encoded: cleanBase64),
+                  let decoded = String(data: data, encoding: .utf8) else {
+                Self.logger.warning("Failed to decode README base64 for \(owner)/\(repo)")
+                return nil
+            }
+
+            // Truncate to 5000 chars for mobile rendering performance
+            if decoded.count > 5000 {
+                return String(decoded.prefix(5000)) + "\n\n---\n*README truncated. View full version on GitHub.*"
+            }
+            return decoded
+        } catch {
+            Self.logger.warning("Failed to fetch README for \(owner)/\(repo): \(error)")
+            return nil
+        }
+    }
+
+    /// Fetch the file listing for a repository directory using GitHub Contents API.
+    /// Returns an array of GitHubFileEntry objects representing files and directories.
+    /// Only fetches the root level (path = "") by default to avoid excessive API calls.
+    func fetchRepoContents(owner: String, repo: String, path: String = "") async -> [GitHubFileEntry] {
+        let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        let uri = URI(string: "https://api.github.com/repos/\(owner)/\(repo)/contents/\(encodedPath)")
+
+        var headers = HTTPHeaders()
+        headers.add(name: .accept, value: "application/vnd.github.v3+json")
+        headers.add(name: .userAgent, value: "ILS-Backend/1.0")
+        if let token = token {
+            headers.add(name: .authorization, value: "Bearer \(token)")
+        }
+
+        do {
+            let response = try await client.get(uri, headers: headers)
+            guard response.status == .ok else {
+                Self.logger.info("Failed to fetch contents for \(owner)/\(repo)/\(path): HTTP \(response.status)")
+                return []
+            }
+
+            struct GitHubContentItem: Codable {
+                let name: String
+                let path: String
+                let type: String    // "file" or "dir"
+                let size: Int?
+            }
+
+            let items = try response.content.decode([GitHubContentItem].self)
+            return items.map { item in
+                GitHubFileEntry(
+                    name: item.name,
+                    path: item.path,
+                    type: item.type,
+                    size: item.size
+                )
+            }
+        } catch {
+            Self.logger.warning("Failed to fetch repo contents for \(owner)/\(repo)/\(path): \(error)")
+            return []
+        }
+    }
 }
