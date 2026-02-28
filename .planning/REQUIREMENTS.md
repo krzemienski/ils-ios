@@ -58,8 +58,8 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 - [x] **AUDIT-01**: Visual audit -- iPhone and iPad screens with numbered screenshot evidence (20+ artifacts)
 - [x] **AUDIT-02**: Functional audit -- real data verification on iPhone and iPad with evidence
 - [x] **AUDIT-03**: Backend audit -- cURL every endpoint, verify JSON structure matches spec contract
-- [ ] **AUDIT-04**: Integration validation -- correlated backend+frontend evidence showing data flows
-- [ ] **AUDIT-05**: Proactive bug hunt -- edge cases, offline behavior, accessibility, memory profiling
+- [x] **AUDIT-04**: Integration validation -- correlated backend+frontend evidence showing data flows
+- [x] **AUDIT-05**: Proactive bug hunt -- edge cases, offline behavior, accessibility, memory profiling
 
 ## Future Requirements
 
@@ -130,8 +130,8 @@ Requirements for v4.0 milestone (Comprehensive Spec Compliance Audit & Remediati
 | AUDIT-01 | Phase 48 | Complete |
 | AUDIT-02 | Phase 48 | Complete |
 | AUDIT-03 | Phase 48 | Complete |
-| AUDIT-04 | Phase 48 | Pending |
-| AUDIT-05 | Phase 48 | Pending |
+| AUDIT-04 | Phase 48 | Complete |
+| AUDIT-05 | Phase 48 | Complete |
 
 **Coverage:**
 - v4.0 requirements: 34 total
