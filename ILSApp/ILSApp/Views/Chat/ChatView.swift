@@ -49,6 +49,7 @@ struct ChatView: View {
         var showAdvancedOptions = false
         var isRenaming = false
         var showSearch = false
+        var showContextWindowDetail = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -170,6 +171,29 @@ struct ChatView: View {
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
         }
+        .sheet(isPresented: $sheets.showContextWindowDetail) {
+            if let usedTokens = viewModel.contextTokensUsed,
+               let windowSize = viewModel.contextWindowSize {
+                ContextWindowDetailSheet(
+                    usedTokens: usedTokens,
+                    contextWindowSize: windowSize,
+                    inputTokens: viewModel.contextInputTokens,
+                    outputTokens: viewModel.contextOutputTokens,
+                    cacheReadTokens: viewModel.contextCacheReadTokens,
+                    cacheCreateTokens: viewModel.contextCacheCreateTokens,
+                    onForkSession: {
+                        sheets.showContextWindowDetail = false
+                        Task {
+                            if let forked = await viewModel.forkSession() {
+                                actions.forkedSession = forked
+                                sheets.showForkAlert = true
+                            }
+                        }
+                    },
+                    onDismiss: { sheets.showContextWindowDetail = false }
+                )
+            }
+        }
         .sheet(item: $viewModel.pendingPermissionRequest) { request in
             PermissionRequestModal(request: request) { decision in
                 viewModel.respondToPermission(requestId: request.requestId, decision: decision)
@@ -225,7 +249,7 @@ struct ChatView: View {
 
     // MARK: - View Components
 
-    /// Top-level layout stacking the status banner, message list, divider, and input bar.
+    /// Top-level layout stacking the status banner, context window bar, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
             if sheets.showSearch {
@@ -236,6 +260,8 @@ struct ChatView: View {
                 searchResultsView
             } else {
                 statusBanner
+
+                contextWindowBar
 
                 messageList
 
@@ -257,6 +283,22 @@ struct ChatView: View {
                 elapsedSeconds: viewModel.streamElapsedSeconds
             )
             .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    /// Compact context window usage bar shown when token data is available.
+    @ViewBuilder
+    private var contextWindowBar: some View {
+        if let usedTokens = viewModel.contextTokensUsed,
+           let windowSize = viewModel.contextWindowSize,
+           windowSize > 0 {
+            ContextWindowBar(
+                usedTokens: usedTokens,
+                contextWindowSize: windowSize
+            ) {
+                sheets.showContextWindowDetail = true
+            }
+            .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 
