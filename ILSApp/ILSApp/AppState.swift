@@ -12,9 +12,12 @@ class AppState {
     var selectedTab: String = "dashboard"
     var navigationIntent: ActiveScreen?
     /// The browser segment to select when navigating via deep link.
-    /// Set by `handleURL()` for `ils://mcp`, `ils://skills`, `ils://plugins` routes.
+    /// Set by `handleURL()` for `ils://mcp`, `ils://skills`, `ils://plugins`, `ils://marketplace/mcp` routes.
     /// Consumed and cleared by SidebarRootView's `.onChange(of: navigationIntent)` handler.
     var browserSegmentIntent: BrowserSegment? = nil
+    /// Server name pre-populated from `ils://mcp/install?server=<name>` deep links.
+    /// Consumed and cleared by BrowserView when opening the install wizard.
+    var pendingMCPInstallName: String? = nil
     var lastSessionId: UUID?
     var lastSyncDate: Date?
 
@@ -96,6 +99,9 @@ class AppState {
             return UUID(uuidString: path)
         }()
 
+        // Normalised path without leading/trailing slashes
+        let pathComponent = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).lowercased()
+
         switch url.host {
         case "home":
             navigationIntent = .home
@@ -108,7 +114,24 @@ class AppState {
         case "browser", "projects":
             navigationIntent = .browser
         case "mcp":
-            browserSegmentIntent = .mcp
+            if pathComponent == "install" {
+                // ils://mcp/install?server=<name> — open Discover tab and pre-populate wizard
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                pendingMCPInstallName = components?.queryItems?.first(where: { $0.name == "server" })?.value
+                browserSegmentIntent = .discover
+            } else {
+                browserSegmentIntent = .mcp
+            }
+            navigationIntent = .browser
+        case "marketplace":
+            // ils://marketplace/mcp — open Discover tab scoped to MCP marketplace
+            if pathComponent == "mcp" {
+                browserSegmentIntent = .discover
+                navigationIntent = .browser
+            }
+        case "mcp-marketplace":
+            // Shorthand: ils://mcp-marketplace
+            browserSegmentIntent = .discover
             navigationIntent = .browser
         case "skills":
             browserSegmentIntent = .skills
