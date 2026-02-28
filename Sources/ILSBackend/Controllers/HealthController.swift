@@ -11,6 +11,9 @@ struct HealthController: RouteCollection {
     /// Timestamp when the application started, used for uptime calculation.
     private let startTime: Date
 
+    /// Executor used to verify Claude CLI availability.
+    let executor = ClaudeExecutorService()
+
     init(startTime: Date = Date()) {
         self.startTime = startTime
     }
@@ -28,9 +31,10 @@ struct HealthController: RouteCollection {
     func detailed(req: Request) async throws -> Response {
         let dbHealthy = await checkDatabase(req: req)
         let fsHealthy = checkFilesystem()
+        let claudeAvailable = await checkClaudeCLI()
         let uptimeSeconds = Int(Date().timeIntervalSince(startTime))
         let diskInfo = checkDiskSpace()
-        let allHealthy = dbHealthy && fsHealthy
+        let allHealthy = dbHealthy && fsHealthy && claudeAvailable
 
         let body = HealthDetail(
             status: allHealthy ? "healthy" : "degraded",
@@ -38,7 +42,8 @@ struct HealthController: RouteCollection {
             version: "1.0.0",
             checks: HealthChecks(
                 database: dbHealthy ? "ok" : "error",
-                filesystem: fsHealthy ? "ok" : "error"
+                filesystem: fsHealthy ? "ok" : "error",
+                claudeCLI: claudeAvailable ? "ok" : "unavailable"
             ),
             disk: diskInfo
         )
@@ -54,8 +59,9 @@ struct HealthController: RouteCollection {
     func ready(req: Request) async throws -> Response {
         let dbHealthy = await checkDatabase(req: req)
         let fsHealthy = checkFilesystem()
+        let claudeAvailable = await checkClaudeCLI()
 
-        if dbHealthy && fsHealthy {
+        if dbHealthy && fsHealthy && claudeAvailable {
             let body = ReadyResponse(status: "ready")
             let response = Response(status: .ok)
             response.headers.contentType = .json
@@ -99,6 +105,12 @@ struct HealthController: RouteCollection {
         return fm.isReadableFile(atPath: homeDir)
     }
 
+    /// Check whether the Claude CLI is available in PATH.
+    /// - Returns: True if `claude` is found and executable
+    private func checkClaudeCLI() async -> Bool {
+        await executor.isAvailable()
+    }
+
     private func checkDiskSpace() -> DiskInfo? {
         let fm = FileManager.default
         let homeDir = fm.homeDirectoryForCurrentUser
@@ -132,6 +144,7 @@ struct HealthDetail: Content {
 struct HealthChecks: Content {
     let database: String
     let filesystem: String
+    let claudeCLI: String
 }
 
 struct DiskInfo: Content {
