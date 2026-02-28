@@ -96,7 +96,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
   1. `GET /api/v1/config/effective` returns JSON with merged config values and a `winningScope` annotation (user/project/local/managed) for each key
   2. All API endpoints return appropriate HTTP status codes for errors (400 for bad input, 404 for missing resources, 500 for server errors) -- not 200-with-error-body
   3. cURL against every backend endpoint confirms JSON structure matches expected field names and nesting
-**Plans**: TBD
+**Plans**: 50-01 (ConfigScope managed case, EffectiveConfig DTO, merge logic, /config/effective route), 50-02 (try? error audit on mutation paths in MCPController and PluginsController)
 
 ### Phase 51: Settings & Config Inheritance
 **Goal**: Users see exactly which settings are inherited from the connected host vs locally overridden, with contextual help on every control
@@ -174,7 +174,7 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 49. Foundation -- Fleet-to-HostProfile Rename | v5.0 | Complete    | 2026-02-28 | - |
-| 50. Backend API -- Config Endpoint & Audit | v5.0 | 0/TBD | Not started | - |
+| 50. Backend API -- Config Endpoint & Audit | v5.0 | 0/2 | Planned | - |
 | 51. Settings & Config Inheritance | v5.0 | 0/TBD | Not started | - |
 | 52. Hooks & Status Management | v5.0 | 0/TBD | Not started | - |
 | 53. GitHub Browse & Install | v5.0 | 0/TBD | Not started | - |
