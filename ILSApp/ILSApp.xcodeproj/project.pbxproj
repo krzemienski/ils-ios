@@ -252,6 +252,7 @@
 		97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
 		99E148F9DFA37DFE3B2FA1E8 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */; };
 		9A2ABF790EE467BD4168A9C8 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */; };
+		F1E2D3C4B5A6F7E8D9C0B1A2 /* AppStoreScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D1E2F3 /* AppStoreScreenshotTests.swift */; };
 		9A917B9E5079DECF9C116276 /* CreateSessionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */; };
 		9AFCE4893AEA34EB0E666E51 /* PollingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE82C913049A620A077F141 /* PollingManager.swift */; };
 		9B0FCBD55404398D4B8D7987 /* hud-state.json in Resources */ = {isa = PBXBuildFile; fileRef = 6157A63376D8A574079B8194 /* hud-state.json */; };
@@ -445,6 +446,7 @@
 
 /* Begin PBXFileReference section */
 		007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D1E2F3 /* AppStoreScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshotTests.swift; sourceTree = "<group>"; };
 		01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserMessageCard.swift; sourceTree = "<group>"; };
 		025F7DAE8CFF9D558461F3F5 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		0292D386E0F18B45765BDB85 /* SessionWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionWindowView.swift; sourceTree = "<group>"; };
@@ -730,6 +732,7 @@
 			isa = PBXGroup;
 			children = (
 				CDD54684EBF7460BB3B088A3 /* AccessibilityAuditTests.swift */,
+				A1B2C3D4E5F6A7B8C9D1E2F3 /* AppStoreScreenshotTests.swift */,
 				B9D0872E6BBB1AD89F5F5A33 /* CISmokeTests.swift */,
 				E4E7D107C5255B902E735D71 /* ErrorHandlingTests.swift */,
 				007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */,
@@ -1501,6 +1504,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6D37D6E9520249F790D58A38 /* AccessibilityAuditTests.swift in Sources */,
+				F1E2D3C4B5A6F7E8D9C0B1A2 /* AppStoreScreenshotTests.swift in Sources */,
 				E16CB60E1402E12859871508 /* CISmokeTests.swift in Sources */,
 				B59E162E2F5E673E11D21726 /* ErrorHandlingTests.swift in Sources */,
 				9A2ABF790EE467BD4168A9C8 /* FeatureGateTests.swift in Sources */,
