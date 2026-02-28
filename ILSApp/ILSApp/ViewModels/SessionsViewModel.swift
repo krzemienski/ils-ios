@@ -72,8 +72,8 @@ class SessionsViewModel: BaseViewModel {
     private var cachedGroupedByTime: [(key: String, value: [ChatSession])] = []
     /// The search text used to build the cached time-grouped sessions
     private var cachedGroupedByTimeSearchText: String = ""
-    /// The session count used to invalidate time-grouped cache
-    private var cachedGroupedByTimeSessionCount: Int = -1
+    /// The mutation version at which time-grouped cache was last built
+    private var cachedGroupedByTimeVersion: Int = -1
 
     /// Sessions filtered by the local search text using precomputed lowercase cache
     var filteredSessions: [ChatSession] {
@@ -95,10 +95,8 @@ class SessionsViewModel: BaseViewModel {
     /// Rebuild the lowercase search cache when sessions array changes
     private func rebuildSearchCache() {
         searchCache = sessions.map { makeSearchEntry(for: $0) }
-        // Increment version to invalidate grouped cache
+        // Increment version to invalidate both grouped caches
         sessionsMutationVersion += 1
-        // Invalidate time-grouped cache
-        cachedGroupedByTimeSessionCount = -1
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
@@ -126,7 +124,7 @@ class SessionsViewModel: BaseViewModel {
     /// Sessions within each bucket are sorted by most recently active.
     /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessionsByTime: [(key: String, value: [ChatSession])] {
-        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeSessionCount == sessions.count {
+        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeVersion == sessionsMutationVersion {
             return cachedGroupedByTime
         }
         let filtered = filteredSessions
@@ -162,7 +160,7 @@ class SessionsViewModel: BaseViewModel {
 
         cachedGroupedByTime = result
         cachedGroupedByTimeSearchText = searchText
-        cachedGroupedByTimeSessionCount = sessions.count
+        cachedGroupedByTimeVersion = sessionsMutationVersion
         return result
     }
 
