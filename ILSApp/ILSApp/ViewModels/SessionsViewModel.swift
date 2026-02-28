@@ -58,6 +58,8 @@ class SessionsViewModel: BaseViewModel {
     private let pageSize = 50
     private var projectPages: [String: Int] = [:]
 
+    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
+
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
     private var searchCache: [(session: ChatSession, searchText: String)] = []
     /// Cached grouped sessions, rebuilt when filteredSessions changes
@@ -76,8 +78,6 @@ class SessionsViewModel: BaseViewModel {
     private var cachedGroupedByTimeSearchText: String = ""
     /// The mutation version at which groupedSessionsByTime cache was last built
     private var cachedGroupedByTimeVersion: Int = -1
-
-    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
 
     deinit {
         searchTask?.cancel()
