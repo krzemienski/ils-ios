@@ -9,6 +9,9 @@ class SettingsViewModel {
 
     var stats: StatsResponse?
     var config: ConfigInfo?
+    /// Effective configuration with per-key scope annotations from /config/effective.
+    /// Used by the UI for inheritance badge logic. Not used for writes (saveWithPatch uses `config`).
+    var effectiveConfig: EffectiveConfig?
     var claudeVersion: String?
     var isLoading = false
     var isLoadingConfig = false
@@ -16,6 +19,8 @@ class SettingsViewModel {
     var isTestingConnection = false
     var error: Error?
 
+    /// Per-key override lookup for O(1) access. Built from effectiveConfig.overrides.
+    private var overrideLookup: [String: ConfigOverride] = [:]
     private var client: APIClient?
 
     init() {}
@@ -26,9 +31,10 @@ class SettingsViewModel {
 
     func loadAll() async {
         async let statsTask: () = loadStats()
-        async let configTask: () = loadConfig()
+        async let effectiveTask: () = loadEffectiveConfig()
+        async let configTask: () = loadConfig()  // Still needed for saveWithPatch read-modify-write
         async let healthTask: () = loadHealth()
-        _ = await (statsTask, configTask, healthTask)
+        _ = await (statsTask, effectiveTask, configTask, healthTask)
     }
 
     func loadHealth() async {
@@ -63,6 +69,49 @@ class SettingsViewModel {
             self.error = error
         }
         isLoadingConfig = false
+    }
+
+    /// Loads the merged effective configuration from the backend.
+    /// The effective config shows which scope won for each key, used by the UI for inheritance badges.
+    /// - Parameter bypassCache: When true, passes cacheTTL=0 to skip APIClient's 60s cache.
+    ///   Use after saveWithPatch to ensure badges update immediately.
+    func loadEffectiveConfig(bypassCache: Bool = false) async {
+        guard let client else { return }
+        isLoadingConfig = true
+        do {
+            let cacheTTL: TimeInterval? = bypassCache ? 0 : nil
+            let response: APIResponse<EffectiveConfig> = try await client.get(
+                "/config/effective",
+                cacheTTL: cacheTTL
+            )
+            effectiveConfig = response.data
+            // Build lookup dictionary for O(1) access per setting key
+            if let overrides = response.data?.overrides {
+                overrideLookup = Dictionary(
+                    uniqueKeysWithValues: overrides.map { ($0.key, $0) }
+                )
+            } else {
+                overrideLookup = [:]
+            }
+        } catch {
+            // Non-fatal: if effective config fails, badges will fall back gracefully
+            self.error = error
+        }
+        isLoadingConfig = false
+    }
+
+    /// Whether a setting key's effective value comes from a scope other than user.
+    /// Returns true (inherited) when: no override data exists for the key, OR the winning scope is not .user.
+    func isInherited(key: String) -> Bool {
+        guard let override = overrideLookup[key] else {
+            return true  // No override means no value set anywhere -- treat as inherited/default
+        }
+        return override.winningScope != .user
+    }
+
+    /// The winning scope for a given key, if available.
+    func winningScope(for key: String) -> ConfigScope? {
+        overrideLookup[key]?.winningScope
     }
 
     func testConnection() async {
@@ -133,6 +182,8 @@ class SettingsViewModel {
                     return updatedConfig.errors?.joined(separator: "\n") ?? "Configuration validation failed"
                 }
             }
+            // Refresh effective config so inheritance badges update immediately
+            await loadEffectiveConfig(bypassCache: true)
             return nil
         } catch {
             return "Failed to save: \(error.localizedDescription)"
@@ -169,7 +220,6 @@ class SettingsViewModel {
     func updateModel(_ newModel: String) {
         Task {
             _ = await saveConfig(model: newModel, colorScheme: config?.content.theme?.colorScheme ?? "system")
-            await loadConfig()
         }
     }
 
@@ -177,7 +227,6 @@ class SettingsViewModel {
     func updateToggle(key: String, value: Bool) {
         Task {
             _ = await saveConfigToggle(key: key, value: value)
-            await loadConfig()
         }
     }
 }
