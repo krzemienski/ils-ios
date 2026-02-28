@@ -121,8 +121,8 @@ Guideline **2.3 (Accurate Metadata)** requires screenshots that match the actual
 | # | Check | Status | Evidence |
 |---|-------|--------|----------|
 | 6.1 | iPhone 6.7" screenshots | ✅ ADDRESSED | 7 screenshots in `AppStoreMetadata/screenshots/iphone_67/` |
-| 6.2 | iPhone 6.1" screenshots | ✅ ADDRESSED | 5 screenshots in `AppStoreMetadata/screenshots/iphone_61/` |
-| 6.3 | iPhone 5.5" screenshots | ✅ ADDRESSED | 5 screenshots in `AppStoreMetadata/screenshots/iphone_55/` |
+| 6.2 | iPhone 6.1" screenshots | ✅ ADDRESSED | 6 screenshots in `AppStoreMetadata/screenshots/iphone_61/` |
+| 6.3 | iPhone 5.5" screenshots | ✅ ADDRESSED | Not required — Apple auto-scales from 6.7"; see `AppStoreMetadata/screenshots/iphone_55/README.md` |
 | 6.4 | iPad 12.9" (M4/6th gen) screenshots | ✅ ADDRESSED | 6 screenshots in `AppStoreMetadata/screenshots/ipad_13/` |
 | 6.5 | iPad 11" screenshots | ✅ ADDRESSED | 6 screenshots in `AppStoreMetadata/screenshots/ipad_11/` |
 | 6.6 | Mac screenshots | ✅ ADDRESSED | 5 screenshots in `AppStoreMetadata/screenshots/mac/` |
