@@ -67,7 +67,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
 **Milestone Goal:** Implement all remaining features (config inheritance, GitHub browse/install, hooks CRUD, profile switching), achieve full cross-platform parity, and validate every screen on every platform through a rigorous 30-gate audit framework.
 
 - [x] **Phase 49: Foundation -- Fleet-to-HostProfile Rename** - Rename "Fleet" to "Host Profiles" across all targets, API routes (with backward aliases), deep links, and UI; set up evidence pipeline (completed 2026-02-28)
-- [ ] **Phase 50: Backend API -- Config Endpoint & Audit** - Add GET /config/effective endpoint with merged config and scope annotations; audit all endpoints for correct error codes and JSON structure
+- [x] **Phase 50: Backend API -- Config Endpoint & Audit** - Add GET /config/effective endpoint with merged config and scope annotations; audit all endpoints for correct error codes and JSON structure (completed 2026-02-28)
 - [ ] **Phase 51: Settings & Config Inheritance** - Config cascade visualization with "inherited from host" vs "custom override" badges; system prompt and model defaults from host CLI; info tooltips on all settings
 - [ ] **Phase 52: Hooks & Status Management** - Expand hooks to all 16 event types with CRUD editor (4 handler types); add active/inactive toggles for skills and plugins
 - [ ] **Phase 53: GitHub Browse & Install** - GitHub skill/plugin browsing with search, category filtering, and preview; one-tap install with progress and error handling
@@ -174,7 +174,7 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 49. Foundation -- Fleet-to-HostProfile Rename | v5.0 | Complete    | 2026-02-28 | - |
-| 50. Backend API -- Config Endpoint & Audit | v5.0 | 0/2 | Planned | - |
+| 50. Backend API -- Config Endpoint & Audit | v5.0 | Complete    | 2026-02-28 | - |
 | 51. Settings & Config Inheritance | v5.0 | 0/TBD | Not started | - |
 | 52. Hooks & Status Management | v5.0 | 0/TBD | Not started | - |
 | 53. GitHub Browse & Install | v5.0 | 0/TBD | Not started | - |

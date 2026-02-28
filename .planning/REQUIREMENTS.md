@@ -41,8 +41,8 @@ Requirements for v5.0 milestone (Cross-Platform Feature Completion & 30-Gate Aud
 
 ### Backend API
 
-- [ ] **API-01**: All API endpoints return expected JSON structures with proper HTTP error codes (not 200-with-error)
-- [ ] **API-02**: GET /config/effective endpoint returns merged config with winning-scope annotations per key
+- [x] **API-01**: All API endpoints return expected JSON structures with proper HTTP error codes (not 200-with-error)
+- [x] **API-02**: GET /config/effective endpoint returns merged config with winning-scope annotations per key
 
 ### Validation -- 30-Gate Audit
 
@@ -117,8 +117,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROF-02 | Phase 54 | Pending |
 | NAV-01 | Phase 54 | Pending |
 | NAV-02 | Phase 54 | Pending |
-| API-01 | Phase 50 | Pending |
-| API-02 | Phase 50 | Pending |
+| API-01 | Phase 50 | Complete |
+| API-02 | Phase 50 | Complete |
 | GATE-01 | Phase 55 | Pending |
 | GATE-02 | Phase 55 | Pending |
 | GATE-03 | Phase 55 | Pending |
