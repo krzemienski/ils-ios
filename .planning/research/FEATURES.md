@@ -1,296 +1,302 @@
-# Feature Landscape: Comprehensive Functional Validation (iOS & iPad)
+# Feature Landscape
 
-**Domain:** iOS/iPadOS functional validation for a 12+ screen native SwiftUI app
-**Researched:** 2026-02-25
-**Confidence:** HIGH (based on existing codebase analysis, previous milestone evidence, Apple platform patterns)
+**Domain:** Native iOS/macOS client for Claude Code (v5.0 new features)
+**Researched:** 2026-02-27
+**Overall confidence:** HIGH
 
----
+## Scope
 
-## Scope Framing
+This document covers the five v5.0 feature domains:
 
-This is NOT a feature-building milestone. v3.5 validates that everything already built across 5
-prior milestones (v1.0, v2.0, v3.0, v1.5, v3.1) actually works from a user's perspective on
-both iPhone and iPad. The "features" here are validation flows, evidence artifacts, and coverage
-dimensions. The question per area is: what must be validated, what states must be observed, and
-what does "complete" look like?
+1. Config inheritance (CLI -> backend -> mobile settings cascade)
+2. GitHub browse/install (skill/plugin marketplace)
+3. Hooks management (CRUD operations for Claude Code hooks)
+4. macOS parity (platform-specific features)
+5. Profile switching (host profile cascade through settings)
 
-Validation dimensions researched:
-1. Per-screen visual validation (iPhone + iPad)
-2. Deep link navigation (all 15 registered routes)
-3. Navigation flows and state transitions
-4. Connection states (connected, disconnected, reconnect)
-5. Evidence collection and dual-agent confirmation
+Features are assessed against what already exists in ILS (substantial app with 10+ screens, 19 view models, 16 backend controllers, 13 themes, premium gating, and basic versions of hooks display, fleet/host profiles, and config editing).
 
 ---
 
 ## Table Stakes
 
-Features/flows that MUST be validated. Missing any of these means the milestone is incomplete.
+Features users expect from a Claude Code management client at this maturity level. Missing any of these makes the app feel incomplete relative to what the CLI already provides.
 
-### 1. Per-Screen Visual Validation (iPhone)
-
-Every screen must be launched on the dedicated iPhone 16 Pro Max simulator
-(UDID `50523130-57AA-48B0-ABD0-4D59CE455F14`), captured as a numbered screenshot,
-and confirmed to render correctly with real data from the backend.
+### 1. Config Inheritance Visualization
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Home screen with stats + quick actions | Entry point; first impression | Low | PASS in Quick-5 audit |
-| Sidebar with all 8 nav items + session list | Primary navigation | Low | PASS in Quick-5 audit |
-| Sessions list with real session data | Core feature (22K+ sessions) | Low | Validate count, row layout, status badges |
-| Chat view with real messages + back button | Core value; NAV-02 back button | Med | NOT yet validated in Quick-5; requires session tap |
-| Browser - MCP tab with server health | Connected MCP servers | Low | Partially seen in Quick-5 (16 servers); needs full capture |
-| Browser - Skills tab with Active badges | Browse/install skills | Low | PASS in Quick-5 audit |
-| Browser - Plugins tab with category filters | Browse/install plugins | Low | PASS in Quick-5 audit |
-| System Monitor with live CPU/Memory/Disk/Network | Real-time metrics | Low | PASS in Quick-5 audit |
-| Settings top: connection, model, InheritanceBadges | Config sync + badges | Low | PASS in Quick-5 audit |
-| Settings bottom: API Key, Permissions, Hooks, Env | Full settings scroll | Low | PASS in Quick-5 audit |
-| Host Profiles with health dots + active indicator | Multi-host management | Med | NOT yet validated in Quick-5 |
-| Themes list with preview swatches | Theme browsing/selection | Med | NOT yet validated in Quick-5 |
-| Hooks management with event types | Hook config view | Med | NOT yet validated in Quick-5; may show empty state |
-| Agent Teams list | Team management | Med | NOT yet validated in Quick-5; likely shows empty state |
+| Multi-scope config loading (user/project/local) | Claude Code CLI has 4+ scopes; mobile must show all | Medium | Existing `ConfigController`, `ConfigScope` enum |
+| "Inherited" vs "Overridden" badges per setting | Users need to see where a value comes from and what it overrides | Medium | Existing `ConfigOverride` DTO (already has `winningScope`, `userValue`, `projectValue`, `localValue`) |
+| Scope picker in config editor | User must choose which scope to edit (user vs project vs local) | Low | Existing `ConfigEditorView` with `scope` parameter |
+| Merged/effective config view | Show the final computed config after all scopes merge | Medium | New backend endpoint to return merged config |
+| Read-only display for managed scope | Managed settings cannot be overridden; show them locked | Low | New `managed` case in `ConfigScope` enum |
 
-**Priority:** The 5 unvalidated screens (Chat+back, MCP detail, Host Profiles, Themes, Hooks)
-are the primary gap from Quick-5 and must be addressed first.
+**Why table stakes:** The CLI's `/status` command already shows settings and their source scopes. The mobile client currently only fetches one scope at a time (`/config?scope=user`). Users who manage settings across multiple projects will be confused if the mobile app doesn't show where values actually come from.
 
-### 2. Per-Screen Visual Validation (iPad)
-
-Every screen must ALSO be captured on an iPad simulator. The app uses a fundamentally different
-layout on iPad: `NavigationSplitView` with a persistent sidebar column instead of the iPhone's
-sheet-based overlay sidebar. This is a structural difference requiring its own validation pass.
+### 2. Hooks Read/Display with Full Event Type Coverage
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| iPad sidebar always visible (persistent column) | NavigationSplitView layout; `isRegularWidth` branch | Med | Core iPad UX difference from iPhone |
-| iPad split-view: sidebar + detail side-by-side | columnVisibility defaults to `.all` | Med | Verify both columns render simultaneously |
-| iPad Home with wider content area | Stats cards should use extra horizontal space | Low | Check LazyVGrid column adaptation |
-| iPad Sessions list in sidebar column | Sessions shown in sidebar, not as a full-screen list | Med | Different information density than iPhone |
-| iPad Chat filling detail column | Messages should fill available detail width | Low | Verify message width constraints adapt |
-| iPad Browser with tabs + list in detail pane | Tabbed browser in wider pane | Low | Verify tab picker and list layout |
-| iPad System Monitor with wider metric cards | Dashboard metrics in wider layout | Low | Check grid column count adaptation |
-| iPad Settings form in detail column | Form sections should use iPad width | Low | Standard SwiftUI Form behavior |
-| iPad Host Profiles in detail column | List with health dots in wider pane | Low | Verify row layout |
-| iPad Themes in detail column | Theme cards/list in wider layout | Low | Check grid adaptation |
-| iPad Hooks in detail column | Hooks management in wider layout | Low | Empty state or hook list |
-| iPad Agent Teams in detail column | Teams list in wider layout | Low | Likely empty state |
-| iPad portrait sidebar behavior | Sidebar may auto-hide in portrait mode | Med | NavigationSplitView default portrait behavior on iPad |
+| Display all 16 hook event types | Claude Code now has 16 event types; ILS only shows 5 | Low | Existing `HooksConfig` model needs new fields |
+| Hook type badges (command/prompt/agent/http) | Four hook types exist; users need to see which is configured | Low | Existing `HookDefinition` model (add `type` variants) |
+| Matcher pattern display with regex highlighting | Matchers are regexes that control when hooks fire; crucial context | Low | Already displayed but could use syntax highlighting |
+| Hook source/scope indicator | Show whether hook came from user, project, local, or plugin | Medium | Need scope info from backend per hook group |
+| Expandable hook detail with full JSON preview | Power users want to see the raw hook config for debugging | Low | Existing `GlassCard` pattern + JSON formatter |
 
-**Critical note:** No dedicated iPad simulator exists yet in the project. One must be created
-for v3.5 (e.g., iPad Pro 13-inch, iPadOS 18.x via `xcrun simctl create`).
+**Why table stakes:** The current `HooksManagementView` is read-only and shows only 5 of the 16 event types (`SessionStart`, `SubagentStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`). Missing: `PermissionRequest`, `PostToolUseFailure`, `Notification`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `SessionEnd`. Users configure hooks in their settings files and need to verify they're correct. Without seeing all event types, hook debugging requires switching back to the CLI.
 
-### 3. Deep Link Navigation (Both Devices)
-
-Every registered `ils://` route must be tested via `xcrun simctl openurl <udid> <url>` and
-confirmed to navigate to the correct screen. Test on BOTH iPhone and iPad simulators.
+### 3. Plugin/Skill Browser with Enhanced Metadata
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| `ils://home` | Basic route | Low | |
-| `ils://sessions` (no UUID) | Falls through to Home | Low | |
-| `ils://sessions/{uuid}` | Parameterized; async session fetch | Med | UUID must be lowercase; tests API lookup |
-| `ils://browser` | Opens Browser (MCP default segment) | Low | |
-| `ils://projects` | Alias for Browser | Low | |
-| `ils://mcp` | Browser with MCP tab selected | Med | Was broken; fixed in commit d351068 |
-| `ils://skills` | Browser with Skills tab selected | Low | Fixed and validated in Quick-5 |
-| `ils://plugins` | Browser with Plugins tab selected | Low | Fixed and validated in Quick-5 |
-| `ils://settings` | Opens Settings | Low | |
-| `ils://system` | Opens System Monitor | Low | |
-| `ils://fleet` | Legacy alias for Host Profiles | Low | |
-| `ils://profiles` | Alternate alias for Host Profiles | Low | |
-| `ils://themes` | Opens Themes | Low | |
-| `ils://hooks` | Opens Hooks | Low | |
-| `ils://teams` | Opens Agent Teams | Low | |
-| Deep link from cold start | App not running; URL launches app to correct screen | High | Tests @SceneStorage restoration + handleURL |
-| Deep link from background | App suspended; URL resumes to correct screen | Med | Tests .onOpenURL while backgrounded |
-| Invalid deep link (e.g., `ils://invalid`) | Should not crash; no-op or fallback | Low | Default case in switch |
+| Browse installed plugins with version, author, description | Users need to see what plugins are active and their metadata | Low | Existing `PluginsViewModel`, `PluginConfigView` (partially built in Phase 47 ECO-01) |
+| Browse installed skills with frontmatter info | Skills are the primary extensibility mechanism; need visibility into `disable-model-invocation`, `allowed-tools`, `context` | Medium | Existing skill detail view needs frontmatter parsing |
+| Search across skills by name/description/keyword | 1000+ skills exist; search is mandatory | Low | Already implemented in `BrowserView` |
+| Plugin update available indicator | Users need to know when newer versions exist | Low | Existing plugin versioning (ECO-01 from v4.0) has update check endpoint |
+| Skill detail view showing invocation type | Show whether skill is user-invocable, model-invocable, or both | Medium | Parse frontmatter from SKILL.md content |
 
-### 4. Navigation Flow Validation
+**Why table stakes:** The browser already shows skills, plugins, and MCP servers. But the Claude Code ecosystem has matured significantly with the marketplace system, plugin manifests (`plugin.json`), and skill frontmatter. The mobile app needs to surface this richer metadata to match what CLI users see via `/plugin list` and `/skills`.
+
+### 4. macOS Keyboard Shortcuts
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| iPhone sidebar via edge swipe | Primary sidebar access on compact-width | Low | DragGesture from leading edge |
-| iPhone sidebar via hamburger button | Toolbar button opens sidebar | Low | All screens must have .topBarLeading item |
-| Chat back button returns to previous screen | NAV-02; previousScreen @State tracking | Med | Must work from sidebar tap AND deep link |
-| Chat session switching preserves back context | Switch session in sidebar; back still navigates correctly | Med | navigateToChat() handles in-chat switches |
-| @SceneStorage restoration on relaunch | Kill app, relaunch; restores last screen | Med | activeScreenKey + lastChatSessionId persistence |
-| Browser segment persists across tab switches | Select Skills tab, leave, return; Skills still selected | Low | browserSegment @State in SidebarRootView |
-| Sidebar session list search/filter | Type in search; sessions filter correctly | Low | SidebarView search functionality |
-| Quick Actions from Home navigate correctly | Tap quick action; navigates to correct screen | Low | onNavigateToBrowser callback |
+| Cmd+N for new session | Standard macOS shortcut | Low | Existing `NotificationCenter` publisher `.ilsCreateNewSession` |
+| Cmd+F for search/filter | Standard find shortcut; should focus search field | Low | Existing `isSearchFocused` state + `/` key handler in `MacContentView` |
+| Cmd+, for Settings | Universal macOS Settings shortcut | Low | Existing `MacSettingsView` |
+| Cmd+1/2/3... for sidebar sections | Standard sidebar navigation | Low | Existing `SidebarSection` enum with 8 cases |
+| Cmd+W to close session/window | Standard close shortcut | Low | Existing `WindowManager` |
+| Cmd+Shift+N for new window | Standard new-window shortcut | Low | Existing `openSessionWindow()` |
 
-### 5. Connection State Validation
+**Why table stakes:** macOS users muscle-memory these shortcuts. The app already handles `/` for search focus and has `NotificationCenter` publishers for menu commands, but keyboard shortcuts are not wired to SwiftUI `.keyboardShortcut()` modifiers on `Commands` menu items. This is the bare minimum for feeling like a real Mac app.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Connected: all data loads from backend | Backend running on port 9999; real data flows | Low | Normal happy path; prerequisite for everything |
-| Disconnected: graceful degradation | Backend stopped; ConnectionBanner visible, no crashes | Med | Stop backend, observe every screen |
-| Reconnection: data auto-refreshes | Restart backend; app recovers without user action | Med | PollingManager reconnect, onChange(isConnected) |
-| Wrong backend binary detection | OLD binary at ils/ vs CURRENT at ils-ios/ | Low | Verify with `lsof -i :9999 -P -n` before any validation |
-
-### 6. Log Capture and Crash Checking
+### 5. macOS Menu Bar Integration
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Zero crashes during full screen walk | Basic stability requirement | Low | Monitor Xcode console or `log stream` |
-| No uncaught exceptions in console | Runtime errors indicate broken code paths | Low | Filter for `ILSApp` process in console output |
-| Log Viewer screen displays entries | AppLogger captures logs for in-app viewing | Med | Navigate to log viewer, confirm entries visible |
+| File menu with New Session, Close Window | Standard macOS File menu | Low | Standard SwiftUI `Commands` |
+| Edit menu with standard Cut/Copy/Paste/Select All | SwiftUI provides defaults but needs verification | Low | Standard SwiftUI |
+| View menu with sidebar toggle | Standard macOS View menu pattern | Low | Existing `columnVisibility` state |
+| Session menu with Rename/Fork/Export/Delete | Already wired via NotificationCenter publishers | Low | Existing `.ilsRenameSession`, `.ilsForkSession`, etc. |
+| Window menu with standard management | Multiple windows via `WindowManager.shared` | Low | Existing `SessionWindowView` |
 
-### 7. Evidence Gate (Dual-Agent Confirmation)
+**Why table stakes:** The macOS app already posts notifications for session operations and handles them in `MacContentView.onReceive()`. But these are programmatic triggers, not proper `Commands` menu items with keyboard shortcuts visible in the menu bar. Users expect to see and discover these through the menu.
+
+### 6. Host Profile Activation Cascades Settings
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Numbered screenshot per iPhone screen | Traceable evidence: "screenshot 01 shows Home" | Low | Sequential: `iphone-01-home.png`, `iphone-02-sidebar.png` |
-| Numbered screenshot per iPad screen | Same standard for iPad | Low | Sequential: `ipad-01-home.png`, `ipad-02-split-view.png` |
-| Deep link evidence screenshots | Each route produces a screenshot of the destination | Low | `deeplink-01-home.png`, etc. |
-| Second agent reviews all evidence | Independent confirmation prevents false PASS claims | Med | Agent reads screenshots, confirms or disputes |
-| Evidence manifest file | Index mapping screenshot number to screen + verdict | Low | Markdown table in evidence directory |
-| Log capture file | Console output saved during validation run | Low | Redirect `log stream` to file |
+| Switching host reloads config from new backend | When active host changes, all settings should refresh | Medium | Existing `HostProfilesViewModel.activate()` calls `appState.updateServerURL()` |
+| Config scope shows host-specific context | After switching hosts, config viewer should reflect that host's settings | Low | Existing `ConfigController` reads from filesystem on backend side |
+| Active host indicator in Settings | Settings should show which host's config is being displayed/edited | Low | Existing `appState.activeHostName` |
+| Hooks reload on host switch | Different hosts may have different hooks configured | Low | Existing `onChange(of: appState.serverURL)` in `HooksManagementView` |
+
+**Why table stakes:** The existing `HostProfilesViewModel.activate()` already updates the server URL and triggers reloads via `appState.updateServerURL()`. Most views have `onChange(of: appState.serverURL)` handlers that refresh data. But the Settings and Config views don't visually acknowledge that their content is now from a different host. Users will be confused editing settings without knowing which backend they apply to.
 
 ---
 
 ## Differentiators
 
-Features that elevate validation beyond "does it render." Not strictly required but
-significantly increase confidence in product quality.
+Features that set the app apart from using the CLI directly. Not expected, but create real value.
+
+### 1. Config Diff View
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Empty state validation per screen | Graceful UX when no data exists | Med | Hooks (no hooks), Teams (no teams), Themes (no custom) |
-| Error state / error banner validation | Error banners, retry affordances render correctly | Med | Kill backend mid-flow, check error handling per screen |
-| Premium gate visual check | Free vs premium UI renders correctly | Med | FeatureGateView overlay appears on gated features |
-| Scroll-to-bottom on long lists | 22K sessions, 50+ skills don't cause jank | Med | Verify LazyVStack performance subjectively |
-| Dark mode parity | All screens correct in dark mode | Med | ThemeSnapshot supports dark; doubles screenshot count |
-| Dynamic Type at XXL size | Large text doesn't break layouts | Med | HIG font compliance done in v3.1; verify visually |
-| iPad orientation change | Portrait to landscape preserves state + layout | Med | Sidebar visibility changes; detail pane resizes |
-| iPad multitasking (Split View) | App in 50/50 split with Safari doesn't crash | Med | iPad-specific multitasking validation |
-| Memory pressure resilience | App survives `xcrun simctl memory warning` | Low | No data loss after low-memory warning |
-| Scene phase transitions | Background then foreground preserves state | Med | PollingManager pauses/resumes, timers pause |
-| Host switch propagation | Switch host profile; all ViewModels reload | High | HP-02; cascading onChange through AppState |
-| GitHub browse/install round-trip | Search, install, verify badge, uninstall | High | Requires GitHub API access; BRW-01..08 |
-| Chat streaming end-to-end | Send message, see streaming, receive response | High | Requires Claude CLI; env var stripping critical |
-| Widget rendering check | ServerStatusWidget shows connected/disconnected | Low | WidgetKit gallery or home screen |
+| Side-by-side scope comparison | Visually compare user vs project vs local config | High | New UI component, three concurrent API calls |
+| Highlight conflicts/overrides | Color-code settings overridden at a more specific scope | Medium | Existing `ConfigOverride` DTO provides all data needed |
+| "What would change?" preview | Before saving, show which effective settings would change | High | Config merge logic on backend or client |
+
+**Value:** No CLI equivalent exists. The CLI's `/status` shows current effective values but not a visual comparison across scopes. This is a unique mobile/desktop advantage over terminal UX.
+
+### 2. Hooks CRUD (Create/Update/Delete)
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Create new hook via form UI | Add hooks without hand-editing JSON -- select event type, set matcher, define command | High | New `HookEditorView`, backend `PUT /config` with hook mutations |
+| Edit existing hook inline | Modify command, matcher, or type without opening a text editor | Medium | Parse and re-serialize hooks within `ClaudeConfig` |
+| Delete hook with confirmation | Remove hooks safely | Medium | Config write with hooks removed |
+| Toggle hook enabled/disabled | Temporarily disable a hook without deleting it | Medium | No native Claude Code concept; would need app-level convention |
+| Hook execution log/history | See when hooks fired, exit codes, duration | High | Requires new backend endpoint or log file parsing |
+
+**Value:** Editing hooks currently requires manually editing JSON files. A visual editor for hooks would be a significant DX improvement, especially for the newer `prompt` and `agent` hook types which have complex configuration (LLM evaluation criteria, agent tool access, etc.).
+
+### 3. Marketplace Discovery and Install
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Browse marketplace catalogs | Show available plugins from registered marketplaces with categories and tags | High | New backend endpoint to fetch/cache marketplace.json from registered sources |
+| One-tap plugin install | Install a plugin directly from the browse UI | High | Backend needs to invoke `claude plugin install` or equivalent git clone |
+| Marketplace registration UI | Add new marketplace sources (GitHub repo, URL) from the app | Medium | Backend endpoint for marketplace management |
+| Plugin update notifications | Badge/indicator when installed plugins have newer versions | Medium | Existing plugin versioning (ECO-01 from v4.0) |
+| Skill preview before install | Show SKILL.md content and frontmatter before committing | Medium | Fetch and render markdown from marketplace source |
+
+**Value:** The CLI experience for marketplace browsing (`/plugin marketplace add`, `/plugin install`) is sequential and text-based. A visual catalog with categories, search, and one-tap install would be a "mobile App Store" experience for Claude Code extensions. Marketplace schema supports `category`, `tags`, `keywords`, `description`, `author`, `version`, and `homepage` -- all ideal for visual browsing.
+
+### 4. macOS Handoff / Continuity
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Continue session viewing between iPhone and Mac | Start browsing a session on iPhone, pick up on Mac | Medium | `NSUserActivity` with SwiftUI `userActivity()` and `onContinueUserActivity()` modifiers |
+| Universal clipboard for session content | Copy session text on Mac, paste on iPhone | Low | Automatic if same iCloud account (standard Continuity) |
+| Drag-and-drop sessions between macOS windows | Drag session from list to new window | Medium | `Transferable` protocol, `draggable()`/`dropDestination()` modifiers |
+
+**Value:** Unique cross-platform experience that no web-based Claude Code client can match. Moving between devices seamlessly leverages the native advantage of having both iOS and macOS apps from the same codebase.
+
+### 5. macOS Multi-Window Panels
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Open config editor in separate window | Edit config while viewing sessions in main window | Medium | New `WindowGroup` scene |
+| System monitor as detachable panel | Always-visible system metrics while working | Medium | New `WindowGroup` scene |
+| Stage Manager awareness | Proper window sizing and grouping | Low | `defaultSize()` and `windowResizability()` modifiers |
+
+**Value:** The macOS app already supports opening sessions in new windows via `WindowManager.shared.openSessionWindow()`. Extending this to config, system monitor, and hooks creates a true multi-pane desktop experience impossible on mobile.
+
+### 6. Config History / Rollback
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Config change history with rollback | See what changed and revert to previous config | High | Claude Code auto-backs up 5 most recent configs; backend could expose these |
+| Before/after diff on config saves | Show exactly what changed before committing | Medium | Diff existing config vs proposed changes |
+
+**Value:** Claude Code auto-backs up the 5 most recent config files. Exposing this through the mobile app as a visual history with rollback would be a unique safety net that even the CLI doesn't offer as a polished feature.
 
 ---
 
 ## Anti-Features
 
-Features to explicitly NOT validate in this milestone.
+Features to explicitly NOT build.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| Unit test coverage | Project mandate: no mocks, stubs, or test files | Validate through real system interaction only |
-| Automated UI test scripts (XCUITest) | Fragile on this codebase; conflicts with functional validation mandate | Manual `xcrun simctl` screenshot capture |
-| Performance benchmarking | Completed in v2.0 milestone (838ms cold-start) | Reference v2.0 evidence if needed |
-| Code-level audit | Completed in v1.5 + v3.0 (70/70 findings resolved) | Trust prior evidence; focus on UX |
-| macOS validation | Already validated in v3.1 Phase 38 (XP-01/02/03 PASS) | Out of scope for v3.5 |
-| App Store submission | Separate milestone per PROJECT.md | Note any blockers found but do not attempt |
-| Accessibility audit (VoiceOver) | Separate concern; a11y labels added in v3.0 | Note obvious issues if seen |
-| Localization testing | App is English-only | Skip entirely |
-| Network throttling / slow connection | Useful but not in scope | Defer to future milestone |
-| StoreKit sandbox testing | Premium gate testing requires sandbox setup | Note if FeatureGateView renders; skip purchase flow |
-| Backend API regression testing | API layer tested implicitly through UI validation | No separate API test pass needed |
+| **Raw JSON text editor for hooks** | Error-prone; users create invalid JSON, break matchers, misconfigure hook types. The existing `ConfigEditorView` does raw editing already -- hooks specifically need structured forms. | Build structured hook editor with form fields, dropdowns for event types, and validation before serializing to JSON |
+| **Auto-sync config changes to CLI in real-time** | Config files are on the host filesystem; mobile talks to a backend. Real-time sync requires file watchers, WebSocket push, and conflict resolution. Disproportionate complexity. | Manual refresh with pull-to-refresh; show "last loaded" timestamp with cache freshness indicators (already built in v4.0 DATA-03) |
+| **Plugin marketplace with user reviews/ratings** | Building a review system is a product in itself. Claude Code's marketplace is a JSON catalog, not a social platform. Reviews belong upstream. | Show GitHub stars if available from marketplace metadata; link to source repo for community feedback |
+| **Hook execution from mobile** | Hooks are shell commands, HTTP endpoints, or LLM prompts that run on the host. Remote execution has severe security implications. | Display hook config for debugging; provide "Edit Config" to modify; show execution logs if backend captures them |
+| **Full config editor for managed scope** | Managed settings are enterprise-deployed and cannot be overridden by design. An editor creates false expectations. | Show managed settings as read-only with a "Managed by organization" badge and lock icon |
+| **macOS menu bar extra (background agent)** | A persistent menu bar utility requires a separate process, LaunchAgent, and fundamental architecture changes. The app is a session viewer, not a daemon. | Focus on main window experience; add a Dock menu with quick actions instead |
+| **macOS Touch Bar support** | Apple discontinued Touch Bar on all current Mac models. `ILSMacApp/TouchBar/` directory exists but investment here is wasted. | Remove or ignore Touch Bar code; invest in keyboard shortcuts and menu bar |
+| **Inline hook testing/dry-run** | Running hooks with test inputs from mobile requires remote execution. Complex, security-sensitive, out of scope. | Show the JSON input schema per event type so users understand what their hooks receive |
+| **Plugin auto-update from mobile** | Auto-updating plugins requires git operations on the host filesystem. The backend would need to shell out to git, npm, or pip. | Show update-available badges; link to CLI command for updating; defer actual updates to CLI |
 
 ---
 
 ## Feature Dependencies
 
 ```
-Backend running (port 9999, correct binary from ils-ios/)
+ConfigScope Enum Update (add "managed" case)
+  |-> Config Inheritance Visualization (table stakes)
+  |     |-> Config Diff View (differentiator)
+  |     |-> Config History (differentiator)
   |
-  +--> ALL screen validations depend on real data from backend
+  |-> Settings Host-Awareness (table stakes)
+        |-> Profile Switching Cascade (table stakes)
+
+HooksConfig Model Update (add 11 missing event types + hook type variants)
+  |-> Hooks Full Display (table stakes)
+  |     |-> Hooks CRUD Editor (differentiator)
+
+Existing BrowserView + PluginsViewModel
+  |-> Plugin Metadata Enhancement (table stakes)
+  |     |-> Marketplace Discovery (differentiator)
+  |           |-> One-Tap Install (differentiator)
+
+Existing MacContentView + NotificationCenter Publishers
+  |-> Keyboard Shortcuts via Commands {} (table stakes)
+  |-> Menu Bar Integration (table stakes)
+  |     |-> Multi-Window Panels (differentiator)
   |
-  +--> Home (stats from /api/v1/sessions, /skills, /mcp, /plugins)
-  +--> Sessions list (/api/v1/sessions with 22K+ entries)
-  |     +--> Chat view (requires session row tap or ils://sessions/{uuid})
-  |           +--> Chat back button (requires previousScreen @State)
-  |           +--> Chat streaming (requires Claude CLI + env var stripping)
-  +--> Browser tabs (/api/v1/mcp, /api/v1/skills, /api/v1/plugins)
-  |     +--> GitHub browse/install (requires internet + GitHub API)
-  +--> System Monitor (WebSocket to host + REST fallback via MetricsWebSocketClient)
-  +--> Settings (/api/v1/config with InheritanceBadge rendering)
-  |     +--> Host switch propagation (requires 2+ host profiles configured)
-  +--> Host Profiles (/api/v1/fleet with health polling)
-  +--> Themes (/api/v1/themes + built-in ThemeSnapshot)
-  +--> Hooks (local config display; may show empty state)
-  +--> Agent Teams (local; likely shows empty state)
+  Existing NSUserActivity support in SwiftUI
+  |-> Handoff / Continuity (differentiator)
 
-iPhone simulator (50523130-57AA-48B0-ABD0-4D59CE455F14)
-  +--> iPhone validation (EXISTING; ready to use)
-
-iPad simulator (MUST BE CREATED)
-  +--> iPad validation (NEW; requires xcrun simctl create)
-  +--> iPad portrait + landscape testing
-  +--> iPad multitasking (differentiator only)
-
-Quick-5 audit (7/12 PASS) --> 5 remaining screens are top priority:
-  1. Chat View (back button, message display)
-  2. Browse - MCP (full capture with health badges)
-  3. Host Profiles (health dots, active indicator)
-  4. Themes (swatch list, selection)
-  5. Hooks (event types or empty state)
-
-Deep link testing --> requires xcrun simctl openurl on both devices
-Screenshot capture --> requires xcrun simctl io <udid> screenshot
-Dual-agent confirmation --> evidence files at known path for second agent to review
+Existing HostProfilesViewModel.activate()
+  |-> Profile Activation Cascade (table stakes)
+  |     |-> Settings Host-Awareness (table stakes)
 ```
+
+### Critical Path
+
+1. **ILSShared model changes** -- `ConfigScope` (add `managed`), `HooksConfig` (add 11 event type fields), `HookDefinition` (add prompt/agent/http type support). These unblock both config inheritance and hooks features across iOS and macOS.
+2. **Backend endpoints** -- Merged/effective config endpoint, config overrides endpoint, marketplace catalog endpoint.
+3. **UI features** -- Build on updated models and endpoints. Config inheritance view, expanded hooks display, enhanced plugin/skill browser.
+4. **macOS features** -- Keyboard shortcuts and menu bar are largely independent of the model/backend work and can proceed in parallel.
+5. **Profile switching** -- Verify and fix gaps in the existing `onChange(of: appState.serverURL)` cascade across all views.
 
 ---
 
 ## MVP Recommendation
 
-Prioritize in this order:
+### Must Have (ship v5.0 without these = incomplete)
 
-1. **Complete remaining 5 iPhone screens** -- MCP detail, Host Profiles, Chat+back button,
-   Themes, Hooks. These are the known gap from Quick-5 and provide immediate coverage uplift
-   from 7/12 to 12/12 (plus Agent Teams = 13).
+1. **Config inheritance visualization** with scope badges (user/project/local/managed) and "Inherited"/"Overridden" indicators. The `ConfigOverride` DTO already provides `winningScope`, `userValue`, `projectValue`, `localValue` -- the backend and UI need to use them. Add a scope picker to `ConfigEditorView` and a merged/effective config summary view.
 
-2. **Create iPad simulator and validate all 13 screens** -- iPad is explicitly called out in
-   the milestone goal. NavigationSplitView persistent sidebar is structurally different from
-   iPhone. This is the largest new validation surface.
+2. **Hooks display for all 16 event types** with hook type badges (command/prompt/agent/http). The current `HooksConfig` model only covers 5 events. Add: `PermissionRequest`, `PostToolUseFailure`, `Notification`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `SessionEnd`.
 
-3. **Deep link testing: all 15 routes on both devices** -- Deep links are a stated milestone
-   target. Browser segment routing was recently broken and fixed (d351068), proving this area
-   is fragile. Use `xcrun simctl openurl` for deterministic testing.
+3. **macOS keyboard shortcuts** (Cmd+N, Cmd+F, Cmd+,, Cmd+1/2/3) and proper menu bar items via SwiftUI `Commands` in the `App` declaration. The `NotificationCenter` publishers already exist; wiring them to `Commands` with `.keyboardShortcut()` is straightforward.
 
-4. **Navigation flow validation** -- Sidebar access, chat back button, @SceneStorage
-   restoration, browser segment persistence. These cross-cutting flows span multiple screens
-   and catch integration issues that per-screen captures miss.
+4. **Profile switching cascades** through settings. When `HostProfilesViewModel.activate()` fires, config editor and hooks views must reload from the new backend. The existing `onChange(of: appState.serverURL)` handlers in most views handle this -- verify and fix gaps. Add visual indicator of which host's settings are being shown.
 
-5. **Connection state validation** -- Connected (happy path, prerequisite for everything),
-   disconnected (graceful degradation), reconnection (auto-recovery). Three captures per
-   state minimum.
+5. **Plugin/skill browser enhancements** with version info, update indicators, and skill frontmatter display. Most of this was partially built in Phase 47 (ECO-01, ECO-02); needs completion and metadata expansion.
 
-6. **Evidence gate: numbered screenshots + dual-agent review** -- The milestone explicitly
-   requires "two independent agent teammates confirm every screenshot and log verdict."
-   Evidence must be organized, numbered, and reviewable.
+### Should Have (target for v5.0 but deferrable)
 
-7. **Log capture** -- Zero crashes, zero uncaught exceptions during the full validation run.
-   Save console output for evidence.
+6. **Hooks CRUD editor** -- structured form for creating/editing hooks. High value but high complexity. Acceptable to ship with read-only hooks + "Edit Config" button to the raw JSON editor.
 
-**Defer:**
-- **GitHub browse/install flow**: Requires external GitHub API; BRW-01..08 already PASS from
-  v3.1. Include only if time permits.
-- **Chat streaming E2E**: Requires Claude CLI in environment; env constraints may block. Test
-  chat view rendering and back button, not message sending.
-- **Dark mode**: Doubles screenshot count. Valuable differentiator but stretch goal only.
-- **iPad multitasking**: Nice-to-have iPad differentiator; not core validation.
-- **Premium gate**: Hard to toggle subscription state in simulator without StoreKit setup.
+7. **Marketplace browsing** -- visual catalog of available plugins from registered marketplaces. Requires significant new backend work (fetching remote marketplace.json, caching, presenting catalog). Can ship with local-only plugin management initially.
+
+8. **macOS menu bar with full Commands** -- proper File, Edit, View, Session, and Window menus with all keyboard shortcuts. Medium effort, high polish.
+
+### Defer (v6.0+)
+
+9. Config diff view (side-by-side scope comparison)
+10. Handoff / Continuity (cross-device session viewing)
+11. Config history with rollback (leveraging Claude Code's auto-backup files)
+12. Marketplace install from mobile (backend CLI invocation)
+13. Multi-window panels for config/system monitor/hooks (macOS)
+14. Hook execution logs/history
+
+---
+
+## Complexity Budget
+
+| Feature Area | Table Stakes Effort | Differentiator Effort | Total |
+|-------------|--------------------|-----------------------|-------|
+| Config Inheritance | 3-4 days | +2-3 days (diff view) | 5-7 days |
+| Hooks Management | 2-3 days (display) | +4-5 days (CRUD editor) | 6-8 days |
+| Plugin/Skill Browser | 1-2 days (metadata) | +5-6 days (marketplace) | 6-8 days |
+| macOS Parity | 2-3 days (shortcuts+menus) | +2-3 days (Handoff, multi-window) | 4-6 days |
+| Profile Switching | 1-2 days | N/A | 1-2 days |
+| **Total** | **9-14 days** | **+13-17 days** | **22-31 days** |
+
+Table stakes alone: approximately 2 weeks of focused execution.
+With key differentiators (hooks CRUD + marketplace browse): approximately 4 weeks.
 
 ---
 
 ## Sources
 
-- Codebase: `SidebarRootView.swift` -- ActiveScreen enum (10 cases), iPadLayout/iPhoneLayout branches, isRegularWidth check
-- Codebase: `AppState.swift` -- handleURL() with 15 deep link routes (home, sessions, browser, mcp, skills, plugins, settings, system, fleet, profiles, themes, hooks, teams, projects + parameterized sessions/{uuid})
-- Codebase: `FeatureGate.swift` -- Premium feature gating (chatExport, customThemes, advancedMonitoring, unlimitedSessions)
-- Quick-5 audit: `.planning/quick/5-cross-milestone-reflection-audit-with-fu/5-SUMMARY.md` -- 7/12 screens PASS, 5 remaining
-- v3.1 requirements: `.planning/REQUIREMENTS.md` -- 31/31 complete, full traceability matrix
-- PROJECT.md: v3.5 milestone definition -- iPhone + iPad + deep links + dual-agent evidence gate
-- [iOS App Testing Checklist (ThinkSys)](https://thinksys.com/qa-testing/ios-app-testing-checklist/)
-- [iOS App Testing Checklist (Aalpha)](https://www.aalpha.net/blog/ios-app-testing-checklist/)
-- [Mobile App Testing Checklist 2025 (NextNative)](https://nextnative.dev/blog/mobile-app-testing-checklist)
-- [NavigationSplitView Documentation (Apple)](https://developer.apple.com/documentation/swiftui/navigationsplitview)
-- [NavigationSplitView on iPad (Hacking with Swift)](https://www.hackingwithswift.com/forums/swiftui/navigationsplitview-on-ipad-is-weird/28465)
-- [Deep Link Testing Guide 2026 (Smler)](https://app.smler.io/blogs/deep-linking/ios/how-to-test-deep-links-ios-complete-guide-2026)
-- [Deep Link Testing (BrowserStack)](https://www.browserstack.com/guide/test-deep-links-on-android-and-ios)
-- [Edge Cases in Mobile Apps (Appmatics)](https://www.appmatics.com/en/blog/edge-cases)
-- [iOS Simulator Commands (GitHub Gist)](https://gist.github.com/patriknyblad/be3678bf6b515f11b602051530b5ac3e)
+### Official Documentation (HIGH confidence)
+- [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks) -- 16 event types, matcher patterns, hook handler types (command/prompt/agent/http), JSON schemas
+- [Claude Code Settings Reference](https://code.claude.com/docs/en/settings) -- Full settings keys, scope precedence (managed > local > project > user), merge behavior, permission rules
+- [Claude Code Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces) -- Marketplace schema, plugin sources (GitHub/npm/pip/git URL), distribution model
+- [Claude Code Skills](https://code.claude.com/docs/en/skills) -- Skill file format, frontmatter reference, invocation control, supporting files
+
+### Community / Guides (MEDIUM confidence)
+- [Claude Code Hooks Power User Guide](https://claude.com/blog/how-to-configure-hooks)
+- [Building macOS Apps with SwiftUI (2026)](https://oneuptime.com/blog/post/2026-02-02-swiftui-macos-applications/view)
+- [macOS Menu Bar App Best Practices](https://medium.com/@p_anhphong/what-i-learned-building-a-native-macos-menu-bar-app-eacbc16c2e14)
+- [SwiftUI Handoff with NSUserActivity](https://www.hackingwithswift.com/quick-start/swiftui/how-to-continue-an-nsuseractivity-in-swiftui)
+- [Customizing macOS Menu Bar in SwiftUI](https://danielsaidi.com/blog/2023/11/22/customizing-the-macos-menu-bar-in-swiftui)
+
+### Codebase Analysis (HIGH confidence)
+- `ILSShared/Models/ClaudeConfig.swift` -- `HooksConfig` covers 5 of 16 event types; `HookDefinition` has `type` and `command` only
+- `ILSShared/DTOs/ResponseDTOs.swift` -- `ConfigOverride` DTO already models scope cascade with `winningScope`, `userValue`, `projectValue`, `localValue`
+- `ILSShared/Models/MCPServer.swift` -- `ConfigScope` enum has user/project/local (missing managed)
+- `HooksManagementView.swift` -- Read-only display, 5 event types, no CRUD capability
+- `HostProfilesViewModel.swift` -- Activation cascades server URL via `appState.updateServerURL()` but settings views don't show which host is active
+- `MacContentView.swift` -- NotificationCenter publishers exist for session operations; keyboard shortcut `/` wired; `SidebarSection` enum has 8 cases
+- `MacSettingsView.swift` -- Tabbed settings view with 5 tabs, no connection to hooks or config inheritance visualization
+- `ConfigController.swift` -- Supports GET/PUT/validate for single scope; no merged/effective config endpoint
+- `PluginConfigView` + `PluginsViewModel` -- Plugin version display partially built in Phase 47 ECO-01
