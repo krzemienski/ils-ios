@@ -116,3 +116,44 @@ public struct Marketplace: Codable, Identifiable, Sendable {
         self.plugins = plugins
     }
 }
+
+/// Preview data for a GitHub repository, including README content and file tree.
+/// Used by the Discover tab preview view before installing a skill or plugin.
+public struct GitHubRepoPreview: Codable, Sendable {
+    public let repository: String        // "owner/repo"
+    public let name: String              // repo display name
+    public let description: String?
+    public let stars: Int
+    public let readme: String?           // markdown content (truncated to 5000 chars by backend)
+    public let files: [GitHubFileEntry]  // root-level file tree
+    public let lastUpdated: String?
+
+    public init(repository: String, name: String, description: String? = nil,
+                stars: Int = 0, readme: String? = nil, files: [GitHubFileEntry] = [],
+                lastUpdated: String? = nil) {
+        self.repository = repository
+        self.name = name
+        self.description = description
+        self.stars = stars
+        self.readme = readme
+        self.files = files
+        self.lastUpdated = lastUpdated
+    }
+}
+
+/// A single file or directory entry from a GitHub repository's contents listing.
+public struct GitHubFileEntry: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let name: String
+    public let path: String
+    public let type: String    // "file" or "dir"
+    public let size: Int?
+
+    public init(id: UUID = UUID(), name: String, path: String, type: String, size: Int? = nil) {
+        self.id = id
+        self.name = name
+        self.path = path
+        self.type = type
+        self.size = size
+    }
+}
