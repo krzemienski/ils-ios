@@ -176,7 +176,11 @@ class MCPViewModel {
         healthTimer = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.checkHealth()
-                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                // ENRG-CRIT: Respect Low Power Mode — increase interval to 120s when active
+                let effectiveInterval = ProcessInfo.processInfo.isLowPowerModeEnabled
+                    ? max(interval, 120)
+                    : interval
+                try? await Task.sleep(nanoseconds: UInt64(effectiveInterval * 1_000_000_000))
             }
         }
     }

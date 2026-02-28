@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import ILSShared
+import os
 #if os(iOS)
 import UIKit
 #endif
@@ -172,7 +173,7 @@ class SSEClient {
             let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
-                    if await lastActivity.secondsSinceLastActivity() > watchdogTimeout {
+                    if lastActivity.secondsSinceLastActivity() > watchdogTimeout {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in \(Int(watchdogTimeout))s", category: "sse")
                         throw URLError(.timedOut)
                     }
@@ -184,7 +185,7 @@ class SSEClient {
             var currentData = ""
 
             for try await line in asyncBytes.lines {
-                await lastActivity.touch() // Reset on ANY received line
+                lastActivity.touch() // Reset on ANY received line
 
                 if line.hasPrefix("event:") {
                     currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
@@ -331,15 +332,18 @@ class SSEClient {
     }
 }
 
-/// Thread-safe tracker for last SSE activity timestamp
-private actor LastActivityTracker {
-    private var lastActivity = Date()
+/// Thread-safe tracker for last SSE activity timestamp.
+/// Uses OSAllocatedUnfairLock instead of actor to avoid actor-hop overhead
+/// on every received SSE line (hot path during streaming).
+private final class LastActivityTracker: Sendable {
+    private let storage = OSAllocatedUnfairLock(initialState: Date())
 
     func touch() {
-        lastActivity = Date()
+        storage.withLock { $0 = Date() }
     }
 
     func secondsSinceLastActivity() -> TimeInterval {
-        Date().timeIntervalSince(lastActivity)
+        let last = storage.withLock { $0 }
+        return Date().timeIntervalSince(last)
     }
 }

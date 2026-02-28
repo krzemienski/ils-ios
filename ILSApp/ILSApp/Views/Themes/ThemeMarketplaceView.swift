@@ -103,7 +103,11 @@ struct ThemeMarketplaceView: View {
             }
         }
         .onAppear { cachedFilteredThemes = computeFilteredThemes() }
-        .onChange(of: searchText) { _, _ in cachedFilteredThemes = computeFilteredThemes() }
+        .task(id: searchText) {
+            // Debounce search input — avoids recomputing on every keystroke
+            try? await Task.sleep(for: .milliseconds(300))
+            cachedFilteredThemes = computeFilteredThemes()
+        }
         .onChange(of: selectedCategory) { _, _ in cachedFilteredThemes = computeFilteredThemes() }
         .alert("Error", isPresented: $showImportError) {
             Button("OK", role: .cancel) { }

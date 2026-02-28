@@ -117,16 +117,6 @@ class ChatViewModel {
         messages.count > messageWindowSize
     }
 
-    /// Get the previous message before the given message in the full messages array.
-    /// Used for same-sender grouping in ChatMessageList.
-    func previousMessage(before message: ChatMessage) -> ChatMessage? {
-        guard let index = messages.firstIndex(where: { $0.id == message.id }),
-              index > 0 else {
-            return nil
-        }
-        return messages[index - 1]
-    }
-
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
     @ObservationIgnored private var batchTask: Task<Void, Never>?
@@ -599,8 +589,8 @@ class ChatViewModel {
         guard let assistantIndex = messages.firstIndex(where: { $0.id == message.id }) else { return }
         // Find the preceding user message
         let precedingUserMessage = messages[..<assistantIndex].last(where: { $0.isUser })
-        // Remove the assistant message
-        messages = messages.filter { $0.id != message.id }
+        // Remove the assistant message (SPERF-HIGH: remove(at:) instead of filter)
+        messages.remove(at: assistantIndex)
         // Resend if we found a user message
         if let userMessage = precedingUserMessage {
             sendMessage(prompt: userMessage.text, projectId: projectId)
@@ -609,7 +599,10 @@ class ChatViewModel {
 
     /// Delete a message from the local messages array
     func deleteMessage(_ message: ChatMessage) {
-        messages = messages.filter { $0.id != message.id }
+        // SPERF-HIGH: remove(at:) instead of O(n) filter rebuild
+        if let index = messages.firstIndex(where: { $0.id == message.id }) {
+            messages.remove(at: index)
+        }
     }
 
     func cancel() {
@@ -699,6 +692,8 @@ class ChatViewModel {
             messages.removeLast()
         } else {
             currentMessage = ChatMessage(isUser: false, text: "")
+            // Pre-allocate for streaming responses to reduce reallocations
+            currentMessage.text.reserveCapacity(8192)
         }
 
         for streamMessage in streamMessages {

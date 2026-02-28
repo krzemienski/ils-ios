@@ -6,11 +6,28 @@ import ILSShared
 @Observable
 class NewSessionViewModel {
     var isCreating = false
+    var recentSessions: [ChatSession] = []
+    var isLoadingSessions = false
 
     private var apiClient: APIClient?
 
     func configure(client: APIClient) {
         self.apiClient = client
+    }
+
+    /// Loads recent sessions for the fork picker.
+    func loadRecentSessions() async {
+        guard let apiClient else { return }
+        isLoadingSessions = true
+        do {
+            let response: APIResponse<ListResponse<ChatSession>> = try await apiClient.get("/sessions?limit=30")
+            if let data = response.data {
+                recentSessions = data.items
+            }
+        } catch {
+            AppLogger.shared.error("Failed to load recent sessions: \(error)", category: "ui")
+        }
+        isLoadingSessions = false
     }
 
     /// Create a new session, optionally associated with a project.

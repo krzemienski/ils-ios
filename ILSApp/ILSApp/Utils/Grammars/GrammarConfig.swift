@@ -100,8 +100,12 @@ struct DataDrivenGrammar: Grammar {
     /// Forwards the delimiter set from the configuration.
     var delimiters: CharacterSet { config.delimiters }
 
-    /// Builds and returns the ordered rule list from the configuration.
-    var syntaxRules: [SyntaxRule] {
+    /// Cached rule list, built once from the configuration at init time.
+    let syntaxRules: [SyntaxRule]
+
+    init(config: GrammarConfig) {
+        self.config = config
+
         var rules: [any SyntaxRule] = []
 
         // 1. Preprocessor rule (e.g. #include, #define)
@@ -152,6 +156,6 @@ struct DataDrivenGrammar: Grammar {
         // 7. Extra language-specific rules
         rules.append(contentsOf: config.extraRules)
 
-        return rules
+        self.syntaxRules = rules
     }
 }

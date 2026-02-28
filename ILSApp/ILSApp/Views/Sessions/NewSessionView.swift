@@ -34,8 +34,7 @@ struct NewSessionView: View {
     @State private var showConfig = false
 
     // Fork mode state
-    @State private var recentSessions: [ChatSession] = []
-    @State private var isLoadingSessions = false
+    // recentSessions and isLoadingSessions moved to NewSessionViewModel
     @State private var selectedSession: ChatSession?
     @State private var forkSearchText = ""
     @State private var debouncedForkResults: [ChatSession] = []
@@ -104,17 +103,17 @@ struct NewSessionView: View {
             await projectsViewModel.loadProjects()
         }
         .task {
-            await loadRecentSessions()
-            debouncedForkResults = recentSessions
+            await sessionViewModel.loadRecentSessions()
+            debouncedForkResults = sessionViewModel.recentSessions
         }
         .task(id: forkSearchText) {
             try? await Task.sleep(for: .milliseconds(200))
             guard !Task.isCancelled else { return }
             if forkSearchText.isEmpty {
-                debouncedForkResults = recentSessions
+                debouncedForkResults = sessionViewModel.recentSessions
             } else {
                 let query = forkSearchText.lowercased()
-                debouncedForkResults = recentSessions.filter {
+                debouncedForkResults = sessionViewModel.recentSessions.filter {
                     ($0.name ?? "").lowercased().contains(query)
                         || ($0.projectName ?? "").lowercased().contains(query)
                         || $0.model.lowercased().contains(query)
@@ -321,7 +320,7 @@ struct NewSessionView: View {
 
             forkSearchBar
 
-            if isLoadingSessions {
+            if sessionViewModel.isLoadingSessions {
                 projectLoadingView
             } else if debouncedForkResults.isEmpty {
                 noResultsView(text: forkSearchText.isEmpty ? "No recent sessions" : "No matching sessions")
@@ -768,18 +767,7 @@ struct NewSessionView: View {
         }
     }
 
-    private func loadRecentSessions() async {
-        isLoadingSessions = true
-        do {
-            let response: APIResponse<ListResponse<ChatSession>> = try await appState.apiClient.get("/sessions?limit=30")
-            if let data = response.data {
-                recentSessions = data.items
-            }
-        } catch {
-            AppLogger.shared.error("Failed to load recent sessions: \(error)", category: "ui")
-        }
-        isLoadingSessions = false
-    }
+    // loadRecentSessions() moved to NewSessionViewModel
 
     // SA-MED-3: Button-triggered Tasks are correct — these are user-initiated actions,
     // not lifecycle-bound work. `.task` modifier is for view lifecycle; `Task {}` is

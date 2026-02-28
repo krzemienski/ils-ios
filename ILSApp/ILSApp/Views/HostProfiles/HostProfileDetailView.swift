@@ -5,35 +5,26 @@ import ILSShared
 ///
 /// Renders a ``FleetHost`` host profile in a scrollable layout covering connection info, health
 /// status, lifecycle controls, and remote logs. This view is the primary host profile detail
-/// screen. Lifecycle operations (start, stop, restart) fire async POST requests to the fleet API.
-/// Logs are loaded on appearance and support manual refresh. Optional host fields — SSH username,
-/// operating platform, and authentication method — are conditionally rendered when non-nil.
+/// screen. Lifecycle operations (start, stop, restart) fire async POST requests via the view model.
+/// Logs are loaded on appearance and support manual refresh.
 ///
 /// ## Topics
 /// ### State
 /// - ``host`` - The host profile being presented
-/// - ``logs`` - Log lines fetched from the remote host
-/// - ``isLoadingLogs`` - Whether a log fetch is in progress
+/// - ``viewModel`` - Manages lifecycle actions and log loading via `HostProfileDetailViewModel`
 ///
 /// ### View Sections
 /// - ``hostInfoSection`` - Address, backend port, and optional SSH username/platform/auth
 /// - ``healthSection`` - Color-coded health indicator with relative last-check timestamp
 /// - ``lifecycleSection`` - Start, stop, and restart buttons each dispatching async API calls
 /// - ``logSection`` - Scrollable log panel capped at 300 pt with inline refresh button
-///
-/// ### Actions
-/// - ``performLifecycle(_:)`` - POSTs a ``LifecycleRequest`` to `/fleet/{id}/lifecycle`
-/// - ``loadLogs()`` - GETs log lines from `/fleet/{id}/logs` and populates ``logs``
 struct HostProfileDetailView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     /// The host profile whose details this view presents.
     let host: FleetHost
 
-    /// Log lines fetched from the remote host's log endpoint.
-    @State private var logs: [String] = []
-    /// Whether a log fetch request is currently in flight.
-    @State private var isLoadingLogs = false
+    @State private var viewModel = HostProfileDetailViewModel()
 
     var body: some View {
         ScrollView {
@@ -51,7 +42,10 @@ struct HostProfileDetailView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
-        .task { await loadLogs() }
+        .task {
+            viewModel.configure(client: appState.apiClient)
+            await viewModel.loadLogs(hostId: host.id)
+        }
     }
 
     // MARK: - Host Info Section
@@ -120,7 +114,7 @@ struct HostProfileDetailView: View {
     @ViewBuilder
     private func lifecycleButton(_ title: String, icon: String, color: Color, action: LifecycleRequest.LifecycleAction) -> some View {
         Button {
-            Task { await performLifecycle(action) }
+            Task { await viewModel.performLifecycle(action, hostId: host.id) }
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: icon)
@@ -145,13 +139,13 @@ struct HostProfileDetailView: View {
             HStack {
                 sectionLabel("Logs")
                 Spacer()
-                if isLoadingLogs {
+                if viewModel.isLoadingLogs {
                     ProgressView()
                         .controlSize(.small)
                         .tint(theme.accent)
                 }
                 Button {
-                    Task { await loadLogs() }
+                    Task { await viewModel.loadLogs(hostId: host.id) }
                 } label: {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -162,15 +156,15 @@ struct HostProfileDetailView: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
-                    if logs.isEmpty {
+                    if viewModel.logs.isEmpty {
                         Text("No logs available")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
                             .padding(.vertical, theme.spacingSM)
                     } else {
                         // SPERF-MED-6: Use indices for stable ForEach identity.
-                        ForEach(logs.indices, id: \.self) { index in
-                            Text(logs[index])
+                        ForEach(viewModel.logs.indices, id: \.self) { index in
+                            Text(viewModel.logs[index])
                                 .font(.system(size: 11, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
@@ -214,19 +208,6 @@ struct HostProfileDetailView: View {
         case .degraded: return theme.warning
         case .unreachable: return theme.error
         case .unknown: return theme.textTertiary
-        }
-    }
-
-    private func performLifecycle(_ action: LifecycleRequest.LifecycleAction) async {
-        let request = LifecycleRequest(action: action, hostId: host.id)
-        let _: LifecycleResponse? = try? await appState.apiClient.post("/host-profiles/\(host.id)/lifecycle", body: request)
-    }
-
-    private func loadLogs() async {
-        isLoadingLogs = true
-        defer { isLoadingLogs = false }
-        if let response: RemoteLogsResponse = try? await appState.apiClient.get("/host-profiles/\(host.id)/logs") {
-            logs = response.lines
         }
     }
 }

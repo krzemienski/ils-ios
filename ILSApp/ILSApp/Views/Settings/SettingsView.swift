@@ -37,8 +37,7 @@ struct SettingsView: View {
     /// The user's preferred color scheme, kept in sync with the remote config on load.
     @State private var colorSchemePreference: String = "system"
     @State private var showDeleteConfirmation: Bool = false
-    @State private var isDeleting: Bool = false
-    @State private var deleteResult: String?
+    // isDeleting and deleteResult moved to SettingsViewModel
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -151,7 +150,7 @@ struct SettingsView: View {
                         Text("Delete All My Data")
                             .foregroundStyle(theme.error)
                         Spacer()
-                        if isDeleting {
+                        if viewModel.isDeleting {
                             ProgressView()
                                 .controlSize(.small)
                         } else {
@@ -162,9 +161,9 @@ struct SettingsView: View {
                     }
                     .padding(theme.spacingMD)
                 }
-                .disabled(isDeleting)
+                .disabled(viewModel.isDeleting)
 
-                if let result = deleteResult {
+                if let result = viewModel.deleteResult {
                     Divider().background(theme.borderSubtle)
                     Text(result)
                         .font(.system(size: theme.fontCaption))
@@ -183,39 +182,14 @@ struct SettingsView: View {
         .alert("Delete All Data?", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete Everything", role: .destructive) {
-                Task { await performDataDeletion() }
+                Task { await viewModel.performDataDeletion() }
             }
         } message: {
             Text("This will permanently delete all your sessions, messages, projects, themes, and cached data. This action cannot be undone.")
         }
     }
 
-    // MARK: - Data Deletion
-
-    /// Calls the GDPR "delete all my data" endpoint and updates the UI with results.
-    private func performDataDeletion() async {
-        isDeleting = true
-        deleteResult = nil
-
-        do {
-            let response: APIResponse<DataErasureResponse> = try await appState.apiClient.delete("/data/all")
-            if let data = response.data {
-                let total = data.messagesDeleted + data.sessionsDeleted +
-                            data.projectsDeleted + data.themesDeleted +
-                            data.fleetHostsDeleted + data.cacheEntriesDeleted
-                deleteResult = "Deleted \(total) items (\(data.sessionsDeleted) sessions, \(data.messagesDeleted) messages, \(data.projectsDeleted) projects)"
-                HapticManager.notification(.success)
-            } else {
-                deleteResult = "Failed to delete data. Server returned no data."
-                HapticManager.notification(.error)
-            }
-        } catch {
-            deleteResult = "Failed to delete data. Check server connection."
-            HapticManager.notification(.error)
-        }
-
-        isDeleting = false
-    }
+    // performDataDeletion() moved to SettingsViewModel
 
     // MARK: - Server URL Management
 

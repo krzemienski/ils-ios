@@ -257,6 +257,10 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         self.firstPrompt = firstPrompt
     }
 
+    /// Pre-compiled regex for stripping markdown heading prefixes.
+    /// Avoids recompiling the pattern on every `displayName` access (hot path for 22K+ sessions).
+    private static let headingPrefixRegex = try! NSRegularExpression(pattern: "^#{1,6}\\s*")
+
     /// A cleaned display name suitable for UI rendering.
     ///
     /// Strips leading markdown heading prefixes (`#`, `##`, `###`, etc.) and trims
@@ -265,14 +269,16 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
     /// when no meaningful name is available.
     public var displayName: String {
         if let name, !name.isEmpty {
-            let cleaned = name
-                .replacingOccurrences(of: "^#{1,6}\\s*", with: "", options: .regularExpression)
+            let range = NSRange(name.startIndex..., in: name)
+            let cleaned = Self.headingPrefixRegex
+                .stringByReplacingMatches(in: name, range: range, withTemplate: "")
                 .trimmingCharacters(in: .whitespaces)
             return cleaned.isEmpty ? "Unnamed Session" : cleaned
         }
         if let prompt = firstPrompt, !prompt.isEmpty {
-            let trimmed = prompt
-                .replacingOccurrences(of: "^#{1,6}\\s*", with: "", options: .regularExpression)
+            let range = NSRange(prompt.startIndex..., in: prompt)
+            let trimmed = Self.headingPrefixRegex
+                .stringByReplacingMatches(in: prompt, range: range, withTemplate: "")
                 .trimmingCharacters(in: .whitespaces)
             return String(trimmed.prefix(40))
         }

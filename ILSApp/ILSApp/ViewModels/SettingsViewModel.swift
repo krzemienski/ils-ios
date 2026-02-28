@@ -211,6 +211,37 @@ class SettingsViewModel {
         }
     }
 
+    // MARK: - Data Deletion
+
+    var isDeleting = false
+    var deleteResult: String?
+
+    /// Calls the GDPR "delete all my data" endpoint and updates the UI with results.
+    func performDataDeletion() async {
+        guard let client else { return }
+        isDeleting = true
+        deleteResult = nil
+
+        do {
+            let response: APIResponse<DataErasureResponse> = try await client.delete("/data/all")
+            if let data = response.data {
+                let total = data.messagesDeleted + data.sessionsDeleted +
+                            data.projectsDeleted + data.themesDeleted +
+                            data.fleetHostsDeleted + data.cacheEntriesDeleted
+                deleteResult = "Deleted \(total) items (\(data.sessionsDeleted) sessions, \(data.messagesDeleted) messages, \(data.projectsDeleted) projects)"
+                HapticManager.notification(.success)
+            } else {
+                deleteResult = "Failed to delete data. Server returned no data."
+                HapticManager.notification(.error)
+            }
+        } catch {
+            deleteResult = "Failed to delete data. Check server connection."
+            HapticManager.notification(.error)
+        }
+
+        isDeleting = false
+    }
+
     // MARK: - Fire-and-forget wrappers (synchronous entry points for Binding setters)
 
     /// Updates the default model from a Binding setter without requiring Task/await.

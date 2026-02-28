@@ -17,35 +17,26 @@ import ILSShared
 ///
 /// ## Topics
 /// ### State
-/// - ``loadedSession`` - Full session fetched from the API, overlaying the seed value
-/// - ``isLoading`` - Whether the initial or retry fetch is in progress
-/// - ``errorMessage`` - Human-readable description of the last fetch failure
+/// - ``viewModel`` - Manages session loading and export via `SessionInfoViewModel`
 struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
 
-    /// The fully-loaded session returned by the API, replacing the seed `session` once fetched.
-    @State private var loadedSession: ChatSession?
-    /// `true` while the API request is in-flight; drives the `ProgressView` placeholder.
-    @State private var isLoading = true
-    /// Set to the localised error description when the fetch fails; clears on retry.
-    @State private var errorMessage: String?
+    @State private var viewModel = SessionInfoViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
-    @State private var exportMarkdown = ""
-    @State private var isExporting = false
 
     private var displaySession: ChatSession {
-        loadedSession ?? session
+        viewModel.loadedSession ?? session
     }
 
     var body: some View {
         Group {
-            if isLoading {
+            if viewModel.isLoading {
                 ProgressView("Loading session details...")
-            } else if let error = errorMessage {
+            } else if let error = viewModel.errorMessage {
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.largeTitle)
@@ -56,7 +47,7 @@ struct SessionInfoView: View {
                         .font(.caption)
                         .foregroundColor(theme.textSecondary)
                     Button("Retry") {
-                        Task { await loadSession() }
+                        Task { await viewModel.loadSession(id: session.id) }
                     }
                 }
                 .padding()
@@ -109,16 +100,19 @@ struct SessionInfoView: View {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 12) {
                     Button {
-                        Task { await exportSession() }
+                        Task {
+                            await viewModel.exportSession(session: displaySession)
+                            showExportSheet = true
+                        }
                     } label: {
-                        if isExporting {
+                        if viewModel.isExporting {
                             ProgressView()
                                 .controlSize(.small)
                         } else {
                             Image(systemName: "square.and.arrow.up")
                         }
                     }
-                    .disabled(isExporting)
+                    .disabled(viewModel.isExporting)
 
                     Button {
                         #if os(iOS)
@@ -139,39 +133,12 @@ struct SessionInfoView: View {
             }
         }
         .sheet(isPresented: $showExportSheet) {
-            ShareSheet(text: exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
+            ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
         }
         .toast(isPresented: $showCopiedToast, message: "Session ID copied")
         .task {
-            await loadSession()
+            viewModel.configure(client: appState.apiClient)
+            await viewModel.loadSession(id: session.id)
         }
-    }
-
-    private func loadSession() async {
-        isLoading = true
-        errorMessage = nil
-
-        do {
-            let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(session.id.uuidString)")
-            if let data = response.data {
-                loadedSession = data
-            } else {
-                errorMessage = "No session data returned"
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-
-        isLoading = false
-    }
-
-    private func exportSession() async {
-        isExporting = true
-        exportMarkdown = await SessionExportService.exportMarkdown(
-            session: displaySession,
-            apiClient: appState.apiClient
-        )
-        isExporting = false
-        showExportSheet = true
     }
 }

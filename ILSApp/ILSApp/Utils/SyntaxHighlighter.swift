@@ -63,7 +63,12 @@ private struct AttributedStringOutputFormat: OutputFormat {
     }
 
     struct Builder: OutputBuilder {
-        private var components: [(text: String, token: Splash.TokenType?)] = []
+        // SPERF-HIGH: Pre-allocate for typical code blocks
+        private var components: [(text: String, token: Splash.TokenType?)] = {
+            var arr = [(text: String, token: Splash.TokenType?)]()
+            arr.reserveCapacity(256)
+            return arr
+        }()
 
         mutating func addToken(_ token: String, ofType type: Splash.TokenType) {
             components.append((token, type))

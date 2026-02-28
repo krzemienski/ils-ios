@@ -130,11 +130,16 @@ struct SystemController: RouteCollection {
 
     // MARK: - WebSocket
 
-    /// WS /system/metrics/live — streams metrics JSON every 2 seconds.
+    /// WS /system/metrics/live — streams metrics JSON at a configurable interval.
+    /// Accepts optional `?interval=N` query parameter (seconds, clamped to 2–60). Default: 5s.
     @Sendable
     func liveMetrics(req: Request, ws: WebSocket) async {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
+
+        // ENRG-CRIT: Default 5s (was 2s). Client can request faster via ?interval=N.
+        let requestedInterval = Double(req.query[String.self, at: "interval"] ?? "5") ?? 5
+        let pushInterval = min(max(requestedInterval, 2), 60)  // Clamp to 2–60s
 
         let service = metricsService
         let cancellation = WebSocketCancellation()
@@ -174,7 +179,7 @@ struct SystemController: RouteCollection {
                     break
                 }
 
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                try? await Task.sleep(nanoseconds: UInt64(pushInterval * 1_000_000_000))
             }
         }
 
