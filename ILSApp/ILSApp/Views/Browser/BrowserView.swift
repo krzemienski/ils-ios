@@ -12,6 +12,7 @@ enum BrowserSegment: String, CaseIterable {
 }
 
 enum DiscoverType: String, CaseIterable {
+    case mcp = "MCP"
     case skills = "Skills"
     case plugins = "Plugins"
 }
@@ -77,6 +78,8 @@ struct BrowserView: View {
     @State private var skillsVM = SkillsViewModel()
     /// Observable view-model that owns plugins list, category filtering, and loading state.
     @State private var pluginsVM = PluginsViewModel()
+    /// Observable view-model that owns the curated MCP marketplace catalog.
+    @State private var mcpMarketplaceVM = MCPMarketplaceViewModel()
 
     /// The currently visible tab; animated transitions unless `reduceMotion` is enabled.
     @State private var segment: BrowserSegment = .mcp
@@ -158,6 +161,7 @@ struct BrowserView: View {
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)
+            mcpMarketplaceVM.configure(client: appState.apiClient)
             await loadAll()
         }
         .onChange(of: appState.browserSegmentIntent) { _, intent in
@@ -175,6 +179,7 @@ struct BrowserView: View {
             mcpVM.configure(client: appState.apiClient)
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)
+            mcpMarketplaceVM.configure(client: appState.apiClient)
             Task { await loadAll() }
         }
     }
@@ -509,9 +514,12 @@ struct BrowserView: View {
             discoverRateLimitBanner
 
             // Results
-            if discoverType == .skills {
+            switch discoverType {
+            case .mcp:
+                discoverMCPResults
+            case .skills:
                 discoverSkillResults
-            } else {
+            case .plugins:
                 discoverPluginResults
             }
         }
@@ -519,8 +527,12 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var discoverSearchField: some View {
-        let searchBinding = discoverType == .skills ? $skillsVM.gitHubSearchText : $pluginsVM.gitHubSearchText
-        let isSearching = discoverType == .skills ? skillsVM.isSearchingGitHub : pluginsVM.isSearchingGitHub
+        let searchBinding = discoverType == .mcp
+            ? $mcpVM.gitHubSearchText
+            : (discoverType == .skills ? $skillsVM.gitHubSearchText : $pluginsVM.gitHubSearchText)
+        let isSearching = discoverType == .mcp
+            ? mcpVM.isSearchingGitHub
+            : (discoverType == .skills ? skillsVM.isSearchingGitHub : pluginsVM.isSearchingGitHub)
 
         HStack(spacing: theme.spacingSM) {
             Image(systemName: "magnifyingglass")
@@ -528,7 +540,9 @@ struct BrowserView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
 
             TextField(
-                discoverType == .skills ? "Search GitHub for skills..." : "Search GitHub for plugins...",
+                discoverType == .mcp
+                    ? "Search GitHub for MCP servers..."
+                    : (discoverType == .skills ? "Search GitHub for skills..." : "Search GitHub for plugins..."),
                 text: searchBinding
             )
             .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -537,6 +551,15 @@ struct BrowserView: View {
             #if os(iOS)
             .textInputAutocapitalization(.never)
             #endif
+            .onChange(of: mcpVM.gitHubSearchText) { _, text in
+                guard discoverType == .mcp, text.count >= 3 else {
+                    if discoverType == .mcp && text.isEmpty {
+                        mcpVM.gitHubResults = []
+                    }
+                    return
+                }
+                mcpVM.updateGitHubSearchText(text)
+            }
             .onChange(of: skillsVM.gitHubSearchText) { _, text in
                 guard discoverType == .skills, text.count >= 3 else {
                     if discoverType == .skills && text.isEmpty {
@@ -556,9 +579,15 @@ struct BrowserView: View {
                 pluginsVM.updateGitHubSearchText(text)
             }
 
-            if !(discoverType == .skills ? skillsVM.gitHubSearchText : pluginsVM.gitHubSearchText).isEmpty {
+            let currentSearchText = discoverType == .mcp
+                ? mcpVM.gitHubSearchText
+                : (discoverType == .skills ? skillsVM.gitHubSearchText : pluginsVM.gitHubSearchText)
+            if !currentSearchText.isEmpty {
                 Button {
-                    if discoverType == .skills {
+                    if discoverType == .mcp {
+                        mcpVM.gitHubSearchText = ""
+                        mcpVM.gitHubResults = []
+                    } else if discoverType == .skills {
                         skillsVM.gitHubSearchText = ""
                         skillsVM.gitHubResults = []
                     } else {
@@ -587,8 +616,12 @@ struct BrowserView: View {
 
     @ViewBuilder
     private var discoverRateLimitBanner: some View {
-        let gitHubError = discoverType == .skills ? skillsVM.gitHubError : pluginsVM.gitHubError
-        let countdown = discoverType == .skills ? skillsVM.rateLimitCountdown : pluginsVM.rateLimitCountdown
+        let gitHubError = discoverType == .mcp
+            ? mcpVM.gitHubError
+            : (discoverType == .skills ? skillsVM.gitHubError : pluginsVM.gitHubError)
+        let countdown = discoverType == .mcp
+            ? mcpVM.rateLimitCountdown
+            : (discoverType == .skills ? skillsVM.rateLimitCountdown : pluginsVM.rateLimitCountdown)
 
         if let errorMsg = gitHubError {
             HStack(spacing: theme.spacingSM) {
@@ -717,6 +750,176 @@ struct BrowserView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, theme.spacingXL)
         }
+    }
+
+    // MARK: - MCP Discover Results
+
+    @ViewBuilder
+    private var discoverMCPResults: some View {
+        let searchText = mcpVM.gitHubSearchText
+
+        if searchText.isEmpty {
+            // Curated featured list with category filter chips
+            VStack(spacing: theme.spacingSM) {
+                // Category filter chips
+                if !mcpMarketplaceVM.categories.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: theme.spacingSM) {
+                            ForEach(mcpMarketplaceVM.categories, id: \.self) { category in
+                                Button {
+                                    mcpMarketplaceVM.selectedCategory = category
+                                } label: {
+                                    Text(category)
+                                        .font(.system(size: theme.fontCaption, weight: mcpMarketplaceVM.selectedCategory == category ? .semibold : .regular, design: theme.fontDesign))
+                                        .foregroundStyle(mcpMarketplaceVM.selectedCategory == category ? theme.textPrimary : theme.textSecondary)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(
+                                            mcpMarketplaceVM.selectedCategory == category
+                                                ? theme.entityMCP.opacity(0.2)
+                                                : theme.bgSecondary
+                                        )
+                                        .clipShape(Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, theme.spacingMD)
+                    }
+                }
+
+                let entries = mcpMarketplaceVM.filteredEntries
+                if mcpMarketplaceVM.isLoadingFeatured && entries.isEmpty {
+                    loadingRows
+                } else if entries.isEmpty {
+                    VStack(spacing: theme.spacingSM) {
+                        Image(systemName: "server.rack")
+                            .font(.system(size: 40))
+                            .foregroundStyle(theme.textTertiary.opacity(0.5))
+                        Text("MCP Marketplace")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                        Text("Search GitHub for MCP servers or browse curated picks")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary.opacity(0.7))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingXL)
+                } else {
+                    ForEach(entries) { entry in
+                        mcpMarketplaceEntryRow(entry)
+                    }
+                }
+            }
+        } else if !mcpVM.gitHubResults.isEmpty {
+            VStack(spacing: theme.spacingSM) {
+                ForEach(mcpVM.gitHubResults, id: \.repository) { result in
+                    discoverResultRow(
+                        result: result,
+                        entityColor: theme.entityMCP,
+                        isInstalled: mcpVM.isInstalled(result: result),
+                        isInstalling: mcpVM.installingMCPServers.contains(result.repository)
+                    )
+                }
+            }
+        } else if searchText.count >= 3 && !mcpVM.isSearchingGitHub {
+            Text("No MCP servers found on GitHub for \"\(searchText)\"")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+        } else if searchText.count > 0 && searchText.count < 3 {
+            Text("Type at least 3 characters to search")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingMD)
+        } else {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: "globe.americas")
+                    .font(.system(size: 40))
+                    .foregroundStyle(theme.textTertiary.opacity(0.5))
+                Text("Search GitHub for MCP servers")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text("Find and install community MCP servers with search")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingXL)
+        }
+    }
+
+    @ViewBuilder
+    private func mcpMarketplaceEntryRow(_ entry: MCPMarketplaceEntry) -> some View {
+        HStack(spacing: theme.spacingMD) {
+            Circle()
+                .fill(theme.entityMCP.opacity(0.6))
+                .frame(width: 10, height: 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(entry.name)
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    if entry.isStaffPick {
+                        Text("Staff Pick")
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.warning)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(theme.warning.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+
+                    if entry.stars > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.warning)
+                            Text("\(entry.stars)")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                        }
+                    }
+                }
+
+                if let description = entry.description {
+                    Text(description)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .lineLimit(2)
+                }
+
+                HStack(spacing: theme.spacingSM) {
+                    Text(entry.category)
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(theme.bgTertiary)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                    Text(entry.repository)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                        .lineLimit(1)
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .padding(theme.spacingMD)
+        .modifier(GlassCard())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.name), \(entry.category)")
     }
 
     /// Shared result row used by both skill and plugin discover results.
@@ -877,7 +1080,7 @@ struct BrowserView: View {
         case .mcp: return mcpVM.servers.count
         case .skills: return skillsVM.skills.count
         case .plugins: return pluginsVM.plugins.count
-        case .discover: return skillsVM.gitHubResults.count + pluginsVM.gitHubResults.count
+        case .discover: return mcpVM.gitHubResults.count + skillsVM.gitHubResults.count + pluginsVM.gitHubResults.count
         }
     }
 
@@ -885,7 +1088,8 @@ struct BrowserView: View {
         async let m: () = mcpVM.loadServers()
         async let s: () = skillsVM.loadSkills()
         async let p: () = pluginsVM.loadPlugins()
-        _ = await (m, s, p)
+        async let mkt: () = mcpMarketplaceVM.loadFeatured()
+        _ = await (m, s, p, mkt)
     }
 
     private func refreshCurrentSegment() async {
@@ -894,9 +1098,16 @@ struct BrowserView: View {
         case .skills: await skillsVM.refreshSkills()
         case .plugins: await pluginsVM.loadPlugins()
         case .discover:
-            if discoverType == .skills {
+            switch discoverType {
+            case .mcp:
+                if mcpVM.gitHubSearchText.isEmpty {
+                    await mcpMarketplaceVM.loadFeatured()
+                } else {
+                    await mcpVM.searchGitHub(query: mcpVM.gitHubSearchText)
+                }
+            case .skills:
                 await skillsVM.searchGitHub(query: skillsVM.gitHubSearchText)
-            } else {
+            case .plugins:
                 await pluginsVM.searchGitHub(query: pluginsVM.gitHubSearchText)
             }
         }
