@@ -78,6 +78,16 @@ class MCPViewModel {
         isLoading = true
         error = nil
 
+        // Cache-first: show cached data immediately while network request is in flight
+        if servers.isEmpty {
+            let cached = await CacheService.shared.getCachedMCPServers()
+            if !cached.isEmpty {
+                servers = cached
+                rebuildSearchCache()
+                AppLogger.shared.info("Loaded \(cached.count) MCP servers from cache", category: "mcp")
+            }
+        }
+
         do {
             let path = refresh ? "/mcp?refresh=true" : "/mcp"
             let response: APIResponse<ListResponse<MCPServer>> = try await client.get(path)
@@ -85,6 +95,10 @@ class MCPViewModel {
                 servers = data.items
                 rebuildSearchCache()
                 lastUpdated = Date()
+                // CONC-03: Use Task instead of Task.detached — CacheService actor handles isolation.
+                Task {
+                    await CacheService.shared.cacheMCPServers(data.items)
+                }
             }
         } catch {
             self.error = error
