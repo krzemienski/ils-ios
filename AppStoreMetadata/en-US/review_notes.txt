@@ -1,20 +1,126 @@
-ILS requires a companion backend server running on a Mac to function. The backend is included in the open-source repository and can be started with:
+================================================================================
+ILS (Intelligent Local Server) — App Review Notes
+================================================================================
 
-  PORT=9999 swift run ILSBackend
+OVERVIEW
+--------
+ILS is a native iOS client for Claude Code, a developer tool by Anthropic. The
+app connects to a lightweight companion backend server that runs locally on a Mac
+and bridges the app to Claude Code sessions on that machine.
 
-The app connects to this backend server over the local network. Without the backend running, the app will show a "Disconnected" state and prompt the user to configure a server connection.
+--------------------------------------------------------------------------------
+1. BACKEND REQUIREMENT & SETUP
+--------------------------------------------------------------------------------
+ILS requires a companion backend server running on a Mac. The backend is free,
+open-source, and ships in the same repository as the iOS app.
 
-To test:
-1. Clone the repository: https://github.com/krzemienski/ils-ios
-2. Run the backend: PORT=9999 swift run ILSBackend
-3. Install the app on a simulator or device on the same network
-4. The app should auto-discover the backend and show connected status
+System requirements:
+  - macOS 13+ with Swift 5.9+ (Xcode 15+)
+  - Xcode command-line tools installed
 
-Key features to review:
-- Dashboard with real-time statistics
-- Chat interface with Claude (requires Claude Code CLI installed)
-- Session, project, and skills browsing
-- System monitoring
-- Settings with theme customization
+Setup steps:
+  a) Clone the repository:
+       git clone https://github.com/krzemienski/ils-ios.git
+       cd ils-ios
 
-Note: Full chat functionality requires Claude Code CLI to be installed on the Mac running the backend. Without it, sessions and browsing features still work with existing data.
+  b) Start the backend server:
+       PORT=9999 swift run ILSBackend
+
+  c) The backend will start and listen on port 9999. Leave this terminal open
+     while testing the app.
+
+The app connects over the local network (LAN or USB tunnel). Without the backend
+running, the app displays a "Disconnected" state with a clear prompt to configure
+a server connection — this is expected and handled gracefully.
+
+--------------------------------------------------------------------------------
+2. GITHUB REPOSITORY
+--------------------------------------------------------------------------------
+Full source code (iOS app + macOS backend) is available at:
+
+  https://github.com/krzemienski/ils-ios
+
+The repository is public and open-source under the MIT License.
+
+--------------------------------------------------------------------------------
+3. TESTING THE APP
+--------------------------------------------------------------------------------
+Option A — Local Setup (Recommended):
+  1. Clone the repo and start the backend per Section 1 above.
+  2. Install the ILS app on an iPhone or iOS Simulator on the same Mac or LAN.
+  3. Launch the app — it will auto-discover the backend via Bonjour/mDNS.
+  4. The Dashboard should show "Connected" with real-time server statistics.
+
+Option B — Pre-configured Test Server:
+  If setting up locally is not practical, a demo backend may be available at:
+    http://ils-demo.example.com:9999
+  (Contact the developer at nkrzemienski@gmail.com to request access credentials
+  and verify the demo server is active prior to your review session.)
+
+Key flows to review:
+  - Dashboard: real-time CPU, memory, and session statistics
+  - Sessions: browse active and historical Claude Code sessions
+  - Chat: send messages to Claude (requires Claude Code CLI — see Section 5)
+  - Projects & Skills: browse project files and installed skills
+  - System: monitor Mac system metrics
+  - Settings: theme customization, server connection configuration
+
+--------------------------------------------------------------------------------
+4. IN-APP PURCHASE (SUBSCRIPTION) — SANDBOX TESTING
+--------------------------------------------------------------------------------
+ILS offers a premium subscription with two tiers:
+  - Monthly:  Product ID  com.ils.app.premium.monthly
+  - Annual:   Product ID  com.ils.app.premium.annual
+
+To test IAP with a Sandbox account:
+
+  a) On the review device, sign out of your personal Apple ID in:
+       Settings → [Your Name] → Sign Out
+     (Do NOT sign out of iCloud if you need other device features.)
+
+  b) Open ILS and navigate to Settings → Upgrade to Premium (or tap any
+     premium-gated feature, such as advanced theme customization).
+
+  c) Tap a subscription option. The StoreKit sandbox sheet will appear.
+
+  d) When prompted for an Apple ID, sign in with a Sandbox Tester account.
+     You can create one at: https://appstoreconnect.apple.com/access/testers
+     Sandbox purchases are free — no real charges are made.
+
+  e) After purchase, the app immediately unlocks premium features. The
+     subscription badge and expiration date appear in Settings → Premium.
+
+  f) To test restore: sign out of the Sandbox account, reinstall the app,
+     sign back in with the same Sandbox account, and tap "Restore Purchases"
+     in Settings → Premium.
+
+Subscription-gated features:
+  - Advanced theme customization (custom accent colors)
+  - Multi-server connection management
+  - Extended session history export
+
+--------------------------------------------------------------------------------
+5. CLAUDE CODE CLI — OPTIONAL DEPENDENCY
+--------------------------------------------------------------------------------
+Full chat functionality (sending messages to Claude) requires the Claude Code
+CLI to be installed on the Mac running the backend:
+  https://docs.anthropic.com/en/docs/claude-code
+
+IMPORTANT: Claude Code CLI is OPTIONAL. If it is not installed:
+  - The app launches and connects to the backend normally.
+  - Session browsing, project/skills browsing, system monitoring, and settings
+    all work fully.
+  - The Chat tab shows a clear informational message explaining that Claude Code
+    is not detected and providing installation instructions.
+  - The app does NOT crash or show an error state — it degrades gracefully.
+
+This means reviewers can fully evaluate all non-chat features without installing
+Claude Code CLI.
+
+--------------------------------------------------------------------------------
+CONTACT
+--------------------------------------------------------------------------------
+Developer: Nick Krzemienski
+Email:     nkrzemienski@gmail.com
+Support:   https://github.com/krzemienski/ils-ios/issues
+================================================================================
