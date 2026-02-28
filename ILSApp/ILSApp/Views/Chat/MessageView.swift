@@ -283,9 +283,10 @@ struct ThinkingView: View {
             RoundedRectangle(cornerRadius: theme.cornerRadius)
                 .strokeBorder(theme.entityPlugin.opacity(0.3), lineWidth: 0.5)
         )
-        .onAppear {
-            if !reduceMotion {
-                startPulsing()
+        .onDisappear {
+            // H-E1: Cancel repeatForever animation to stop GPU work after navigation.
+            withAnimation(.linear(duration: 0.0)) {
+                pulseScale = 1.0
             }
         }
         .onDisappear {
@@ -295,11 +296,9 @@ struct ThinkingView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                if !reduceMotion {
-                    startPulsing()
-                }
-            } else {
+            // ThinkingView is used only for historical (completed) thinking blocks.
+            // Pulsing is not restarted here; reserved for a future isActive parameter.
+            if phase != .active {
                 withAnimation(.default) {
                     pulseScale = 1.0
                 }
