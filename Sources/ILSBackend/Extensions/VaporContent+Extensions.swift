@@ -196,6 +196,9 @@ extension PermissionsConfig: Content {}
 extension HooksConfig: Content {}
 extension HookDefinition: Content {}
 extension ConfigInfo: Content {}
+extension ConfigProfiles: Content {}
+extension ConfigOverride: Content {}
+extension EffectiveConfig: Content {}
 extension CustomTheme: Content {}
 extension HostProfile: Content {}
 extension HostProfile.HealthStatus: Content {}

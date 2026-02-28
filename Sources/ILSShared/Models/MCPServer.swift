@@ -8,6 +8,8 @@ public enum ConfigScope: String, Codable, Sendable {
     case project
     /// Local configuration (current directory).
     case local
+    /// Managed configuration (enterprise/system-wide settings).
+    case managed
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -16,7 +18,7 @@ public enum ConfigScope: String, Codable, Sendable {
             throw DecodingError.dataCorrupted(
                 DecodingError.Context(
                     codingPath: decoder.codingPath,
-                    debugDescription: "Unrecognized ConfigScope: '\(raw)'. Expected: user, project, local"
+                    debugDescription: "Unrecognized ConfigScope: '\(raw)'. Expected: user, project, local, managed"
                 )
             )
         }

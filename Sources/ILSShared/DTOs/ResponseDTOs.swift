@@ -152,11 +152,14 @@ public struct ConfigProfiles: Codable, Sendable {
     public let project: ConfigInfo?
     /// Local override config from .claude/settings.local.json
     public let local: ConfigInfo?
+    /// Managed config from system-wide managed settings
+    public let managed: ConfigInfo?
 
-    public init(user: ConfigInfo?, project: ConfigInfo?, local: ConfigInfo?) {
+    public init(user: ConfigInfo?, project: ConfigInfo?, local: ConfigInfo?, managed: ConfigInfo? = nil) {
         self.user = user
         self.project = project
         self.local = local
+        self.managed = managed
     }
 }
 
@@ -174,6 +177,8 @@ public struct ConfigOverride: Codable, Sendable {
     public let projectValue: String?
     /// Value from local scope
     public let localValue: String?
+    /// Value from managed scope
+    public let managedValue: String?
 
     public init(
         key: String,
@@ -181,7 +186,8 @@ public struct ConfigOverride: Codable, Sendable {
         winningValue: String,
         userValue: String?,
         projectValue: String?,
-        localValue: String?
+        localValue: String?,
+        managedValue: String? = nil
     ) {
         precondition(!key.isEmpty, "ConfigOverride key must not be empty")
         self.key = key
@@ -190,6 +196,27 @@ public struct ConfigOverride: Codable, Sendable {
         self.userValue = userValue
         self.projectValue = projectValue
         self.localValue = localValue
+        self.managedValue = managedValue
+    }
+}
+
+/// Effective configuration with per-key scope annotations.
+///
+/// Returned by GET /config/effective. Contains the merged config
+/// (highest-precedence non-nil value for each key), per-key override
+/// annotations showing which scope won, and the raw profiles for debugging.
+public struct EffectiveConfig: Codable, Sendable {
+    /// Merged config values (highest-precedence non-nil for each key)
+    public let config: ClaudeConfig
+    /// Per-key annotations showing which scope won
+    public let overrides: [ConfigOverride]
+    /// All scope configs that were read (for debugging / UI display)
+    public let profiles: ConfigProfiles
+
+    public init(config: ClaudeConfig, overrides: [ConfigOverride], profiles: ConfigProfiles) {
+        self.config = config
+        self.overrides = overrides
+        self.profiles = profiles
     }
 }
 

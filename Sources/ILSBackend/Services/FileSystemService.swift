@@ -267,6 +267,12 @@ struct FileSystemService {
         try config.writeConfig(scope: scope, content: content)
     }
 
+    /// Read effective (merged) configuration across all scopes.
+    /// - Returns: EffectiveConfig with merged values and per-key scope annotations
+    func readEffectiveConfig() -> EffectiveConfig {
+        config.readEffectiveConfig()
+    }
+
     // MARK: - Session Scanning
 
     /// Scan for external Claude Code sessions from `~/.claude/projects/`.

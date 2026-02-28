@@ -12,8 +12,16 @@ struct ConfigController: RouteCollection {
         let config = routes.grouped("config")
 
         config.get(use: get)
+        config.get("effective", use: effective)
         config.put(use: update)
         config.post("validate", use: validate)
+    }
+
+    /// GET /config/effective - Get merged effective configuration with scope annotations
+    @Sendable
+    func effective(req: Request) async throws -> APIResponse<EffectiveConfig> {
+        let effectiveConfig = fileSystem.readEffectiveConfig()
+        return APIResponse(success: true, data: effectiveConfig)
     }
 
     /// GET /config - Get configuration for a scope
