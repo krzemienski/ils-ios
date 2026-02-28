@@ -30,7 +30,7 @@ import ILSShared
 /// ### Scroll Management
 /// - ``scrollToBottom(proxy:)`` - Scrolls to the sentinel "bottom" anchor, respecting reduce-motion
 /// - ``jumpToBottomButton(proxy:)`` - Floating FAB that resets scroll state and jumps to bottom
-/// - ``shouldShowTypingIndicator()`` - Returns true while streaming and no text has arrived yet
+/// - ``showsTypingIndicator`` - Returns true while streaming and no text has arrived yet
 struct ChatMessageList: View {
     /// Ordered array of messages to display in the conversation.
     let messages: [ChatMessage]
@@ -179,12 +179,16 @@ struct ChatMessageList: View {
                 }
             }
 
-            if shouldShowTypingIndicator() {
-                TypingIndicatorBubble()
-                    .padding(.horizontal, messageSpacing)
-                    .padding(.top, messageSpacing)
-                    .id("typing-indicator")
+            Group {
+                if showsTypingIndicator {
+                    TypingIndicatorBubble()
+                        .padding(.horizontal, messageSpacing)
+                        .padding(.top, messageSpacing)
+                        .id("typing-indicator")
+                        .transition(reduceMotion ? .identity : .opacity.combined(with: .move(edge: .bottom)))
+                }
             }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: showsTypingIndicator)
 
             Color.clear
                 .frame(height: 1)
@@ -193,9 +197,9 @@ struct ChatMessageList: View {
         .padding(.vertical, messageSpacing)
     }
 
-    /// Returns `true` while Claude is streaming but no tokens have been received yet,
+    /// `true` while Claude is streaming but no tokens have been received yet,
     /// indicating the typing indicator should be shown.
-    private func shouldShowTypingIndicator() -> Bool {
+    private var showsTypingIndicator: Bool {
         isStreaming && (currentStreamingMessage?.text.isEmpty ?? true)
     }
 
