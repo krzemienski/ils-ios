@@ -69,7 +69,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
 - [x] **Phase 49: Foundation -- Fleet-to-HostProfile Rename** - Rename "Fleet" to "Host Profiles" across all targets, API routes (with backward aliases), deep links, and UI; set up evidence pipeline (completed 2026-02-28)
 - [x] **Phase 50: Backend API -- Config Endpoint & Audit** - Add GET /config/effective endpoint with merged config and scope annotations; audit all endpoints for correct error codes and JSON structure (completed 2026-02-28)
 - [x] **Phase 51: Settings & Config Inheritance** - Config cascade visualization with "inherited from host" vs "custom override" badges; system prompt and model defaults from host CLI; info tooltips on all settings (completed 2026-02-28)
-- [ ] **Phase 52: Hooks & Status Management** - Expand hooks to all 16 event types with CRUD editor (4 handler types); add active/inactive toggles for skills and plugins
+- [x] **Phase 52: Hooks & Status Management** - Expand hooks to all 16 event types with CRUD editor (4 handler types); add active/inactive toggles for skills and plugins (completed 2026-02-28)
 - [ ] **Phase 53: GitHub Browse & Install** - GitHub skill/plugin browsing with search, category filtering, and preview; one-tap install with progress and error handling
 - [ ] **Phase 54: Navigation, Profiles & Polish** - Home quick actions, recent sessions data consistency, profile switching with visual feedback, real-time system metrics, node_modules filtering
 - [ ] **Phase 55: Visual Audit -- iPhone, iPad & Mac** - Screenshot evidence across all 3 platforms with numbered artifacts (15+ iPhone, 15+ iPad, 10+ Mac)
@@ -176,7 +176,7 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 49. Foundation -- Fleet-to-HostProfile Rename | v5.0 | Complete    | 2026-02-28 | - |
 | 50. Backend API -- Config Endpoint & Audit | v5.0 | Complete    | 2026-02-28 | - |
 | 51. Settings & Config Inheritance | 2/2 | Complete    | 2026-02-28 | - |
-| 52. Hooks & Status Management | 1/2 | In Progress|  | - |
+| 52. Hooks & Status Management | 2/2 | Complete   | 2026-02-28 | - |
 | 53. GitHub Browse & Install | v5.0 | 0/TBD | Not started | - |
 | 54. Navigation, Profiles & Polish | v5.0 | 0/TBD | Not started | - |
 | 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/TBD | Not started | - |
