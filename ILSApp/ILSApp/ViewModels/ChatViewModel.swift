@@ -54,6 +54,27 @@ class ChatViewModel {
     /// Whether a search request is in flight.
     var isSearchLoading = false
 
+    // MARK: - Context Window Properties
+
+    /// Total context window size in tokens for the current model (nil until first result).
+    var contextWindowSize: Int? = nil
+    /// Total tokens used in the current context (input + output, nil until first result).
+    var contextTokensUsed: Int? = nil
+    /// Input tokens for the latest result (includes cache reads).
+    var contextInputTokens: Int = 0
+    /// Output tokens for the latest result.
+    var contextOutputTokens: Int = 0
+    /// Cache read tokens for the latest result.
+    var contextCacheReadTokens: Int = 0
+    /// Cache creation tokens for the latest result.
+    var contextCacheCreateTokens: Int = 0
+
+    /// Context window usage as a percentage (0–100), or nil if data not yet available.
+    var contextUsagePercent: Double? {
+        guard let used = contextTokensUsed, let total = contextWindowSize, total > 0 else { return nil }
+        return Double(used) / Double(total) * 100.0
+    }
+
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
         guard isStreaming, let lastMessage = messages.last, !lastMessage.isUser else {
@@ -766,6 +787,28 @@ class ChatViewModel {
 
             case .result(let resultMsg):
                 currentMessage.cost = resultMsg.totalCostUSD
+
+                // Extract context window data from result message
+                if let usage = resultMsg.usage {
+                    let inputTokens = usage.inputTokens
+                    let outputTokens = usage.outputTokens
+                    let cacheRead = usage.cacheReadInputTokens ?? 0
+                    let cacheCreate = usage.cacheCreationInputTokens ?? 0
+
+                    contextInputTokens = inputTokens
+                    contextOutputTokens = outputTokens
+                    contextCacheReadTokens = cacheRead
+                    contextCacheCreateTokens = cacheCreate
+                    contextTokensUsed = inputTokens + outputTokens
+
+                    // Real per-message output token count
+                    currentMessage.tokenCount = outputTokens
+                }
+
+                // Extract context window size from per-model usage
+                if let windowSize = resultMsg.modelUsage?.values.first?.contextWindow {
+                    contextWindowSize = windowSize
+                }
 
             case .permission(let permissionReq):
                 pendingPermissionRequest = permissionReq
