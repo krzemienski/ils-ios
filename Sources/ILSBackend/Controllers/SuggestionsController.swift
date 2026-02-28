@@ -34,9 +34,9 @@ struct SuggestionsController: RouteCollection {
     /// - `limit`: Max results to return (1–50, default 5)
     ///
     /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with array of SessionSuggestion
+    /// - Returns: APIResponse with ListResponse of SessionSuggestion
     @Sendable
-    func sessions(req: Request) async throws -> APIResponse<[SessionSuggestion]> {
+    func sessions(req: Request) async throws -> APIResponse<ListResponse<SessionSuggestion>> {
         let context = req.query[String.self, at: "context"] ?? ""
         let projectName = req.query[String.self, at: "projectName"]
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 5, 1), 50)
@@ -71,7 +71,7 @@ struct SuggestionsController: RouteCollection {
             clickCounts: clickCounts
         )
 
-        return APIResponse(success: true, data: suggestions)
+        return APIResponse(success: true, data: ListResponse(items: suggestions))
     }
 
     /// Return ranked skill suggestions based on the current project and context.
@@ -82,9 +82,9 @@ struct SuggestionsController: RouteCollection {
     /// - `limit`: Max results to return (1–50, default 5)
     ///
     /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with array of SkillSuggestion
+    /// - Returns: APIResponse with ListResponse of SkillSuggestion
     @Sendable
-    func skills(req: Request) async throws -> APIResponse<[SkillSuggestion]> {
+    func skills(req: Request) async throws -> APIResponse<ListResponse<SkillSuggestion>> {
         let projectName = req.query[String.self, at: "projectName"]
         let context = req.query[String.self, at: "context"] ?? ""
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 5, 1), 50)
@@ -101,7 +101,7 @@ struct SuggestionsController: RouteCollection {
             limit: limit
         )
 
-        return APIResponse(success: true, data: suggestions)
+        return APIResponse(success: true, data: ListResponse(items: suggestions))
     }
 
     /// Record user interaction with a suggestion for future relevance boosting.
