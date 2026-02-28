@@ -98,7 +98,9 @@ struct HomeView: View {
             // Sessions are loaded by SidebarRootView (shared VM)
         }
         .refreshable {
-            HapticManager.impact(.medium)
+            #if os(iOS)
+            HapticManager.impact(.light)
+            #endif
             isRefreshing = true
             await dashboardVM.loadAll()
             await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
