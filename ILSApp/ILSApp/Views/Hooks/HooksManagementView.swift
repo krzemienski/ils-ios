@@ -6,16 +6,19 @@ struct HooksManagementView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var viewModel = SettingsViewModel()
+    @State private var viewModel = HooksViewModel()
+    @State private var showCreateSheet = false
+    @State private var editingHook: (eventType: String, groupIndex: Int, group: HookGroup)?
+    @State private var showDeleteError: String?
 
     var body: some View {
         Group {
-            if viewModel.isLoadingConfig {
+            if viewModel.isLoading && viewModel.hooks.isEmpty {
                 loadingState
-            } else if let hooks = viewModel.config?.content.hooks, hasAnyHooks(hooks) {
-                hooksList(hooks)
-            } else {
+            } else if viewModel.hooks.isEmpty {
                 emptyState
+            } else {
+                hooksList
             }
         }
         .background(theme.bgPrimary)
@@ -23,41 +26,67 @@ struct HooksManagementView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showCreateSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .accessibilityLabel("Create new hook")
+            }
+        }
         .refreshable {
-            await viewModel.loadConfig()
+            await viewModel.loadHooks()
         }
         .task {
             viewModel.configure(client: appState.apiClient)
-            await viewModel.loadConfig()
+            await viewModel.loadHooks()
         }
         .onChange(of: appState.serverURL) { _, _ in
             viewModel.configure(client: appState.apiClient)
-            Task { await viewModel.loadConfig() }
+            Task { await viewModel.loadHooks() }
         }
-    }
-
-    // MARK: - Helpers
-
-    private func hasAnyHooks(_ hooks: HooksConfig) -> Bool {
-        countTotalHooks(hooks) > 0
-    }
-
-    private func eventSections(_ hooks: HooksConfig) -> [(String, [HookGroup])] {
-        hooks.events
-            .filter { !$0.value.isEmpty }
-            .sorted { $0.key < $1.key }
-            .map { ($0.key, $0.value) }
+        .sheet(isPresented: $showCreateSheet) {
+            HookEditorSheet(
+                existingHook: nil,
+                onSave: { eventType, group, editIndex in
+                    await viewModel.saveHook(eventType: eventType, group: group, editIndex: editIndex)
+                }
+            )
+        }
+        .sheet(item: Binding(
+            get: { editingHook.map { EditingHookWrapper(eventType: $0.eventType, groupIndex: $0.groupIndex, group: $0.group) } },
+            set: { wrapper in editingHook = wrapper.map { ($0.eventType, $0.groupIndex, $0.group) } }
+        )) { wrapper in
+            HookEditorSheet(
+                existingHook: (wrapper.eventType, wrapper.groupIndex, wrapper.group),
+                onSave: { eventType, group, editIndex in
+                    await viewModel.saveHook(eventType: eventType, group: group, editIndex: editIndex)
+                }
+            )
+        }
+        .alert("Delete Failed", isPresented: Binding(
+            get: { showDeleteError != nil },
+            set: { if !$0 { showDeleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let error = showDeleteError {
+                Text(error)
+            }
+        }
     }
 
     // MARK: - Hooks List
 
-    private func hooksList(_ hooks: HooksConfig) -> some View {
+    private var hooksList: some View {
         ScrollView {
             LazyVStack(spacing: theme.spacingMD) {
-                summaryHeader(hooks)
+                summaryHeader
 
-                ForEach(eventSections(hooks), id: \.0) { eventType, groups in
-                    hookEventSection(eventType: eventType, groups: groups)
+                ForEach(viewModel.eventTypes, id: \.self) { eventType in
+                    hookEventSection(eventType: eventType)
                 }
 
                 configActionButtons
@@ -70,18 +99,10 @@ struct HooksManagementView: View {
 
     // MARK: - Summary Header
 
-    private func countTotalHooks(_ hooks: HooksConfig) -> Int {
-        hooks.events.values.reduce(0) { $0 + $1.count }
-    }
-
-    @ViewBuilder
-    private func summaryHeader(_ hooks: HooksConfig) -> some View {
-        let totalHooks = countTotalHooks(hooks)
-        let eventCount = eventSections(hooks).count
-
+    private var summaryHeader: some View {
         HStack(spacing: theme.spacingMD) {
             VStack(spacing: 2) {
-                Text("\(totalHooks)")
+                Text("\(viewModel.totalHookCount)")
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                 Text("Total Hooks")
@@ -94,7 +115,7 @@ struct HooksManagementView: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
             VStack(spacing: 2) {
-                Text("\(eventCount)")
+                Text("\(viewModel.eventTypes.count)")
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.info)
                 Text("Event Types")
@@ -110,20 +131,18 @@ struct HooksManagementView: View {
 
     // MARK: - Hook Event Section
 
-    private func countGroupHooks(_ groups: [HookGroup]) -> Int {
-        groups.reduce(0) { $0 + ($1.hooks?.count ?? 0) }
-    }
+    private func hookEventSection(eventType: String) -> some View {
+        let items = viewModel.hooksByEventType[eventType] ?? []
+        let hookCount = items.count
 
-    private func hookEventSection(eventType: String, groups: [HookGroup]) -> some View {
-        let hookCount = countGroupHooks(groups)
         return VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack(spacing: theme.spacingSM) {
-                Image(systemName: iconForEventType(eventType))
+                Image(systemName: viewModel.iconForEventType(eventType))
                     .foregroundStyle(theme.accent)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .accessibilityHidden(true)
 
-                Text(eventType)
+                Text(viewModel.labelForEventType(eventType))
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
@@ -139,83 +158,129 @@ struct HooksManagementView: View {
             }
             .padding(.top, theme.spacingSM)
 
-            ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
-                ForEach(group.hooks ?? [], id: \.command) { hookDef in
-                    hookRow(hookDef: hookDef, matcher: group.matcher, eventType: eventType)
-                }
+            ForEach(items) { item in
+                hookRow(item: item, eventType: eventType)
             }
         }
     }
 
     // MARK: - Hook Row
 
-    private func hookRow(hookDef: HookDefinition, matcher: String?, eventType: String) -> some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            // Command line
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "terminal")
-                    .foregroundStyle(theme.accent)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .accessibilityHidden(true)
-
-                Text(hookDef.command ?? "No command")
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
-                    .foregroundStyle(theme.textPrimary)
-                    .lineLimit(2)
-
-                Spacer()
+    private func hookRow(item: HookDisplayItem, eventType: String) -> some View {
+        Button {
+            // Open edit sheet -- build the HookGroup from the display item
+            if let hooksConfig = viewModel.config?.content.hooks,
+               let groups = hooksConfig.events[eventType],
+               item.groupIndex < groups.count {
+                editingHook = (eventType: eventType, groupIndex: item.groupIndex, group: groups[item.groupIndex])
             }
-
-            // Metadata row
-            HStack(spacing: theme.spacingSM) {
-                // Hook type badge
-                if let hookType = hookDef.type {
-                    Text(hookType)
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+        } label: {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                // Action summary line
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: iconForHandlerType(item.hookType))
                         .foregroundStyle(theme.accent)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .accessibilityHidden(true)
+
+                    Text(item.actionSummary)
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
+                        .foregroundStyle(theme.textPrimary)
+                        .lineLimit(2)
+
+                    Spacer()
+
+                    // Chevron to indicate tappable
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
+                }
+
+                // Metadata row
+                HStack(spacing: theme.spacingSM) {
+                    // Hook type badge
+                    if let hookType = item.hookType {
+                        Text(hookType)
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(colorForHandlerType(hookType))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(colorForHandlerType(hookType).opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+
+                    // Matcher badge
+                    if let matcher = item.matcher, !matcher.isEmpty {
+                        HStack(spacing: 2) {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .accessibilityHidden(true)
+                            Text(matcher)
+                                .lineLimit(1)
+                        }
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
+                        .foregroundStyle(theme.warning)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(theme.accent.opacity(0.15))
+                        .background(theme.warning.opacity(0.15))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
-                }
-
-                // Matcher badge
-                if let matcher, !matcher.isEmpty {
-                    HStack(spacing: 2) {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .accessibilityHidden(true)
-                        Text(matcher)
-                            .lineLimit(1)
                     }
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
-                    .foregroundStyle(theme.warning)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(theme.warning.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                }
 
-                Spacer()
+                    Spacer()
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button {
+                if let hooksConfig = viewModel.config?.content.hooks,
+                   let groups = hooksConfig.events[eventType],
+                   item.groupIndex < groups.count {
+                    editingHook = (eventType: eventType, groupIndex: item.groupIndex, group: groups[item.groupIndex])
+                }
+            } label: {
+                Label("Edit", systemImage: "pencil")
+            }
+
+            Button(role: .destructive) {
+                Task {
+                    if let error = await viewModel.deleteHook(eventType: eventType, groupIndex: item.groupIndex) {
+                        showDeleteError = error
+                    }
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
             }
         }
-        .padding(theme.spacingMD)
-        .modifier(GlassCard())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(eventType) hook, \(hookDef.command ?? "no command")")
+        .accessibilityLabel("\(eventType) hook, \(item.actionSummary)")
+        .accessibilityHint("Tap to edit, long press for options")
     }
 
-    private func iconForEventType(_ eventType: String) -> String {
-        switch eventType {
-        case "PreToolUse": return "wrench.and.screwdriver"
-        case "PostToolUse": return "checkmark.circle"
-        case "UserPromptSubmit": return "arrow.up.circle"
-        case "SessionStart": return "play.circle"
-        case "SubagentStart": return "person.fill.badge.plus"
-        default: return "bolt"
+    // MARK: - Handler Type Helpers
+
+    private func iconForHandlerType(_ type: String?) -> String {
+        switch type {
+        case "command": return "terminal"
+        case "http": return "network"
+        case "prompt": return "text.bubble"
+        case "agent": return "person.crop.circle"
+        default: return "terminal"
         }
     }
 
-    // MARK: - Config Action Buttons (shared between hooksList and emptyState)
+    private func colorForHandlerType(_ type: String) -> Color {
+        switch type {
+        case "command": return theme.accent
+        case "http": return theme.info
+        case "prompt": return theme.success
+        case "agent": return theme.warning
+        default: return theme.accent
+        }
+    }
+
+    // MARK: - Config Action Buttons
 
     @State private var showCopiedConfirmation = false
 
@@ -286,46 +351,71 @@ struct HooksManagementView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: theme.spacingMD) {
-            Image(systemName: "gearshape.2")
-                .font(.system(size: 40, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-                .accessibilityHidden(true)
-            Text("No Hooks Configured")
-                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-            Text("Hooks let you run custom commands at key points in Claude Code's lifecycle, such as before/after tool use or when a session ends.")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, theme.spacingLG)
-
-            // Actionable guidance card
-            VStack(alignment: .leading, spacing: theme.spacingSM) {
-                Text("To add hooks, edit your settings file:")
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                Text("~/.claude/settings.json")
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: .monospaced))
-                    .foregroundStyle(theme.accent)
-                    .padding(theme.spacingSM)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(theme.bgTertiary)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-                configActionButtons
-
-                Text("Supported event types: PreToolUse, PostToolUse, UserPromptSubmit, SessionStart, SubagentStart")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+        ScrollView {
+            VStack(spacing: theme.spacingMD) {
+                Image(systemName: "gearshape.2")
+                    .font(.system(size: 40, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
+                    .accessibilityHidden(true)
+                Text("No Hooks Configured")
+                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                Text("Hooks let you run custom commands at key points in Claude Code's lifecycle, such as before/after tool use, when a session starts, or when config changes.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, theme.spacingLG)
+
+                // Create hook button
+                Button {
+                    showCreateSheet = true
+                } label: {
+                    HStack(spacing: theme.spacingSM) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Create Hook")
+                            .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, theme.spacingMD)
+                    .background(theme.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, theme.spacingMD)
+
+                // Supported event types card
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    Text("Supported Event Types")
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: theme.spacingSM) {
+                        ForEach(HooksViewModel.allEventTypes, id: \.name) { eventInfo in
+                            HStack(spacing: 4) {
+                                Image(systemName: eventInfo.icon)
+                                    .font(.system(size: theme.fontCaption))
+                                    .foregroundStyle(theme.accent)
+                                    .frame(width: 16)
+                                Text(eventInfo.label)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
+                                    .lineLimit(1)
+                                Spacer()
+                            }
+                        }
+                    }
+
+                    configActionButtons
+                        .padding(.top, theme.spacingSM)
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+                .padding(.horizontal, theme.spacingMD)
             }
-            .padding(theme.spacingMD)
-            .modifier(GlassCard())
-            .padding(.horizontal, theme.spacingMD)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingXL)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, theme.spacingXL)
     }
 
     // MARK: - Loading State
@@ -342,10 +432,19 @@ struct HooksManagementView: View {
     }
 }
 
+// MARK: - Identifiable Wrapper for Edit Sheet
+
+/// Wrapper to make the editing hook tuple Identifiable for sheet(item:) binding.
+private struct EditingHookWrapper: Identifiable {
+    let id = UUID()
+    let eventType: String
+    let groupIndex: Int
+    let group: HookGroup
+}
+
 #Preview {
     NavigationStack {
         HooksManagementView()
             .environment(AppState())
     }
 }
-
