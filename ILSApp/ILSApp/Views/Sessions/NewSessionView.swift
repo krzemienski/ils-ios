@@ -32,6 +32,10 @@ struct NewSessionView: View {
     @State private var maxTurns = ""
     @State private var sessionName = ""
     @State private var showConfig = false
+    /// Controls presentation of the templates library sheet.
+    @State private var showTemplates = false
+    /// The name of the template applied to the current configuration, if any.
+    @State private var appliedTemplateName: String? = nil
 
     // Fork mode state
     // recentSessions and isLoadingSessions moved to NewSessionViewModel
@@ -118,6 +122,16 @@ struct NewSessionView: View {
                         || ($0.projectName ?? "").lowercased().contains(query)
                         || $0.model.lowercased().contains(query)
                 }
+            }
+        }
+        .sheet(isPresented: $showTemplates) {
+            TemplatesLibraryView { template in
+                selectedModel = template.model
+                permissionMode = template.permissionMode
+                systemPrompt = template.systemPrompt
+                maxBudget = template.maxBudgetString
+                maxTurns = template.maxTurns.map { String($0) } ?? ""
+                appliedTemplateName = template.name
             }
         }
         #if os(iOS)
@@ -474,6 +488,7 @@ struct NewSessionView: View {
                         .accessibilityIdentifier("session-name-field")
                 }
 
+                templatePickerButton
                 modelSection
                 permissionsSection
                 systemPromptSection
@@ -487,6 +502,52 @@ struct NewSessionView: View {
         .padding(theme.spacingSM)
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+    }
+
+    // MARK: - Template Picker Button
+
+    /// Button that opens the templates library sheet, plus an applied-template badge.
+    ///
+    /// Tapping the button presents ``TemplatesLibraryView`` as a sheet. When a template
+    /// is selected, the configuration fields are populated and a "Template: <name>" badge
+    /// is displayed below the button to confirm which template is in use.
+    @ViewBuilder
+    private var templatePickerButton: some View {
+        VStack(alignment: .leading, spacing: theme.spacingXS) {
+            Button {
+                showTemplates = true
+            } label: {
+                HStack(spacing: theme.spacingXS) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    Text("From Template")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                }
+                .foregroundStyle(theme.accent)
+                .padding(.horizontal, theme.spacingSM)
+                .padding(.vertical, theme.spacingXS + 2)
+                .background(theme.accent.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("from-template-button")
+
+            if let templateName = appliedTemplateName {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                    Text("Template: \(templateName)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                }
+                .padding(.horizontal, theme.spacingXS + 2)
+                .padding(.vertical, 3)
+                .background(theme.accent.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .accessibilityIdentifier("applied-template-badge")
+            }
+        }
     }
 
     // MARK: - Model Selection

@@ -214,6 +214,10 @@
 		806FB07F2FE6F6C7990534E2 /* CrimsonTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F254EBBAABE0F2400CF42A6 /* CrimsonTheme.swift */; };
 		80AF8390762975EE963049E9 /* NeonNoirTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */; };
 		817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF79B379753DF9239B9A59CE /* SessionTemplate.swift */; };
+		BBT001TMPL00001BBBBCCDD01 /* TemplatesLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAT001TMPL00001AABBCCDD01 /* TemplatesLibraryView.swift */; };
+		BBT001TMPL00002BBBBCCDD02 /* TemplateRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAT001TMPL00002AABBCCDD02 /* TemplateRow.swift */; };
+		BBT001TMPL00003BBBBCCDD03 /* EditTemplateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAT001TMPL00003AABBCCDD03 /* EditTemplateView.swift */; };
+		BBT001TMPL00004BBBBCCDD04 /* TemplatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAT001TMPL00004AABBCCDD04 /* TemplatesViewModel.swift */; };
 		81BD7A2F3D77F9EC7CDFEA58 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548657A1773765E26B590326 /* SkillsViewModel.swift */; };
 		81EA0BAEEB2CEF1F8F48A784 /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */; };
 		81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5264936CB2EEF18D3167704B /* LogViewerView.swift */; };
@@ -673,6 +677,18 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		AAT001TMPL00001AABBCCDD01 /* TemplatesLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesLibraryView.swift; sourceTree = "<group>"; };
+		AAT001TMPL00002AABBCCDD02 /* TemplateRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateRow.swift; sourceTree = "<group>"; };
+		AAT001TMPL00003AABBCCDD03 /* EditTemplateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditTemplateView.swift; sourceTree = "<group>"; };
+		AAT001TMPL00004AABBCCDD04 /* TemplatesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesViewModel.swift; sourceTree = "<group>"; };
+		AA11223344556677889900AA /* BashGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BashGrammar.swift; sourceTree = "<group>"; };
+		BB11223344556677889900BB /* PythonGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonGrammar.swift; sourceTree = "<group>"; };
+		CC11223344556677889900CC /* JavaScriptGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JavaScriptGrammar.swift; sourceTree = "<group>"; };
+		DD11223344556677889900DD /* SwiftGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftGrammar.swift; sourceTree = "<group>"; };
+		727D0C276E674AD88EB9463E /* SyntaxRuleTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxRuleTypes.swift; sourceTree = "<group>"; };
+		85C1BA7D562D484C83E126A3 /* GrammarConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarConfig.swift; sourceTree = "<group>"; };
+		90E0C263F72E46E1ACB15FD5 /* GrammarDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarDefinitions.swift; sourceTree = "<group>"; };
+		4C85A90430484B5DBD710158 /* GrammarRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarRegistry.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -897,6 +913,16 @@
 			path = state;
 			sourceTree = "<group>";
 		};
+		CCT001TMPL00001CCCCDDEE01 /* Templates */ = {
+			isa = PBXGroup;
+			children = (
+				AAT001TMPL00003AABBCCDD03 /* EditTemplateView.swift */,
+				AAT001TMPL00002AABBCCDD02 /* TemplateRow.swift */,
+				AAT001TMPL00001AABBCCDD01 /* TemplatesLibraryView.swift */,
+			);
+			path = Templates;
+			sourceTree = "<group>";
+		};
 		6F49257F38D17C70764B897D /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
@@ -1097,6 +1123,7 @@
 				EC0EA26CB702D429DB898547 /* Root */,
 				6F49257F38D17C70764B897D /* Sessions */,
 				65E9833774D51388F67CA2ED /* Settings */,
+				CCT001TMPL00001CCCCDDEE01 /* Templates */,
 				92871BF3828C012BD56DA31B /* Shared */,
 				22DD4F3C737B296969C8725E /* System */,
 				964C9FCA1325915B55D0A42C /* Teams */,
@@ -1174,6 +1201,7 @@
 				CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */,
 				6E65F9892954F605C2737A7D /* TeamsViewModel.swift */,
 				C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */,
+				AAT001TMPL00004AABBCCDD04 /* TemplatesViewModel.swift */,
 				83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */,
 			);
 			path = ViewModels;
@@ -1630,6 +1658,10 @@
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
 				817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */,
 				5C1BE37B321699D1338D5A18 /* SessionWidget.swift in Sources */,
+				BBT001TMPL00001BBBBCCDD01 /* TemplatesLibraryView.swift in Sources */,
+				BBT001TMPL00002BBBBCCDD02 /* TemplateRow.swift in Sources */,
+				BBT001TMPL00003BBBBCCDD03 /* EditTemplateView.swift in Sources */,
+				BBT001TMPL00004BBBBCCDD04 /* TemplatesViewModel.swift in Sources */,
 				E6F992C4BA5DAA01E1C28291 /* SessionsViewModel.swift in Sources */,
 				140F5D17040FBC8C181E4FF2 /* SettingsAboutSection.swift in Sources */,
 				AFB2F0196A4B23CDC4E2AA58 /* SettingsAppearanceSection.swift in Sources */,
