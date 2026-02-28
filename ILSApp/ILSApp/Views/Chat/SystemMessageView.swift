@@ -70,11 +70,13 @@ enum SystemEventType {
 /// ### Presentation
 /// - ``iconName`` - SF Symbol name for this event kind
 /// - ``color(theme:)`` - Semantic theme color for icon, text, and tinted background
-enum SystemEventKind {
+fileprivate enum SystemEventKind {
     case sessionStarted
     case sessionEnded
     case sessionForked
     case planMode
+    case autoMode
+    case contextCleared
     case warning
     case error
     case info
@@ -88,7 +90,9 @@ enum SystemEventKind {
         if lower.contains("fork") || lower.contains("branch") { return .sessionForked }
         if lower.contains("started") || lower.contains("created") || lower.contains("connected") { return .sessionStarted }
         if lower.contains("ended") || lower.contains("closed") || lower.contains("disconnected") || lower.contains("terminated") { return .sessionEnded }
+        if lower.contains("auto mode") || lower.contains("agent mode") { return .autoMode }
         if lower.contains("plan mode") { return .planMode }
+        if (lower.contains("context") && lower.contains("clear")) || lower.contains("compacted") { return .contextCleared }
         if lower.contains("error") || lower.contains("failed") { return .error }
         if lower.contains("warning") || lower.contains("warn") { return .warning }
         return .info
@@ -101,6 +105,8 @@ enum SystemEventKind {
         case .sessionEnded:   return "stop.circle.fill"
         case .sessionForked:  return "arrow.branch"
         case .planMode:       return "pencil.circle.fill"
+        case .autoMode:       return "wand.and.stars"
+        case .contextCleared: return "xmark.circle.fill"
         case .warning:        return "exclamationmark.circle.fill"
         case .error:          return "exclamationmark.triangle.fill"
         case .info:           return "info.circle.fill"
@@ -110,13 +116,15 @@ enum SystemEventKind {
     /// Semantic color from the active theme for icon, text, and tinted background.
     func color(theme: ThemeSnapshot) -> Color {
         switch self {
-        case .sessionStarted: return theme.success
+        case .sessionStarted: return theme.info
         case .sessionEnded:   return theme.textTertiary
         case .sessionForked:  return theme.info
-        case .planMode:       return theme.info
+        case .planMode:       return theme.warning
+        case .autoMode:       return theme.warning
+        case .contextCleared: return theme.warning
         case .warning:        return theme.warning
         case .error:          return theme.error
-        case .info:           return theme.entitySystem
+        case .info:           return theme.textTertiary
         }
     }
 }
@@ -181,4 +189,18 @@ struct SystemMessageView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("System message: \(message)")
     }
+}
+
+// MARK: - Preview
+
+#Preview {
+    VStack(spacing: 8) {
+        SystemMessageView(message: "Session started")
+        SystemMessageView(message: "Session forked from abc123")
+        SystemMessageView(message: "Entered plan mode")
+        SystemMessageView(message: "Entered auto mode")
+        SystemMessageView(message: "Context window cleared")
+        SystemMessageView(message: "Unknown event occurred")
+    }
+    .padding()
 }
