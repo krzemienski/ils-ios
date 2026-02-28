@@ -56,12 +56,23 @@ public struct ListResponse<T: Codable>: Codable where T: Sendable {
 
 // MARK: - Project Requests
 
+/// Request payload for creating a new project in ILS.
 public struct CreateProjectRequest: Codable, Sendable {
+    /// Display name for the project.
     public let name: String
+    /// Absolute filesystem path to the project's root directory.
     public let path: String
+    /// Default Claude model to use for sessions in this project (e.g., `"sonnet"`, `"opus"`).
     public let defaultModel: String?
+    /// Optional human-readable description of the project.
     public let description: String?
 
+    /// Creates a new project request.
+    /// - Parameters:
+    ///   - name: Display name for the project.
+    ///   - path: Absolute filesystem path to the project's root directory.
+    ///   - defaultModel: Default Claude model for sessions in this project.
+    ///   - description: Optional human-readable description of the project.
     public init(name: String, path: String, defaultModel: String? = nil, description: String? = nil) {
         self.name = name
         self.path = path
@@ -70,11 +81,22 @@ public struct CreateProjectRequest: Codable, Sendable {
     }
 }
 
+/// Request payload for updating an existing project's metadata.
+///
+/// All fields are optional; only non-nil values are applied.
 public struct UpdateProjectRequest: Codable, Sendable {
+    /// New display name for the project, or `nil` to leave unchanged.
     public let name: String?
+    /// New default Claude model for sessions, or `nil` to leave unchanged.
     public let defaultModel: String?
+    /// New human-readable description, or `nil` to leave unchanged.
     public let description: String?
 
+    /// Creates an update project request.
+    /// - Parameters:
+    ///   - name: New display name for the project.
+    ///   - defaultModel: New default Claude model for sessions.
+    ///   - description: New human-readable description of the project.
     public init(name: String? = nil, defaultModel: String? = nil, description: String? = nil) {
         self.name = name
         self.defaultModel = defaultModel
@@ -130,12 +152,20 @@ public struct CreateSessionRequest: Codable, Sendable {
     }
 }
 
-/// Response from session scan
+/// Response from a filesystem scan for external Claude Code sessions.
 public struct SessionScanResponse: Codable, Sendable {
+    /// External sessions discovered during the scan.
     public let items: [ExternalSession]
+    /// Filesystem paths that were scanned during the operation.
     public let scannedPaths: [String]
+    /// Total number of sessions discovered across all scanned paths.
     public let total: Int
 
+    /// Creates a session scan response.
+    /// - Parameters:
+    ///   - items: External sessions discovered during the scan.
+    ///   - scannedPaths: Filesystem paths that were scanned.
+    ///   - total: Total session count; defaults to the number of items.
     public init(items: [ExternalSession], scannedPaths: [String], total: Int? = nil) {
         self.items = items
         self.scannedPaths = scannedPaths
@@ -143,11 +173,17 @@ public struct SessionScanResponse: Codable, Sendable {
     }
 }
 
-/// Response for recent sessions (for dashboard timeline)
+/// Response containing recently active sessions for the dashboard timeline.
 public struct RecentSessionsResponse: Codable, Sendable {
+    /// Recently active sessions ordered by last activity.
     public let items: [ChatSession]
+    /// Total number of recent sessions available.
     public let total: Int
 
+    /// Creates a recent sessions response.
+    /// - Parameters:
+    ///   - items: Recently active sessions ordered by last activity.
+    ///   - total: Total session count; defaults to the number of items.
     public init(items: [ChatSession], total: Int? = nil) {
         self.items = items
         self.total = total ?? items.count
@@ -360,17 +396,35 @@ public struct ChatExport: Codable, Sendable {
     }
 }
 
-/// Session metadata for export.
+/// Session metadata included in a chat export payload.
 public struct ChatExportSession: Codable, Sendable {
+    /// Unique identifier of the exported session.
     public let id: UUID
+    /// Display name of the session, if one was assigned.
     public let name: String?
+    /// Claude model used for this session (e.g., `"sonnet"`, `"opus"`).
     public let model: String
+    /// Timestamp when the session was created.
     public let createdAt: Date
+    /// Timestamp of the most recent activity in the session.
     public let lastActiveAt: Date
+    /// Total number of messages in the session.
     public let messageCount: Int
+    /// Cumulative cost of all Claude API calls in the session, in USD.
     public let totalCostUSD: Double?
+    /// Name of the project this session is associated with, if any.
     public let projectName: String?
 
+    /// Creates a chat export session metadata value.
+    /// - Parameters:
+    ///   - id: Unique identifier of the exported session.
+    ///   - name: Display name of the session.
+    ///   - model: Claude model used for this session.
+    ///   - createdAt: Timestamp when the session was created.
+    ///   - lastActiveAt: Timestamp of the most recent activity.
+    ///   - messageCount: Total number of messages in the session.
+    ///   - totalCostUSD: Cumulative API cost in USD.
+    ///   - projectName: Name of the associated project, if any.
     public init(
         id: UUID,
         name: String?,
@@ -392,12 +446,20 @@ public struct ChatExportSession: Codable, Sendable {
     }
 }
 
-/// Message representation for export.
+/// A single message included in a chat export payload.
 public struct ChatExportMessage: Codable, Sendable {
+    /// Role of the message author (e.g., user or assistant).
     public let role: MessageRole
+    /// Text content of the message.
     public let content: String
+    /// Timestamp when the message was created.
     public let createdAt: Date
 
+    /// Creates a chat export message.
+    /// - Parameters:
+    ///   - role: Role of the message author.
+    ///   - content: Text content of the message.
+    ///   - createdAt: Timestamp when the message was created.
     public init(role: MessageRole, content: String, createdAt: Date) {
         self.role = role
         self.content = content
@@ -405,11 +467,17 @@ public struct ChatExportMessage: Codable, Sendable {
     }
 }
 
-/// Permission decision from client
+/// Permission decision sent by the client in response to a tool-use permission request.
 public struct PermissionDecision: Codable, Sendable {
-    public let decision: String // "allow" or "deny"
+    /// The client's decision — either `"allow"` or `"deny"`.
+    public let decision: String
+    /// Optional human-readable explanation for the decision.
     public let reason: String?
 
+    /// Creates a permission decision.
+    /// - Parameters:
+    ///   - decision: The client's decision (`"allow"` or `"deny"`).
+    ///   - reason: Optional human-readable explanation for the decision.
     public init(decision: String, reason: String? = nil) {
         self.decision = decision
         self.reason = reason
@@ -418,9 +486,13 @@ public struct PermissionDecision: Codable, Sendable {
 
 // MARK: - WebSocket Messages
 
+/// Messages that the client sends to the server over a WebSocket connection.
 public enum WSClientMessage: Codable, Sendable {
+    /// A user prompt to send to Claude.
     case message(prompt: String)
+    /// A permission decision responding to a server ``PermissionRequest``.
     case permission(requestId: String, decision: String, reason: String?)
+    /// A cancellation request for the current in-progress Claude operation.
     case cancel
 
     private enum CodingKeys: String, CodingKey {
@@ -465,10 +537,15 @@ public enum WSClientMessage: Codable, Sendable {
     }
 }
 
+/// Messages that the server sends to the client over a WebSocket connection.
 public enum WSServerMessage: Codable, Sendable {
+    /// An incremental streaming chunk from Claude's response.
     case stream(StreamMessage)
+    /// A tool-use permission request that requires a client decision before Claude can proceed.
     case permission(PermissionRequest)
+    /// A fatal error that terminated the current Claude operation.
     case error(StreamError)
+    /// Confirmation that the current Claude operation has finished, with a result summary.
     case complete(ResultMessage)
 
     private enum CodingKeys: String, CodingKey {
@@ -592,18 +669,41 @@ public struct InstallPluginRequest: Codable, Sendable {
 
 // MARK: - Theme Requests
 
+/// Request payload for creating a new custom UI theme.
 public struct CreateCustomThemeRequest: Codable, Sendable {
+    /// Unique display name for the theme.
     public let name: String
+    /// Optional human-readable description of the theme.
     public let description: String?
+    /// Optional author or creator of the theme.
     public let author: String?
+    /// Optional semantic version string for the theme (e.g., `"1.0.0"`).
     public let version: String?
+    /// Color design tokens for the theme.
     public let colors: ColorTokens?
+    /// Typography design tokens for the theme.
     public let typography: TypographyTokens?
+    /// Spacing design tokens for the theme.
     public let spacing: SpacingTokens?
+    /// Corner radius design tokens for the theme.
     public let cornerRadius: CornerRadiusTokens?
+    /// Shadow design tokens for the theme.
     public let shadows: ShadowTokens?
+    /// Mesh gradient configuration for the theme's background.
     public let meshGradient: MeshGradientConfig?
 
+    /// Creates a new custom theme request.
+    /// - Parameters:
+    ///   - name: Unique display name for the theme.
+    ///   - description: Optional human-readable description of the theme.
+    ///   - author: Optional author or creator of the theme.
+    ///   - version: Optional semantic version string for the theme.
+    ///   - colors: Color design tokens.
+    ///   - typography: Typography design tokens.
+    ///   - spacing: Spacing design tokens.
+    ///   - cornerRadius: Corner radius design tokens.
+    ///   - shadows: Shadow design tokens.
+    ///   - meshGradient: Mesh gradient configuration for the background.
     public init(
         name: String,
         description: String? = nil,
@@ -629,18 +729,43 @@ public struct CreateCustomThemeRequest: Codable, Sendable {
     }
 }
 
+/// Request payload for updating an existing custom UI theme.
+///
+/// All fields are optional; only non-nil values are applied to the existing theme.
 public struct UpdateCustomThemeRequest: Codable, Sendable {
+    /// New display name for the theme, or `nil` to leave unchanged.
     public let name: String?
+    /// New human-readable description, or `nil` to leave unchanged.
     public let description: String?
+    /// New author attribution, or `nil` to leave unchanged.
     public let author: String?
+    /// New semantic version string, or `nil` to leave unchanged.
     public let version: String?
+    /// Updated color design tokens, or `nil` to leave unchanged.
     public let colors: ColorTokens?
+    /// Updated typography design tokens, or `nil` to leave unchanged.
     public let typography: TypographyTokens?
+    /// Updated spacing design tokens, or `nil` to leave unchanged.
     public let spacing: SpacingTokens?
+    /// Updated corner radius design tokens, or `nil` to leave unchanged.
     public let cornerRadius: CornerRadiusTokens?
+    /// Updated shadow design tokens, or `nil` to leave unchanged.
     public let shadows: ShadowTokens?
+    /// Updated mesh gradient configuration, or `nil` to leave unchanged.
     public let meshGradient: MeshGradientConfig?
 
+    /// Creates an update custom theme request.
+    /// - Parameters:
+    ///   - name: New display name for the theme.
+    ///   - description: New human-readable description of the theme.
+    ///   - author: New author attribution.
+    ///   - version: New semantic version string.
+    ///   - colors: Updated color design tokens.
+    ///   - typography: Updated typography design tokens.
+    ///   - spacing: Updated spacing design tokens.
+    ///   - cornerRadius: Updated corner radius design tokens.
+    ///   - shadows: Updated shadow design tokens.
+    ///   - meshGradient: Updated mesh gradient configuration for the background.
     public init(
         name: String? = nil,
         description: String? = nil,
