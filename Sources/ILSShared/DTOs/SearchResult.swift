@@ -157,3 +157,64 @@ public struct GitHubFileEntry: Codable, Identifiable, Sendable {
         self.size = size
     }
 }
+
+/// Describes a required environment variable for an MCP server.
+public struct MCPEnvVarSpec: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let key: String
+    public let description: String
+    public let isRequired: Bool
+    public let placeholder: String?
+
+    public init(id: UUID = UUID(), key: String, description: String, isRequired: Bool = true, placeholder: String? = nil) {
+        self.id = id
+        self.key = key
+        self.description = description
+        self.isRequired = isRequired
+        self.placeholder = placeholder
+    }
+}
+
+/// Represents a curated MCP server entry in the marketplace.
+public struct MCPMarketplaceEntry: Codable, Identifiable, Sendable {
+    public let id: UUID
+    public let name: String
+    public let repository: String
+    public let command: String
+    public let args: [String]
+    public let requiredEnvVars: [MCPEnvVarSpec]
+    public let category: String
+    public let stars: Int
+    public let isStaffPick: Bool
+    public let isTrending: Bool
+    public let tags: [String]
+    public let description: String?
+
+    public init(
+        id: UUID = UUID(),
+        name: String,
+        repository: String,
+        command: String,
+        args: [String] = [],
+        requiredEnvVars: [MCPEnvVarSpec] = [],
+        category: String,
+        stars: Int = 0,
+        isStaffPick: Bool = false,
+        isTrending: Bool = false,
+        tags: [String] = [],
+        description: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.repository = repository
+        self.command = command
+        self.args = args
+        self.requiredEnvVars = requiredEnvVars
+        self.category = category
+        self.stars = stars
+        self.isStaffPick = isStaffPick
+        self.isTrending = isTrending
+        self.tags = tags
+        self.description = description
+    }
+}
