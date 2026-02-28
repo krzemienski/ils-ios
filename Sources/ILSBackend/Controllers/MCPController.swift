@@ -8,6 +8,8 @@ import ILSShared
 ///
 /// Routes:
 /// - `GET /mcp`: List MCP servers (all scopes or filtered by scope)
+/// - `GET /mcp/search`: Search GitHub for MCP server repositories
+/// - `GET /mcp/marketplace`: Browse curated marketplace of popular MCP servers
 /// - `GET /mcp/:name`: Get a specific MCP server by name
 /// - `GET /mcp/:name/health`: Check health status of an MCP server
 /// - `GET /mcp/:name/logs`: Get recent logs for an MCP server
@@ -27,6 +29,10 @@ struct MCPController: RouteCollection {
 
         mcp.get(use: list)
         mcp.post(use: create)
+
+        // Static routes — must come before ":name" to avoid capture
+        mcp.get("search", use: search)
+        mcp.get("marketplace", use: marketplace)
 
         // Named server routes — order matters: static segments before ":name"
         mcp.get(":name", "health", use: health)
@@ -186,6 +192,167 @@ struct MCPController: RouteCollection {
         return APIResponse(
             success: true,
             data: DeletedResponse()
+        )
+    }
+
+    // MARK: - Marketplace & Search
+
+    /// Search GitHub for MCP server repositories.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required)
+    /// - `page`: Page number (default 1)
+    /// - `per_page`: Results per page (default 20)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of GitHubSearchResult objects
+    @Sendable
+    func search(req: Request) async throws -> APIResponse<ListResponse<GitHubSearchResult>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'q' is required")
+        }
+
+        let page = req.query[Int.self, at: "page"] ?? 1
+        let perPage = req.query[Int.self, at: "per_page"] ?? 20
+
+        let results = try await req.application.githubService.searchMCPServers(query: query, page: page, perPage: perPage)
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: results)
+        )
+    }
+
+    /// Return a curated list of popular MCP servers from the marketplace.
+    ///
+    /// Returns hardcoded Staff Picks and Popular entries covering the most widely
+    /// used MCP servers in the community ecosystem.
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of MCPMarketplaceEntry objects
+    @Sendable
+    func marketplace(req: Request) async throws -> APIResponse<ListResponse<MCPMarketplaceEntry>> {
+        let entries: [MCPMarketplaceEntry] = [
+            // MARK: Staff Picks
+            MCPMarketplaceEntry(
+                name: "filesystem",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+                requiredEnvVars: [],
+                category: "Staff Picks",
+                stars: 28000,
+                isStaffPick: true,
+                isTrending: false,
+                tags: ["files", "filesystem", "official"],
+                description: "Read, write, and manage files on your local filesystem. Perfect for working with codebases and documents."
+            ),
+            MCPMarketplaceEntry(
+                name: "brave-search",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-brave-search"],
+                requiredEnvVars: [
+                    MCPEnvVarSpec(key: "BRAVE_API_KEY", description: "Brave Search API key", isRequired: true, placeholder: "BSA...")
+                ],
+                category: "Staff Picks",
+                stars: 28000,
+                isStaffPick: true,
+                isTrending: true,
+                tags: ["search", "web", "official"],
+                description: "Web search powered by Brave Search API. Get real-time search results directly in Claude."
+            ),
+            MCPMarketplaceEntry(
+                name: "github",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-github"],
+                requiredEnvVars: [
+                    MCPEnvVarSpec(key: "GITHUB_PERSONAL_ACCESS_TOKEN", description: "GitHub Personal Access Token", isRequired: true, placeholder: "ghp_...")
+                ],
+                category: "Staff Picks",
+                stars: 28000,
+                isStaffPick: true,
+                isTrending: true,
+                tags: ["github", "git", "official"],
+                description: "Interact with GitHub repositories, issues, pull requests, and code directly from Claude."
+            ),
+            // MARK: Popular
+            MCPMarketplaceEntry(
+                name: "postgres",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-postgres"],
+                requiredEnvVars: [
+                    MCPEnvVarSpec(key: "POSTGRES_CONNECTION_STRING", description: "PostgreSQL connection string", isRequired: true, placeholder: "postgresql://user:pass@localhost/db")
+                ],
+                category: "Popular",
+                stars: 28000,
+                isStaffPick: false,
+                isTrending: false,
+                tags: ["database", "postgres", "sql", "official"],
+                description: "Query and manage PostgreSQL databases. Run SQL, explore schemas, and interact with your data."
+            ),
+            MCPMarketplaceEntry(
+                name: "puppeteer",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-puppeteer"],
+                requiredEnvVars: [],
+                category: "Popular",
+                stars: 28000,
+                isStaffPick: false,
+                isTrending: true,
+                tags: ["browser", "automation", "web", "official"],
+                description: "Browser automation with Puppeteer. Navigate websites, take screenshots, and interact with web pages."
+            ),
+            MCPMarketplaceEntry(
+                name: "slack",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-slack"],
+                requiredEnvVars: [
+                    MCPEnvVarSpec(key: "SLACK_BOT_TOKEN", description: "Slack Bot OAuth token", isRequired: true, placeholder: "xoxb-..."),
+                    MCPEnvVarSpec(key: "SLACK_TEAM_ID", description: "Slack workspace team ID", isRequired: true, placeholder: "T...")
+                ],
+                category: "Popular",
+                stars: 28000,
+                isStaffPick: false,
+                isTrending: false,
+                tags: ["slack", "messaging", "team", "official"],
+                description: "Read and send messages in Slack. List channels, search conversations, and manage your workspace."
+            ),
+            MCPMarketplaceEntry(
+                name: "fetch",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-fetch"],
+                requiredEnvVars: [],
+                category: "Popular",
+                stars: 28000,
+                isStaffPick: false,
+                isTrending: false,
+                tags: ["http", "fetch", "web", "official"],
+                description: "Make HTTP requests to any URL. Fetch web pages, call APIs, and retrieve remote content."
+            ),
+            MCPMarketplaceEntry(
+                name: "sequential-thinking",
+                repository: "modelcontextprotocol/servers",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+                requiredEnvVars: [],
+                category: "Popular",
+                stars: 28000,
+                isStaffPick: false,
+                isTrending: true,
+                tags: ["reasoning", "thinking", "official"],
+                description: "Enables dynamic and reflective problem-solving through sequential thought chains."
+            ),
+        ]
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: entries)
         )
     }
 

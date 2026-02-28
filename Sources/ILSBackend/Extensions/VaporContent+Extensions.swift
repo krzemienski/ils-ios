@@ -193,6 +193,8 @@ extension MCPHealthResponse: Content {}
 extension MCPLogEntry: Content {}
 extension MCPLogsResponse: Content {}
 extension MCPRestartResponse: Content {}
+extension MCPMarketplaceEntry: Content {}
+extension MCPEnvVarSpec: Content {}
 extension ClaudeConfig: Content {}
 extension PermissionsConfig: Content {}
 extension HooksConfig: Content {}
