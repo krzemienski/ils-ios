@@ -7,15 +7,17 @@ struct AccentButton: View {
     let title: String
     let icon: String?
     let isLoading: Bool
+    let isFullWidth: Bool
     let action: () -> Void
 
     @State private var isPressed = false
     @State private var resetTask: Task<Void, Never>?
 
-    init(_ title: String, icon: String? = nil, isLoading: Bool = false, action: @escaping () -> Void) {
+    init(_ title: String, icon: String? = nil, isLoading: Bool = false, isFullWidth: Bool = false, action: @escaping () -> Void) {
         self.title = title
         self.icon = icon
         self.isLoading = isLoading
+        self.isFullWidth = isFullWidth
         self.action = action
     }
 
@@ -51,6 +53,7 @@ struct AccentButton: View {
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
             .foregroundColor(theme.textOnAccent)
+            .frame(maxWidth: isFullWidth ? .infinity : nil)
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingSM + 2)
             .background(theme.accent.opacity(isEnabled ? 1.0 : 0.4))
