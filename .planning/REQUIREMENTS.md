@@ -15,9 +15,9 @@ Requirements for v5.0 milestone (Cross-Platform Feature Completion & 30-Gate Aud
 
 ### Config & Settings
 
-- [ ] **CFG-01**: Config cascade visualization shows "inherited from host" vs "custom override" badges on each setting
-- [ ] **CFG-02**: System prompt and model defaults inherited from connected host CLI configuration, not hardcoded
-- [ ] **CFG-03**: Info tooltips (>=20 words) on tool controls, permissions, and settings sections
+- [x] **CFG-01**: Config cascade visualization shows "inherited from host" vs "custom override" badges on each setting
+- [x] **CFG-02**: System prompt and model defaults inherited from connected host CLI configuration, not hardcoded
+- [x] **CFG-03**: Info tooltips (>=20 words) on tool controls, permissions, and settings sections
 
 ### Skills, Plugins & Hooks
 
@@ -103,9 +103,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FOUND-01 | Phase 49 | Pending |
 | FOUND-02 | Phase 54 | Pending |
 | FOUND-03 | Phase 49 | Pending |
-| CFG-01 | Phase 51 | Pending |
-| CFG-02 | Phase 51 | Pending |
-| CFG-03 | Phase 51 | Pending |
+| CFG-01 | Phase 51 | Complete |
+| CFG-02 | Phase 51 | Complete |
+| CFG-03 | Phase 51 | Complete |
 | SKILL-01 | Phase 53 | Pending |
 | SKILL-02 | Phase 53 | Pending |
 | SKILL-03 | Phase 53 | Pending |
