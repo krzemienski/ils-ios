@@ -44,6 +44,18 @@ class ChatViewModel {
     /// Internal access for Live Activity extension.
     var streamStartTime: Date?
 
+    // MARK: - Offline Message Queue
+
+    /// Whether the backend server is currently reachable.
+    /// Set externally by the hosting view to reflect `appState.isConnected`.
+    var isConnected: Bool = true
+
+    /// True when there are messages queued for this session awaiting delivery.
+    var hasPendingQueuedMessages: Bool {
+        guard sessionId != nil else { return false }
+        return MessageQueueService.shared.pendingCount > 0
+    }
+
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
         guard isStreaming, let lastMessage = messages.last, !lastMessage.isUser else {
@@ -143,6 +155,14 @@ class ChatViewModel {
         // Cancel any previous observation tasks
         for task in observationTasks { task.cancel() }
         observationTasks.removeAll()
+
+        // Observe network restoration to drain the offline message queue
+        observationTasks.append(Task { @MainActor [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
+                guard !Task.isCancelled else { break }
+                self?.drainQueue()
+            }
+        })
 
         // Single observation task that tracks all SSEClient properties
         // Uses withObservationTracking (Swift Observation) instead of Combine publishers
@@ -544,7 +564,45 @@ class ChatViewModel {
         messages.append(ChatMessage(isUser: true, text: text))
     }
 
+    /// Send a message, or enqueue it for later delivery if the server is unreachable.
     func sendMessage(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
+        guard isConnected else {
+            if let sessionId {
+                let queued = QueuedMessage(sessionId: sessionId, content: prompt)
+                MessageQueueService.shared.enqueue(queued)
+                AppLogger.shared.info("Message queued while offline: \(prompt.prefix(50))", category: "chat")
+            }
+            return
+        }
+        performSend(prompt: prompt, projectId: projectId, options: options)
+    }
+
+    /// Deliver all messages queued for the current session now that connectivity is restored.
+    func drainQueue() {
+        guard isConnected, let sessionId else { return }
+
+        let all = MessageQueueService.shared.dequeueAll()
+        guard !all.isEmpty else { return }
+
+        // Separate messages for this session from other sessions
+        let mine = all.filter { $0.sessionId == sessionId }
+        let others = all.filter { $0.sessionId != sessionId }
+
+        // Re-enqueue messages belonging to other sessions
+        for msg in others {
+            MessageQueueService.shared.enqueue(msg)
+        }
+
+        guard !mine.isEmpty else { return }
+        AppLogger.shared.info("Draining \(mine.count) queued message(s) for session \(sessionId)", category: "chat")
+
+        for queued in mine {
+            performSend(prompt: queued.content, projectId: nil, options: nil)
+        }
+    }
+
+    /// Core send implementation — builds and starts the SSE stream request.
+    private func performSend(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
         guard let sseClient else { return }
 
         // For external sessions, inject claudeSessionId as resume option
