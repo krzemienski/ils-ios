@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC11DD22EE33FF44AA55BB04 /* MacSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */; };
+		CC11DD22EE33FF44AA55BB05 /* MacNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		0116261DC4C2DAD124FAB937 /* SkillDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0617F20B854A6A31E51BE659 /* SkillDetailView.swift */; };
 		0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E32DD92F87322D4834E67C /* SessionExporter.swift */; };
@@ -442,9 +444,19 @@
 			remoteGlobalIDString = D645525C5887D056718B993A;
 			remoteInfo = ILSApp;
 		};
+		CC11DD22EE33FF44AA55BB08 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EF21AB5EEE4667421D71D6B8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AB6F4F861DC7592BED6D0F4B;
+			remoteInfo = ILSMacApp;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSmokeTests.swift; sourceTree = "<group>"; };
+		CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacNavigationTests.swift; sourceTree = "<group>"; };
+		CC11DD22EE33FF44AA55BB03 /* ILSMacAppUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ILSMacAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D1E2F3 /* AppStoreScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshotTests.swift; sourceTree = "<group>"; };
 		01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserMessageCard.swift; sourceTree = "<group>"; };
@@ -1023,6 +1035,7 @@
 				F542A5ACA0B852B3BCD0141E /* ILSApp */,
 				10F27BC201D3A23D791EBED6 /* ILSAppUITests */,
 				60C21CF81EEA9386849DC0A8 /* ILSMacApp */,
+				CC11DD22EE33FF44AA55BB06 /* ILSMacAppUITests */,
 				074A6B4F495721F2E83C93C4 /* Packages */,
 				EF0E595ED7834EA73544B0C4 /* Products */,
 			);
@@ -1263,6 +1276,7 @@
 				5BEBD3082640EBC2FF87502B /* ILSApp.app */,
 				6565D1348C399AC59657A9F3 /* ILSAppUITests.xctest */,
 				5403907FD9017776F9FA89AC /* ILSMacApp.app */,
+				CC11DD22EE33FF44AA55BB03 /* ILSMacAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1281,6 +1295,15 @@
 				D20194415A10CB918E81BE13 /* ThemeTypographySection.swift */,
 			);
 			path = Editor;
+			sourceTree = "<group>";
+		};
+		CC11DD22EE33FF44AA55BB06 /* ILSMacAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */,
+				CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */,
+			);
+			path = ILSMacAppUITests;
 			sourceTree = "<group>";
 		};
 		F542A5ACA0B852B3BCD0141E /* ILSApp */ = {
@@ -1392,6 +1415,24 @@
 			productReference = 6565D1348C399AC59657A9F3 /* ILSAppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		CC11DD22EE33FF44AA55BB10 /* ILSMacAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC11DD22EE33FF44AA55BB13 /* Build configuration list for PBXNativeTarget "ILSMacAppUITests" */;
+			buildPhases = (
+				CC11DD22EE33FF44AA55BB07 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC11DD22EE33FF44AA55BB09 /* PBXTargetDependency */,
+			);
+			name = ILSMacAppUITests;
+			packageProductDependencies = (
+			);
+			productName = ILSMacAppUITests;
+			productReference = CC11DD22EE33FF44AA55BB03 /* ILSMacAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		D645525C5887D056718B993A /* ILSApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3CE612D23514EE7784A0C27C /* Build configuration list for PBXNativeTarget "ILSApp" */;
@@ -1432,6 +1473,10 @@
 						DevelopmentTeam = HC36V7B67Z;
 						TestTargetID = D645525C5887D056718B993A;
 					};
+					CC11DD22EE33FF44AA55BB10 = {
+						DevelopmentTeam = HC36V7B67Z;
+						TestTargetID = AB6F4F861DC7592BED6D0F4B;
+					};
 					D645525C5887D056718B993A = {
 						DevelopmentTeam = HC36V7B67Z;
 					};
@@ -1464,6 +1509,7 @@
 				D645525C5887D056718B993A /* ILSApp */,
 				AFAEC0CB808548C8237B923B /* ILSAppUITests */,
 				AB6F4F861DC7592BED6D0F4B /* ILSMacApp */,
+				CC11DD22EE33FF44AA55BB10 /* ILSMacAppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -1922,6 +1968,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC11DD22EE33FF44AA55BB07 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC11DD22EE33FF44AA55BB04 /* MacSmokeTests.swift in Sources */,
+				CC11DD22EE33FF44AA55BB05 /* MacNavigationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1929,6 +1984,11 @@
 			isa = PBXTargetDependency;
 			target = D645525C5887D056718B993A /* ILSApp */;
 			targetProxy = 393D95ED6C2FD6573ABFD6A1 /* PBXContainerItemProxy */;
+		};
+		CC11DD22EE33FF44AA55BB09 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB6F4F861DC7592BED6D0F4B /* ILSMacApp */;
+			targetProxy = CC11DD22EE33FF44AA55BB08 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2259,11 +2319,63 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		CC11DD22EE33FF44AA55BB11 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = HC36V7B67Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ils.mac.uitests;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "";
+				TEST_TARGET_NAME = ILSMacApp;
+			};
+			name = Debug;
+		};
+		CC11DD22EE33FF44AA55BB12 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = HC36V7B67Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ils.mac.uitests;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "";
+				TEST_TARGET_NAME = ILSMacApp;
+			};
+			name = Release;
+		};
 		DFCE3D86ED7093B74666BA73 /* Build configuration list for PBXProject "ILSApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4A6FB7B697FDE8443E15135D /* Debug */,
 				2872342BD321DC563EE55F50 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CC11DD22EE33FF44AA55BB13 /* Build configuration list for PBXNativeTarget "ILSMacAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC11DD22EE33FF44AA55BB11 /* Debug */,
+				CC11DD22EE33FF44AA55BB12 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
