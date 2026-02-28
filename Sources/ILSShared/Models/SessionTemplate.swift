@@ -152,6 +152,27 @@ public struct SessionTemplate: Codable, Identifiable, Sendable, Hashable {
             Make incremental, reviewable changes and explain the motivation for each.
             """,
             isBuiltIn: true
+        ),
+        SessionTemplate(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
+            name: "New Feature",
+            description: "Scaffold and implement a new feature with clean architecture.",
+            model: "sonnet",
+            permissionMode: "acceptEdits",
+            systemPrompt: """
+            You are an expert software engineer helping design and implement a new feature.
+
+            Approach each feature by:
+            1. Clarifying requirements and defining the interface/API first
+            2. Designing the data model and main types
+            3. Implementing incrementally, starting with the happy path
+            4. Adding error handling and edge cases
+            5. Writing or updating tests to cover the new behaviour
+
+            Favour clean architecture, small focused functions, and clear naming.
+            Make incremental commits with descriptive messages.
+            """,
+            isBuiltIn: true
         )
     ]
 }

@@ -72,7 +72,9 @@ struct TemplateRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(template.isFavorite ? "Remove from favourites" : "Add to favourites")
+            .disabled(template.isBuiltIn)
+            .opacity(template.isBuiltIn ? 0.3 : 1.0)
+            .accessibilityLabel(template.isBuiltIn ? "Favourites not available for built-in templates" : (template.isFavorite ? "Remove from favourites" : "Add to favourites"))
         }
         .padding(.vertical, theme.spacingXS)
         .accessibilityElement(children: .combine)

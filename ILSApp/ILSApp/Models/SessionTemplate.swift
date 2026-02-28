@@ -6,6 +6,6 @@ import ILSShared
 extension SessionTemplate {
     /// Convenience string representation of the optional max budget in USD.
     var maxBudgetString: String {
-        maxBudgetUSD.map { String($0) } ?? ""
+        maxBudgetUSD.map { String(format: "%.2f", $0) } ?? ""
     }
 }
