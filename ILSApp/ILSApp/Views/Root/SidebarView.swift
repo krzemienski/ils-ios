@@ -190,20 +190,42 @@ struct SidebarView: View {
     // MARK: - Navigation Items
 
     private var navigationItems: some View {
-        VStack(spacing: theme.spacingXS) {
-            sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
-            sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
-            sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
-            if enableAgentTeams {
-                sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
+        VStack(spacing: 0) {
+            // Primary screens group
+            sidebarSectionHeader(title: "NAVIGATE")
+            VStack(spacing: theme.spacingXS) {
+                sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
+                sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
+                sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
+                if enableAgentTeams {
+                    sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
+                }
             }
-            sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
-            sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
-            sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
-            sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
+
+            Spacer().frame(height: theme.spacingMD)
+
+            // Configuration screens group
+            sidebarSectionHeader(title: "CONFIGURE")
+            VStack(spacing: theme.spacingXS) {
+                sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
+                sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
+                sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
+                sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
+            }
         }
         .padding(.horizontal, theme.spacingSM)
         .padding(.top, theme.spacingMD)
+    }
+
+    // MARK: - Section Header
+
+    private func sidebarSectionHeader(title: String) -> some View {
+        Text(title)
+            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+            .foregroundStyle(theme.textTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, theme.spacingSM + 4)
+            .padding(.bottom, theme.spacingXS)
     }
 
     // MARK: - Sessions Section
