@@ -232,9 +232,25 @@ struct HomeView: View {
 
                     Spacer()
 
-                    Text("\(isSearching ? displaySessions.count : sessionsVM.totalCount)")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                    if isSearching {
+                        Text("\(displaySessions.count)")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    } else {
+                        Button {
+                            onNavigate?(.browser)
+                        } label: {
+                            HStack(spacing: theme.spacingXS) {
+                                Text("View All")
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                                Text("(\(sessionsVM.totalCount))")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption - 2, weight: .semibold))
+                            }
+                            .foregroundStyle(theme.accent)
+                        }
+                    }
                 }
 
                 ForEach(displaySessions, id: \.id) { session in
@@ -355,6 +371,14 @@ struct HomeView: View {
                 GridItem(.flexible(), spacing: theme.spacingSM)
             ], spacing: theme.spacingSM) {
                 quickActionCard(
+                    icon: "plus.bubble.fill",
+                    title: "New Session",
+                    color: theme.entitySession
+                ) {
+                    showNewSessionSheet = true
+                }
+
+                quickActionCard(
                     icon: "sparkles",
                     title: "Discover Skills",
                     subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
@@ -387,6 +411,14 @@ struct HomeView: View {
                     color: theme.textSecondary
                 ) {
                     onNavigate?(.settings)
+                }
+
+                quickActionCard(
+                    icon: "gauge.with.dots.needle.33percent",
+                    title: "System Monitor",
+                    color: theme.entityMCP
+                ) {
+                    onNavigate?(.system)
                 }
             }
             .shimmerIfActive(isRefreshing)
