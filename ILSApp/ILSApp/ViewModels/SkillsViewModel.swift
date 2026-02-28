@@ -14,6 +14,7 @@ class SkillsViewModel {
     var gitHubSearchText = ""
     var installingSkills: Set<String> = []
     var gitHubError: String?
+    var lastInstallError: Error?
     var lastUpdated: Date?
     var rateLimitCountdown: Int = 0
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
@@ -235,6 +236,7 @@ class SkillsViewModel {
     func installFromGitHub(result: GitHubSearchResult) async -> Bool {
         guard let client else { return false }
         installingSkills.insert(result.repository)
+        lastInstallError = nil
         defer { installingSkills.remove(result.repository) }
         do {
             let request = SkillInstallRequest(repository: result.repository, skillPath: result.skillPath)
@@ -243,9 +245,24 @@ class SkillsViewModel {
             await loadSkills(refresh: true)
             return true
         } catch {
+            self.lastInstallError = error
             self.error = error
             AppLogger.shared.error("Failed to install skill from GitHub: \(error.localizedDescription)", category: "skills")
             return false
+        }
+    }
+
+    /// Fetch preview data (README + file tree) for a GitHub repository.
+    /// Returns nil on failure (network error, rate limit, etc.).
+    func fetchPreview(repository: String) async -> GitHubRepoPreview? {
+        guard let client else { return nil }
+        do {
+            let encoded = repository.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? repository
+            let response: APIResponse<GitHubRepoPreview> = try await client.get("/skills/preview?repo=\(encoded)")
+            return response.data
+        } catch {
+            AppLogger.shared.error("Failed to fetch skill preview for \(repository): \(error.localizedDescription)", category: "skills")
+            return nil
         }
     }
 }

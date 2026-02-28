@@ -18,6 +18,7 @@ class PluginsViewModel {
     var gitHubResults: [GitHubSearchResult] = []
     var isSearchingGitHub = false
     var gitHubError: String?
+    var lastInstallError: Error?
     var rateLimitCountdown: Int = 0
     var lastUpdated: Date?
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
@@ -258,6 +259,7 @@ class PluginsViewModel {
         guard let client else { return false }
         let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.repository
         installingPlugins.insert(result.repository)
+        lastInstallError = nil
         defer { installingPlugins.remove(result.repository) }
         do {
             let request = InstallPluginRequest(pluginName: repoName, marketplace: result.repository)
@@ -265,9 +267,24 @@ class PluginsViewModel {
             await loadPlugins()
             return true
         } catch {
+            self.lastInstallError = error
             self.error = error
             AppLogger.shared.error("Failed to install plugin from GitHub: \(error.localizedDescription)", category: "plugins")
             return false
+        }
+    }
+
+    /// Fetch preview data (README + file tree) for a GitHub repository.
+    /// Returns nil on failure (network error, rate limit, etc.).
+    func fetchPreview(repository: String) async -> GitHubRepoPreview? {
+        guard let client else { return nil }
+        do {
+            let encoded = repository.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? repository
+            let response: APIResponse<GitHubRepoPreview> = try await client.get("/plugins/preview?repo=\(encoded)")
+            return response.data
+        } catch {
+            AppLogger.shared.error("Failed to fetch plugin preview for \(repository): \(error.localizedDescription)", category: "plugins")
+            return nil
         }
     }
 
