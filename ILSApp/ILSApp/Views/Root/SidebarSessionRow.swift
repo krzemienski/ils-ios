@@ -16,10 +16,12 @@ import ILSShared
 /// ### Inputs
 /// - ``session`` - The session model whose data drives the row
 /// - ``isActive`` - Whether this row represents the currently open session
+/// - ``searchText`` - Optional filter text whose matches are highlighted in accent colour
 /// - ``onTap`` - Callback invoked (with haptic feedback) when the row is tapped
 ///
 /// ### Display Helpers
 /// - ``sessionDisplayName`` - Name-fallback chain: explicit name → first-prompt prefix → "Unnamed Session"
+/// - ``highlightedDisplayName`` - AttributedString with search-term matches coloured in `theme.accent`
 /// - ``relativeTime`` - Human-readable relative timestamp derived from `lastActiveAt`
 /// - ``statusColor`` - Theme colour corresponding to the session's lifecycle status
 struct SidebarSessionRow: View {
@@ -30,6 +32,11 @@ struct SidebarSessionRow: View {
     /// When `true` the indicator dot uses `accent`, the row background gains a tinted
     /// highlight, and the session name is rendered semibold in the accent colour.
     var isActive: Bool = false
+    /// Substring used to highlight matching characters in the session name.
+    ///
+    /// When non-empty and the session is not active, any case-insensitive occurrence of
+    /// this string within ``sessionDisplayName`` is rendered in `theme.accent`.
+    var searchText: String = ""
     /// Called when the user taps the row; fired after a selection haptic.
     let onTap: () -> Void
 
@@ -47,10 +54,9 @@ struct SidebarSessionRow: View {
                     .frame(width: 6, height: 6)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    // Session name
-                    Text(sessionDisplayName)
+                    // Session name — with optional search-term highlighting
+                    Text(highlightedDisplayName)
                         .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .medium, design: theme.fontDesign))
-                        .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
                         .lineLimit(1)
 
                     // Project name (secondary context)
@@ -100,6 +106,53 @@ struct SidebarSessionRow: View {
 
     private var sessionDisplayName: String {
         session.displayName
+    }
+
+    /// Builds an `AttributedString` for the session name, highlighting every
+    /// case-insensitive occurrence of `searchText` in `theme.accent`.
+    ///
+    /// When `isActive` is `true` the entire name uses the accent colour (no
+    /// per-character highlighting needed).  When `searchText` is empty the name
+    /// is returned in `theme.textPrimary` with no additional work.
+    private var highlightedDisplayName: AttributedString {
+        let name = sessionDisplayName
+
+        // Active rows and empty queries skip the substring-scan path.
+        guard !searchText.isEmpty, !isActive else {
+            var result = AttributedString(name)
+            result.foregroundColor = isActive ? theme.accent : theme.textPrimary
+            return result
+        }
+
+        var result = AttributedString()
+        let lowercasedName = name.lowercased()
+        let lowercasedSearch = searchText.lowercased()
+        var current = name.startIndex
+
+        while current < name.endIndex {
+            let searchRange = current..<name.endIndex
+            if let matchRange = lowercasedName.range(of: lowercasedSearch, range: searchRange) {
+                // Append text before the match in the default colour.
+                if current < matchRange.lowerBound {
+                    var segment = AttributedString(name[current..<matchRange.lowerBound])
+                    segment.foregroundColor = theme.textPrimary
+                    result.append(segment)
+                }
+                // Append the matched substring in accent colour.
+                var match = AttributedString(name[matchRange])
+                match.foregroundColor = theme.accent
+                result.append(match)
+                current = matchRange.upperBound
+            } else {
+                // Append the remaining non-matching tail.
+                var tail = AttributedString(name[current...])
+                tail.foregroundColor = theme.textPrimary
+                result.append(tail)
+                break
+            }
+        }
+
+        return result
     }
 
     private var relativeTime: String {
