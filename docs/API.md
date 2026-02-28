@@ -2662,6 +2662,56 @@ curl http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-44665544
 
 ---
 
+## Data Erasure
+
+The Data Erasure API provides GDPR-compliant deletion of all user data stored by ILS, including sessions, messages, and associated metadata.
+
+### Delete All Data
+
+**Endpoint:** `DELETE /api/v1/data/all`
+**Description:** Permanently deletes all sessions, messages, and user data stored by ILS. This operation is irreversible and is intended for GDPR compliance (right to erasure).
+
+**Request Body:** None required.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionsDeleted": 42,
+    "messagesDeleted": 1337,
+    "message": "All data has been permanently deleted"
+  }
+}
+```
+
+**Fields:**
+- `sessionsDeleted` - Number of sessions that were deleted
+- `messagesDeleted` - Number of messages that were deleted
+- `message` - Human-readable confirmation message
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/data/all
+```
+
+**Example Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionsDeleted": 42,
+    "messagesDeleted": 1337,
+    "message": "All data has been permanently deleted"
+  }
+}
+```
+
+**⚠️ Warning:** This operation is **permanent and irreversible**. All sessions and messages stored in the ILS database will be deleted. External Claude Code session files in `~/.claude/projects/` are not affected.
+
+---
+
 ## WebSocket Protocol
 
 The WebSocket protocol provides bidirectional real-time communication for chat sessions.
