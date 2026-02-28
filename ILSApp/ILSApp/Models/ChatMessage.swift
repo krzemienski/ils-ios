@@ -4,8 +4,8 @@ import Foundation
 
 /// SPERF-03: Copy Overhead Analysis
 ///
-/// ChatMessage is a value type with 11 stored properties (~200 bytes per instance):
-///   2 UUIDs, 1 Bool, 2 Strings, 2 small arrays, 2 optionals, 2 numbers.
+/// ChatMessage is a value type with 13 stored properties (~220 bytes per instance):
+///   2 UUIDs, 3 Bools, 2 Strings, 2 small arrays, 3 optionals, 2 numbers.
 ///
 /// During streaming, the ChatViewModel accumulates text into a local `inout ChatMessage`
 /// variable and appends to the `messages` array only once at the end of streaming.
@@ -31,6 +31,10 @@ struct ChatMessage: Identifiable, Equatable {
     var isFromHistory: Bool = false
     var tokenCount: Int = 0
     var elapsedSeconds: Double = 0
+    /// True when this message represents a system-level event rather than user/assistant content.
+    var isSystem: Bool = false
+    /// Semantic classification of the system event. When nil, `SystemMessageView` falls back to `.generic`.
+    var systemEventType: SystemEventType?
 
     /// Append text in-place, making intent explicit for streaming accumulation.
     @inline(__always)
@@ -49,7 +53,9 @@ struct ChatMessage: Identifiable, Equatable {
         timestamp: Date? = nil,
         isFromHistory: Bool = false,
         tokenCount: Int = 0,
-        elapsedSeconds: Double = 0
+        elapsedSeconds: Double = 0,
+        isSystem: Bool = false,
+        systemEventType: SystemEventType? = nil
     ) {
         self.id = id
         self.isUser = isUser
@@ -62,6 +68,22 @@ struct ChatMessage: Identifiable, Equatable {
         self.isFromHistory = isFromHistory
         self.tokenCount = tokenCount
         self.elapsedSeconds = elapsedSeconds
+        self.isSystem = isSystem
+        self.systemEventType = systemEventType
+    }
+
+    /// Convenience factory for creating a system event message.
+    ///
+    /// - Parameters:
+    ///   - text: The human-readable description of the event (e.g. "Session started").
+    ///   - eventType: Semantic classification for icon and colour. Defaults to `nil` (`.generic` rendering).
+    static func systemEvent(_ text: String, eventType: SystemEventType? = nil) -> ChatMessage {
+        ChatMessage(
+            isUser: false,
+            text: text,
+            isSystem: true,
+            systemEventType: eventType
+        )
     }
 
     static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
@@ -75,7 +97,9 @@ struct ChatMessage: Identifiable, Equatable {
         lhs.timestamp == rhs.timestamp &&
         lhs.isFromHistory == rhs.isFromHistory &&
         lhs.tokenCount == rhs.tokenCount &&
-        lhs.elapsedSeconds == rhs.elapsedSeconds
+        lhs.elapsedSeconds == rhs.elapsedSeconds &&
+        lhs.isSystem == rhs.isSystem &&
+        lhs.systemEventType == rhs.systemEventType
     }
 }
 

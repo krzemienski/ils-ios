@@ -145,9 +145,19 @@ struct ChatMessageList: View {
             // instead of O(n) firstIndex(where:) which caused O(n²) per render.
             ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
                 let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
-                let isSameSender = prevMessage?.isUser == message.isUser
+                // System messages are never grouped with adjacent messages.
+                let isSameSender = !message.isSystem
+                    && !(prevMessage?.isSystem ?? false)
+                    && prevMessage?.isUser == message.isUser
 
-                if message.isUser {
+                if message.isSystem {
+                    SystemMessageView(
+                        message: message.text,
+                        eventType: message.systemEventType ?? .generic
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                } else if message.isUser {
                     UserMessageCard(
                         message: message,
                         onDelete: onDeleteMessage
