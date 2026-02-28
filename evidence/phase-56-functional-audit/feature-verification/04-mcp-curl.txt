@@ -1,0 +1,4 @@
+MCP servers: 16
+  playwright: healthy
+  sequential-thinking: healthy
+  audit-verify: healthy

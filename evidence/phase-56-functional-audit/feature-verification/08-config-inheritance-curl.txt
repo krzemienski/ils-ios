@@ -1,0 +1,11 @@
+Config Inheritance from /config/effective:
+Config keys: 8
+  permissions: scope=local -> badge: Host Default
+  env: scope=user -> badge: Custom
+  hooks: scope=local -> badge: Host Default
+  enabledPlugins: scope=user -> badge: Custom
+  includeCoAuthoredBy: scope=user -> badge: Custom
+  statusLine: scope=user -> badge: Custom
+  alwaysThinkingEnabled: scope=user -> badge: Custom
+  autoUpdatesChannel: scope=user -> badge: Custom
+Total overrides: 8
