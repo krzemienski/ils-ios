@@ -1,33 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v4.0
-milestone_name: Comprehensive Spec Compliance Audit & Remediation
-status: unknown
-last_updated: "2026-02-28T01:06:01.741Z"
+milestone: v5.0
+milestone_name: Cross-Platform Feature Completion & 30-Gate Audit
+status: active
+last_updated: "2026-02-28T01:30:00.000Z"
 progress:
-  total_phases: 46
-  completed_phases: 33
-  total_plans: 97
-  completed_plans: 90
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-25)
+See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v4.0 Phase 48 COMPLETE -- Comprehensive Audit & Verification
+**Current focus:** v5.0 initialization — defining requirements and roadmap
 
 ## Current Position
 
-Phase: 48 -- Comprehensive Audit & Verification -- COMPLETE
-Plan: 48-01 COMPLETE, 48-02 COMPLETE, 48-03 COMPLETE (3/3)
-Status: Complete
-Last activity: 2026-02-28 -- Plan 48-03 complete. 10 integration flows, 14 edge cases, gate verdict PASS. All 5 AUDIT requirements PASS.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-27 — Milestone v5.0 started. Scope: Features + Full 30-Gate Audit. v4.1 macOS parity merged in.
 
-Progress: [██████████] 97%
+Progress: [░░░░░░░░░░] 0%
 
 ## Previous Milestones
 
@@ -37,6 +37,8 @@ Progress: [██████████] 97%
 - v1.5 (Phases 25-32): All Audit Fixes -- SHIPPED 2026-02-24 | 70/70 findings
 - v3.1 (Phases 33-39): Comprehensive Audit, Bug Fix & UX Overhaul -- SHIPPED 2026-02-25 | 31/31 REQs
 - v3.5 (Phases 40-42): Comprehensive Functional Validation -- iPhone 23/23 PASS | iPad deferred
+- v4.0 (Phases 43-48): Comprehensive Spec Compliance Audit -- COMPLETE 2026-02-28 | Gate PASS, 123 evidence artifacts
+- v4.1: Cancelled -- scope merged into v5.0
 
 ## Accumulated Context
 
@@ -72,7 +74,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-28
-Stopped at: Completed 48-03-PLAN.md (Integration + Bug Hunt + Gate Verdict) -- Phase 48 COMPLETE
-Resume file: None
-Key artifacts: .planning/phases/48-comprehensive-audit-verification/48-03-SUMMARY.md, /tmp/v4.0-audit/gate/verdict.md, /tmp/v4.0-audit/integration/ (30 files), /tmp/v4.0-audit/edge-cases/ (14 files), 123 total artifacts across all audit plans
+Last session: 2026-02-27
+Stopped at: v5.0 milestone initialized. MILESTONE-CONTEXT.md written with full scope. Next: define requirements (Step 9 of new-milestone workflow), then create roadmap.
+Resume file: .planning/MILESTONE-CONTEXT.md
+Key artifacts: .planning/MILESTONE-CONTEXT.md (full scope), evidence/AUDIT-STATE.md (30-gate tracker from prior session, VG-01+VG-02 PASS)
