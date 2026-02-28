@@ -676,6 +676,9 @@ class ChatViewModel {
 
         do {
             let response: APIResponse<ChatSession> = try await apiClient.post("/sessions/\(sessionId.uuidString)/fork", body: EmptyBody())
+            if response.data != nil {
+                messages.append(ChatMessage.systemEvent("Session forked", eventType: .sessionForked))
+            }
             return response.data
         } catch {
             self.error = error
@@ -685,9 +688,10 @@ class ChatViewModel {
     }
 
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
-        // Find or create current assistant message
+        // Find or create current assistant message.
+        // Guard against re-popping injected system event messages (isSystem: true).
         var currentMessage: ChatMessage
-        if let lastMessage = messages.last, !lastMessage.isUser, !lastMessage.isFromHistory {
+        if let lastMessage = messages.last, !lastMessage.isUser, !lastMessage.isFromHistory, !lastMessage.isSystem {
             currentMessage = lastMessage
             messages.removeLast()
         } else {
@@ -700,6 +704,15 @@ class ChatViewModel {
             switch streamMessage {
             case .system(let sysMsg):
                 AppLogger.shared.info("Session initialized: \(sysMsg.data.sessionId)", category: "chat")
+                if sysMsg.subtype == "init" {
+                    // Flush any in-progress assistant content before the system event.
+                    if !currentMessage.text.isEmpty || !currentMessage.toolCalls.isEmpty {
+                        messages.append(currentMessage)
+                        currentMessage = ChatMessage(isUser: false, text: "")
+                        currentMessage.text.reserveCapacity(8192)
+                    }
+                    messages.append(ChatMessage.systemEvent("Session started", eventType: .sessionStarted))
+                }
 
             case .assistant(let assistantMsg):
                 handleAssistantMessage(assistantMsg, message: &currentMessage)
@@ -728,7 +741,11 @@ class ChatViewModel {
         // Approximate token count from text length (rough: ~4 chars per token)
         streamTokenCount = max(streamTokenCount, currentMessage.text.count / 4)
 
-        messages.append(currentMessage)
+        // Only append the assistant message if it carries content. A system-only
+        // batch (e.g. just a session-init event) leaves currentMessage empty.
+        if !currentMessage.text.isEmpty || !currentMessage.toolCalls.isEmpty {
+            messages.append(currentMessage)
+        }
     }
 
     // MARK: - Stream Message Handlers
