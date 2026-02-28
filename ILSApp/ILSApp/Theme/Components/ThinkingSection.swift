@@ -28,7 +28,16 @@ struct ThinkingSection: View {
                 expandedContent
             }
         }
-        .background(theme.bgTertiary)
+        .background(
+            LinearGradient(
+                colors: [
+                    theme.entityPlugin.opacity(0.12),
+                    theme.info.opacity(0.08)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .overlay(
             RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
