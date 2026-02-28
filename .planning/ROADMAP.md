@@ -155,7 +155,10 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
   2. 15+ numbered screenshot artifacts exist for iPad showing correct NavigationSplitView layout with sidebar and detail panes
   3. 10+ numbered screenshot artifacts exist for Mac showing proper macOS chrome, menu bar, and keyboard shortcut indicators
   4. All screenshots show real data (not empty states) and correct theming
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 55-01-PLAN.md -- iPhone visual audit: pre-flight + 15+ numbered screenshots via deep links and idb automation
+- [ ] 55-02-PLAN.md -- iPad visual audit: NavigationSplitView layout evidence with 15+ numbered screenshots
+- [ ] 55-03-PLAN.md -- Mac visual audit: 3-column layout + menu bar evidence with 10+ numbered screenshots
 
 ### Phase 56: Functional Audit & Bug Hunt
 **Goal**: Every feature area works end-to-end across platforms, and edge cases are systematically tested and documented
@@ -181,5 +184,5 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 52. Hooks & Status Management | 2/2 | Complete    | 2026-02-28 | - |
 | 53. GitHub Browse & Install | 2/2 | Complete    | 2026-02-28 | - |
 | 54. Navigation, Profiles & Polish | 2/2 | Complete    | 2026-02-28 | - |
-| 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/TBD | Not started | - |
+| 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/3 | Plans complete | - |
 | 56. Functional Audit & Bug Hunt | v5.0 | 0/TBD | Not started | - |
