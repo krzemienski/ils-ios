@@ -307,6 +307,16 @@ struct ChatView: View {
             }
         }
         #endif
+        // Connection quality indicator — only visible when connected (offline state shown by OfflineIndicator)
+        ToolbarItem(placement: .automatic) {
+            if ConnectionQualityService.shared.quality != .offline {
+                ConnectionQualityIndicator(
+                    quality: ConnectionQualityService.shared.quality,
+                    latencyMs: ConnectionQualityService.shared.latencyMs
+                )
+                .accessibilityIdentifier("connection-quality-indicator")
+            }
+        }
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button {
