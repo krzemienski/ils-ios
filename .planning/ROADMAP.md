@@ -130,7 +130,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
   3. Installing a skill from GitHub shows a progress indicator, handles network errors gracefully with retry option, and the skill appears in the local skills list after install
   4. The same browse/search/preview/install flow works identically for plugins (symmetric UX)
   5. Search results are debounced and cached to avoid GitHub API rate limit errors
-**Plans**: TBD
+**Plans**: 53-01 (Backend data layer: DTOs, GitHubService preview methods, controller routes, ViewModel fetchPreview/lastInstallError), 53-02 (UI layer: Discover tab in BrowserView, GitHubPreviewView with MarkdownUI README + file listing + install/retry)
 
 ### Phase 54: Navigation, Profiles & Polish
 **Goal**: Home screen is immediately useful with quick actions and consistent data, and profile switching gives clear feedback about which host config is active
@@ -177,7 +177,7 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 | 50. Backend API -- Config Endpoint & Audit | v5.0 | Complete    | 2026-02-28 | - |
 | 51. Settings & Config Inheritance | 2/2 | Complete    | 2026-02-28 | - |
 | 52. Hooks & Status Management | 2/2 | Complete    | 2026-02-28 | - |
-| 53. GitHub Browse & Install | 1/2 | In Progress|  | - |
+| 53. GitHub Browse & Install | 2/2 | Complete    | 2026-02-28 | - |
 | 54. Navigation, Profiles & Polish | v5.0 | 0/TBD | Not started | - |
 | 55. Visual Audit -- iPhone, iPad & Mac | v5.0 | 0/TBD | Not started | - |
 | 56. Functional Audit & Bug Hunt | v5.0 | 0/TBD | Not started | - |
