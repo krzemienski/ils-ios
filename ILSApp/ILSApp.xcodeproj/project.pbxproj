@@ -93,6 +93,7 @@
 		2C9CF6BB63C937DA6442373A /* UserMessageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */; };
 		2CCFD53061E151D34D7E15AA /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086281B052347B8C9884124C /* MetricsWebSocketClient.swift */; };
 		2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B121B5870E59B111E9F54CFC /* AssistantCard.swift */; };
+		DC38FED474DD498BA99AB623 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */; };
 		2DE2E7CD15D3686175AEEA34 /* Scenario04_ErrorHandlingAndRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B8FAB1246E8DB2AF699A5B5 /* Scenario04_ErrorHandlingAndRecovery.swift */; };
 		2F0EAF3FFE0122F9369FDE92 /* MacDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */; };
 		2F35F33131F061E873FBC02F /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06A8A5DC276AB8E77D502627 /* SSEClient.swift */; };
@@ -112,6 +113,7 @@
 		37966728A2EB40050DC24223 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97B54AA46C4307B025310A2 /* GlassCard.swift */; };
 		37AB7475EC00B946B497B905 /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AD4ECE9770812FE2B0982B /* PremiumView.swift */; };
 		387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B121B5870E59B111E9F54CFC /* AssistantCard.swift */; };
+		9C8249AE19C441E6BB868B79 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */; };
 		38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */; };
 		39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */; };
 		39E04FA35C5D68812FE9F06F /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */; };
@@ -487,6 +489,7 @@
 		1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConfigSection.swift; sourceTree = "<group>"; };
 		1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeColorTokensSection.swift; sourceTree = "<group>"; };
 		1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
+		A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageSearchResultRow.swift; sourceTree = "<group>"; };
 		1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
 		20728850B297F9D25F6F821B /* ObsidianTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianTheme.swift; sourceTree = "<group>"; };
@@ -1357,6 +1360,7 @@
 				8EED2EA5CED6B30EE2D3364D /* ErrorMessageView.swift */,
 				170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */,
 				1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */,
+				A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */,
 				5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */,
 				2A8D7644950A87917982EDDC /* StreamingIndicatorView.swift */,
 				3CCE99F177854714809F1D61 /* TypingIndicatorBubble.swift */,
@@ -1582,6 +1586,7 @@
 				1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
 				05B9BAF492B57A8F4BEFD565 /* BashGrammar.swift in Sources */,
+				DC38FED474DD498BA99AB623 /* MessageSearchResultRow.swift in Sources */,
 				9C30563A1ED1E15628E54487 /* BrowserView.swift in Sources */,
 				84A0C3EB7D957139BF54D41B /* CacheService.swift in Sources */,
 				6FF2FE7DC2E16FC1CCC1DADB /* CacheStatusView.swift in Sources */,
@@ -1787,6 +1792,7 @@
 				BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,
 				BBCDB1B897FFADCE8BA88E24 /* BashGrammar.swift in Sources */,
+				9C8249AE19C441E6BB868B79 /* MessageSearchResultRow.swift in Sources */,
 				5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */,
 				834A2D8B4FE2267C537917D3 /* CacheService.swift in Sources */,
 				A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */,

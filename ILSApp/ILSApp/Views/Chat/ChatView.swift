@@ -48,6 +48,7 @@ struct ChatView: View {
         var showDeleteSessionConfirmation = false
         var showAdvancedOptions = false
         var isRenaming = false
+        var showSearch = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -67,6 +68,7 @@ struct ChatView: View {
     @State private var actions = ActionState()
     /// The current text in the message input field.
     @State private var inputText = ""
+    @State private var searchDebounceTask: Task<Void, Never>?
     /// Whether the user has manually scrolled up from the bottom of the message list.
     @State private var isUserScrolledUp = false
     /// Whether the "jump to bottom" button is currently visible.
@@ -211,6 +213,14 @@ struct ChatView: View {
         .onDisappear {
             draftPersistTask?.cancel()
         }
+        .onChange(of: viewModel.searchQuery) { _, newValue in
+            searchDebounceTask?.cancel()
+            searchDebounceTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard !Task.isCancelled else { return }
+                await viewModel.searchMessages(query: newValue)
+            }
+        }
     }
 
     // MARK: - View Components
@@ -218,13 +228,21 @@ struct ChatView: View {
     /// Top-level layout stacking the status banner, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
-            statusBanner
+            if sheets.showSearch {
+                inlineSearchBar
 
-            messageList
+                theme.divider.frame(height: 0.5)
 
-            theme.divider.frame(height: 0.5)
+                searchResultsView
+            } else {
+                statusBanner
 
-            bottomBar
+                messageList
+
+                theme.divider.frame(height: 0.5)
+
+                bottomBar
+            }
         }
     }
 
@@ -273,6 +291,95 @@ struct ChatView: View {
         )
     }
 
+    // MARK: - Search UI
+
+    private var inlineSearchBar: some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(theme.textTertiary)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+
+            TextField("Search messages...", text: $viewModel.searchQuery)
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+
+            if !viewModel.searchQuery.isEmpty {
+                Button {
+                    viewModel.searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Clear search")
+            }
+
+            Button("Cancel") {
+                searchDebounceTask?.cancel()
+                searchDebounceTask = nil
+                viewModel.cancelSearch()
+                sheets.showSearch = false
+            }
+            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+            .foregroundStyle(theme.accent)
+        }
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.vertical, theme.spacingSM)
+        .background(theme.bgSecondary)
+    }
+
+    @ViewBuilder
+    private var searchResultsView: some View {
+        if viewModel.isSearchLoading {
+            VStack {
+                Spacer()
+                ProgressView()
+                    .tint(theme.accent)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else if viewModel.searchQuery.isEmpty {
+            VStack {
+                Spacer()
+                Text("Type to search messages")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else if viewModel.searchResults.isEmpty {
+            VStack {
+                Spacer()
+                Text("No results for \"\(viewModel.searchQuery)\"")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, theme.spacingLG)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.searchResults) { result in
+                        MessageSearchResultRow(result: result)
+                            .padding(.horizontal, theme.spacingMD)
+
+                        theme.divider
+                            .frame(height: 0.5)
+                            .padding(.leading, theme.spacingMD)
+                    }
+                }
+            }
+            .background(theme.bgPrimary)
+        }
+    }
+
     /// Chat input bar for composing and sending messages to Claude.
     private var bottomBar: some View {
         ChatInputBar(
@@ -307,6 +414,19 @@ struct ChatView: View {
             }
         }
         #endif
+
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button {
+                viewModel.isSearchActive = true
+                sheets.showSearch = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .accessibilityLabel("Search messages")
+            .accessibilityIdentifier("search-messages-button")
+        }
+
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button {
