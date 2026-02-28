@@ -179,7 +179,13 @@ struct PluginsController: RouteCollection {
         }
 
         // Add to config's extraKnownMarketplaces
-        var config = (try? fileSystem.readConfig(scope: .user))?.content ?? ClaudeConfig()
+        let configInfo: ConfigInfo
+        do {
+            configInfo = try fileSystem.readConfig(scope: .user)
+        } catch {
+            throw Abort(.internalServerError, reason: "Failed to read user config: \(error.localizedDescription)")
+        }
+        var config = configInfo.content
         var marketplaces = config.extraKnownMarketplaces ?? [:]
         marketplaces[input.repo] = input.source
         config.extraKnownMarketplaces = marketplaces
@@ -322,7 +328,13 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: .user))?.content ?? ClaudeConfig()
+        let enableConfigInfo: ConfigInfo
+        do {
+            enableConfigInfo = try fileSystem.readConfig(scope: .user)
+        } catch {
+            throw Abort(.internalServerError, reason: "Failed to read user config: \(error.localizedDescription)")
+        }
+        var config = enableConfigInfo.content
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = true
         config.enabledPlugins = enabled
@@ -351,7 +363,13 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: .user))?.content ?? ClaudeConfig()
+        let disableConfigInfo: ConfigInfo
+        do {
+            disableConfigInfo = try fileSystem.readConfig(scope: .user)
+        } catch {
+            throw Abort(.internalServerError, reason: "Failed to read user config: \(error.localizedDescription)")
+        }
+        var config = disableConfigInfo.content
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = false
         config.enabledPlugins = enabled

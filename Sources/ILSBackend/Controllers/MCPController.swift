@@ -256,9 +256,16 @@ struct MCPController: RouteCollection {
 
         // Dynamic JSON — Claude settings files have evolving schema with arbitrary keys
         var json: [String: Any] = [:]
-        if fm.fileExists(atPath: settingsPath),
-           let data = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
-           let existing = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+        if fm.fileExists(atPath: settingsPath) {
+            let data: Data
+            do {
+                data = try Data(contentsOf: URL(fileURLWithPath: settingsPath))
+            } catch {
+                throw Abort(.internalServerError, reason: "Failed to read settings file: \(error.localizedDescription)")
+            }
+            guard let existing = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                throw Abort(.unprocessableEntity, reason: "Settings file contains invalid JSON")
+            }
             json = existing
         }
 
