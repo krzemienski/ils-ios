@@ -332,7 +332,8 @@ struct SidebarView: View {
                 ForEach(sessions) { session in
                     SidebarSessionRow(
                         session: session,
-                        isActive: isSessionActive(session)
+                        isActive: isSessionActive(session),
+                        searchText: sessionsViewModel.searchText
                     ) {
                         onSessionSelected(session)
                         isSidebarOpen = false
