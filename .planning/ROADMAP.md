@@ -66,7 +66,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
 
 **Milestone Goal:** Implement all remaining features (config inheritance, GitHub browse/install, hooks CRUD, profile switching), achieve full cross-platform parity, and validate every screen on every platform through a rigorous 30-gate audit framework.
 
-- [ ] **Phase 49: Foundation -- Fleet-to-HostProfile Rename** - Rename "Fleet" to "Host Profiles" across all targets, API routes (with backward aliases), deep links, and UI; set up evidence pipeline
+- [x] **Phase 49: Foundation -- Fleet-to-HostProfile Rename** - Rename "Fleet" to "Host Profiles" across all targets, API routes (with backward aliases), deep links, and UI; set up evidence pipeline (completed 2026-02-28)
 - [ ] **Phase 50: Backend API -- Config Endpoint & Audit** - Add GET /config/effective endpoint with merged config and scope annotations; audit all endpoints for correct error codes and JSON structure
 - [ ] **Phase 51: Settings & Config Inheritance** - Config cascade visualization with "inherited from host" vs "custom override" badges; system prompt and model defaults from host CLI; info tooltips on all settings
 - [ ] **Phase 52: Hooks & Status Management** - Expand hooks to all 16 event types with CRUD editor (4 handler types); add active/inactive toggles for skills and plugins
@@ -86,7 +86,7 @@ Phases 43-48: iOS UI Gap Remediation, Platform & Performance Compliance, Data & 
   2. Old API routes (`/api/v1/fleet/*`) still return valid responses (backward-compatible aliases exist alongside new `/api/v1/host-profiles/*` routes)
   3. Deep link `ils://fleet` continues to navigate to the Host Profiles screen; `ils://host-profiles` also works
   4. Evidence capture pipeline (`evidence/` directory) is operational -- running the capture script produces numbered screenshot artifacts on iPhone simulator
-**Plans**: TBD
+**Plans**: 49-01 (ILSShared + backend rename, dual routes), 49-02 (iOS path strings, deep link, pbxproj, evidence pipeline)
 
 ### Phase 50: Backend API -- Config Endpoint & Audit
 **Goal**: A new config merge endpoint exists that returns the effective configuration with per-key scope annotations, and all existing endpoints return proper HTTP error codes
@@ -173,7 +173,7 @@ Phases 49-50 are sequential (rename first, then API). Phase 51 depends on 50. Ph
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 49. Foundation -- Fleet-to-HostProfile Rename | v5.0 | 0/TBD | Not started | - |
+| 49. Foundation -- Fleet-to-HostProfile Rename | v5.0 | Complete    | 2026-02-28 | - |
 | 50. Backend API -- Config Endpoint & Audit | v5.0 | 0/TBD | Not started | - |
 | 51. Settings & Config Inheritance | v5.0 | 0/TBD | Not started | - |
 | 52. Hooks & Status Management | v5.0 | 0/TBD | Not started | - |
