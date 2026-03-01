@@ -204,6 +204,8 @@ class AppState {
             navigationIntent = .themes
         case "hooks":
             navigationIntent = .hooks
+        case "backends":
+            navigationIntent = .backends
         case "teams":
             navigationIntent = .teams
         case "activity":

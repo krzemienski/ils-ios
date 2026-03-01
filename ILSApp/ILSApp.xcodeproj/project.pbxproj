@@ -506,6 +506,18 @@
 		A0A1A2A3A4A5A6A7A8A9B0B1 /* SnapshotTestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */; };
 		D0D1D2D3D4D5D6D7D8D9E0E1 /* ScreenSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */; };
 		C4D5E6F78901234567AABBCC /* ICloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F901234567AABB /* ICloudSyncSettingsView.swift */; };
+		AA1122334455667788AABBCC /* BackendConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001122334455667788AABB /* BackendConnectionStore.swift */; };
+		AA2233445566778899AABBCC /* BackendConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001122334455667788AABB /* BackendConnectionStore.swift */; };
+		BB1122334455667788AABBCC /* BackendManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001122334455667788AABB /* BackendManager.swift */; };
+		BB2233445566778899AABBCC /* BackendManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001122334455667788AABB /* BackendManager.swift */; };
+		CC1122334455667788AABBCC /* BackendConnectionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC001122334455667788AABB /* BackendConnectionsViewModel.swift */; };
+		CC2233445566778899AABBCC /* BackendConnectionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC001122334455667788AABB /* BackendConnectionsViewModel.swift */; };
+		DD1122334455667788AABBCC /* AddBackendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD001122334455667788AABB /* AddBackendView.swift */; };
+		DD2233445566778899AABBCC /* AddBackendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD001122334455667788AABB /* AddBackendView.swift */; };
+		EE1122334455667788AABBCC /* BackendConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE001122334455667788AABB /* BackendConnectionsView.swift */; };
+		EE2233445566778899AABBCC /* BackendConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE001122334455667788AABB /* BackendConnectionsView.swift */; };
+		FF1122334455667788AABBCC /* BackendHealthDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF001122334455667788AABB /* BackendHealthDashboardView.swift */; };
+		FF2233445566778899AABBCC /* BackendHealthDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF001122334455667788AABB /* BackendHealthDashboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -807,6 +819,12 @@
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
 		E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSnapshotTests.swift; sourceTree = "<group>"; };
+		AA001122334455667788AABB /* BackendConnectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendConnectionStore.swift; sourceTree = "<group>"; };
+		BB001122334455667788AABB /* BackendManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendManager.swift; sourceTree = "<group>"; };
+		CC001122334455667788AABB /* BackendConnectionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendConnectionsViewModel.swift; sourceTree = "<group>"; };
+		DD001122334455667788AABB /* AddBackendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBackendView.swift; sourceTree = "<group>"; };
+		EE001122334455667788AABB /* BackendConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendConnectionsView.swift; sourceTree = "<group>"; };
+		FF001122334455667788AABB /* BackendHealthDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendHealthDashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1254,12 +1272,23 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		AB001122334455667788AABB /* Backends */ = {
+			isa = PBXGroup;
+			children = (
+				DD001122334455667788AABB /* AddBackendView.swift */,
+				EE001122334455667788AABB /* BackendConnectionsView.swift */,
+				FF001122334455667788AABB /* BackendHealthDashboardView.swift */,
+			);
+			path = Backends;
+			sourceTree = "<group>";
+		};
 		B385414DDDDE6CDD82D4141C /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				E2DEA312D98D14A52FD03359 /* AppIconGenerator.swift */,
 				6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */,
 				1A1FCC9DA753480F940D5954 /* ActivityFeed */,
+				AB001122334455667788AABB /* Backends */,
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
 				3FCDD95699E33E1A571D74BB /* Components */,
@@ -1287,6 +1316,8 @@
 			children = (
 				D80552C5B47B45FB0F4A2E25 /* APIClient.swift */,
 				8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */,
+				AA001122334455667788AABB /* BackendConnectionStore.swift */,
+				BB001122334455667788AABB /* BackendManager.swift */,
 				C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */,
 				8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */,
 				F48795057C7081556FF5B265 /* ConnectionManager.swift */,
@@ -1347,6 +1378,7 @@
 			children = (
 				A043BAE1603803A839C0CB52 /* BaseViewModel.swift */,
 				A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */,
+				CC001122334455667788AABB /* BackendConnectionsViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
@@ -1761,6 +1793,12 @@
 				566B63F0CEDAD0931B75BC76 /* APIClient.swift in Sources */,
 				F511D9CB8F68D9D9B0341314 /* BaseViewModel.swift in Sources */,
 				F3AE767DFC8E6026F28265A5 /* AccentButton.swift in Sources */,
+				DD1122334455667788AABBCC /* AddBackendView.swift in Sources */,
+				AA1122334455667788AABBCC /* BackendConnectionStore.swift in Sources */,
+				EE1122334455667788AABBCC /* BackendConnectionsView.swift in Sources */,
+				CC1122334455667788AABBCC /* BackendConnectionsViewModel.swift in Sources */,
+				FF1122334455667788AABBCC /* BackendHealthDashboardView.swift in Sources */,
+				BB1122334455667788AABBCC /* BackendManager.swift in Sources */,
 				302B9566F08451133D4AF3A3 /* AdvancedOptionsSheet.swift in Sources */,
 				F0AE54F8A383B8B86B0E134C /* AgentTeamDetailView.swift in Sources */,
 				0AF85229F311A27F4C4D0D35 /* AgentTeamsListView.swift in Sources */,
@@ -1988,6 +2026,12 @@
 				5AB34314A4A3CD36A92275CA /* APIClient.swift in Sources */,
 				A5534EA92B26FA8ADC30543F /* BaseViewModel.swift in Sources */,
 				D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */,
+				DD2233445566778899AABBCC /* AddBackendView.swift in Sources */,
+				AA2233445566778899AABBCC /* BackendConnectionStore.swift in Sources */,
+				EE2233445566778899AABBCC /* BackendConnectionsView.swift in Sources */,
+				CC2233445566778899AABBCC /* BackendConnectionsViewModel.swift in Sources */,
+				FF2233445566778899AABBCC /* BackendHealthDashboardView.swift in Sources */,
+				BB2233445566778899AABBCC /* BackendManager.swift in Sources */,
 				BB8F5CDE74990B193B24E4EC /* AdvancedOptionsSheet.swift in Sources */,
 				F6BA33956604B8222959BC8E /* AgentTeamDetailView.swift in Sources */,
 				7032D6514C652C6659D7AAC1 /* AgentTeamsListView.swift in Sources */,
