@@ -25,6 +25,9 @@ extension Notification.Name {
 
     /// Posted when the user wants to toggle expand/collapse all tool call accordions.
     static let ilsToggleExpandAllToolCalls = Notification.Name("ILSToggleExpandAllToolCalls")
+
+    /// Posted when the user activates the global command palette (Cmd+K).
+    static let ilsOpenCommandPalette = Notification.Name("ILSOpenCommandPalette")
 }
 
 // MARK: - ILS Commands
@@ -41,6 +44,14 @@ struct ILSCommands: Commands {
                 NotificationCenter.default.post(name: .ilsCreateNewSession, object: nil)
             }
             .keyboardShortcut("n", modifiers: .command)
+        }
+
+        // Command Palette
+        CommandGroup(after: .newItem) {
+            Button("Command Palette") {
+                NotificationCenter.default.post(name: .ilsOpenCommandPalette, object: nil)
+            }
+            .keyboardShortcut("k", modifiers: .command)
         }
 
         // Navigation menu
