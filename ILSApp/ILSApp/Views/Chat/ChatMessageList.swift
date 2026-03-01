@@ -155,8 +155,8 @@ struct ChatMessageList: View {
                         message: message.text,
                         eventType: message.systemEventType ?? .generic
                     )
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    .padding(.horizontal, messageSpacing)
+                    .padding(.top, messageSpacing)
                 } else if message.isUser {
                     UserMessageCard(
                         message: message,
@@ -223,8 +223,8 @@ struct ChatMessageList: View {
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Circle())
         }
-        .padding(.trailing, 16)
-        .padding(.bottom, 16)
+        .padding(.trailing, messageSpacing)
+        .padding(.bottom, messageSpacing)
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel("Jump to bottom")
         .accessibilityHint("Scrolls to the most recent message")
