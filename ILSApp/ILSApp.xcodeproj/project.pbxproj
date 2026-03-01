@@ -142,6 +142,7 @@
 		9C8249AE19C441E6BB868B79 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */; };
 		38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */; };
 		39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */; };
+		C5D6E7F8A9B0C1D2E3F4A5B6 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E7F8A9B0C1D2E3F4A5B6C7 /* LiveActivityManager.swift */; };
 		39E04FA35C5D68812FE9F06F /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */; };
 		3A428F89FADC77D6AD890B8F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ECE4D8717C9C64D19FE78B2 /* OnboardingView.swift */; };
 		3B2913D9EF855E31851D8B2A /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D406A95CF1DAFB1A1D7DAF2 /* ChatView.swift */; };
@@ -705,6 +706,7 @@
 		87BBB3407D22A2279F4D8250 /* Scenario10_DashboardAndAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario10_DashboardAndAnalytics.swift; sourceTree = "<group>"; };
 		8911A1661FBAAAB37B3E9A26 /* HooksViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksViewModel.swift; sourceTree = "<group>"; };
 		8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		D6E7F8A9B0C1D2E3F4A5B6C7 /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		8AEAC8111CFAB3AEB8A35D89 /* ThemeCornerRadiusSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeCornerRadiusSection.swift; sourceTree = "<group>"; };
 		8B54988B86A494CD21D10B91 /* SSHSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHSetupView.swift; sourceTree = "<group>"; };
 		8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CitadelSSHService.swift; sourceTree = "<group>"; };
@@ -1334,6 +1336,7 @@
 				50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */,
 				7C748DE91CEA4C3A823DD3A8 /* KeychainService.swift */,
 				AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */,
+				D6E7F8A9B0C1D2E3F4A5B6C7 /* LiveActivityManager.swift */,
 				46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */,
 				B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */,
 				A3F2C1D0E4B5678901234567 /* MessageQueueService.swift */,
@@ -1920,6 +1923,7 @@
 				641164270E6BB7627B69ADC0 /* ILSTheme.swift in Sources */,
 				AB5CA0482D20AB42EDFFEEDD /* KeychainService.swift in Sources */,
 				7666DDC50F812E38DC02D4F7 /* LaunchScreenView.swift in Sources */,
+				C5D6E7F8A9B0C1D2E3F4A5B6 /* LiveActivityManager.swift in Sources */,
 				46A28AD0491373CD08B47A82 /* LocalDatabase.swift in Sources */,
 				81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */,
 				AFD18292F620F2F1328B803F /* LowPowerModeMonitor.swift in Sources */,

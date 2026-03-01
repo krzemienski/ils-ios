@@ -9,8 +9,8 @@ extension ChatViewModel {
 
     /// Start a Live Activity for the current chat streaming session.
     ///
-    /// Creates a new `Activity<ChatStreamingAttributes>` that appears on the lock screen
-    /// and Dynamic Island while Claude streams a response.
+    /// Delegates to `LiveActivityManager` which tracks one activity per session UUID,
+    /// preventing duplicates when multiple sessions stream simultaneously.
     ///
     /// - Parameters:
     ///   - sessionId: UUID string for deep-link navigation to the session
@@ -18,46 +18,14 @@ extension ChatViewModel {
     ///   - model: Claude model being used (e.g., "Sonnet")
     @available(iOS 16.2, *)
     func startLiveActivity(sessionId: String, sessionName: String, model: String) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            AppLogger.shared.info("Live Activities not enabled by user", category: "liveActivity")
-            return
-        }
-
-        let attributes = ChatStreamingAttributes(
+        LiveActivityManager.shared.startActivity(
             sessionId: sessionId,
             sessionName: sessionName,
             model: model
         )
-
-        let initialState = ChatStreamingAttributes.ContentState(
-            status: .streaming,
-            messagePreview: "",
-            tokenCount: 0,
-            cost: 0.0,
-            elapsedSeconds: 0
-        )
-
-        do {
-            let activity = try Activity.request(
-                attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
-                pushType: nil
-            )
-            AppLogger.shared.info(
-                "Started Live Activity: \(activity.id)",
-                category: "liveActivity"
-            )
-        } catch {
-            AppLogger.shared.error(
-                "Failed to start Live Activity: \(error)",
-                category: "liveActivity"
-            )
-        }
     }
 
     /// Update the running Live Activity with new streaming data.
-    ///
-    /// Finds the most recent `ChatStreamingAttributes` activity and updates its state.
     ///
     /// - Parameters:
     ///   - preview: Truncated preview of the assistant message (max ~120 chars)
@@ -65,6 +33,7 @@ extension ChatViewModel {
     ///   - cost: Running cost in USD
     @available(iOS 16.2, *)
     func updateLiveActivity(preview: String, tokens: Int, cost: Double) {
+        guard let sid = sessionId?.uuidString else { return }
         let elapsed: Int
         if let start = streamStartTime {
             elapsed = Int(Date().timeIntervalSince(start))
@@ -72,7 +41,7 @@ extension ChatViewModel {
             elapsed = 0
         }
 
-        let updatedState = ChatStreamingAttributes.ContentState(
+        let state = ChatStreamingAttributes.ContentState(
             status: .streaming,
             messagePreview: String(preview.prefix(120)),
             tokenCount: tokens,
@@ -80,13 +49,7 @@ extension ChatViewModel {
             elapsedSeconds: elapsed
         )
 
-        Task {
-            for activity in Activity<ChatStreamingAttributes>.activities {
-                await activity.update(
-                    ActivityContent(state: updatedState, staleDate: nil)
-                )
-            }
-        }
+        LiveActivityManager.shared.updateActivity(sessionId: sid, state: state)
     }
 
     /// Update Live Activity with a specific status, preserving current preview and token data.
@@ -96,6 +59,7 @@ extension ChatViewModel {
     /// - Parameter status: The new status to display in the Live Activity.
     @available(iOS 16.2, *)
     func updateLiveActivityStatus(_ status: SessionActivityStatus) {
+        guard let sid = sessionId?.uuidString else { return }
         let elapsed: Int
         if let start = streamStartTime {
             elapsed = Int(Date().timeIntervalSince(start))
@@ -110,7 +74,7 @@ extension ChatViewModel {
             preview = ""
         }
 
-        let updatedState = ChatStreamingAttributes.ContentState(
+        let state = ChatStreamingAttributes.ContentState(
             status: status,
             messagePreview: preview,
             tokenCount: streamTokenCount,
@@ -118,21 +82,16 @@ extension ChatViewModel {
             elapsedSeconds: elapsed
         )
 
-        Task {
-            for activity in Activity<ChatStreamingAttributes>.activities {
-                await activity.update(
-                    ActivityContent(state: updatedState, staleDate: nil)
-                )
-            }
-        }
+        LiveActivityManager.shared.updateActivity(sessionId: sid, state: state)
     }
 
-    /// End all running chat streaming Live Activities.
+    /// End the running Live Activity for this session.
     ///
     /// Sets `status` to `.completed` and dismisses the activity after a brief delay
     /// so the user can see the final stats.
     @available(iOS 16.2, *)
     func endLiveActivity() {
+        guard let sid = sessionId?.uuidString else { return }
         let finalTokens = streamTokenCount
         let finalCost = currentStreamingMessage?.cost ?? 0.0
         let finalPreview: String
@@ -157,14 +116,7 @@ extension ChatViewModel {
             elapsedSeconds: elapsed
         )
 
-        Task {
-            for activity in Activity<ChatStreamingAttributes>.activities {
-                await activity.end(
-                    ActivityContent(state: finalState, staleDate: nil),
-                    dismissalPolicy: .after(.now + 30)
-                )
-            }
-        }
+        LiveActivityManager.shared.endActivity(sessionId: sid, finalState: finalState)
     }
 }
 
