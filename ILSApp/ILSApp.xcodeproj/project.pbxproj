@@ -301,6 +301,8 @@
 		B59E162E2F5E673E11D21726 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E7D107C5255B902E735D71 /* ErrorHandlingTests.swift */; };
 		B5A6B7EE2A10BDA5BD6BCB12 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D406A95CF1DAFB1A1D7DAF2 /* ChatView.swift */; };
 		B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77899531B324530342B03A8 /* DashboardViewModel.swift */; };
+		3372A649D1624A829B54F1D8 /* DashboardWidgetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3358437AC3C347869B95035B /* DashboardWidgetType.swift */; };
+		801A5827021A420E8D3D509A /* DashboardWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B84C1FE24948E9A9CC1296 /* DashboardWidget.swift */; };
 		B78070D42E4A59D3915BDE36 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D04010DA9C7A983032E9DA /* SidebarView.swift */; };
 		B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */; };
 		B8668FF8270D511302414DBF /* SSHViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */; };
@@ -667,6 +669,8 @@
 		F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookEditorSheet.swift; sourceTree = "<group>"; };
 		F48795057C7081556FF5B265 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
 		F77899531B324530342B03A8 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		3358437AC3C347869B95035B /* DashboardWidgetType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWidgetType.swift; sourceTree = "<group>"; };
+		41B84C1FE24948E9A9CC1296 /* DashboardWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWidget.swift; sourceTree = "<group>"; };
 		F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewCard.swift; sourceTree = "<group>"; };
 		F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSessionsListView.swift; sourceTree = "<group>"; };
 		F9A4655E180715DDFB024576 /* EntityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
@@ -788,6 +792,15 @@
 				1695ADC93CE18946E4C2517E /* HooksManagementView.swift */,
 			);
 			path = Hooks;
+			sourceTree = "<group>";
+		};
+		AB35FB7A9D1D4D7C988F8CC5 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				3358437AC3C347869B95035B /* DashboardWidgetType.swift */,
+				41B84C1FE24948E9A9CC1296 /* DashboardWidget.swift */,
+			);
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		4C557C8746D41751E699EBCA /* Home */ = {
@@ -1088,6 +1101,7 @@
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
 				3FCDD95699E33E1A571D74BB /* Components */,
+				AB35FB7A9D1D4D7C988F8CC5 /* Dashboard */,
 				4C557C8746D41751E699EBCA /* Home */,
 				49504EDF5094AD1D30ECB653 /* Hooks */,
 				89794D9EC1C8E4A85C554260 /* HostProfiles */,
@@ -1547,6 +1561,8 @@
 				C5F70DDFF7BE69DE68BA4B3D /* CyberpunkEffects.swift in Sources */,
 				08B2A5AC7ED9F7BF7E8851A2 /* CyberpunkTheme.swift in Sources */,
 				B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */,
+				3372A649D1624A829B54F1D8 /* DashboardWidgetType.swift in Sources */,
+				801A5827021A420E8D3D509A /* DashboardWidget.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
 				A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */,
