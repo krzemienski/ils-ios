@@ -220,5 +220,9 @@ struct OfflineCacheSettingsView: View {
         OfflineCacheSettingsView()
             .padding()
     }
+    #if canImport(UIKit)
     .background(Color(.systemBackground))
+    #else
+    .background(Color(.windowBackgroundColor))
+    #endif
 }
