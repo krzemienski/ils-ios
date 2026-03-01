@@ -2440,6 +2440,276 @@ curl http://localhost:9999/api/v1/tunnel/status
 
 ---
 
+## Host Profiles
+
+Host Profiles manage remote machines that ILS can connect to for distributed Claude Code execution. Each host profile stores connection details (hostname, SSH port, backend port, auth method) and tracks health status.
+
+**Canonical routes:** `/api/v1/host-profiles/*`
+**Backward-compatible aliases:** `/api/v1/fleet/*` (same handlers, same responses — maintained for legacy clients)
+
+### List Host Profiles
+
+**Endpoint:** `GET /api/v1/host-profiles`
+**Description:** List all registered host profiles, sorted by active status (active first) then name. Also returns the ID of the currently active host.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "hosts": [
+      {
+        "id": "uuid",
+        "name": "My Mac Mini",
+        "host": "192.168.1.100",
+        "port": 22,
+        "backendPort": 9999,
+        "username": "alice",
+        "authMethod": "key",
+        "isActive": true,
+        "healthStatus": "healthy",
+        "lastHealthCheck": "2026-02-15T12:00:00Z",
+        "platform": "macOS"
+      }
+    ],
+    "activeHostId": "uuid"
+  },
+  "error": null
+}
+```
+
+**Fields:**
+- `hosts` — Array of all registered `HostProfile` objects (active host appears first)
+- `activeHostId` — UUID of the currently active host, or `null` if none is active
+
+**HostProfile Object:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Unique identifier |
+| `name` | string | Human-readable display name |
+| `host` | string | Hostname or IP address |
+| `port` | integer | SSH port (default: 22) |
+| `backendPort` | integer | ILS backend port on remote (default: 9999) |
+| `username` | string? | SSH username (optional) |
+| `authMethod` | string? | Auth method: `"password"` or `"key"` (optional) |
+| `isActive` | boolean | Whether this is the currently active host |
+| `healthStatus` | string | `"healthy"`, `"degraded"`, `"unreachable"`, or `"unknown"` |
+| `lastHealthCheck` | ISO8601? | Timestamp of the last health check (optional) |
+| `platform` | string? | OS platform e.g. `"macOS"`, `"Linux"` (optional) |
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/host-profiles
+
+# Backward-compatible alias
+curl http://localhost:9999/api/v1/fleet
+```
+
+---
+
+### Register Host Profile
+
+**Endpoint:** `POST /api/v1/host-profiles/register`
+**Description:** Register a new remote host with ILS. The new host is created with `isActive: false` and `healthStatus: "unknown"`. Use the activate endpoint to make it the active host.
+
+**Request Body:**
+```json
+{
+  "name": "My Mac Mini",
+  "host": "192.168.1.100",
+  "port": 22,
+  "backendPort": 9999,
+  "username": "alice",
+  "authMethod": "key",
+  "credential": null
+}
+```
+
+**Request Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | ✅ | Display name (max 255 chars) |
+| `host` | string | ✅ | Hostname or IP address (max 255 chars) |
+| `port` | integer | ✅ | SSH port (typically 22) |
+| `backendPort` | integer | ✅ | ILS backend port on remote (typically 9999) |
+| `username` | string | ❌ | SSH username |
+| `authMethod` | string | ❌ | `"password"` or `"key"` |
+| `credential` | string | ❌ | Password or private key path |
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "My Mac Mini",
+    "host": "192.168.1.100",
+    "port": 22,
+    "backendPort": 9999,
+    "username": "alice",
+    "authMethod": "key",
+    "isActive": false,
+    "healthStatus": "unknown",
+    "lastHealthCheck": null,
+    "platform": null
+  },
+  "error": null
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/host-profiles/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Mac Mini",
+    "host": "192.168.1.100",
+    "port": 22,
+    "backendPort": 9999,
+    "username": "alice",
+    "authMethod": "key"
+  }'
+
+# Backward-compatible alias
+curl -X POST http://localhost:9999/api/v1/fleet/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Mac Mini", "host": "192.168.1.100", "port": 22, "backendPort": 9999}'
+```
+
+---
+
+### Activate Host Profile
+
+**Endpoint:** `POST /api/v1/host-profiles/:id/activate`
+**Description:** Set a host profile as the active host. All other hosts are atomically deactivated in the same database transaction so only one host is active at a time.
+
+**Parameters:**
+- `id` (path, UUID) — Host profile ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "name": "My Mac Mini",
+    "host": "192.168.1.100",
+    "port": 22,
+    "backendPort": 9999,
+    "username": "alice",
+    "authMethod": "key",
+    "isActive": true,
+    "healthStatus": "unknown",
+    "lastHealthCheck": null,
+    "platform": null
+  },
+  "error": null
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` — `id` is not a valid UUID
+- `404 Not Found` — No host profile with that ID exists
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/host-profiles/3fa85f64-5717-4562-b3fc-2c963f66afa6/activate
+
+# Backward-compatible alias
+curl -X POST http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6/activate
+```
+
+---
+
+### Delete Host Profile
+
+**Endpoint:** `DELETE /api/v1/host-profiles/:id`
+**Description:** Permanently delete a host profile by ID.
+
+**Parameters:**
+- `id` (path, UUID) — Host profile ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  },
+  "error": null
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` — `id` is not a valid UUID
+- `404 Not Found` — No host profile with that ID exists
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/host-profiles/3fa85f64-5717-4562-b3fc-2c963f66afa6
+
+# Backward-compatible alias
+curl -X DELETE http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6
+```
+
+---
+
+### Get Host Profile Health
+
+**Endpoint:** `GET /api/v1/host-profiles/:id/health`
+**Description:** Perform a live HTTP health check against the remote host's ILS backend (`http(s)://{host}:{backendPort}/health`). Uses a 5-second timeout. Updates and persists the host's `healthStatus` and `lastHealthCheck` timestamp. HTTPS is used automatically when `backendPort` is 443.
+
+**Parameters:**
+- `id` (path, UUID) — Host profile ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "hostId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "status": "healthy",
+    "backendVersion": "1.1.0",
+    "claudeAvailable": true,
+    "lastChecked": "2026-02-15T12:34:56Z"
+  },
+  "error": null
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `hostId` | UUID | ID of the checked host profile |
+| `status` | string | `"healthy"` (2xx response), `"degraded"` (non-2xx), `"unreachable"` (timeout/DNS/refused), or `"unknown"` |
+| `backendVersion` | string | Version from the remote `/health` JSON response, or `"unknown"` |
+| `claudeAvailable` | boolean | `true` if remote backend returned HTTP 2xx |
+| `lastChecked` | ISO8601 | Timestamp when the check was performed |
+
+**Error Responses:**
+- `400 Bad Request` — `id` is not a valid UUID
+- `404 Not Found` — No host profile with that ID exists
+
+**Note:** A `200 OK` response from this endpoint means the health *check completed* — the remote host's reachability is indicated by the `status` field in the response body, not the HTTP status code.
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/host-profiles/3fa85f64-5717-4562-b3fc-2c963f66afa6/health
+
+# Backward-compatible alias
+curl http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6/health
+```
+
+---
+
 ## WebSocket Protocol
 
 The WebSocket protocol provides bidirectional real-time communication for chat sessions.
