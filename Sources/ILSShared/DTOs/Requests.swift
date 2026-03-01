@@ -192,6 +192,19 @@ public struct RecentSessionsResponse: Codable, Sendable {
 
 // MARK: - Chat Requests
 
+/// Execution backend for Claude queries.
+///
+/// Controls whether the backend routes through the Python Agent SDK wrapper
+/// or directly invokes `claude -p` CLI.
+public enum ExecutionBackend: String, Codable, Sendable {
+    /// Python Agent SDK — works inside Claude Code sessions, no permission forwarding.
+    case sdk
+    /// Direct `claude -p` — has permission forwarding + stream events, hangs in CC sessions.
+    case cli
+    /// Auto-detect: SDK if CLAUDECODE env var present, CLI otherwise.
+    case auto
+}
+
 /// Request to stream a chat message via Server-Sent Events.
 ///
 /// Sends a prompt to Claude and receives streaming responses via SSE.
@@ -258,6 +271,8 @@ public struct ChatOptions: Codable, Sendable {
     public let betas: [String]?
     /// Whether to enable debug mode.
     public let debug: Bool?
+    /// Execution backend to use (sdk, cli, or auto-detect).
+    public let backend: ExecutionBackend?
 
     public init(
         model: String? = nil,
@@ -277,7 +292,8 @@ public struct ChatOptions: Codable, Sendable {
         inputFormat: String? = nil,
         agent: String? = nil,
         betas: [String]? = nil,
-        debug: Bool? = nil
+        debug: Bool? = nil,
+        backend: ExecutionBackend? = nil
     ) {
         self.model = model
         self.permissionMode = permissionMode
@@ -297,6 +313,7 @@ public struct ChatOptions: Codable, Sendable {
         self.agent = agent
         self.betas = betas
         self.debug = debug
+        self.backend = backend
     }
 }
 

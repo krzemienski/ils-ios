@@ -236,7 +236,11 @@ class ChatViewModel {
                     } else {
                         self.flushPendingMessages()
                         self.stopBatchTimer()
-                        self.lastProcessedMessageIndex = 0
+                        // Preserve current message count to prevent re-processing
+                        // all messages on the next observation cycle (was resetting
+                        // to 0, causing full replay and text duplication).
+                        let finalCount = sseClient.messages.count
+                        self.lastProcessedMessageIndex = finalCount
                         // End Live Activity
                         #if os(iOS)
                         if #available(iOS 16.2, *) {
@@ -244,7 +248,7 @@ class ChatViewModel {
                         }
                         #endif
                         self.streamStartTime = nil
-                        lastMessageCount = 0
+                        lastMessageCount = finalCount
                     }
                     lastStreaming = streaming
                 }
@@ -679,7 +683,8 @@ class ChatViewModel {
                 inputFormat: options?.inputFormat,
                 agent: options?.agent,
                 betas: options?.betas,
-                debug: options?.debug
+                debug: options?.debug,
+                backend: options?.backend
             )
         }
 
@@ -921,11 +926,13 @@ class ChatViewModel {
     // MARK: - Stream Message Handlers
 
     /// Handle assistant message: accumulate text, tool calls, tool results, and thinking blocks.
+    /// The assistant event contains the authoritative final content for each block.
+    /// Use assignment (not append) for text to avoid duplication with prior streaming deltas.
     private func handleAssistantMessage(_ assistantMsg: AssistantMessage, message: inout ChatMessage) {
         for block in assistantMsg.content {
             switch block {
             case .text(let textBlock):
-                message.text += textBlock.text
+                message.text = textBlock.text
 
             case .toolUse(let toolUseBlock):
                 message.toolCalls.append(ToolCallDisplay(

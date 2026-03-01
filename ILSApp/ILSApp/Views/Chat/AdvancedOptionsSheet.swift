@@ -103,6 +103,9 @@ struct ChatOptionsConfig {
     /// Intended for development and troubleshooting; not recommended in production.
     var debug: Bool = false
 
+    /// Execution backend to use (auto-detect, SDK, or CLI).
+    var backend: ExecutionBackend = .auto
+
     /// Whether any non-default options have been set.
     /// Returns `true` if any property differs from its default, indicating that ``toChatOptions()``
     /// will produce a non-nil ``ChatOptions`` payload to attach to the outgoing request.
@@ -113,7 +116,8 @@ struct ChatOptionsConfig {
         !allowedTools.isEmpty || !disallowedTools.isEmpty ||
         continueConversation || noSessionPersistence ||
         !includePartialMessages || !inputFormat.isEmpty ||
-        !agent.isEmpty || !betas.isEmpty || debug
+        !agent.isEmpty || !betas.isEmpty || debug ||
+        backend != .auto
     }
 
     /// Converts this UI model to a ``ChatOptions`` value for inclusion in an API request.
@@ -136,7 +140,8 @@ struct ChatOptionsConfig {
             inputFormat: inputFormat.isEmpty ? nil : inputFormat,
             agent: agent.isEmpty ? nil : agent,
             betas: betas.isEmpty ? nil : betas.split(separator: ",").map(String.init),
-            debug: debug ? true : nil
+            debug: debug ? true : nil,
+            backend: backend != .auto ? backend : nil
         )
     }
 }
@@ -264,6 +269,14 @@ struct AdvancedOptionsSheet: View {
                     .frame(maxWidth: 100)
                     .accessibilityLabel("Max budget USD text field")
             }
+
+            Picker("Backend", selection: $config.backend) {
+                Text("Auto").tag(ExecutionBackend.auto)
+                Text("Agent SDK").tag(ExecutionBackend.sdk)
+                Text("CLI").tag(ExecutionBackend.cli)
+            }
+            .pickerStyle(.menu)
+            .accessibilityLabel("Backend execution picker")
         }
         .listRowBackground(theme.bgSecondary)
     }
