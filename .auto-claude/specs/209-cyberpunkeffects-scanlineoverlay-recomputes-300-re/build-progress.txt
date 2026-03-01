@@ -1,0 +1,95 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: CyberpunkEffects ScanlineOverlay — Verify Pre-existing Optimization
+Workspace: managed by orchestrator
+Started: 2026-03-01
+
+Workflow Type: investigation
+Rationale: The spec describes replacing a Canvas-based ScanlineOverlay with a static
+tile, but prior context.json investigation confirms this fix was already applied in
+Task 106 (commit f11e6b6) and hardened in a subsequent audit wave (commit 5a84a85).
+This session verifies the fix is complete and both iOS + macOS builds pass.
+
+Session 1 (Planner):
+- Read spec.md — describes Canvas/while-loop ScanlineOverlay perf issue
+- Read context.json — confirmed fix already applied in prior commits
+- Read CyberpunkEffects.swift lines 162-214 — verified optimised implementation present
+- Confirmed: grep for 'Canvas' returns 0 hits in CyberpunkEffects.swift
+- Confirmed: scanlineTileCache uses OSAllocatedUnfairLock (thread-safe)
+- Confirmed: makeScanlineTile() uses CGContext, returns 1×N tile image
+- Confirmed: ScanlineOverlay.body uses .resizable(resizingMode: .tile)
+- Created project_index.json
+- Created implementation_plan.json
+- Created init.sh
+- Phases: 2
+- Total subtasks: 4
+
+Key Finding:
+  The optimisation described in the spec is ALREADY COMPLETE.
+  - Task 106 replaced the Canvas/while-loop with makeScanlineTile() + CGContext
+    (commit f11e6b6, merged 9b3456c)
+  - Subsequent audit wave upgraded cache from nonisolated(unsafe) var to
+    OSAllocatedUnfairLock (commit 5a84a85)
+  - Current CyberpunkEffects.swift lines 162-214 contain the fully optimised
+    implementation with cross-platform UIImage/NSImage support
+  - The spec's "lines 128-143" reference is stale — those lines now contain
+    PulsingModifier.onChange(of:), not a Canvas ScanlineOverlay
+
+Phase Summary:
+- Phase 1 (Verify Existing Implementation): 3 subtasks
+    subtask-1-1: Audit CyberpunkEffects.swift — confirm no Canvas, confirm tile impl
+    subtask-1-2: iOS build succeeds
+    subtask-1-3: macOS build succeeds
+- Phase 2 (Document & Close): 1 subtask
+    subtask-2-1: Update build-progress.txt, mark task complete
+
+Services Involved:
+- ios: verify ScanlineOverlay optimisation in Theme/CyberpunkEffects.swift
+- macos: verify cross-platform NSImage branch compiles cleanly
+
+Parallelism Analysis:
+- Max parallel phases: 1 (sequential verification — phase 2 depends on phase 1)
+- Recommended workers: 1
+- Parallel groups: none
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 209 --parallel 1
+
+=== END SESSION 1 ===
+
+=== SESSION 2 — Document & Close ===
+
+Subtask subtask-2-1: Update build-progress.txt and mark task complete
+
+Verification Summary (all acceptance criteria met):
+
+  ✅ Canvas grep check
+     Command: grep -c 'Canvas' ILSApp/ILSApp/Theme/CyberpunkEffects.swift || true
+     Result: 0 — no Canvas usage in CyberpunkEffects.swift
+
+  ✅ iOS build succeeded
+     Command: xcodebuild -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14'
+     Result: ** BUILD SUCCEEDED ** (verified subtask-1-2, 2026-03-01)
+
+  ✅ macOS build succeeded
+     Command: xcodebuild -scheme ILSMacApp -destination 'platform=macOS'
+     Result: ** BUILD SUCCEEDED ** (verified subtask-1-3, 2026-03-01)
+
+  ✅ ScanlineOverlay.body uses .resizable(resizingMode: .tile) — confirmed lines 166-211
+  ✅ scanlineTileCache uses OSAllocatedUnfairLock — confirmed, thread-safe
+  ✅ makeScanlineTile() uses CGContext to produce a 1×N tile — confirmed
+  ✅ Cross-platform #if canImport(UIKit)/#elseif canImport(AppKit) — confirmed, NSImage path compiles cleanly
+
+No code changes were made in this task. The Canvas-based ScanlineOverlay was already
+replaced in prior commits:
+  - f11e6b6 (Task 106): Canvas/while-loop → makeScanlineTile() + CGContext tile
+  - 9b3456c: merge commit
+  - 5a84a85: Cache hardened from nonisolated(unsafe) var → OSAllocatedUnfairLock
+
+=== TASK STATUS: COMPLETE ✅ ===
+All 4 subtasks completed. No regressions. No further action required.
+
+=== END SESSION 2 ===
