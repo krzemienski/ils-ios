@@ -156,6 +156,9 @@ extension RenameSessionRequest: Content {}
 extension BulkDeleteSessionsRequest: Content {}
 extension BulkDeleteProjectsRequest: Content {}
 extension MessageSearchResult: Content {}
+extension SessionComparisonResult: Content {}
+extension SessionWithMessages: Content {}
+extension RecentlyComparedPair: Content {}
 extension ChatExport: Content {}
 extension ChatExportSession: Content {}
 extension ChatExportMessage: Content {}

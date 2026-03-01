@@ -9,6 +9,7 @@ import ILSShared
 /// - `POST /sessions`: Create a new session
 /// - `GET /sessions/scan`: Scan for external Claude Code sessions
 /// - `GET /sessions/search?q=`: Search across all session messages
+/// - `GET /sessions/compare?a=id1&b=id2`: Compare two sessions side-by-side
 /// - `GET /sessions/:id`: Get a specific session
 /// - `PUT /sessions/:id`: Rename a session
 /// - `DELETE /sessions/:id`: Delete a session
@@ -33,6 +34,7 @@ struct SessionsController: RouteCollection {
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get("search", use: searchAll)
+        sessions.get("compare", use: compare)
         sessions.get(":id", use: get)
         sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
@@ -529,6 +531,58 @@ struct SessionsController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: results, total: total)
+        )
+    }
+
+    /// Compare two sessions side-by-side, returning full metadata and message histories.
+    ///
+    /// Query parameters:
+    /// - `a`: UUID of the first session (required)
+    /// - `b`: UUID of the second session (required)
+    ///
+    /// - Parameter req: Vapor Request with `a` and `b` query params
+    /// - Returns: APIResponse with SessionComparisonResult containing both sessions and their messages
+    @Sendable
+    func compare(req: Request) async throws -> APIResponse<SessionComparisonResult> {
+        guard let idA = req.query[UUID.self, at: "a"] else {
+            throw Abort(.badRequest, reason: "Query parameter 'a' (session ID) is required")
+        }
+        guard let idB = req.query[UUID.self, at: "b"] else {
+            throw Abort(.badRequest, reason: "Query parameter 'b' (session ID) is required")
+        }
+
+        guard let sessionA = try await SessionModel.query(on: req.db)
+            .filter(\.$id == idA)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session A not found")
+        }
+
+        guard let sessionB = try await SessionModel.query(on: req.db)
+            .filter(\.$id == idB)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session B not found")
+        }
+
+        let messagesA = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == idA)
+            .sort(\.$createdAt, .ascending)
+            .all()
+
+        let messagesB = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == idB)
+            .sort(\.$createdAt, .ascending)
+            .all()
+
+        return APIResponse(
+            success: true,
+            data: SessionComparisonResult(
+                sessionA: sessionA.toShared(projectName: sessionA.project?.name),
+                sessionB: sessionB.toShared(projectName: sessionB.project?.name),
+                messagesA: messagesA.map { $0.toShared() },
+                messagesB: messagesB.map { $0.toShared() }
+            )
         )
     }
 
