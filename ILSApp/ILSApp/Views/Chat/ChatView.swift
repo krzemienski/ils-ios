@@ -84,6 +84,7 @@ struct ChatView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Body
 
@@ -257,7 +258,7 @@ struct ChatView: View {
 
     // MARK: - View Components
 
-    /// Top-level layout stacking the status banner, context window bar, related-sessions panel, message list, divider, and input bar.
+    /// Top-level layout stacking the status banner, offline banner, context window bar, related-sessions panel, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
             if sheets.showSearch {
@@ -268,6 +269,12 @@ struct ChatView: View {
                 searchResultsView
             } else {
                 statusBanner
+
+                OfflineIndicator(isOffline: viewModel.isOffline)
+                    .animation(
+                        reduceMotion ? .none : .easeInOut(duration: 0.3),
+                        value: viewModel.isOffline
+                    )
 
                 contextWindowBar
 
@@ -452,19 +459,59 @@ struct ChatView: View {
     }
 
     /// Chat input bar for composing and sending messages to Claude.
+    ///
+    /// When offline, the send button is disabled and a queued-message count indicator
+    /// is shown above the input row if any messages are waiting to be sent.
     private var bottomBar: some View {
-        ChatInputBar(
-            text: $inputText,
-            isStreaming: viewModel.isStreaming,
-            isDisabled: viewModel.isLoadingHistory,
-            hasCustomOptions: chatOptionsConfig.hasCustomOptions,
-            onSend: sendMessage,
-            onCancel: { viewModel.cancel() },
-            onCommandPalette: { sheets.showCommandPalette = true },
-            onAdvancedOptions: { sheets.showAdvancedOptions = true },
-            pendingCount: MessageQueueService.shared.pendingCount
+        VStack(spacing: 0) {
+            if viewModel.isOffline && viewModel.queuedMessageCount > 0 {
+                offlineQueueIndicator
+            }
+            ChatInputBar(
+                text: $inputText,
+                isStreaming: viewModel.isStreaming,
+                isDisabled: viewModel.isLoadingHistory || viewModel.isOffline,
+                hasCustomOptions: chatOptionsConfig.hasCustomOptions,
+                onSend: sendMessage,
+                onCancel: { viewModel.cancel() },
+                onCommandPalette: { sheets.showCommandPalette = true },
+                onAdvancedOptions: { sheets.showAdvancedOptions = true }
+            )
+            .focused($isInputFocused)
+        }
+        .animation(
+            reduceMotion ? .none : .easeInOut(duration: 0.25),
+            value: viewModel.isOffline && viewModel.queuedMessageCount > 0
         )
-        .focused($isInputFocused)
+    }
+
+    /// Thin strip above the input bar showing how many messages are queued offline.
+    @ViewBuilder
+    private var offlineQueueIndicator: some View {
+        let count = viewModel.queuedMessageCount
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "clock.arrow.2.circlepath")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+            Text("\(count) message\(count == 1 ? "" : "s") queued — will send when online")
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+        }
+        .foregroundStyle(theme.warning)
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.vertical, theme.spacingXS)
+        .frame(maxWidth: .infinity)
+        .background(
+            theme.warning.opacity(0.15)
+                .overlay(
+                    Rectangle()
+                        .stroke(theme.warning.opacity(0.3), lineWidth: 0.5)
+                )
+        )
+        .transition(
+            reduceMotion
+                ? .opacity
+                : .move(edge: .bottom).combined(with: .opacity)
+        )
+        .accessibilityLabel("\(count) message\(count == 1 ? "" : "s") queued. Will send when back online.")
     }
 
     /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
