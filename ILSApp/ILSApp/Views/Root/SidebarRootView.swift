@@ -240,7 +240,8 @@ struct SidebarRootView: View {
                 isSidebarOpen: .constant(true),
                 onSessionSelected: { session in
                     navigateToChat(session)
-                }
+                },
+                activityFeedUnreadCount: activityFeedVM.unreadCount
             )
             .background(theme.bgSidebar)
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
@@ -370,7 +371,8 @@ struct SidebarRootView: View {
                 isSidebarOpen: $isSidebarOpen,
                 onSessionSelected: { session in
                     navigateToChat(session)
-                }
+                },
+                activityFeedUnreadCount: activityFeedVM.unreadCount
             )
             .frame(width: sidebarWidth)
 

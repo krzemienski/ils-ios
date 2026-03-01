@@ -139,6 +139,8 @@ class AppState {
             navigationIntent = .hooks
         case "teams":
             navigationIntent = .teams
+        case "activity":
+            navigationIntent = .activityFeed
         default:
             break
         }

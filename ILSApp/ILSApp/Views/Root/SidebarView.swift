@@ -41,6 +41,8 @@ struct SidebarView: View {
     @Binding var isSidebarOpen: Bool
     /// Called when the user selects a session from the list.
     var onSessionSelected: (ChatSession) -> Void
+    /// Number of unread activity events to display as a badge on the Activity Feed nav item.
+    var activityFeedUnreadCount: Int = 0
 
     @FocusState private var isSearchFocused: Bool
     /// The session currently being renamed, if any.
@@ -197,6 +199,12 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
                 sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
                 sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
+                sidebarNavItem(
+                    icon: "list.bullet.rectangle.fill",
+                    label: "Activity Feed",
+                    screen: .activityFeed,
+                    badge: activityFeedUnreadCount
+                )
                 if enableAgentTeams {
                     sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
                 }
@@ -517,8 +525,9 @@ struct SidebarView: View {
 
     // MARK: - Navigation Item
 
-    private func sidebarNavItem(icon: String, label: String, screen: ActiveScreen) -> some View {
+    private func sidebarNavItem(icon: String, label: String, screen: ActiveScreen, badge: Int = 0) -> some View {
         let isActive = isScreenActive(screen)
+        let clampedBadge = min(badge, 99)
 
         return Button {
             HapticManager.selection()
@@ -532,6 +541,15 @@ struct SidebarView: View {
                 Text(label)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 Spacer()
+                if clampedBadge > 0 {
+                    Text("\(clampedBadge)")
+                        .font(.system(size: theme.fontCaption - 1, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textOnAccent)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(theme.accent)
+                        .clipShape(Capsule())
+                }
             }
             .foregroundStyle(isActive ? theme.accent : theme.textSecondary)
             .padding(.horizontal, theme.spacingSM + 4)
@@ -540,7 +558,7 @@ struct SidebarView: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
-        .accessibilityLabel(label)
+        .accessibilityLabel(clampedBadge > 0 ? "\(label), \(clampedBadge) unread" : label)
         .accessibilityHint("Navigate to \(label)")
     }
 
@@ -557,7 +575,7 @@ struct SidebarView: View {
         switch (activeScreen, screen) {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
-             (.themes, .themes), (.hooks, .hooks):
+             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed):
             return true
         case (.chat, .chat):
             return true
