@@ -55,7 +55,7 @@ struct ChatStreamingAttributes: ActivityAttributes {
 
 /// Static color constants matching the Obsidian/Cyberpunk dark aesthetic.
 /// WidgetKit views cannot access SwiftUI `@Environment`, so colors are declared as constants.
-private enum LiveActivityColors {
+enum LiveActivityColors {
     static let background = Color(hex: "0A0A0F")
     static let backgroundSecondary = Color(hex: "111118")
     static let accent = Color(hex: "00D4FF") // Cyan accent (Cyberpunk)
