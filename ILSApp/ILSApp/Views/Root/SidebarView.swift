@@ -307,6 +307,7 @@ struct SidebarView: View {
             // Configuration screens group
             sidebarSectionHeader(title: "CONFIGURE")
             VStack(spacing: theme.spacingXS) {
+                sidebarNavItem(icon: "chart.bar.fill", label: "Usage", screen: .usage)
                 sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
                 sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
                 sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
@@ -686,7 +687,7 @@ struct SidebarView: View {
         switch (activeScreen, screen) {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
-             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed):
+             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed), (.usage, .usage):
             return true
         case (.chat, .chat):
             return true

@@ -423,6 +423,14 @@ struct HomeView: View {
                 ) {
                     onNavigate?(.system)
                 }
+
+                quickActionCard(
+                    icon: "chart.bar.fill",
+                    title: "Usage",
+                    color: theme.accent
+                ) {
+                    onNavigate?(.usage)
+                }
             }
             .shimmerIfActive(isRefreshing)
         }
