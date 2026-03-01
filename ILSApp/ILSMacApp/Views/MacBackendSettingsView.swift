@@ -58,7 +58,7 @@ struct MacBackendSettingsView: View {
             }
         }
         .task {
-            await viewModel.manager.startMonitoringIfInstalled()
+            await viewModel.startMonitoringIfInstalled()
             await viewModel.checkForUpdates()
         }
     }

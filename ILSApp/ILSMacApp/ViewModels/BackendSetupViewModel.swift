@@ -123,6 +123,13 @@ final class BackendSetupViewModel {
         backendStatus == .notInstalled
     }
 
+    // MARK: - Monitoring
+
+    /// Start backend health monitoring if the backend is installed. Call from app/view startup.
+    func startMonitoringIfInstalled() async {
+        await manager.startMonitoringIfInstalled()
+    }
+
     // MARK: - Actions
 
     /// Run the full install flow: build binary → copy → install LaunchAgent.

@@ -15,6 +15,9 @@
 		0225E7F25803E1514F00780E /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE193B8BF8C7258B6DDE90D /* MidnightTheme.swift */; };
 		023A3B6DE4DF37F470EB65AC /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3E667C92D5B2A3F254C5A5 /* SyntaxHighlighter.swift */; };
 		025049AA4A5926FD4D1A6F7B /* MemoryPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0DAD288105951801975063 /* MemoryPerformanceTests.swift */; };
+		EDD1D9A162F240A79F07033E /* BackendLifecycleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA699B5E1E441D6A28D82A4 /* BackendLifecycleManager.swift */; };
+		4BDA92B1F3514A0498F73CA2 /* BackendSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5335F7D7E13413584FDAA73 /* BackendSetupViewModel.swift */; };
+		82E07F2948854B7992776C02 /* MacBackendSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175D6193694B4485A690BA10 /* MacBackendSettingsView.swift */; };
 		029BE21752EEEAB02DA9DB1A /* SpotlightIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FD667CEB54A3977A624A32D /* SpotlightIndexer.swift */; };
 		02DF31D5753A3D1A805198E2 /* StreamingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8D7644950A87917982EDDC /* StreamingIndicatorView.swift */; };
 		0454FDC092D6ECF573218246 /* TeamMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F7180FB7CF6802768BD600 /* TeamMessagesView.swift */; };
@@ -498,6 +501,9 @@
 		3CB16994516471A2241BCCC2 /* ILSMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSMacApp.swift; sourceTree = "<group>"; };
 		3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubPreviewView.swift; sourceTree = "<group>"; };
 		3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetSessionInfoIntent.swift; sourceTree = "<group>"; };
+		0DA699B5E1E441D6A28D82A4 /* BackendLifecycleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendLifecycleManager.swift; sourceTree = "<group>"; };
+		B5335F7D7E13413584FDAA73 /* BackendSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendSetupViewModel.swift; sourceTree = "<group>"; };
+		175D6193694B4485A690BA10 /* MacBackendSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBackendSettingsView.swift; sourceTree = "<group>"; };
 		3FD667CEB54A3977A624A32D /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
 		402B977AA6C4850AA23BDB0E /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		40AE3C8E1ADD87D38B3BE116 /* ThemeMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMarketplaceView.swift; sourceTree = "<group>"; };
@@ -825,6 +831,7 @@
 				8FBB1D9A4D837F7C7CDBCED0 /* Commands */,
 				65E3054B0AEC0126D127D094 /* Managers */,
 				644B298820C1CC14136B8D23 /* Services */,
+				0F343A876CEE48FFAB56EAD2 /* ViewModels */,
 				8EEAC71B68A42786E0EF5057 /* TouchBar */,
 				B36A0BE0D970CD5B43C06A27 /* Views */,
 			);
@@ -834,6 +841,7 @@
 		644B298820C1CC14136B8D23 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				0DA699B5E1E441D6A28D82A4 /* BackendLifecycleManager.swift */,
 				3FD667CEB54A3977A624A32D /* SpotlightIndexer.swift */,
 			);
 			path = Services;
@@ -846,6 +854,14 @@
 				2D2ABD33FCEA2A3BF7E58F8E /* WindowManager.swift */,
 			);
 			path = Managers;
+			sourceTree = "<group>";
+		};
+		0F343A876CEE48FFAB56EAD2 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				B5335F7D7E13413584FDAA73 /* BackendSetupViewModel.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 		65E9833774D51388F67CA2ED /* Settings */ = {
@@ -1074,6 +1090,7 @@
 				5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */,
 				F0B4BF71D7F947143FA895AC /* MacProjectsListView.swift */,
 				F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */,
+				175D6193694B4485A690BA10 /* MacBackendSettingsView.swift */,
 				1715C85690BFE53786364C7B /* MacSettingsView.swift */,
 				0292D386E0F18B45765BDB85 /* SessionWindowView.swift */,
 			);
@@ -1850,6 +1867,9 @@
 				755A46A5480B96B3E3346CDB /* SnowTheme.swift in Sources */,
 				E0D6CBABA7A2B335FA926F12 /* SparklineChart.swift in Sources */,
 				8B51E92863D3F7AA73B6F65E /* SpawnTeammateView.swift in Sources */,
+				EDD1D9A162F240A79F07033E /* BackendLifecycleManager.swift in Sources */,
+				4BDA92B1F3514A0498F73CA2 /* BackendSetupViewModel.swift in Sources */,
+				82E07F2948854B7992776C02 /* MacBackendSettingsView.swift in Sources */,
 				029BE21752EEEAB02DA9DB1A /* SpotlightIndexer.swift in Sources */,
 				BFC1BD3E7E6F94F5B12F06E0 /* StatCard.swift in Sources */,
 				04BF08BADE4A7D9A0BBEF578 /* StreamingIndicatorView.swift in Sources */,
