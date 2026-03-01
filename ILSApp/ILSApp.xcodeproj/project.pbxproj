@@ -368,6 +368,7 @@
 		B59E162E2F5E673E11D21726 /* ErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E7D107C5255B902E735D71 /* ErrorHandlingTests.swift */; };
 		B5A6B7EE2A10BDA5BD6BCB12 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D406A95CF1DAFB1A1D7DAF2 /* ChatView.swift */; };
 		B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77899531B324530342B03A8 /* DashboardViewModel.swift */; };
+		9D50F55CD7D34214B6F7599A /* UsageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66A288C5D84BFBA24F4EC9 /* UsageDashboardViewModel.swift */; };
 		B78070D42E4A59D3915BDE36 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D04010DA9C7A983032E9DA /* SidebarView.swift */; };
 		B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */; };
 		B8668FF8270D511302414DBF /* SSHViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */; };
@@ -452,6 +453,7 @@
 		E2546FA4477DDC7F5D5B161A /* SnowTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F38C9481FF1206F75E66FC2 /* SnowTheme.swift */; };
 		E3232091BD3461B7459F07F9 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */; };
 		E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77899531B324530342B03A8 /* DashboardViewModel.swift */; };
+		26663809AD75493689AD6F90 /* UsageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66A288C5D84BFBA24F4EC9 /* UsageDashboardViewModel.swift */; };
 		E3636731594B2808A893643F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2839D9B4F57064D597B4D3 /* SettingsView.swift */; };
 		E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */; };
 		E40DD2C368904D059EF66C6F /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64417034D7BE8F3619B3BC06 /* HapticManager.swift */; };
@@ -799,6 +801,7 @@
 		F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookEditorSheet.swift; sourceTree = "<group>"; };
 		F48795057C7081556FF5B265 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
 		F77899531B324530342B03A8 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		FF66A288C5D84BFBA24F4EC9 /* UsageDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageDashboardViewModel.swift; sourceTree = "<group>"; };
 		F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewCard.swift; sourceTree = "<group>"; };
 		F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSessionsListView.swift; sourceTree = "<group>"; };
 		F9A4655E180715DDFB024576 /* EntityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
@@ -1371,6 +1374,7 @@
 				CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */,
 				6E65F9892954F605C2737A7D /* TeamsViewModel.swift */,
 				C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */,
+				FF66A288C5D84BFBA24F4EC9 /* UsageDashboardViewModel.swift */,
 				83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */,
 			);
 			path = ViewModels;
@@ -1801,6 +1805,7 @@
 				08B2A5AC7ED9F7BF7E8851A2 /* CyberpunkTheme.swift in Sources */,
 				B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */,
 				B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */,
+				9D50F55CD7D34214B6F7599A /* UsageDashboardViewModel.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
 				A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */,
@@ -2030,6 +2035,7 @@
 				D5ED11A460131301452F9A86 /* CyberpunkTheme.swift in Sources */,
 				C2D3E4F5061789ABCDEF0123 /* ActivityFeedViewModel.swift in Sources */,
 				E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */,
+				26663809AD75493689AD6F90 /* UsageDashboardViewModel.swift in Sources */,
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
 				C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */,
 				90D58E27CFDEB9AB8BFEFEAD /* EmberTheme.swift in Sources */,
