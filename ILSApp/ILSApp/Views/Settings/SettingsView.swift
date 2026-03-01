@@ -39,6 +39,8 @@ struct SettingsView: View {
     @State private var showDeleteConfirmation: Bool = false
     // isDeleting and deleteResult moved to SettingsViewModel
 
+    @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
+
     private let availableColorSchemes = ["system", "light", "dark"]
 
     var body: some View {
@@ -53,6 +55,8 @@ struct SettingsView: View {
                 configSection
 
                 statisticsSection
+
+                contextWindowSection
 
                 dataPrivacySection
 
@@ -133,6 +137,40 @@ struct SettingsView: View {
             availableColorSchemes: availableColorSchemes,
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
+    }
+
+    private var contextWindowSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("CONTEXT WINDOW")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                Toggle(isOn: $showContextWindowBar) {
+                    HStack(spacing: theme.spacingMD) {
+                        Image(systemName: "cpu")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.accent)
+                            .frame(width: 28, height: 28)
+                            .background(theme.accent.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        Text("Show context usage bar")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+                .padding(theme.spacingMD)
+                .tint(theme.accent)
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            Text("Displays a bar in chat showing how much of Claude's context window is being used.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
     }
 
     private var dataPrivacySection: some View {

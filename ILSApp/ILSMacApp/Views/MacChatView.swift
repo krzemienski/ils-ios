@@ -24,6 +24,7 @@ struct MacChatView: View {
     @State private var showSearch = false
     @State private var searchDebounceTask: Task<Void, Never>?
     @State private var chatOptionsConfig = ChatOptionsConfig()
+    @State private var showContextWindowDetail = false
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -197,6 +198,31 @@ struct MacChatView: View {
                 .frame(minWidth: 500, minHeight: 300)
                 .presentationBackground(theme.bgPrimary)
             }
+            .sheet(isPresented: $showContextWindowDetail) {
+                if let usedTokens = viewModel.contextTokensUsed,
+                   let windowSize = viewModel.contextWindowSize {
+                    ContextWindowDetailSheet(
+                        usedTokens: usedTokens,
+                        contextWindowSize: windowSize,
+                        inputTokens: viewModel.contextInputTokens,
+                        outputTokens: viewModel.contextOutputTokens,
+                        cacheReadTokens: viewModel.contextCacheReadTokens,
+                        cacheCreateTokens: viewModel.contextCacheCreateTokens,
+                        onForkSession: {
+                            showContextWindowDetail = false
+                            Task {
+                                if let forked = await viewModel.forkSession() {
+                                    forkedSession = forked
+                                    showForkAlert = true
+                                }
+                            }
+                        },
+                        onDismiss: { showContextWindowDetail = false }
+                    )
+                    .frame(minWidth: 500, minHeight: 500)
+                    .presentationBackground(theme.bgPrimary)
+                }
+            }
             .task {
                 viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
                 viewModel.sessionId = session.id
@@ -237,6 +263,8 @@ struct MacChatView: View {
             } else {
                 statusBanner
 
+                contextWindowBar
+
                 messageList
 
                 theme.divider.frame(height: 0.5)
@@ -255,6 +283,21 @@ struct MacChatView: View {
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
             )
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    @ViewBuilder
+    private var contextWindowBar: some View {
+        if let usedTokens = viewModel.contextTokensUsed,
+           let windowSize = viewModel.contextWindowSize,
+           windowSize > 0 {
+            ContextWindowBar(
+                usedTokens: usedTokens,
+                contextWindowSize: windowSize
+            ) {
+                showContextWindowDetail = true
+            }
             .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
