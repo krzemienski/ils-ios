@@ -7,6 +7,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     case general = "General"
     case appearance = "Appearance"
     case connection = "Connection"
+    case backend = "Backend"
     case advanced = "Advanced"
     case about = "About"
 
@@ -17,6 +18,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         case .general: return "gearshape"
         case .appearance: return "paintbrush"
         case .connection: return "network"
+        case .backend: return "server.rack"
         case .advanced: return "wrench.and.screwdriver"
         case .about: return "info.circle"
         }
@@ -66,6 +68,8 @@ struct MacSettingsView: View {
                         appearanceSettings
                     case .connection:
                         connectionSettings
+                    case .backend:
+                        MacBackendSettingsView()
                     case .advanced:
                         advancedSettings
                     case .about:
