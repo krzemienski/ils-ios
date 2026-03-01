@@ -50,6 +50,8 @@ struct SettingsView: View {
 
                 SettingsAppearanceSection()
 
+                DashboardSettingsSection()
+
                 configSection
 
                 statisticsSection

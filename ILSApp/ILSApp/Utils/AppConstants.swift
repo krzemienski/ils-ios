@@ -53,4 +53,8 @@ enum AppConstants {
 
     /// UserDefaults key for the dashboard iCloud Key-Value Store sync enabled flag.
     static let dashboardICloudSyncEnabledKey = "dashboard_icloud_sync_enabled"
+
+    /// UserDefaults key for the widget auto-refresh interval in seconds.
+    /// Default value is 30 seconds; valid options are 15, 30, 60, and 300.
+    static let dashboardWidgetRefreshIntervalKey = "dashboard_widget_refresh_interval"
 }

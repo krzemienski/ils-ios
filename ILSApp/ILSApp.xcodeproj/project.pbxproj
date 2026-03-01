@@ -316,6 +316,10 @@
 		B5C6D7E8F9A0B1C2D3E4F5A6 /* TeamActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F9A0B1C2D3E4F5 /* TeamActivityWidget.swift */; };
 		D7E8F9A0B1C2D3E4F5A6B7C8 /* SystemMetricsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D7E8F9A0B1C2D3E4F5A6B7 /* SystemMetricsWidget.swift */; };
 		F9A0B1C2D3E4F5A6B7C8D9E0 /* UsageStatsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F9A0B1C2D3E4F5A6B7C8D9 /* UsageStatsWidget.swift */; };
+		AA1122334455667788990011 /* AddWidgetSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1122334455667788990011 /* AddWidgetSheet.swift */; };
+		CC1122334455667788990011 /* WidgetSizeSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1122334455667788990011 /* WidgetSizeSelector.swift */; };
+		EE1122334455667788990011 /* DashboardLayoutPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1122334455667788990011 /* DashboardLayoutPickerView.swift */; };
+		A0B1C2D3E4F5A6B7C8D9E0F1 /* DashboardSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F6A7B8C9D0E1 /* DashboardSettingsSection.swift */; };
 		B78070D42E4A59D3915BDE36 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D04010DA9C7A983032E9DA /* SidebarView.swift */; };
 		B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */; };
 		B8668FF8270D511302414DBF /* SSHViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */; };
@@ -697,6 +701,10 @@
 		A4B5C6D7E8F9A0B1C2D3E4F5 /* TeamActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamActivityWidget.swift; sourceTree = "<group>"; };
 		C6D7E8F9A0B1C2D3E4F5A6B7 /* SystemMetricsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsWidget.swift; sourceTree = "<group>"; };
 		E8F9A0B1C2D3E4F5A6B7C8D9 /* UsageStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStatsWidget.swift; sourceTree = "<group>"; };
+		BB1122334455667788990011 /* AddWidgetSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWidgetSheet.swift; sourceTree = "<group>"; };
+		DD1122334455667788990011 /* WidgetSizeSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSizeSelector.swift; sourceTree = "<group>"; };
+		FF1122334455667788990011 /* DashboardLayoutPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardLayoutPickerView.swift; sourceTree = "<group>"; };
+		F0A1B2C3D4E5F6A7B8C9D0E1 /* DashboardSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSettingsSection.swift; sourceTree = "<group>"; };
 		F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewCard.swift; sourceTree = "<group>"; };
 		F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSessionsListView.swift; sourceTree = "<group>"; };
 		F9A4655E180715DDFB024576 /* EntityType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityType.swift; sourceTree = "<group>"; };
@@ -830,6 +838,10 @@
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* DashboardWidgetViewModel.swift */,
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* WidgetContainerView.swift */,
 				E0F2A4B6C8D0E2F4A6B8C0D2 /* DashboardGridView.swift */,
+				BB1122334455667788990011 /* AddWidgetSheet.swift */,
+				DD1122334455667788990011 /* WidgetSizeSelector.swift */,
+				FF1122334455667788990011 /* DashboardLayoutPickerView.swift */,
+				F0A1B2C3D4E5F6A7B8C9D0E1 /* DashboardSettingsSection.swift */,
 				A7B8C9D0E1F2A3B4C5D6E7F8 /* Widgets */,
 			);
 			path = Dashboard;
@@ -1623,6 +1635,10 @@
 				B5C6D7E8F9A0B1C2D3E4F5A6 /* TeamActivityWidget.swift in Sources */,
 				D7E8F9A0B1C2D3E4F5A6B7C8 /* SystemMetricsWidget.swift in Sources */,
 				F9A0B1C2D3E4F5A6B7C8D9E0 /* UsageStatsWidget.swift in Sources */,
+				AA1122334455667788990011 /* AddWidgetSheet.swift in Sources */,
+				CC1122334455667788990011 /* WidgetSizeSelector.swift in Sources */,
+				EE1122334455667788990011 /* DashboardLayoutPickerView.swift in Sources */,
+				A0B1C2D3E4F5A6B7C8D9E0F1 /* DashboardSettingsSection.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
 				A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */,
