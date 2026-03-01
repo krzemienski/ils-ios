@@ -65,4 +65,33 @@ enum AppConstants {
 
     /// iCloud KV store key for the synced active host profile name.
     static let iCloudActiveHostNameKey = "ils_icloud_active_host_name"
+
+    // MARK: - Offline Cache Settings Keys
+
+    /// UserDefaults key for whether offline caching is enabled.
+    static let offlineCacheEnabledKey = "offline_cache_enabled"
+
+    /// UserDefaults key for the maximum number of sessions to cache offline.
+    static let offlineCacheMaxSessionsKey = "offline_cache_max_sessions"
+
+    /// UserDefaults key for the cache TTL in seconds.
+    static let offlineCacheTTLKey = "offline_cache_ttl"
+
+    /// UserDefaults key for whether session caching is enabled.
+    static let offlineCacheSessionsEnabledKey = "offline_cache_sessions_enabled"
+
+    /// UserDefaults key for whether message caching is enabled.
+    static let offlineCacheMessagesEnabledKey = "offline_cache_messages_enabled"
+
+    /// UserDefaults key for whether project caching is enabled.
+    static let offlineCacheProjectsEnabledKey = "offline_cache_projects_enabled"
+
+    /// UserDefaults key for whether skills caching is enabled.
+    static let offlineCacheSkillsEnabledKey = "offline_cache_skills_enabled"
+
+    /// UserDefaults key for whether MCP server caching is enabled.
+    static let offlineCacheMCPServersEnabledKey = "offline_cache_mcp_servers_enabled"
+
+    /// UserDefaults key for whether plugin caching is enabled.
+    static let offlineCachePluginsEnabledKey = "offline_cache_plugins_enabled"
 }
