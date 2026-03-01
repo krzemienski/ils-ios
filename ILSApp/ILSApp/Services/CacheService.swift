@@ -48,7 +48,7 @@ actor CacheService {
     /// Retrieve cached sessions, filtering out expired entries.
     func getCachedSessions() async -> [ChatSession] {
         do {
-            return try await db.fetchSessions(olderThan: sessionTTL)
+            return try await db.fetchSessions(newerThan: sessionTTL)
         } catch {
             AppLogger.shared.error(
                 "Failed to fetch cached sessions: \(error.localizedDescription)",

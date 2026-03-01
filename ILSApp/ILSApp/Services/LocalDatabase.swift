@@ -424,11 +424,18 @@ actor LocalDatabase {
         }
     }
 
-    func fetchSessions(olderThan maxAge: TimeInterval? = nil) throws -> [ChatSession] {
+    /// Fetch cached sessions.
+    ///
+    /// - Parameters:
+    ///   - newerThan: Optional TTL window — only return sessions cached within this many seconds.
+    ///                Ignored when `isOffline` is true so stale cache is still surfaced.
+    ///   - isOffline: When `true`, skips TTL filtering and returns all cached sessions regardless of age.
+    func fetchSessions(newerThan maxAge: TimeInterval? = nil, isOffline: Bool = false) throws -> [ChatSession] {
         guard let dbPool else { return [] }
         return try dbPool.read { db in
             var request = CachedSession.order(Column("lastActiveAt").desc)
-            if let maxAge {
+            // Skip TTL filter when offline so users always see cached data
+            if !isOffline, let maxAge {
                 let cutoff = Date().addingTimeInterval(-maxAge)
                 request = request.filter(Column("cachedAt") >= cutoff)
             }
@@ -632,5 +639,28 @@ actor LocalDatabase {
         try dbPool.write { db in
             _ = try CachedServerConnection.deleteOne(db, key: id)
         }
+    }
+
+    // MARK: - Storage
+
+    /// Returns the total disk usage in bytes for the SQLite cache files (main db, WAL, and SHM).
+    func cacheStorageBytes() -> Int64 {
+        let fileManager = FileManager.default
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return 0
+        }
+        let dbPath = appSupport
+            .appendingPathComponent("ILS", isDirectory: true)
+            .appendingPathComponent("cache.sqlite")
+            .path
+
+        var totalBytes: Int64 = 0
+        for path in [dbPath, dbPath + "-wal", dbPath + "-shm"] {
+            if let attrs = try? fileManager.attributesOfItem(atPath: path),
+               let size = attrs[.size] as? Int64 {
+                totalBytes += size
+            }
+        }
+        return totalBytes
     }
 }
