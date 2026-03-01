@@ -79,6 +79,7 @@
 		2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C934E92FC1D3804790EA3977 /* SessionInfoView.swift */; };
 		28CA248D91D2DCEDBC2EEB29 /* ConnectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */; };
 		29DCAB0F0B90EE30DB9E8091 /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
+		20566D9697D74A6C9E2CA9A5 /* CodingFocusFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */; };
 		29DE61F29D190C75CE01F6E5 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */; };
 		463B015435784E8287DD84C3 /* SessionSnippetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F5BE4D9B1141599441340F /* SessionSnippetView.swift */; };
 		6880C48A7ACB455EAE94CB6F /* SessionSnippetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81F5BE4D9B1141599441340F /* SessionSnippetView.swift */; };
@@ -183,6 +184,7 @@
 		69BD26FFABCE9816AE439B06 /* ProjectsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E4E9B9B4ADFE072002F72ED /* ProjectsViewModel.swift */; };
 		6A1D0563C49549C5B7156575 /* ThemePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0258956E713A6D6A3940159 /* ThemePreviewView.swift */; };
 		6A1E87A92394F16EFC6DDA1D /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97B54AA46C4307B025310A2 /* GlassCard.swift */; };
+		3C2042B8780F4E5BA2127F7C /* CodingFocusFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */; };
 		6A56E46FE442AA1CBB4D89E7 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */; };
 		6BB6DB9CD14FC1D904F30259 /* GrammarDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6061C5B3E094C0E104ED8680 /* GrammarDefinitions.swift */; };
 		6BFA87146F9663D99F2E85A9 /* FeatureGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */; };
@@ -635,6 +637,7 @@
 		D20194415A10CB918E81BE13 /* ThemeTypographySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTypographySection.swift; sourceTree = "<group>"; };
 		D42504430548D6626CEB65C9 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		D59D339E49103B78DA87082F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodingFocusFilter.swift; sourceTree = "<group>"; };
 		D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateSessionIntent.swift; sourceTree = "<group>"; };
 		D68E949FA8A0FB7017FECC14 /* ThemeSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSnapshot.swift; sourceTree = "<group>"; };
 		D6B718DC938D99F94156DCCC /* Scenario07_MCPServerManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario07_MCPServerManagement.swift; sourceTree = "<group>"; };
@@ -1063,6 +1066,7 @@
 		B28E52062E84098B69EE3AD1 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
+				30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */,
 				D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */,
 				3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */,
 				0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */,
@@ -1628,6 +1632,7 @@
 				E889BCB0D28DB2C5061D1041 /* SSHSetupView.swift in Sources */,
 				88AD5DA924D58B1F29D63CC4 /* SSHViewModel.swift in Sources */,
 				91A5D38E3832D8230E17CC34 /* ScreenshotProtectionModifier.swift in Sources */,
+				20566D9697D74A6C9E2CA9A5 /* CodingFocusFilter.swift in Sources */,
 				29DE61F29D190C75CE01F6E5 /* SendMessageIntent.swift in Sources */,
 				A477E3BBA09753A405318DBC /* ServerSetupSheet.swift in Sources */,
 				47C604CF499F29E3DB4DADC9 /* ServerStatusWidget.swift in Sources */,
@@ -1829,6 +1834,7 @@
 				F3010037ABCA48302B4CE17F /* SSHSetupView.swift in Sources */,
 				B8668FF8270D511302414DBF /* SSHViewModel.swift in Sources */,
 				C53177E16F414FDCE97448A8 /* ScreenshotProtectionModifier.swift in Sources */,
+				3C2042B8780F4E5BA2127F7C /* CodingFocusFilter.swift in Sources */,
 				6A56E46FE442AA1CBB4D89E7 /* SendMessageIntent.swift in Sources */,
 				C98C8C3293EE329AA9EA1D07 /* ServerSetupSheet.swift in Sources */,
 				BC4369EBF23D06689240F5E3 /* ServerStatusWidget.swift in Sources */,
