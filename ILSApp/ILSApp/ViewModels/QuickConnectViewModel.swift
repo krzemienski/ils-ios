@@ -36,10 +36,52 @@ class QuickConnectViewModel {
     var backendInfo: BackendInfo?
     var showConnectedState = false
 
+    // MARK: - Auto Detection & Troubleshooting
+    var isAutoDetecting = false
+    var isShowingTroubleshooting = false
+
     // MARK: - History
     var connectionHistory: [String] = []
 
     // MARK: - Computed
+
+    /// Contextual troubleshooting suggestions based on the last connection failure message.
+    var troubleshootingSteps: [String] {
+        guard case .failure(let message) = connectionResult else { return [] }
+        let lower = message.lowercased()
+        var steps: [String] = []
+
+        // URL format hint
+        if lower.contains("invalid") || lower.contains("url") {
+            steps.append("Ensure the URL includes the protocol, e.g. http://localhost:9999")
+            steps.append("Remove any trailing slashes or extra spaces from the URL")
+        }
+
+        // Firewall hint
+        if lower.contains("reach") || lower.contains("refused") || lower.contains("connect") {
+            steps.append("Check that your firewall allows connections on port 9999")
+            steps.append("Verify the Claude Code backend is running: claude --backend")
+        }
+
+        // Localhost hint
+        if lower.contains("reach") || lower.contains("refused") || lower.contains("health") {
+            steps.append("Try using 127.0.0.1 instead of localhost in the URL")
+        }
+
+        // VPN hint
+        if lower.contains("timeout") || lower.contains("timed out") || lower.contains("network") || lower.contains("health") {
+            steps.append("If connected to a VPN, try disconnecting — it may block local traffic")
+        }
+
+        // Generic fallback
+        if steps.isEmpty {
+            steps.append("Verify the backend server is running on the specified port")
+            steps.append("Confirm the host and port are correct")
+            steps.append("Ensure your device is on the same network as the server")
+        }
+
+        return steps
+    }
 
     var isConnectEnabled: Bool {
         switch selectedMode {
@@ -150,6 +192,7 @@ class QuickConnectViewModel {
 
         guard let urlObj = URL(string: url), urlObj.host != nil else {
             connectionSteps[0].status = .failure("Invalid URL")
+            connectionResult = .failure("Invalid URL")
             isConnecting = false
             return false
         }
@@ -165,6 +208,7 @@ class QuickConnectViewModel {
             connectionSteps[1].status = .success
         } catch {
             connectionSteps[1].status = .failure("Cannot reach server")
+            connectionResult = .failure("Cannot reach server")
             isConnecting = false
             HapticManager.notification(.error)
             return false
@@ -197,9 +241,38 @@ class QuickConnectViewModel {
 
         } catch {
             connectionSteps[2].status = .failure("Health check failed")
+            connectionResult = .failure("Health check failed")
             isConnecting = false
             HapticManager.notification(.error)
             return false
+        }
+    }
+
+    // MARK: - Auto Detection
+
+    /// Attempt to auto-detect a local ILS backend at http://localhost:9999/health.
+    ///
+    /// Uses a 2-second timeout. On success, sets `localURL` to the detected address
+    /// and triggers the full connect flow. Silently does nothing on failure.
+    func autoDetectLocal(appState: AppState) async {
+        isAutoDetecting = true
+        defer { isAutoDetecting = false }
+
+        let detectionURLString = "http://localhost:9999/health"
+        guard let url = URL(string: detectionURLString) else { return }
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 2.0
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                localURL = "http://localhost:9999"
+                selectedMode = .local
+                _ = await connect(appState: appState)
+            }
+        } catch {
+            // Auto-detection failed silently — user can connect manually
         }
     }
 }
