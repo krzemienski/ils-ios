@@ -93,14 +93,13 @@ struct UserMessageCard: View, Equatable {
             }
 
             // Copy Image — one menu item per image attachment
-            ForEach(message.attachments.filter { $0.mimeType.hasPrefix("image/") }, id: \.id) { attachment in
+            let imageAttachments = message.attachments.filter { $0.mimeType.hasPrefix("image/") }
+            ForEach(Array(imageAttachments.enumerated()), id: \.element.id) { index, attachment in
                 Button {
                     copyImage(attachment)
                 } label: {
                     Label(
-                        message.attachments.filter { $0.mimeType.hasPrefix("image/") }.count > 1
-                            ? "Copy Image \(message.attachments.firstIndex(where: { $0.id == attachment.id }).map { $0 + 1 }.map(String.init) ?? "")"
-                            : "Copy Image",
+                        imageAttachments.count > 1 ? "Copy Image \(index + 1)" : "Copy Image",
                         systemImage: "photo.on.rectangle"
                     )
                 }

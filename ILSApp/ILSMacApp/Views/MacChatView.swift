@@ -260,7 +260,7 @@ struct MacChatView: View {
                     .allowsHitTesting(false)
             }
         }
-        .onDrop(of: [UTType.image, UTType.fileURL], isTargeted: $isDragTargeted) { providers in
+        .onDrop(of: [UTType.image], isTargeted: $isDragTargeted) { providers in
             for provider in providers {
                 provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
                     guard let data,

@@ -14,7 +14,7 @@ import AppKit
 /// Presents a list of attachment options:
 /// - Camera (iOS only) — captures a photo via `UIImagePickerController`
 /// - Photo Library — `PhotosPicker` allowing up to 5 images
-/// - Files — `fileImporter` accepting images, PDFs, and plain text
+/// - Files — `fileImporter` accepting images and plain text
 /// - Paste from Clipboard — reads image data from the system pasteboard
 ///
 /// Each selected item is compressed via `ImageCompressionService` and delivered
@@ -92,7 +92,7 @@ struct AttachmentPickerSheet: View {
         // MARK: - File importer
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: [.image, .pdf, .plainText],
+            allowedContentTypes: [.image, .plainText],
             allowsMultipleSelection: true
         ) { result in
             processFileImporterResult(result)
@@ -153,7 +153,7 @@ struct AttachmentPickerSheet: View {
                             attachments.append(attachment)
                         }
                     } else {
-                        // Non-image files (PDF, text): base64-encode raw bytes without compression
+                        // Non-image files (text): base64-encode raw bytes without compression
                         let base64 = data.base64EncodedString()
                         attachments.append(MessageAttachment(
                             mimeType: mimeType,
@@ -232,7 +232,6 @@ struct AttachmentPickerSheet: View {
         if type.conforms(to: .jpeg) { return "image/jpeg" }
         if type.conforms(to: .png)  { return "image/png" }
         if type.conforms(to: .gif)  { return "image/gif" }
-        if type.conforms(to: .pdf)  { return "application/pdf" }
         if type.conforms(to: .plainText) { return "text/plain" }
         if type.conforms(to: .image)    { return "image/jpeg" }
         return type.preferredMIMEType
