@@ -210,6 +210,14 @@ struct AlertHistoryView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel(for: record))
+        .contextMenu {
+            Button(role: .destructive) {
+                withAnimation { manager.removeAlertRecord(id: record.id) }
+                HapticManager.selection()
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
     }
 
     // MARK: - Toolbar Button

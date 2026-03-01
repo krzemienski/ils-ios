@@ -209,6 +209,7 @@ struct AlertThresholdSettingsView: View {
             iconColor: theme.entitySystem,
             conditionPrefix: ">=",
             unit: "%",
+            metricType: .cpu,
             enabled: $cpuEnabled,
             threshold: $cpuThreshold,
             cooldown: $cpuCooldown
@@ -224,6 +225,7 @@ struct AlertThresholdSettingsView: View {
             iconColor: theme.entitySystem,
             conditionPrefix: ">=",
             unit: "%",
+            metricType: .memory,
             enabled: $memoryEnabled,
             threshold: $memoryThreshold,
             cooldown: $memoryCooldown
@@ -239,6 +241,7 @@ struct AlertThresholdSettingsView: View {
             iconColor: theme.accent,
             conditionPrefix: ">=",
             unit: "%",
+            metricType: .disk,
             enabled: $diskEnabled,
             threshold: $diskThreshold,
             cooldown: $diskCooldown
@@ -289,6 +292,11 @@ struct AlertThresholdSettingsView: View {
                         cooldownPicker(selection: $networkCooldown)
                     }
                     .accessibilityLabel("Network alert cooldown period")
+
+                    Divider().background(theme.bgTertiary).padding(.vertical, theme.spacingXS)
+
+                    // Snooze controls
+                    snoozeRow(for: .network)
                 }
             }
             .padding(theme.spacingMD)
@@ -357,6 +365,62 @@ struct AlertThresholdSettingsView: View {
         }
     }
 
+    // MARK: - Snooze Row
+
+    /// Renders snooze controls for a given metric type.
+    /// Shows active snooze expiry + "Clear" when snoozed; shows a "Snooze" menu otherwise.
+    @ViewBuilder
+    private func snoozeRow(for metricType: AlertMetricType) -> some View {
+        if let threshold = manager.thresholds.first(where: { $0.metricType == metricType }) {
+            if threshold.isSnoozed, let snoozedUntil = threshold.snoozedUntil {
+                HStack {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.warning)
+                    Text("Snoozed until \(snoozedUntil.formatted(.dateTime.hour().minute()))")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.warning)
+                    Spacer()
+                    Button("Clear") {
+                        manager.clearSnooze(id: threshold.id)
+                        HapticManager.selection()
+                    }
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.accent)
+                    .buttonStyle(.plain)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(
+                    "\(metricType.displayName) alerts snoozed until \(snoozedUntil.formatted(.dateTime.hour().minute())). Activate to clear snooze."
+                )
+            } else {
+                HStack {
+                    Text("Snooze Alerts")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                    Spacer()
+                    Menu {
+                        ForEach(SnoozeDuration.allCases, id: \.self) { duration in
+                            Button(duration.displayName) {
+                                manager.snoozeThreshold(id: threshold.id, for: duration)
+                                HapticManager.selection()
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("Snooze")
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 11, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(theme.accent)
+                    }
+                    .accessibilityLabel("Snooze \(metricType.displayName) alerts")
+                }
+            }
+        }
+    }
+
     // MARK: - Reusable Metric Card
 
     @ViewBuilder
@@ -366,6 +430,7 @@ struct AlertThresholdSettingsView: View {
         iconColor: Color,
         conditionPrefix: String,
         unit: String,
+        metricType: AlertMetricType,
         enabled: Binding<Bool>,
         threshold: Binding<Double>,
         cooldown: Binding<TimeInterval>
@@ -422,6 +487,11 @@ struct AlertThresholdSettingsView: View {
                         cooldownPicker(selection: cooldown)
                     }
                     .accessibilityLabel("\(title) alert cooldown period")
+
+                    Divider().background(theme.bgTertiary).padding(.vertical, theme.spacingXS)
+
+                    // Snooze controls
+                    snoozeRow(for: metricType)
                 }
             }
             .padding(theme.spacingMD)
