@@ -295,9 +295,15 @@ struct MacContentView: View {
                     .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
-                Text("\(sessionsViewModel.totalCount)")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
+                if !sessionsViewModel.debouncedSearchText.isEmpty {
+                    Text("\(sessionsViewModel.filteredCount) of \(sessionsViewModel.totalCount)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                } else {
+                    Text("\(sessionsViewModel.totalCount)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.top, theme.spacingMD)
@@ -313,9 +319,12 @@ struct MacContentView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .focused($isSearchFocused)
+                    .onChange(of: sessionsViewModel.searchText) { _, _ in
+                        sessionsViewModel.scheduleSearchDebounce()
+                    }
                 if !sessionsViewModel.searchText.isEmpty {
                     Button {
-                        sessionsViewModel.searchText = ""
+                        sessionsViewModel.clearSearch()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))

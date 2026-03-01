@@ -40,6 +40,8 @@ class SessionsViewModel: BaseViewModel {
     var searchQuery: String?
     /// Client-side search text for filtering.
     var searchText: String = ""
+    /// Debounced version of searchText used for actual filtering.
+    var debouncedSearchText: String = ""
     /// Timestamp of most recent successful data load from API.
     var lastUpdated: Date?
 
@@ -75,10 +77,46 @@ class SessionsViewModel: BaseViewModel {
     /// The mutation version at which groupedSessionsByTime cache was last built
     private var cachedGroupedByTimeVersion: Int = -1
 
+    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
+
+    deinit {
+        searchTask?.cancel()
+    }
+
+    /// Schedule a debounced update of debouncedSearchText.
+    /// Call this from `.onChange(of: searchText)` in the view instead of filtering on every keystroke.
+    func scheduleSearchDebounce() {
+        searchTask?.cancel()
+        let text = searchText
+        guard !text.isEmpty else {
+            debouncedSearchText = ""
+            return
+        }
+        searchTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard let self, !Task.isCancelled else { return }
+            debouncedSearchText = text
+        }
+    }
+
+    /// Clear search text and debounced text immediately.
+    func clearSearch() {
+        searchTask?.cancel()
+        searchText = ""
+        debouncedSearchText = ""
+    }
+
+    /// Number of sessions matching the current debounced search text.
+    var filteredCount: Int {
+        guard !debouncedSearchText.isEmpty else { return sessions.count }
+        return filteredSessions.count
+    }
+
+
     /// Sessions filtered by the local search text using precomputed lowercase cache
     var filteredSessions: [ChatSession] {
-        guard !searchText.isEmpty else { return sessions }
-        let query = searchText.lowercased()
+        guard !debouncedSearchText.isEmpty else { return sessions }
+        let query = debouncedSearchText.lowercased()
         return searchCache
             .filter { $0.searchText.contains(query) }
             .map(\.session)
@@ -102,7 +140,7 @@ class SessionsViewModel: BaseViewModel {
     /// Filtered sessions grouped by project, sorted by most recently active.
     /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessions: [(key: String, value: [ChatSession])] {
-        if cachedGroupedSearchText == searchText && cachedGroupedVersion == sessionsMutationVersion {
+        if cachedGroupedSearchText == debouncedSearchText && cachedGroupedVersion == sessionsMutationVersion {
             return cachedGroupedSessions
         }
         let filtered = filteredSessions
@@ -115,7 +153,7 @@ class SessionsViewModel: BaseViewModel {
             return latest1 > latest2
         }
         cachedGroupedSessions = sorted
-        cachedGroupedSearchText = searchText
+        cachedGroupedSearchText = debouncedSearchText
         cachedGroupedVersion = sessionsMutationVersion
         return sorted
     }
@@ -124,7 +162,7 @@ class SessionsViewModel: BaseViewModel {
     /// Sessions within each bucket are sorted by most recently active.
     /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessionsByTime: [(key: String, value: [ChatSession])] {
-        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeVersion == sessionsMutationVersion {
+        if cachedGroupedByTimeSearchText == debouncedSearchText && cachedGroupedByTimeVersion == sessionsMutationVersion {
             return cachedGroupedByTime
         }
         let filtered = filteredSessions
@@ -159,15 +197,15 @@ class SessionsViewModel: BaseViewModel {
         if !earlier.isEmpty { result.append((key: "Earlier", value: earlier)) }
 
         cachedGroupedByTime = result
-        cachedGroupedByTimeSearchText = searchText
+        cachedGroupedByTimeSearchText = debouncedSearchText
         cachedGroupedByTimeVersion = sessionsMutationVersion
         return result
     }
 
-    /// Filtered project groups based on search text
+    /// Filtered project groups based on debounced search text
     var filteredProjectGroups: [ProjectGroupInfo] {
-        guard !searchText.isEmpty else { return projectGroups }
-        let query = searchText.lowercased()
+        guard !debouncedSearchText.isEmpty else { return projectGroups }
+        let query = debouncedSearchText.lowercased()
         return projectGroups.filter { group in
             group.name.lowercased().contains(query)
         }
@@ -183,6 +221,9 @@ class SessionsViewModel: BaseViewModel {
     var emptyStateText: String {
         if isLoading {
             return "Loading sessions..."
+        }
+        if !debouncedSearchText.isEmpty && filteredSessions.isEmpty {
+            return "No sessions found"
         }
         return sessions.isEmpty ? "No sessions" : ""
     }
