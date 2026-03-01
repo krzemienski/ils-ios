@@ -1,6 +1,22 @@
 import Foundation
 import GRDB
 
+// MARK: - PermissionStats
+
+/// Aggregated statistics for permission decisions.
+struct PermissionStats: Sendable {
+    /// Total number of permissions approved (including auto-approved).
+    let totalApproved: Int
+    /// Total number of permissions denied.
+    let totalDenied: Int
+    /// Number of permissions approved automatically by an auto-approve rule.
+    let totalAutoApproved: Int
+    /// Ratio of approved to total decisions. 0.0 if no decisions recorded.
+    let approvalRate: Double
+    /// Map of tool name to decision count, top 5 tools by frequency.
+    let topTools: [String: Int]
+}
+
 // MARK: - PermissionHistoryEntry
 
 /// GRDB-backed record for storing the history of permission decisions made by the user.

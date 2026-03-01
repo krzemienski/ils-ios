@@ -577,4 +577,99 @@ actor LocalDatabase {
         }
         AppLogger.shared.info("All cached data cleared", category: "cache")
     }
+
+    // MARK: - Permission History
+
+    /// Insert a permission decision record into local storage.
+    func savePermissionEntry(_ entry: PermissionHistoryEntry) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            try entry.insert(db)
+        }
+    }
+
+    /// Fetch permission history ordered by most recent first.
+    func fetchPermissionHistory(limit: Int = 200) throws -> [PermissionHistoryEntry] {
+        guard let dbPool else { return [] }
+        return try dbPool.read { db in
+            try PermissionHistoryEntry
+                .order(Column("timestamp").desc)
+                .limit(limit)
+                .fetchAll(db)
+        }
+    }
+
+    /// Aggregate permission statistics using SQL GROUP BY queries.
+    func fetchPermissionStats() throws -> PermissionStats {
+        guard let dbPool else {
+            return PermissionStats(
+                totalApproved: 0,
+                totalDenied: 0,
+                totalAutoApproved: 0,
+                approvalRate: 0.0,
+                topTools: [:]
+            )
+        }
+        return try dbPool.read { db in
+            // Decision + auto-approve breakdown
+            let decisionRows = try Row.fetchAll(db, sql: """
+                SELECT decision, is_auto_approved, COUNT(*) as cnt
+                FROM permission_history
+                GROUP BY decision, is_auto_approved
+                """)
+
+            var totalApproved = 0
+            var totalDenied = 0
+            var totalAutoApproved = 0
+
+            for row in decisionRows {
+                let decision: String = row["decision"]
+                let isAutoApproved: Bool = row["is_auto_approved"]
+                let count: Int = row["cnt"]
+                if decision == "allow" {
+                    totalApproved += count
+                } else {
+                    totalDenied += count
+                }
+                if isAutoApproved {
+                    totalAutoApproved += count
+                }
+            }
+
+            let total = totalApproved + totalDenied
+            let approvalRate = total > 0 ? Double(totalApproved) / Double(total) : 0.0
+
+            // Top 5 tools by usage frequency
+            let toolRows = try Row.fetchAll(db, sql: """
+                SELECT tool_name, COUNT(*) as cnt
+                FROM permission_history
+                GROUP BY tool_name
+                ORDER BY cnt DESC
+                LIMIT 5
+                """)
+
+            var topTools: [String: Int] = [:]
+            for row in toolRows {
+                let toolName: String = row["tool_name"]
+                let count: Int = row["cnt"]
+                topTools[toolName] = count
+            }
+
+            return PermissionStats(
+                totalApproved: totalApproved,
+                totalDenied: totalDenied,
+                totalAutoApproved: totalAutoApproved,
+                approvalRate: approvalRate,
+                topTools: topTools
+            )
+        }
+    }
+
+    /// Delete all permission history records.
+    func clearPermissionHistory() throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            _ = try PermissionHistoryEntry.deleteAll(db)
+        }
+    }
 }
