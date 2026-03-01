@@ -149,6 +149,12 @@ final class AlertThresholdManager {
         saveThresholds()
     }
 
+    /// Remove a specific alert record by ID.
+    func removeAlertRecord(id: UUID) {
+        alertHistory.removeAll { $0.id == id }
+        saveAlertHistory()
+    }
+
     /// Remove all alert history records.
     func clearHistory() {
         alertHistory.removeAll()
