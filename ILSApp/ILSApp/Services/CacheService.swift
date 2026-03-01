@@ -4,16 +4,12 @@ import ILSShared
 /// High-level caching API that wraps LocalDatabase.
 ///
 /// Provides cache-first data loading with configurable expiry times.
-/// Sessions expire after 1 hour; skills, plugins, and MCP servers expire after 24 hours.
+/// TTL and capacity limits are driven by `OfflineCacheSettings`.
 actor CacheService {
     static let shared = CacheService()
 
-    /// Cache TTL for sessions (1 hour).
-    private let sessionTTL: TimeInterval = 3600
-    /// Cache TTL for reference data like skills, plugins, MCP (24 hours).
-    private let referenceTTL: TimeInterval = 86400
-
     private let db = LocalDatabase.shared
+    private let settings = OfflineCacheSettings.shared
 
     private init() {}
 
@@ -21,7 +17,7 @@ actor CacheService {
     func initialize() async {
         do {
             try await db.initialize()
-            try await db.cleanupExpired(olderThan: referenceTTL)
+            try await db.cleanupExpired(olderThan: settings.cacheTTL)
             AppLogger.shared.info("CacheService initialized", category: "cache")
         } catch {
             AppLogger.shared.error(
@@ -33,10 +29,16 @@ actor CacheService {
 
     // MARK: - Sessions
 
-    /// Cache a list of sessions.
+    /// Cache a list of sessions, respecting the configured session count limit.
+    ///
+    /// When `OfflineCacheSettings.maxSessions` is non-zero, the list is sorted by
+    /// `lastActiveAt` descending and trimmed to the limit before saving, so the most
+    /// recently active sessions are always retained.
     func cacheSessions(_ sessions: [ChatSession]) async {
+        guard settings.isCachingEnabled(for: .sessions) else { return }
         do {
-            try await db.saveSessions(sessions)
+            let toCache = applySessionLimit(sessions)
+            try await db.saveSessions(toCache)
         } catch {
             AppLogger.shared.error(
                 "Failed to cache sessions: \(error.localizedDescription)",
@@ -45,10 +47,15 @@ actor CacheService {
         }
     }
 
-    /// Retrieve cached sessions, filtering out expired entries.
-    func getCachedSessions() async -> [ChatSession] {
+    /// Retrieve cached sessions.
+    ///
+    /// - Parameter isOffline: When `true`, bypasses the TTL filter so stale cached
+    ///   sessions are still returned when the server is unreachable.
+    func getCachedSessions(isOffline: Bool = false) async -> [ChatSession] {
+        guard settings.isCachingEnabled(for: .sessions) else { return [] }
         do {
-            return try await db.fetchSessions(newerThan: sessionTTL)
+            let ttl = isOffline ? nil : settings.cacheTTL
+            return try await db.fetchSessions(newerThan: ttl, isOffline: isOffline)
         } catch {
             AppLogger.shared.error(
                 "Failed to fetch cached sessions: \(error.localizedDescription)",
@@ -56,6 +63,15 @@ actor CacheService {
             )
             return []
         }
+    }
+
+    // MARK: - Private Helpers
+
+    /// Applies the configured session count limit, keeping the most-recently-active sessions.
+    private func applySessionLimit(_ sessions: [ChatSession]) -> [ChatSession] {
+        let limit = settings.maxSessions
+        guard limit > 0, sessions.count > limit else { return sessions }
+        return Array(sessions.sorted { $0.lastActiveAt > $1.lastActiveAt }.prefix(limit))
     }
 
     // MARK: - Messages
@@ -197,10 +213,15 @@ actor CacheService {
 
     // MARK: - Cache Management
 
-    /// Clear all cached data.
+    /// Clear all cached data and log the storage freed.
     func clearAll() async {
+        let bytesBefore = await db.cacheStorageBytes()
         do {
             try await db.clearAll()
+            AppLogger.shared.info(
+                "Cache cleared — freed \(bytesBefore / 1024) KB",
+                category: "cache"
+            )
         } catch {
             AppLogger.shared.error(
                 "Failed to clear cache: \(error.localizedDescription)",
@@ -209,15 +230,20 @@ actor CacheService {
         }
     }
 
-    /// Remove expired cache entries.
+    /// Remove expired cache entries using the configured TTL.
     func cleanupExpired() async {
         do {
-            try await db.cleanupExpired(olderThan: referenceTTL)
+            try await db.cleanupExpired(olderThan: settings.cacheTTL)
         } catch {
             AppLogger.shared.error(
                 "Failed to cleanup expired cache: \(error.localizedDescription)",
                 category: "cache"
             )
         }
+    }
+
+    /// Returns the total disk space used by the SQLite cache in bytes.
+    func cacheStorageBytes() async -> Int64 {
+        await db.cacheStorageBytes()
     }
 }
