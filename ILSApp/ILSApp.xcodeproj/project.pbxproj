@@ -11,7 +11,13 @@
 		CC11DD22EE33FF44AA55BB05 /* MacNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		031C9457D5594277A7BC8DDD /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
+		B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */; };
+		C2D3E4F5061789ABCDEF0123 /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */; };
 		5C78C0044BDB48A28B717373 /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
+		E29E6054D2BB409186079797 /* ActivityFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */; };
+		5C164E67B91E407BBA283D9F /* ActivityFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */; };
+		4008B7045A074527ADA4514B /* ActivityFeedFilterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */; };
+		30B0FD63A73B4927965E9EA9 /* ActivityFeedFilterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */; };
 		0116261DC4C2DAD124FAB937 /* SkillDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0617F20B854A6A31E51BE659 /* SkillDetailView.swift */; };
 		0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E32DD92F87322D4834E67C /* SessionExporter.swift */; };
 		021CE9A40CA38D09371544DD /* GhostProtocolTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADD83017F56B561B81A06BB /* GhostProtocolTheme.swift */; };
@@ -510,6 +516,8 @@
 		0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSShortcuts.swift; sourceTree = "<group>"; };
 		0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSessionRow.swift; sourceTree = "<group>"; };
 		DE4F28D4F464451098C4900B /* ActivityEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEventRow.swift; sourceTree = "<group>"; };
+		382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedView.swift; sourceTree = "<group>"; };
+		D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedFilterSheet.swift; sourceTree = "<group>"; };
 		126022DAC2872BEEF6363538 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
 		138C7CC5E048F4B6BDBB35AF /* SidebarRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
 		16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
@@ -703,6 +711,7 @@
 		D0AC287F02419ED83792CFC3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D20194415A10CB918E81BE13 /* ThemeTypographySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTypographySection.swift; sourceTree = "<group>"; };
 		D42504430548D6626CEB65C9 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedViewModel.swift; sourceTree = "<group>"; };
 		D59D339E49103B78DA87082F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateSessionIntent.swift; sourceTree = "<group>"; };
 		D68E949FA8A0FB7017FECC14 /* ThemeSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSnapshot.swift; sourceTree = "<group>"; };
@@ -1274,6 +1283,7 @@
 			isa = PBXGroup;
 			children = (
 				A043BAE1603803A839C0CB52 /* BaseViewModel.swift */,
+				A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
@@ -1336,6 +1346,8 @@
 			isa = PBXGroup;
 			children = (
 				DE4F28D4F464451098C4900B /* ActivityEventRow.swift */,
+				382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */,
+				D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */,
 			);
 			path = ActivityFeed;
 			sourceTree = "<group>";
@@ -1680,6 +1692,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				031C9457D5594277A7BC8DDD /* ActivityEventRow.swift in Sources */,
+				E29E6054D2BB409186079797 /* ActivityFeedView.swift in Sources */,
+				4008B7045A074527ADA4514B /* ActivityFeedFilterSheet.swift in Sources */,
 				566B63F0CEDAD0931B75BC76 /* APIClient.swift in Sources */,
 				F511D9CB8F68D9D9B0341314 /* BaseViewModel.swift in Sources */,
 				F3AE767DFC8E6026F28265A5 /* AccentButton.swift in Sources */,
@@ -1719,6 +1733,7 @@
 				2BCCA24ACFF9D1337F501CEA /* CustomThemeAdapter.swift in Sources */,
 				C5F70DDFF7BE69DE68BA4B3D /* CyberpunkEffects.swift in Sources */,
 				08B2A5AC7ED9F7BF7E8851A2 /* CyberpunkTheme.swift in Sources */,
+				B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */,
 				B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
@@ -1888,6 +1903,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C78C0044BDB48A28B717373 /* ActivityEventRow.swift in Sources */,
+				5C164E67B91E407BBA283D9F /* ActivityFeedView.swift in Sources */,
+				30B0FD63A73B4927965E9EA9 /* ActivityFeedFilterSheet.swift in Sources */,
 				5AB34314A4A3CD36A92275CA /* APIClient.swift in Sources */,
 				A5534EA92B26FA8ADC30543F /* BaseViewModel.swift in Sources */,
 				D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */,
@@ -1929,6 +1946,7 @@
 				D1F086F32783A95DF775F5AF /* CustomThemeAdapter.swift in Sources */,
 				E543569B607012FC1FC178DB /* CyberpunkEffects.swift in Sources */,
 				D5ED11A460131301452F9A86 /* CyberpunkTheme.swift in Sources */,
+				C2D3E4F5061789ABCDEF0123 /* ActivityFeedViewModel.swift in Sources */,
 				E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */,
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
 				C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */,
