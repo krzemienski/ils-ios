@@ -115,6 +115,10 @@ struct SidebarRootView: View {
     /// Shared sessions view model owned by this root view and passed to ``SidebarView`` and
     /// ``HomeView``, ensuring sessions are fetched once and reused across both consumers.
     @State private var sessionsVM = SessionsViewModel()
+    /// Current connection event shown in the toast banner. `nil` when no toast is visible.
+    @State private var connectionEvent: ConnectionEvent? = nil
+    /// Shared network reachability monitor used to detect connection loss and restore events.
+    private let networkMonitor = NetworkMonitor.shared
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -205,6 +209,11 @@ struct SidebarRootView: View {
                 await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
             }
         }
+        .onChange(of: networkMonitor.isConnected) { _, isConnected in
+            withAnimation(reduceMotion ? .none : .easeInOut(duration: 0.3)) {
+                connectionEvent = isConnected ? .restored : .lost
+            }
+        }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
@@ -291,11 +300,18 @@ struct SidebarRootView: View {
             .transition(.opacity)
             .animation(reduceMotion ? .none : .easeInOut(duration: 0.2), value: activeScreen)
             .safeAreaInset(edge: .top, spacing: 0) {
-                OfflineIndicator(isOffline: appState.isOffline)
-                    .animation(
-                        reduceMotion ? .none : .easeInOut(duration: 0.3),
-                        value: appState.isOffline
-                    )
+                VStack(spacing: 0) {
+                    OfflineIndicator(isOffline: appState.isOffline)
+                        .animation(
+                            reduceMotion ? .none : .easeInOut(duration: 0.3),
+                            value: appState.isOffline
+                        )
+                    ConnectionEventToast(event: $connectionEvent)
+                        .animation(
+                            reduceMotion ? .none : .easeInOut(duration: 0.3),
+                            value: connectionEvent
+                        )
+                }
             }
             #if os(iOS)
             .toolbarBackground(.visible, for: .navigationBar)

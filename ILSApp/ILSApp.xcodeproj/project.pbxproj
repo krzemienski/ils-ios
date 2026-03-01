@@ -183,6 +183,9 @@
 		6288CA8E4CB2C16EF82AB4DA /* ILSShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */; };
 		641164270E6BB7627B69ADC0 /* ILSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */; };
 		6555329D4958AC6721212189 /* OfflineIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75ECADC2C6860C7274E4736 /* OfflineIndicator.swift */; };
+		9BDFB2352E2D4630ABECA416 /* ConnectionQualityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5EA294351ED49EB81006F55 /* ConnectionQualityIndicator.swift */; };
+		872D32630DA14D8DB206781F /* ConnectionEventToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4666CE850AD49878C620A04 /* ConnectionEventToast.swift */; };
+		FA165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift */; };
 		66583D69D1D8DDC05D825FB8 /* ThemeColorTokensSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */; };
 		66CB3A8E1A407714CC9E3B12 /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF79B379753DF9239B9A59CE /* SessionTemplate.swift */; };
 		670190C2C456CD11D49B71AD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FF39B3DA7644595EE7DA45 /* HomeView.swift */; };
@@ -287,6 +290,8 @@
 		A0215E5E1541D648707ADB25 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA08AF75B109E531A23DCAD /* EmberTheme.swift */; };
 		A2503FA67B49A02492C78369 /* LowPowerModeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */; };
+		C436642F1E2E4EAA99EC831E /* ConnectionQualityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */; };
+		B7E1A2C3D4F5678901234568 /* MessageQueueService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F2C1D0E4B5678901234567 /* MessageQueueService.swift */; };
 		A2CD3C1A6CDF29B50C78F3F5 /* CommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */; };
 		A477E3BBA09753A405318DBC /* ServerSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B579302585432A18086CAF11 /* ServerSetupSheet.swift */; };
 		A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B921611379A5927C0729DD0A /* MCPServerDetailView.swift */; };
@@ -315,6 +320,8 @@
 		AF776B6CC6CDA97E71F1466C /* GetSessionInfoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */; };
 		AFB2F0196A4B23CDC4E2AA58 /* SettingsAppearanceSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */; };
 		AFD18292F620F2F1328B803F /* LowPowerModeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */; };
+		9491F0DDF2C546E59F31D407 /* ConnectionQualityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */; };
+		C9D0E1F2A3B4678901234569 /* MessageQueueService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F2C1D0E4B5678901234567 /* MessageQueueService.swift */; };
 		B0724A065B4366563281BDFE /* NeonNoirTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */; };
 		B1AEB28346BBEA6D4FA0E645 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA55E17AA6947D058AB87FA /* MarkdownUI */; };
 		B2D22D2ABF27C0FB36F9FB2B /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE193B8BF8C7258B6DDE90D /* MidnightTheme.swift */; };
@@ -402,6 +409,9 @@
 		E16CB60E1402E12859871508 /* CISmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D0872E6BBB1AD89F5F5A33 /* CISmokeTests.swift */; };
 		E1D98FB794A1C58450A03369 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */; };
 		E22DF7F6525F8DA5149951D2 /* OfflineIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75ECADC2C6860C7274E4736 /* OfflineIndicator.swift */; };
+		94706C7E1189456C89A3DFB7 /* ConnectionQualityIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5EA294351ED49EB81006F55 /* ConnectionQualityIndicator.swift */; };
+		DB386D804098485498FA0D64 /* ConnectionEventToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4666CE850AD49878C620A04 /* ConnectionEventToast.swift */; };
+		FB165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift */; };
 		E2546FA4477DDC7F5D5B161A /* SnowTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F38C9481FF1206F75E66FC2 /* SnowTheme.swift */; };
 		E3232091BD3461B7459F07F9 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */; };
 		E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77899531B324530342B03A8 /* DashboardViewModel.swift */; };
@@ -551,6 +561,8 @@
 		40AE3C8E1ADD87D38B3BE116 /* ThemeMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMarketplaceView.swift; sourceTree = "<group>"; };
 		40BB4C233B48361C8E553661 /* ScrollPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollPerformanceTests.swift; sourceTree = "<group>"; };
 		46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowPowerModeMonitor.swift; sourceTree = "<group>"; };
+		B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionQualityService.swift; sourceTree = "<group>"; };
+		A3F2C1D0E4B5678901234567 /* MessageQueueService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageQueueService.swift; sourceTree = "<group>"; };
 		474B7FAC477CE04C4939DDEB /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		482028C3E3B35A6E9FF0920C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsViewModel.swift; sourceTree = "<group>"; };
@@ -693,6 +705,9 @@
 		D68E949FA8A0FB7017FECC14 /* ThemeSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSnapshot.swift; sourceTree = "<group>"; };
 		D6B718DC938D99F94156DCCC /* Scenario07_MCPServerManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario07_MCPServerManagement.swift; sourceTree = "<group>"; };
 		D75ECADC2C6860C7274E4736 /* OfflineIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineIndicator.swift; sourceTree = "<group>"; };
+		B5EA294351ED49EB81006F55 /* ConnectionQualityIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionQualityIndicator.swift; sourceTree = "<group>"; };
+		E4666CE850AD49878C620A04 /* ConnectionEventToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEventToast.swift; sourceTree = "<group>"; };
+		FC165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueuedMessageBadge.swift; sourceTree = "<group>"; };
 		D7A7C4DEC0862087B19372E0 /* CacheStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheStatusView.swift; sourceTree = "<group>"; };
 		D80552C5B47B45FB0F4A2E25 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		D9FF39B3DA7644595EE7DA45 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -818,7 +833,10 @@
 			isa = PBXGroup;
 			children = (
 				D7A7C4DEC0862087B19372E0 /* CacheStatusView.swift */,
+				B5EA294351ED49EB81006F55 /* ConnectionQualityIndicator.swift */,
+				E4666CE850AD49878C620A04 /* ConnectionEventToast.swift */,
 				D75ECADC2C6860C7274E4736 /* OfflineIndicator.swift */,
+				FC165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1203,6 +1221,8 @@
 				7C748DE91CEA4C3A823DD3A8 /* KeychainService.swift */,
 				AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */,
 				46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */,
+				B9EF7B13A8F5441DB4BA4807 /* ConnectionQualityService.swift */,
+				A3F2C1D0E4B5678901234567 /* MessageQueueService.swift */,
 				086281B052347B8C9884124C /* MetricsWebSocketClient.swift */,
 				E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */,
 				0D259013682B0E76D248995F /* PerformanceMonitor.swift */,
@@ -1726,6 +1746,8 @@
 				46A28AD0491373CD08B47A82 /* LocalDatabase.swift in Sources */,
 				81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */,
 				AFD18292F620F2F1328B803F /* LowPowerModeMonitor.swift in Sources */,
+				9491F0DDF2C546E59F31D407 /* ConnectionQualityService.swift in Sources */,
+				C9D0E1F2A3B4678901234569 /* MessageQueueService.swift in Sources */,
 				78D2DCBE8119FCE195105244 /* MCPServerDetailView.swift in Sources */,
 				EE1A0003B4C2D9F100001E01 /* MCPAddEditView.swift in Sources */,
 				EE2A0003B4C2D9F100001E01 /* MCPLogsView.swift in Sources */,
@@ -1745,6 +1767,9 @@
 				3013A38F73E6762D7FB50E77 /* NotificationPreferencesView.swift in Sources */,
 				D27CDEB3FFF8814B55E98B49 /* ObsidianTheme.swift in Sources */,
 				E22DF7F6525F8DA5149951D2 /* OfflineIndicator.swift in Sources */,
+				94706C7E1189456C89A3DFB7 /* ConnectionQualityIndicator.swift in Sources */,
+				DB386D804098485498FA0D64 /* ConnectionEventToast.swift in Sources */,
+				FB165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift in Sources */,
 				3A428F89FADC77D6AD890B8F /* OnboardingView.swift in Sources */,
 				5C601E692F813E7A7DE0B8B3 /* PaperTheme.swift in Sources */,
 				691D978E9A1AAD1D04B3A5FC /* PerformanceMonitor.swift in Sources */,
@@ -1931,6 +1956,8 @@
 				8DC8290512BF30B7D1574021 /* LocalDatabase.swift in Sources */,
 				1EA9202F785FC72DF260B40F /* LogViewerView.swift in Sources */,
 				A2503FA67B49A02492C78369 /* LowPowerModeMonitor.swift in Sources */,
+				C436642F1E2E4EAA99EC831E /* ConnectionQualityService.swift in Sources */,
+				B7E1A2C3D4F5678901234568 /* MessageQueueService.swift in Sources */,
 				A47E1E3B0892AEBD9D725206 /* MCPServerDetailView.swift in Sources */,
 				EE1A0004B4C2D9F100001E01 /* MCPAddEditView.swift in Sources */,
 				EE2A0004B4C2D9F100001E01 /* MCPLogsView.swift in Sources */,
@@ -1957,6 +1984,9 @@
 				FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */,
 				415FA9BEB8D7C968A1383F44 /* ObsidianTheme.swift in Sources */,
 				6555329D4958AC6721212189 /* OfflineIndicator.swift in Sources */,
+				9BDFB2352E2D4630ABECA416 /* ConnectionQualityIndicator.swift in Sources */,
+				872D32630DA14D8DB206781F /* ConnectionEventToast.swift in Sources */,
+				FA165CCA2F7F4A2B9E123456 /* QueuedMessageBadge.swift in Sources */,
 				D34412D635D61666C3E92EDE /* OnboardingView.swift in Sources */,
 				D772A51606D786C53190FC8F /* PaperTheme.swift in Sources */,
 				3745234529CDF48C45490BBF /* PerformanceMonitor.swift in Sources */,

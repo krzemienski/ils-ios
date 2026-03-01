@@ -225,6 +225,9 @@ struct ChatView: View {
         .onChange(of: appState.serverURL) { _, _ in
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
         }
+        .onChange(of: appState.isConnected) { _, connected in
+            viewModel.isConnected = connected
+        }
         .onChange(of: inputText) { _, newValue in
             // Persist draft to UserDefaults with 500ms debounce (DATA-05)
             draftPersistTask?.cancel()
@@ -458,7 +461,8 @@ struct ChatView: View {
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
             onCommandPalette: { sheets.showCommandPalette = true },
-            onAdvancedOptions: { sheets.showAdvancedOptions = true }
+            onAdvancedOptions: { sheets.showAdvancedOptions = true },
+            pendingCount: MessageQueueService.shared.pendingCount
         )
         .focused($isInputFocused)
     }
@@ -482,6 +486,16 @@ struct ChatView: View {
             }
         }
         #endif
+        // Connection quality indicator — only visible when connected (offline state shown by OfflineIndicator)
+        ToolbarItem(placement: .automatic) {
+            if ConnectionQualityService.shared.quality != .offline {
+                ConnectionQualityIndicator(
+                    quality: ConnectionQualityService.shared.quality,
+                    latencyMs: ConnectionQualityService.shared.latencyMs
+                )
+                .accessibilityIdentifier("connection-quality-indicator")
+            }
+        }
 
         ToolbarItem(placement: .navigationBarTrailing) {
             Button {
@@ -494,6 +508,7 @@ struct ChatView: View {
             .accessibilityLabel("Search messages")
             .accessibilityIdentifier("search-messages-button")
         }
+
 
         ToolbarItem(placement: .primaryAction) {
             Menu {
