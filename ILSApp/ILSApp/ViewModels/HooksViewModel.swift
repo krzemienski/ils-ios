@@ -368,6 +368,44 @@ class HooksViewModel {
         return result
     }
 
+    // MARK: - Test Simulator
+
+    /// Simulates a Claude Code event and returns the enabled hooks that would fire.
+    ///
+    /// Matching rules:
+    /// - Only enabled hooks are considered (disabled hooks are excluded).
+    /// - A hook matches when its `eventType` equals the given `eventType`.
+    /// - If the hook has no matcher (nil or empty), it matches all events of that type.
+    /// - If the hook has a matcher, it is treated as a regex pattern and tested against
+    ///   `toolName` first; if `toolName` is nil or doesn't match, it is tested against
+    ///   `extraContext`.
+    ///
+    /// - Parameters:
+    ///   - eventType: PascalCase event type to simulate (e.g., "PreToolUse").
+    ///   - toolName: Optional tool name input (e.g., "Bash", "Edit").
+    ///   - extraContext: Optional free-form context string for matcher testing.
+    /// - Returns: Array of `HookDisplayItem` that would fire for this event.
+    func simulateEvent(eventType: String, toolName: String?, extraContext: String?) -> [HookDisplayItem] {
+        hooks.filter { hook in
+            guard hook.isEnabled, hook.eventType == eventType else { return false }
+
+            // No matcher means the hook fires for every event of this type.
+            guard let matcher = hook.matcher, !matcher.isEmpty else { return true }
+
+            return matchesPattern(matcher, input: toolName) ||
+                   matchesPattern(matcher, input: extraContext)
+        }
+    }
+
+    /// Tests whether `pattern` (a regex string) matches `input`.
+    /// Returns false when `input` is nil or the pattern is invalid.
+    private func matchesPattern(_ pattern: String, input: String?) -> Bool {
+        guard let input, !input.isEmpty else { return false }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return false }
+        let range = NSRange(input.startIndex..., in: input)
+        return regex.firstMatch(in: input, options: [], range: range) != nil
+    }
+
     // MARK: - Enable / Disable
 
     /// Returns true when the hook at the given position is currently disabled.
