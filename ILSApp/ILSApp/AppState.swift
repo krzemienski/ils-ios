@@ -190,6 +190,8 @@ class AppState {
             navigationIntent = .teams
         case "activity":
             navigationIntent = .activityFeed
+        case "usage":
+            navigationIntent = .usage
         default:
             break
         }
