@@ -216,6 +216,13 @@ extension SessionSuggestion: Content {}
 extension SkillSuggestion: Content {}
 extension SuggestionFeedbackRequest: Content {}
 
+// MARK: - Activity Feed Types
+extension ActivityEvent: Content {}
+extension ActivityEventType: Content {}
+extension ActivityEventSeverity: Content {}
+extension ActivityFeedFilter: Content {}
+extension ActivityFeedResponse: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}
