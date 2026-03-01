@@ -38,8 +38,13 @@ struct SettingsView: View {
     @State private var colorSchemePreference: String = "system"
     @State private var showDeleteConfirmation: Bool = false
     // isDeleting and deleteResult moved to SettingsViewModel
+    @State private var checkpointIntervalIndex: Int = 1  // Default index → 10 messages
+    @State private var isRunningIntegrityCheck: Bool = false
+    @State private var showIntegrityAlert: Bool = false
+    @State private var integrityAlertMessage: String = ""
 
     private let availableColorSchemes = ["system", "light", "dark"]
+    private let checkpointIntervalOptions = [5, 10, 20, 50]
 
     var body: some View {
         ScrollView {
@@ -53,6 +58,8 @@ struct SettingsView: View {
                 configSection
 
                 statisticsSection
+
+                sessionBackupSection
 
                 dataPrivacySection
 
@@ -77,6 +84,7 @@ struct SettingsView: View {
             serverURL = appState.serverURL
             await viewModel.loadAll()
             syncColorScheme()
+            syncCheckpointInterval()
         }
         .onChange(of: colorSchemePreference) { _, newValue in
             saveColorScheme(newValue)
@@ -90,6 +98,9 @@ struct SettingsView: View {
             if connected {
                 Task { await viewModel.loadAll() }
             }
+        }
+        .onChange(of: checkpointIntervalIndex) { _, newIdx in
+            UserDefaults.standard.set(checkpointIntervalOptions[newIdx], forKey: "checkpointInterval")
         }
     }
 
@@ -131,6 +142,68 @@ struct SettingsView: View {
             availableColorSchemes: availableColorSchemes,
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
+    }
+
+    private var sessionBackupSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("SESSION BACKUP")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .foregroundStyle(theme.accent)
+                    Text("Checkpoint Interval")
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Stepper(
+                        "\(checkpointIntervalOptions[checkpointIntervalIndex]) messages",
+                        value: $checkpointIntervalIndex,
+                        in: 0...(checkpointIntervalOptions.count - 1)
+                    )
+                    .fixedSize()
+                }
+                .padding(theme.spacingMD)
+
+                Divider().background(theme.borderSubtle)
+
+                Button {
+                    Task { await runIntegrityCheck() }
+                } label: {
+                    HStack {
+                        Image(systemName: "checkmark.shield")
+                            .foregroundStyle(theme.accent)
+                        Text("Check Backup Integrity")
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        if isRunningIntegrityCheck {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .disabled(isRunningIntegrityCheck)
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            Text("Auto-checkpoints are created every \(checkpointIntervalOptions[checkpointIntervalIndex]) messages. Run an integrity check to verify session data is consistent.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
+        .alert("Integrity Check", isPresented: $showIntegrityAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(integrityAlertMessage)
+        }
     }
 
     private var dataPrivacySection: some View {
@@ -190,6 +263,37 @@ struct SettingsView: View {
     }
 
     // performDataDeletion() moved to SettingsViewModel
+
+    // MARK: - Session Backup
+
+    /// Loads the stored checkpoint interval from UserDefaults and sets the matching index.
+    private func syncCheckpointInterval() {
+        let stored = UserDefaults.standard.integer(forKey: "checkpointInterval")
+        if stored > 0, let idx = checkpointIntervalOptions.firstIndex(of: stored) {
+            checkpointIntervalIndex = idx
+        }
+    }
+
+    /// Calls `SessionBackupService` to verify session data consistency and shows the result.
+    private func runIntegrityCheck() async {
+        isRunningIntegrityCheck = true
+        defer { isRunningIntegrityCheck = false }
+
+        let response = await SessionBackupService.shared.runIntegrityCheck(client: appState.apiClient)
+
+        if let results = response?.data {
+            let issueCount = results.filter { !$0.passed }.count
+            if issueCount == 0 {
+                integrityAlertMessage = "All \(results.count) session(s) passed the integrity check."
+            } else {
+                integrityAlertMessage = "\(issueCount) integrity issue(s) found across \(results.count) session(s). Consider restoring from a checkpoint."
+            }
+        } else {
+            integrityAlertMessage = "Integrity check could not be completed. Please check your connection."
+        }
+
+        showIntegrityAlert = true
+    }
 
     // MARK: - Server URL Management
 
