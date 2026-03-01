@@ -236,6 +236,16 @@ struct MacChatView: View {
                     showErrorAlert = true
                 }
             }
+            .onChange(of: viewModel.isStreaming) { wasStreaming, isNowStreaming in
+                if wasStreaming && !isNowStreaming {
+                    Task {
+                        await NotificationManager.shared.postStreamingCompleteNotification(
+                            sessionId: session.id,
+                            sessionName: session.name ?? "Chat"
+                        )
+                    }
+                }
+            }
     }
 
     // MARK: - View Components
