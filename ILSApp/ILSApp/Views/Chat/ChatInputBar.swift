@@ -179,6 +179,7 @@ struct ChatInputBar: View {
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
         .disabled(text.isEmpty || isDisabled)
+        .keyboardShortcut(.return, modifiers: .command)
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
         .accessibilityHint("Sends the current message to Claude")
