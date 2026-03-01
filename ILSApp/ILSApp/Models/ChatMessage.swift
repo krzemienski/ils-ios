@@ -22,6 +22,7 @@ import Foundation
 struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     let isUser: Bool
+    var isSystem: Bool = false
     var text: String
     var toolCalls: [ToolCallDisplay] = []
     var toolResults: [ToolResultDisplay] = []
@@ -45,6 +46,7 @@ struct ChatMessage: Identifiable, Equatable {
     init(
         id: UUID = UUID(),
         isUser: Bool,
+        isSystem: Bool = false,
         text: String,
         toolCalls: [ToolCallDisplay] = [],
         toolResults: [ToolResultDisplay] = [],
@@ -59,6 +61,7 @@ struct ChatMessage: Identifiable, Equatable {
     ) {
         self.id = id
         self.isUser = isUser
+        self.isSystem = isSystem
         self.text = text
         self.toolCalls = toolCalls
         self.toolResults = toolResults
@@ -89,6 +92,7 @@ struct ChatMessage: Identifiable, Equatable {
     static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
         lhs.id == rhs.id &&
         lhs.isUser == rhs.isUser &&
+        lhs.isSystem == rhs.isSystem &&
         lhs.text == rhs.text &&
         lhs.toolCalls == rhs.toolCalls &&
         lhs.toolResults == rhs.toolResults &&
