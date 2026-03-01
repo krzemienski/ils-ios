@@ -754,6 +754,24 @@ struct NewSessionView: View {
         }
     }
 
+    private var configurationSummary: String {
+        var parts: [String] = []
+        parts.append(selectedModel.capitalized)
+        parts.append(formattedMode(permissionMode))
+        let hasBudget = !maxBudget.isEmpty
+        let hasTurns = !maxTurns.isEmpty
+        if hasBudget && hasTurns {
+            parts.append("$\(maxBudget) \u{00b7} \(maxTurns) turns")
+        } else if hasBudget {
+            parts.append("$\(maxBudget)")
+        } else if hasTurns {
+            parts.append("\(maxTurns) turns")
+        } else {
+            parts.append("No limit")
+        }
+        return parts.joined(separator: " \u{00b7} ")
+    }
+
     // MARK: - Actions
 
     private func performAction() {
