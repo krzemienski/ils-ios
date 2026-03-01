@@ -284,6 +284,10 @@
 		B1C4D3E4F5A6B7C8D9E0F1A3 /* FirstSessionWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184C3D4E5F6A7B8C9D0E1F2 /* FirstSessionWizardView.swift */; };
 		D3E4F5A6B7C8D9E0F1A2B3C4 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D3E4F5A6B7C8D9E0F1A2B3 /* OnboardingViewModel.swift */; };
 		E4F5A6B7C8D9E0F1A2B3C4D5 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D3E4F5A6B7C8D9E0F1A2B3 /* OnboardingViewModel.swift */; };
+		F5A6B7C8D9E0F1A2B3C4D5E6 /* FeatureTourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0F1A2B3C4D5E6F7A8B9CA /* FeatureTourView.swift */; };
+		A6B7C8D9E0F1A2B3C4D5E6F7 /* OnboardingWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F1A2B3C4D5E6F7A8B9CACB /* OnboardingWizardView.swift */; };
+		B7C8D9E0F1A2B3C4D5E6F7A8 /* FeatureTourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0F1A2B3C4D5E6F7A8B9CA /* FeatureTourView.swift */; };
+		C8D9E0F1A2B3C4D5E6F7A8B9 /* OnboardingWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F1A2B3C4D5E6F7A8B9CACB /* OnboardingWizardView.swift */; };
 		A6B1F359D0276E09406C350F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9A4655E180715DDFB024576 /* EntityType.swift */; };
 		A78516F2705D5D8ACE7C8218 /* TypingIndicatorBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */; };
 		A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A7C4DEC0862087B19372E0 /* CacheStatusView.swift */; };
@@ -617,6 +621,8 @@
 		82C1613A45434750A624BC93 /* WelcomeCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCarouselView.swift; sourceTree = "<group>"; };
 		F184C3D4E5F6A7B8C9D0E1F2 /* FirstSessionWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstSessionWizardView.swift; sourceTree = "<group>"; };
 		C2D3E4F5A6B7C8D9E0F1A2B3 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		D9E0F1A2B3C4D5E6F7A8B9CA /* FeatureTourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureTourView.swift; sourceTree = "<group>"; };
+		E0F1A2B3C4D5E6F7A8B9CACB /* OnboardingWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWizardView.swift; sourceTree = "<group>"; };
 		B579302585432A18086CAF11 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
 		B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
@@ -1051,6 +1057,8 @@
 				9157F7AA62B94E258D9E448D /* TroubleshootingView.swift */,
 				82C1613A45434750A624BC93 /* WelcomeCarouselView.swift */,
 				F184C3D4E5F6A7B8C9D0E1F2 /* FirstSessionWizardView.swift */,
+				D9E0F1A2B3C4D5E6F7A8B9CA /* FeatureTourView.swift */,
+				E0F1A2B3C4D5E6F7A8B9CACB /* OnboardingWizardView.swift */,
 				B579302585432A18086CAF11 /* ServerSetupSheet.swift */,
 				8B54988B86A494CD21D10B91 /* SSHSetupView.swift */,
 			);
@@ -1640,6 +1648,8 @@
 				64C00A18BBD247C0939D8B3B /* WelcomeCarouselView.swift in Sources */,
 				A184B2C3D4E5F6A7B8C9D0E1 /* FirstSessionWizardView.swift in Sources */,
 				D3E4F5A6B7C8D9E0F1A2B3C4 /* OnboardingViewModel.swift in Sources */,
+				F5A6B7C8D9E0F1A2B3C4D5E6 /* FeatureTourView.swift in Sources */,
+				A6B7C8D9E0F1A2B3C4D5E6F7 /* OnboardingWizardView.swift in Sources */,
 				FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */,
 				2F35F33131F061E873FBC02F /* SSEClient.swift in Sources */,
 				E889BCB0D28DB2C5061D1041 /* SSHSetupView.swift in Sources */,
@@ -1844,6 +1854,8 @@
 				260E65CF6DFA49BF86285248 /* WelcomeCarouselView.swift in Sources */,
 				B1C4D3E4F5A6B7C8D9E0F1A3 /* FirstSessionWizardView.swift in Sources */,
 				E4F5A6B7C8D9E0F1A2B3C4D5 /* OnboardingViewModel.swift in Sources */,
+				B7C8D9E0F1A2B3C4D5E6F7A8 /* FeatureTourView.swift in Sources */,
+				C8D9E0F1A2B3C4D5E6F7A8B9 /* OnboardingWizardView.swift in Sources */,
 				A0215E5E1541D648707ADB25 /* QuickConnectViewModel.swift in Sources */,
 				6D77C87FBBC7B9B3EB0BE3B5 /* SSEClient.swift in Sources */,
 				F3010037ABCA48302B4CE17F /* SSHSetupView.swift in Sources */,
