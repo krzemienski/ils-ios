@@ -609,7 +609,7 @@ struct AlertThresholdSettingsView: View {
             let request = UNNotificationRequest(
                 identifier: "ils.alert.test.\(Date().timeIntervalSince1970)",
                 content: content,
-                trigger: UNTimeIntervalNotificationTrigger(timeIntervalSinceNow: 1, repeats: false)
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
             )
 
             UNUserNotificationCenter.current().add(request) { _ in

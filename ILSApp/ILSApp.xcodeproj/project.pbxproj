@@ -9,6 +9,12 @@
 /* Begin PBXBuildFile section */
 		CC11DD22EE33FF44AA55BB04 /* MacSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */; };
 		CC11DD22EE33FF44AA55BB05 /* MacNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */; };
+		373FECEEE6872F6E898AE3A3 /* AlertThresholdSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */; };
+		A22D2B4C7773EFB999117AC7 /* AlertThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */; };
+		1F5CC7A30FC95731224260C6 /* AlertThresholdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */; };
+		D202F781C3598C233C2267BB /* AlertThresholdSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */; };
+		93DEFF05C0D7B8A34856FEA1 /* AlertThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */; };
+		C7239E9FDB0BB455ECB8E08D /* AlertThresholdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		031C9457D5594277A7BC8DDD /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
 		B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */; };
@@ -529,6 +535,9 @@
 		CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSmokeTests.swift; sourceTree = "<group>"; };
 		CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacNavigationTests.swift; sourceTree = "<group>"; };
 		CC11DD22EE33FF44AA55BB03 /* ILSMacAppUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ILSMacAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThresholdSettingsView.swift; sourceTree = "<group>"; };
+		225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThreshold.swift; sourceTree = "<group>"; };
+		BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThresholdManager.swift; sourceTree = "<group>"; };
 		007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D1E2F3 /* AppStoreScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshotTests.swift; sourceTree = "<group>"; };
 		01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserMessageCard.swift; sourceTree = "<group>"; };
@@ -884,6 +893,7 @@
 			children = (
 				9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */,
 				56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */,
+				34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */,
 				03E11049F41DFFB7A80801AB /* SystemMonitorView.swift */,
 			);
 			path = System;
@@ -1285,6 +1295,7 @@
 		BA480E94C563D561E67BEEF5 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+								BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */,
 				D80552C5B47B45FB0F4A2E25 /* APIClient.swift */,
 				8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */,
 				C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */,
@@ -1530,6 +1541,7 @@
 		F77935035ABD9F11E3244B7D /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */,
 				DE41119A5355AEB72E4B4406 /* ChatMessage.swift */,
 				FF79B379753DF9239B9A59CE /* SessionTemplate.swift */,
 				2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */,
@@ -1975,6 +1987,9 @@
 				B66889B6AF9F4B1095BA0B3B /* GrammarConfig.swift in Sources */,
 				557F8242A7EB4123BA34E9EB /* GrammarDefinitions.swift in Sources */,
 				3AE3F4704F74487D8A099977 /* GrammarRegistry.swift in Sources */,
+				373FECEEE6872F6E898AE3A3 /* AlertThresholdSettingsView.swift in Sources */,
+				A22D2B4C7773EFB999117AC7 /* AlertThreshold.swift in Sources */,
+				1F5CC7A30FC95731224260C6 /* AlertThresholdManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2218,6 +2233,9 @@
 				786044B7A7C7460C9F6D2163 /* GrammarConfig.swift in Sources */,
 				6A9D2F0D5C704B96B9C03327 /* GrammarDefinitions.swift in Sources */,
 				CCCCAE4E19EF479BBBB70272 /* GrammarRegistry.swift in Sources */,
+				D202F781C3598C233C2267BB /* AlertThresholdSettingsView.swift in Sources */,
+				93DEFF05C0D7B8A34856FEA1 /* AlertThreshold.swift in Sources */,
+				C7239E9FDB0BB455ECB8E08D /* AlertThresholdManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
