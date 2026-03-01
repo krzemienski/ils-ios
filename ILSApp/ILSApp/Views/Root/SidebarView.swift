@@ -206,10 +206,79 @@ struct SidebarView: View {
                 .accessibilityLabel("Active host")
                 .accessibilityValue("Local")
             }
+
+            // iCloud sync status indicator
+            iCloudSyncStatusIndicator
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.top, theme.spacingLG)
         .padding(.bottom, theme.spacingMD)
+    }
+
+    // MARK: - iCloud Sync Status
+
+    /// Shows a compact iCloud sync status row inside the sidebar header.
+    ///
+    /// Hidden when sync is disabled. Reflects the current `ICloudSyncStatus`
+    /// with an SF Symbol, color, and relative last-sync timestamp.
+    @ViewBuilder
+    private var iCloudSyncStatusIndicator: some View {
+        let syncManager = ICloudSyncManager.shared
+        if syncManager.isSyncEnabled {
+            HStack(spacing: theme.spacingXS) {
+                Image(systemName: iCloudStatusIcon(for: syncManager.syncStatus))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(iCloudStatusColor(for: syncManager.syncStatus))
+                Text(iCloudStatusLabel(status: syncManager.syncStatus, lastSyncDate: syncManager.lastSyncDate))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(syncManager.syncStatus == .error ? theme.error : theme.textTertiary)
+                    .lineLimit(1)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("iCloud sync status")
+            .accessibilityValue(iCloudStatusLabel(status: syncManager.syncStatus, lastSyncDate: syncManager.lastSyncDate))
+        }
+    }
+
+    private func iCloudStatusIcon(for status: ICloudSyncStatus) -> String {
+        switch status {
+        case .syncing: return "arrow.clockwise.icloud"
+        case .error:   return "exclamationmark.icloud"
+        default:       return "checkmark.icloud"
+        }
+    }
+
+    private func iCloudStatusColor(for status: ICloudSyncStatus) -> Color {
+        switch status {
+        case .syncing: return theme.accent
+        case .error:   return theme.error
+        default:       return theme.success
+        }
+    }
+
+    private func iCloudStatusLabel(status: ICloudSyncStatus, lastSyncDate: Date?) -> String {
+        switch status {
+        case .syncing:  return "Syncing..."
+        case .error:    return "Sync error"
+        case .idle:
+            guard let date = lastSyncDate else { return "iCloud Sync" }
+            return "Synced \(iCloudRelativeTime(from: date))"
+        case .disabled: return "iCloud Sync"
+        }
+    }
+
+    private func iCloudRelativeTime(from date: Date) -> String {
+        let interval = Date().timeIntervalSince(date)
+        switch interval {
+        case ..<5:    return "just now"
+        case ..<60:   return "\(Int(interval))s ago"
+        case ..<3600:
+            let m = Int(interval / 60)
+            return m == 1 ? "1 min ago" : "\(m) min ago"
+        default:
+            let h = Int(interval / 3600)
+            return h == 1 ? "1 hr ago" : "\(h) hrs ago"
+        }
     }
 
     // MARK: - Navigation Items
