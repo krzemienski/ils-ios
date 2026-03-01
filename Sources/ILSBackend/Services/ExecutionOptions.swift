@@ -1,6 +1,14 @@
 import Foundation
 import ILSShared
 
+/// A base64-encoded image attachment to include with a chat execution request.
+struct ExecutionImageAttachment {
+    /// MIME type of the image (e.g. "image/png", "image/jpeg").
+    let mediaType: String
+    /// Base64-encoded image data.
+    let data: String
+}
+
 /// Options for Claude CLI execution, mirroring ChatOptions from ILSShared.
 ///
 /// Supports all Claude CLI flags including session management, model selection,
@@ -39,6 +47,9 @@ struct ExecutionOptions {
     var pluginDir: String?
     var strictMcpConfig: Bool?
     var settingsPath: String?
+
+    // Image attachments — populated from ChatStreamRequest, not ChatOptions.
+    var images: [ExecutionImageAttachment]?
 
     init(from chatOptions: ChatOptions? = nil) {
         // Only copy properties that exist on the shared ChatOptions DTO.
