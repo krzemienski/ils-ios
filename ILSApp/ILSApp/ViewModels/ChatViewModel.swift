@@ -609,6 +609,9 @@ class ChatViewModel {
     }
 
     /// Deliver all messages queued for the current session now that connectivity is restored.
+    /// Messages are sent one at a time: each send waits for the prior stream to finish
+    /// before starting the next, preventing `sseClient.startStream()` from cancelling
+    /// in-flight streams (which would silently lose all but the last queued message).
     func drainQueue() {
         guard isConnected, let sessionId else { return }
 
@@ -627,8 +630,27 @@ class ChatViewModel {
         guard !mine.isEmpty else { return }
         AppLogger.shared.info("Draining \(mine.count) queued message(s) for session \(sessionId)", category: "chat")
 
-        for queued in mine {
-            performSend(prompt: queued.content, projectId: nil, options: nil)
+        // Send sequentially: wait for each stream to complete before starting the next.
+        Task { @MainActor [weak self] in
+            for queued in mine {
+                guard let self, self.isConnected else { break }
+
+                // Wait for any in-flight stream to finish before sending the next message.
+                // Uses withObservationTracking to avoid spinning — fires exactly once
+                // per isStreaming change, then re-registers until streaming is false.
+                while self.isStreaming {
+                    await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                        withObservationTracking {
+                            _ = self.isStreaming
+                        } onChange: {
+                            continuation.resume()
+                        }
+                    }
+                }
+
+                guard self.isConnected else { break }
+                self.performSend(prompt: queued.content, projectId: nil, options: nil)
+            }
         }
     }
 

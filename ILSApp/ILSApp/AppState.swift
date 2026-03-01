@@ -55,6 +55,10 @@ class AppState {
 
         connectionQualityService.serverURL = cm.serverURL
         pollingManager.checkConnection()
+        // Start quality polling at launch so returning users see the indicator immediately.
+        // startPolling() is idempotent (guards against duplicate starts) and measure()
+        // handles the offline case gracefully, so this is safe to call unconditionally.
+        connectionQualityService.startPolling()
     }
 
     func updateServerURL(_ url: String) {
