@@ -3,36 +3,16 @@ import ILSShared
 
 // MARK: - MCP Server Detail View (extracted from MCPServerListView.swift, migrated to theme)
 
-/// Detail view for a single MCP (Model Context Protocol) server configuration.
-///
-/// Displays the server's command, arguments, environment variables, connection status,
-/// and configuration scope. Sensitive environment variable values (API keys, tokens,
-/// secrets) are automatically detected and masked, with a timed reveal toggle so users
-/// can inspect them without leaving credentials permanently visible.
-///
-/// ## Topics
-/// ### State
-/// - ``server`` - The MCP server whose details are being displayed
-/// - ``showCopiedToast`` - Whether the "Copied to clipboard" toast is visible
-/// - ``revealedKeys`` - Set of environment variable keys currently shown unmasked
-/// - ``autoHideTasks`` - Background tasks that auto-hide revealed sensitive values
-///
-/// ### View Sections
-/// - Command — executable path and argument list
-/// - Environment Variables — masked/revealed key-value pairs with sensitivity detection
-/// - Configuration — scope, connection status indicator, and optional config path
-/// - Full Command — complete shell-ready command string with copy toolbar button
 struct MCPServerDetailView: View {
-    /// The MCP server whose configuration and status this view presents.
     let server: MCPServer
+    var viewModel: MCPViewModel
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Whether the "Copied to clipboard" confirmation toast is currently visible.
     @State private var showCopiedToast = false
-    /// Set of environment variable keys whose values are currently revealed in plain text.
     @State private var revealedKeys: Set<String> = []
-    /// Auto-hide tasks keyed by environment variable name; each cancels after 5 seconds to re-mask the value.
     @State private var autoHideTasks: [String: Task<Void, Never>] = [:]
+    @State private var isToggling = false
+    @State private var showEditSheet = false
 
     /// Patterns that indicate a value is sensitive and should be masked.
     private static let sensitivePatterns: [(key: String, value: String)] = [
@@ -44,6 +24,11 @@ struct MCPServerDetailView: View {
         ("", "gho_"), ("", "ghs_"), ("", "github_pat_"),
         ("", "xoxb-"), ("", "xoxp-"), ("", "Bearer ")
     ]
+
+    /// Live server looked up from viewModel so SwiftUI re-renders on state changes.
+    private var liveServer: MCPServer {
+        viewModel.servers.first(where: { $0.id == server.id }) ?? server
+    }
 
     private func isSensitive(key: String, value: String) -> Bool {
         let lowerKey = key.lowercased()
@@ -176,6 +161,42 @@ struct MCPServerDetailView: View {
                             }
                         }
 
+                        Divider().background(theme.divider)
+
+                        HStack {
+                            if isToggling {
+                                Toggle(isOn: .constant(liveServer.isEnabled)) {
+                                    Text("Enabled")
+                                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textPrimary)
+                                }
+                                .tint(theme.accent)
+                                .disabled(true)
+                                Spacer()
+                                ProgressView()
+                                    .tint(theme.accent)
+                                    .scaleEffect(0.8)
+                            } else {
+                                Toggle(isOn: Binding(
+                                    get: { liveServer.isEnabled },
+                                    set: { _ in
+                                        HapticManager.selection()
+                                        isToggling = true
+                                        Task {
+                                            await viewModel.toggleEnabled(server)
+                                            isToggling = false
+                                        }
+                                    }
+                                )) {
+                                    Text("Enabled")
+                                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textPrimary)
+                                }
+                                .tint(theme.accent)
+                                .accessibilityLabel(liveServer.isEnabled ? "Disable \(server.name)" : "Enable \(server.name)")
+                            }
+                        }
+
                         if let configPath = server.configPath {
                             Divider().background(theme.divider)
                             HStack {
@@ -200,6 +221,51 @@ struct MCPServerDetailView: View {
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+
+                // Actions Section
+                sectionCard(title: "Actions") {
+                    VStack(spacing: 0) {
+                        NavigationLink {
+                            MCPLogsView(server: server, viewModel: viewModel)
+                        } label: {
+                            HStack {
+                                Image(systemName: "doc.text.magnifyingglass")
+                                    .foregroundStyle(theme.accent)
+                                    .frame(width: 24)
+                                Text("View Logs")
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textPrimary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("View logs for \(server.name)")
+
+                        Divider().background(theme.divider).padding(.vertical, theme.spacingXS)
+
+                        NavigationLink {
+                            MCPTroubleshootView(server: server, viewModel: viewModel)
+                        } label: {
+                            HStack {
+                                Image(systemName: "wrench.and.screwdriver")
+                                    .foregroundStyle(theme.warning)
+                                    .frame(width: 24)
+                                Text("Troubleshoot")
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textPrimary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Troubleshoot \(server.name)")
+                    }
+                }
             }
             .padding(theme.spacingMD)
         }
@@ -211,12 +277,26 @@ struct MCPServerDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
+                    showEditSheet = true
+                } label: {
+                    Text("Edit")
+                        .foregroundStyle(theme.accent)
+                }
+                .accessibilityLabel("Edit \(server.name)")
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                Button {
                     copyToClipboard()
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .foregroundStyle(theme.accent)
                 }
                 .accessibilityLabel("Copy command")
+            }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            NavigationStack {
+                MCPAddEditView(viewModel: viewModel, server: server)
             }
         }
         .overlay(alignment: .bottom) {
@@ -260,7 +340,7 @@ struct MCPServerDetailView: View {
     }
 
     private var statusColor: Color {
-        switch server.status {
+        switch liveServer.status {
         case .healthy: return theme.success
         case .unhealthy: return theme.error
         case .unknown: return theme.warning
@@ -268,7 +348,7 @@ struct MCPServerDetailView: View {
     }
 
     private var statusText: String {
-        switch server.status {
+        switch liveServer.status {
         case .healthy: return "Healthy"
         case .unhealthy: return "Unhealthy"
         case .unknown: return "Unknown"
@@ -282,7 +362,12 @@ struct MCPServerDetailView: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(fullCommand, forType: .string)
         #endif
-        // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
         showCopiedToast = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            await MainActor.run {
+                showCopiedToast = false
+            }
+        }
     }
 }

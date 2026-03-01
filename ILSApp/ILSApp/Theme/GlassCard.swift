@@ -7,14 +7,14 @@ struct GlassCard: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(padding ?? theme.spacingMD)
-            .background(theme.glassBackground)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            .background(
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
+                    .fill(theme.glassBackground)
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .stroke(theme.glassBorder, lineWidth: 0.5)
             )
-            .shadow(color: theme.accent.opacity(0.08), radius: 8, x: 0, y: 0)
-            .drawingGroup() // Offload shadow compositing to Metal
     }
 }
 

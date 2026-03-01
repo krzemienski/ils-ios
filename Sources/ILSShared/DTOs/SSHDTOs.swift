@@ -2,6 +2,35 @@ import Foundation
 
 // MARK: - SSH Requests
 
+/// Jump host (bastion) configuration for proxied SSH connections.
+public struct SSHJumpHost: Codable, Sendable {
+    /// Hostname or IP address of the jump/bastion host.
+    public let host: String
+    /// Port number of the jump host (default: 22).
+    public let port: Int
+    /// Username to authenticate with on the jump host.
+    public let username: String
+    /// Authentication method to use on the jump host (e.g., `"password"`, `"privateKey"`).
+    public let authMethod: String
+    /// Credential value for the jump host (password or private key content).
+    public let credential: String
+
+    /// Creates a new jump host configuration.
+    /// - Parameters:
+    ///   - host: Hostname or IP address of the jump/bastion host.
+    ///   - port: SSH port (default: 22).
+    ///   - username: Username for authentication on the jump host.
+    ///   - authMethod: Authentication method (e.g., `"password"`, `"privateKey"`).
+    ///   - credential: Password or private key content for the jump host.
+    public init(host: String, port: Int = 22, username: String, authMethod: String, credential: String) {
+        self.host = host
+        self.port = port
+        self.username = username
+        self.authMethod = authMethod
+        self.credential = credential
+    }
+}
+
 /// Request payload for establishing an SSH connection to a remote host.
 public struct SSHConnectRequest: Codable, Sendable {
     /// Hostname or IP address of the remote SSH server.
@@ -14,6 +43,10 @@ public struct SSHConnectRequest: Codable, Sendable {
     public let authMethod: String
     /// Credential value corresponding to the chosen ``authMethod`` (password or private key).
     public let credential: String
+    /// Whether to enable SSH agent forwarding for this connection.
+    public let agentForwarding: Bool
+    /// Optional jump host (bastion) to proxy the connection through.
+    public let jumpHost: SSHJumpHost?
 
     /// Creates a new SSH connection request.
     /// - Parameters:
@@ -22,12 +55,24 @@ public struct SSHConnectRequest: Codable, Sendable {
     ///   - username: Username for authentication.
     ///   - authMethod: Authentication method (e.g., `"password"`, `"privateKey"`).
     ///   - credential: Password or private key content for authentication.
-    public init(host: String, port: Int = 22, username: String, authMethod: String, credential: String) {
+    ///   - agentForwarding: Whether to enable SSH agent forwarding (default: false).
+    ///   - jumpHost: Optional jump host configuration for proxied connections.
+    public init(
+        host: String,
+        port: Int = 22,
+        username: String,
+        authMethod: String,
+        credential: String,
+        agentForwarding: Bool = false,
+        jumpHost: SSHJumpHost? = nil
+    ) {
         self.host = host
         self.port = port
         self.username = username
         self.authMethod = authMethod
         self.credential = credential
+        self.agentForwarding = agentForwarding
+        self.jumpHost = jumpHost
     }
 }
 
@@ -45,6 +90,40 @@ public struct SSHExecuteRequest: Codable, Sendable {
     public init(command: String, timeout: Int? = nil) {
         self.command = command
         self.timeout = timeout
+    }
+}
+
+/// Request payload for starting SSH local port forwarding.
+public struct SSHPortForwardRequest: Codable, Sendable {
+    /// Local port to listen on.
+    public let localPort: Int
+    /// Remote host to forward connections to.
+    public let remoteHost: String
+    /// Remote port to forward connections to.
+    public let remotePort: Int
+
+    /// Creates a new port forward request.
+    /// - Parameters:
+    ///   - localPort: Local port to listen on.
+    ///   - remoteHost: Remote host to forward to (e.g., "localhost").
+    ///   - remotePort: Remote port to forward to.
+    public init(localPort: Int, remoteHost: String, remotePort: Int) {
+        self.localPort = localPort
+        self.remoteHost = remoteHost
+        self.remotePort = remotePort
+    }
+}
+
+/// Request payload for stopping an active SSH port forwarding.
+public struct SSHStopPortForwardRequest: Codable, Sendable {
+    /// Local port of the forwarding to stop.
+    public let localPort: Int
+
+    /// Creates a new stop-port-forward request.
+    /// - Parameters:
+    ///   - localPort: Local port of the forwarding to stop.
+    public init(localPort: Int) {
+        self.localPort = localPort
     }
 }
 
@@ -129,5 +208,59 @@ public struct SSHPlatformResponse: Codable, Sendable {
         self.platform = platform
         self.isSupported = isSupported
         self.rejectionReason = rejectionReason
+    }
+}
+
+/// Response describing an active SSH port forwarding.
+public struct SSHPortForwardResponse: Codable, Sendable {
+    /// Local port being listened on.
+    public let localPort: Int
+    /// Remote host connections are forwarded to.
+    public let remoteHost: String
+    /// Remote port connections are forwarded to.
+    public let remotePort: Int
+    /// URL for accessing the forwarded service (e.g., `"http://localhost:9999"`).
+    public let serverUrl: String
+    /// Whether the port forwarding is currently active.
+    public let active: Bool
+
+    /// Creates a new port forward response.
+    public init(localPort: Int, remoteHost: String, remotePort: Int, serverUrl: String, active: Bool) {
+        self.localPort = localPort
+        self.remoteHost = remoteHost
+        self.remotePort = remotePort
+        self.serverUrl = serverUrl
+        self.active = active
+    }
+}
+
+/// Information about a single active port forwarding.
+public struct SSHPortForwardInfo: Codable, Sendable {
+    /// Local port being listened on.
+    public let localPort: Int
+    /// Remote host connections are forwarded to.
+    public let remoteHost: String
+    /// Remote port connections are forwarded to.
+    public let remotePort: Int
+    /// URL for accessing the forwarded service.
+    public let serverUrl: String
+
+    /// Creates a new port forward info.
+    public init(localPort: Int, remoteHost: String, remotePort: Int, serverUrl: String) {
+        self.localPort = localPort
+        self.remoteHost = remoteHost
+        self.remotePort = remotePort
+        self.serverUrl = serverUrl
+    }
+}
+
+/// Response listing all active port forwardings.
+public struct SSHPortForwardStatusResponse: Codable, Sendable {
+    /// All currently active port forwardings.
+    public let forwardings: [SSHPortForwardInfo]
+
+    /// Creates a new port forward status response.
+    public init(forwardings: [SSHPortForwardInfo]) {
+        self.forwardings = forwardings
     }
 }

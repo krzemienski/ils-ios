@@ -1,0 +1,132 @@
+{
+  "feature": "CodeBlockView re-highlights syntax on every expand/collapse toggle",
+  "workflow_type": "simple",
+  "workflow_rationale": "Single-file trivial fix (one-line change) already applied prior to task creation. Workflow is verification-only.",
+  "phases": [
+    {
+      "id": "phase-1-verify",
+      "name": "Verify Fix",
+      "type": "investigation",
+      "description": "Confirm that the syntax re-highlighting bug is already fixed in the codebase and the iOS build compiles successfully.",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Confirm fix is applied: verify .task(id:) in CodeBlockView.swift does NOT include isExpanded",
+          "service": "ios",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "ILSApp/ILSApp/Views/Chat/CodeBlockView.swift"
+          ],
+          "notes": "Verified: .task(id:) in CodeBlockView.swift uses only code.hashValue and language — does NOT include isExpanded. Fix was already applied. Line 230: .task(id: \"\\(code.hashValue)-\\(language ?? \"\")\"). Syntax highlighting only re-runs when code content or language changes.",
+          "expected_output": "Line 230 of CodeBlockView.swift reads: .task(id: \"\\(code.hashValue)-\\(language ?? \"\")\") — confirming isExpanded is absent",
+          "verification": {
+            "type": "command",
+            "command": "grep -n 'task(id:' ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
+            "expected": "Only one match; the id string must NOT contain 'isExpanded'"
+          },
+          "status": "completed",
+          "updated_at": "2026-02-28T17:51:01.955792+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Build iOS target to confirm no compilation errors were introduced by the fix",
+          "service": "ios",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet 2>&1 | tail -5",
+            "expected": "** BUILD SUCCEEDED **"
+          },
+          "status": "completed",
+          "notes": "iOS build succeeded with ** BUILD SUCCEEDED **. No compilation errors. The fix (removing isExpanded from .task(id:) key in CodeBlockView.swift) compiles cleanly.",
+          "updated_at": "2026-02-28T19:18:58.005863+00:00"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 1,
+    "total_subtasks": 2,
+    "services_involved": [
+      "ios"
+    ],
+    "investigation_findings": "The bug described in the spec (isExpanded included in .task(id:) key) was already fixed in commit 65e249d before this task was created. The fix consists of three improvements: (1) init() pre-computes syntax highlighting synchronously so no flash on first render; (2) .task(id: code.hashValue+language) refreshes only when code/language changes — NOT on isExpanded toggle; (3) collapsed view uses .lineLimit() on the full AttributedString instead of re-slicing displayedLines.",
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "N/A — sequential only"
+    },
+    "startup_command": "N/A — verification only, no services to start"
+  },
+  "verification_strategy": {
+    "risk_level": "trivial",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "command"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      ".task(id:) key in CodeBlockView.swift does not contain isExpanded",
+      "iOS build succeeds without errors"
+    ],
+    "verification_steps": [
+      {
+        "name": "Grep verification",
+        "command": "grep -n 'task(id:' ILSApp/ILSApp/Views/Chat/CodeBlockView.swift",
+        "expected_outcome": "id string contains only code.hashValue and language",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "iOS build",
+        "command": "xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet 2>&1 | tail -5",
+        "expected_outcome": "** BUILD SUCCEEDED **",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Trivial risk — the fix is a well-understood single-line change removing isExpanded from a task modifier key. Already applied and should only need build verification."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "executionPhase": "complete",
+  "status": "done",
+  "planStatus": "completed",
+  "updated_at": "2026-03-01T01:52:45.916Z",
+  "last_updated": "2026-02-28T19:18:58.005870+00:00",
+  "xstateState": "done"
+}

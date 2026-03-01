@@ -13,7 +13,7 @@ struct GlowEffect: ViewModifier {
         content
             // ENRG-05: Single shadow pass instead of double — halves GPU blur render cost.
             .shadow(color: color.opacity(opacity), radius: radius * 1.5)
-            .drawingGroup()
+            // drawingGroup() removed: Metal rasterization breaks UIKit-backed controls (Toggle, TextField, Picker)
     }
 }
 

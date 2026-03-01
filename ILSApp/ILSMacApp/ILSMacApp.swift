@@ -19,6 +19,7 @@ struct ILSMacApp: App {
     @State private var themeManager = ThemeManager()
     @State private var windowManager = WindowManager.shared
     @State private var notificationManager = NotificationManager.shared
+    @State private var backendManager = BackendLifecycleManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
 
@@ -51,6 +52,8 @@ struct ILSMacApp: App {
                     } catch {
                         print("Failed to request notification permissions: \(error)")
                     }
+                    // Start backend health monitoring if already installed
+                    await backendManager.startMonitoringIfInstalled()
                 }
         }
         .defaultSize(width: 1200, height: 800)

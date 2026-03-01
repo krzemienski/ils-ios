@@ -8,10 +8,12 @@ final class HostProfilesViewModel {
     var hosts: [HostProfile] = []
     var activeHostId: UUID?
     var isLoading = false
-    var loadError: String?
+    var error: Error?
     /// Name of the most recently activated host, used to trigger the success banner.
     /// Set by activate() and cleared by the view after the banner auto-dismisses.
     var lastActivatedHostName: String?
+    var operationState: AsyncOperationState?
+    var operationMessage: String?
 
     private let appState: AppState
     @ObservationIgnored private var healthTask: Task<Void, Never>?
@@ -26,7 +28,7 @@ final class HostProfilesViewModel {
 
     func loadHosts() async {
         isLoading = true
-        loadError = nil
+        error = nil
         defer { isLoading = false }
 
         do {
@@ -35,11 +37,17 @@ final class HostProfilesViewModel {
             hosts = fleet.hosts
             activeHostId = fleet.activeHostId
         } catch {
-            loadError = "Failed to load host profiles: \(error.localizedDescription)"
+            self.error = error
         }
     }
 
     func register(name: String, host: String, port: Int, backendPort: Int, username: String?, authMethod: String?, credential: String?) async {
+        operationState = .connecting
+        operationMessage = "Registering host..."
+        defer {
+            operationState = nil
+            operationMessage = nil
+        }
         let request = RegisterHostProfileRequest(
             name: name, host: host, port: port, backendPort: backendPort,
             username: username, authMethod: authMethod, credential: credential
@@ -49,7 +57,7 @@ final class HostProfilesViewModel {
             hosts.append(newHost)
             if hosts.count == 1 { activeHostId = newHost.id }
         } catch {
-            loadError = "Failed to register host: \(error.localizedDescription)"
+            self.error = error
         }
     }
 
@@ -57,6 +65,12 @@ final class HostProfilesViewModel {
         Task { [weak self] in
             guard let self else { return }
             guard let host = hosts.first(where: { $0.id == id }) else { return }
+            operationState = .connecting
+            operationMessage = "Activating host..."
+            defer {
+                operationState = nil
+                operationMessage = nil
+            }
             do {
                 let _: HostProfile = try await appState.apiClient.post("/host-profiles/\(id)/activate", body: EmptyBody())
                 activeHostId = id
@@ -68,7 +82,7 @@ final class HostProfilesViewModel {
                 UserDefaults.standard.set(host.name, forKey: "activeHostName")
                 self.lastActivatedHostName = host.name
             } catch {
-                loadError = "Failed to activate host '\(host.name)': \(error.localizedDescription)"
+                self.error = error
             }
         }
     }
@@ -85,7 +99,7 @@ final class HostProfilesViewModel {
                     UserDefaults.standard.removeObject(forKey: "activeHostName")
                 }
             } catch {
-                loadError = "Failed to remove host: \(error.localizedDescription)"
+                self.error = error
             }
         }
     }

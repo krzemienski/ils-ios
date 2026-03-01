@@ -10,7 +10,9 @@ class TeamsViewModel {
     var tasks: [TeamTask] = []
     var messages: [TeamMessage] = []
     var isLoading = false
-    var error: String?
+    var error: Error?
+    var operationState: AsyncOperationState?
+    var operationMessage: String?
 
     private let apiClient: APIClient
     @ObservationIgnored private var pollingTask: Task<Void, Never>?
@@ -38,10 +40,10 @@ class TeamsViewModel {
             if response.success, let data = response.data {
                 teams = data
             } else {
-                error = response.error?.message ?? "Failed to load teams"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to load teams"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -55,10 +57,10 @@ class TeamsViewModel {
             if response.success {
                 await loadTeams()
             } else {
-                error = response.error?.message ?? "Failed to create team"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to create team"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -71,10 +73,10 @@ class TeamsViewModel {
             if response.success {
                 await loadTeams()
             } else {
-                error = response.error?.message ?? "Failed to delete team"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to delete team"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -86,10 +88,10 @@ class TeamsViewModel {
             if response.success, let data = response.data {
                 selectedTeam = data
             } else {
-                error = response.error?.message ?? "Failed to load team detail"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to load team detail"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
     }
 
@@ -98,15 +100,21 @@ class TeamsViewModel {
     func spawnTeammate(teamName: String, request: SpawnTeammateRequest) async {
         isLoading = true
         error = nil
+        operationState = .connecting
+        operationMessage = "Spawning teammate..."
+        defer {
+            operationState = nil
+            operationMessage = nil
+        }
         do {
             let response: APIResponse<TeamMember> = try await apiClient.post( "/teams/\(teamName)/spawn", body: request)
             if response.success {
                 await loadTeamDetail(name: teamName)
             } else {
-                error = response.error?.message ?? "Failed to spawn teammate"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to spawn teammate"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -114,16 +122,22 @@ class TeamsViewModel {
     func shutdownTeammate(teamName: String, name: String) async {
         isLoading = true
         error = nil
+        operationState = .connecting
+        operationMessage = "Shutting down teammate..."
+        defer {
+            operationState = nil
+            operationMessage = nil
+        }
         do {
             let request = ShutdownTeammateRequest(memberName: name)
             let response: APIResponse<DeletedResponse> = try await apiClient.post( "/teams/\(teamName)/shutdown", body: request)
             if response.success {
                 await loadTeamDetail(name: teamName)
             } else {
-                error = response.error?.message ?? "Failed to shutdown teammate"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to shutdown teammate"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -137,10 +151,10 @@ class TeamsViewModel {
             if response.success, let data = response.data {
                 tasks = data
             } else {
-                error = response.error?.message ?? "Failed to load tasks"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to load tasks"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
     }
 
@@ -153,10 +167,10 @@ class TeamsViewModel {
             if response.success {
                 await loadTasks(teamName: teamName)
             } else {
-                error = response.error?.message ?? "Failed to create task"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to create task"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -170,10 +184,10 @@ class TeamsViewModel {
             if response.success {
                 await loadTasks(teamName: teamName)
             } else {
-                error = response.error?.message ?? "Failed to update task"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to update task"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }
@@ -187,10 +201,10 @@ class TeamsViewModel {
             if response.success, let data = response.data {
                 messages = data
             } else {
-                error = response.error?.message ?? "Failed to load messages"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to load messages"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
     }
 
@@ -203,10 +217,10 @@ class TeamsViewModel {
             if response.success {
                 await loadMessages(teamName: teamName)
             } else {
-                error = response.error?.message ?? "Failed to send message"
+                error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to send message"])
             }
         } catch {
-            self.error = error.localizedDescription
+            self.error = error
         }
         isLoading = false
     }

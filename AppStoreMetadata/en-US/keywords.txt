@@ -1,1 +1,1 @@
-claude code,ai assistant,developer tools,session manager,mcp,skills,plugins,anthropic,code chat
+ai assistant,developer tools,mcp,skills,plugins,anthropic,terminal,llm,coding,ios dev,ai chat,swift

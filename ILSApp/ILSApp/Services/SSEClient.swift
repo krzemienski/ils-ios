@@ -22,16 +22,23 @@ class SSEClient {
         case reconnecting(attempt: Int)
     }
 
-    private var streamTask: Task<Void, Never>?
+    // @ObservationIgnored: Internal lifecycle state, not view-observable.
+    // Required so deinit (nonisolated) can access them for safety-net cancellation.
+    @ObservationIgnored private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
-    private let maxReconnectAttempts = 3
+    private let maxReconnectAttempts = 10
     private let reconnectDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
     private let session: URLSession
     private var lastEventId: String?
+    // NET-RES-1: Cancellable handle to the current backoff sleep task so network
+    // restoration can skip remaining wait and trigger an immediate retry.
+    private var backoffSleepTask: Task<Void, Never>?
+    // NET-RES-1: Observer for network restoration to cancel backoff and reconnect.
+    private var networkObserver: NSObjectProtocol?
     #if os(iOS)
-    private var backgroundObserver: NSObjectProtocol?
+    @ObservationIgnored private var backgroundObserver: NSObjectProtocol?
     #endif
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
@@ -70,11 +77,36 @@ class SSEClient {
             }
         }
         #endif
+
+        // NET-RES-1: Subscribe to network restoration so any active backoff sleep is
+        // cancelled immediately, triggering a faster reconnection attempt.
+        networkObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.handleNetworkRestoration()
+            }
+        }
+    }
+
+    /// Safety-net deinit: cancels stream task and removes NotificationCenter observer
+    /// if cleanup() was not called from the view lifecycle. Primary cleanup path
+    /// remains cleanup() called from view's onDisappear.
+    /// Task.cancel() and NotificationCenter.removeObserver() are thread-safe.
+    deinit {
+        streamTask?.cancel()
+        #if os(iOS)
+        if let observer = backgroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        #endif
     }
 
     /// Tear down session and cancel in-flight tasks.
-    /// Call from view's onDisappear; replaces deinit-based cleanup
-    /// which cannot safely access @MainActor state.
+    /// Call from view's onDisappear for full cleanup including URLSession invalidation.
     func cleanup() {
         // MEM-05: Remove background observer to prevent retain cycle / stale notifications.
         #if os(iOS)
@@ -83,6 +115,11 @@ class SSEClient {
             backgroundObserver = nil
         }
         #endif
+        // NET-RES-1: Remove network observer on teardown.
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+            networkObserver = nil
+        }
         cancel()
         session.invalidateAndCancel()
     }
@@ -239,9 +276,17 @@ class SSEClient {
 
         // Exponential backoff capped at 30 seconds
         let delay = min(reconnectDelay * UInt64(1 << (reconnectAttempts - 1)), 30_000_000_000)
-        try? await Task.sleep(nanoseconds: delay)
 
-        // Check if cancelled during sleep
+        // NET-RES-1: Wrap sleep in a separate task so network restoration can cancel
+        // just the backoff without cancelling the parent stream task.
+        let sleepTask = Task<Void, Never> {
+            try? await Task.sleep(nanoseconds: delay)
+        }
+        backoffSleepTask = sleepTask
+        await sleepTask.value
+        backoffSleepTask = nil
+
+        // Check if parent stream task was cancelled during sleep
         if Task.isCancelled {
             return false
         }
@@ -320,6 +365,8 @@ class SSEClient {
 
     /// Cancel the current stream
     func cancel() {
+        backoffSleepTask?.cancel()
+        backoffSleepTask = nil
         streamTask?.cancel()
         streamTask = nil
         isStreaming = false
@@ -329,6 +376,50 @@ class SSEClient {
         lastEventId = nil
         userMessageId = nil
         assistantMessageId = nil
+    }
+
+    // MARK: - Network Restoration
+
+    /// NET-RES-1: Called when network becomes available — skip any active backoff
+    /// sleep for immediate reconnection, or restart a stopped stream.
+    private func handleNetworkRestoration() {
+        if backoffSleepTask != nil {
+            // Currently in a backoff wait — cancel the sleep so performStream
+            // proceeds immediately on the next iteration.
+            AppLogger.shared.info("Network restored — skipping SSE backoff sleep", category: "sse")
+            backoffSleepTask?.cancel()
+            backoffSleepTask = nil
+        } else if !isStreaming, currentRequest != nil {
+            // All reconnect attempts were exhausted but the user hasn't explicitly
+            // cancelled — restart the stream now that network is back.
+            AppLogger.shared.info("Network restored — restarting stopped SSE stream", category: "sse")
+            resetAndReconnect()
+        }
+    }
+
+    /// Externally trigger an immediate reconnection for the current request.
+    /// Cancels any active backoff sleep so reconnection starts without delay.
+    /// If the stream was fully stopped (all attempts exhausted), restarts it.
+    func resetAndReconnect() {
+        // Cancel any active backoff sleep — performStream will proceed after sleep exits.
+        backoffSleepTask?.cancel()
+        backoffSleepTask = nil
+
+        guard let request = currentRequest else { return }
+
+        if !isStreaming {
+            // Stream was fully stopped — restart from scratch with a fresh attempt counter.
+            AppLogger.shared.info("resetAndReconnect — restarting stream from scratch", category: "sse")
+            reconnectAttempts = 0
+            isStreaming = true
+            error = nil
+            connectionState = .connecting
+            streamTask = Task { [weak self] in
+                await self?.performStream(request: request)
+            }
+        }
+        // If isStreaming is true and we're in backoff, cancelling backoffSleepTask
+        // above is sufficient — performStream continues after the sleep exits.
     }
 }
 
