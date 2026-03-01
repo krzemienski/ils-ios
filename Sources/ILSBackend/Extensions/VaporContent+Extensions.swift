@@ -223,6 +223,14 @@ extension ActivityEventSeverity: Content {}
 extension ActivityFeedFilter: Content {}
 extension ActivityFeedResponse: Content {}
 
+// MARK: - Usage Types
+extension UsageMetrics: Content {}
+extension DailyUsage: Content {}
+extension ProjectUsage: Content {}
+extension RateLimitStatus: Content {}
+extension UsagePeriod: Content {}
+extension UsageExportFormat: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}
