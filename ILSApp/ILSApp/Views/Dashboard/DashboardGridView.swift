@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import UniformTypeIdentifiers
 
 // MARK: - DashboardGridView
 
@@ -23,14 +24,23 @@ import ILSShared
 /// - ``onNavigate`` — forwarded to ``QuickActionsWidget``
 /// - ``onNavigateToBrowser`` — forwarded to ``QuickActionsWidget``
 ///
+/// ## Edit Mode
+/// A "Edit" / "Done" toolbar button (placed at `.navigationBarTrailing`) toggles
+/// `isEditMode`. When active, each tile shows a remove (×) button and a drag
+/// handle (≡). Widgets can be reordered by dragging; on drop the
+/// `onReorderWidget` callback receives `(fromID, toID)` so the parent can
+/// update positions in ``DashboardLayoutStore``. Reorders animate with a
+/// spring effect.
+///
 /// ## Usage
 /// ```swift
 /// DashboardGridView(
 ///     layout: store.activeLayout,
-///     isEditMode: isEditing,
+///     isEditMode: $isEditMode,
 ///     sessionsVM: sessionsVM,
 ///     apiClient: appState.apiClient,
 ///     onRemoveWidget: { store.remove($0) },
+///     onReorderWidget: { from, to in store.reorder(widgetID: from, before: to) },
 ///     onSessionSelected: onSessionSelected,
 ///     onNavigate: onNavigate,
 ///     onNavigateToBrowser: onNavigateToBrowser
@@ -42,14 +52,18 @@ struct DashboardGridView: View {
 
     /// The layout whose widget tiles should be rendered.
     let layout: DashboardLayout
-    /// When `true`, each tile shows a remove (×) button and a scrim overlay.
-    let isEditMode: Bool
+    /// Bound to the parent's edit-mode state. Toggled by the built-in toolbar button.
+    @Binding var isEditMode: Bool
     /// Shared sessions view model passed to session-aware widgets.
     var sessionsVM: SessionsViewModel
     /// API client used by widgets that fetch their own data.
     var apiClient: APIClient
     /// Called when the user taps the × button on a tile during edit mode.
     var onRemoveWidget: ((DashboardWidget) -> Void)?
+    /// Called when the user drags one widget onto another to request a reorder.
+    /// Receives `(fromID, toID)` where `fromID` is the dragged widget and `toID`
+    /// is the drop target. The parent is responsible for updating positions.
+    var onReorderWidget: ((UUID, UUID) -> Void)?
     /// Called when the user taps a session row inside a widget.
     var onSessionSelected: ((ChatSession) -> Void)?
     /// Called to push a top-level ``ActiveScreen`` onto the navigation stack.
@@ -58,6 +72,9 @@ struct DashboardGridView: View {
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
+
+    /// Tracks the widget being dragged so we can dim its tile.
+    @State private var draggingWidgetID: UUID?
 
     // MARK: - Row Model
 
@@ -97,6 +114,36 @@ struct DashboardGridView: View {
                 HStack(alignment: .top, spacing: theme.spacingMD) {
                     ForEach(row.widgets) { widget in
                         widgetSlot(for: widget)
+                            .opacity(draggingWidgetID == widget.id ? 0.4 : 1.0)
+                            .onDrag {
+                                guard isEditMode else { return NSItemProvider() }
+                                draggingWidgetID = widget.id
+                                return NSItemProvider(object: widget.id.uuidString as NSString)
+                            }
+                            .onDrop(of: [UTType.plainText], isTargeted: nil) { providers in
+                                guard isEditMode else { return false }
+                                providers.first?.loadObject(ofClass: NSString.self) { item, _ in
+                                    guard let idString = item as? String,
+                                          let fromID = UUID(uuidString: idString) else { return }
+                                    DispatchQueue.main.async {
+                                        withAnimation(.spring()) {
+                                            onReorderWidget?(fromID, widget.id)
+                                        }
+                                        draggingWidgetID = nil
+                                    }
+                                }
+                                return true
+                            }
+                    }
+                }
+            }
+        }
+        .animation(.spring(), value: layout.widgets.map(\.id))
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(isEditMode ? "Done" : "Edit") {
+                    withAnimation(.spring()) {
+                        isEditMode.toggle()
                     }
                 }
             }
@@ -390,16 +437,22 @@ private struct ProjectStatusSlot: View {
 // MARK: - Preview
 
 #Preview {
+    @Previewable @State var isEditMode = false
+
     let layout = DashboardLayout(name: "Developer", persona: .developer)
 
-    ScrollView {
-        DashboardGridView(
-            layout: layout,
-            isEditMode: false,
-            sessionsVM: SessionsViewModel(),
-            apiClient: APIClient(baseURL: "http://localhost:9999")
-        )
-        .padding()
+    NavigationStack {
+        ScrollView {
+            DashboardGridView(
+                layout: layout,
+                isEditMode: $isEditMode,
+                sessionsVM: SessionsViewModel(),
+                apiClient: APIClient(baseURL: "http://localhost:9999")
+            )
+            .padding()
+        }
+        .navigationTitle("Dashboard")
+        .navigationBarTitleDisplayMode(.inline)
     }
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     .background(ThemeSnapshot(ObsidianTheme()).bgPrimary)

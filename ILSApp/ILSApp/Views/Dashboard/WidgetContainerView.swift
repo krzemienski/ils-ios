@@ -126,27 +126,45 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
         .padding(theme.spacingMD)
     }
 
-    /// Edit-mode overlay: translucent scrim + remove (×) button at top trailing.
+    /// Edit-mode overlay: translucent scrim + remove (×) button at top trailing
+    /// and drag handle (≡) at bottom leading.
     private var editModeOverlay: some View {
-        ZStack(alignment: .topTrailing) {
-            // Non-interactive scrim so the remove button remains tappable
+        ZStack {
+            // Non-interactive scrim so interactive controls remain tappable
             RoundedRectangle(cornerRadius: theme.cornerRadius)
                 .fill(theme.bgPrimary.opacity(0.35))
                 .allowsHitTesting(false)
 
-            Button(action: onRemove) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(theme.error)
-                    // Circular backing shape for legibility on any widget background
-                    .background(
-                        Circle()
-                            .fill(theme.bgPrimary)
-                            .padding(3)
-                    )
+            VStack {
+                // Remove button — top trailing
+                HStack {
+                    Spacer()
+                    Button(action: onRemove) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(theme.error)
+                            // Circular backing shape for legibility on any widget background
+                            .background(
+                                Circle()
+                                    .fill(theme.bgPrimary)
+                                    .padding(3)
+                            )
+                    }
+                    .accessibilityLabel("Remove \(widget.type.displayName) widget")
+                }
+
+                Spacer()
+
+                // Drag handle — bottom leading
+                HStack {
+                    Image(systemName: "line.3.horizontal")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(theme.textSecondary)
+                        .accessibilityLabel("Drag to reorder \(widget.type.displayName) widget")
+                    Spacer()
+                }
             }
             .padding(theme.spacingSM)
-            .accessibilityLabel("Remove \(widget.type.displayName) widget")
         }
         .frame(maxWidth: .infinity)
         .frame(height: frameHeight)
