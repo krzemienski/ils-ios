@@ -117,7 +117,7 @@ struct AssistantCard: View, Equatable {
                 .transition(.scale.combined(with: .opacity))
             }
         }
-        .accessibilityLabel("Assistant said: \(message.text.prefix(100))")
+        .accessibilityLabel(accessibilityLabelString)
         #if os(macOS)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ILSToggleExpandAllToolCalls"))) { _ in
             let newValue = (expandAllToolCalls == true) ? false : true
@@ -130,6 +130,22 @@ struct AssistantCard: View, Equatable {
             }
         }
         #endif
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityLabelString: String {
+        var parts: [String] = ["Assistant said: \(message.text.prefix(100))"]
+        if let timestamp = message.timestamp {
+            parts.append(formattedTimestamp(timestamp))
+        }
+        if let cost = message.cost {
+            parts.append(String(format: "$%.4f", cost))
+        }
+        if message.tokenCount > 0 {
+            parts.append("\(message.tokenCount) tokens")
+        }
+        return parts.joined(separator: ", ")
     }
 
     // MARK: - Metadata Row
