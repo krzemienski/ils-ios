@@ -80,6 +80,10 @@ struct MacContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @FocusState private var isSearchFocused: Bool
 
+    @State private var showGlobalCommandPalette = false
+    @State private var commandRegistry = CommandRegistry()
+    @State private var shortcutStore = KeyboardShortcutStore()
+
     var body: some View {
         @Bindable var appState = appState
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -163,6 +167,9 @@ struct MacContentView: View {
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .ilsOpenCommandPalette)) { _ in
+            showGlobalCommandPalette = true
+        }
         .onKeyPress(.init("/")) {
             isSearchFocused = true
             return .handled
@@ -171,6 +178,18 @@ struct MacContentView: View {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)
+        }
+        .sheet(isPresented: $showGlobalCommandPalette) {
+            GlobalCommandPaletteView(
+                registry: commandRegistry,
+                shortcutStore: shortcutStore
+            ) { command in
+                handleGlobalCommand(command)
+            }
+            .environment(appState)
+            .environment(\.theme, theme)
+            .frame(minWidth: 600, minHeight: 450)
+            .presentationBackground(theme.bgPrimary)
         }
         .alert("Rename Session", isPresented: Binding(
             get: { sessionToRename != nil },
@@ -601,6 +620,17 @@ struct MacContentView: View {
                 md += "\n---\n"
                 try? md.write(to: url, atomically: true, encoding: .utf8)
             }
+        }
+    }
+
+    private func handleGlobalCommand(_ command: GlobalCommand) {
+        switch command.action {
+        case .navigate(let screen):
+            handleNavigationIntent(screen)
+        case .postNotification(let name):
+            NotificationCenter.default.post(name: name, object: nil)
+        case .custom:
+            break
         }
     }
 
