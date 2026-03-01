@@ -25,14 +25,38 @@ struct CreateSessionIntent: AppIntent {
     @Parameter(title: "Model", default: .sonnet)
     var model: SessionModel
 
+    @Parameter(title: "Project Path")
+    var projectPath: String?
+
+    @Parameter(title: "Skill Name")
+    var skillName: String?
+
+    @Parameter(title: "Initial Prompt")
+    var initialPrompt: String?
+
     static var parameterSummary: some ParameterSummary {
-        Summary("Create session \(\.$name) with \(\.$model)")
+        Summary("Create session \(\.$name) with \(\.$model)") {
+            \.$projectPath
+            \.$skillName
+            \.$initialPrompt
+        }
     }
 
     /// Codable request body for session creation.
     private struct CreateSessionBody: Encodable {
         let name: String
         let model: String
+        let projectPath: String?
+        let skillName: String?
+        let initialPrompt: String?
+
+        enum CodingKeys: String, CodingKey {
+            case name
+            case model
+            case projectPath = "project_path"
+            case skillName = "skill_name"
+            case initialPrompt = "initial_prompt"
+        }
     }
 
     /// Codable response wrapper matching the backend's APIResponse<T>.
@@ -51,7 +75,13 @@ struct CreateSessionIntent: AppIntent {
             return .result(value: "Error: Invalid server URL")
         }
 
-        let body = CreateSessionBody(name: name, model: model.rawValue)
+        let body = CreateSessionBody(
+            name: name,
+            model: model.rawValue,
+            projectPath: projectPath,
+            skillName: skillName,
+            initialPrompt: initialPrompt
+        )
         let jsonData: Data
         do {
             jsonData = try JSONEncoder().encode(body)
