@@ -109,13 +109,10 @@ struct SidebarView: View {
         .sheet(item: $sessionToSaveAsTemplate) { session in
             NavigationStack {
                 EditTemplateView(
-                    template: SessionTemplate(
-                        name: session.name ?? "New Template",
-                        description: "",
-                        model: session.model,
-                        permissionMode: session.permissionMode.rawValue,
-                        systemPrompt: ""
-                    ),
+                    template: nil,
+                    prefillName: session.name ?? "New Template",
+                    prefillModel: session.model,
+                    prefillPermissionMode: session.permissionMode.rawValue,
                     viewModel: templatesViewModel
                 )
             }

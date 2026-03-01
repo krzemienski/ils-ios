@@ -78,14 +78,23 @@ struct EditTemplateView: View {
     /// Creates the view in create or edit mode.
     /// - Parameters:
     ///   - template: The template to edit, or `nil` to create a new one.
+    ///   - prefillName: Initial name used when `template` is `nil` (e.g. from a session name).
+    ///   - prefillModel: Initial model used when `template` is `nil`.
+    ///   - prefillPermissionMode: Initial permission mode used when `template` is `nil`.
     ///   - viewModel: The shared templates view model.
-    init(template: SessionTemplate?, viewModel: TemplatesViewModel) {
+    init(
+        template: SessionTemplate?,
+        prefillName: String = "",
+        prefillModel: String = "sonnet",
+        prefillPermissionMode: String = "default",
+        viewModel: TemplatesViewModel
+    ) {
         self.template = template
         self.viewModel = viewModel
-        _name = State(initialValue: template?.name ?? "")
+        _name = State(initialValue: template?.name ?? prefillName)
         _description = State(initialValue: template?.description ?? "")
-        _selectedModel = State(initialValue: template?.model ?? "sonnet")
-        _permissionMode = State(initialValue: template?.permissionMode ?? "default")
+        _selectedModel = State(initialValue: template?.model ?? prefillModel)
+        _permissionMode = State(initialValue: template?.permissionMode ?? prefillPermissionMode)
         _systemPrompt = State(initialValue: template?.systemPrompt ?? "")
         if let budget = template?.maxBudgetUSD {
             _maxBudget = State(initialValue: String(format: "%.2f", budget))
