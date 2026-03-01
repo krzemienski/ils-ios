@@ -3,8 +3,8 @@ import Foundation
 /// Persists and manages ``DashboardLayout`` objects across sessions.
 ///
 /// Layouts are encoded as JSON and written to `UserDefaults`. When
-/// `NSUbiquitousKeyValueStore` is available (iCloud enabled) the store also
-/// mirrors data there so layouts sync across the user's devices.
+/// `iCloudSyncEnabled` is `true` the store also mirrors data to
+/// `NSUbiquitousKeyValueStore` so layouts sync across the user's devices.
 ///
 /// ## Usage
 /// ```swift
@@ -18,12 +18,16 @@ import Foundation
 ///
 /// // Switch the active layout
 /// layoutStore.setActiveLayout(layout)
+///
+/// // Toggle cross-device sync
+/// layoutStore.iCloudSyncEnabled = true
 /// ```
 ///
 /// ## Topics
 /// ### Properties
 /// - ``layouts`` - All persisted layouts, ordered by creation date
 /// - ``activeLayout`` - The currently displayed layout
+/// - ``iCloudSyncEnabled`` - Whether layouts sync via iCloud Key-Value Store
 ///
 /// ### Methods
 /// - ``save(_:)`` - Persist or update a layout
@@ -86,14 +90,34 @@ final class DashboardLayoutStore {
     /// Falls back to the first available layout if the persisted ID is not found.
     private(set) var activeLayout: DashboardLayout?
 
+    /// Whether to mirror layout data to `NSUbiquitousKeyValueStore` for cross-device sync.
+    ///
+    /// Persisted in `UserDefaults` so the preference survives app restarts.
+    /// Setting this to `true` immediately starts observing remote changes and
+    /// pushes the current local data up to iCloud.
+    var iCloudSyncEnabled: Bool {
+        get { defaults.bool(forKey: AppConstants.dashboardICloudSyncEnabledKey) }
+        set {
+            defaults.set(newValue, forKey: AppConstants.dashboardICloudSyncEnabledKey)
+            if newValue {
+                observeICloudChanges()
+                persistToICloud()
+            } else {
+                removeICloudObserver()
+            }
+        }
+    }
+
     // MARK: - Private
 
     private let defaults: UserDefaults
     private let iCloud: NSUbiquitousKeyValueStore?
+    // nonisolated(unsafe) allows access from deinit (which is non-actor-isolated)
+    nonisolated(unsafe) private var iCloudObserver: NSObjectProtocol?
 
     // MARK: - Init
 
-    /// Creates the store, loads persisted data, and wires up iCloud sync.
+    /// Creates the store, loads persisted data, and wires up iCloud sync if enabled.
     ///
     /// - Parameters:
     ///   - defaults: The `UserDefaults` suite to read/write. Defaults to `.standard`.
@@ -105,7 +129,15 @@ final class DashboardLayoutStore {
         self.defaults = defaults
         self.iCloud = iCloud
         load()
-        observeICloudChanges()
+        if defaults.bool(forKey: AppConstants.dashboardICloudSyncEnabledKey) {
+            observeICloudChanges()
+        }
+    }
+
+    deinit {
+        if let observer = iCloudObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Public API
@@ -167,25 +199,26 @@ final class DashboardLayoutStore {
     }
 
     private func loadLayouts() -> [DashboardLayout] {
-        // Prefer iCloud data if available and newer
-        if let iCloudData = iCloud?.data(forKey: AppConstants.dashboardLayoutsKey) {
-            if let decoded = try? JSONDecoder().decode([DashboardLayout].self, from: iCloudData) {
-                return decoded
-            }
+        // Prefer iCloud data if sync is enabled and data is present
+        if iCloudSyncEnabled,
+           let iCloudData = iCloud?.data(forKey: AppConstants.dashboardLayoutsKey),
+           let decoded = try? JSONDecoder().decode([DashboardLayout].self, from: iCloudData) {
+            return decoded
         }
         // Fall back to UserDefaults
-        if let localData = defaults.data(forKey: AppConstants.dashboardLayoutsKey) {
-            if let decoded = try? JSONDecoder().decode([DashboardLayout].self, from: localData) {
-                return decoded
-            }
+        if let localData = defaults.data(forKey: AppConstants.dashboardLayoutsKey),
+           let decoded = try? JSONDecoder().decode([DashboardLayout].self, from: localData) {
+            return decoded
         }
         // No persisted data — seed with defaults
         return Self.defaultLayouts
     }
 
     private func resolveActiveLayout() -> DashboardLayout? {
-        let activeIDString = defaults.string(forKey: AppConstants.dashboardActiveLayoutIDKey)
-            ?? iCloud?.string(forKey: AppConstants.dashboardActiveLayoutIDKey)
+        var activeIDString = defaults.string(forKey: AppConstants.dashboardActiveLayoutIDKey)
+        if activeIDString == nil, iCloudSyncEnabled {
+            activeIDString = iCloud?.string(forKey: AppConstants.dashboardActiveLayoutIDKey)
+        }
         if let idString = activeIDString,
            let uuid = UUID(uuidString: idString),
            let match = layouts.first(where: { $0.id == uuid }) {
@@ -197,21 +230,39 @@ final class DashboardLayoutStore {
     private func persist() {
         guard let encoded = try? JSONEncoder().encode(layouts) else { return }
         defaults.set(encoded, forKey: AppConstants.dashboardLayoutsKey)
-        iCloud?.set(encoded, forKey: AppConstants.dashboardLayoutsKey)
-        iCloud?.synchronize()
+        if iCloudSyncEnabled {
+            iCloud?.set(encoded, forKey: AppConstants.dashboardLayoutsKey)
+            iCloud?.synchronize()
+        }
     }
 
     private func persistActiveID() {
         let idString = activeLayout?.id.uuidString ?? ""
         defaults.set(idString, forKey: AppConstants.dashboardActiveLayoutIDKey)
-        iCloud?.set(idString, forKey: AppConstants.dashboardActiveLayoutIDKey)
-        iCloud?.synchronize()
+        if iCloudSyncEnabled {
+            iCloud?.set(idString, forKey: AppConstants.dashboardActiveLayoutIDKey)
+            iCloud?.synchronize()
+        }
+    }
+
+    /// Pushes the current local state to iCloud without writing to UserDefaults again.
+    /// Called when iCloud sync is first enabled to upload any existing local data.
+    private func persistToICloud() {
+        guard let iCloud = iCloud else { return }
+        if let encoded = try? JSONEncoder().encode(layouts) {
+            iCloud.set(encoded, forKey: AppConstants.dashboardLayoutsKey)
+        }
+        let idString = activeLayout?.id.uuidString ?? ""
+        iCloud.set(idString, forKey: AppConstants.dashboardActiveLayoutIDKey)
+        iCloud.synchronize()
     }
 
     // MARK: - iCloud Sync
 
     private func observeICloudChanges() {
-        NotificationCenter.default.addObserver(
+        guard iCloud != nil else { return }
+        removeICloudObserver()
+        iCloudObserver = NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
             object: iCloud,
             queue: .main
@@ -219,6 +270,13 @@ final class DashboardLayoutStore {
             Task { @MainActor [weak self] in
                 self?.load()
             }
+        }
+    }
+
+    private func removeICloudObserver() {
+        if let observer = iCloudObserver {
+            NotificationCenter.default.removeObserver(observer)
+            iCloudObserver = nil
         }
     }
 }

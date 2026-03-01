@@ -50,4 +50,7 @@ enum AppConstants {
 
     /// UserDefaults / NSUbiquitousKeyValueStore key for the UUID string of the active ``DashboardLayout``.
     static let dashboardActiveLayoutIDKey = "dashboard_active_layout_id"
+
+    /// UserDefaults key for the dashboard iCloud Key-Value Store sync enabled flag.
+    static let dashboardICloudSyncEnabledKey = "dashboard_icloud_sync_enabled"
 }
