@@ -506,6 +506,14 @@
 		A0A1A2A3A4A5A6A7A8A9B0B1 /* SnapshotTestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */; };
 		D0D1D2D3D4D5D6D7D8D9E0E1 /* ScreenSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */; };
 		C4D5E6F78901234567AABBCC /* ICloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F901234567AABB /* ICloudSyncSettingsView.swift */; };
+		D3B6F9A2C084E71586D50A7C /* ILSWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = F2D5A087C41B39E6073EC948 /* ILSWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E5A8D0B1F2C347698EF60B93 /* ILSWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C8E1B0D726F39508A4D7B2 /* ILSWidgetsBundle.swift */; };
+		DA91B3C5E6F70812A0B84C5F /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A1D3B7E4F20568A92C4D10 /* Color+Hex.swift */; };
+		E79F01289DCC8F3D58369768 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = D68EF0178CBB7E2C47258657 /* ILSShared */; };
+		F7C0E2A3B4D589071FA72B4D /* SessionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634B53732914E58E3AAD3092 /* SessionWidget.swift */; };
+		A9E1B3C5D6F70812A0B84C5E /* ServerStatusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59590E5FFF289E598D2F6A1C /* ServerStatusWidget.swift */; };
+		BC03D5E7F8A91624B2C95E7F /* WidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0CAE23A8231676A08CDD189 /* WidgetBundle.swift */; };
+		CE15E8F0A2B4073C5D0B6F80 /* WidgetDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -522,6 +530,12 @@
 			proxyType = 1;
 			remoteGlobalIDString = AB6F4F861DC7592BED6D0F4B;
 			remoteInfo = ILSMacApp;
+		F24ABCC3D5E73AF803E19213 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EF21AB5EEE4667421D71D6B8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA4C9F3D2E1087A56B74CE02;
+			remoteInfo = ILSWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -807,6 +821,10 @@
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
 		E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSnapshotTests.swift; sourceTree = "<group>"; };
+		A4C8E1B0D726F39508A4D7B2 /* ILSWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSWidgetsBundle.swift; sourceTree = "<group>"; };
+		B7F2D4A9C530E81674B920C5 /* ILSWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSWidgets.entitlements; sourceTree = "<group>"; };
+		C9A1D3B7E4F20568A92C4D10 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
+		F2D5A087C41B39E6073EC948 /* ILSWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ILSWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -831,6 +849,14 @@
 				7513A6F0B2B8C6E36B7B1986 /* HighlightSwift in Frameworks */,
 				1BD7B651932533AEFCE5026C /* Citadel in Frameworks */,
 				7A188DF0BCF75034655C59B4 /* GRDB in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E9B3C67D05A4F18E2C903B4A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E79F01289DCC8F3D58369768 /* ILSShared in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1164,6 +1190,7 @@
 				10F27BC201D3A23D791EBED6 /* ILSAppUITests */,
 				60C21CF81EEA9386849DC0A8 /* ILSMacApp */,
 				CC11DD22EE33FF44AA55BB06 /* ILSMacAppUITests */,
+				C0A3E7B8D941F265089C3B4E /* ILSWidgets */,
 				074A6B4F495721F2E83C93C4 /* Packages */,
 				EF0E595ED7834EA73544B0C4 /* Products */,
 			);
@@ -1439,6 +1466,16 @@
 			path = Themes;
 			sourceTree = "<group>";
 		};
+		C0A3E7B8D941F265089C3B4E /* ILSWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				C9A1D3B7E4F20568A92C4D10 /* Color+Hex.swift */,
+				A4C8E1B0D726F39508A4D7B2 /* ILSWidgetsBundle.swift */,
+				B7F2D4A9C530E81674B920C5 /* ILSWidgets.entitlements */,
+			);
+			path = ILSWidgets;
+			sourceTree = "<group>";
+		};
 		EF0E595ED7834EA73544B0C4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1446,6 +1483,7 @@
 				6565D1348C399AC59657A9F3 /* ILSAppUITests.xctest */,
 				5403907FD9017776F9FA89AC /* ILSMacApp.app */,
 				CC11DD22EE33FF44AA55BB03 /* ILSMacAppUITests.xctest */,
+				F2D5A087C41B39E6073EC948 /* ILSWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1615,10 +1653,12 @@
 				A4A7DF60096F1CE481CCEC80 /* Sources */,
 				CEC272911F8C0CFE9F9B02C8 /* Resources */,
 				39DB7C44291CD2B8BA315AF1 /* Frameworks */,
+				D027F9A1B3C5184D6E1C7091 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E139ABB2C4D629E7F2D08102 /* PBXTargetDependency */,
 			);
 			name = ILSApp;
 			packageProductDependencies = (
@@ -1631,6 +1671,26 @@
 			productName = ILSApp;
 			productReference = 5BEBD3082640EBC2FF87502B /* ILSApp.app */;
 			productType = "com.apple.product-type.application";
+		};
+		BA4C9F3D2E1087A56B74CE02 /* ILSWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C57DEF067BAA6D1B36147546 /* Build configuration list for PBXNativeTarget "ILSWidgets" */;
+			buildPhases = (
+				C5E8B21F4A7036D9E48F1C73 /* Sources */,
+				D7F0A45C8B3192E6FA2D0B98 /* Resources */,
+				E9B3C67D05A4F18E2C903B4A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ILSWidgets;
+			packageProductDependencies = (
+				D68EF0178CBB7E2C47258657 /* ILSShared */,
+			);
+			productName = ILSWidgets;
+			productReference = F2D5A087C41B39E6073EC948 /* ILSWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -1651,6 +1711,8 @@
 					CC11DD22EE33FF44AA55BB10 = {
 						DevelopmentTeam = HC36V7B67Z;
 						TestTargetID = AB6F4F861DC7592BED6D0F4B;
+					BA4C9F3D2E1087A56B74CE02 = {
+						DevelopmentTeam = HC36V7B67Z;
 					};
 					D645525C5887D056718B993A = {
 						DevelopmentTeam = HC36V7B67Z;
@@ -1685,6 +1747,7 @@
 				AFAEC0CB808548C8237B923B /* ILSAppUITests */,
 				AB6F4F861DC7592BED6D0F4B /* ILSMacApp */,
 				CC11DD22EE33FF44AA55BB10 /* ILSMacAppUITests */,
+				BA4C9F3D2E1087A56B74CE02 /* ILSWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -1717,7 +1780,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D7F0A45C8B3192E6FA2D0B98 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D027F9A1B3C5184D6E1C7091 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D3B6F9A2C084E71586D50A7C /* ILSWidgets.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		81AE57AD59171F19AA6222C1 /* Sources */ = {
@@ -2230,6 +2314,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C5E8B21F4A7036D9E48F1C73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA91B3C5E6F70812A0B84C5F /* Color+Hex.swift in Sources */,
+				E5A8D0B1F2C347698EF60B93 /* ILSWidgetsBundle.swift in Sources */,
+				F7C0E2A3B4D589071FA72B4D /* SessionWidget.swift in Sources */,
+				A9E1B3C5D6F70812A0B84C5E /* ServerStatusWidget.swift in Sources */,
+				BC03D5E7F8A91624B2C95E7F /* WidgetBundle.swift in Sources */,
+				CE15E8F0A2B4073C5D0B6F80 /* WidgetDataProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -2242,6 +2339,10 @@
 			isa = PBXTargetDependency;
 			target = AB6F4F861DC7592BED6D0F4B /* ILSMacApp */;
 			targetProxy = CC11DD22EE33FF44AA55BB08 /* PBXContainerItemProxy */;
+		E139ABB2C4D629E7F2D08102 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA4C9F3D2E1087A56B74CE02 /* ILSWidgets */;
+			targetProxy = F24ABCC3D5E73AF803E19213 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2542,6 +2643,65 @@
 			};
 			name = Release;
 		};
+		A35BCDD4E6F84B0914F2A324 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ILSWidgets/ILSWidgets.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC36V7B67Z;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ils.app.widgets";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B46CDEE5F7A95C0A25036435 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ILSWidgets/ILSWidgets.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = HC36V7B67Z;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ils.app.widgets";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2614,6 +2774,14 @@
 				TEST_TARGET_NAME = ILSMacApp;
 			};
 			name = Release;
+		C57DEF067BAA6D1B36147546 /* Build configuration list for PBXNativeTarget "ILSWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A35BCDD4E6F84B0914F2A324 /* Debug */,
+				B46CDEE5F7A95C0A25036435 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 		DFCE3D86ED7093B74666BA73 /* Build configuration list for PBXProject "ILSApp" */ = {
 			isa = XCConfigurationList;
@@ -2725,6 +2893,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2F4F0F761670BE5C21342EDD /* XCRemoteSwiftPackageReference "HighlightSwift" */;
 			productName = HighlightSwift;
+		};
+		D68EF0178CBB7E2C47258657 /* ILSShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ILSShared;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
