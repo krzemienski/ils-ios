@@ -444,7 +444,11 @@
 		A1B2C3D4E5F678901234ABD0 /* PermissionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD3 /* PermissionHistoryView.swift */; };
 		A1B2C3D4E5F678901234ABD1 /* AutoApproveRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */; };
 		A1B2C3D4E5F678901234ABD2 /* AutoApproveRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */; };
+		A1B2C3D4E5F678901234ABD6 /* AutoApproveRuleEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD8 /* AutoApproveRuleEditorSheet.swift */; };
+		A1B2C3D4E5F678901234ABD7 /* AutoApproveRuleEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD8 /* AutoApproveRuleEditorSheet.swift */; };
 		658BAEC364AB8FC2968FAD72 /* AutoApproveRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */; };
+		AA100006BB200006CC300006 /* AutoApproveRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */; };
+		AA100007BB200007CC300007 /* AutoApproveRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -699,6 +703,7 @@
 		B3655125A521E21F14F0B06F /* PermissionHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryViewModel.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F678901234ABD3 /* PermissionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRulesView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F678901234ABD8 /* AutoApproveRuleEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRuleEditorSheet.swift; sourceTree = "<group>"; };
 		AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRulesViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1139,6 +1144,7 @@
 			children = (
 				A1B2C3D4E5F678901234ABD3 /* PermissionHistoryView.swift */,
 				A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */,
+				A1B2C3D4E5F678901234ABD8 /* AutoApproveRuleEditorSheet.swift */,
 			);
 			path = Permissions;
 			sourceTree = "<group>";
@@ -1741,8 +1747,10 @@
 				A78516F2705D5D8ACE7C8218 /* TypingIndicatorBubble.swift in Sources */,
 				895B75AB05181525D8F74B26 /* UserMessageCard.swift in Sources */,
 				A1B2C3D4E5F678901234ABCD /* PermissionHistoryViewModel.swift in Sources */,
+				AA100006BB200006CC300006 /* AutoApproveRulesViewModel.swift in Sources */,
 				A1B2C3D4E5F678901234ABCF /* PermissionHistoryView.swift in Sources */,
 				A1B2C3D4E5F678901234ABD1 /* AutoApproveRulesView.swift in Sources */,
+				A1B2C3D4E5F678901234ABD6 /* AutoApproveRuleEditorSheet.swift in Sources */,
 				F67CF6C7C6DFE2DE29538176 /* WidgetBundle.swift in Sources */,
 				CBEE11D4F11C220DCBD5A6E9 /* WidgetDataProvider.swift in Sources */,
 			);
@@ -1950,8 +1958,10 @@
 				1DF691F3BAFDB545D82AD747 /* TypingIndicatorBubble.swift in Sources */,
 				2C9CF6BB63C937DA6442373A /* UserMessageCard.swift in Sources */,
 				A1B2C3D4E5F678901234ABCE /* PermissionHistoryViewModel.swift in Sources */,
+				AA100007BB200007CC300007 /* AutoApproveRulesViewModel.swift in Sources */,
 				A1B2C3D4E5F678901234ABD0 /* PermissionHistoryView.swift in Sources */,
 				A1B2C3D4E5F678901234ABD2 /* AutoApproveRulesView.swift in Sources */,
+				A1B2C3D4E5F678901234ABD7 /* AutoApproveRuleEditorSheet.swift in Sources */,
 				69B49241EE62B52643029E85 /* WidgetBundle.swift in Sources */,
 				F276A16D5AE2E3F7EC2DC5B8 /* WidgetDataProvider.swift in Sources */,
 				14CA4BF383D513A6B6617243 /* WindowManager.swift in Sources */,
