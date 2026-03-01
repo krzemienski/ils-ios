@@ -97,6 +97,39 @@ struct ServerStatusWidgetView: View {
                         .foregroundColor(Color(hex: WidgetColors.textTertiary))
                 }
             }
+
+            // Rate limit bar (shown when rate limit data is available)
+            if let used = entry.rateLimitUsed, let limit = entry.rateLimitLimit, limit > 0 {
+                let fraction = min(1.0, Double(used) / Double(limit))
+                let limitColor: Color = fraction >= 0.9
+                    ? Color(hex: WidgetColors.error)
+                    : fraction >= 0.7
+                        ? Color(hex: WidgetColors.warning)
+                        : Color(hex: WidgetColors.success)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text("Limit")
+                            .font(.caption2.weight(.medium))
+                            .foregroundColor(Color(hex: WidgetColors.textTertiary))
+                        Spacer()
+                        Text("\(used)/\(limit)")
+                            .font(.caption2.weight(.semibold).monospaced())
+                            .foregroundColor(limitColor)
+                    }
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color(hex: WidgetColors.border))
+                                .frame(height: 4)
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(limitColor)
+                                .frame(width: geo.size.width * fraction, height: 4)
+                        }
+                    }
+                    .frame(height: 4)
+                }
+            }
         }
         .padding(12)
         .containerBackground(for: .widget) {

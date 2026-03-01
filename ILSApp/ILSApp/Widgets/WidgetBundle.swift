@@ -12,6 +12,7 @@ struct ILSWidgets: WidgetBundle {
     var body: some Widget {
         SessionWidget()
         ServerStatusWidget()
+        RateLimitWidget()
     }
 }
 #endif
