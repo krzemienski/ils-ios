@@ -4,26 +4,46 @@ import SwiftUI
 import ActivityKit
 import WidgetKit
 
+// MARK: - Session Activity Status
+
+/// Represents the current streaming/execution status of a session shown in the Live Activity.
+///
+/// This enum replaces the old `isStreaming: Bool` to provide richer status display,
+/// enabling distinct UI treatment for streaming, waiting, complete, and error states.
+enum SessionActivityStatus: String, Codable, Hashable {
+    /// Claude is actively generating a response (tokens flowing).
+    case streaming
+    /// Claude is awaiting user input (tool use prompt, permission request, etc.).
+    case waitingForInput
+    /// Response generation completed successfully.
+    case completed
+    /// Session ended with an error.
+    case error
+}
+
 // MARK: - Activity Attributes
 
 /// Defines the static and dynamic data for a chat streaming Live Activity.
 ///
 /// Static data (set once at activity start):
+/// - `sessionId`: UUID string for deep-link navigation to the session
 /// - `sessionName`: Human-readable session name
 /// - `model`: Claude model being used (e.g., "Sonnet", "Opus")
 ///
 /// Dynamic data (updated during streaming via `ContentState`):
-/// - `isStreaming`: Whether Claude is actively generating
+/// - `status`: Current activity status (streaming, waitingForInput, completed, error)
 /// - `messagePreview`: Truncated preview of the response text
 /// - `tokenCount`: Approximate token count of the response
 /// - `cost`: Running cost in USD
 /// - `elapsedSeconds`: Seconds since streaming started
 struct ChatStreamingAttributes: ActivityAttributes {
+    /// UUID string for deep-link navigation (e.g., `ils://session/<sessionId>`).
+    let sessionId: String
     let sessionName: String
     let model: String
 
     struct ContentState: Codable, Hashable {
-        var isStreaming: Bool
+        var status: SessionActivityStatus
         var messagePreview: String
         var tokenCount: Int
         var cost: Double
@@ -43,6 +63,8 @@ private enum LiveActivityColors {
     static let textPrimary = Color(hex: "E8ECF0")
     static let textSecondary = Color(hex: "888899")
     static let success = Color(hex: "22C55E")
+    static let warning = Color(hex: "F59E0B")
+    static let destructive = Color(hex: "EF4444")
     static let border = Color(hex: "1A1A2E")
 }
 
@@ -90,19 +112,7 @@ struct ChatStreamingLockScreenView: View {
             }
 
             // Status line
-            if context.state.isStreaming {
-                HStack(spacing: 4) {
-                    Text("Claude is responding")
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(LiveActivityColors.success)
-
-                    StreamingDotsView()
-                }
-            } else {
-                Text("Response complete")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(LiveActivityColors.textSecondary)
-            }
+            statusLineView(for: context.state.status)
 
             // Message preview
             if !context.state.messagePreview.isEmpty {
@@ -141,6 +151,41 @@ struct ChatStreamingLockScreenView: View {
         }
         .padding(16)
         .background(LiveActivityColors.background)
+    }
+
+    @ViewBuilder
+    private func statusLineView(for status: SessionActivityStatus) -> some View {
+        switch status {
+        case .streaming:
+            HStack(spacing: 4) {
+                Text("Claude is responding")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.success)
+                StreamingDotsView()
+            }
+        case .waitingForInput:
+            HStack(spacing: 4) {
+                Image(systemName: "hand.raised")
+                    .font(.footnote)
+                    .foregroundStyle(LiveActivityColors.warning)
+                Text("Waiting for input")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.warning)
+            }
+        case .completed:
+            Text("Response complete")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(LiveActivityColors.textSecondary)
+        case .error:
+            HStack(spacing: 4) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(LiveActivityColors.destructive)
+                Text("Session error")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.destructive)
+            }
+        }
     }
 
     private func formatTokenCount(_ count: Int) -> String {
@@ -254,20 +299,7 @@ struct ChatStreamingExpandedView: View {
 
             // Middle row: status + cost
             HStack {
-                if state.isStreaming {
-                    HStack(spacing: 2) {
-                        Circle()
-                            .fill(LiveActivityColors.success)
-                            .frame(width: 6, height: 6)
-                        Text("Streaming")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(LiveActivityColors.success)
-                    }
-                } else {
-                    Text("Complete")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(LiveActivityColors.textSecondary)
-                }
+                expandedStatusView(for: state.status)
 
                 Spacer()
 
@@ -292,6 +324,43 @@ struct ChatStreamingExpandedView: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func expandedStatusView(for status: SessionActivityStatus) -> some View {
+        switch status {
+        case .streaming:
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(LiveActivityColors.success)
+                    .frame(width: 6, height: 6)
+                Text("Streaming")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.success)
+            }
+        case .waitingForInput:
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(LiveActivityColors.warning)
+                    .frame(width: 6, height: 6)
+                Text("Waiting")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.warning)
+            }
+        case .completed:
+            Text("Complete")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(LiveActivityColors.textSecondary)
+        case .error:
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(LiveActivityColors.destructive)
+                    .frame(width: 6, height: 6)
+                Text("Error")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.destructive)
+            }
+        }
     }
 
     private func formatTokenCount(_ count: Int) -> String {
@@ -328,22 +397,24 @@ extension ChatViewModel {
     /// and Dynamic Island while Claude streams a response.
     ///
     /// - Parameters:
+    ///   - sessionId: UUID string for deep-link navigation to the session
     ///   - sessionName: Display name for the session
     ///   - model: Claude model being used (e.g., "Sonnet")
     @available(iOS 16.2, *)
-    func startLiveActivity(sessionName: String, model: String) {
+    func startLiveActivity(sessionId: String, sessionName: String, model: String) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             AppLogger.shared.info("Live Activities not enabled by user", category: "liveActivity")
             return
         }
 
         let attributes = ChatStreamingAttributes(
+            sessionId: sessionId,
             sessionName: sessionName,
             model: model
         )
 
         let initialState = ChatStreamingAttributes.ContentState(
-            isStreaming: true,
+            status: .streaming,
             messagePreview: "",
             tokenCount: 0,
             cost: 0.0,
@@ -373,7 +444,7 @@ extension ChatViewModel {
     /// Finds the most recent `ChatStreamingAttributes` activity and updates its state.
     ///
     /// - Parameters:
-    ///   - preview: Truncated preview of the assistant message (max ~100 chars)
+    ///   - preview: Truncated preview of the assistant message (max ~120 chars)
     ///   - tokens: Current approximate token count
     ///   - cost: Running cost in USD
     @available(iOS 16.2, *)
@@ -386,7 +457,7 @@ extension ChatViewModel {
         }
 
         let updatedState = ChatStreamingAttributes.ContentState(
-            isStreaming: true,
+            status: .streaming,
             messagePreview: String(preview.prefix(120)),
             tokenCount: tokens,
             cost: cost,
@@ -404,7 +475,7 @@ extension ChatViewModel {
 
     /// End all running chat streaming Live Activities.
     ///
-    /// Sets `isStreaming` to `false` and dismisses the activity after a brief delay
+    /// Sets `status` to `.completed` and dismisses the activity after a brief delay
     /// so the user can see the final stats.
     @available(iOS 16.2, *)
     func endLiveActivity() {
@@ -425,7 +496,7 @@ extension ChatViewModel {
         }
 
         let finalState = ChatStreamingAttributes.ContentState(
-            isStreaming: false,
+            status: .completed,
             messagePreview: finalPreview,
             tokenCount: finalTokens,
             cost: finalCost,

@@ -228,9 +228,10 @@ class ChatViewModel {
                         // Start Live Activity for Dynamic Island
                         #if os(iOS)
                         if #available(iOS 16.2, *) {
+                            let sessionIdString = self.sessionId?.uuidString.lowercased() ?? ""
                             let sessionName = self.sessionDisplayName ?? "Chat Session"
                             let model = self.sessionModel ?? "claude"
-                            self.startLiveActivity(sessionName: sessionName, model: model)
+                            self.startLiveActivity(sessionId: sessionIdString, sessionName: sessionName, model: model)
                         }
                         #endif
                     } else {
