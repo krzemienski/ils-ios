@@ -2447,6 +2447,11 @@ Host Profiles manage remote machines that ILS can connect to for distributed Cla
 **Canonical routes:** `/api/v1/host-profiles/*`
 **Backward-compatible aliases:** `/api/v1/fleet/*` (same handlers, same responses — maintained for legacy clients)
 
+**Authorization:** These routes are admin-protected. When the `ILS_ADMIN_KEY` environment variable is set on the server, all requests must include the `X-Admin-Token` header. Omitting it (or providing an incorrect value) returns `403 Forbidden`. In development mode (no `ILS_ADMIN_KEY` set), the header is not required.
+
+**Headers:**
+- `X-Admin-Token: <your-admin-key>` — Required when `ILS_ADMIN_KEY` is configured on the server
+
 ### List Host Profiles
 
 **Endpoint:** `GET /api/v1/host-profiles`
@@ -2501,10 +2506,12 @@ Host Profiles manage remote machines that ILS can connect to for distributed Cla
 **Example:**
 
 ```bash
-curl http://localhost:9999/api/v1/host-profiles
+curl http://localhost:9999/api/v1/host-profiles \
+  -H "X-Admin-Token: your-admin-key"
 
 # Backward-compatible alias
-curl http://localhost:9999/api/v1/fleet
+curl http://localhost:9999/api/v1/fleet \
+  -H "X-Admin-Token: your-admin-key"
 ```
 
 ---
@@ -2585,7 +2592,7 @@ curl -X POST http://localhost:9999/api/v1/fleet/register \
 ### Activate Host Profile
 
 **Endpoint:** `POST /api/v1/host-profiles/:id/activate`
-**Description:** Set a host profile as the active host. All other hosts are atomically deactivated in the same database transaction so only one host is active at a time.
+**Description:** Set a host profile as the active host. All other hosts are atomically set to inactive in the same database transaction so only one host is active at a time.
 
 **Parameters:**
 - `id` (path, UUID) — Host profile ID
@@ -2714,6 +2721,11 @@ curl http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6/hea
 
 The Data Erasure API provides a single destructive endpoint to completely wipe all local ILS data. This is intended for GDPR compliance ("right to be forgotten"), factory-reset workflows, and development/testing teardown. **This action is irreversible.**
 
+**Authorization:** These routes are admin-protected. When the `ILS_ADMIN_KEY` environment variable is set on the server, all requests must include the `X-Admin-Token` header. Omitting it (or providing an incorrect value) returns `403 Forbidden`. In development mode (no `ILS_ADMIN_KEY` set), the header is not required.
+
+**Headers:**
+- `X-Admin-Token: <your-admin-key>` — Required when `ILS_ADMIN_KEY` is configured on the server
+
 ### Erase All Data
 
 **Endpoint:** `DELETE /api/v1/data/all`
@@ -2726,8 +2738,12 @@ The Data Erasure API provides a single destructive endpoint to completely wipe a
 {
   "success": true,
   "data": {
-    "message": "All ILS data has been erased successfully.",
-    "erasedAt": "2026-02-15T12:34:56Z"
+    "messagesDeleted": 142,
+    "sessionsDeleted": 38,
+    "projectsDeleted": 12,
+    "themesDeleted": 3,
+    "fleetHostsDeleted": 2,
+    "cacheEntriesDeleted": 57
   },
   "error": null
 }
@@ -2737,8 +2753,12 @@ The Data Erasure API provides a single destructive endpoint to completely wipe a
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `message` | string | Human-readable confirmation of the erasure |
-| `erasedAt` | ISO8601 | Timestamp when the erasure was performed |
+| `messagesDeleted` | integer | Number of chat messages deleted |
+| `sessionsDeleted` | integer | Number of chat sessions deleted |
+| `projectsDeleted` | integer | Number of projects deleted |
+| `themesDeleted` | integer | Number of custom themes deleted |
+| `fleetHostsDeleted` | integer | Number of host profiles deleted |
+| `cacheEntriesDeleted` | integer | Number of cached results deleted |
 
 **Error Responses:**
 - `500 Internal Server Error` — Erasure failed partway through; data may be in an inconsistent state
@@ -2751,7 +2771,8 @@ The Data Erasure API provides a single destructive endpoint to completely wipe a
 
 ```bash
 # Erase all ILS data (IRREVERSIBLE)
-curl -X DELETE http://localhost:9999/api/v1/data/all
+curl -X DELETE http://localhost:9999/api/v1/data/all \
+  -H "X-Admin-Token: your-admin-key"
 ```
 
 **Response:**
@@ -2759,8 +2780,12 @@ curl -X DELETE http://localhost:9999/api/v1/data/all
 {
   "success": true,
   "data": {
-    "message": "All ILS data has been erased successfully.",
-    "erasedAt": "2026-02-15T12:34:56Z"
+    "messagesDeleted": 142,
+    "sessionsDeleted": 38,
+    "projectsDeleted": 12,
+    "themesDeleted": 3,
+    "fleetHostsDeleted": 2,
+    "cacheEntriesDeleted": 57
   },
   "error": null
 }
@@ -3022,9 +3047,9 @@ The API does not currently implement CORS headers. For web clients, you may need
 ## Changelog
 
 **v1.2.0 (2026-03-01)**
-- Added Host Profiles endpoints (list, register, get, update, delete, activate, deactivate, health-check)
-- Added Data Erasure endpoint (POST /api/v1/erase-all-data)
-- Documented HostProfile model with all fields (id, name, host, port, apiKey, isActive, etc.)
+- Added Host Profiles endpoints (list, register, activate, delete, health-check)
+- Added Data Erasure endpoint (DELETE /api/v1/data/all) with per-table deletion count response
+- Documented HostProfile model with all fields (id, name, host, port, backendPort, username, authMethod, isActive, healthStatus, lastHealthCheck, platform)
 - Documented DataErasureController response format
 
 **v1.1.0 (2026-02-15)**
