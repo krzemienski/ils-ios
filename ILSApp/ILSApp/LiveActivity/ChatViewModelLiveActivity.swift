@@ -33,7 +33,7 @@ extension ChatViewModel {
     ///   - cost: Running cost in USD
     @available(iOS 16.2, *)
     func updateLiveActivity(preview: String, tokens: Int, cost: Double) {
-        guard let sid = sessionId?.uuidString else { return }
+        guard let sid = sessionId?.uuidString.lowercased() else { return }
         let elapsed: Int
         if let start = streamStartTime {
             elapsed = Int(Date().timeIntervalSince(start))
@@ -59,7 +59,7 @@ extension ChatViewModel {
     /// - Parameter status: The new status to display in the Live Activity.
     @available(iOS 16.2, *)
     func updateLiveActivityStatus(_ status: SessionActivityStatus) {
-        guard let sid = sessionId?.uuidString else { return }
+        guard let sid = sessionId?.uuidString.lowercased() else { return }
         let elapsed: Int
         if let start = streamStartTime {
             elapsed = Int(Date().timeIntervalSince(start))
@@ -91,7 +91,7 @@ extension ChatViewModel {
     /// so the user can see the final stats.
     @available(iOS 16.2, *)
     func endLiveActivity() {
-        guard let sid = sessionId?.uuidString else { return }
+        guard let sid = sessionId?.uuidString.lowercased() else { return }
         let finalTokens = streamTokenCount
         let finalCost = currentStreamingMessage?.cost ?? 0.0
         let finalPreview: String
