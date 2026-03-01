@@ -68,8 +68,8 @@ enum SystemEventType {
 /// call sites that pass only a `message` string.
 ///
 /// The view carries no interactive elements; its accessibility label prefixes the raw
-/// string with "System message:" to distinguish it from user or assistant content when
-/// read aloud by VoiceOver.
+/// string with "System: " to distinguish it from user or assistant content when read
+/// aloud by VoiceOver.
 ///
 /// ## Topics
 /// ### Input Properties
