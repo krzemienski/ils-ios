@@ -444,6 +444,7 @@
 		A1B2C3D4E5F678901234ABD0 /* PermissionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD3 /* PermissionHistoryView.swift */; };
 		A1B2C3D4E5F678901234ABD1 /* AutoApproveRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */; };
 		A1B2C3D4E5F678901234ABD2 /* AutoApproveRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */; };
+		658BAEC364AB8FC2968FAD72 /* AutoApproveRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -698,6 +699,7 @@
 		B3655125A521E21F14F0B06F /* PermissionHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryViewModel.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F678901234ABD3 /* PermissionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F678901234ABD4 /* AutoApproveRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRulesView.swift; sourceTree = "<group>"; };
+		AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRulesViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1190,6 +1192,7 @@
 		CF667032F0641715AC1D846F /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				AAFCBB4C2474DACCAA8E1578 /* AutoApproveRulesViewModel.swift */,
 				B3655125A521E21F14F0B06F /* PermissionHistoryViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
@@ -1523,6 +1526,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				658BAEC364AB8FC2968FAD72 /* AutoApproveRulesViewModel.swift in Sources */,
 				99BD426CABCE88CC8858F8BA /* PermissionHistoryViewModel.swift in Sources */,
 				E16CB60E1402E12859871508 /* CISmokeTests.swift in Sources */,
 				B59E162E2F5E673E11D21726 /* ErrorHandlingTests.swift in Sources */,
