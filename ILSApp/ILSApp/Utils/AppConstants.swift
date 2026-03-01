@@ -42,4 +42,12 @@ enum AppConstants {
     static var defaultModel: String {
         UserDefaults.standard.string(forKey: defaultModelKey) ?? "sonnet"
     }
+
+    // MARK: - Command Palette Keys
+
+    /// UserDefaults key for the command palette recently used command IDs (array of String).
+    static let commandPaletteRecentCommandsKey = "commandPaletteRecentCommands"
+
+    /// UserDefaults key for the command palette per-command usage counts (JSON-encoded [String: Int]).
+    static let commandPaletteUsageCountKey = "commandPaletteUsageCount"
 }
