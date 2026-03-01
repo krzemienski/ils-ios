@@ -2470,7 +2470,7 @@ Host Profiles manage remote machines that ILS can connect to for distributed Cla
         "port": 22,
         "backendPort": 9999,
         "username": "alice",
-        "authMethod": "key",
+        "authMethod": "sshKey",
         "isActive": true,
         "healthStatus": "healthy",
         "lastHealthCheck": "2026-02-15T12:00:00Z",
@@ -2497,7 +2497,7 @@ Host Profiles manage remote machines that ILS can connect to for distributed Cla
 | `port` | integer | SSH port (default: 22) |
 | `backendPort` | integer | ILS backend port on remote (default: 9999) |
 | `username` | string? | SSH username (optional) |
-| `authMethod` | string? | Auth method: `"password"` or `"key"` (optional) |
+| `authMethod` | string? | Auth method: `"password"` or `"sshKey"` (optional) |
 | `isActive` | boolean | Whether this is the currently active host |
 | `healthStatus` | string | `"healthy"`, `"degraded"`, `"unreachable"`, or `"unknown"` |
 | `lastHealthCheck` | ISO8601? | Timestamp of the last health check (optional) |
@@ -2529,7 +2529,7 @@ curl http://localhost:9999/api/v1/fleet \
   "port": 22,
   "backendPort": 9999,
   "username": "alice",
-  "authMethod": "key",
+  "authMethod": "sshKey",
   "credential": null
 }
 ```
@@ -2543,7 +2543,7 @@ curl http://localhost:9999/api/v1/fleet \
 | `port` | integer | ✅ | SSH port (typically 22) |
 | `backendPort` | integer | ✅ | ILS backend port on remote (typically 9999) |
 | `username` | string | ❌ | SSH username |
-| `authMethod` | string | ❌ | `"password"` or `"key"` |
+| `authMethod` | string | ❌ | `"password"` or `"sshKey"` |
 | `credential` | string | ❌ | Password or private key path |
 
 **Response Schema:**
@@ -2557,7 +2557,7 @@ curl http://localhost:9999/api/v1/fleet \
     "port": 22,
     "backendPort": 9999,
     "username": "alice",
-    "authMethod": "key",
+    "authMethod": "sshKey",
     "isActive": false,
     "healthStatus": "unknown",
     "lastHealthCheck": null,
@@ -2578,7 +2578,7 @@ curl -X POST http://localhost:9999/api/v1/host-profiles/register \
     "port": 22,
     "backendPort": 9999,
     "username": "alice",
-    "authMethod": "key"
+    "authMethod": "sshKey"
   }'
 
 # Backward-compatible alias
@@ -2608,7 +2608,7 @@ curl -X POST http://localhost:9999/api/v1/fleet/register \
     "port": 22,
     "backendPort": 9999,
     "username": "alice",
-    "authMethod": "key",
+    "authMethod": "sshKey",
     "isActive": true,
     "healthStatus": "unknown",
     "lastHealthCheck": null,
