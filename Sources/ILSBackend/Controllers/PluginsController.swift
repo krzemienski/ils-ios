@@ -93,10 +93,10 @@ struct PluginsController: RouteCollection {
 
         // Add custom marketplaces
         if let extra = config?.content.extraKnownMarketplaces {
-            for (name, source) in extra {
+            for (name, value) in extra {
                 marketplaces.append(PluginMarketplace(
                     name: name,
-                    source: source
+                    source: value.displayValue
                 ))
             }
         }
@@ -229,7 +229,7 @@ struct PluginsController: RouteCollection {
         }
         var config = configInfo.content
         var marketplaces = config.extraKnownMarketplaces ?? [:]
-        marketplaces[input.repo] = input.source
+        marketplaces[input.repo] = .string(input.source)
         config.extraKnownMarketplaces = marketplaces
 
         _ = try fileSystem.writeConfig(scope: .user, content: config)
