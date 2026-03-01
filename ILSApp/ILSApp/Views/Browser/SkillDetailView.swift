@@ -74,6 +74,9 @@ struct SkillDetailView: View {
     /// True while the async delete operation is in flight; disables toolbar buttons and shows a spinner.
     @State private var isDeleting = false
 
+    /// Favorites manager for star/unstar action.
+    @State private var favoritesManager = SkillFavoritesManager.shared
+
     /// Cached MarkdownUI theme — only rebuilt when the app theme changes.
     @State private var cachedMarkdownTheme: MarkdownUI.Theme = .basic
     @State private var cachedMarkdownThemeId: String = ""
@@ -103,9 +106,18 @@ struct SkillDetailView: View {
         .inlineNavigationBarTitle()
         #endif
         .toolbar {
-            if skill.source == .local || skill.source == .github {
-                ToolbarItem(placement: .primaryAction) {
-                    HStack(spacing: theme.spacingSM) {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: theme.spacingSM) {
+                    // Favorite button (shown for all skills)
+                    Button {
+                        Task { await favoritesManager.toggleFavorite(skill: skill) }
+                    } label: {
+                        Image(systemName: favoritesManager.isFavorite(skillName: skill.name) ? "star.fill" : "star")
+                            .foregroundStyle(favoritesManager.isFavorite(skillName: skill.name) ? theme.warning : theme.textSecondary)
+                    }
+                    .accessibilityLabel(favoritesManager.isFavorite(skillName: skill.name) ? "Remove from Favorites" : "Add to Favorites")
+
+                    if skill.source == .local || skill.source == .github {
                         Button {
                             if isEditing {
                                 saveEdit()

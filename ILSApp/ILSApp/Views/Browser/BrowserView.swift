@@ -37,6 +37,8 @@ struct BrowserView: View {
     @FocusState private var isSearchFocused: Bool
     /// Sub-segment within the Discover tab: search skills or plugins
     @State private var discoverType: DiscoverType = .skills
+    /// Favorites manager for skill star/unstar actions.
+    @State private var favoritesManager = SkillFavoritesManager.shared
 
     /// TipKit tip surfacing the MCP browser after session creation.
     private let mcpBrowserTip = MCPBrowserTip()
@@ -109,6 +111,7 @@ struct BrowserView: View {
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)
             await loadAll()
+            Task { await favoritesManager.syncFromCloud() }
         }
         .onChange(of: appState.browserSegmentIntent) { _, intent in
             // React to deep links when BrowserView is already on screen
@@ -386,6 +389,8 @@ struct BrowserView: View {
     @ViewBuilder
     private var skillsContent: some View {
         let items = skillsVM.filteredSkills
+        let favoriteItems = searchText.isEmpty ? items.filter { favoritesManager.isFavorite(skillName: $0.name) } : []
+        let regularItems = searchText.isEmpty ? items.filter { !favoritesManager.isFavorite(skillName: $0.name) } : items
         if skillsVM.isLoading && items.isEmpty {
             loadingRows
         } else if items.isEmpty && searchText.isEmpty {
@@ -401,51 +406,97 @@ struct BrowserView: View {
                 subtitle: "Try a different search"
             )
         } else {
-            ForEach(items) { skill in
-                HStack(spacing: 0) {
-                    NavigationLink {
-                        SkillDetailView(skill: skill)
-                    } label: {
-                        browserRow(
-                            name: skill.name,
-                            subtitle: skill.description ?? "No description",
-                            status: skill.isActive ? "Active" : "Inactive",
-                            statusColor: skill.isActive ? theme.success : theme.textTertiary,
-                            entityColor: theme.entitySkill,
-                            badge: skill.tags.first
-                        )
-                    }
-                    .buttonStyle(.plain)
-
-                    // Visible toggle button for active/inactive status
-                    Button {
-                        Task { await skillsVM.toggleSkillActive(skill) }
-                    } label: {
-                        Image(systemName: skill.isActive ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(skill.isActive ? theme.success : theme.textTertiary)
-                            .font(.system(size: 22))
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(skill.isActive ? "Disable \(skill.name)" : "Enable \(skill.name)")
+            if !favoriteItems.isEmpty {
+                skillsSectionHeader("FAVORITES")
+                ForEach(favoriteItems) { skill in
+                    skillRowEntry(skill)
                 }
-                .contextMenu {
-                    Button {
-                        Task { await skillsVM.toggleSkillActive(skill) }
-                    } label: {
-                        Label(skill.isActive ? "Disable" : "Enable", systemImage: skill.isActive ? "pause.circle" : "play.circle")
-                    }
-                    if skill.source == .local || skill.source == .github {
-                        Button(role: .destructive) {
-                            Task { await skillsVM.deleteSkill(skill) }
-                        } label: {
-                            Label("Remove", systemImage: "trash")
-                        }
-                    }
+                if !regularItems.isEmpty {
+                    skillsSectionHeader("ALL SKILLS")
+                }
+            }
+            ForEach(regularItems) { skill in
+                skillRowEntry(skill)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func skillRowEntry(_ skill: Skill) -> some View {
+        HStack(spacing: 0) {
+            NavigationLink {
+                SkillDetailView(skill: skill)
+            } label: {
+                browserRow(
+                    name: skill.name,
+                    subtitle: skill.description ?? "No description",
+                    status: skill.isActive ? "Active" : "Inactive",
+                    statusColor: skill.isActive ? theme.success : theme.textTertiary,
+                    entityColor: theme.entitySkill,
+                    badge: skill.tags.first
+                )
+            }
+            .buttonStyle(.plain)
+
+            // Favorite button
+            Button {
+                Task { await favoritesManager.toggleFavorite(skill: skill) }
+            } label: {
+                Image(systemName: favoritesManager.isFavorite(skillName: skill.name) ? "star.fill" : "star")
+                    .foregroundStyle(favoritesManager.isFavorite(skillName: skill.name) ? theme.warning : theme.textTertiary)
+                    .font(.system(size: 18))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(favoritesManager.isFavorite(skillName: skill.name) ? "Unfavorite \(skill.name)" : "Favorite \(skill.name)")
+
+            // Active toggle button
+            Button {
+                Task { await skillsVM.toggleSkillActive(skill) }
+            } label: {
+                Image(systemName: skill.isActive ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(skill.isActive ? theme.success : theme.textTertiary)
+                    .font(.system(size: 22))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(skill.isActive ? "Disable \(skill.name)" : "Enable \(skill.name)")
+        }
+        .contextMenu {
+            Button {
+                Task { await favoritesManager.toggleFavorite(skill: skill) }
+            } label: {
+                Label(
+                    favoritesManager.isFavorite(skillName: skill.name) ? "Remove from Favorites" : "Add to Favorites",
+                    systemImage: favoritesManager.isFavorite(skillName: skill.name) ? "star.slash" : "star"
+                )
+            }
+            Button {
+                Task { await skillsVM.toggleSkillActive(skill) }
+            } label: {
+                Label(skill.isActive ? "Disable" : "Enable", systemImage: skill.isActive ? "pause.circle" : "play.circle")
+            }
+            if skill.source == .local || skill.source == .github {
+                Button(role: .destructive) {
+                    Task { await skillsVM.deleteSkill(skill) }
+                } label: {
+                    Label("Remove", systemImage: "trash")
                 }
             }
         }
+    }
+
+    private func skillsSectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .tracking(1)
+            Spacer()
+        }
+        .padding(.top, theme.spacingSM)
     }
 
     // MARK: - Plugins Content
