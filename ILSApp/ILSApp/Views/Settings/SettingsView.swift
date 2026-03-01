@@ -14,10 +14,12 @@ import ILSShared
 /// - ``viewModel`` - View model loading and persisting all settings data
 /// - ``serverURL`` - Editable server URL string, trimmed before saving
 /// - ``colorSchemePreference`` - Currently selected color scheme ("system", "light", or "dark")
+/// - ``showSessionSuggestions`` - Whether to show AI-powered session suggestions
 ///
 /// ### View Components
 /// - ``connectionSection`` - Server URL entry and connection testing
 /// - ``remoteAccessSection`` - Remote/tunnel access configuration
+/// - ``sessionSuggestionsSection`` - Toggle for smart session suggestions
 /// - ``configSection`` - Model selection and appearance preferences
 /// - ``statisticsSection`` - Usage statistics display
 ///
@@ -38,6 +40,8 @@ struct SettingsView: View {
     @State private var colorSchemePreference: String = "system"
     @State private var showDeleteConfirmation: Bool = false
     // isDeleting and deleteResult moved to SettingsViewModel
+    /// Whether to show AI-powered smart session suggestions in new session and chat views.
+    @AppStorage("showSessionSuggestions") private var showSessionSuggestions: Bool = true
 
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
 
@@ -51,6 +55,8 @@ struct SettingsView: View {
                 remoteAccessSection
 
                 SettingsAppearanceSection()
+
+                sessionSuggestionsSection
 
                 configSection
 
@@ -117,6 +123,38 @@ struct SettingsView: View {
             onTestConnection: testConnection,
             onSaveServerSettings: saveServerSettings
         ).remoteAccessSection
+    }
+
+    private var sessionSuggestionsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Session Suggestions")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Show Session Suggestions")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $showSessionSuggestions)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Show session suggestions")
+                .onChange(of: showSessionSuggestions) {
+                    HapticManager.selection()
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Surface relevant past sessions and skills based on your current context.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
     }
 
     private var configSection: some View {

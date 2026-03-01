@@ -57,6 +57,7 @@ struct ChatView: View {
         var errorId: UUID?
         var forkedSession: ChatSession?
         var navigateToForked: ChatSession?
+        var navigateToRelated: ChatSession?
         var messageToDelete: ChatMessage?
         var renameText = ""
         var exportMarkdown = ""
@@ -205,6 +206,9 @@ struct ChatView: View {
         .navigationDestination(item: $actions.navigateToForked) { session in
             ChatView(session: session)
         }
+        .navigationDestination(item: $actions.navigateToRelated) { session in
+            ChatView(session: session)
+        }
         .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
             if newValue != nil {
                 actions.errorId = UUID()
@@ -250,7 +254,7 @@ struct ChatView: View {
 
     // MARK: - View Components
 
-    /// Top-level layout stacking the status banner, context window bar, message list, divider, and input bar.
+    /// Top-level layout stacking the status banner, context window bar, related-sessions panel, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
             if sheets.showSearch {
@@ -263,6 +267,8 @@ struct ChatView: View {
                 statusBanner
 
                 contextWindowBar
+
+                relatedSessionsPanel
 
                 messageList
 
@@ -302,6 +308,23 @@ struct ChatView: View {
                 sheets.showContextWindowDetail = true
             }
             .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    /// Shows related past sessions at the top of a brand-new chat (no messages yet).
+    ///
+    /// Only rendered when the session has no messages and is not currently loading history,
+    /// giving the user quick access to relevant past work before they start typing.
+    @ViewBuilder
+    private var relatedSessionsPanel: some View {
+        if viewModel.displayMessages.isEmpty && !viewModel.isLoadingHistory {
+            RelatedSessionsPanel(
+                session: session,
+                apiClient: appState.apiClient,
+                onNavigate: { related in
+                    actions.navigateToRelated = related
+                }
+            )
         }
     }
 
