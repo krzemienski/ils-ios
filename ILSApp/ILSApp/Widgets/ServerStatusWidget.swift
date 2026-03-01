@@ -99,6 +99,7 @@ struct ServerStatusWidgetView: View {
             }
         }
         .padding(12)
+        .widgetURL(URL(string: "ils://sessions"))
         .containerBackground(for: .widget) {
             Color(hex: WidgetColors.background)
         }

@@ -12,6 +12,8 @@ struct ILSWidgets: WidgetBundle {
     var body: some Widget {
         SessionWidget()
         ServerStatusWidget()
+        LargeSessionWidget()
+        LockScreenWidget()
     }
 }
 #endif
