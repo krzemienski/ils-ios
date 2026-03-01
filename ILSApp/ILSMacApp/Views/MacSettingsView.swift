@@ -37,6 +37,7 @@ struct MacSettingsView: View {
     @AppStorage("defaultModel") var defaultModel: String = "claude-sonnet-4-20250514"
     @AppStorage("enableAgentTeams") var enableAgentTeams: Bool = false
     @AppStorage("enableDebugMode") var enableDebugMode: Bool = false
+    @AppStorage("showSessionSuggestions") var showSessionSuggestions: Bool = true
 
     let availableModels = [
         "claude-sonnet-4-20250514",
@@ -149,6 +150,18 @@ struct MacSettingsView: View {
                     Spacer()
                     SettingsInfoButton(text: "Experimental feature that enables coordination of multiple AI agents working together on complex tasks. Agent Teams is a local-only setting stored on your device and is not synced with your host CLI configuration.")
                 }
+
+                Divider()
+
+                settingRow(label: "Session Suggestions") {
+                    Toggle("", isOn: $showSessionSuggestions)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+
+                Text("Show smart suggestions when starting a new session")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
             }
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
@@ -519,6 +532,7 @@ struct MacSettingsView: View {
         defaultModel = "claude-sonnet-4-20250514"
         enableAgentTeams = false
         enableDebugMode = false
+        showSessionSuggestions = true
         serverURL = "http://localhost:9999"
         themeManager.setTheme("obsidian")
     }

@@ -22,7 +22,9 @@ class SSEClient {
         case reconnecting(attempt: Int)
     }
 
-    private var streamTask: Task<Void, Never>?
+    // @ObservationIgnored: Internal lifecycle state, not view-observable.
+    // Required so deinit (nonisolated) can access them for safety-net cancellation.
+    @ObservationIgnored private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
@@ -36,7 +38,7 @@ class SSEClient {
     // NET-RES-1: Observer for network restoration to cancel backoff and reconnect.
     private var networkObserver: NSObjectProtocol?
     #if os(iOS)
-    private var backgroundObserver: NSObjectProtocol?
+    @ObservationIgnored private var backgroundObserver: NSObjectProtocol?
     #endif
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
@@ -90,9 +92,21 @@ class SSEClient {
         }
     }
 
+    /// Safety-net deinit: cancels stream task and removes NotificationCenter observer
+    /// if cleanup() was not called from the view lifecycle. Primary cleanup path
+    /// remains cleanup() called from view's onDisappear.
+    /// Task.cancel() and NotificationCenter.removeObserver() are thread-safe.
+    deinit {
+        streamTask?.cancel()
+        #if os(iOS)
+        if let observer = backgroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        #endif
+    }
+
     /// Tear down session and cancel in-flight tasks.
-    /// Call from view's onDisappear; replaces deinit-based cleanup
-    /// which cannot safely access @MainActor state.
+    /// Call from view's onDisappear for full cleanup including URLSession invalidation.
     func cleanup() {
         // MEM-05: Remove background observer to prevent retain cycle / stale notifications.
         #if os(iOS)

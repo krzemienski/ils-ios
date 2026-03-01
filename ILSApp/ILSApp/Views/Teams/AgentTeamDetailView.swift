@@ -37,6 +37,11 @@ struct AgentTeamDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if let state = viewModel.operationState, let message = viewModel.operationMessage {
+                AsyncOperationBanner(message: message, state: state)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             if let team = viewModel.selectedTeam {
                 headerSection(team)
             }

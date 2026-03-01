@@ -77,6 +77,11 @@ actor ClaudeExecutorService {
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = Pipe()
+            // MEM-FD: Explicitly close pipe FDs — short-lived helpers rely on ARC otherwise.
+            defer {
+                pipe.fileHandleForReading.closeFile()
+                process.standardError = nil
+            }
 
             try process.run()
             process.waitUntilExit()
@@ -97,6 +102,10 @@ actor ClaudeExecutorService {
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
+        // MEM-FD: Explicitly close pipe FD — short-lived helper relies on ARC otherwise.
+        defer {
+            pipe.fileHandleForReading.closeFile()
+        }
 
         try process.run()
         process.waitUntilExit()
@@ -182,6 +191,10 @@ actor ClaudeExecutorService {
                 Self.logger.debug("SDK process started (PID: \(process.processIdentifier))")
             } catch {
                 Self.logger.debug("Failed to start SDK process: \(error)")
+                // MEM-FD: Close pipes to prevent file descriptor leak on process launch failure.
+                // readStdout (which normally closes them via defer) is never reached in this path.
+                outputPipe.fileHandleForReading.closeFile()
+                errorPipe.fileHandleForReading.closeFile()
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch Agent SDK wrapper: \(error.localizedDescription)"
@@ -277,6 +290,10 @@ actor ClaudeExecutorService {
                 Self.logger.debug("CLI process started (PID: \(process.processIdentifier))")
             } catch {
                 Self.logger.debug("Failed to start CLI process: \(error)")
+                // MEM-FD: Close pipes to prevent file descriptor leak on process launch failure.
+                // readStdout (which normally closes them via defer) is never reached in this path.
+                outputPipe.fileHandleForReading.closeFile()
+                errorPipe.fileHandleForReading.closeFile()
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch claude: \(error.localizedDescription)"

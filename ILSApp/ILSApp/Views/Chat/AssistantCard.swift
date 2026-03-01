@@ -81,7 +81,7 @@ struct AssistantCard: View, Equatable {
                     showCopyConfirmation = false
                 }
             } label: {
-                Label("Copy Markdown", systemImage: "doc.on.doc")
+                Label("Copy", systemImage: "doc.on.doc")
             }
 
             if let onRetry {

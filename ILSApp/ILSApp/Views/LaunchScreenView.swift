@@ -101,7 +101,7 @@ struct LaunchScreenView: View {
                         }
                     }
                 }
-                .drawingGroup() // Offload shadow compositing to Metal
+                // drawingGroup() removed: Metal rasterization breaks UIKit-backed controls (Toggle, TextField, Picker)
                 .scaleEffect(isAnimating ? 1.0 : 0.9)
 
                 // App name with cyberpunk styling

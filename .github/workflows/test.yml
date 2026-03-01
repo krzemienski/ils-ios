@@ -11,23 +11,37 @@ on:
         options:
           - Quick Smoke Tests
           - Full Test Suite
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ui-tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ui-tests:
-    name: UI Tests (${{ inputs.test_plan }})
-    runs-on: macos-14
-    timeout-minutes: 30
+    name: UI Tests (${{ inputs.test_plan || 'Quick Smoke Tests' }})
+    runs-on: macos-15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
         run: |
-          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
-          if [ -n "$XCODE_PATH" ]; then
-            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           else
-            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
           fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
 
       - name: Start backend
         run: |
@@ -48,10 +62,41 @@ jobs:
             -project ILSApp/ILSApp.xcodeproj \
             -scheme ILSApp \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
-            -testPlan '${{ inputs.test_plan }}' \
+            -testPlan '${{ inputs.test_plan || 'Quick Smoke Tests' }}' \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults.xcresult || true
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          cd ILSApp
+          ./scripts/generate-coverage-report.sh \
+            --result ../TestResults.xcresult \
+            --output ../coverage-report \
+            --format json || true
+
+      - name: Test summary
+        if: always()
+        run: |
+          if [ -d "TestResults.xcresult" ]; then
+            echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+            xcrun xcresulttool get --format json --path TestResults.xcresult 2>/dev/null | \
+              python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    metrics = data.get('metrics', {})
+    passed = metrics.get('testsCount', {}).get('_value', '?')
+    failed = metrics.get('testsFailedCount', {}).get('_value', 0)
+    skipped = metrics.get('testsSkippedCount', {}).get('_value', 0)
+    print(f'| Passed | Failed | Skipped |')
+    print(f'|--------|--------|---------|')
+    print(f'| {passed}   | {failed}   | {skipped}   |')
+except:
+    print('Could not parse test metrics')
+" >> $GITHUB_STEP_SUMMARY || true
+          fi
 
       - name: Upload test results
         if: always()
@@ -60,3 +105,11 @@ jobs:
           name: test-results
           path: TestResults.xcresult
           retention-days: 7
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report/
+          retention-days: 30
