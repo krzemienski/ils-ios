@@ -173,6 +173,8 @@
 		6555329D4958AC6721212189 /* OfflineIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75ECADC2C6860C7274E4736 /* OfflineIndicator.swift */; };
 		66583D69D1D8DDC05D825FB8 /* ThemeColorTokensSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */; };
 		66CB3A8E1A407714CC9E3B12 /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF79B379753DF9239B9A59CE /* SessionTemplate.swift */; };
+		78F91D648CEA4C8F86115342 /* HookExecutionEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5A21A18C734E3FB4914822 /* HookExecutionEntry.swift */; };
+		01DB33346C6A4FF3A9EA7993 /* HookTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A73D32EAD54D3F8A1C5DFD /* HookTemplate.swift */; };
 		670190C2C456CD11D49B71AD /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FF39B3DA7644595EE7DA45 /* HomeView.swift */; };
 		6703A874008D1951B6F6A79D /* ThemeSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D68E949FA8A0FB7017FECC14 /* ThemeSnapshot.swift */; };
 		691D978E9A1AAD1D04B3A5FC /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D259013682B0E76D248995F /* PerformanceMonitor.swift */; };
@@ -214,6 +216,8 @@
 		806FB07F2FE6F6C7990534E2 /* CrimsonTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F254EBBAABE0F2400CF42A6 /* CrimsonTheme.swift */; };
 		80AF8390762975EE963049E9 /* NeonNoirTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */; };
 		817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF79B379753DF9239B9A59CE /* SessionTemplate.swift */; };
+		07B9103949EC4B1F812DFC17 /* HookExecutionEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5A21A18C734E3FB4914822 /* HookExecutionEntry.swift */; };
+		240981D17E444D079F9B44A1 /* HookTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A73D32EAD54D3F8A1C5DFD /* HookTemplate.swift */; };
 		81BD7A2F3D77F9EC7CDFEA58 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548657A1773765E26B590326 /* SkillsViewModel.swift */; };
 		81EA0BAEEB2CEF1F8F48A784 /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */; };
 		81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5264936CB2EEF18D3167704B /* LogViewerView.swift */; };
@@ -673,6 +677,8 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		9F5A21A18C734E3FB4914822 /* HookExecutionEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookExecutionEntry.swift; sourceTree = "<group>"; };
+		31A73D32EAD54D3F8A1C5DFD /* HookTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookTemplate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1312,6 +1318,8 @@
 			isa = PBXGroup;
 			children = (
 				DE41119A5355AEB72E4B4406 /* ChatMessage.swift */,
+				9F5A21A18C734E3FB4914822 /* HookExecutionEntry.swift */,
+				31A73D32EAD54D3F8A1C5DFD /* HookTemplate.swift */,
 				FF79B379753DF9239B9A59CE /* SessionTemplate.swift */,
 				2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */,
 			);
@@ -1628,6 +1636,8 @@
 				0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */,
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
+				07B9103949EC4B1F812DFC17 /* HookExecutionEntry.swift in Sources */,
+				240981D17E444D079F9B44A1 /* HookTemplate.swift in Sources */,
 				817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */,
 				5C1BE37B321699D1338D5A18 /* SessionWidget.swift in Sources */,
 				E6F992C4BA5DAA01E1C28291 /* SessionsViewModel.swift in Sources */,
@@ -1827,6 +1837,8 @@
 				EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */,
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
+				78F91D648CEA4C8F86115342 /* HookExecutionEntry.swift in Sources */,
+				01DB33346C6A4FF3A9EA7993 /* HookTemplate.swift in Sources */,
 				66CB3A8E1A407714CC9E3B12 /* SessionTemplate.swift in Sources */,
 				26B89816D115402D4EC07DCF /* SessionWidget.swift in Sources */,
 				AB361433854827B55D401375 /* SessionWindowView.swift in Sources */,

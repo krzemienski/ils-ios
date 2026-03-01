@@ -82,10 +82,14 @@ class HooksViewModel {
     /// Snapshot of disabled hook groups keyed by hook key for restoration on re-enable.
     private var disabledHooksSnapshot: [String: HookGroup] = [:]
 
+    /// Execution log entries, newest entries appended at the end. Max 500 entries.
+    var executionLog: [HookExecutionEntry] = []
+
     private var client: APIClient?
 
     init() {
         loadDisabledState()
+        loadExecutionLog()
     }
 
     func configure(client: APIClient) {
@@ -495,6 +499,39 @@ class HooksViewModel {
         let snapshotKey = AppConstants.disabledHooksKey + "_snapshot"
         if let data = try? JSONEncoder().encode(disabledHooksSnapshot) {
             UserDefaults.standard.set(data, forKey: snapshotKey)
+        }
+    }
+
+    // MARK: - Execution Log
+
+    /// Appends a new entry to the execution log and persists it to UserDefaults.
+    /// Automatically trims the oldest entries to keep at most 500 total.
+    func addExecutionEntry(_ entry: HookExecutionEntry) {
+        executionLog.append(entry)
+        if executionLog.count > 500 {
+            executionLog.removeFirst(executionLog.count - 500)
+        }
+        persistExecutionLog()
+    }
+
+    /// Clears all execution log entries and removes them from UserDefaults.
+    func clearExecutionLog() {
+        executionLog.removeAll()
+        UserDefaults.standard.removeObject(forKey: AppConstants.hookExecutionLogKey)
+    }
+
+    /// Loads the execution log from UserDefaults.
+    private func loadExecutionLog() {
+        guard let data = UserDefaults.standard.data(forKey: AppConstants.hookExecutionLogKey),
+              let entries = try? JSONDecoder().decode([HookExecutionEntry].self, from: data) else {
+            return
+        }
+        executionLog = entries
+    }
+
+    private func persistExecutionLog() {
+        if let data = try? JSONEncoder().encode(executionLog) {
+            UserDefaults.standard.set(data, forKey: AppConstants.hookExecutionLogKey)
         }
     }
 
