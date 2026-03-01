@@ -426,6 +426,8 @@ struct MacContentView: View {
                     activeScreen = .chat(ChatSession(id: uuid, name: "Session"))
                 }
             }
+        case .usage:
+            UsageDashboardView()
         }
     }
 
@@ -681,6 +683,7 @@ struct MacContentView: View {
         case .hostProfiles: selectedSection = .hostProfiles
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
+        case .usage: selectedSection = .home
         case .chat: selectedSection = .home
         case .activityFeed: selectedSection = .home
         }

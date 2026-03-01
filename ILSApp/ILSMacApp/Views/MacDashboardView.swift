@@ -374,6 +374,16 @@ struct MacDashboardView: View {
                 ) {
                     onNavigate?(.system)
                 }
+
+                quickActionButton(
+                    icon: "chart.bar.fill",
+                    title: "Usage",
+                    subtitle: "Rate limit & stats",
+                    color: theme.entityProject,
+                    shortcut: "5"
+                ) {
+                    onNavigate?(.usage)
+                }
             }
         }
     }

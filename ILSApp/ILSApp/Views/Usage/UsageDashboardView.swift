@@ -530,7 +530,7 @@ private struct AlertSettingsSheet: View {
                 }
             }
             .navigationTitle("Alert Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
