@@ -345,7 +345,7 @@ private struct QRCameraPreviewView: UIViewRepresentable {
         let session = context.coordinator.session
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer.videoGravity = .resizeAspectFill
-        previewLayer.frame = UIScreen.main.bounds
+        previewLayer.frame = view.bounds
         view.layer.addSublayer(previewLayer)
         context.coordinator.previewLayer = previewLayer
 

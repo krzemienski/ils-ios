@@ -45,44 +45,6 @@ class QuickConnectViewModel {
 
     // MARK: - Computed
 
-    /// Contextual troubleshooting suggestions based on the last connection failure message.
-    var troubleshootingSteps: [String] {
-        guard case .failure(let message) = connectionResult else { return [] }
-        let lower = message.lowercased()
-        var steps: [String] = []
-
-        // URL format hint
-        if lower.contains("invalid") || lower.contains("url") {
-            steps.append("Ensure the URL includes the protocol, e.g. http://localhost:9999")
-            steps.append("Remove any trailing slashes or extra spaces from the URL")
-        }
-
-        // Firewall hint
-        if lower.contains("reach") || lower.contains("refused") || lower.contains("connect") {
-            steps.append("Check that your firewall allows connections on port 9999")
-            steps.append("Verify the Claude Code backend is running: claude --backend")
-        }
-
-        // Localhost hint
-        if lower.contains("reach") || lower.contains("refused") || lower.contains("health") {
-            steps.append("Try using 127.0.0.1 instead of localhost in the URL")
-        }
-
-        // VPN hint
-        if lower.contains("timeout") || lower.contains("timed out") || lower.contains("network") || lower.contains("health") {
-            steps.append("If connected to a VPN, try disconnecting — it may block local traffic")
-        }
-
-        // Generic fallback
-        if steps.isEmpty {
-            steps.append("Verify the backend server is running on the specified port")
-            steps.append("Confirm the host and port are correct")
-            steps.append("Ensure your device is on the same network as the server")
-        }
-
-        return steps
-    }
-
     var isConnectEnabled: Bool {
         switch selectedMode {
         case .local:
@@ -194,6 +156,7 @@ class QuickConnectViewModel {
             connectionSteps[0].status = .failure("Invalid URL")
             connectionResult = .failure("Invalid URL")
             isConnecting = false
+            showSteps = false
             return false
         }
         connectionSteps[0].status = .success
@@ -210,6 +173,7 @@ class QuickConnectViewModel {
             connectionSteps[1].status = .failure("Cannot reach server")
             connectionResult = .failure("Cannot reach server")
             isConnecting = false
+            showSteps = false
             HapticManager.notification(.error)
             return false
         }
@@ -243,6 +207,7 @@ class QuickConnectViewModel {
             connectionSteps[2].status = .failure("Health check failed")
             connectionResult = .failure("Health check failed")
             isConnecting = false
+            showSteps = false
             HapticManager.notification(.error)
             return false
         }

@@ -32,8 +32,8 @@ class ConnectionManager {
 
     /// The date onboarding was completed, persisted to UserDefaults.
     var onboardingCompletedDate: Date? {
-        get { UserDefaults.standard.object(forKey: "onboardingCompletedDate") as? Date }
-        set { UserDefaults.standard.set(newValue, forKey: "onboardingCompletedDate") }
+        get { UserDefaults.standard.object(forKey: "onboardingCompletionDate") as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: "onboardingCompletionDate") }
     }
 
     init() {
