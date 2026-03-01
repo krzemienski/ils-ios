@@ -73,7 +73,7 @@ class ConnectionManager {
         updateServerURL(cleanURL)
         isConnected = true
         UserDefaults.standard.set(true, forKey: "hasConnectedBefore")
-        showOnboarding = false
+        // NOTE: showOnboarding is managed by the wizard via onComplete() in ServerSetupSheet
 
         // Trigger first-session wizard exactly once: when hasConnectedBefore flips false → true.
         if wasFirstConnection {
