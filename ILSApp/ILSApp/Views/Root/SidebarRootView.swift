@@ -260,6 +260,14 @@ struct SidebarRootView: View {
                 columnVisibility = .all
             }
         }
+        #if os(iOS)
+        // IPAD-KB-1: Zero-size overlay that provides global Cmd+N / Cmd+, shortcuts for
+        // external keyboard users. Positioned on iPadLayout (regular width only) since
+        // iPhone users don't typically pair physical keyboards.
+        .overlay {
+            iPadKeyboardShortcutOverlay()
+        }
+        #endif
     }
 
     // MARK: - iPhone Layout (Overlay Sidebar)
