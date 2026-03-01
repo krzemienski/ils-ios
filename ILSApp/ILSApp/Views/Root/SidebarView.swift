@@ -350,6 +350,7 @@ struct SidebarView: View {
 
     // MARK: - Project Group
 
+    @ViewBuilder
     private func projectGroup(group: ProjectGroupInfo) -> some View {
         let name = group.name
         let sessions = sessionsViewModel.projectSessions[name] ?? []
