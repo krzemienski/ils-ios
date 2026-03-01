@@ -70,3 +70,13 @@ struct AccentButton: View {
         .onDisappear { resetTask?.cancel() }
     }
 }
+
+#Preview {
+    VStack(spacing: 16) {
+        AccentButton("Create Session") {}
+        AccentButton("Loading...", isLoading: true) {}
+        AccentButton("Disabled") {}
+            .disabled(true)
+    }
+    .padding()
+}
