@@ -484,6 +484,12 @@ struct SessionsController: RouteCollection {
     /// - `q`: Search query (required, case-insensitive LIKE match on message content)
     /// - `limit`: Maximum results (1-100, default 50)
     /// - `offset`: Pagination offset (default 0)
+    /// - `role`: Filter by message role ("user", "assistant", or "system")
+    /// - `dateFrom`: ISO8601 start date filter (e.g. "2024-01-01T00:00:00Z")
+    /// - `dateTo`: ISO8601 end date filter (e.g. "2024-12-31T23:59:59Z")
+    /// - `projectName`: Filter to messages from sessions belonging to a named project ("Ungrouped" for sessions with no project)
+    ///
+    /// Results include a `matchContext` field with ~60 characters of surrounding text around the match.
     ///
     /// - Parameter req: Vapor Request with search query params
     /// - Returns: APIResponse with list of MessageSearchResult
@@ -497,16 +503,72 @@ struct SessionsController: RouteCollection {
 
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
         let offset = max(req.query[Int.self, at: "offset"] ?? 0, 0)
+        let roleFilter = req.query[String.self, at: "role"]
+        let projectNameFilter = req.query[String.self, at: "projectName"]
+
+        let isoFormatter = ISO8601DateFormatter()
+        let dateFrom: Date? = req.query[String.self, at: "dateFrom"].flatMap { isoFormatter.date(from: $0) }
+        let dateTo: Date? = req.query[String.self, at: "dateTo"].flatMap { isoFormatter.date(from: $0) }
 
         let searchPattern = "%\(query)%"
 
-        // Query messages matching search across all sessions, joined with session data
-        let matchingMessages = try await MessageModel.query(on: req.db)
+        // Build base query with DB-level filters (role, date range)
+        var baseQuery = MessageModel.query(on: req.db)
             .filter(\.$content, .custom("LIKE"), searchPattern)
             .sort(\.$createdAt, .descending)
             .with(\.$session) {
                 $0.with(\.$project)
             }
+
+        if let role = roleFilter, !role.isEmpty {
+            baseQuery = baseQuery.filter(\.$role == role)
+        }
+        if let from = dateFrom {
+            baseQuery = baseQuery.filter(\.$createdAt >= from)
+        }
+        if let to = dateTo {
+            baseQuery = baseQuery.filter(\.$createdAt <= to)
+        }
+
+        // When projectName is specified, load all matching rows and filter in-memory
+        // (joining through session → project in Fluent requires full eager-load anyway)
+        if let projectName = projectNameFilter, !projectName.isEmpty {
+            let allMatches = try await baseQuery.all()
+
+            let filtered = allMatches.filter { msg in
+                let sessionProjectName = msg.session.project?.name
+                if projectName == "Ungrouped" {
+                    return sessionProjectName == nil || sessionProjectName?.isEmpty == true
+                }
+                return sessionProjectName == projectName
+            }
+
+            let total = filtered.count
+            let start = min(offset, filtered.count)
+            let end = min(start + limit, filtered.count)
+            let page = Array(filtered[start..<end])
+
+            let results = page.map { msg in
+                MessageSearchResult(
+                    id: msg.id ?? UUID(),
+                    sessionId: msg.$session.id,
+                    sessionName: msg.session.name,
+                    sessionModel: msg.session.model,
+                    role: MessageRole(rawValue: msg.role) ?? .user,
+                    content: msg.content,
+                    matchContext: extractMatchContext(from: msg.content, query: query),
+                    createdAt: msg.createdAt ?? Date()
+                )
+            }
+
+            return APIResponse(
+                success: true,
+                data: ListResponse(items: results, total: total)
+            )
+        }
+
+        // Normal path: use DB-level pagination + a separate count query
+        let matchingMessages = try await baseQuery
             .offset(offset)
             .limit(limit)
             .all()
@@ -519,19 +581,57 @@ struct SessionsController: RouteCollection {
                 sessionModel: msg.session.model,
                 role: MessageRole(rawValue: msg.role) ?? .user,
                 content: msg.content,
+                matchContext: extractMatchContext(from: msg.content, query: query),
                 createdAt: msg.createdAt ?? Date()
             )
         }
 
-        // Get total count for pagination
-        let total = try await MessageModel.query(on: req.db)
+        // Build a parallel count query with the same DB-level filters
+        var countQuery = MessageModel.query(on: req.db)
             .filter(\.$content, .custom("LIKE"), searchPattern)
-            .count()
+
+        if let role = roleFilter, !role.isEmpty {
+            countQuery = countQuery.filter(\.$role == role)
+        }
+        if let from = dateFrom {
+            countQuery = countQuery.filter(\.$createdAt >= from)
+        }
+        if let to = dateTo {
+            countQuery = countQuery.filter(\.$createdAt <= to)
+        }
+
+        let total = try await countQuery.count()
 
         return APIResponse(
             success: true,
             data: ListResponse(items: results, total: total)
         )
+    }
+
+    /// Extract a short snippet of text surrounding the first occurrence of `query` in `content`.
+    ///
+    /// Returns up to `contextRadius` characters before and after the match, with leading/trailing
+    /// ellipsis characters when the content was trimmed. Returns `nil` if no match is found.
+    private func extractMatchContext(from content: String, query: String, contextRadius: Int = 60) -> String? {
+        let lowercasedContent = content.lowercased()
+        let lowercasedQuery = query.lowercased()
+        guard let matchRange = lowercasedContent.range(of: lowercasedQuery) else { return nil }
+
+        let matchStart = content.distance(from: content.startIndex, to: matchRange.lowerBound)
+        let matchEnd = content.distance(from: content.startIndex, to: matchRange.upperBound)
+
+        let contextStart = max(0, matchStart - contextRadius)
+        let contextEnd = min(content.count, matchEnd + contextRadius)
+
+        let startIndex = content.index(content.startIndex, offsetBy: contextStart)
+        let endIndex = content.index(content.startIndex, offsetBy: contextEnd)
+
+        var snippet = String(content[startIndex..<endIndex])
+
+        if contextStart > 0 { snippet = "…" + snippet }
+        if contextEnd < content.count { snippet = snippet + "…" }
+
+        return snippet
     }
 
     /// Compare two sessions side-by-side, returning full metadata and message histories.
