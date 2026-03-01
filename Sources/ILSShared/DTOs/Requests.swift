@@ -666,3 +666,92 @@ public struct UpdateCustomThemeRequest: Codable, Sendable {
     }
 }
 
+// MARK: - Checkpoint & Backup Requests
+
+/// Request to create a named checkpoint (snapshot) for a session.
+///
+/// Checkpoints allow users to save the conversation state at a specific point
+/// and later fork or restore from that point.
+public struct CreateCheckpointRequest: Codable, Sendable {
+    /// Human-readable name for the checkpoint (e.g., "Before refactor attempt").
+    public let name: String
+    /// Optional description with more context about why this checkpoint was created.
+    public let description: String?
+
+    public init(name: String, description: String? = nil) {
+        self.name = name
+        self.description = description
+    }
+}
+
+/// Request to fork a session starting from a specific message.
+///
+/// Creates a new session containing all messages up to and including the specified
+/// message, allowing the user to explore a different approach from that point.
+public struct ForkFromMessageRequest: Codable, Sendable {
+    /// The message ID to fork from (all messages up to this point are included).
+    public let messageId: UUID
+    /// Optional name for the forked session.
+    public let name: String?
+
+    public init(messageId: UUID, name: String? = nil) {
+        self.messageId = messageId
+        self.name = name
+    }
+}
+
+/// Request to bulk-export multiple sessions at once.
+///
+/// Exports all specified sessions in the given format, returning a combined archive.
+public struct BulkExportRequest: Codable, Sendable {
+    /// Array of session UUIDs to include in the export.
+    public let sessionIds: [UUID]
+    /// Format to export sessions in.
+    public let format: ExportFormat
+    /// Whether to include full message content or just metadata.
+    public let includeMessages: Bool?
+
+    public init(sessionIds: [UUID], format: ExportFormat, includeMessages: Bool? = nil) {
+        self.sessionIds = sessionIds
+        self.format = format
+        self.includeMessages = includeMessages
+    }
+}
+
+/// Request to import a previously exported session.
+///
+/// Accepts a JSON-encoded `ChatExport` payload and creates a new session from it.
+public struct ImportSessionRequest: Codable, Sendable {
+    /// The exported session data to import.
+    public let export: ChatExport
+    /// Optional project to assign the imported session to.
+    public let projectId: UUID?
+
+    public init(export: ChatExport, projectId: UUID? = nil) {
+        self.export = export
+        self.projectId = projectId
+    }
+}
+
+/// Result of a session integrity check.
+///
+/// Returned by the integrity verification endpoint on startup or on demand,
+/// indicating whether a session's stored data is consistent and uncorrupted.
+public struct IntegrityCheckResult: Codable, Sendable {
+    /// The session that was checked.
+    public let sessionId: UUID
+    /// Whether the session passed the integrity check.
+    public let passed: Bool
+    /// List of issues found (empty if `passed` is true).
+    public let issues: [String]
+    /// When the check was performed.
+    public let checkedAt: Date
+
+    public init(sessionId: UUID, passed: Bool, issues: [String] = [], checkedAt: Date = Date()) {
+        self.sessionId = sessionId
+        self.passed = passed
+        self.issues = issues
+        self.checkedAt = checkedAt
+    }
+}
+
