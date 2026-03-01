@@ -371,6 +371,28 @@ actor LocalDatabase {
             }
         }
 
+        migrator.registerMigration("v2_permission_history") { db in
+            try db.create(table: "permission_history") { t in
+                t.primaryKey("id", .text)
+                t.column("sessionId", .text).notNull()
+                t.column("toolName", .text).notNull()
+                t.column("toolInputSummary", .text).notNull()
+                t.column("decision", .text).notNull()
+                t.column("isAutoApproved", .boolean).notNull().defaults(to: false)
+                t.column("timestamp", .datetime).notNull()
+            }
+            try db.create(
+                index: "permission_history_sessionId",
+                on: "permission_history",
+                columns: ["sessionId"]
+            )
+            try db.create(
+                index: "permission_history_timestamp",
+                on: "permission_history",
+                columns: ["timestamp"]
+            )
+        }
+
         try migrator.migrate(dbPool)
     }
 

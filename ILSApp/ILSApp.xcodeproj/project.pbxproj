@@ -347,6 +347,8 @@
 		CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */; };
 		D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
 		D053AA11000BA5544B72F3C1 /* ThemeManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */; };
+		1A96802193814FFBAA2150A8 /* PermissionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D040DC56884D10942C6C29 /* PermissionHistory.swift */; };
+		BA5DCF690C074C1E89187D21 /* PermissionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D040DC56884D10942C6C29 /* PermissionHistory.swift */; };
 		D07764A7C157666618C165DD /* ThemeTypographySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D20194415A10CB918E81BE13 /* ThemeTypographySection.swift */; };
 		D16F32907FC22CE7467DF3CD /* HooksManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1695ADC93CE18946E4C2517E /* HooksManagementView.swift */; };
 		D18F6B5DB10E4016BC0C8632 /* ConfigEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */; };
@@ -673,6 +675,7 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		35D040DC56884D10942C6C29 /* PermissionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1312,6 +1315,7 @@
 			isa = PBXGroup;
 			children = (
 				DE41119A5355AEB72E4B4406 /* ChatMessage.swift */,
+				35D040DC56884D10942C6C29 /* PermissionHistory.swift */,
 				FF79B379753DF9239B9A59CE /* SessionTemplate.swift */,
 				2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */,
 			);
@@ -1668,6 +1672,7 @@
 				40F5BFCA27CF950AED4747DD /* ThemeEditorView.swift in Sources */,
 				E72E9E428D357533E4673FCA /* ThemeEditorViewModel.swift in Sources */,
 				D053AA11000BA5544B72F3C1 /* ThemeManifest.swift in Sources */,
+				1A96802193814FFBAA2150A8 /* PermissionHistory.swift in Sources */,
 				4AE7404C5F07C1DD574FD563 /* ThemeMarketplaceView.swift in Sources */,
 				804C8D2F76A6E1EBDE2BADFC /* ThemeMeshGradientSection.swift in Sources */,
 				0DEA24A0F1FF445652963E8C /* ThemeMetadataSection.swift in Sources */,
@@ -1869,6 +1874,7 @@
 				E9F1870916A648BFA1C77E16 /* ThemeEditorView.swift in Sources */,
 				C78081A75B5DFB73AB720204 /* ThemeEditorViewModel.swift in Sources */,
 				FC004FECD43C6609A67992E3 /* ThemeManifest.swift in Sources */,
+				BA5DCF690C074C1E89187D21 /* PermissionHistory.swift in Sources */,
 				2BB6F13CC784C14F38E47ED8 /* ThemeMarketplaceView.swift in Sources */,
 				C8C9B04FC1C8270E438599A7 /* ThemeMeshGradientSection.swift in Sources */,
 				1E03C78A90016AD5952E7DFB /* ThemeMetadataSection.swift in Sources */,
