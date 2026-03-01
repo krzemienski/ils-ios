@@ -45,7 +45,7 @@ struct ActivityFeedView: View {
         .inlineNavigationBarTitle()
         #endif
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .automatic) {
                 // Mark-all-read button
                 Button {
                     HapticManager.impact(.light)
