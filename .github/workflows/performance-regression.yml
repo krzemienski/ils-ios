@@ -1,0 +1,291 @@
+# Performance Regression CI
+# Runs all performance benchmarks on every push/PR to master and fails
+# if any metric regresses more than 10% from the stored baseline.
+#
+# Workflow summary:
+#   1. Build backend + start it on port 9999
+#   2. Run the "Performance Baselines" xctestplan
+#   3. Extract metrics from the xcresult bundle
+#   4. Compare against performance-baselines.json → fail on regression
+#   5. Upload xcresult + metrics JSON as artifacts
+#   6. Post a Markdown summary to the Actions job summary
+
+name: Performance Regression
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: perf-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance:
+    name: Performance Benchmarks
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. Select Xcode 16.2
+      # -----------------------------------------------------------------------
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
+
+      # -----------------------------------------------------------------------
+      # 3. Cache SPM packages
+      # -----------------------------------------------------------------------
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+            ILSApp/ILSApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+          key: ios-spm-${{ runner.os }}-${{ hashFiles('ILSApp/ILSApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ios-spm-${{ runner.os }}-
+
+      - name: Resolve package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -skipPackagePluginValidation
+
+      # -----------------------------------------------------------------------
+      # 4. Build backend
+      # -----------------------------------------------------------------------
+      - name: Build backend
+        run: swift build --product ILSBackend
+
+      # -----------------------------------------------------------------------
+      # 5. Start backend on port 9999
+      # -----------------------------------------------------------------------
+      - name: Start backend
+        run: |
+          PORT=9999 swift run ILSBackend > /tmp/ils_backend.log 2>&1 &
+          echo $! > /tmp/ils_backend.pid
+          echo "Backend PID: $(cat /tmp/ils_backend.pid)"
+
+          BACKEND_STARTED=false
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+              BACKEND_STARTED=true
+              echo "::notice::Backend ready after ${i}s"
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$BACKEND_STARTED" = false ]; then
+            echo "::error::Backend failed to start within 120s"
+            cat /tmp/ils_backend.log
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 6. Run "Performance Baselines" test plan
+      # -----------------------------------------------------------------------
+      - name: Run performance tests
+        id: run_tests
+        run: |
+          RESULT_PATH="PerformanceResults_${{ github.sha }}.xcresult"
+          echo "result_path=$RESULT_PATH" >> "$GITHUB_OUTPUT"
+
+          # Run with continue-on-error so we can still extract metrics even if
+          # some individual tests fail; regression check is the authoritative gate.
+          set +e
+          xcodebuild test \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -testPlan "Performance Baselines" \
+            -skipPackagePluginValidation \
+            -resultBundlePath "$RESULT_PATH" \
+            -quiet
+          TEST_EXIT=$?
+          set -e
+
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "::warning::One or more performance tests failed (exit $TEST_EXIT). Metrics from passing tests will still be evaluated."
+          fi
+
+          if [ ! -d "$RESULT_PATH" ]; then
+            echo "::error::No xcresult bundle produced. Cannot evaluate regressions."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # 7. Extract metrics from xcresult
+      # -----------------------------------------------------------------------
+      - name: Extract performance metrics
+        id: extract_metrics
+        run: |
+          METRICS_FILE="performance_metrics_${{ github.sha }}.json"
+          echo "metrics_file=$METRICS_FILE" >> "$GITHUB_OUTPUT"
+
+          bash scripts/extract-performance-metrics.sh \
+            --format json \
+            --output "$METRICS_FILE" \
+            "${{ steps.run_tests.outputs.result_path }}"
+
+          if [ ! -f "$METRICS_FILE" ]; then
+            echo "::warning::Metrics file not created — xcresult may contain no performance data."
+            echo "[]" > "$METRICS_FILE"
+          fi
+
+          METRIC_COUNT=$(python3 -c "import json,sys; print(len(json.load(open('$METRICS_FILE'))))" 2>/dev/null || echo "0")
+          echo "::notice::Extracted $METRIC_COUNT performance metric entries."
+
+      # -----------------------------------------------------------------------
+      # 8. Check for regressions — this step FAILS the job on regression
+      # -----------------------------------------------------------------------
+      - name: Check performance regressions
+        id: regression_check
+        continue-on-error: false
+        run: |
+          python3 scripts/check-performance-regression.py \
+            --baselines performance-baselines.json \
+            --metrics "${{ steps.extract_metrics.outputs.metrics_file }}" \
+            --output regression_report_${{ github.sha }}.json \
+            --verbose
+
+      # -----------------------------------------------------------------------
+      # 9. Upload artifacts (always — even on failure)
+      # -----------------------------------------------------------------------
+      - name: Upload xcresult bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult-${{ github.sha }}
+          path: ${{ steps.run_tests.outputs.result_path }}
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload metrics JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-metrics-${{ github.sha }}
+          path: |
+            performance_metrics_${{ github.sha }}.json
+            regression_report_${{ github.sha }}.json
+          retention-days: 30
+          if-no-files-found: warn
+
+      # -----------------------------------------------------------------------
+      # 10. Post job summary
+      # -----------------------------------------------------------------------
+      - name: Post job summary
+        if: always()
+        run: |
+          METRICS_FILE="performance_metrics_${{ github.sha }}.json"
+          REPORT_FILE="regression_report_${{ github.sha }}.json"
+          SHA_SHORT="${{ github.sha }}"
+          SHA_SHORT="${SHA_SHORT:0:8}"
+
+          {
+            echo "## Performance Benchmark Results"
+            echo ""
+            echo "**Commit:** \`$SHA_SHORT\`  |  **Ref:** \`${{ github.ref_name }}\`"
+            echo ""
+
+            # Regression check outcome
+            if [ "${{ steps.regression_check.outcome }}" = "success" ]; then
+              echo "### ✅ No Performance Regressions"
+            else
+              echo "### ❌ Performance Regressions Detected"
+              echo ""
+              echo "> One or more metrics regressed more than the allowed threshold."
+              echo "> Run \`scripts/update-performance-baseline.sh --confirm --reason \"...\"\` to update baselines if this is intentional."
+            fi
+
+            echo ""
+
+            # Metrics table from report JSON (if available)
+            if [ -f "$REPORT_FILE" ]; then
+              python3 - <<'PYEOF'
+          import json, sys, os
+
+          report_path = os.environ.get("REPORT_FILE", "")
+          try:
+              with open(report_path) as f:
+                  report = json.load(f)
+          except Exception:
+              print("_(metrics report unavailable)_")
+              sys.exit(0)
+
+          all_results = (
+              report.get("regressions", []) +
+              report.get("warnings", []) +
+              report.get("passing", [])
+          )
+          if not all_results:
+              print("_(no metrics matched baselines)_")
+              sys.exit(0)
+
+          print("| Metric | Baseline | Measured | Change | Status |")
+          print("|--------|----------|----------|--------|--------|")
+          for r in sorted(all_results, key=lambda x: x.get("key", "")):
+              key = r.get("key", "?")
+              baseline = r.get("baseline_value", "N/A")
+              measured = r.get("measured_value", "N/A")
+              pct = r.get("change_pct")
+              status = r.get("status", "unknown")
+              change_str = f"{pct:+.1f}%" if isinstance(pct, (int, float)) else "N/A"
+              if status == "regression":
+                  icon = "🔴 FAIL"
+              elif status == "warning":
+                  icon = "🟡 WARN"
+              elif status == "pass":
+                  icon = "🟢 PASS"
+              else:
+                  icon = "⚪ N/A"
+              unit = r.get("unit", "")
+              print(f"| `{key}` | {baseline} {unit} | {measured} {unit} | {change_str} | {icon} |")
+          PYEOF
+            fi
+
+            echo ""
+            echo "---"
+            echo "_Artifacts: [xcresult](../actions/runs/${{ github.run_id }}) · [metrics JSON](../actions/runs/${{ github.run_id }})_"
+
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          REPORT_FILE: regression_report_${{ github.sha }}.json
+
+      # -----------------------------------------------------------------------
+      # Cleanup: stop backend
+      # -----------------------------------------------------------------------
+      - name: Stop backend
+        if: always()
+        run: |
+          if [ -f /tmp/ils_backend.pid ]; then
+            BACKEND_PID=$(cat /tmp/ils_backend.pid)
+            if ps -p "$BACKEND_PID" > /dev/null 2>&1; then
+              kill "$BACKEND_PID" || true
+            fi
+            rm -f /tmp/ils_backend.pid
+          fi
