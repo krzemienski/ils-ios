@@ -260,28 +260,37 @@ class TunnelSettingsViewModel {
 
     /// Observes network availability changes and triggers auto-reconnect when
     /// the network is restored and the user previously wanted the tunnel running.
+    /// Uses withObservationTracking to react to NetworkMonitor.isConnected changes.
     func observeNetworkChanges() {
         if let existing = networkObserver {
             NotificationCenter.default.removeObserver(existing)
+            networkObserver = nil
         }
+        scheduleNetworkObservation()
+    }
 
-        networkObserver = NotificationCenter.default.addObserver(
-            forName: .networkDidBecomeAvailable,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            guard let self else { return }
+    private func scheduleNetworkObservation() {
+        withObservationTracking {
+            _ = NetworkMonitor.shared.isConnected
+        } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                guard self.userWantsRunning && !self.isRunning else { return }
-                self.isAutoReconnecting = true
-                AppLogger.shared.info("Network restored — auto-reconnecting tunnel", category: "tunnel")
-                if self.cfToken.isEmpty {
-                    await self.startTunnel()
-                } else {
-                    await self.startNamedTunnel()
+                let isNowConnected = NetworkMonitor.shared.isConnected
+                if isNowConnected && self.userWantsRunning && !self.isRunning {
+                    self.isAutoReconnecting = true
+                    AppLogger.shared.info("Network restored — auto-reconnecting tunnel in 2s", category: "tunnel")
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    if self.userWantsRunning && !self.isRunning {
+                        if self.cfToken.isEmpty {
+                            await self.startTunnel()
+                        } else {
+                            await self.startNamedTunnel()
+                        }
+                    }
+                    self.isAutoReconnecting = false
                 }
-                self.isAutoReconnecting = false
+                // Re-register for the next change
+                self.scheduleNetworkObservation()
             }
         }
     }
