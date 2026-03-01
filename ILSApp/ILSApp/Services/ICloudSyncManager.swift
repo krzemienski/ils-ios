@@ -1,4 +1,6 @@
+import CloudKit
 import Foundation
+import ILSShared
 import Observation
 
 // MARK: - ICloudSyncStatus
@@ -333,6 +335,170 @@ final class ICloudSyncManager {
             object: nil,
             userInfo: [ICloudSyncManager.changedKeysUserInfoKey: changedKeys]
         )
+    }
+}
+
+// MARK: - Custom Theme Sync
+
+extension ICloudSyncManager {
+
+    private enum ThemeCloudKitConfig {
+        static let containerIdentifier = "iCloud.com.ils.app"
+        static let recordType = "CustomTheme"
+    }
+
+    private enum ThemeRecordField {
+        static let themeId = "themeId"
+        static let themeData = "themeData"
+        static let modifiedAt = "modifiedAt"
+    }
+
+    private static let themeEncoder: JSONEncoder = {
+        let e = JSONEncoder()
+        e.dateEncodingStrategy = .iso8601
+        return e
+    }()
+
+    private static let themeDecoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
+
+    private var themeDatabase: CKDatabase {
+        CKContainer(identifier: ThemeCloudKitConfig.containerIdentifier).privateCloudDatabase
+    }
+
+    /// Syncs custom themes with CloudKit and creates remote-only themes in the backend.
+    ///
+    /// Pushes all provided `themes` to the CloudKit private database using the
+    /// `.changedKeys` save policy to minimise bandwidth. Then fetches all remote
+    /// records and creates any that are absent from the backend via `apiClient`.
+    /// No-ops silently when sync is disabled.
+    func syncCustomThemes(themes: [CustomTheme], apiClient: APIClient) async {
+        guard isSyncEnabled else { return }
+
+        // Push local themes to CloudKit
+        let records = themes.compactMap { makeThemeRecord(from: $0) }
+        if !records.isEmpty {
+            do {
+                let (saveResults, _) = try await themeDatabase.modifyRecords(
+                    saving: records,
+                    deleting: [],
+                    savePolicy: .changedKeys,
+                    atomically: false
+                )
+                let successCount = saveResults.values.filter { result in
+                    if case .success = result { return true }
+                    return false
+                }.count
+                AppLogger.shared.info(
+                    "Pushed \(successCount)/\(records.count) custom theme(s) to CloudKit",
+                    category: "icloud"
+                )
+            } catch {
+                AppLogger.shared.warning(
+                    "Failed to push custom themes to CloudKit: \(error.localizedDescription)",
+                    category: "icloud"
+                )
+            }
+        }
+
+        // Fetch remote themes and create any missing ones in the backend
+        let remoteThemes = await fetchRemoteThemes()
+        let localIds = Set(themes.map { $0.id })
+        let newRemoteThemes = remoteThemes.filter { !localIds.contains($0.id) }
+
+        for remoteTheme in newRemoteThemes {
+            do {
+                let request = CreateCustomThemeRequest(
+                    name: remoteTheme.name,
+                    description: remoteTheme.description,
+                    author: remoteTheme.author,
+                    version: remoteTheme.version,
+                    colors: remoteTheme.colors,
+                    typography: remoteTheme.typography,
+                    spacing: remoteTheme.spacing,
+                    cornerRadius: remoteTheme.cornerRadius,
+                    shadows: remoteTheme.shadows,
+                    meshGradient: remoteTheme.meshGradient
+                )
+                let _: APIResponse<CustomTheme> = try await apiClient.post("/themes", body: request)
+                AppLogger.shared.info(
+                    "Created remote theme '\(remoteTheme.name)' in backend from CloudKit sync",
+                    category: "icloud"
+                )
+            } catch {
+                AppLogger.shared.warning(
+                    "Failed to create remote theme '\(remoteTheme.name)' in backend: \(error.localizedDescription)",
+                    category: "icloud"
+                )
+            }
+        }
+    }
+
+    /// Fetches all custom themes stored in the CloudKit private database.
+    ///
+    /// Returns an empty array on failure so callers need no guard logic.
+    func fetchRemoteThemes() async -> [CustomTheme] {
+        guard isSyncEnabled else { return [] }
+
+        let query = CKQuery(
+            recordType: ThemeCloudKitConfig.recordType,
+            predicate: NSPredicate(value: true)
+        )
+
+        do {
+            let (matchResults, _) = try await themeDatabase.records(
+                matching: query,
+                desiredKeys: nil,
+                resultsLimit: CKQueryOperation.maximumResults
+            )
+
+            var themes: [CustomTheme] = []
+            for (_, result) in matchResults {
+                switch result {
+                case .success(let record):
+                    if let theme = parseThemeRecord(record) {
+                        themes.append(theme)
+                    }
+                case .failure(let error):
+                    AppLogger.shared.warning(
+                        "Failed to parse CloudKit theme record: \(error.localizedDescription)",
+                        category: "icloud"
+                    )
+                }
+            }
+
+            AppLogger.shared.info(
+                "Fetched \(themes.count) custom theme(s) from CloudKit",
+                category: "icloud"
+            )
+            return themes
+        } catch {
+            AppLogger.shared.warning(
+                "Failed to fetch custom themes from CloudKit: \(error.localizedDescription)",
+                category: "icloud"
+            )
+            return []
+        }
+    }
+
+    // MARK: - CloudKit Record Helpers
+
+    private func makeThemeRecord(from theme: CustomTheme) -> CKRecord? {
+        guard let data = try? Self.themeEncoder.encode(theme) else { return nil }
+        let recordID = CKRecord.ID(recordName: theme.id.uuidString)
+        let record = CKRecord(recordType: ThemeCloudKitConfig.recordType, recordID: recordID)
+        record[ThemeRecordField.themeId] = theme.id.uuidString as CKRecordValue
+        record[ThemeRecordField.themeData] = data as CKRecordValue
+        record[ThemeRecordField.modifiedAt] = theme.updatedAt as CKRecordValue
+        return record
+    }
+
+    private func parseThemeRecord(_ record: CKRecord) -> CustomTheme? {
+        guard let data = record[ThemeRecordField.themeData] as? Data else { return nil }
+        return try? Self.themeDecoder.decode(CustomTheme.self, from: data)
     }
 }
 
