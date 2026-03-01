@@ -51,14 +51,13 @@ final class ICloudSyncManager {
     /// Direct (localKey → iCloudKey) pairs for scalar preferences synced via
     /// NSUbiquitousKeyValueStore. Each push reads from UserDefaults and writes
     /// to the paired iCloud key; each pull does the reverse.
-    ///
-    /// Additional keys (e.g. themeID) are appended by later phases.
     static var syncableKeys: [(local: String, iCloud: String)] = [
         (local: AppConstants.serverURLKey,    iCloud: AppConstants.iCloudServerURLKey),
         (local: AppConstants.defaultModelKey, iCloud: AppConstants.iCloudDefaultModelKey),
         (local: "activeHostName",             iCloud: AppConstants.iCloudActiveHostNameKey),
         (local: "colorScheme",                iCloud: "ils_icloud_color_scheme"),
         (local: "enableAgentTeams",           iCloud: "ils_icloud_enable_agent_teams"),
+        (local: "selectedThemeID",            iCloud: AppConstants.iCloudActiveThemeKey),
     ]
 
     /// Shared notification user-info key for the array of changed iCloud keys.

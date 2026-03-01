@@ -195,6 +195,9 @@ class ThemeManager {
     /// All available themes.
     private(set) var availableThemes: [any AppTheme] = []
 
+    /// Observer token for `iCloudPreferencesDidChange` notifications.
+    @ObservationIgnored private var iCloudChangeObserver: NSObjectProtocol?
+
     init() {
         // Migrate legacy theme IDs from before the rename
         var savedID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "cyberpunk"
@@ -222,14 +225,48 @@ class ThemeManager {
         let selectedTheme = themes.first(where: { $0.id == savedID }) ?? CyberpunkTheme()
         self._currentTheme = selectedTheme
         self.currentSnapshot = ThemeSnapshot(selectedTheme)
+
+        // Listen for iCloud-driven theme changes so the active theme updates
+        // immediately when another device selects a different theme.
+        iCloudChangeObserver = NotificationCenter.default.addObserver(
+            forName: .iCloudPreferencesDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.applyThemeFromCloud()
+            }
+        }
+    }
+
+    deinit {
+        if let observer = iCloudChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     /// Switch to a different theme by ID.
+    ///
+    /// Persists the selection to UserDefaults and immediately pushes the change
+    /// to the iCloud key-value store for cross-device sync.
     /// - Parameter id: Theme identifier (e.g., "cyberpunk")
     func setTheme(_ id: String) {
         guard let theme = availableThemes.first(where: { $0.id == id }) else { return }
         currentTheme = theme
         UserDefaults.standard.set(id, forKey: Self.themeIDKey)
+        ICloudSyncManager.shared.set(id, forKey: AppConstants.iCloudActiveThemeKey)
+    }
+
+    /// Applies a theme change that arrived from iCloud.
+    ///
+    /// Reads the theme ID already written to UserDefaults by `applyCloudPreferences()`
+    /// and updates the in-memory theme without re-pushing to iCloud.
+    private func applyThemeFromCloud() {
+        let themeID = UserDefaults.standard.string(forKey: Self.themeIDKey) ?? "cyberpunk"
+        guard themeID != currentTheme.id,
+              let theme = availableThemes.first(where: { $0.id == themeID }) else { return }
+        currentTheme = theme
+        AppLogger.shared.info("Theme '\(themeID)' applied from iCloud sync", category: "icloud")
     }
 
     /// Register a custom theme.
