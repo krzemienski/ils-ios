@@ -80,24 +80,6 @@ actor ClaudeExecutorService {
         }
     }
 
-    /// Get Claude CLI version string.
-    /// - Returns: Version string (e.g., "claude 1.2.3") or "unknown" on failure
-    func getVersion() async throws -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = ["-l", "-c", "claude --version"]
-
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-
-        try process.run()
-        process.waitUntilExit()
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "unknown"
-    }
-
     /// Execute a Claude query with streaming JSON output.
     ///
     /// Uses either the Agent SDK (Node.js wrapper) or direct `claude -p` CLI depending
