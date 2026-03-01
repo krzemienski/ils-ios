@@ -26,6 +26,8 @@ struct HookDisplayItem: Identifiable, Hashable {
     let prompt: String?
     let groupIndex: Int
     let hookIndex: Int
+    /// Whether this hook is currently active in the Claude config.
+    let isEnabled: Bool
 
     init(
         eventType: String,
@@ -35,7 +37,8 @@ struct HookDisplayItem: Identifiable, Hashable {
         url: String? = nil,
         prompt: String? = nil,
         groupIndex: Int,
-        hookIndex: Int
+        hookIndex: Int,
+        isEnabled: Bool = true
     ) {
         self.id = UUID()
         self.eventType = eventType
@@ -46,6 +49,7 @@ struct HookDisplayItem: Identifiable, Hashable {
         self.prompt = prompt
         self.groupIndex = groupIndex
         self.hookIndex = hookIndex
+        self.isEnabled = isEnabled
     }
 
     /// Human-readable summary of the hook's action, regardless of handler type.
@@ -71,9 +75,18 @@ class HooksViewModel {
     var error: Error?
     var config: ConfigInfo?
 
+    /// Keys of disabled hooks persisted across app launches.
+    /// Format: "EventType:groupIndex" (e.g., "PreToolUse:0").
+    private(set) var disabledHookKeys: Set<String> = []
+
+    /// Snapshot of disabled hook groups keyed by hook key for restoration on re-enable.
+    private var disabledHooksSnapshot: [String: HookGroup] = [:]
+
     private var client: APIClient?
 
-    init() {}
+    init() {
+        loadDisabledState()
+    }
 
     func configure(client: APIClient) {
         self.client = client
@@ -297,34 +310,151 @@ class HooksViewModel {
         return result
     }
 
+    // MARK: - Enable / Disable
+
+    /// Returns true when the hook at the given position is currently disabled.
+    func isHookDisabled(eventType: String, groupIndex: Int) -> Bool {
+        disabledHookKeys.contains(hookKey(eventType: eventType, groupIndex: groupIndex))
+    }
+
+    /// Toggle the enabled state of a hook.
+    ///
+    /// - For an **enabled** hook: saves its `HookGroup` to a local snapshot, removes it from
+    ///   the Claude config, and marks it disabled in UserDefaults.
+    /// - For a **disabled** hook: restores its `HookGroup` from the snapshot back into the
+    ///   Claude config and removes the disabled record.
+    /// - Returns: An error string on failure, or `nil` on success.
+    func toggleHookEnabled(eventType: String, groupIndex: Int) async -> String? {
+        let key = hookKey(eventType: eventType, groupIndex: groupIndex)
+        if disabledHookKeys.contains(key) {
+            return await enableHook(key: key, eventType: eventType)
+        } else {
+            return await disableHook(key: key, eventType: eventType, groupIndex: groupIndex)
+        }
+    }
+
+    // MARK: - Private Enable/Disable Helpers
+
+    private func hookKey(eventType: String, groupIndex: Int) -> String {
+        "\(eventType):\(groupIndex)"
+    }
+
+    private func disableHook(key: String, eventType: String, groupIndex: Int) async -> String? {
+        guard let groups = config?.content.hooks?.events[eventType],
+              groupIndex >= 0, groupIndex < groups.count else {
+            return "Hook not found in configuration"
+        }
+        let group = groups[groupIndex]
+
+        // Persist snapshot and disabled key before touching the config
+        disabledHooksSnapshot[key] = group
+        disabledHookKeys.insert(key)
+        persistDisabledState()
+
+        let result = await deleteHook(eventType: eventType, groupIndex: groupIndex)
+        if result != nil {
+            // Rollback local state on failure
+            disabledHooksSnapshot.removeValue(forKey: key)
+            disabledHookKeys.remove(key)
+            persistDisabledState()
+        }
+        return result
+    }
+
+    private func enableHook(key: String, eventType: String) async -> String? {
+        guard let group = disabledHooksSnapshot[key] else {
+            return "Disabled hook not found in snapshot; cannot re-enable"
+        }
+
+        // Append the group back to the end of the event type's list
+        let result = await saveHook(eventType: eventType, group: group, editIndex: nil)
+        if result == nil {
+            disabledHookKeys.remove(key)
+            disabledHooksSnapshot.removeValue(forKey: key)
+            persistDisabledState()
+        }
+        return result
+    }
+
+    // MARK: - UserDefaults Persistence for Disabled State
+
+    private func loadDisabledState() {
+        if let data = UserDefaults.standard.data(forKey: AppConstants.disabledHooksKey),
+           let keys = try? JSONDecoder().decode([String].self, from: data) {
+            disabledHookKeys = Set(keys)
+        }
+
+        let snapshotKey = AppConstants.disabledHooksKey + "_snapshot"
+        if let data = UserDefaults.standard.data(forKey: snapshotKey),
+           let snapshot = try? JSONDecoder().decode([String: HookGroup].self, from: data) {
+            disabledHooksSnapshot = snapshot
+        }
+    }
+
+    private func persistDisabledState() {
+        if let data = try? JSONEncoder().encode(Array(disabledHookKeys)) {
+            UserDefaults.standard.set(data, forKey: AppConstants.disabledHooksKey)
+        }
+
+        let snapshotKey = AppConstants.disabledHooksKey + "_snapshot"
+        if let data = try? JSONEncoder().encode(disabledHooksSnapshot) {
+            UserDefaults.standard.set(data, forKey: snapshotKey)
+        }
+    }
+
     // MARK: - Private
 
     private func flattenHooks(from hooksConfig: HooksConfig?) {
         var items: [HookDisplayItem] = []
 
-        guard let hooksConfig else {
-            hooks = items
-            return
+        if let hooksConfig {
+            // Iterate over all event types in the dictionary, sorted by canonical lifecycle order
+            let sortedEvents = hooksConfig.events.sorted { left, right in
+                let leftIdx = Self.eventTypeOrder[left.key] ?? Int.max
+                let rightIdx = Self.eventTypeOrder[right.key] ?? Int.max
+                return leftIdx < rightIdx
+            }
+
+            for (eventType, groups) in sortedEvents {
+                items.append(contentsOf: flattenGroups(groups, eventType: eventType, isEnabled: true))
+            }
         }
 
-        // Iterate over all event types in the dictionary, sorted by canonical lifecycle order
-        let sortedEvents = hooksConfig.events.sorted { left, right in
-            let leftIdx = Self.eventTypeOrder[left.key] ?? Int.max
-            let rightIdx = Self.eventTypeOrder[right.key] ?? Int.max
+        // Append disabled hooks from the local snapshot, sorted by lifecycle order
+        let sortedDisabled = disabledHooksSnapshot.sorted { left, right in
+            let leftEvent = left.key.components(separatedBy: ":").first ?? ""
+            let rightEvent = right.key.components(separatedBy: ":").first ?? ""
+            let leftIdx = Self.eventTypeOrder[leftEvent] ?? Int.max
+            let rightIdx = Self.eventTypeOrder[rightEvent] ?? Int.max
             return leftIdx < rightIdx
         }
 
-        for (eventType, groups) in sortedEvents {
-            items.append(contentsOf: flattenGroups(groups, eventType: eventType))
+        for (key, group) in sortedDisabled {
+            let parts = key.split(separator: ":", maxSplits: 1)
+            guard parts.count == 2,
+                  let originalGroupIndex = Int(parts[1]) else { continue }
+            let eventType = String(parts[0])
+            items.append(contentsOf: flattenGroups(
+                [group],
+                eventType: eventType,
+                startGroupIndex: originalGroupIndex,
+                isEnabled: false
+            ))
         }
 
         hooks = items
     }
 
-    private func flattenGroups(_ groups: [HookGroup], eventType: String) -> [HookDisplayItem] {
+    private func flattenGroups(
+        _ groups: [HookGroup],
+        eventType: String,
+        startGroupIndex: Int = 0,
+        isEnabled: Bool
+    ) -> [HookDisplayItem] {
         var items: [HookDisplayItem] = []
 
-        for (groupIndex, group) in groups.enumerated() {
+        for (offset, group) in groups.enumerated() {
+            let groupIndex = startGroupIndex + offset
             guard let hookDefs = group.hooks else { continue }
             for (hookIndex, hookDef) in hookDefs.enumerated() {
                 items.append(HookDisplayItem(
@@ -335,7 +465,8 @@ class HooksViewModel {
                     url: hookDef.url,
                     prompt: hookDef.prompt,
                     groupIndex: groupIndex,
-                    hookIndex: hookIndex
+                    hookIndex: hookIndex,
+                    isEnabled: isEnabled
                 ))
             }
         }
