@@ -310,6 +310,64 @@ class HooksViewModel {
         return result
     }
 
+    // MARK: - Import / Export
+
+    /// Exports the current hooks configuration as a pretty-printed JSON string.
+    ///
+    /// The JSON format matches the Claude Code `hooks` config block exactly, e.g.:
+    /// ```json
+    /// {
+    ///   "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "echo hi" }] }]
+    /// }
+    /// ```
+    /// - Returns: Pretty-printed JSON string, or nil if there are no hooks or serialization fails.
+    func exportHooksAsJSON() -> String? {
+        guard let hooksConfig = config?.content.hooks, !hooksConfig.events.isEmpty else {
+            return nil
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(hooksConfig) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    /// Imports hooks from a JSON string, replacing the current hooks configuration.
+    ///
+    /// Expects the same format as `exportHooksAsJSON()` — a top-level object whose keys are
+    /// PascalCase event type names and values are arrays of `HookGroup` objects.
+    /// - Parameter jsonString: JSON string in Claude Code hooks format.
+    /// - Returns: Error message string, or nil on success.
+    func importHooksFromJSON(_ jsonString: String) async -> String? {
+        guard let data = jsonString.data(using: .utf8) else {
+            return "Invalid JSON string encoding"
+        }
+        guard client != nil else { return "Client not configured" }
+
+        let importedEvents: [String: [HookGroup]]
+        do {
+            importedEvents = try JSONDecoder().decode([String: [HookGroup]].self, from: data)
+        } catch {
+            return "Failed to parse JSON: \(error.localizedDescription)"
+        }
+
+        guard !importedEvents.isEmpty else { return "No hooks found in JSON" }
+
+        isSaving = true
+        defer { isSaving = false }
+
+        let settingsVM = SettingsViewModel()
+        settingsVM.configure(client: client!)
+        let result = await settingsVM.saveWithPatch { config in
+            config.hooks = HooksConfig(events: importedEvents)
+        }
+
+        if result == nil {
+            await loadHooks()
+        }
+
+        return result
+    }
+
     // MARK: - Enable / Disable
 
     /// Returns true when the hook at the given position is currently disabled.
