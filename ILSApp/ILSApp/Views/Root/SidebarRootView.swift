@@ -18,6 +18,7 @@ enum ActiveScreen: Hashable {
     case hostProfiles
     case themes
     case hooks
+    case permissions
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -34,6 +35,7 @@ enum ActiveScreen: Hashable {
         case .hostProfiles: return "hostProfiles"
         case .themes: return "themes"
         case .hooks: return "hooks"
+        case .permissions: return "permissions"
         }
     }
 
@@ -48,6 +50,7 @@ enum ActiveScreen: Hashable {
         case "fleet", "hostProfiles": return .hostProfiles  // "fleet" kept for backward compat
         case "themes": return .themes
         case "hooks": return .hooks
+        case "permissions": return .permissions
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -285,6 +288,8 @@ struct SidebarRootView: View {
                     themesScreen
                 case .hooks:
                     hooksScreen
+                case .permissions:
+                    permissionsScreen
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -412,6 +417,11 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var hooksScreen: some View {
         HooksManagementView()
+    }
+
+    @ViewBuilder
+    private var permissionsScreen: some View {
+        PermissionHistoryView()
     }
 
     // MARK: - Chat Navigation

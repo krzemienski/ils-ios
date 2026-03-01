@@ -128,6 +128,8 @@ class AppState {
             navigationIntent = .hooks
         case "teams":
             navigationIntent = .teams
+        case "permissions":
+            navigationIntent = .permissions
         default:
             break
         }
