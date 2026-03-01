@@ -18,10 +18,10 @@ struct ConnectionBanner: View {
             } else {
                 ProgressView()
                     .scaleEffect(0.7)
-                    .tint(.white)
+                    .tint(theme.textOnAccent)
                 Text("Reconnecting...")
                     .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.textOnAccent)
             }
             Spacer()
         }
