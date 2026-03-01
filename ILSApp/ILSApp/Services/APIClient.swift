@@ -337,6 +337,7 @@ actor APIClient {
 
     private struct CreateCheckpointBody: Encodable {
         let name: String
+        let isAutomatic: Bool?
     }
 
     private struct BulkExportBody: Encodable {
@@ -353,8 +354,8 @@ actor APIClient {
     }
 
     /// Create a named checkpoint for a session at the current message count.
-    func createCheckpoint<T: Decodable>(sessionId: UUID, name: String) async throws -> T {
-        let body = CreateCheckpointBody(name: name)
+    func createCheckpoint<T: Decodable>(sessionId: UUID, name: String, isAutomatic: Bool = false) async throws -> T {
+        let body = CreateCheckpointBody(name: name, isAutomatic: isAutomatic)
         return try await post("/sessions/\(sessionId.uuidString)/checkpoints", body: body)
     }
 

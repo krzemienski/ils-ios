@@ -72,7 +72,7 @@ struct SessionBackupController: RouteCollection {
             sessionId: sessionId,
             name: input.name.trimmingCharacters(in: .whitespaces),
             messageCount: session.messageCount,
-            isAutomatic: false
+            isAutomatic: input.isAutomatic ?? false
         )
 
         try await checkpoint.save(on: req.db)

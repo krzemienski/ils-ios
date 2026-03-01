@@ -27,8 +27,8 @@ class SessionCheckpointsViewModel {
         error = nil
 
         do {
-            let response: APIResponse<[SessionCheckpoint]> = try await client.listCheckpoints(sessionId: sessionId)
-            checkpoints = response.data ?? []
+            let response: APIResponse<ListResponse<SessionCheckpoint>> = try await client.listCheckpoints(sessionId: sessionId)
+            checkpoints = response.data?.items ?? []
         } catch {
             self.error = error.localizedDescription
         }

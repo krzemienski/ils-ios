@@ -677,10 +677,14 @@ public struct CreateCheckpointRequest: Codable, Sendable {
     public let name: String
     /// Optional description with more context about why this checkpoint was created.
     public let description: String?
+    /// Whether this checkpoint was created automatically (e.g., by the backup service).
+    /// Defaults to `false` when omitted, which indicates a manually created checkpoint.
+    public let isAutomatic: Bool?
 
-    public init(name: String, description: String? = nil) {
+    public init(name: String, description: String? = nil, isAutomatic: Bool? = nil) {
         self.name = name
         self.description = description
+        self.isAutomatic = isAutomatic
     }
 }
 

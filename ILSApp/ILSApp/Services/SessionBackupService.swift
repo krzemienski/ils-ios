@@ -54,7 +54,8 @@ actor SessionBackupService {
             let name = "Auto checkpoint (\(newCount) messages)"
             let _: APIResponse<SessionCheckpoint> = try await client.createCheckpoint(
                 sessionId: sessionId,
-                name: name
+                name: name,
+                isAutomatic: true
             )
             UserDefaults.standard.set(newCount, forKey: lastCountKey)
             AppLogger.shared.info(
