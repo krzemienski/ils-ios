@@ -18,6 +18,13 @@ public struct DashboardStats: Codable, Sendable {
     /// Plugin statistics.
     public let plugins: PluginStat
 
+    /// Creates a new dashboard statistics snapshot.
+    /// - Parameters:
+    ///   - projects: Project count statistics.
+    ///   - sessions: Session count statistics.
+    ///   - skills: Skill count statistics.
+    ///   - mcpServers: MCP server health statistics.
+    ///   - plugins: Plugin installation statistics.
     public init(
         projects: CountStat,
         sessions: SessionStat,
@@ -42,6 +49,10 @@ public struct CountStat: Codable, Sendable {
     /// Active count.
     public let active: Int?
 
+    /// Creates a new count statistic.
+    /// - Parameters:
+    ///   - total: Total number of items. Must be non-negative.
+    ///   - active: Number of currently active items, if applicable. Must be non-negative.
     public init(total: Int, active: Int? = nil) {
         precondition(total >= 0, "CountStat total must be non-negative")
         if let active { precondition(active >= 0, "CountStat active must be non-negative") }
@@ -57,6 +68,10 @@ public struct SessionStat: Codable, Sendable {
     /// Currently active sessions.
     public let active: Int
 
+    /// Creates a new session count statistic.
+    /// - Parameters:
+    ///   - total: Total number of sessions. Must be non-negative.
+    ///   - active: Number of currently active sessions. Must be non-negative.
     public init(total: Int, active: Int) {
         precondition(total >= 0, "SessionStat total must be non-negative")
         precondition(active >= 0, "SessionStat active must be non-negative")
@@ -72,6 +87,10 @@ public struct MCPStat: Codable, Sendable {
     /// Healthy MCP servers.
     public let healthy: Int
 
+    /// Creates a new MCP server health statistic.
+    /// - Parameters:
+    ///   - total: Total number of MCP servers. Must be non-negative.
+    ///   - healthy: Number of healthy MCP servers. Must be non-negative and not exceed `total`.
     public init(total: Int, healthy: Int) {
         precondition(total >= 0, "MCPStat total must be non-negative")
         precondition(healthy >= 0, "MCPStat healthy must be non-negative")
@@ -88,6 +107,10 @@ public struct PluginStat: Codable, Sendable {
     /// Enabled plugins.
     public let enabled: Int
 
+    /// Creates a new plugin installation statistic.
+    /// - Parameters:
+    ///   - total: Total number of installed plugins. Must be non-negative.
+    ///   - enabled: Number of enabled plugins. Must be non-negative and not exceed `total`.
     public init(total: Int, enabled: Int) {
         precondition(total >= 0, "PluginStat total must be non-negative")
         precondition(enabled >= 0, "PluginStat enabled must be non-negative")

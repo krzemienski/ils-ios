@@ -56,13 +56,30 @@ actor ClaudeExecutorService {
     /// `let` property — nonisolated by default on actors, safe to access from nonisolated methods.
     private let readQueue = DispatchQueue(label: "ils.claude-stdout-reader", qos: .userInitiated)
 
-    /// When true, uses the Agent SDK (via Node.js wrapper) instead of `claude -p`.
-    /// The SDK calls the Anthropic API directly, avoiding the subprocess hang issue.
-    /// Set to false to fall back to `claude -p` when running outside Claude Code.
-    ///
-    /// SWIFT6-01: `static let` — no runtime mutation exists in the codebase.
-    /// Previously `nonisolated(unsafe) static var` but grep confirms zero write sites.
-    static let useAgentSDK: Bool = true
+    /// Thread-safe boolean for sharing timeout state across GCD queues.
+    /// Replaces bare `var didTimeout = false` which was a data race between
+    /// DispatchWorkItem closures (global queue) and readStdout (readQueue).
+    private final class AtomicBool: @unchecked Sendable {
+        private var _value: Bool
+        private let lock = NSLock()
+        init(_ value: Bool) { _value = value }
+        var value: Bool {
+            get { lock.lock(); defer { lock.unlock() }; return _value }
+            set { lock.lock(); defer { lock.unlock() }; _value = newValue }
+        }
+    }
+
+    /// Resolve which execution backend to use for a given request.
+    /// Explicit `.sdk` or `.cli` in options overrides auto-detection.
+    /// Auto-detection: SDK if `CLAUDECODE` env var present, CLI otherwise.
+    private static func resolveBackend(options: ExecutionOptions) -> ExecutionBackend {
+        if let explicit = options.backend, explicit != .auto {
+            return explicit
+        }
+        // Inside a Claude Code session → SDK (avoids CLI nesting hang)
+        // Outside → CLI (richer streaming, permission forwarding)
+        return ProcessInfo.processInfo.environment["CLAUDECODE"] != nil ? .sdk : .cli
+    }
 
     // MARK: - Public API
 
@@ -77,6 +94,10 @@ actor ClaudeExecutorService {
             let pipe = Pipe()
             process.standardOutput = pipe
             process.standardError = Pipe()
+            // MEM-FD: Explicitly close pipe FDs — short-lived helpers rely on ARC otherwise.
+            defer {
+                pipe.fileHandleForReading.closeFile()
+            }
 
             try process.run()
             process.waitUntilExit()
@@ -97,6 +118,10 @@ actor ClaudeExecutorService {
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
+        // MEM-FD: Explicitly close pipe FD — short-lived helper relies on ARC otherwise.
+        defer {
+            pipe.fileHandleForReading.closeFile()
+        }
 
         try process.run()
         process.waitUntilExit()
@@ -107,8 +132,8 @@ actor ClaudeExecutorService {
 
     /// Execute a Claude query with streaming JSON output.
     ///
-    /// Uses either the Agent SDK (Node.js wrapper) or direct `claude -p` CLI depending
-    /// on the `useAgentSDK` flag. Both produce NDJSON on stdout in the same format.
+    /// Routes to SDK (Python wrapper) or CLI (`claude -p`) based on per-request
+    /// `options.backend` field with auto-detection fallback.
     ///
     /// - Parameters:
     ///   - prompt: User prompt text
@@ -120,47 +145,56 @@ actor ClaudeExecutorService {
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        if Self.useAgentSDK {
+        let backend = Self.resolveBackend(options: options)
+        Self.logger.debug("Using backend: \(backend.rawValue)")
+        switch backend {
+        case .sdk, .auto:
             return executeWithSDK(prompt: prompt, workingDirectory: workingDirectory, options: options)
-        } else {
+        case .cli:
             return executeWithCLI(prompt: prompt, workingDirectory: workingDirectory, options: options)
         }
     }
 
     // MARK: - Agent SDK Execution
 
-    /// Execute via Agent SDK (Node.js wrapper).
+    /// Execute via Agent SDK (Python wrapper).
     ///
-    /// Spawns `node scripts/sdk-wrapper.mjs '<json-config>'` where the prompt and all
-    /// options are passed as a JSON argument. The SDK calls the Anthropic API directly,
-    /// avoiding subprocess conflicts with the parent Claude Code session.
+    /// Spawns `python3 scripts/sdk-wrapper.py '<json-config>'` where the prompt and all
+    /// options are passed as a JSON argument. The SDK wraps Claude CLI internally,
+    /// inheriting OAuth auth from `~/.claude/`.
     private nonisolated func executeWithSDK(
         prompt: String,
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        AsyncThrowingStream { continuation in
+        AsyncThrowingStream(bufferingPolicy: .bufferingNewest(100)) { continuation in
             // Build SDK configuration as JSON
             let sdkConfig = Self.buildSDKConfig(prompt: prompt, options: options, workingDirectory: workingDirectory)
             Self.logger.debug("SDK config: \(sdkConfig.prefix(200))")
 
-            // Find the sdk-wrapper.mjs script relative to the backend working directory
+            // Find the sdk-wrapper.py script relative to the backend working directory
             let projectRoot = workingDirectory ?? FileManager.default.currentDirectoryPath
-            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.mjs"
+            let wrapperPath = "\(projectRoot)/scripts/sdk-wrapper.py"
 
-            // Build the node command
-            let command = "node \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
+            // Build the python3 command
+            let command = "python3 \(Self.shellEscape(wrapperPath)) \(Self.shellEscape(sdkConfig))"
 
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-            process.arguments = ["-l", "-c", command]
+            // Inline-strip CLAUDE* env vars that login shell may re-export from profile.
+            let cleanCmd = "for v in $(env | grep ^CLAUDE | cut -d= -f1); do unset $v; done; \(command)"
+            process.arguments = ["-l", "-c", cleanCmd]
 
             if let dir = workingDirectory {
                 process.currentDirectoryURL = URL(fileURLWithPath: dir)
             }
 
-            // Inherit environment — the Agent SDK uses Claude Code's auth (not ANTHROPIC_API_KEY)
-            process.environment = ProcessInfo.processInfo.environment
+            // Also strip from Process environment (belt-and-suspenders).
+            var env = ProcessInfo.processInfo.environment
+            for key in env.keys where key.hasPrefix("CLAUDE") {
+                env.removeValue(forKey: key)
+            }
+            process.environment = env
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
@@ -182,6 +216,10 @@ actor ClaudeExecutorService {
                 Self.logger.debug("SDK process started (PID: \(process.processIdentifier))")
             } catch {
                 Self.logger.debug("Failed to start SDK process: \(error)")
+                // MEM-FD: Close pipes to prevent file descriptor leak on process launch failure.
+                // readStdout (which normally closes them via defer) is never reached in this path.
+                outputPipe.fileHandleForReading.closeFile()
+                errorPipe.fileHandleForReading.closeFile()
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch Agent SDK wrapper: \(error.localizedDescription)"
@@ -190,11 +228,11 @@ actor ClaudeExecutorService {
                 return
             }
 
-            // --- Timeout mechanism ---
-            var didTimeout = false
+            // --- Timeout mechanism (thread-safe via AtomicBool) ---
+            let didTimeout = AtomicBool(false)
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout = true
+                didTimeout.value = true
                 Self.logger.debug("TIMEOUT: No SDK data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -203,7 +241,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout = true
+                    didTimeout.value = true
                     Self.logger.debug("TOTAL TIMEOUT: SDK process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -217,7 +255,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: &didTimeout,
+                    didTimeout: didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -239,37 +277,49 @@ actor ClaudeExecutorService {
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        AsyncThrowingStream { continuation in
+        AsyncThrowingStream(bufferingPolicy: .bufferingNewest(100)) { continuation in
             let command = Self.buildCommand(options: options)
             Self.logger.debug("CLI command: \(command)")
 
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-            process.arguments = ["-l", "-c", command]
+            // Use login shell for PATH resolution, but inline-strip any CLAUDE*
+            // env vars that ~/.zshrc re-exports (e.g. CLAUDE_CODE_MAX_OUTPUT_TOKENS).
+            let cleanCmd = "for v in $(env | grep ^CLAUDE | cut -d= -f1); do unset $v; done; \(command)"
+            process.arguments = ["-l", "-c", cleanCmd]
 
             if let dir = workingDirectory {
                 process.currentDirectoryURL = URL(fileURLWithPath: dir)
             }
 
-            process.environment = ProcessInfo.processInfo.environment
+            // Also strip from Process environment (belt-and-suspenders).
+            var env = ProcessInfo.processInfo.environment
+            for key in env.keys where key.hasPrefix("CLAUDE") {
+                env.removeValue(forKey: key)
+            }
+            process.environment = env
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
             process.standardOutput = outputPipe
             process.standardError = errorPipe
 
-            // Send prompt via stdin, keep open for permission forwarding
+            // Send prompt via stdin, then close to signal EOF.
+            // `claude -p` reads stdin until EOF when no positional prompt arg is given.
             let stdinPipe = Pipe()
             process.standardInput = stdinPipe
             if let data = (prompt + "\n").data(using: .utf8) {
                 stdinPipe.fileHandleForWriting.write(data)
             }
+            stdinPipe.fileHandleForWriting.closeFile()
 
             let sessionId = options.sessionId ?? UUID().uuidString
-            let stdinHandle = stdinPipe.fileHandleForWriting
+            let stdinHandle: FileHandle? = nil  // stdin already closed
             Task { [weak self] in
                 await self?.storeProcess(sessionId, process: process)
-                await self?.storeStdinHandle(sessionId, handle: stdinHandle)
+                if let handle = stdinHandle {
+                    await self?.storeStdinHandle(sessionId, handle: handle)
+                }
             }
 
             do {
@@ -277,6 +327,10 @@ actor ClaudeExecutorService {
                 Self.logger.debug("CLI process started (PID: \(process.processIdentifier))")
             } catch {
                 Self.logger.debug("Failed to start CLI process: \(error)")
+                // MEM-FD: Close pipes to prevent file descriptor leak on process launch failure.
+                // readStdout (which normally closes them via defer) is never reached in this path.
+                outputPipe.fileHandleForReading.closeFile()
+                errorPipe.fileHandleForReading.closeFile()
                 continuation.yield(.error(StreamError(
                     code: "LAUNCH_ERROR",
                     message: "Failed to launch claude: \(error.localizedDescription)"
@@ -285,10 +339,10 @@ actor ClaudeExecutorService {
                 return
             }
 
-            var didTimeout = false
+            let didTimeout = AtomicBool(false)
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout = true
+                didTimeout.value = true
                 Self.logger.debug("TIMEOUT: No CLI data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -297,7 +351,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout = true
+                    didTimeout.value = true
                     Self.logger.debug("TOTAL TIMEOUT: CLI process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -311,7 +365,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: &didTimeout,
+                    didTimeout: didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -330,7 +384,7 @@ actor ClaudeExecutorService {
         errorPipe: Pipe,
         process: Process,
         sessionId: String,
-        didTimeout: inout Bool,
+        didTimeout: AtomicBool,
         timeoutWork: DispatchWorkItem,
         totalTimeoutWork: DispatchWorkItem,
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
@@ -382,7 +436,7 @@ actor ClaudeExecutorService {
 
         let exitCode = process.terminationStatus
         if exitCode != 0 {
-            if didTimeout {
+            if didTimeout.value {
                 logger.debug("Process killed by timeout (exit \(exitCode))")
                 continuation.yield(.error(StreamError(
                     code: "TIMEOUT",

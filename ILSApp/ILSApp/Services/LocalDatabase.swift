@@ -229,6 +229,31 @@ struct CachedPlugin: Codable, FetchableRecord, PersistableRecord, Identifiable {
     }
 }
 
+/// Cached SSH server connection profile for GRDB persistence.
+///
+/// Intentionally omits sensitive fields (credentials, private keys, passwords).
+/// Credentials are stored separately in the system Keychain, keyed by connection ID.
+struct CachedServerConnection: Codable, FetchableRecord, PersistableRecord, Identifiable {
+    static let databaseTableName = "cached_server_connections"
+
+    /// UUID of the connection profile (as string).
+    let id: String
+    /// Hostname or IP address of the remote server.
+    var host: String
+    /// SSH port number.
+    var port: Int
+    /// SSH username for authentication.
+    var username: String
+    /// Authentication method identifier ("password" or "privateKey").
+    var authMethod: String
+    /// Optional human-readable label for the profile.
+    var label: String?
+    /// Timestamp of the last successful connection, if any.
+    var lastConnected: Date?
+    /// Timestamp when this record was cached.
+    var cachedAt: Date
+}
+
 // MARK: - LocalDatabase
 
 /// Thread-safe local SQLite database for offline caching.
@@ -367,6 +392,19 @@ actor LocalDatabase {
                 t.column("isInstalled", .boolean).notNull()
                 t.column("isEnabled", .boolean).notNull()
                 t.column("version", .text)
+                t.column("cachedAt", .datetime).notNull()
+            }
+        }
+
+        migrator.registerMigration("v2_add_server_connections") { db in
+            try db.create(table: "cached_server_connections") { t in
+                t.primaryKey("id", .text)
+                t.column("host", .text).notNull()
+                t.column("port", .integer).notNull()
+                t.column("username", .text).notNull()
+                t.column("authMethod", .text).notNull()
+                t.column("label", .text)
+                t.column("lastConnected", .datetime)
                 t.column("cachedAt", .datetime).notNull()
             }
         }
@@ -554,5 +592,45 @@ actor LocalDatabase {
             _ = try CachedPlugin.deleteAll(db)
         }
         AppLogger.shared.info("All cached data cleared", category: "cache")
+    }
+
+    // MARK: - Server Connections (SSH Profiles)
+
+    /// Saves or updates an SSH server connection profile.
+    /// - Parameter connection: The profile to persist. Credentials must be stored separately in Keychain.
+    func saveServerConnection(_ connection: CachedServerConnection) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            try connection.save(db)
+        }
+    }
+
+    /// Fetches all saved SSH server connection profiles, ordered by most recently connected.
+    func fetchServerConnections() throws -> [CachedServerConnection] {
+        guard let dbPool else { return [] }
+        return try dbPool.read { db in
+            try CachedServerConnection
+                .order(Column("lastConnected").desc, Column("cachedAt").desc)
+                .fetchAll(db)
+        }
+    }
+
+    /// Fetches a single SSH server connection profile by its UUID string.
+    /// - Parameter id: UUID string of the profile to fetch.
+    /// - Returns: The profile if found, or `nil`.
+    func fetchServerConnection(byId id: String) throws -> CachedServerConnection? {
+        guard let dbPool else { return nil }
+        return try dbPool.read { db in
+            try CachedServerConnection.fetchOne(db, key: id)
+        }
+    }
+
+    /// Deletes an SSH server connection profile by its UUID string.
+    /// - Parameter id: UUID string of the profile to delete.
+    func deleteServerConnection(byId id: String) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            _ = try CachedServerConnection.deleteOne(db, key: id)
+        }
     }
 }

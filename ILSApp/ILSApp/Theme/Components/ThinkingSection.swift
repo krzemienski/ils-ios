@@ -28,11 +28,17 @@ struct ThinkingSection: View {
                 expandedContent
             }
         }
-        .background(theme.bgTertiary)
+        .background(
+            LinearGradient(
+                colors: [theme.entityPlugin.opacity(0.12), theme.info.opacity(0.06)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .overlay(
             RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
-                .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
+                .strokeBorder(theme.entityPlugin.opacity(0.3), lineWidth: 0.5)
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(isActive ? "AI thinking process, in progress" : "AI thinking process")

@@ -1,5 +1,29 @@
 import Foundation
 
+/// A box type used to allow recursive references in `ServerConnection`.
+/// `ServerConnection` is a value type (struct), so a direct recursive property
+/// would be invalid. This box wraps the connection in a class to enable the
+/// jump host pattern.
+public final class ServerConnectionBox: Codable, Sendable {
+    /// The wrapped server connection.
+    public let connection: ServerConnection
+
+    /// Creates a new box around a server connection.
+    public init(_ connection: ServerConnection) {
+        self.connection = connection
+    }
+}
+
+extension ServerConnectionBox: Hashable {
+    public static func == (lhs: ServerConnectionBox, rhs: ServerConnectionBox) -> Bool {
+        lhs.connection == rhs.connection
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(connection)
+    }
+}
+
 /// Represents an SSH server connection for remote Claude Code execution.
 public struct ServerConnection: Codable, Identifiable, Hashable, Sendable {
     /// Unique identifier for this connection.
@@ -16,6 +40,10 @@ public struct ServerConnection: Codable, Identifiable, Hashable, Sendable {
     public var label: String?
     /// Timestamp of the last successful connection.
     public var lastConnected: Date?
+    /// Whether to enable SSH agent forwarding when connecting.
+    public var agentForwarding: Bool
+    /// Optional jump host (bastion server) to proxy this connection through.
+    public var jumpHost: ServerConnectionBox?
 
     /// Authentication method for SSH connections.
     public enum AuthMethod: String, Codable, Sendable {
@@ -48,6 +76,8 @@ public struct ServerConnection: Codable, Identifiable, Hashable, Sendable {
     ///   - authMethod: Authentication method to use.
     ///   - label: Optional human-readable label.
     ///   - lastConnected: Timestamp of last successful connection.
+    ///   - agentForwarding: Whether to enable SSH agent forwarding (default: false).
+    ///   - jumpHost: Optional jump host (bastion) to proxy this connection through.
     public init(
         id: UUID = UUID(),
         host: String,
@@ -55,7 +85,9 @@ public struct ServerConnection: Codable, Identifiable, Hashable, Sendable {
         username: String,
         authMethod: AuthMethod,
         label: String? = nil,
-        lastConnected: Date? = nil
+        lastConnected: Date? = nil,
+        agentForwarding: Bool = false,
+        jumpHost: ServerConnectionBox? = nil
     ) {
         precondition(!host.isEmpty, "ServerConnection host must not be empty")
         precondition(!username.isEmpty, "ServerConnection username must not be empty")
@@ -67,5 +99,7 @@ public struct ServerConnection: Codable, Identifiable, Hashable, Sendable {
         self.authMethod = authMethod
         self.label = label
         self.lastConnected = lastConnected
+        self.agentForwarding = agentForwarding
+        self.jumpHost = jumpHost
     }
 }
