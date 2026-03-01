@@ -89,6 +89,7 @@ targets:
               - ils
         NSFaceIDUsageDescription: "Face ID is used to protect your server credentials stored in the Keychain."
         NSSupportsLiveActivities: true
+        UIApplicationSupportsMultipleScenes: true
         UILaunchScreen: {}
     entitlements:
       path: ILSApp/ILSApp.entitlements
