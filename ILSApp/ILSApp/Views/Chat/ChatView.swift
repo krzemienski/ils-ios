@@ -57,8 +57,6 @@ struct ChatView: View {
         var navigateToForked: ChatSession?
         var messageToDelete: ChatMessage?
         var renameText = ""
-        var exportMarkdown = ""
-        var isExporting = false
     }
 
     /// State controlling sheet and alert presentation.
@@ -161,7 +159,8 @@ struct ChatView: View {
             Text("This will permanently delete this session and all its messages.")
         }
         .sheet(isPresented: $sheets.showExportSheet) {
-            ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
+            SessionExportPickerSheet(session: session)
+                .environment(appState)
         }
         .sheet(isPresented: $sheets.showAdvancedOptions) {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
@@ -329,7 +328,7 @@ struct ChatView: View {
                 .accessibilityIdentifier("fork-session-button")
 
                 Button {
-                    Task { await exportSession() }
+                    exportSession()
                 } label: {
                     Label("Export", systemImage: "square.and.arrow.up")
                 }
@@ -409,14 +408,8 @@ struct ChatView: View {
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
     }
 
-    /// Export the full conversation as a Markdown file for sharing.
-    private func exportSession() async {
-        actions.isExporting = true
-        actions.exportMarkdown = SessionExportService.exportMarkdown(
-            session: session,
-            messages: viewModel.messages
-        )
-        actions.isExporting = false
+    /// Present the export format picker for sharing the session.
+    private func exportSession() {
         sheets.showExportSheet = true
     }
 }

@@ -65,6 +65,8 @@
 		1F0E75F4FE9FA0A116F87AB5 /* ScrollPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BB4C233B48361C8E553661 /* ScrollPerformanceTests.swift */; };
 		1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */; };
 		20FB190430C47A5FD65C6EA7 /* SessionExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C762E18BD102C1442B83A33F /* SessionExportService.swift */; };
+		5D9A72282D214C339453C262 /* SessionBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC7275C66284A24822D12C4 /* SessionBackupService.swift */; };
+		8965D350183842629D3BF18E /* SessionBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DC7275C66284A24822D12C4 /* SessionBackupService.swift */; };
 		20FE0631A246BE453EFD51B6 /* SparklineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685FF84BB2B79DC7BC1AB69F /* SparklineChart.swift */; };
 		217B408FC61DFCC3B1D4E880 /* SpawnTeammateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970C2A5F3E4A68DA171D4E85 /* SpawnTeammateView.swift */; };
 		22F9854D3C5AB0DC6518F326 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */; };
@@ -627,6 +629,7 @@
 		C5B056B7908867F6A45C233C /* LaunchPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchPerformanceTests.swift; sourceTree = "<group>"; };
 		C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesViewModel.swift; sourceTree = "<group>"; };
 		C6435DCBC926C12F7B22C09B /* GraphiteTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphiteTheme.swift; sourceTree = "<group>"; };
+		9DC7275C66284A24822D12C4 /* SessionBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBackupService.swift; sourceTree = "<group>"; };
 		C762E18BD102C1442B83A33F /* SessionExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionExportService.swift; sourceTree = "<group>"; };
 		C7833DDD0453FC543AF33950 /* Scenario03_StreamingAndCancellation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario03_StreamingAndCancellation.swift; sourceTree = "<group>"; };
 		C82F89BCFDD21A13377F020D /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
@@ -1133,6 +1136,7 @@
 				E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */,
 				0D259013682B0E76D248995F /* PerformanceMonitor.swift */,
 				2EE82C913049A620A077F141 /* PollingManager.swift */,
+				9DC7275C66284A24822D12C4 /* SessionBackupService.swift */,
 				C762E18BD102C1442B83A33F /* SessionExportService.swift */,
 				06A8A5DC276AB8E77D502627 /* SSEClient.swift */,
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
@@ -1637,6 +1641,7 @@
 				47C604CF499F29E3DB4DADC9 /* ServerStatusWidget.swift in Sources */,
 				C913EE769244089EE3D6BA36 /* SessionEntity.swift in Sources */,
 				20FB190430C47A5FD65C6EA7 /* SessionExportService.swift in Sources */,
+				5D9A72282D214C339453C262 /* SessionBackupService.swift in Sources */,
 				0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */,
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
@@ -1839,6 +1844,7 @@
 				BC4369EBF23D06689240F5E3 /* ServerStatusWidget.swift in Sources */,
 				36A459918D16CC918CF4BEAA /* SessionEntity.swift in Sources */,
 				F6E04D2995D19353AE7B687C /* SessionExportService.swift in Sources */,
+				8965D350183842629D3BF18E /* SessionBackupService.swift in Sources */,
 				EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */,
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,

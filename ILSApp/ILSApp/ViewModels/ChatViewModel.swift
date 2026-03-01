@@ -194,6 +194,17 @@ class ChatViewModel {
                         #endif
                         self.streamStartTime = nil
                         lastMessageCount = 0
+                        // Trigger auto-checkpoint check after AI response completes
+                        if let sessionId = self.sessionId, let apiClient = self.apiClient {
+                            let newCount = self.messages.count
+                            Task {
+                                await SessionBackupService.shared.didSendMessage(
+                                    sessionId: sessionId,
+                                    newCount: newCount,
+                                    client: apiClient
+                                )
+                            }
+                        }
                     }
                     lastStreaming = streaming
                 }
