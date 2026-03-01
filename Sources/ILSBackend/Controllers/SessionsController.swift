@@ -9,6 +9,7 @@ import ILSShared
 /// - `POST /sessions`: Create a new session
 /// - `GET /sessions/scan`: Scan for external Claude Code sessions
 /// - `GET /sessions/search?q=`: Search across all session messages
+/// - `GET /sessions/integrity-check`: Verify session messageCount integrity (optional ?fix=true)
 /// - `GET /sessions/:id`: Get a specific session
 /// - `PUT /sessions/:id`: Rename a session
 /// - `DELETE /sessions/:id`: Delete a session
@@ -35,6 +36,7 @@ struct SessionsController: RouteCollection {
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get("search", use: searchAll)
+        sessions.get("integrity-check", use: integrityCheck)
         sessions.get(":id", use: get)
         sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
@@ -736,6 +738,53 @@ struct SessionsController: RouteCollection {
             success: true,
             data: ListResponse(items: results, total: total)
         )
+    }
+
+    // MARK: - Integrity Check
+
+    /// Verify the integrity of all DB sessions by comparing stored messageCount against the
+    /// actual number of MessageModel rows.
+    ///
+    /// Query parameters:
+    /// - `fix`: If "true", automatically updates sessions whose stored count diverges from actual.
+    ///
+    /// - Parameter req: Vapor Request with optional `fix` query param
+    /// - Returns: APIResponse with list of IntegrityCheckResult for every session checked
+    @Sendable
+    func integrityCheck(req: Request) async throws -> APIResponse<[IntegrityCheckResult]> {
+        let fix = req.query[String.self, at: "fix"] == "true"
+
+        let sessions = try await SessionModel.query(on: req.db).all()
+        var results: [IntegrityCheckResult] = []
+        results.reserveCapacity(sessions.count)
+
+        for session in sessions {
+            guard let sessionId = session.id else { continue }
+
+            let actualCount = try await MessageModel.query(on: req.db)
+                .filter(\.$session.$id == sessionId)
+                .count()
+
+            var issues: [String] = []
+
+            if session.messageCount != actualCount {
+                issues.append("messageCount mismatch: stored \(session.messageCount), actual \(actualCount)")
+
+                if fix {
+                    session.messageCount = actualCount
+                    try await session.save(on: req.db)
+                }
+            }
+
+            results.append(IntegrityCheckResult(
+                sessionId: sessionId,
+                passed: issues.isEmpty,
+                issues: issues,
+                checkedAt: Date()
+            ))
+        }
+
+        return APIResponse(success: true, data: results)
     }
 
     // MARK: - Chat Export

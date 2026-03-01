@@ -170,6 +170,7 @@ extension MCPStat: Content {}
 extension PluginStat: Content {}
 extension DeletedResponse: Content {}
 extension DataErasureResponse: Content {}
+extension IntegrityCheckResult: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
