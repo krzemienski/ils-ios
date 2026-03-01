@@ -18,8 +18,8 @@ struct MacSessionsListView: View {
 
     // State
     @State private var searchText: String = ""
+    @State private var debouncedSearchText: String = ""
     @State private var selectedSessionId: UUID?
-    @State private var cachedFilteredGroups: [ProjectGroupInfo] = []
 
     /// Comma-separated project names whose DisclosureGroups are expanded, persisted across app launches.
     @AppStorage("macExpandedProjects") private var expandedProjectsStorage: String = ""
@@ -55,13 +55,6 @@ struct MacSessionsListView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadProjectGroups()
-            updateFilteredGroups()
-        }
-        .onChange(of: searchText) { _, _ in
-            updateFilteredGroups()
-        }
-        .onChange(of: viewModel.projectGroups.count) { _, _ in
-            updateFilteredGroups()
         }
     }
 
@@ -73,9 +66,15 @@ struct MacSessionsListView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Spacer()
-            Text("\(viewModel.totalCount)")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
+            if !debouncedSearchText.isEmpty {
+                Text("\(filteredProjectGroups.count) of \(viewModel.totalCount)")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            } else {
+                Text("\(viewModel.totalCount)")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.top, theme.spacingMD)
@@ -96,6 +95,7 @@ struct MacSessionsListView: View {
             if !searchText.isEmpty {
                 Button {
                     searchText = ""
+                    debouncedSearchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -118,10 +118,10 @@ struct MacSessionsListView: View {
         List(selection: $selectedSessionId) {
             if viewModel.isLoading && viewModel.projectGroups.isEmpty {
                 loadingView
-            } else if cachedFilteredGroups.isEmpty {
+            } else if filteredProjectGroups.isEmpty {
                 emptyView
             } else {
-                ForEach(cachedFilteredGroups) { group in
+                ForEach(filteredProjectGroups) { group in
                     projectGroup(group: group)
                 }
             }
@@ -129,6 +129,10 @@ struct MacSessionsListView: View {
         .listStyle(.sidebar)
         .refreshable {
             await viewModel.loadProjectGroups()
+        }
+        .task(id: searchText) {
+            try? await Task.sleep(for: .milliseconds(300))
+            debouncedSearchText = searchText
         }
         .onChange(of: selectedSessionId) { _, newId in
             // Handle keyboard selection (Return key)
@@ -303,7 +307,7 @@ struct MacSessionsListView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.system(size: 24, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
-            Text(searchText.isEmpty ? "No sessions yet" : "No matching sessions")
+            Text(debouncedSearchText.isEmpty ? "No sessions yet" : "No matching sessions")
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
@@ -338,13 +342,10 @@ struct MacSessionsListView: View {
 
     // MARK: - Helpers
 
-    private func updateFilteredGroups() {
-        guard !searchText.isEmpty else {
-            cachedFilteredGroups = viewModel.projectGroups
-            return
-        }
-        let query = searchText.lowercased()
-        cachedFilteredGroups = viewModel.projectGroups.filter { group in
+    private var filteredProjectGroups: [ProjectGroupInfo] {
+        guard !debouncedSearchText.isEmpty else { return viewModel.projectGroups }
+        let query = debouncedSearchText.lowercased()
+        return viewModel.projectGroups.filter { group in
             group.name.lowercased().contains(query)
         }
     }
