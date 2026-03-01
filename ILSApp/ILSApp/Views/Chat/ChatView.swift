@@ -48,6 +48,7 @@ struct ChatView: View {
         var showDeleteSessionConfirmation = false
         var showAdvancedOptions = false
         var isRenaming = false
+        var showAttachmentPicker = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -67,6 +68,8 @@ struct ChatView: View {
     @State private var actions = ActionState()
     /// The current text in the message input field.
     @State private var inputText = ""
+    /// Pending attachments to be sent with the next message.
+    @State private var pendingAttachments: [MessageAttachment] = []
     /// Whether the user has manually scrolled up from the bottom of the message list.
     @State private var isUserScrolledUp = false
     /// Whether the "jump to bottom" button is currently visible.
@@ -167,6 +170,15 @@ struct ChatView: View {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
+        }
+        .sheet(isPresented: $sheets.showAttachmentPicker) {
+            AttachmentPickerSheet(
+                onAttach: { attachments in
+                    pendingAttachments.append(contentsOf: attachments)
+                },
+                onDismiss: { sheets.showAttachmentPicker = false }
+            )
+            .presentationBackground(theme.bgPrimary)
         }
         .sheet(item: $viewModel.pendingPermissionRequest) { request in
             PermissionRequestModal(request: request) { decision in
@@ -283,7 +295,9 @@ struct ChatView: View {
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
             onCommandPalette: { sheets.showCommandPalette = true },
-            onAdvancedOptions: { sheets.showAdvancedOptions = true }
+            onAdvancedOptions: { sheets.showAdvancedOptions = true },
+            attachments: $pendingAttachments,
+            onAttachmentTap: { sheets.showAttachmentPicker = true }
         )
         .focused($isInputFocused)
     }
@@ -399,14 +413,21 @@ struct ChatView: View {
         guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
         let prompt = inputText
+        let attachments = pendingAttachments
         inputText = ""
+        pendingAttachments = []
 
         // Clear persisted draft on send (DATA-05)
         UserDefaults.standard.removeObject(forKey: "chatDraft_\(session.id.uuidString)")
         draftPersistTask?.cancel()
 
-        viewModel.addUserMessage(prompt)
-        viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
+        viewModel.addUserMessage(prompt, attachments: attachments)
+        viewModel.sendMessage(
+            prompt: prompt,
+            projectId: session.projectId,
+            options: chatOptionsConfig.toChatOptions(),
+            attachments: attachments
+        )
     }
 
     /// Export the full conversation as a Markdown file for sharing.
