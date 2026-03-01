@@ -118,6 +118,7 @@
 		3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */; };
 		3ECD0B190A2B788BC969453C /* ChatInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */; };
 		409F0C523D14F33C1143F23E /* GrammarDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6061C5B3E094C0E104ED8680 /* GrammarDefinitions.swift */; };
+		A1B2C3D4E5F60001AAAA0001 /* GrammarDefinitions+Scripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000AAAA0001 /* GrammarDefinitions+Scripting.swift */; };
 		40F5BFCA27CF950AED4747DD /* ThemeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05E3DDA4E3B80E90339047E5 /* ThemeEditorView.swift */; };
 		415FA9BEB8D7C968A1383F44 /* ObsidianTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20728850B297F9D25F6F821B /* ObsidianTheme.swift */; };
 		41FB48402FEE23C36AC1E3A9 /* ThemeShadowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751C7B1C31C6E1B8006E0821 /* ThemeShadowSection.swift */; };
@@ -182,6 +183,7 @@
 		6A1E87A92394F16EFC6DDA1D /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97B54AA46C4307B025310A2 /* GlassCard.swift */; };
 		6A56E46FE442AA1CBB4D89E7 /* SendMessageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */; };
 		6BB6DB9CD14FC1D904F30259 /* GrammarDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6061C5B3E094C0E104ED8680 /* GrammarDefinitions.swift */; };
+		A1B2C3D4E5F60002AAAA0002 /* GrammarDefinitions+Scripting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000AAAA0001 /* GrammarDefinitions+Scripting.swift */; };
 		6BFA87146F9663D99F2E85A9 /* FeatureGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */; };
 		6D77C87FBBC7B9B3EB0BE3B5 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06A8A5DC276AB8E77D502627 /* SSEClient.swift */; };
 		6E34C5445A2760CEE34B49CE /* CitadelSSHService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */; };
@@ -531,6 +533,7 @@
 		5D406A95CF1DAFB1A1D7DAF2 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		5E683D748A14BABED0367834 /* ILSMacApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSMacApp.entitlements; sourceTree = "<group>"; };
 		6061C5B3E094C0E104ED8680 /* GrammarDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarDefinitions.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60000AAAA0001 /* GrammarDefinitions+Scripting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GrammarDefinitions+Scripting.swift"; sourceTree = "<group>"; };
 		610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditorViewModel.swift; sourceTree = "<group>"; };
 		6157A63376D8A574079B8194 /* hud-state.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "hud-state.json"; sourceTree = "<group>"; };
 		62D1F1E3963FFA7F5AC61009 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -1204,6 +1207,7 @@
 				E00F6701245AF7B9134C8D4A /* BashGrammar.swift */,
 				086471F6384F852489CD04E2 /* GrammarConfig.swift */,
 				6061C5B3E094C0E104ED8680 /* GrammarDefinitions.swift */,
+				A1B2C3D4E5F60000AAAA0001 /* GrammarDefinitions+Scripting.swift */,
 				A739B55CE00235EB978045C4 /* GrammarRegistry.swift */,
 				03452CA1134CD8D414AAF4CF /* JavaScriptGrammar.swift */,
 				7C8832C537298BC59A575FF3 /* PythonGrammar.swift */,
@@ -1564,6 +1568,7 @@
 				6A1E87A92394F16EFC6DDA1D /* GlassCard.swift in Sources */,
 				3E116A9F7F4A11446DC574BD /* GrammarConfig.swift in Sources */,
 				6BB6DB9CD14FC1D904F30259 /* GrammarDefinitions.swift in Sources */,
+				A1B2C3D4E5F60002AAAA0002 /* GrammarDefinitions+Scripting.swift in Sources */,
 				14FDCB593D5990C347A26446 /* GrammarRegistry.swift in Sources */,
 				BE6A0DBA034EC6767202145C /* GraphiteTheme.swift in Sources */,
 				95865DF75FE8F66BBF3DDCB9 /* HapticManager.swift in Sources */,
@@ -1755,6 +1760,7 @@
 				37966728A2EB40050DC24223 /* GlassCard.swift in Sources */,
 				C18516CBE323057F964BE25B /* GrammarConfig.swift in Sources */,
 				409F0C523D14F33C1143F23E /* GrammarDefinitions.swift in Sources */,
+				A1B2C3D4E5F60001AAAA0001 /* GrammarDefinitions+Scripting.swift in Sources */,
 				5FD3729463DD124E8AF5D8C5 /* GrammarRegistry.swift in Sources */,
 				30CF8A4B3FD09D7835ADFF29 /* GraphiteTheme.swift in Sources */,
 				E40DD2C368904D059EF66C6F /* HapticManager.swift in Sources */,
