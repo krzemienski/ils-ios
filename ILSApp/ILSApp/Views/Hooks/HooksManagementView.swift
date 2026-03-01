@@ -10,6 +10,15 @@ struct HooksManagementView: View {
     @State private var showCreateSheet = false
     @State private var editingHook: (eventType: String, groupIndex: Int, group: HookGroup)?
     @State private var showDeleteError: String?
+    @State private var toggleError: String?
+
+    // Import / Export
+    @State private var showExportSheet = false
+    @State private var exportedJSON: String = ""
+    @State private var showImportSheet = false
+    @State private var importText: String = ""
+    @State private var importError: String?
+    @State private var isImporting = false
 
     var body: some View {
         Group {
@@ -28,12 +37,51 @@ struct HooksManagementView: View {
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button {
-                    showCreateSheet = true
-                } label: {
-                    Image(systemName: "plus")
+                HStack(spacing: theme.spacingSM) {
+                    Menu {
+                        NavigationLink {
+                            HookTestSimulatorView(viewModel: viewModel)
+                        } label: {
+                            Label("Test Simulator", systemImage: "play.circle")
+                        }
+
+                        NavigationLink {
+                            HookExecutionLogView(viewModel: viewModel)
+                        } label: {
+                            Label("Execution Log", systemImage: "clock.arrow.circlepath")
+                        }
+
+                        Divider()
+
+                        Button {
+                            if let json = viewModel.exportHooksAsJSON() {
+                                exportedJSON = json
+                                showExportSheet = true
+                            }
+                        } label: {
+                            Label("Export JSON", systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(viewModel.hooks.isEmpty)
+
+                        Button {
+                            importText = ""
+                            importError = nil
+                            showImportSheet = true
+                        } label: {
+                            Label("Import JSON", systemImage: "square.and.arrow.down")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("More options")
+
+                    Button {
+                        showCreateSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("Create new hook")
                 }
-                .accessibilityLabel("Create new hook")
             }
         }
         .refreshable {
@@ -66,6 +114,16 @@ struct HooksManagementView: View {
                 }
             )
         }
+        // Export share sheet
+        .sheet(isPresented: $showExportSheet) {
+            if !exportedJSON.isEmpty {
+                ShareSheet(items: [exportedJSON])
+            }
+        }
+        // Import sheet
+        .sheet(isPresented: $showImportSheet) {
+            importSheet
+        }
         .alert("Delete Failed", isPresented: Binding(
             get: { showDeleteError != nil },
             set: { if !$0 { showDeleteError = nil } }
@@ -73,6 +131,16 @@ struct HooksManagementView: View {
             Button("OK", role: .cancel) {}
         } message: {
             if let error = showDeleteError {
+                Text(error)
+            }
+        }
+        .alert("Toggle Failed", isPresented: Binding(
+            get: { toggleError != nil },
+            set: { if !$0 { toggleError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let error = toggleError {
                 Text(error)
             }
         }
@@ -179,7 +247,7 @@ struct HooksManagementView: View {
                 // Action summary line
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: iconForHandlerType(item.hookType))
-                        .foregroundStyle(theme.accent)
+                        .foregroundStyle(item.isEnabled ? theme.accent : theme.textTertiary)
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .accessibilityHidden(true)
 
@@ -189,6 +257,17 @@ struct HooksManagementView: View {
                         .lineLimit(2)
 
                     Spacer()
+
+                    // Disabled badge
+                    if !item.isEnabled {
+                        Text("disabled")
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(theme.bgTertiary)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
 
                     // Chevron to indicate tappable
                     Image(systemName: "chevron.right")
@@ -230,6 +309,8 @@ struct HooksManagementView: View {
             }
             .padding(theme.spacingMD)
             .modifier(GlassCard())
+            // Dim disabled hooks
+            .opacity(item.isEnabled ? 1.0 : 0.5)
         }
         .buttonStyle(.plain)
         .contextMenu {
@@ -243,6 +324,22 @@ struct HooksManagementView: View {
                 Label("Edit", systemImage: "pencil")
             }
 
+            Button {
+                Task {
+                    if let error = await viewModel.toggleHookEnabled(
+                        eventType: eventType,
+                        groupIndex: item.groupIndex
+                    ) {
+                        toggleError = error
+                    }
+                }
+            } label: {
+                Label(
+                    item.isEnabled ? "Disable" : "Enable",
+                    systemImage: item.isEnabled ? "pause.circle" : "play.circle"
+                )
+            }
+
             Button(role: .destructive) {
                 Task {
                     if let error = await viewModel.deleteHook(eventType: eventType, groupIndex: item.groupIndex) {
@@ -254,7 +351,7 @@ struct HooksManagementView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(eventType) hook, \(item.actionSummary)")
+        .accessibilityLabel("\(eventType) hook, \(item.actionSummary)\(item.isEnabled ? "" : ", disabled")")
         .accessibilityHint("Tap to edit, long press for options")
     }
 
@@ -342,6 +439,92 @@ struct HooksManagementView: View {
                                 showCopiedConfirmation = false
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Import Sheet
+
+    private var importSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: theme.spacingMD) {
+                    Text("Paste hooks JSON below. This will replace your current hooks configuration.")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(.horizontal, theme.spacingMD)
+                        .padding(.top, theme.spacingSM)
+
+                    TextEditor(text: $importText)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.textPrimary)
+                        .scrollContentBackground(.hidden)
+                        .background(theme.bgSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                        .frame(minHeight: 200)
+                        .padding(.horizontal, theme.spacingMD)
+
+                    if let error = importError {
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundStyle(theme.error)
+                                .accessibilityHidden(true)
+                            Text(error)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.error)
+                        }
+                        .padding(.horizontal, theme.spacingMD)
+                    }
+
+                    Button {
+                        Task {
+                            isImporting = true
+                            let trimmed = importText.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if let error = await viewModel.importHooksFromJSON(trimmed) {
+                                importError = error
+                            } else {
+                                showImportSheet = false
+                            }
+                            isImporting = false
+                        }
+                    } label: {
+                        HStack(spacing: theme.spacingSM) {
+                            if isImporting {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "square.and.arrow.down")
+                                    .accessibilityHidden(true)
+                            }
+                            Text(isImporting ? "Importing..." : "Import")
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingMD)
+                        .background(importText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isImporting
+                            ? theme.accent.opacity(0.4)
+                            : theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(importText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isImporting)
+                    .padding(.horizontal, theme.spacingMD)
+                    .padding(.bottom, theme.spacingLG)
+                }
+            }
+            .background(theme.bgPrimary)
+            .navigationTitle("Import Hooks")
+            #if os(iOS)
+            .inlineNavigationBarTitle()
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showImportSheet = false
                     }
                 }
             }
