@@ -1,0 +1,4 @@
+{"error":"Invalid session ID","reason":"Invalid session ID","success":false,"code":"BAD_REQUEST"}
+HTTP Status: 400
+APIClient handles DecodingError gracefully via do/catch in loadX() methods.
+PASS -- error handling is in code; no crash on invalid UUID endpoint.

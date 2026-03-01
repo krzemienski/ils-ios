@@ -65,6 +65,12 @@ final class SubscriptionManager {
     /// Last error message from a failed operation.
     private(set) var errorMessage: String?
 
+    /// Whether the user is eligible for an introductory free trial offer.
+    private(set) var trialEligible: Bool = false
+
+    /// Duration of the free trial in days, if available.
+    private(set) var trialDurationDays: Int?
+
     // MARK: - Private
 
     /// Listener task that observes `Transaction.updates` for the lifetime of the app.
@@ -86,6 +92,7 @@ final class SubscriptionManager {
         Task { [weak self] in
             await self?.checkSubscriptionStatus()
             await self?.fetchProducts()
+            await self?.checkTrialEligibility()
         }
     }
 
@@ -100,6 +107,8 @@ final class SubscriptionManager {
                 lhs.price < rhs.price
             }
             errorMessage = nil
+            // Refresh trial eligibility whenever products are (re)loaded
+            await checkTrialEligibility()
         } catch {
             AppLogger.shared.error(
                 "Failed to fetch products: \(error.localizedDescription)",
@@ -107,6 +116,39 @@ final class SubscriptionManager {
             )
             errorMessage = "Unable to load subscription options. Please try again."
         }
+    }
+
+    // MARK: - Trial Eligibility
+
+    /// Checks whether the user is eligible for an introductory free trial offer.
+    ///
+    /// Reads the `introductoryOffer` from StoreKit 2's `Product.SubscriptionInfo`
+    /// and calculates the trial duration in days. Hides the trial callout entirely
+    /// when the user is not eligible (already used their trial).
+    func checkTrialEligibility() async {
+        var foundEligible = false
+        var foundDays: Int?
+
+        for product in products {
+            guard let subscription = product.subscription else { continue }
+            if await subscription.isEligibleForIntroOffer,
+               let introOffer = subscription.introductoryOffer,
+               introOffer.paymentMode == .freeTrial {
+                foundEligible = true
+                let period = introOffer.period
+                switch period.unit {
+                case .day: foundDays = period.value
+                case .week: foundDays = period.value * 7
+                case .month: foundDays = period.value * 30
+                case .year: foundDays = period.value * 365
+                @unknown default: foundDays = nil
+                }
+                break
+            }
+        }
+
+        trialEligible = foundEligible
+        trialDurationDays = foundDays
     }
 
     // MARK: - Purchase

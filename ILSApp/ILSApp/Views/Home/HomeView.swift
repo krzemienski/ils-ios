@@ -41,10 +41,13 @@ struct HomeView: View {
     @State private var isRefreshing = false
     /// Controls presentation of the New Session sheet.
     @State private var showNewSessionSheet = false
+    /// Text entered in the sessions search bar.
+    @State private var sessionSearchText: String = ""
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let createSessionTip = CreateSessionTip()
+    private let commandPaletteTip = CommandPaletteTip()
 
     /// Shared sessions view model owned by SidebarRootView.
     var sessionsVM: SessionsViewModel
@@ -65,6 +68,9 @@ struct HomeView: View {
                 TipView(createSessionTip)
                     .tipBackground(theme.bgSecondary)
 
+                TipView(commandPaletteTip)
+                    .tipBackground(theme.bgSecondary)
+
                 quickActionsGrid
                 recentSessionsSection
                 statsSection
@@ -74,6 +80,7 @@ struct HomeView: View {
             .animation(.easeInOut(duration: 0.3), value: isRefreshing)
         }
         .background(theme.bgPrimary)
+        .navigationTitle("Home")
         .sheet(isPresented: $showNewSessionSheet) {
             NewSessionView { session in
                 showNewSessionSheet = false
@@ -91,12 +98,15 @@ struct HomeView: View {
             // Sessions are loaded by SidebarRootView (shared VM)
         }
         .refreshable {
-            HapticManager.impact(.medium)
+            #if os(iOS)
+            HapticManager.impact(.light)
+            #endif
             isRefreshing = true
             await dashboardVM.loadAll()
             await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
             isRefreshing = false
         }
+        .searchable(text: $sessionSearchText, prompt: "Search sessions")
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
         }
@@ -204,23 +214,48 @@ struct HomeView: View {
 
     @ViewBuilder
     private var recentSessionsSection: some View {
-        let recent = Array(sessionsVM.sessions.prefix(5))
+        let isSearching = !sessionSearchText.isEmpty
+        let displaySessions: [ChatSession] = {
+            if isSearching {
+                return sessionsVM.sessions.filter {
+                    $0.displayName.localizedCaseInsensitiveContains(sessionSearchText)
+                }
+            } else {
+                return Array(sessionsVM.sessions.prefix(5))
+            }
+        }()
 
-        if !recent.isEmpty {
+        if !displaySessions.isEmpty {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack {
-                    Text("Recent Sessions")
+                    Text(isSearching ? "Results" : "Recent Sessions")
                         .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
 
                     Spacer()
 
-                    Text("\(sessionsVM.totalCount)")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                    if isSearching {
+                        Text("\(displaySessions.count)")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    } else {
+                        Button {
+                            onNavigate?(.browser)
+                        } label: {
+                            HStack(spacing: theme.spacingXS) {
+                                Text("View All")
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                                Text("(\(sessionsVM.totalCount))")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption - 2, weight: .semibold))
+                            }
+                            .foregroundStyle(theme.accent)
+                        }
+                    }
                 }
 
-                ForEach(recent, id: \.id) { session in
+                ForEach(displaySessions, id: \.id) { session in
                     Button {
                         onSessionSelected?(session)
                     } label: {
@@ -230,6 +265,17 @@ struct HomeView: View {
                     .shimmerIfActive(isRefreshing)
                 }
             }
+        } else if isSearching {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 24, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text("No sessions matching \"\(sessionSearchText)\"")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingMD)
         } else if !appState.isConnected {
             // Empty state handled by connection banner
             EmptyView()
@@ -248,7 +294,7 @@ struct HomeView: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.name ?? "Unnamed Session")
+                Text(session.displayName)
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
@@ -278,7 +324,7 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityLabel("\(session.name ?? "Unnamed"), \(session.model), \(session.messageCount) messages")
+        .accessibilityLabel("\(session.displayName), \(session.model), \(session.messageCount) messages")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }
@@ -326,7 +372,7 @@ struct HomeView: View {
                 GridItem(.flexible(), spacing: theme.spacingSM),
                 GridItem(.flexible(), spacing: theme.spacingSM)
             ], spacing: theme.spacingSM) {
-                quickActionCard(
+                QuickActionCard(
                     icon: "plus.bubble.fill",
                     title: "New Session",
                     color: theme.entitySession
@@ -334,73 +380,77 @@ struct HomeView: View {
                     showNewSessionSheet = true
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "sparkles",
-                    title: "Skills",
+                    title: "Discover Skills",
                     subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
                     color: theme.entitySkill
                 ) {
                     onNavigateToBrowser?(.skills)
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "server.rack",
-                    title: "MCP Servers",
-                    subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
+                    title: "Configure MCP",
+                    subtitle: mcpHealthSubtitle(),
+                    subtitleColor: mcpHealthSubtitleColor(),
                     color: theme.entityMCP
                 ) {
                     onNavigateToBrowser?(.mcp)
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "puzzlepiece.extension.fill",
-                    title: "Plugins",
+                    title: "Browse Plugins",
                     subtitle: statsSubtitle(dashboardVM.stats?.plugins.total),
                     color: theme.entityPlugin
                 ) {
                     onNavigateToBrowser?(.plugins)
+                }
+
+                QuickActionCard(
+                    icon: "gearshape.fill",
+                    title: "Edit Settings",
+                    color: theme.textSecondary
+                ) {
+                    onNavigate?(.settings)
+                }
+
+                QuickActionCard(
+                    icon: "gauge.with.dots.needle.33percent",
+                    title: "System Monitor",
+                    color: theme.entityMCP
+                ) {
+                    onNavigate?(.system)
                 }
             }
             .shimmerIfActive(isRefreshing)
         }
     }
 
-    @ViewBuilder
-    private func quickActionCard(
-        icon: String,
-        title: String,
-        subtitle: String? = nil,
-        color: Color,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: icon)
-                    .font(.system(size: 24, design: theme.fontDesign))
-                    .foregroundStyle(color)
-
-                Text(title)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingMD)
-            .modifier(GlassCard())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
-        .accessibilityHint("Double tap to open \(title)")
-    }
 
     private func statsSubtitle(_ count: Int?) -> String? {
         guard let count else { return nil }
         return "\(count)"
+    }
+
+    /// Returns a health-aware subtitle for the Configure MCP quick action card.
+    /// Shows "X/Y healthy" with a warning color when servers are unhealthy,
+    /// or the plain total count when all servers are healthy.
+    private func mcpHealthSubtitle() -> String? {
+        guard let mcpStats = dashboardVM.stats?.mcpServers else { return nil }
+        if mcpStats.healthy < mcpStats.total {
+            return "\(mcpStats.healthy)/\(mcpStats.total) healthy"
+        }
+        return "\(mcpStats.total)"
+    }
+
+    /// Returns `theme.warning` when any MCP server is unhealthy, otherwise `nil`
+    /// so the card falls back to the default `theme.textTertiary` subtitle color.
+    private func mcpHealthSubtitleColor() -> Color? {
+        guard let mcpStats = dashboardVM.stats?.mcpServers,
+              mcpStats.healthy < mcpStats.total else { return nil }
+        return theme.warning
     }
 
     // MARK: - Stats Section
@@ -447,6 +497,11 @@ struct HomeView: View {
                 }
                 .shimmerIfActive(isRefreshing)
 
+                HStack {
+                    Spacer()
+                    CacheStatusView(lastUpdated: dashboardVM.lastUpdated)
+                }
+
                 // Secondary stats row: plugins + active counts
                 HStack(spacing: theme.spacingSM) {
                     secondaryStat(
@@ -492,6 +547,69 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value)")
+    }
+}
+
+// MARK: - Quick Action Card
+
+private struct QuickActionCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String?
+    let subtitleColor: Color?
+    let color: Color
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme: ThemeSnapshot
+    @State private var isPressed = false
+
+    init(
+        icon: String,
+        title: String,
+        subtitle: String? = nil,
+        subtitleColor: Color? = nil,
+        color: Color,
+        action: @escaping () -> Void
+    ) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.subtitleColor = subtitleColor
+        self.color = color
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: icon)
+                    .font(.system(size: 24, design: theme.fontDesign))
+                    .foregroundStyle(color)
+
+                Text(title)
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(subtitleColor ?? theme.textTertiary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingMD)
+            .modifier(GlassCard())
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+        .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
+        .accessibilityHint("Double tap to open \(title)")
     }
 }
 

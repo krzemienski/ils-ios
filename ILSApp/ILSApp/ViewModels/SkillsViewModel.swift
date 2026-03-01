@@ -4,14 +4,18 @@ import ILSShared
 
 @MainActor
 @Observable
-class SkillsViewModel {
+class SkillsViewModel: BaseViewModel {
     var skills: [Skill] = []
-    var isLoading = false
-    var error: Error?
     var searchText = ""
     var gitHubResults: [GitHubSearchResult] = []
     var isSearchingGitHub = false
     var gitHubSearchText = ""
+    var installingSkills: Set<String> = []
+    var gitHubError: String?
+    var lastInstallError: Error?
+    var lastUpdated: Date?
+    var rateLimitCountdown: Int = 0
+    @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
     /// Update GitHub search text and trigger debounced search.
     /// Call this instead of assigning `gitHubSearchText` directly.
@@ -35,19 +39,13 @@ class SkillsViewModel {
         }
     }
 
-    private var client: APIClient?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     /// Precomputed lowercase search strings keyed by skill index, rebuilt when skills change
     private var searchCache: [(skill: Skill, searchText: String)] = []
 
-    init() {}
-
     deinit {
         searchTask?.cancel()
-    }
-
-    func configure(client: APIClient) {
-        self.client = client
+        countdownTask?.cancel()
     }
 
     /// Filtered skills based on search text using precomputed lowercase cache
@@ -95,6 +93,7 @@ class SkillsViewModel {
             if let data = response.data {
                 skills = data.items
                 rebuildSearchCache()
+                lastUpdated = Date()
             }
         } catch {
             self.error = error
@@ -178,20 +177,48 @@ class SkillsViewModel {
         }
     }
 
+    /// Check if a GitHub search result is already installed locally
+    func isInstalled(result: GitHubSearchResult) -> Bool {
+        let repoName = result.repository.split(separator: "/").last.map(String.init) ?? result.repository
+        return skills.contains { $0.name == repoName || $0.path.contains(repoName) }
+    }
+
+    private func startCountdown() {
+        countdownTask?.cancel()
+        rateLimitCountdown = 60
+        countdownTask = Task { @MainActor [weak self] in
+            while let self, self.rateLimitCountdown > 0 {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self.rateLimitCountdown -= 1
+            }
+            guard let self, !Task.isCancelled else { return }
+            self.gitHubError = nil
+            self.rateLimitCountdown = 0
+        }
+    }
+
     func searchGitHub(query: String) async {
         guard let client, !query.isEmpty else {
             gitHubResults = []
             return
         }
         isSearchingGitHub = true
-        error = nil
+        gitHubError = nil
         do {
             let response: APIResponse<ListResponse<GitHubSearchResult>> = try await client.get("/skills/search?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)")
             if let data = response.data {
                 gitHubResults = data.items
             }
+            gitHubError = nil
         } catch {
-            self.error = error
+            let desc = error.localizedDescription.lowercased()
+            if desc.contains("rate limit") || desc.contains("429") || desc.contains("limit reached") {
+                gitHubError = "GitHub rate limit reached"
+                startCountdown()
+            } else {
+                self.error = error
+            }
             AppLogger.shared.error("GitHub search failed: \(error.localizedDescription)", category: "skills")
         }
         isSearchingGitHub = false
@@ -199,6 +226,9 @@ class SkillsViewModel {
 
     func installFromGitHub(result: GitHubSearchResult) async -> Bool {
         guard let client else { return false }
+        installingSkills.insert(result.repository)
+        lastInstallError = nil
+        defer { installingSkills.remove(result.repository) }
         do {
             let request = SkillInstallRequest(repository: result.repository, skillPath: result.skillPath)
             let _: APIResponse<Skill> = try await client.post("/skills/install", body: request)
@@ -206,9 +236,24 @@ class SkillsViewModel {
             await loadSkills(refresh: true)
             return true
         } catch {
+            self.lastInstallError = error
             self.error = error
             AppLogger.shared.error("Failed to install skill from GitHub: \(error.localizedDescription)", category: "skills")
             return false
+        }
+    }
+
+    /// Fetch preview data (README + file tree) for a GitHub repository.
+    /// Returns nil on failure (network error, rate limit, etc.).
+    func fetchPreview(repository: String) async -> GitHubRepoPreview? {
+        guard let client else { return nil }
+        do {
+            let encoded = repository.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? repository
+            let response: APIResponse<GitHubRepoPreview> = try await client.get("/skills/preview?repo=\(encoded)")
+            return response.data
+        } catch {
+            AppLogger.shared.error("Failed to fetch skill preview for \(repository): \(error.localizedDescription)", category: "skills")
+            return nil
         }
     }
 }

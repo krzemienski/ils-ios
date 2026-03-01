@@ -105,6 +105,13 @@ struct ThemeSnapshot: Sendable {
     let fontDesign: Font.Design
     let isLight: Bool
 
+    // MARK: - MeshGradient
+
+    /// Optional MeshGradient background color hex strings (9 colors for 3x3 grid).
+    /// Nil means no mesh gradient; use standard background.
+    let meshGradientColors: [String]?
+    let meshGradientAnimated: Bool
+
     // MARK: - Init from Protocol
 
     /// Creates a snapshot by copying all properties from an `AppTheme` conforming type.
@@ -165,5 +172,10 @@ struct ThemeSnapshot: Sendable {
 
         self.fontDesign = source.fontDesign
         self.isLight = source.isLight
+
+        // MeshGradient — reads from AppTheme protocol; custom themes provide via CustomThemeAdapter
+        self.meshGradientColors = source.meshGradientColors
+        self.meshGradientAnimated = source.meshGradientAnimated
     }
+
 }

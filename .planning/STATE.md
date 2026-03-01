@@ -1,52 +1,67 @@
+---
+gsd_state_version: 1.0
+milestone: v5.0
+milestone_name: Cross-Platform Feature Completion & 30-Gate Audit
+status: unknown
+last_updated: "2026-02-28T05:37:25.544Z"
+progress:
+  total_phases: 52
+  completed_phases: 39
+  total_plans: 109
+  completed_plans: 102
+---
+
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-24)
+See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Every screen works correctly, reflects host config, and provides a polished native experience
-**Current focus:** v3.1 Comprehensive Audit, Bug Fix & UX Overhaul
+**Current focus:** v5.0 Phase 49 -- Foundation (Fleet-to-HostProfile Rename)
 
 ## Current Position
 
-Phase: 34 — Host Profiles Fix & Redesign -- COMPLETE
-Plan: 3/3 complete — All summaries documented
-Status: All 3 plans executed and documented. Phase 34 complete.
-Last activity: 2026-02-25 — Completed 34-02 (ViewModel reactive reconfiguration on host switch)
+Phase: 49 (first of 8 v5.0 phases, 49-56)
+Plan: 49-01, 49-02
+Status: Ready to execute
+Last activity: 2026-02-27 -- Phase 49 plans created. 2 plans: 49-01 (ILSShared + backend rename, dual routes), 49-02 (iOS path strings, deep link, evidence pipeline).
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Previous Milestones
 
-- v1.0 (Phases 1-10): Cross-Platform Audit — SHIPPED 2026-02-21 | 15/15 REQs PASS | 0 crashes
-- v2.0 (Phases 11-17): Performance Optimization Suite — COMPLETE 2026-02-24 | 838ms cold-start, regression tests
-- v3.0 (Phases 18-24): Comprehensive Audit Remediation — COMPLETE 2026-02-23 | 165/165 issues resolved
-- v1.5 (Phases 25-32): All Audit Fixes — SHIPPED 2026-02-24 | 50 REQs | 70/70 findings resolved/documented
+- v1.0 (Phases 1-10): Cross-Platform Audit -- SHIPPED 2026-02-21 | 15/15 REQs PASS
+- v2.0 (Phases 11-17): Performance Optimization Suite -- COMPLETE 2026-02-24
+- v3.0 (Phases 18-24): Comprehensive Audit Remediation -- COMPLETE 2026-02-23 | 165 issues
+- v1.5 (Phases 25-32): All Audit Fixes -- SHIPPED 2026-02-24 | 70/70 findings
+- v3.1 (Phases 33-39): Comprehensive Audit, Bug Fix & UX Overhaul -- SHIPPED 2026-02-25 | 31/31 REQs
+- v3.5 (Phases 40-42): Comprehensive Functional Validation -- iPhone 23/23 PASS | iPad deferred
+- v4.0 (Phases 43-48): Comprehensive Spec Compliance Audit -- COMPLETE 2026-02-28 | Gate PASS, 123 evidence artifacts
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0 (v5.0)
+- Average duration: --
+- Total execution time: --
 
 ## Accumulated Context
 
 ### Decisions
 
-- [v3.1]: Shift from code health to product quality — UX gaps now blocking real usage
-- [v3.1]: Fleet → Host Profiles redesign — multi-host concept clearer than fleet metaphor
-- [v3.1]: Host CLI config sync required — app must reflect connected host defaults
-- [v3.1]: Phase numbering continues from 33 (v1.5 ended at Phase 32)
-- [v3.1]: Scope includes new features (GitHub browse/install, host sync) unlike previous code-health milestones
-- [33-01]: Sub-token spacing (1pt, 2pt) retained for tight label pairs -- below spacingXS threshold by design
-- [33-01]: HomeView section ordering verified correct as-is -- no reordering needed
-- [33-02]: Used lightweight previousScreen @State instead of NavigationPath to avoid breaking @SceneStorage chat restoration
-- [33-02]: Back button replaces hamburger via topBarLeading placement; sidebar remains accessible via edge swipe
-- [33-02]: activeHostName defaults to nil; wired by Phase 34 HostProfilesViewModel.activate()
-- [33-03]: Used BrowserSegment type (not String) for browserSegmentIntent since enum is top-level and target-accessible
-- [33-03]: ils://projects grouped with ils://browser (no .projects case in BrowserSegment); mcp/skills/plugins get individual segment intents
-- [33-03]: Non-chat deep links clear previousScreen to prevent stale back destinations
-- [34-03]: UI-facing terminology uses "host profile"; backend API paths and model types keep "fleet"
-- [34-01]: HostProfilesViewModel uses optional pattern in View -- initialized in .task to ensure AppState is available from @Environment
-- [34-01]: hostProfileRow receives unwrapped viewModel as parameter rather than optional chaining throughout
-- [34-01]: Health polling uses silent catch (best-effort) while user-facing operations surface errors via loadError
-- [34-03]: Fixed HostProfilesView optional viewModel pattern to match updated init(appState:) signature
-- [34-02]: SidebarRootView onChange also reloads custom themes via themeManager to keep theme picker in sync with new host
-- [34-02]: SettingsView onChange updates local serverURL @State so connection section reflects new host URL immediately
-- [34-02]: ConfigEditorView onChange resets both configText and originalConfigText to prevent false unsaved-changes warnings
-- [34-02]: ChatView only reconfigures clients without reloading -- preserves visible conversation
+- [v5.0]: Phase numbering starts at 49 (v4.0 ended at Phase 48)
+- [v5.0]: Research completed -- 8-phase structure derived from dependency analysis
+- [v5.0]: FOUND-01 (Fleet rename) first -- touches shared types used everywhere
+- [v5.0]: API-02 (config/effective endpoint) before CFG work -- UI needs backend merge data
+- [v5.0]: GATE phases last -- all implementation must complete before evidence capture
+- [v5.0]: Phase 53 (GitHub Browse) can run parallel with 51-52 after Phase 49 completes
+
+### Carried Forward (from v4.0)
+
+- iPad simulator: C074375B-2CB2-4F95-A55C-972F2FF35041 (iPad Pro 13, iOS 18.6)
+- Active theme: Ember
+- Gap analysis: .planning/quick/6-comprehensive-ils-audit-and-remediation-/GAP-ANALYSIS.md
 
 ### Pending Todos
 
@@ -58,6 +73,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed 34-02-PLAN.md — 8 views gain reactive ViewModel reconfiguration on host switch
-Resume file: None
+Last session: 2026-02-27
+Stopped at: Phase 49 plans complete. 49-01 (wave 1): ILSShared + backend rename + dual routes. 49-02 (wave 2): iOS path strings, deep link, pbxproj, evidence pipeline.
+Resume file: .planning/phases/49-foundation/49-01-PLAN.md
+Key artifacts: .planning/phases/49-foundation/49-01-PLAN.md, .planning/phases/49-foundation/49-02-PLAN.md

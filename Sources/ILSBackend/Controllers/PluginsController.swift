@@ -12,6 +12,7 @@ import ILSShared
 /// - `GET /plugins/marketplace`: List available plugin marketplaces
 /// - `POST /plugins/marketplaces`: Register a new plugin marketplace
 /// - `POST /plugins/install`: Install a plugin via git clone
+/// - `GET /plugins/github-search`: Search GitHub for plugin.json repositories
 /// - `POST /plugins/:name/enable`: Enable a plugin
 /// - `POST /plugins/:name/disable`: Disable a plugin
 /// - `DELETE /plugins/:name`: Uninstall a plugin
@@ -27,12 +28,15 @@ struct PluginsController: RouteCollection {
 
         plugins.get(use: list)
         plugins.get("search", use: search)
+        plugins.get("github-search", use: githubSearch)
+        plugins.get("preview", use: preview)
         plugins.get("marketplace", use: marketplace)
         plugins.post("marketplaces", use: addMarketplace)
         plugins.post("install", use: install)
         plugins.post(":name", "enable", use: enable)
         plugins.post(":name", "disable", use: disable)
         plugins.delete(":name", use: uninstall)
+        plugins.get(":name", "check-update", use: checkUpdate)
     }
 
     /// List all installed plugins.
@@ -73,7 +77,7 @@ struct PluginsController: RouteCollection {
     @Sendable
     func marketplace(req: Request) async throws -> APIResponse<[PluginMarketplace]> {
         // Read known marketplaces from config
-        let config = try? fileSystem.readConfig(scope: "user")
+        let config = try? fileSystem.readConfig(scope: .user)
         var marketplaces: [PluginMarketplace] = []
 
         // Add official marketplace
@@ -133,6 +137,73 @@ struct PluginsController: RouteCollection {
         )
     }
 
+    /// Search GitHub for plugin repositories containing plugin.json files.
+    ///
+    /// Query parameters:
+    /// - `q`: Search query (required)
+    /// - `page`: Page number (default 1)
+    /// - `per_page`: Results per page (default 20)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of GitHubSearchResult objects
+    @Sendable
+    func githubSearch(req: Request) async throws -> APIResponse<ListResponse<GitHubSearchResult>> {
+        guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'q' is required")
+        }
+
+        let page = req.query[Int.self, at: "page"] ?? 1
+        let perPage = req.query[Int.self, at: "per_page"] ?? 20
+
+        let results = try await req.application.githubService.searchPlugins(query: query, page: page, perPage: perPage)
+
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: results)
+        )
+    }
+
+    /// Preview a GitHub plugin repository showing README and file tree.
+    ///
+    /// Query parameters:
+    /// - `repo`: Repository in "owner/repo" format (required)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with GitHubRepoPreview
+    @Sendable
+    func preview(req: Request) async throws -> APIResponse<GitHubRepoPreview> {
+        guard let repoParam = req.query[String.self, at: "repo"], !repoParam.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'repo' is required in 'owner/repo' format")
+        }
+
+        let parts = repoParam.split(separator: "/")
+        guard parts.count == 2 else {
+            throw Abort(.badRequest, reason: "Repository must be in 'owner/repo' format")
+        }
+        let owner = String(parts[0])
+        let repo = String(parts[1])
+
+        let github = req.application.githubService
+
+        // Fetch README and file tree concurrently
+        async let readmeResult = github.fetchReadme(owner: owner, repo: repo)
+        async let filesResult = github.fetchRepoContents(owner: owner, repo: repo)
+
+        let readme = await readmeResult
+        let files = await filesResult
+
+        let previewData = GitHubRepoPreview(
+            repository: repoParam,
+            name: repo,
+            description: nil,
+            stars: 0,
+            readme: readme,
+            files: files
+        )
+
+        return APIResponse(success: true, data: previewData)
+    }
+
     /// Register a new custom plugin marketplace.
     ///
     /// Adds the marketplace to `extraKnownMarketplaces` in user config.
@@ -150,12 +221,18 @@ struct PluginsController: RouteCollection {
         }
 
         // Add to config's extraKnownMarketplaces
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        let configInfo: ConfigInfo
+        do {
+            configInfo = try fileSystem.readConfig(scope: .user)
+        } catch {
+            throw Abort(.internalServerError, reason: "Failed to read user config: \(error.localizedDescription)")
+        }
+        var config = configInfo.content
         var marketplaces = config.extraKnownMarketplaces ?? [:]
         marketplaces[input.repo] = input.source
         config.extraKnownMarketplaces = marketplaces
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try fileSystem.writeConfig(scope: .user, content: config)
 
         let marketplace = Marketplace(
             name: String(parts[1]),
@@ -293,12 +370,18 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        let enableConfigInfo: ConfigInfo
+        do {
+            enableConfigInfo = try fileSystem.readConfig(scope: .user)
+        } catch {
+            throw Abort(.internalServerError, reason: "Failed to read user config: \(error.localizedDescription)")
+        }
+        var config = enableConfigInfo.content
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = true
         config.enabledPlugins = enabled
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try fileSystem.writeConfig(scope: .user, content: config)
 
         // Invalidate cache so enabled status change is reflected
         await fileSystem.invalidatePluginsCache()
@@ -322,12 +405,18 @@ struct PluginsController: RouteCollection {
         }
 
         // Update settings
-        var config = (try? fileSystem.readConfig(scope: "user"))?.content ?? ClaudeConfig()
+        let disableConfigInfo: ConfigInfo
+        do {
+            disableConfigInfo = try fileSystem.readConfig(scope: .user)
+        } catch {
+            throw Abort(.internalServerError, reason: "Failed to read user config: \(error.localizedDescription)")
+        }
+        var config = disableConfigInfo.content
         var enabled = config.enabledPlugins ?? [:]
         enabled[name] = false
         config.enabledPlugins = enabled
 
-        _ = try fileSystem.writeConfig(scope: "user", content: config)
+        _ = try fileSystem.writeConfig(scope: .user, content: config)
 
         // Invalidate cache so enabled status change is reflected
         await fileSystem.invalidatePluginsCache()
@@ -336,6 +425,54 @@ struct PluginsController: RouteCollection {
             success: true,
             data: EnabledResponse(enabled: false)
         )
+    }
+
+    /// Check if a plugin has an available update by comparing local version against GitHub latest release.
+    ///
+    /// Also returns unmet dependencies for the plugin.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with PluginUpdateInfo
+    @Sendable
+    func checkUpdate(req: Request) async throws -> APIResponse<PluginUpdateInfo> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid plugin name")
+        }
+
+        let plugins = try await fileSystem.listPlugins(bypassCache: false)
+        guard let plugin = plugins.first(where: { $0.name == name }) else {
+            throw Abort(.notFound, reason: "Plugin '\(name)' not found")
+        }
+
+        let currentVersion = plugin.version ?? "0.0.0"
+        var latestVersion = currentVersion
+        var updateAvailable = false
+
+        if let marketplace = plugin.marketplace {
+            let parts = marketplace.split(separator: "/")
+            if parts.count == 2 {
+                let owner = String(parts[0])
+                let repo = String(parts[1])
+                if let tagName = await req.application.githubService.getLatestRelease(owner: owner, repo: repo) {
+                    latestVersion = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
+                    updateAvailable = latestVersion.compare(currentVersion, options: .numeric) == .orderedDescending
+                }
+            }
+        }
+
+        var unmetDependencies: [String] = []
+        if let deps = plugin.dependencies, !deps.isEmpty {
+            let installedNames = Set(plugins.map { $0.name })
+            unmetDependencies = deps.filter { !installedNames.contains($0) }
+        }
+
+        return APIResponse(success: true, data: PluginUpdateInfo(
+            pluginName: name,
+            currentVersion: currentVersion,
+            latestVersion: latestVersion,
+            updateAvailable: updateAvailable,
+            unmetDependencies: unmetDependencies
+        ))
     }
 
     /// Uninstall a plugin by removing its directory.

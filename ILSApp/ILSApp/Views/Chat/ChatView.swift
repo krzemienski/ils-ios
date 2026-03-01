@@ -48,6 +48,8 @@ struct ChatView: View {
         var showDeleteSessionConfirmation = false
         var showAdvancedOptions = false
         var isRenaming = false
+        var showSearch = false
+        var showContextWindowDetail = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -55,6 +57,7 @@ struct ChatView: View {
         var errorId: UUID?
         var forkedSession: ChatSession?
         var navigateToForked: ChatSession?
+        var navigateToRelated: ChatSession?
         var messageToDelete: ChatMessage?
         var renameText = ""
         var exportMarkdown = ""
@@ -67,23 +70,27 @@ struct ChatView: View {
     @State private var actions = ActionState()
     /// The current text in the message input field.
     @State private var inputText = ""
+    @State private var searchDebounceTask: Task<Void, Never>?
     /// Whether the user has manually scrolled up from the bottom of the message list.
     @State private var isUserScrolledUp = false
     /// Whether the "jump to bottom" button is currently visible.
     @State private var showJumpToBottom = false
     /// Configuration for advanced chat options applied to the next outgoing message.
     @State private var chatOptionsConfig = ChatOptionsConfig()
+    /// Debounced task for persisting draft text to UserDefaults (DATA-05).
+    @State private var draftPersistTask: Task<Void, Never>?
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
 
     // MARK: - Body
 
     var body: some View {
         mainContent
             .background(theme.bgPrimary)
-            .navigationTitle(session.name ?? "Chat")
+            .navigationTitle(session.displayName)
             #if os(iOS)
             .inlineNavigationBarTitle()
             #endif
@@ -166,6 +173,29 @@ struct ChatView: View {
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
         }
+        .sheet(isPresented: $sheets.showContextWindowDetail) {
+            if let usedTokens = viewModel.contextTokensUsed,
+               let windowSize = viewModel.contextWindowSize {
+                ContextWindowDetailSheet(
+                    usedTokens: usedTokens,
+                    contextWindowSize: windowSize,
+                    inputTokens: viewModel.contextInputTokens,
+                    outputTokens: viewModel.contextOutputTokens,
+                    cacheReadTokens: viewModel.contextCacheReadTokens,
+                    cacheCreateTokens: viewModel.contextCacheCreateTokens,
+                    onForkSession: {
+                        sheets.showContextWindowDetail = false
+                        Task {
+                            if let forked = await viewModel.forkSession() {
+                                actions.forkedSession = forked
+                                sheets.showForkAlert = true
+                            }
+                        }
+                    },
+                    onDismiss: { sheets.showContextWindowDetail = false }
+                )
+            }
+        }
         .sheet(item: $viewModel.pendingPermissionRequest) { request in
             PermissionRequestModal(request: request) { decision in
                 viewModel.respondToPermission(requestId: request.requestId, decision: decision)
@@ -174,6 +204,9 @@ struct ChatView: View {
             .presentationBackground(theme.bgPrimary)
         }
         .navigationDestination(item: $actions.navigateToForked) { session in
+            ChatView(session: session)
+        }
+        .navigationDestination(item: $actions.navigateToRelated) { session in
             ChatView(session: session)
         }
         .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
@@ -192,20 +225,57 @@ struct ChatView: View {
         .onChange(of: appState.serverURL) { _, _ in
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
         }
+        .onChange(of: inputText) { _, newValue in
+            // Persist draft to UserDefaults with 500ms debounce (DATA-05)
+            draftPersistTask?.cancel()
+            draftPersistTask = Task {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                guard !Task.isCancelled else { return }
+                let key = "chatDraft_\(session.id.uuidString)"
+                if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    UserDefaults.standard.removeObject(forKey: key)
+                } else {
+                    UserDefaults.standard.set(newValue, forKey: key)
+                }
+            }
+        }
+        .onDisappear {
+            draftPersistTask?.cancel()
+        }
+        .onChange(of: viewModel.searchQuery) { _, newValue in
+            searchDebounceTask?.cancel()
+            searchDebounceTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard !Task.isCancelled else { return }
+                await viewModel.searchMessages(query: newValue)
+            }
+        }
     }
 
     // MARK: - View Components
 
-    /// Top-level layout stacking the status banner, message list, divider, and input bar.
+    /// Top-level layout stacking the status banner, context window bar, related-sessions panel, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
-            statusBanner
+            if sheets.showSearch {
+                inlineSearchBar
 
-            messageList
+                theme.divider.frame(height: 0.5)
 
-            theme.divider.frame(height: 0.5)
+                searchResultsView
+            } else {
+                statusBanner
 
-            bottomBar
+                contextWindowBar
+
+                relatedSessionsPanel
+
+                messageList
+
+                theme.divider.frame(height: 0.5)
+
+                bottomBar
+            }
         }
     }
 
@@ -213,13 +283,48 @@ struct ChatView: View {
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
-            StreamingStatusBanner(
-                statusText: statusText,
-                connectionState: viewModel.connectionState,
+            AsyncOperationBanner(
+                message: statusText,
+                state: viewModel.connectionState.asAsyncOperationState,
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
             )
+            .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    /// Compact context window usage bar shown when token data is available and the
+    /// "Show context usage bar" preference is enabled in Settings.
+    @ViewBuilder
+    private var contextWindowBar: some View {
+        if showContextWindowBar,
+           let usedTokens = viewModel.contextTokensUsed,
+           let windowSize = viewModel.contextWindowSize,
+           windowSize > 0 {
+            ContextWindowBar(
+                usedTokens: usedTokens,
+                contextWindowSize: windowSize
+            ) {
+                sheets.showContextWindowDetail = true
+            }
             .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    /// Shows related past sessions at the top of a brand-new chat (no messages yet).
+    ///
+    /// Only rendered when the session has no messages and is not currently loading history,
+    /// giving the user quick access to relevant past work before they start typing.
+    @ViewBuilder
+    private var relatedSessionsPanel: some View {
+        if viewModel.displayMessages.isEmpty && !viewModel.isLoadingHistory {
+            RelatedSessionsPanel(
+                session: session,
+                apiClient: appState.apiClient,
+                onNavigate: { related in
+                    actions.navigateToRelated = related
+                }
+            )
         }
     }
 
@@ -252,6 +357,95 @@ struct ChatView: View {
                 isInputFocused = false
             }
         )
+    }
+
+    // MARK: - Search UI
+
+    private var inlineSearchBar: some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(theme.textTertiary)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+
+            TextField("Search messages...", text: $viewModel.searchQuery)
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
+
+            if !viewModel.searchQuery.isEmpty {
+                Button {
+                    viewModel.searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Clear search")
+            }
+
+            Button("Cancel") {
+                searchDebounceTask?.cancel()
+                searchDebounceTask = nil
+                viewModel.cancelSearch()
+                sheets.showSearch = false
+            }
+            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+            .foregroundStyle(theme.accent)
+        }
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.vertical, theme.spacingSM)
+        .background(theme.bgSecondary)
+    }
+
+    @ViewBuilder
+    private var searchResultsView: some View {
+        if viewModel.isSearchLoading {
+            VStack {
+                Spacer()
+                ProgressView()
+                    .tint(theme.accent)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else if viewModel.searchQuery.isEmpty {
+            VStack {
+                Spacer()
+                Text("Type to search messages")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else if viewModel.searchResults.isEmpty {
+            VStack {
+                Spacer()
+                Text("No results for \"\(viewModel.searchQuery)\"")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, theme.spacingLG)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.searchResults) { result in
+                        MessageSearchResultRow(result: result)
+                            .padding(.horizontal, theme.spacingMD)
+
+                        theme.divider
+                            .frame(height: 0.5)
+                            .padding(.leading, theme.spacingMD)
+                    }
+                }
+            }
+            .background(theme.bgPrimary)
+        }
     }
 
     /// Chat input bar for composing and sending messages to Claude.
@@ -288,6 +482,19 @@ struct ChatView: View {
             }
         }
         #endif
+
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button {
+                viewModel.isSearchActive = true
+                sheets.showSearch = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .accessibilityLabel("Search messages")
+            .accessibilityIdentifier("search-messages-button")
+        }
+
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button {
@@ -352,6 +559,12 @@ struct ChatView: View {
 
     /// Configure the view model and load message history.
     private func setupChatView() async {
+        // Restore draft from UserDefaults (DATA-05)
+        let draftKey = "chatDraft_\(session.id.uuidString)"
+        if let saved = UserDefaults.standard.string(forKey: draftKey), !saved.isEmpty {
+            inputText = saved
+        }
+
         viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
         viewModel.sessionId = session.id
         viewModel.encodedProjectPath = session.encodedProjectPath
@@ -376,6 +589,10 @@ struct ChatView: View {
         let prompt = inputText
         inputText = ""
 
+        // Clear persisted draft on send (DATA-05)
+        UserDefaults.standard.removeObject(forKey: "chatDraft_\(session.id.uuidString)")
+        draftPersistTask?.cancel()
+
         viewModel.addUserMessage(prompt)
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
     }
@@ -389,65 +606,6 @@ struct ChatView: View {
         )
         actions.isExporting = false
         sheets.showExportSheet = true
-    }
-}
-
-// MARK: - Streaming Status Banner
-
-/// A banner displayed at the top of the chat view showing real-time streaming status.
-///
-/// Adapts its icon and color to reflect the current SSE connection state, and optionally
-/// shows token count and elapsed time when a stream is actively receiving tokens.
-struct StreamingStatusBanner: View {
-    /// The human-readable status string describing the current connection or streaming state.
-    let statusText: String
-    /// The current SSE connection state, used to select the appropriate icon and color.
-    let connectionState: SSEClient.ConnectionState
-    /// Number of tokens received in the current stream. Shown when greater than zero.
-    var tokenCount: Int = 0
-    /// Elapsed time in seconds for the current stream. Shown alongside token count.
-    var elapsedSeconds: Double = 0
-
-    @Environment(\.theme) private var theme: ThemeSnapshot
-
-    var body: some View {
-        HStack(spacing: theme.spacingSM) {
-            Group {
-                switch connectionState {
-                case .connecting, .connected:
-                    ProgressView()
-                        .scaleEffect(0.7)
-                        .tint(theme.accent)
-                        .accessibilityIdentifier("streaming-indicator")
-                case .reconnecting:
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundStyle(theme.warning)
-                case .disconnected:
-                    Image(systemName: "wifi.slash")
-                        .foregroundStyle(theme.error)
-                }
-            }
-            .frame(width: 16, height: 16)
-
-            Text(statusText)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textSecondary)
-                .accessibilityIdentifier("streaming-status-text")
-
-            Spacer()
-
-            if tokenCount > 0 {
-                Text("~\(tokenCount) tokens \u{2022} \(String(format: "%.1f", elapsedSeconds))s")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
-                    .foregroundStyle(theme.textTertiary)
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                    .accessibilityIdentifier("streaming-stats-text")
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, theme.spacingXS)
-        .background(theme.bgSecondary)
-        .accessibilityIdentifier("streaming-status-banner")
     }
 }
 

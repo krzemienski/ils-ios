@@ -12,14 +12,25 @@ struct ConfigController: RouteCollection {
         let config = routes.grouped("config")
 
         config.get(use: get)
+        config.get("effective", use: effective)
         config.put(use: update)
         config.post("validate", use: validate)
+    }
+
+    /// GET /config/effective - Get merged effective configuration with scope annotations
+    @Sendable
+    func effective(req: Request) async throws -> APIResponse<EffectiveConfig> {
+        let effectiveConfig = fileSystem.readEffectiveConfig()
+        return APIResponse(success: true, data: effectiveConfig)
     }
 
     /// GET /config - Get configuration for a scope
     @Sendable
     func get(req: Request) async throws -> APIResponse<ConfigInfo> {
-        let scope = req.query[String.self, at: "scope"] ?? "user"
+        let scopeString = req.query[String.self, at: "scope"] ?? "user"
+        guard let scope = ConfigScope(rawValue: scopeString) else {
+            throw Abort(.badRequest, reason: "Invalid scope '\(scopeString)'. Must be one of: user, project, local")
+        }
 
         let config = try fileSystem.readConfig(scope: scope)
 
@@ -34,12 +45,7 @@ struct ConfigController: RouteCollection {
     func update(req: Request) async throws -> APIResponse<ConfigInfo> {
         let input = try req.content.decode(UpdateConfigRequest.self)
 
-        // Validate scope
-        let validScopes = ["user", "project", "local"]
-        guard validScopes.contains(input.scope) else {
-            throw Abort(.badRequest, reason: "Invalid scope. Must be one of: \(validScopes.joined(separator: ", "))")
-        }
-
+        // Scope is already type-safe via ConfigScope enum in UpdateConfigRequest
         let config = try fileSystem.writeConfig(scope: input.scope, content: input.content)
 
         return APIResponse(

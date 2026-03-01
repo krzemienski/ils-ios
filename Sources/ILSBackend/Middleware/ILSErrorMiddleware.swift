@@ -67,6 +67,7 @@ struct ILSErrorMiddleware: AsyncMiddleware {
         case .unprocessableEntity: return "VALIDATION_ERROR"
         case .conflict: return "CONFLICT"
         case .tooManyRequests: return "RATE_LIMITED"
+        case .payloadTooLarge: return "PAYLOAD_TOO_LARGE"
         case .serviceUnavailable: return "SERVICE_UNAVAILABLE"
         default:
             if (400..<500).contains(Int(status.code)) {

@@ -1,0 +1,1 @@
+{"version":"1.0.0","status":"healthy","uptime":7,"disk":{"totalGB":1858.2,"freeGB":367.5,"usedPercent":80.2},"checks":{"database":"ok","filesystem":"ok"}}

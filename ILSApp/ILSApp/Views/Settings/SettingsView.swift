@@ -14,10 +14,12 @@ import ILSShared
 /// - ``viewModel`` - View model loading and persisting all settings data
 /// - ``serverURL`` - Editable server URL string, trimmed before saving
 /// - ``colorSchemePreference`` - Currently selected color scheme ("system", "light", or "dark")
+/// - ``showSessionSuggestions`` - Whether to show AI-powered session suggestions
 ///
 /// ### View Components
 /// - ``connectionSection`` - Server URL entry and connection testing
 /// - ``remoteAccessSection`` - Remote/tunnel access configuration
+/// - ``sessionSuggestionsSection`` - Toggle for smart session suggestions
 /// - ``configSection`` - Model selection and appearance preferences
 /// - ``statisticsSection`` - Usage statistics display
 ///
@@ -36,6 +38,12 @@ struct SettingsView: View {
     @State private var serverURL: String = ""
     /// The user's preferred color scheme, kept in sync with the remote config on load.
     @State private var colorSchemePreference: String = "system"
+    @State private var showDeleteConfirmation: Bool = false
+    // isDeleting and deleteResult moved to SettingsViewModel
+    /// Whether to show AI-powered smart session suggestions in new session and chat views.
+    @AppStorage("showSessionSuggestions") private var showSessionSuggestions: Bool = true
+
+    @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -48,9 +56,15 @@ struct SettingsView: View {
 
                 SettingsAppearanceSection()
 
+                sessionSuggestionsSection
+
                 configSection
 
                 statisticsSection
+
+                contextWindowSection
+
+                dataPrivacySection
 
                 SettingsAboutSection(
                     viewModel: viewModel,
@@ -65,7 +79,9 @@ struct SettingsView: View {
         .inlineNavigationBarTitle()
         .screenshotProtected()
         .refreshable {
-            HapticManager.impact(.medium)
+            #if os(iOS)
+            HapticManager.impact(.light)
+            #endif
             await viewModel.loadAll()
         }
         .task {
@@ -81,6 +97,11 @@ struct SettingsView: View {
             viewModel.configure(client: appState.apiClient)
             serverURL = appState.serverURL
             Task { await viewModel.loadAll() }
+        }
+        .onChange(of: appState.isConnected) { _, connected in
+            if connected {
+                Task { await viewModel.loadAll() }
+            }
         }
     }
 
@@ -104,6 +125,38 @@ struct SettingsView: View {
         ).remoteAccessSection
     }
 
+    private var sessionSuggestionsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Session Suggestions")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Show Session Suggestions")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $showSessionSuggestions)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Show session suggestions")
+                .onChange(of: showSessionSuggestions) {
+                    HapticManager.selection()
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Surface relevant past sessions and skills based on your current context.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+    }
+
     private var configSection: some View {
         SettingsConfigSection(
             viewModel: viewModel,
@@ -123,6 +176,98 @@ struct SettingsView: View {
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
     }
+
+    private var contextWindowSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("CONTEXT WINDOW")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                Toggle(isOn: $showContextWindowBar) {
+                    HStack(spacing: theme.spacingMD) {
+                        Image(systemName: "cpu")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.accent)
+                            .frame(width: 28, height: 28)
+                            .background(theme.accent.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        Text("Show context usage bar")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+                .padding(theme.spacingMD)
+                .tint(theme.accent)
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            Text("Displays a bar in chat showing how much of Claude's context window is being used.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
+    }
+
+    private var dataPrivacySection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("DATA & PRIVACY")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                Button {
+                    showDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "trash.fill")
+                            .foregroundStyle(theme.error)
+                        Text("Delete All My Data")
+                            .foregroundStyle(theme.error)
+                        Spacer()
+                        if viewModel.isDeleting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.textTertiary)
+                        }
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .disabled(viewModel.isDeleting)
+
+                if let result = viewModel.deleteResult {
+                    Divider().background(theme.borderSubtle)
+                    Text(result)
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textSecondary)
+                        .padding(theme.spacingMD)
+                }
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            Text("Permanently deletes all sessions, messages, projects, themes, host profiles, and cached data from the server.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
+        .alert("Delete All Data?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete Everything", role: .destructive) {
+                Task { await viewModel.performDataDeletion() }
+            }
+        } message: {
+            Text("This will permanently delete all your sessions, messages, projects, themes, and cached data. This action cannot be undone.")
+        }
+    }
+
+    // performDataDeletion() moved to SettingsViewModel
 
     // MARK: - Server URL Management
 

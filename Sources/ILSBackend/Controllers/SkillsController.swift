@@ -18,6 +18,8 @@ import ILSShared
 /// - `GET /skills/:name`: Get a specific skill by name
 /// - `PUT /skills/:name`: Update an existing skill's content
 /// - `DELETE /skills/:name`: Delete a local skill
+/// - `POST /skills/:name/enable`: Enable a skill (remove from disabled list)
+/// - `POST /skills/:name/disable`: Disable a skill (add to disabled list)
 struct SkillsController: RouteCollection {
     let fileSystem: FileSystemService
 
@@ -30,11 +32,14 @@ struct SkillsController: RouteCollection {
 
         skills.get(use: list)
         skills.get("search", use: search)
+        skills.get("preview", use: preview)
         skills.post(use: create)
         skills.post("install", use: install)
         skills.get(":name", use: get)
         skills.put(":name", use: update)
         skills.delete(":name", use: delete)
+        skills.post(":name", "enable", use: enableSkill)
+        skills.post(":name", "disable", use: disableSkill)
     }
 
     /// List all available skills from `~/.claude/skills/` and plugin directories.
@@ -226,6 +231,47 @@ struct SkillsController: RouteCollection {
         )
     }
 
+    /// Preview a GitHub skill repository showing README and file tree.
+    ///
+    /// Query parameters:
+    /// - `repo`: Repository in "owner/repo" format (required)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with GitHubRepoPreview
+    @Sendable
+    func preview(req: Request) async throws -> APIResponse<GitHubRepoPreview> {
+        guard let repoParam = req.query[String.self, at: "repo"], !repoParam.isEmpty else {
+            throw Abort(.badRequest, reason: "Query parameter 'repo' is required in 'owner/repo' format")
+        }
+
+        let parts = repoParam.split(separator: "/")
+        guard parts.count == 2 else {
+            throw Abort(.badRequest, reason: "Repository must be in 'owner/repo' format")
+        }
+        let owner = String(parts[0])
+        let repo = String(parts[1])
+
+        let github = req.application.githubService
+
+        // Fetch README and file tree concurrently
+        async let readmeResult = github.fetchReadme(owner: owner, repo: repo)
+        async let filesResult = github.fetchRepoContents(owner: owner, repo: repo)
+
+        let readme = await readmeResult
+        let files = await filesResult
+
+        let previewData = GitHubRepoPreview(
+            repository: repoParam,
+            name: repo,
+            description: nil,
+            stars: 0,
+            readme: readme,
+            files: files
+        )
+
+        return APIResponse(success: true, data: previewData)
+    }
+
     /// Install a skill from a GitHub repository.
     ///
     /// Fetches the skill content from GitHub and saves it to `~/.claude/skills/{repo}/SKILL.md`.
@@ -281,6 +327,103 @@ struct SkillsController: RouteCollection {
         return APIResponse(
             success: true,
             data: skill
+        )
+    }
+
+    // MARK: - Enable/Disable
+
+    /// Configuration file for tracking disabled skills.
+    private struct SkillsConfig: Codable {
+        var disabledSkills: [String]
+
+        init(disabledSkills: [String] = []) {
+            self.disabledSkills = disabledSkills
+        }
+    }
+
+    /// Path to the skills configuration file.
+    private var skillsConfigPath: String {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return "\(home)/.claude/skills/.skills-config.json"
+    }
+
+    /// Read the skills config file, creating it if it doesn't exist.
+    private func readSkillsConfig() throws -> SkillsConfig {
+        let fm = FileManager.default
+        let path = skillsConfigPath
+
+        guard fm.fileExists(atPath: path) else {
+            return SkillsConfig()
+        }
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: path))
+        return try JSONDecoder().decode(SkillsConfig.self, from: data)
+    }
+
+    /// Write the skills config file.
+    private func writeSkillsConfig(_ config: SkillsConfig) throws {
+        let fm = FileManager.default
+        let path = skillsConfigPath
+
+        // Ensure parent directory exists
+        let parentDir = (path as NSString).deletingLastPathComponent
+        if !fm.fileExists(atPath: parentDir) {
+            try fm.createDirectory(atPath: parentDir, withIntermediateDirectories: true)
+        }
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(config)
+        try data.write(to: URL(fileURLWithPath: path))
+    }
+
+    /// Enable a skill by removing it from the disabled list.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with EnabledResponse
+    @Sendable
+    func enableSkill(req: Request) async throws -> APIResponse<EnabledResponse> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid skill name")
+        }
+
+        try PathSanitizer.validateComponent(name)
+
+        var config = try readSkillsConfig()
+        config.disabledSkills.removeAll { $0 == name }
+        try writeSkillsConfig(config)
+
+        await fileSystem.invalidateSkillsCache()
+
+        return APIResponse(
+            success: true,
+            data: EnabledResponse(enabled: true)
+        )
+    }
+
+    /// Disable a skill by adding it to the disabled list.
+    ///
+    /// - Parameter req: Vapor Request with name parameter
+    /// - Returns: APIResponse with EnabledResponse
+    @Sendable
+    func disableSkill(req: Request) async throws -> APIResponse<EnabledResponse> {
+        guard let name = req.parameters.get("name") else {
+            throw Abort(.badRequest, reason: "Invalid skill name")
+        }
+
+        try PathSanitizer.validateComponent(name)
+
+        var config = try readSkillsConfig()
+        if !config.disabledSkills.contains(name) {
+            config.disabledSkills.append(name)
+        }
+        try writeSkillsConfig(config)
+
+        await fileSystem.invalidateSkillsCache()
+
+        return APIResponse(
+            success: true,
+            data: EnabledResponse(enabled: false)
         )
     }
 }

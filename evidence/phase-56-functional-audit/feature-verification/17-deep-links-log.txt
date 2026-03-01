@@ -1,0 +1,19 @@
+Deep Link Verification
+======================
+Date: 2026-02-28
+
+ils://home -- OK
+ils://sessions -- OK
+ils://settings -- OK
+ils://hooks -- OK
+ils://themes -- OK
+ils://host-profiles -- OK
+ils://system -- OK
+ils://browser -- OK
+ils://mcp -- OK
+ils://skills -- OK
+ils://plugins -- OK
+ils://fleet -- OK (backward compat -> Host Profiles)
+
+Total: 12 deep links tested.
+All navigated without crash.

@@ -46,9 +46,40 @@ struct SettingsConfigSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             generalSettingsSection
+            systemPromptSection
             apiKeySection
             permissionsSection
             advancedSection
+        }
+    }
+
+    // MARK: - System Prompt
+
+    @ViewBuilder
+    var systemPromptSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("System Prompt")
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "doc.text")
+                        .foregroundStyle(theme.accent)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Configured via CLAUDE.md")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("System prompts are set using CLAUDE.md files on your host, not in settings.json. Per-session prompts can be set when creating a new session.")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                settingAnnotation(
+                    isInherited: true,
+                    tooltip: "Claude Code uses CLAUDE.md files at user, project, and local scopes for system prompts. Edit these files on your host to customize Claude's behavior. Per-session system prompts can also be set via the New Session screen."
+                )
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
         }
     }
 
@@ -69,7 +100,7 @@ struct SettingsConfigSection: View {
                     }
                 } else if let config = viewModel.config?.content {
                     Picker("Default Model", selection: Binding(
-                        get: { config.model ?? SettingsViewModel.defaultModelID },
+                        get: { viewModel.effectiveConfig?.config.model ?? config.model ?? SettingsViewModel.defaultModelID },
                         set: { newModel in
                             viewModel.updateModel(newModel)
                         }
@@ -81,8 +112,8 @@ struct SettingsConfigSection: View {
                     .tint(theme.accent)
                     .accessibilityLabel("Default Claude model")
                     settingAnnotation(
-                        isInherited: config.model == nil,
-                        tooltip: "The Claude model used for conversations. When inherited, uses the model configured in your host CLI settings."
+                        isInherited: viewModel.isInherited(key: "model"),
+                        tooltip: "The Claude model used for new conversations and chat sessions. When set to 'inherited', the model configured in your host's Claude CLI settings (via `claude config set model`) is used automatically. Override this locally to use a different model on this device."
                     )
 
                     Picker("Color Scheme", selection: $colorSchemePreference) {
@@ -93,14 +124,14 @@ struct SettingsConfigSection: View {
                     .tint(theme.accent)
                     .accessibilityLabel("Color scheme preference")
                     settingAnnotation(
-                        isInherited: config.theme?.colorScheme == nil,
-                        tooltip: "Controls the app's appearance. System follows your device setting."
+                        isInherited: viewModel.isInherited(key: "theme"),
+                        tooltip: "Controls whether the app uses light mode, dark mode, or follows your device's system appearance setting. When inherited, the color scheme configured in your host's Claude CLI theme settings is applied. Override locally to customize appearance on this device."
                     )
 
                     settingsRow("Updates Channel", value: (config.autoUpdatesChannel ?? "stable").capitalized)
                     settingAnnotation(
-                        isInherited: config.autoUpdatesChannel == nil,
-                        tooltip: "Controls which release channel Claude CLI auto-updates from. Stable is recommended for production use."
+                        isInherited: viewModel.isInherited(key: "autoUpdatesChannel"),
+                        tooltip: "Controls which release channel the Claude CLI uses for automatic updates on your host machine. The 'stable' channel is recommended for production use, while 'beta' provides early access to new features that may have rough edges."
                     )
 
                     Toggle(isOn: Binding(
@@ -117,8 +148,8 @@ struct SettingsConfigSection: View {
                     .tint(theme.accent)
                     .accessibilityLabel("Enable extended thinking mode")
                     settingAnnotation(
-                        isInherited: config.alwaysThinkingEnabled == nil,
-                        tooltip: "Enables extended thinking mode for deeper reasoning. Uses more tokens per response."
+                        isInherited: viewModel.isInherited(key: "alwaysThinkingEnabled"),
+                        tooltip: "Enables extended thinking mode where Claude performs deeper multi-step reasoning before responding. This uses significantly more tokens per response but produces more thorough and accurate answers for complex questions and tasks."
                     )
 
                     Toggle(isOn: Binding(
@@ -135,8 +166,8 @@ struct SettingsConfigSection: View {
                     .tint(theme.accent)
                     .accessibilityLabel("Include co-authored-by attribution")
                     settingAnnotation(
-                        isInherited: config.includeCoAuthoredBy == nil,
-                        tooltip: "Adds co-authored-by attribution to git commits made during Claude sessions."
+                        isInherited: viewModel.isInherited(key: "includeCoAuthoredBy"),
+                        tooltip: "Adds a 'Co-Authored-By: Claude' attribution line to git commits made during Claude Code sessions. This provides transparency about AI-assisted code changes and is recommended for team repositories where commit provenance matters."
                     )
                 } else {
                     Text("No configuration loaded")
@@ -148,7 +179,7 @@ struct SettingsConfigSection: View {
             .modifier(GlassCard())
 
             if let config = viewModel.config {
-                Text("Scope: \(config.scope) • \(config.path)")
+                Text("Scope: \(config.scope.rawValue) • \(config.path)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
@@ -193,10 +224,10 @@ struct SettingsConfigSection: View {
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }
-                    HStack {
-                        Spacer()
-                        SettingsInfoButton(text: "Your Anthropic API key for authenticating with the Claude API. For security, API keys cannot be edited through the iOS app.")
-                    }
+                    settingAnnotation(
+                        isInherited: true,
+                        tooltip: "Your Anthropic API key. Managed on the host via environment variables or `claude config set apiKey`. Cannot be edited from the iOS app for security."
+                    )
                 } else if !viewModel.isLoadingConfig {
                     Text("Loading API key status...")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -223,8 +254,8 @@ struct SettingsConfigSection: View {
                 if let config = viewModel.config?.content, let permissions = config.permissions {
                     settingsRow("Default Mode", value: permissions.defaultMode?.capitalized ?? "Prompt")
                     settingAnnotation(
-                        isInherited: permissions.defaultMode == nil,
-                        tooltip: "Controls which tools Claude can use without asking. Inherited from host CLI configuration."
+                        isInherited: viewModel.isInherited(key: "permissions"),
+                        tooltip: "Controls the default permission mode for tool execution. In 'prompt' mode, Claude asks before running tools. In 'auto' mode, allowed tools run without confirmation. This setting is inherited from your host CLI's permissions configuration."
                     )
 
                     if let allowed = permissions.allow, !allowed.isEmpty {
@@ -241,6 +272,10 @@ struct SettingsConfigSection: View {
                     } else {
                         settingsRow("Allowed", value: "None")
                     }
+                    settingAnnotation(
+                        isInherited: viewModel.isInherited(key: "permissions"),
+                        tooltip: "Tools and file patterns explicitly allowed to run without asking for confirmation. Each rule is a glob pattern matching tool names or file paths. These allow rules are configured in your host CLI's permissions settings and override the default permission mode."
+                    )
 
                     if let denied = permissions.deny, !denied.isEmpty {
                         DisclosureGroup {
@@ -256,6 +291,10 @@ struct SettingsConfigSection: View {
                     } else {
                         settingsRow("Denied", value: "None")
                     }
+                    settingAnnotation(
+                        isInherited: viewModel.isInherited(key: "permissions"),
+                        tooltip: "Tools and file patterns explicitly blocked from running, even if they would otherwise be allowed. Deny rules take precedence over allow rules. These are configured in your host CLI's permissions settings to enforce security boundaries."
+                    )
                 } else if !viewModel.isLoadingConfig {
                     Text("No permissions configured")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -304,8 +343,8 @@ struct SettingsConfigSection: View {
                         .buttonStyle(.plain)
                     }
                     settingAnnotation(
-                        isInherited: config.hooks == nil,
-                        tooltip: "Lifecycle hooks that run custom commands at specific events (session start, before/after tool use). Configured in ~/.claude/settings.json."
+                        isInherited: viewModel.isInherited(key: "hooks"),
+                        tooltip: "Lifecycle hooks that run custom commands or scripts at specific Claude Code events such as session start, before tool use, and after tool use. Hooks are configured in your host's ~/.claude/settings.json file and can automate workflows or enforce policies."
                     )
 
                     if let plugins = config.enabledPlugins {
@@ -314,14 +353,30 @@ struct SettingsConfigSection: View {
                     } else {
                         settingsRow("Enabled Plugins", value: "0")
                     }
+                    settingAnnotation(
+                        isInherited: viewModel.isInherited(key: "enabledPlugins"),
+                        tooltip: "Plugins that are currently installed and enabled on your host machine. Plugins extend Claude Code with additional capabilities and integrations. You can browse, install, and manage plugins from the Browse tab in the sidebar."
+                    )
 
                     if let statusLine = config.statusLine {
                         settingsRow("Status Line", value: statusLine.type ?? "disabled")
+                    } else {
+                        settingsRow("Status Line", value: "Not configured")
                     }
+                    settingAnnotation(
+                        isInherited: viewModel.isInherited(key: "statusLine"),
+                        tooltip: "A custom status line displayed at the bottom of the Claude Code terminal interface on your host. The status line can show dynamic information like the current project, git branch, or custom text configured via your host's settings."
+                    )
 
                     if let env = config.env, !env.isEmpty {
                         settingsRow("Environment Vars", value: "\(env.count)")
+                    } else {
+                        settingsRow("Environment Vars", value: "0")
                     }
+                    settingAnnotation(
+                        isInherited: viewModel.isInherited(key: "env"),
+                        tooltip: "Environment variables that are injected into Claude Code sessions when they start on your host. These can include API keys, feature flags, or configuration values that tools and hooks need during execution."
+                    )
                 } else if !viewModel.isLoadingConfig {
                     Text("No advanced settings")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -331,7 +386,7 @@ struct SettingsConfigSection: View {
                 Divider().background(theme.bgTertiary)
 
                 NavigationLink {
-                    ConfigEditorView(scope: "user")
+                    ConfigEditorView(scope: .user)
                 } label: {
                     HStack {
                         Text("Edit User Settings")
@@ -345,7 +400,7 @@ struct SettingsConfigSection: View {
                 }
 
                 NavigationLink {
-                    ConfigEditorView(scope: "project")
+                    ConfigEditorView(scope: .project)
                 } label: {
                     HStack {
                         Text("Edit Project Settings")
@@ -388,6 +443,10 @@ struct SettingsConfigSection: View {
                         }
                     }
                     .tint(theme.accent)
+                    settingAnnotation(
+                        isInherited: false,
+                        tooltip: "Experimental feature that enables coordination of multiple AI agents working together on complex tasks. Agent Teams is an iOS-only local setting stored on your device and is not synced with your host CLI configuration."
+                    )
                 }
                 .padding(theme.spacingMD)
                 .modifier(GlassCard())
@@ -458,13 +517,7 @@ struct SettingsConfigSection: View {
     // MARK: - Helpers
 
     func countHooks(_ hooks: HooksConfig) -> Int {
-        var count = 0
-        if let h = hooks.sessionStart { count += h.count }
-        if let h = hooks.subagentStart { count += h.count }
-        if let h = hooks.userPromptSubmit { count += h.count }
-        if let h = hooks.preToolUse { count += h.count }
-        if let h = hooks.postToolUse { count += h.count }
-        return count
+        hooks.events.values.reduce(0) { $0 + $1.count }
     }
 
     /// Reads pre-computed hook event breakdown from ViewModel

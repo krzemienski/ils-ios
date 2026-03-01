@@ -1,0 +1,4 @@
+Host Profiles from /api/v1/host-profiles:
+Profiles: 1
+  Local Backend: active=True, health=healthy
+Active host ID: 836FBD4C-990A-4EAD-B7CD-9F8BA5C67E38

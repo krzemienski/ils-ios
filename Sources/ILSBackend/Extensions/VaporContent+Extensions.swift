@@ -43,12 +43,6 @@ extension APIResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension APIResponse: Content where T: Content {}
-// CONC-15: @unchecked Sendable extensions are required for Vapor Content protocol
-// conformance. Vapor's Content protocol inherits from Sendable, but generic wrapper
-// types (APIResponse<T>, ListResponse<T>, PaginatedResponse<T>) cannot automatically
-// satisfy Sendable when T is constrained to Sendable. The @unchecked annotation is
-// the standard Vapor pattern. These types are value types (structs) defined in ILSShared
-// with all-Sendable stored properties, so the assertion is correct. Reviewed 2026-02-24.
 extension APIResponse: @unchecked Sendable where T: Sendable {}
 
 // ListResponse conformances
@@ -166,6 +160,7 @@ extension SessionStat: Content {}
 extension MCPStat: Content {}
 extension PluginStat: Content {}
 extension DeletedResponse: Content {}
+extension DataErasureResponse: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
@@ -173,6 +168,8 @@ extension ProjectGroupInfo: Content {}
 extension ServerStatus: Content {}
 extension Marketplace: Content {}
 extension GitHubSearchResult: Content {}
+extension GitHubRepoPreview: Content {}
+extension GitHubFileEntry: Content {}
 
 // MARK: - Model Types
 extension Project: Content {}
@@ -184,27 +181,40 @@ extension Skill: Content {}
 extension Plugin: Content {}
 extension PluginMarketplace: Content {}
 extension PluginInfo: Content {}
+extension PluginUpdateInfo: Content {}
 extension MCPServer: Content {}
 extension MCPHealthResponse: Content {}
 extension MCPLogEntry: Content {}
 extension MCPLogsResponse: Content {}
 extension MCPRestartResponse: Content {}
+extension MCPValidationResult: Content {}
+extension MCPPreset: Content {}
+extension MCPPresetCategory: Content {}
+extension MCPPresetListResponse: Content {}
 extension ClaudeConfig: Content {}
 extension PermissionsConfig: Content {}
 extension HooksConfig: Content {}
 extension HookDefinition: Content {}
 extension ConfigInfo: Content {}
+extension ConfigProfiles: Content {}
+extension ConfigOverride: Content {}
+extension EffectiveConfig: Content {}
 extension CustomTheme: Content {}
-extension FleetHost: Content {}
-extension FleetHost.HealthStatus: Content {}
-extension FleetListResponse: Content {}
-extension FleetHealthResponse: Content {}
-extension RegisterFleetHostRequest: Content {}
+extension HostProfile: Content {}
+extension HostProfile.HealthStatus: Content {}
+extension HostProfileListResponse: Content {}
+extension HostProfileHealthResponse: Content {}
+extension RegisterHostProfileRequest: Content {}
 extension ColorTokens: Content {}
 extension TypographyTokens: Content {}
 extension SpacingTokens: Content {}
 extension CornerRadiusTokens: Content {}
 extension ShadowTokens: Content {}
+
+// MARK: - Suggestion Types
+extension SessionSuggestion: Content {}
+extension SkillSuggestion: Content {}
+extension SuggestionFeedbackRequest: Content {}
 
 // MARK: - Stream Types
 extension StreamMessage: Content {}

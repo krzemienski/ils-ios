@@ -1,22 +1,22 @@
 import Foundation
 
-// MARK: - Host Profiles Typealiases (migration path)
+// MARK: - Fleet Backward-Compatible Typealiases
 
-/// Typealias for migration path — new code should use `RegisterHostProfileRequest`.
-public typealias RegisterHostProfileRequest = RegisterFleetHostRequest
-/// Typealias for migration path — new code should use `HostProfileListResponse`.
-public typealias HostProfileListResponse = FleetListResponse
-/// Typealias for migration path — new code should use `HostProfileHealthResponse`.
-public typealias HostProfileHealthResponse = FleetHealthResponse
+/// Backward-compatible alias — new code should use `RegisterHostProfileRequest`.
+public typealias RegisterFleetHostRequest = RegisterHostProfileRequest
+/// Backward-compatible alias — new code should use `HostProfileListResponse`.
+public typealias FleetListResponse = HostProfileListResponse
+/// Backward-compatible alias — new code should use `HostProfileHealthResponse`.
+public typealias FleetHealthResponse = HostProfileHealthResponse
 
-// MARK: - Fleet Requests
+// MARK: - Host Profile Requests
 
-/// Request payload for registering a new fleet host with the ILS backend.
+/// Request payload for registering a new host profile with the ILS backend.
 ///
 /// Sent when adding a remote machine to the fleet so ILS can connect to it
 /// via SSH and proxy Claude Code sessions through the remote backend.
-public struct RegisterFleetHostRequest: Codable, Sendable {
-    /// Human-readable display name for the fleet host.
+public struct RegisterHostProfileRequest: Codable, Sendable {
+    /// Human-readable display name for the host profile.
     public let name: String
     /// Hostname or IP address of the remote machine.
     public let host: String
@@ -31,7 +31,7 @@ public struct RegisterFleetHostRequest: Codable, Sendable {
     /// Credential value associated with the chosen auth method (password or private key path).
     public let credential: String?
 
-    /// Creates a new fleet host registration request.
+    /// Creates a new host profile registration request.
     /// - Parameters:
     ///   - name: Human-readable display name for the host.
     ///   - host: Hostname or IP address of the remote machine.
@@ -59,31 +59,31 @@ public struct RegisterFleetHostRequest: Codable, Sendable {
     }
 }
 
-// MARK: - Fleet Responses
+// MARK: - Host Profile Responses
 
-/// Response payload containing the full list of registered fleet hosts.
-public struct FleetListResponse: Codable, Sendable {
-    /// All fleet hosts registered with this ILS instance.
-    public let hosts: [FleetHost]
+/// Response payload containing the full list of registered host profiles.
+public struct HostProfileListResponse: Codable, Sendable {
+    /// All host profiles registered with this ILS instance.
+    public let hosts: [HostProfile]
     /// Identifier of the currently active (selected) host, if any.
     public let activeHostId: UUID?
 
-    /// Creates a fleet list response.
+    /// Creates a host profile list response.
     /// - Parameters:
-    ///   - hosts: Array of registered fleet hosts.
+    ///   - hosts: Array of registered host profiles.
     ///   - activeHostId: Optional ID of the currently active host.
-    public init(hosts: [FleetHost], activeHostId: UUID? = nil) {
+    public init(hosts: [HostProfile], activeHostId: UUID? = nil) {
         self.hosts = hosts
         self.activeHostId = activeHostId
     }
 }
 
-/// Response payload describing the health status of a single fleet host.
-public struct FleetHealthResponse: Codable, Sendable {
-    /// Identifier of the fleet host this health report belongs to.
+/// Response payload describing the health status of a single host profile.
+public struct HostProfileHealthResponse: Codable, Sendable {
+    /// Identifier of the host profile this health report belongs to.
     public let hostId: UUID
     /// Current health status of the host (e.g., online, offline, unreachable).
-    public let status: FleetHost.HealthStatus
+    public let status: HostProfile.HealthStatus
     /// Version string of the ILS backend running on the remote host, if reachable.
     public let backendVersion: String?
     /// Whether Claude Code is available and responsive on the remote host.
@@ -91,16 +91,16 @@ public struct FleetHealthResponse: Codable, Sendable {
     /// Timestamp of the most recent health check for this host.
     public let lastChecked: Date
 
-    /// Creates a fleet health response.
+    /// Creates a host profile health response.
     /// - Parameters:
-    ///   - hostId: Identifier of the fleet host.
+    ///   - hostId: Identifier of the host profile.
     ///   - status: Current health status.
     ///   - backendVersion: Optional backend version string.
     ///   - claudeAvailable: Whether Claude Code is available (default: `false`).
     ///   - lastChecked: Timestamp of the health check (default: now).
     public init(
         hostId: UUID,
-        status: FleetHost.HealthStatus,
+        status: HostProfile.HealthStatus,
         backendVersion: String? = nil,
         claudeAvailable: Bool = false,
         lastChecked: Date = Date()

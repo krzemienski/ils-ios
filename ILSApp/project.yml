@@ -88,15 +88,13 @@ targets:
             CFBundleURLSchemes:
               - ils
         NSFaceIDUsageDescription: "Face ID is used to protect your server credentials stored in the Keychain."
+        NSSupportsLiveActivities: true
         UILaunchScreen: {}
     entitlements:
       path: ILSApp/ILSApp.entitlements
 
   # ──────────────────────────────────────────────
-  # macOS App
-  # ──────────────────────────────────────────────
-  # ──────────────────────────────────────────────
-  # UI Tests
+  # iOS UI Tests
   # ──────────────────────────────────────────────
   ILSAppUITests:
     type: bundle.ui-testing
@@ -194,6 +192,34 @@ targets:
     entitlements:
       path: ILSMacApp/ILSMacApp.entitlements
 
+  # ──────────────────────────────────────────────
+  # macOS UI Tests
+  # ──────────────────────────────────────────────
+  ILSMacAppUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: ILSMacAppUITests
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ils.mac.uitests
+        SWIFT_VERSION: "5.0"
+        SWIFT_STRICT_CONCURRENCY: targeted
+        DEVELOPMENT_TEAM: HC36V7B67Z
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: ""
+        TEST_TARGET_NAME: ILSMacApp
+      configs:
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+    dependencies:
+      - target: ILSMacApp
+
 # ──────────────────────────────────────────────
 # Schemes
 # ──────────────────────────────────────────────
@@ -214,8 +240,13 @@ schemes:
     build:
       targets:
         ILSMacApp: all
+        ILSMacAppUITests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - name: ILSMacAppUITests
 
   ILSApp-WithBackend:
     build:

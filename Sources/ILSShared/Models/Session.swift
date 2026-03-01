@@ -256,6 +256,34 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         self.encodedProjectPath = encodedProjectPath
         self.firstPrompt = firstPrompt
     }
+
+    /// Pre-compiled regex for stripping markdown heading prefixes.
+    /// Avoids recompiling the pattern on every `displayName` access (hot path for 22K+ sessions).
+    private static let headingPrefixRegex = try! NSRegularExpression(pattern: "^#{1,6}\\s*")
+
+    /// A cleaned display name suitable for UI rendering.
+    ///
+    /// Strips leading markdown heading prefixes (`#`, `##`, `###`, etc.) and trims
+    /// whitespace so that session names imported from Claude Code conversations
+    /// render cleanly in lists and navigation bars.  Falls back to `"Unnamed Session"`
+    /// when no meaningful name is available.
+    public var displayName: String {
+        if let name, !name.isEmpty {
+            let range = NSRange(name.startIndex..., in: name)
+            let cleaned = Self.headingPrefixRegex
+                .stringByReplacingMatches(in: name, range: range, withTemplate: "")
+                .trimmingCharacters(in: .whitespaces)
+            return cleaned.isEmpty ? "Unnamed Session" : cleaned
+        }
+        if let prompt = firstPrompt, !prompt.isEmpty {
+            let range = NSRange(prompt.startIndex..., in: prompt)
+            let trimmed = Self.headingPrefixRegex
+                .stringByReplacingMatches(in: prompt, range: range, withTemplate: "")
+                .trimmingCharacters(in: .whitespaces)
+            return String(trimmed.prefix(40))
+        }
+        return "Unnamed Session"
+    }
 }
 
 /// External session discovered from Claude Code storage.

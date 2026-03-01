@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import os
 
 // MARK: - Glow Effect
 
@@ -12,7 +13,7 @@ struct GlowEffect: ViewModifier {
         content
             // ENRG-05: Single shadow pass instead of double — halves GPU blur render cost.
             .shadow(color: color.opacity(opacity), radius: radius * 1.5)
-            .drawingGroup()
+            // drawingGroup() removed: Metal rasterization breaks UIKit-backed controls (Toggle, TextField, Picker)
     }
 }
 
@@ -161,11 +162,12 @@ extension View {
 // MARK: - Scanline Overlay
 
 /// Module-level cache keyed by "lineSpacing_opacity" — avoids re-creating the tile on every layout pass.
-nonisolated(unsafe) private var scanlineTileCache: [String: Image] = [:]
+/// Thread-safe via OSAllocatedUnfairLock (CONC-CRIT: replaces nonisolated(unsafe) bare dictionary).
+private let scanlineTileCache = OSAllocatedUnfairLock(initialState: [String: Image]())
 
 private func makeScanlineTile(lineSpacing: CGFloat, opacity: Double) -> Image {
     let key = "\(lineSpacing)_\(opacity)"
-    if let cached = scanlineTileCache[key] {
+    if let cached = scanlineTileCache.withLock({ $0[key] }) {
         return cached
     }
 
@@ -196,7 +198,7 @@ private func makeScanlineTile(lineSpacing: CGFloat, opacity: Double) -> Image {
     let image = Image(nsImage: NSImage(cgImage: cgImage, size: NSSize(width: 1, height: height)))
     #endif
 
-    scanlineTileCache[key] = image
+    scanlineTileCache.withLock { $0[key] = image }
     return image
 }
 

@@ -4,18 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class ThemesViewModel {
+class ThemesViewModel: BaseViewModel {
     var themes: [CustomTheme] = []
-    var isLoading = false
-    var error: Error?
-
-    private var client: APIClient?
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -55,7 +45,8 @@ class ThemesViewModel {
         typography: TypographyTokens?,
         spacing: SpacingTokens?,
         cornerRadius: CornerRadiusTokens?,
-        shadows: ShadowTokens?
+        shadows: ShadowTokens?,
+        meshGradient: MeshGradientConfig? = nil
     ) async -> CustomTheme? {
         guard let client else { return nil }
         do {
@@ -68,7 +59,8 @@ class ThemesViewModel {
                 typography: typography,
                 spacing: spacing,
                 cornerRadius: cornerRadius,
-                shadows: shadows
+                shadows: shadows,
+                meshGradient: meshGradient
             )
             let response: APIResponse<CustomTheme> = try await client.post("/themes", body: request)
             if let theme = response.data {
@@ -91,7 +83,8 @@ class ThemesViewModel {
         typography: TypographyTokens?,
         spacing: SpacingTokens?,
         cornerRadius: CornerRadiusTokens?,
-        shadows: ShadowTokens?
+        shadows: ShadowTokens?,
+        meshGradient: MeshGradientConfig? = nil
     ) async -> CustomTheme? {
         guard let client else { return nil }
         do {
@@ -104,7 +97,8 @@ class ThemesViewModel {
                 typography: typography,
                 spacing: spacing,
                 cornerRadius: cornerRadius,
-                shadows: shadows
+                shadows: shadows,
+                meshGradient: meshGradient
             )
             let response: APIResponse<CustomTheme> = try await client.put("/themes/\(theme.id)", body: request)
             if let updated = response.data {

@@ -5,30 +5,17 @@ import ILSShared
 ///
 /// Starts at `~/` and allows navigating into subdirectories. Directories sort
 /// before files; both groups are ordered alphabetically. Tapping a file opens a
-/// read-only text preview sheet; tapping a directory updates ``currentPath`` and
-/// reloads the listing via the backend `listDirectory` API endpoint.
+/// read-only text preview sheet; tapping a directory updates the path and
+/// reloads the listing via the view model.
 ///
 /// ## Topics
 /// ### State
-/// - ``currentPath`` - Currently displayed filesystem path (tilde-relative or absolute)
-/// - ``entries`` - Raw directory listing returned from the backend
-/// - ``previewFile`` - Non-nil while the text-file preview sheet is presented
+/// - ``viewModel`` - Manages directory loading and file preview via `FileBrowserViewModel`
 struct FileBrowserView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) var appState
 
-    @State private var currentPath: String = "~"
-    @State private var entries: [FileEntryResponse] = []
-    @State private var isLoading: Bool = false
-    @State private var errorMessage: String?
-    @State private var previewFile: PreviewFile?
-    @State private var cachedSortedEntries: [FileEntryResponse] = []
-
-    struct PreviewFile: Identifiable {
-        let id = UUID()
-        let name: String
-        let content: String
-    }
+    @State private var viewModel = FileBrowserViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,12 +26,12 @@ struct FileBrowserView: View {
                 .background(theme.bgTertiary)
 
             // File list
-            if isLoading {
+            if viewModel.isLoading {
                 Spacer()
                 ProgressView()
                     .tint(theme.entitySystem)
                 Spacer()
-            } else if let error = errorMessage {
+            } else if let error = viewModel.errorMessage {
                 Spacer()
                 VStack(spacing: theme.spacingSM) {
                     Image(systemName: "exclamationmark.triangle")
@@ -55,14 +42,14 @@ struct FileBrowserView: View {
                         .foregroundStyle(theme.textSecondary)
                         .multilineTextAlignment(.center)
                     Button("Retry") {
-                        Task { await loadDirectory() }
+                        Task { await viewModel.loadDirectory() }
                     }
                     .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.accent)
                 }
                 .padding()
                 Spacer()
-            } else if entries.isEmpty {
+            } else if viewModel.entries.isEmpty {
                 Spacer()
                 Text("Empty directory")
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -71,7 +58,7 @@ struct FileBrowserView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(cachedSortedEntries, id: \.name) { entry in
+                        ForEach(viewModel.cachedSortedEntries, id: \.name) { entry in
                             fileRow(entry)
                             Divider()
                                 .background(theme.bgTertiary)
@@ -86,12 +73,10 @@ struct FileBrowserView: View {
         .inlineNavigationBarTitle()
         #endif
         .task {
-            await loadDirectory()
+            viewModel.configure(client: appState.apiClient)
+            await viewModel.loadDirectory()
         }
-        .onChange(of: entries) { _, newEntries in
-            cachedSortedEntries = Self.sortEntries(newEntries)
-        }
-        .sheet(item: $previewFile) { file in
+        .sheet(item: $viewModel.previewFile) { file in
             filePreviewSheet(file)
                 .presentationBackground(theme.bgPrimary)
         }
@@ -100,10 +85,10 @@ struct FileBrowserView: View {
     // MARK: - Breadcrumb
 
     private var pathComponents: [(label: String, path: String)] {
-        let parts = currentPath.split(separator: "/", omittingEmptySubsequences: true)
+        let parts = viewModel.currentPath.split(separator: "/", omittingEmptySubsequences: true)
         var result: [(String, String)] = []
 
-        if currentPath.hasPrefix("~") {
+        if viewModel.currentPath.hasPrefix("~") {
             result.append(("~", "~"))
             var accumulated = "~"
             for part in parts.dropFirst(0).enumerated() {
@@ -111,7 +96,7 @@ struct FileBrowserView: View {
                 accumulated += "/\(part.element)"
                 result.append((String(part.element), accumulated))
             }
-            if result.count == 1 && currentPath == "~" {
+            if result.count == 1 && viewModel.currentPath == "~" {
                 return result
             }
         } else {
@@ -138,8 +123,8 @@ struct FileBrowserView: View {
                     }
 
                     Button {
-                        currentPath = component.path
-                        Task { await loadDirectory() }
+                        viewModel.currentPath = component.path
+                        Task { await viewModel.loadDirectory() }
                     } label: {
                         Text(component.label)
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -159,21 +144,12 @@ struct FileBrowserView: View {
 
     // MARK: - File Row
 
-    /// Sorts entries: directories first, then alphabetical.
-    private static func sortEntries(_ entries: [FileEntryResponse]) -> [FileEntryResponse] {
-        entries.sorted { a, b in
-            if a.isDirectory && !b.isDirectory { return true }
-            if !a.isDirectory && b.isDirectory { return false }
-            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
-        }
-    }
-
     private func fileRow(_ entry: FileEntryResponse) -> some View {
         Button {
             if entry.isDirectory {
-                navigateToDirectory(entry.name)
+                viewModel.navigateToDirectory(entry.name)
             } else {
-                Task { await previewFileContent(entry.name) }
+                Task { await viewModel.previewFileContent(entry.name) }
             }
         } label: {
             HStack(spacing: theme.spacingMD) {
@@ -211,7 +187,7 @@ struct FileBrowserView: View {
 
     // MARK: - File Preview Sheet
 
-    private func filePreviewSheet(_ file: PreviewFile) -> some View {
+    private func filePreviewSheet(_ file: FileBrowserViewModel.PreviewFile) -> some View {
         NavigationStack {
             ScrollView {
                 Text(file.content)
@@ -228,54 +204,11 @@ struct FileBrowserView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
-                        previewFile = nil
+                        viewModel.previewFile = nil
                     }
                     .foregroundStyle(theme.entitySystem)
                 }
             }
-        }
-    }
-
-    // MARK: - Navigation & Loading
-
-    private func navigateToDirectory(_ name: String) {
-        if currentPath == "/" {
-            currentPath = "/\(name)"
-        } else {
-            currentPath = "\(currentPath)/\(name)"
-        }
-        Task { await loadDirectory() }
-    }
-
-    private func loadDirectory() async {
-        isLoading = true
-        errorMessage = nil
-
-        let encodedPath = currentPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? currentPath
-
-        do {
-            let result: [FileEntryResponse] = try await appState.apiClient.get("/system/files?path=\(encodedPath)")
-            entries = result
-            cachedSortedEntries = Self.sortEntries(result)
-        } catch {
-            errorMessage = "Failed to load directory: \(error.localizedDescription)"
-        }
-
-        isLoading = false
-    }
-
-    private func previewFileContent(_ name: String) async {
-        let filePath = currentPath == "/" ? "/\(name)" : "\(currentPath)/\(name)"
-        let encodedPath = filePath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? filePath
-
-        do {
-            let data = try await appState.apiClient.getRawData("/system/files?path=\(encodedPath)&preview=true")
-            let content = String(data: data, encoding: .utf8) ?? "Unable to read file"
-            let lines = content.components(separatedBy: "\n")
-            let truncated = lines.prefix(500).joined(separator: "\n")
-            previewFile = PreviewFile(name: name, content: truncated)
-        } catch {
-            // Silently fail for preview
         }
     }
 

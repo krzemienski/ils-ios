@@ -1,411 +1,637 @@
-# Architecture Research
+# Architecture Patterns
 
-**Domain:** iOS/macOS native client for Claude Code — v3.1 feature integration
-**Researched:** 2026-02-24
-**Confidence:** HIGH (based on direct codebase inspection, not inference)
+**Domain:** Cross-platform feature completion for native Swift iOS/macOS Claude Code client
+**Researched:** 2026-02-27
+**Confidence:** HIGH (codebase fully analyzed, all integration points mapped, patterns verified against existing code)
 
----
+## Current Architecture Summary
 
-## Existing Architecture Map
-
-Confirmed by reading source files directly:
+The ILS app follows a well-established architecture after 8 milestones of hardening:
 
 ```
-ILSAppApp.swift
-  ├── AppState (@Observable @MainActor)
-  │     ├── APIClient (actor) — HTTP, auto-prefixes /api/v1, NSCache
-  │     ├── ConnectionManager (@Observable @MainActor)
-  │     └── NavigationIntent (drives SidebarRootView routing)
-  │
-  ├── ThemeManager (@Observable)
-  │
-  └── SidebarRootView (root SwiftUI view)
-        ├── ActiveScreen enum (home/chat/system/settings/browser/
-        │                      teams/hostProfiles/themes/hooks)
-        ├── SessionsViewModel (@State)
-        ├── HomeView
-        ├── ChatView
-        ├── BrowserView → SkillsViewModel, PluginsViewModel, MCPViewModel
-        ├── SettingsView → SettingsViewModel (@State)
-        ├── HostProfilesView → HostProfilesViewModel (@State)
-        └── [system/teams/themes/hooks screens]
-
-Vapor Backend (:9999, /api/v1 prefix):
-  ConfigController   → FileSystemService → ~/.claude/settings.json
-  FleetController    → FleetHostModel (Fluent/SQLite)
-  SkillsController   → FileSystemService + GitHubService
-  PluginsController  → FileSystemService + git clone subprocess
-  [10 other controllers]
-
-ILSShared (Swift package, used by both iOS app and backend):
-  ClaudeConfig       — full config model, already has all fields needed
-  ConfigInfo         — scope + path + content + isValid
-  ConfigProfiles     — user/project/local triple (ALREADY EXISTS in ResponseDTOs.swift)
-  ConfigOverride     — per-key winning scope (ALREADY EXISTS in ResponseDTOs.swift)
-  FleetHost          — host model with health status
-  Skill, Plugin, MCPServer, etc.
+┌─────────────────────────────────────────────────────────────────┐
+│                        PRESENTATION LAYER                       │
+│                                                                 │
+│  iOS: SidebarRootView (ActiveScreen enum routing)               │
+│       NavigationStack + sheet-based sidebar (iPhone)             │
+│       NavigationSplitView (iPad)                                │
+│                                                                 │
+│  macOS: MacContentView (NavigationSplitView 3-column)           │
+│         SidebarSection enum mirrors ActiveScreen                │
+│                                                                 │
+│  Shared Views: HomeView, ChatView, BrowserView, SettingsView,   │
+│                SystemMonitorView, HooksManagementView,          │
+│                HostProfilesView, ThemePickerView,                │
+│                AgentTeamsListView                                │
+├─────────────────────────────────────────────────────────────────┤
+│                        VIEWMODEL LAYER                          │
+│                                                                 │
+│  @Observable @MainActor classes                                 │
+│  configure(client:) pattern for deferred APIClient injection    │
+│  18 ViewModels: Dashboard, Sessions, Chat, Config, Hooks,       │
+│                 Settings, Skills, Plugins, MCP, Projects,       │
+│                 HostProfiles, Themes, Teams, System, SSH,        │
+│                 NewSession, QuickConnect, Setup                  │
+├─────────────────────────────────────────────────────────────────┤
+│                        SERVICE LAYER                            │
+│                                                                 │
+│  APIClient (actor): REST with cache, retry, auth, coalescing    │
+│  SSEClient: Server-sent events for chat streaming               │
+│  CacheService: NSCache with per-endpoint TTL                    │
+│  ConnectionManager: URL, health polling, reconnect              │
+│  MetricsWebSocketClient: Real-time system metrics               │
+│  SyncCoordinator: Offline queue + replay                        │
+│  FeatureGate + SubscriptionManager: Premium features            │
+├─────────────────────────────────────────────────────────────────┤
+│                        SHARED LAYER (ILSShared)                 │
+│                                                                 │
+│  Models: Session, Project, Skill, Plugin, MCPServer,            │
+│          FleetHost (aliased as HostProfile), ClaudeConfig,      │
+│          Message, CustomTheme, StreamMessage                    │
+│  DTOs: FleetDTOs, SystemDTOs, TeamDTOs, TunnelDTOs,            │
+│        ResponseDTOs, Requests, DashboardStats,                  │
+│        ConfigOverride, UpdateConfigRequest                      │
+│  Enums: ConfigScope (user/project/local)                        │
+├─────────────────────────────────────────────────────────────────┤
+│                        BACKEND (Vapor 4)                        │
+│                                                                 │
+│  15 Controllers: Sessions, Projects, Chat, Skills, MCP,         │
+│                  Plugins, Config, Stats, Themes, System,         │
+│                  Teams, Tunnel, Fleet, Health, DataErasure       │
+│  Services: FileSystemService, SkillsFileService,                │
+│            ClaudeExecutorService                                │
+│  Database: SQLite via Fluent ORM, 8 migrations                  │
+│  Middleware: CORS, APIKey, RateLimit, RequestLogging,           │
+│             ILSError, Admin, BodySize                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
----
+## v5.0 Feature Integration Map
 
-## New vs Modified Components
+### Stream 1: Navigation & Layout
 
-### New Components (must be created from scratch)
+**What changes:** Refinements to existing navigation, not structural changes.
 
-| Component | Type | File Path |
-|-----------|------|-----------|
-| `SettingsDefaultsSection` | SwiftUI View | `ILSApp/ILSApp/Views/Settings/SettingsDefaultsSection.swift` |
-| `ConfigOverrideRow` | SwiftUI View | `ILSApp/ILSApp/Views/Settings/ConfigOverrideRow.swift` |
-| `GitHubBrowseView` | SwiftUI View | `ILSApp/ILSApp/Views/Browser/GitHubBrowseView.swift` |
-| `GitHubResultRow` | SwiftUI View | `ILSApp/ILSApp/Views/Browser/GitHubResultRow.swift` |
-| `InstallProgressView` | SwiftUI View (sheet) | `ILSApp/ILSApp/Views/Browser/InstallProgressView.swift` |
-| `EffectiveConfigResponse` | Shared DTO | `Sources/ILSShared/DTOs/ResponseDTOs.swift` (additive) |
-| `GET /config/defaults` handler | Backend | `Sources/ILSBackend/Controllers/ConfigController.swift` (additive) |
-| `GET /fleet/:id/config` handler | Backend | `Sources/ILSBackend/Controllers/FleetController.swift` (additive) |
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `SidebarRootView.swift` | MODIFY | Add quick actions row in homeScreen builder, ensure data consistency for recent sessions |
+| `HomeView.swift` | MODIFY | Home sidebar content improvements, quick actions, recent sessions widget consistency |
+| `SidebarView.swift` | MODIFY | Session detail navigation improvements from sidebar |
+| `MacContentView.swift` | MODIFY (mirror) | Mirror all iOS sidebar/home changes |
+| `SessionsViewModel.swift` | MODIFY | Ensure filtered/recent session data consistency |
 
-### Modified Components (targeted additions to existing files)
+**Integration Points:**
+- ActiveScreen enum: No changes needed (all screens already routed)
+- NavigationIntent: No changes needed (deep links already cover all routes)
+- browserSegment forwarding: Already working
 
-| Component | File | What Changes |
-|-----------|------|--------------|
-| `SettingsViewModel` | `ViewModels/SettingsViewModel.swift` | Add `loadEffectiveDefaults()`, `effectiveConfig` property |
-| `HostProfilesViewModel` | `ViewModels/HostProfilesViewModel.swift` | Add `fetchConfigForHost(id:)`, `configSnapshot` |
-| `SkillsViewModel` | `ViewModels/SkillsViewModel.swift` | Add `searchGitHub(query:)`, `installFromGitHub(repo:)`, `installedNames` |
-| `PluginsViewModel` | `ViewModels/PluginsViewModel.swift` | Add `install(name:marketplace:)`, `uninstall(name:)` calls (endpoints exist) |
-| `SidebarRootView` | `Views/Root/SidebarRootView.swift` | Fix hamburger accessibility from all screens |
-| `SidebarView` | `Views/Sidebar/SidebarView.swift` | Add active host name indicator |
-| `SettingsView` | `Views/Settings/SettingsView.swift` | Add `SettingsDefaultsSection` into scroll view |
-| `HostProfilesView` | `Views/Fleet/HostProfilesView.swift` | Add "Sync Config" action, active profile indicator |
-| `HostProfileDetailView` | `Views/Fleet/HostProfileDetailView.swift` | Show config snapshot section |
-| `SkillsView` | `Views/Browser/` (skills tab) | Status badges (installed/not-installed), GitHub browse button |
-| `PluginsView` | `Views/Browser/` (plugins tab) | Install/enable/disable action buttons, status badges |
-| `ConfigController` | `Sources/ILSBackend/Controllers/ConfigController.swift` | Add `defaults()` handler route |
-| `FleetController` | `Sources/ILSBackend/Controllers/FleetController.swift` | Add `remoteConfig()` handler route |
+**Dependencies:** None. This stream can start immediately.
 
----
+### Stream 2: Settings & Config Inheritance
 
-## Data Flows
+**What changes:** The most architecturally significant stream. Introduces config cascade visualization and inherited-vs-custom distinction in the settings UI.
 
-### Feature 1: Host CLI Config Sync
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `ConfigController.swift` (backend) | MODIFY | Add `GET /config/cascade` endpoint that returns all 3 scopes merged with per-key provenance |
+| `FileSystemService.swift` (backend) | MODIFY | Add `readAllScopes()` method returning user + project + local configs |
+| `ConfigOverride` (ILSShared) | EXISTS | Already has `winningScope`, `userValue`, `projectValue`, `localValue` fields |
+| `ConfigInfo` (ILSShared) | EXISTS | Already has `scope` and `path` fields |
+| `SettingsViewModel.swift` | MODIFY | Add `loadCascade()` to fetch merged config, add `overrides: [ConfigOverride]` property |
+| `SettingsView.swift` | MODIFY | Add inheritance badges ("Host Default", "Project", "Custom") next to each setting |
+| `ConfigEditorViewModel.swift` | MODIFY | Support scope-aware editing (user vs project vs local) |
+| `MacSettingsView.swift` | MODIFY (mirror) | Mirror iOS settings changes |
 
-Shows the user their host's effective Claude Code defaults, with per-key scope attribution.
-
+**Data Flow:**
 ```
-SettingsView.task
-    → SettingsViewModel.loadEffectiveDefaults()
-    → APIClient.get("/config/defaults")                    ← NEW endpoint
-    → ConfigController.defaults()                          ← NEW handler
-        FileSystemService.readConfig("local")
-        FileSystemService.readConfig("project")
-        FileSystemService.readConfig("user")
-        mergeConfigs() → [ConfigOverride]
-    → EffectiveConfigResponse                              ← NEW DTO
-    → SettingsViewModel.effectiveConfig: EffectiveConfigResponse
-
-SettingsView body
-    → SettingsDefaultsSection(overrides: effectiveConfig.overrides)
-        → ConfigOverrideRow for each key
-            shows: key name + winning value + scope badge
-            ("model: claude-opus-4-6 · from user config")
-```
-
-**What's new at each layer:**
-
-Backend: one new route `config.get("defaults", use: defaults)`. Handler reads all three scopes via existing `FileSystemService.readConfig()`, merges with `local > project > user` precedence, builds `[ConfigOverride]` array. Uses `ConfigProfiles` and `ConfigOverride` that already exist in `ILSShared/DTOs/ResponseDTOs.swift`.
-
-ILSShared: new `EffectiveConfigResponse` struct wrapping `ConfigProfiles` + `[ConfigOverride]`. Additive to `ResponseDTOs.swift`.
-
-iOS: `SettingsViewModel` gets `effectiveConfig: EffectiveConfigResponse?` property and `loadEffectiveDefaults()` async method called from `loadAll()`. New `SettingsDefaultsSection` view inserted into `SettingsView` body. New `ConfigOverrideRow` component shows per-key scope badges.
-
-### Feature 2: GitHub Skill Browse + Install
-
-```
-BrowserView (Skills segment)
-    → "Browse GitHub" button → GitHubBrowseView (sheet or push)
-        SkillsViewModel.searchGitHub(query: String) async
-        → APIClient.get("/skills/search?q={query}")        ← endpoint EXISTS
-        → SkillsController.search()                        ← EXISTS, uses GitHubService
-        → [GitHubSearchResult]
-        GitHubBrowseView renders GitHubResultRow cards
-        User taps "Install" → InstallProgressView sheet
-            SkillsViewModel.installFromGitHub(repo: String) async
-            → APIClient.post("/skills/install", body: SkillInstallRequest)  ← EXISTS
-            → SkillsController.install()                   ← EXISTS
-            → fileSystem.invalidateSkillsCache()           ← EXISTS
-        On success:
-            SkillsViewModel.loadSkills()                   ← refresh list
-            Skill list shows "Installed" badge on newly installed entry
-```
-
-**What's new at each layer:**
-
-Backend: nothing. `GET /skills/search` and `POST /skills/install` are fully implemented in `SkillsController.swift`.
-
-ILSShared: nothing. `GitHubSearchResult` and `SkillInstallRequest` already exist in `SearchResult.swift`.
-
-iOS: new `GitHubBrowseView`, `GitHubResultRow`, `InstallProgressView` views. New `searchGitHub()` and `installFromGitHub()` methods on `SkillsViewModel`. `SkillsViewModel` needs a computed `installedSkillNames: Set<String>` from the existing `skills` array so `SkillsView` rows can show badges.
-
-### Feature 3: GitHub Plugin Browse + Install
-
-```
-BrowserView (Plugins segment)
-    PluginsViewModel.loadMarketplace() async
-    → APIClient.get("/plugins/marketplace")                ← EXISTS
-    → [PluginMarketplace] (official + custom)
-    Plugins list shows install/enable/disable buttons per row
-
-"Install" tapped → InstallProgressView (same component as skills)
-    PluginsViewModel.install(name: String, marketplace: String) async
-    → APIClient.post("/plugins/install", body: InstallPluginRequest)  ← EXISTS
-    → git clone in backend (~5–30s) → returns Plugin
-    Plugin row updates to show "Installed" + "Enabled" badges
-
-"Enable"/"Disable" tapped
-    PluginsViewModel.enable(name: String) / disable(name: String) async
-    → APIClient.post("/plugins/{name}/enable")             ← EXISTS
-    → APIClient.post("/plugins/{name}/disable")            ← EXISTS
-    → Plugin.isEnabled updated in-place in ViewModel
-
-"Uninstall" tapped (context menu)
-    PluginsViewModel.uninstall(name: String) async
-    → APIClient.delete("/plugins/{name}")                  ← EXISTS
-    → Plugin removed from ViewModel.plugins array
-```
-
-**What's new at each layer:**
-
-Backend: nothing. All endpoints exist in `PluginsController.swift`.
-
-ILSShared: nothing.
-
-iOS: `PluginsViewModel` gets `install()`, `uninstall()`, `enable()`, `disable()` async methods wrapping existing API calls (these methods are missing from the ViewModel — the endpoints are there but the VM doesn't call them). `PluginsView` rows get status badges and action buttons. `InstallProgressView` is reused from skills feature.
-
-### Feature 4: Host Profiles Redesign
-
-```
-HostProfilesView (existing)
-    Already shows: host list, health badges, active capsule badge, context menu
-    New: "Sync Config" action in context menu
-        HostProfilesViewModel.fetchConfigForHost(id: UUID) async
-        → APIClient.get("/fleet/{id}/config")              ← NEW endpoint
-        → FleetController.remoteConfig()                   ← NEW handler
-            Looks up FleetHostModel by ID
-            HTTP GET to http://{host}:{backendPort}/api/v1/config?scope=user
-            (same pattern as existing health() handler)
-        → configSnapshot: ConfigInfo stored on HostProfilesViewModel
-
-HostProfileDetailView (existing)
-    New section: "Configuration" showing configSnapshot values
-    If not yet fetched: "Fetch Config" button
-
-SidebarView header/footer
-    Active host name shown when activeHostId != nil
-    → HostProfilesViewModel.activeHost: FleetHost? (computed property)
-    → SidebarView reads from shared or newly loaded HostProfilesViewModel
-```
-
-**What's new at each layer:**
-
-Backend: one new route `fleet.get(":id", "config", use: remoteConfig)`. Handler follows the same pattern as `FleetController.health()` — loads the host model, makes HTTP GET to the remote host's backend, returns proxied response. Falls back to error if unreachable.
-
-ILSShared: nothing. `ConfigInfo` already exists and is the return type.
-
-iOS: `HostProfilesViewModel` gets `configSnapshot: [UUID: ConfigInfo]` dictionary and `fetchConfigForHost(id:)` method. `HostProfileDetailView` expanded with a config preview section. `HostProfilesView` context menu gets "Fetch Config" action. `SidebarView` reads `activeHostId` from `HostProfilesViewModel` to show active host name in header.
-
-**Note on SidebarView access to HostProfilesViewModel:** `HostProfilesViewModel` is currently `@State` inside `HostProfilesView`. For the sidebar to read the active host name, two options: (a) lift `activeHostId` into `AppState` when activation is called, or (b) give `SidebarView` its own lightweight `HostProfilesViewModel` reference. Option (a) is simpler — `AppState.activeHostName: String?` set by `HostProfilesViewModel.activate()`.
-
-### Feature 5: Navigation / UX Overhaul
-
-```
-Current problem:
-    Hamburger button is in each child view's toolbar independently.
-    Some screens don't have it at all.
-
-Fix in SidebarRootView.mainContent():
-    The NavigationStack is the container. The hamburger goes on the
-    NavigationStack's own toolbar, not inside child view bodies.
-    This ensures it appears consistently on EVERY screen.
-
-Current code (simplified):
-    NavigationStack {
-        Group { switch activeScreen { ... } }
-        .toolbar {
-            if showHamburger {
-                ToolbarItem(.topBarLeading) { hamburgerButton }
-            }
-        }
+CLI writes ~/.claude/settings.json (user scope)
+CLI writes .claude/settings.json (project scope)
+CLI writes .claude/settings.local.json (local scope)
+    │
+    ▼
+Backend FileSystemService reads all 3 files
+    │
+    ▼
+GET /config/cascade returns:
+  {
+    mergedConfig: ClaudeConfig,        // final merged result
+    overrides: [ConfigOverride],       // per-key provenance
+    scopes: {
+      user: ConfigInfo,
+      project: ConfigInfo?,
+      local: ConfigInfo?
     }
-
-The .toolbar modifier is already at the NavigationStack level in
-SidebarRootView.mainContent() — the fix is ensuring child views
-do NOT also add conflicting .topBarLeading items that override it.
-Audit each child view's .toolbar for conflicts.
-
-Session back button:
-    ChatView uses NavigationLink push — verify .navigationBarBackButtonHidden(false)
-    is not set. No code change expected — just a verification.
-
-Home screen layout:
-    HomeView.swift changes only — layout/spacing within existing view.
+  }
+    │
+    ▼
+SettingsViewModel stores merged + overrides
+    │
+    ▼
+SettingsView renders each setting with:
+  - Current value (from merged config)
+  - Source badge (user/project/local/default)
+  - Tooltip explaining inheritance
 ```
 
-**What's new:** Primarily audit and remove conflicting toolbar items from child views. The navigation architecture (`SidebarRootView`, `ActiveScreen` enum) is not changed.
+**Key Architectural Decision:** The existing `ConfigOverride` DTO in ILSShared already models per-key cascade provenance. The backend needs a new endpoint but the shared model layer is ready. The `saveWithPatch` pattern in SettingsViewModel already implements read-then-patch to preserve CLI-only fields -- this pattern extends naturally to scope-aware saves.
 
----
+**New DTO needed:**
+```swift
+public struct ConfigCascadeResponse: Codable, Sendable {
+    public let merged: ClaudeConfig
+    public let overrides: [ConfigOverride]
+    public let userConfig: ConfigInfo
+    public let projectConfig: ConfigInfo?
+    public let localConfig: ConfigInfo?
+}
+```
+
+**Dependencies:** None for backend work. Settings UI depends on the cascade endpoint.
+
+### Stream 3: Skills/Plugins/Hooks/Theming
+
+**What changes:** Multiple sub-features that touch BrowserView, SkillsFileService, and HooksManagementView.
+
+#### 3a: MCP Data Fixes
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `MCPViewModel.swift` | MODIFY | Verify MCP server data displays correctly (scope, tools, status) |
+| `MCPController.swift` (backend) | VERIFY | Ensure scope field uses ConfigScope enum |
+
+**Dependencies:** DATA-01 (ConfigScope) already completed in v4.0.
+
+#### 3b: node_modules Filtering
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `SkillsFileService.swift` (backend) | ALREADY DONE | `excludedDirectories` already contains "node_modules" at line 143 |
+
+**Status:** This is pre-satisfied. The `excludedDirectories` set already filters `node_modules`, `.git`, `__pycache__`, `.venv`, `venv`, `.build`, `build`, `dist`, `.cache`, `.npm`, `.yarn`, `vendor`, `Pods`, `.swiftpm`, `examples`, `tests`, `test`. Verify only.
+
+#### 3c: GitHub Browse & Install
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `SkillsController.swift` (backend) | MODIFY | Add `GET /skills/github/search?q=` endpoint proxying GitHub API |
+| `PluginsController.swift` (backend) | MODIFY | Add `GET /plugins/github/search?q=` endpoint proxying GitHub API |
+| `SkillsController.swift` (backend) | MODIFY | Add `POST /skills/github/install` endpoint to clone/install from GitHub |
+| `PluginsController.swift` (backend) | MODIFY | Add `POST /plugins/github/install` endpoint |
+| `SkillsViewModel.swift` | MODIFY | Add `searchGitHub(query:)`, `installFromGitHub(url:)` methods |
+| `PluginsViewModel.swift` | MODIFY | Add `searchGitHub(query:)`, `installFromGitHub(url:)` methods |
+| `BrowserView.swift` | MODIFY | Add "Discover from GitHub" section in skills and plugins tabs |
+| `GitHubSearchResult` (ILSShared) | NEW | DTO for GitHub search results (name, description, stars, url) |
+| `GitHubInstallRequest` (ILSShared) | NEW | Request body for install-from-github |
+| `GitHubRateLimitHandler` (backend) | NEW | Middleware/utility for rate limit tracking + retry-after headers |
+
+**Data Flow:**
+```
+User types search query in BrowserView Skills/Plugins tab
+    │
+    ▼
+SkillsViewModel.searchGitHub(query:) or PluginsViewModel
+    │
+    ▼
+GET /api/v1/skills/github/search?q=query
+    │
+    ▼
+Backend proxies to GitHub API (api.github.com/search/repositories)
+Rate limit tracking via X-RateLimit-* headers
+    │
+    ▼
+Returns [GitHubSearchResult] to iOS
+    │
+    ▼
+BrowserView shows "Discovered from GitHub" section
+Each result has Install button
+    │
+    ▼
+POST /api/v1/skills/github/install { url: "...", name: "..." }
+    │
+    ▼
+Backend clones repo, validates structure, copies to skills directory
+    │
+    ▼
+Invalidates skills cache, returns updated skill list
+```
+
+**Key decision:** GitHub search is proxied through the backend (not called directly from iOS) because:
+1. The backend is already authenticated and can manage rate limits server-side
+2. GitHub API requires a token for higher rate limits; the backend can store this securely
+3. Installation requires filesystem access which only the backend has
+
+**Dependencies:** None. Independent of other streams.
+
+#### 3d: Hooks Management Enhancement
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `HooksManagementView.swift` | MODIFY | Currently read-only display. Add enable/disable toggle per hook, add/remove hooks |
+| `HooksViewModel.swift` | MODIFY | Add CRUD operations: `addHook()`, `removeHook()`, `toggleHook()` |
+| `SettingsViewModel.swift` | REUSE | `saveWithPatch()` already preserves hooks -- used by HooksViewModel for writes |
+
+**Key insight:** HooksManagementView currently reads hooks via `SettingsViewModel` loading `/config?scope=user`. It already displays all hook groups correctly. Enhancement is to make it editable, using the same `saveWithPatch` pattern that SettingsView uses for config writes. The hooks data structure (`HooksConfig` -> `[HookGroup]` -> `[HookDefinition]`) is already fully modeled in ILSShared.
+
+**Dependencies:** None.
+
+#### 3e: Themes Audit
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `ThemePickerView.swift` | VERIFY | Verify all 13 built-in themes render correctly |
+| `ThemesViewModel.swift` | VERIFY | Verify custom theme CRUD works end-to-end |
+| `ThemesListView.swift` (macOS) | VERIFY | Verify macOS theme picker matches iOS |
+
+**Dependencies:** ECO-03 (MeshGradient) already completed in v4.0.
+
+### Stream 4: System Monitor + Profiles
+
+**What changes:** Rename "Fleet" to "Host Profiles" everywhere (code-level, not just UI), verify system monitor metrics.
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `FleetHost.swift` (ILSShared) | RENAME | Rename struct to `HostProfile`, remove typealias |
+| `FleetDTOs.swift` (ILSShared) | RENAME | Rename to `HostProfileDTOs.swift`, rename types |
+| `FleetController.swift` (backend) | RENAME | Rename to `HostProfileController.swift` |
+| `FleetHostModel` (backend) | RENAME | Rename to `HostProfileModel` |
+| `CreateFleetHosts` migration | KEEP | Migration name stays (Fluent tracks by name) |
+| `HostProfilesViewModel.swift` | MODIFY | Remove Fleet references, use HostProfile directly |
+| `HostProfilesView.swift` | VERIFY | Already uses "Host Profiles" in UI |
+| `HostProfileDetailView.swift` | VERIFY | Already uses HostProfile typealias |
+| `AppState.swift` | VERIFY | `activeHostName` already named correctly |
+| `SidebarRootView.swift` | VERIFY | `.hostProfiles` case already exists |
+| `configure.swift` (routes) | MODIFY | Route registration after controller rename |
+| `SystemMetricsViewModel.swift` | VERIFY | Verify real-time metrics data flow |
+| `MetricsWebSocketClient.swift` | VERIFY | Verify WebSocket connection and data parsing |
+
+**Grep audit results from codebase:**
+- `FleetHost` struct: ILSShared/Models/FleetHost.swift (with `HostProfile` typealias)
+- `FleetDTOs`: ILSShared/DTOs/FleetDTOs.swift (with typealiases for `HostProfileListResponse`, etc.)
+- `FleetController`: Sources/ILSBackend/Controllers/FleetController.swift
+- `FleetHostModel`: Backend database model
+- iOS files using "Fleet": 8 files total (SettingsView, SidebarRootView, HostProfiles*, AppState, plus localization)
+
+**Rename Strategy:** The existing typealias pattern (`public typealias HostProfile = FleetHost`) was intentionally created as a migration path. v5.0 completes the migration:
+1. Rename the underlying types (FleetHost -> HostProfile, FleetListResponse -> HostProfileListResponse)
+2. Add reverse typealiases temporarily (`public typealias FleetHost = HostProfile`)
+3. Update all call sites
+4. Remove reverse typealiases in a follow-up
+
+**Key constraint:** The database migration `CreateFleetHosts` must keep its name (Fluent tracks migrations by name). The table name in SQLite stays `fleet_hosts` -- only the Swift types change.
+
+**Dependencies:** None.
+
+### Stream 5: Backend API Audit
+
+**What changes:** Verification and hardening of all 15 controllers.
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| All 15 controllers | VERIFY | Endpoint structure matches spec, error codes are consistent |
+| `configure.swift` | VERIFY | Route registration order, middleware chain |
+| `ILSErrorMiddleware.swift` | VERIFY | Structured error response format |
+| Response DTOs | VERIFY | JSON field names match camelCase convention |
+
+**Dependencies:** Depends on Stream 4 (Fleet rename) completing first, so API audit covers the final endpoint names.
+
+### macOS Feature Parity (MAC-01 through MAC-08)
+
+**What changes:** Platform-specific macOS capabilities that don't exist on iOS.
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| `MacContentView.swift` | MODIFY | Add drag-and-drop support (MAC-01), inspector panel (MAC-04) |
+| `ILSCommands.swift` | MODIFY | Complete menu bar (File, Edit, View, Session menus) (MAC-03) |
+| `MacChatView.swift` | MODIFY | Add drag-and-drop for files into chat (MAC-01) |
+| `ILSMacApp.swift` | MODIFY | Add Handoff support via NSUserActivity (MAC-02) |
+| `AppDelegate.swift` | MODIFY | Register NSUserActivity types for Handoff (MAC-02) |
+| `SessionWindowView.swift` | MODIFY | Stage Manager window optimization (MAC-07) |
+| `WindowManager.swift` | MODIFY | Window sizing for Stage Manager (MAC-07) |
+| NEW: `ShareExtension/` target | NEW | macOS Share Extension for sharing text/URLs to ILS (MAC-06) |
+| NEW: `AutomatorActions/` | NEW | AppleScript/Automator support (MAC-05) |
+
+**macOS-specific patterns:**
+- Drag-and-drop uses `.onDrop(of:)` modifier with `UTType` conformance
+- Handoff requires `NSUserActivity` with `activityType` registered in Info.plist
+- Share Extension is a separate Xcode target with its own `ShareViewController`
+- AppleScript support requires an `.sdef` (scripting definition) file
+
+**Dependencies:** Streams 1-4 should complete first so macOS parity mirrors the final iOS state.
+
+### Platform Validation & Audit
+
+| Component | Type | Change Description |
+|-----------|------|-------------------|
+| No new code | VALIDATION | Screenshot capture across iPhone, iPad, Mac |
+| Evidence artifacts | NEW | 50+ screenshots across 3 platforms |
+
+**Dependencies:** All implementation streams must complete before validation.
 
 ## Component Boundaries
 
-### Strict Rules to Maintain
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| SidebarRootView / MacContentView | Top-level routing, sidebar, navigation | AppState, all screen views |
+| AppState | Global state coordination, deep links | ConnectionManager, NavigationIntent |
+| APIClient (actor) | HTTP REST, caching, auth, retry | Backend controllers via HTTP |
+| SSEClient | Chat streaming via server-sent events | ChatController (backend) |
+| ViewModels | Screen-specific state + business logic | APIClient, AppState |
+| ILSShared | Type-safe models + DTOs | iOS app, macOS app, backend |
+| Backend Controllers | Route handlers, DB queries | FileSystemService, Fluent ORM |
+| FileSystemService | Config file I/O, skill scanning | Filesystem (~/.claude/) |
+| SkillsFileService | Skill discovery + GitHub proxy | Filesystem + GitHub API |
 
-| Rule | Rationale |
-|------|-----------|
-| iOS never reads `~/.claude/settings.json` directly | Sandbox + backend is the config broker |
-| GitHub API calls go through backend `/skills/search` | `GitHubService` in backend handles rate limits |
-| All new ViewModels follow `@Observable @MainActor class` pattern | Existing codebase convention |
-| No new `ActiveScreen` cases for GitHub browse | GitHub browse is a sub-flow within Browser, not a peer screen |
-| `EffectiveConfigResponse` goes in `ILSShared` | Both backend (produces it) and iOS (consumes it) need the type |
-| `APIClient` adds `/api/v1` prefix automatically | Never double-prefix paths |
+## Data Flow Changes for v5.0
 
-### Component Communication
+### Config Inheritance Flow (NEW)
 
-| From | To | Via |
-|------|----|-----|
-| `SettingsView` | `ConfigController.defaults()` | `APIClient.get("/config/defaults")` |
-| `SkillsViewModel` | `SkillsController.search()` | `APIClient.get("/skills/search?q=")` |
-| `SkillsViewModel` | `SkillsController.install()` | `APIClient.post("/skills/install")` |
-| `PluginsViewModel` | `PluginsController.install()` | `APIClient.post("/plugins/install")` |
-| `PluginsViewModel` | `PluginsController.enable/disable()` | `APIClient.post("/plugins/{name}/enable|disable")` |
-| `HostProfilesViewModel` | `FleetController.remoteConfig()` | `APIClient.get("/fleet/{id}/config")` |
-| `HostProfilesViewModel` | `AppState.activeHostName` | Direct property set on activation |
-| `SidebarView` | `AppState.activeHostName` | `@Environment(AppState.self)` |
+```
+~/.claude/settings.json ──────► FileSystemService.readConfig(.user)
+.claude/settings.json ─────────► FileSystemService.readConfig(.project)
+.claude/settings.local.json ───► FileSystemService.readConfig(.local)
+                                       │
+                                       ▼
+                               ConfigController.cascade()
+                               Merges: local > project > user
+                               Tracks: per-key winning scope
+                                       │
+                                       ▼
+                               ConfigCascadeResponse {
+                                 merged: ClaudeConfig
+                                 overrides: [ConfigOverride]
+                                 userConfig, projectConfig, localConfig
+                               }
+                                       │
+                                       ▼
+                               SettingsViewModel.loadCascade()
+                                       │
+                                       ▼
+                               SettingsView renders:
+                                 [Model: claude-sonnet-4] [Host Default]
+                                 [Thinking: ON]           [Project]
+                                 [Co-author: OFF]         [Custom]
+```
 
----
+### GitHub Search + Install Flow (NEW)
+
+```
+BrowserView ──► SkillsViewModel.searchGitHub("query")
+                        │
+                        ▼
+                GET /skills/github/search?q=query
+                        │
+                        ▼
+                Backend → GitHub API (api.github.com)
+                Rate limit tracking (X-RateLimit-Remaining)
+                        │
+                        ▼
+                [GitHubSearchResult] → BrowserView "Discovered from GitHub"
+                        │
+                        ▼ (user taps Install)
+                POST /skills/github/install { url, name }
+                        │
+                        ▼
+                Backend: git clone → validate → install
+                Invalidate /skills cache
+                        │
+                        ▼
+                SkillsViewModel.loadSkills() → refreshed list
+```
+
+### Hooks CRUD Flow (ENHANCED)
+
+```
+Current (read-only):
+  HooksManagementView → SettingsViewModel.loadConfig() → display hooks
+
+v5.0 (read-write):
+  HooksManagementView → HooksViewModel (dedicated)
+    │
+    ├── loadHooks() → GET /config?scope=user → flattenHooks()
+    │
+    ├── addHook(eventType, matcher, command)
+    │   └── SettingsViewModel.saveWithPatch { config.hooks.preToolUse.append(...) }
+    │
+    ├── removeHook(id)
+    │   └── SettingsViewModel.saveWithPatch { config.hooks.preToolUse.remove(at:) }
+    │
+    └── toggleHook(id, enabled)
+        └── Not natively supported by HookDefinition schema
+        └── Workaround: remove hook to "disable", re-add to "enable"
+        └── OR: Add optional `enabled: Bool?` field to HookDefinition
+```
+
+**Key insight about hook toggling:** Claude Code's hook schema does not have an `enabled` field. Options:
+1. **Add `enabled: Bool?` to HookDefinition** (cleanest, backward-compatible since optional)
+2. **Comment-out pattern** (move hook to a `_disabled` key) -- fragile
+3. **Remove/re-add** -- data loss risk
+
+Recommendation: Option 1. Add `enabled` field to HookDefinition in ILSShared. The field is optional so existing configs without it default to `true` (enabled). The backend preserves it through the `saveWithPatch` read-then-write pattern.
+
+## Patterns to Follow
+
+### Pattern 1: ViewModel configure(client:) + .task {}
+
+Every ViewModel follows the same lifecycle:
+
+```swift
+@Observable @MainActor
+class FooViewModel {
+    private var client: APIClient?
+
+    func configure(client: APIClient) {
+        self.client = client
+    }
+
+    func loadData() async { /* use client */ }
+}
+
+// In View:
+.task {
+    viewModel.configure(client: appState.apiClient)
+    await viewModel.loadData()
+}
+.onChange(of: appState.serverURL) { _, _ in
+    viewModel.configure(client: appState.apiClient)
+    Task { await viewModel.loadData() }
+}
+```
+
+New ViewModels (if any) MUST follow this pattern. Do not inject APIClient via init -- the `configure(client:)` pattern handles server URL changes.
+
+### Pattern 2: saveWithPatch for Config Writes
+
+```swift
+func saveWithPatch(applying delta: (inout ClaudeConfig) -> Void) async -> String? {
+    // 1. Load fresh config from server
+    // 2. Apply delta closure (mutates ONLY target field)
+    // 3. PUT full config back (preserves CLI-only fields)
+}
+```
+
+All config mutations MUST use this pattern. Direct PUT with partial config destroys CLI-only fields (hooks, env, permissions, etc.).
+
+### Pattern 3: iOS/macOS View Sharing
+
+Most views are shared between iOS and macOS via `#if os(iOS)` / `#if os(macOS)` guards. The macOS target includes all files from `ILSApp/ILSApp/` except for iOS-only files (Widgets, LiveActivity, Intents). When modifying shared views:
+
+1. Build iOS first (auto-build hook handles this)
+2. Build macOS immediately after: `xcodebuild -scheme ILSMacApp -destination 'platform=macOS' -quiet`
+3. Platform-specific code goes in `#if os()` blocks, not separate files
+
+### Pattern 4: Backend Response Wrapping
+
+All backend endpoints return `APIResponse<T>`:
+
+```swift
+APIResponse(success: true, data: someData)
+```
+
+New endpoints MUST follow this pattern. The iOS APIClient's `get<T>` method expects to decode `APIResponse<T>`.
+
+### Pattern 5: ILSShared DTOs with Preconditions
+
+```swift
+public struct NewDTO: Codable, Sendable {
+    public let field: String
+
+    public init(field: String) {
+        precondition(!field.isEmpty, "field must not be empty")
+        self.field = field
+    }
+}
+```
+
+All new ILSShared types MUST be `Codable, Sendable` and include precondition validation in initializers.
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Direct Config PUT Without Read
+
+**What:** Sending a partial ClaudeConfig via PUT /config
+**Why bad:** Destroys CLI-only fields (hooks, env, permissions, statusLine, enabledPlugins)
+**Instead:** Always use `saveWithPatch` which reads fresh config, applies delta, PUTs full config
+
+### Anti-Pattern 2: Separate View Files for iOS vs macOS
+
+**What:** Creating `FooView.swift` and `MacFooView.swift` for the same screen
+**Why bad:** Doubles maintenance burden, features drift out of sync
+**Instead:** Use `#if os(iOS)` guards within a single file. Exception: MacContentView is necessarily different (3-column NavigationSplitView vs iOS's sheet sidebar)
+
+### Anti-Pattern 3: Fleet Terminology in New Code
+
+**What:** Using `Fleet`, `FleetHost`, `FleetListResponse` in new code
+**Why bad:** v5.0 is completing the rename to HostProfile
+**Instead:** Use `HostProfile`, `HostProfileListResponse`, etc. Old typealiases exist for backward compat only
+
+### Anti-Pattern 4: Double-Prefixing API Paths
+
+**What:** `client.get("/api/v1/sessions")`
+**Why bad:** APIClient already adds `/api/v1` prefix
+**Instead:** `client.get("/sessions")`
+
+### Anti-Pattern 5: Bypassing FeatureGate
+
+**What:** `if isPremium { showFeature() }` directly in views
+**Why bad:** Duplicates gate logic, misses paywall trigger
+**Instead:** Use `FeatureGateView(feature: .chatExport) { ExportButton() }` or `FeatureGate.shared.isAvailable(.feature)` in ViewModels
+
+### Anti-Pattern 6: Guessing Simulator Coordinates
+
+**What:** Hardcoding tap coordinates from visual estimation
+**Why bad:** Coordinates vary by device, OS version, dynamic type size
+**Instead:** Use `idb_describe operation:all` to get accessibility tree with exact centerX/centerY
+
+## New Components Inventory
+
+### New Files (estimated)
+
+| File | Target | Purpose |
+|------|--------|---------|
+| `Sources/ILSShared/DTOs/GitHubDTOs.swift` | ILSShared | GitHubSearchResult, GitHubInstallRequest, GitHubInstallResponse |
+| `Sources/ILSShared/DTOs/ConfigCascadeDTOs.swift` | ILSShared | ConfigCascadeResponse |
+| `Sources/ILSBackend/Services/GitHubService.swift` | Backend | GitHub API proxy with rate limit tracking |
+| `ILSApp/ILSMacApp/Extensions/ShareExtension/` | macOS | Share Extension target (MAC-06) |
+| `ILSApp/ILSMacApp/Scripting/ILS.sdef` | macOS | AppleScript definition (MAC-05) |
+
+### Modified Files (by stream)
+
+**Stream 1 (Nav/Layout):** ~5 files
+- HomeView.swift, SidebarView.swift, SidebarRootView.swift, MacContentView.swift, SessionsViewModel.swift
+
+**Stream 2 (Settings/Config):** ~8 files
+- ConfigController.swift, FileSystemService.swift, SettingsViewModel.swift, SettingsView.swift, ConfigEditorViewModel.swift, MacSettingsView.swift, + 2 new DTOs
+
+**Stream 3 (Skills/Plugins/Hooks):** ~10 files
+- SkillsController.swift, PluginsController.swift, SkillsViewModel.swift, PluginsViewModel.swift, BrowserView.swift, HooksManagementView.swift, HooksViewModel.swift, + 2 new backend service + DTOs
+
+**Stream 4 (Rename/Monitor):** ~12 files (rename touches many)
+- FleetHost.swift, FleetDTOs.swift, FleetController.swift, FleetHostModel.swift, HostProfilesViewModel.swift, HostProfilesView.swift, HostProfileDetailView.swift, SettingsView.swift, configure.swift, routes.swift, Localizable.xcstrings
+
+**Stream 5 (API Audit):** ~0-3 files (verification, fixes as found)
+
+**macOS Parity:** ~10 files
+- MacContentView.swift, MacChatView.swift, ILSCommands.swift, ILSMacApp.swift, AppDelegate.swift, SessionWindowView.swift, WindowManager.swift, + new Share Extension target, + new sdef
+
+**Validation:** 0 new code files (evidence artifacts only)
 
 ## Suggested Build Order
 
-Dependencies between the four features:
-
 ```
-Navigation/UX Overhaul        ← no dependencies, unblocks comfortable dev of other screens
-GitHub Browse + Install        ← no backend changes needed
-Host CLI Config Sync           ← needs EffectiveConfigResponse DTO + GET /config/defaults
-Host Profiles Redesign         ← needs GET /fleet/:id/config; benefits from config sync patterns
+Phase 1: Stream 4 (Fleet → HostProfile rename)
+  └── Must happen first: touches shared types used everywhere
+  └── All other streams build on the renamed types
+
+Phase 2: Stream 2 (Config inheritance) + Stream 3b (node_modules verify)
+  └── Config cascade endpoint + Settings UI
+  └── node_modules is pre-satisfied, just verify
+
+Phase 3: Stream 1 (Nav/Layout) + Stream 3a (MCP verify) + Stream 3d (Hooks CRUD)
+  └── Independent features, can run in parallel
+  └── Hooks CRUD builds on config write patterns from Phase 2
+
+Phase 4: Stream 3c (GitHub browse/install)
+  └── New backend endpoints + iOS UI
+  └── Most complex new feature, benefits from stable foundation
+
+Phase 5: Stream 5 (Backend API audit)
+  └── Runs after all endpoint changes are complete
+
+Phase 6: macOS Feature Parity (MAC-01 through MAC-08)
+  └── Mirrors final iOS state
+  └── Share Extension and AppleScript are independent substreams
+
+Phase 7: Platform Validation (30-gate audit)
+  └── All code complete, evidence capture only
+
+Phase 8: Bug Hunt + Final Gate
+  └── Edge cases, offline, accessibility, memory profiling
 ```
 
-### Step 1: Navigation / UX Overhaul (fastest, no backend)
+**Phase ordering rationale:**
+1. Rename first because it touches shared types -- doing it later risks merge conflicts with every other stream
+2. Config inheritance second because it establishes the cascade pattern that hooks management builds on
+3. GitHub browse/install is the most complex new feature and benefits from a stable codebase
+4. macOS parity last (before validation) because it mirrors iOS and should capture the final state
+5. API audit after all endpoint changes to avoid auditing endpoints that will change
 
-**Why first:** Every other feature requires navigating to its screen during development. Fixing the hamburger accessibility and home screen layout removes friction for all subsequent work. Zero backend risk.
+## Scalability Considerations
 
-**Files touched:** `SidebarRootView.swift`, `HomeView.swift`, child view toolbar audits.
-
-### Step 2: GitHub Browse + Install — Skills first, then Plugins
-
-**Why second:** Backend endpoints are complete. Pure iOS UI work — fastest path to demonstrable new functionality. Skills install is simpler (file write) vs plugins (git clone with longer latency), so tackle skills first to validate the `InstallProgressView` component before reusing it for plugins.
-
-**Files touched:** New `GitHubBrowseView`, `GitHubResultRow`, `InstallProgressView`. Modified `SkillsViewModel`, `PluginsViewModel`, `SkillsView`, `PluginsView`.
-
-### Step 3: Host CLI Config Sync
-
-**Why third:** Requires the one meaningful ILSShared DTO addition (`EffectiveConfigResponse`) and one new backend handler (`GET /config/defaults`). The DTO change rebuilds both backend and iOS — do it in one commit. The backend handler is straightforward (3x `FileSystemService.readConfig()` calls + merge logic). iOS side is new `SettingsDefaultsSection` + `ConfigOverrideRow`.
-
-**Sequence within this step:**
-1. Add `EffectiveConfigResponse` to `ILSShared/DTOs/ResponseDTOs.swift`
-2. Add `defaults()` handler + route to `ConfigController.swift`
-3. Add `loadEffectiveDefaults()` to `SettingsViewModel`
-4. Add `SettingsDefaultsSection` + `ConfigOverrideRow` views
-5. Wire into `SettingsView`
-
-### Step 4: Host Profiles Redesign
-
-**Why last:** Requires `GET /fleet/:id/config` (second new backend endpoint) and the active host indicator in the sidebar (which touches `AppState`). Benefits from having config display patterns established in step 3. The `HostProfileDetailView` config section reuses `ConfigOverrideRow` from step 3.
-
-**Sequence within this step:**
-1. Add `activeHostName: String?` to `AppState`
-2. Set it in `HostProfilesViewModel.activate()`
-3. Add `remoteConfig()` handler + route to `FleetController.swift`
-4. Add `fetchConfigForHost()` + `configSnapshot` to `HostProfilesViewModel`
-5. Update `HostProfileDetailView` with config section
-6. Update `HostProfilesView` context menu with "Fetch Config" action
-7. Update `SidebarView` to show active host name
-
----
-
-## Scaling Considerations
-
-This is a local-first iOS app connecting to a personal backend. Scaling is not a concern. Relevant practical limits:
-
-| Concern | Approach |
-|---------|----------|
-| GitHub API rate limits on skill search | Backend `GitHubService` already proxies all calls; add response caching in `GitHubService` if rate limits hit during development |
-| `POST /plugins/install` latency (git clone) | Can take 5–30s. iOS must show a spinner + allow cancellation. `InstallProgressView` sheet handles this. Do not set a short URLSession timeout on the iOS side for this call |
-| `/config/defaults` reads filesystem 3x | Acceptable for a settings screen load — not a hot path. If latency is noticeable, combine into a single `readAllConfigs()` in `FileSystemService` |
-| Config cache in `APIClient` | `/config` path has 60s TTL. After `PUT /config`, call `APIClient.get("/config/defaults", bypassCache: true)` to get fresh effective defaults |
-
----
-
-## Anti-Patterns
-
-### Anti-Pattern 1: New ActiveScreen cases for sub-flows
-
-**What people do:** Add `.githubSkills` or `.githubPlugins` to the `ActiveScreen` enum to navigate to GitHub browse.
-
-**Why it's wrong:** GitHub browse is a sub-flow within the existing Browser screen, not a peer navigation destination. Adding top-level cases grows the sidebar nav model unnecessarily and breaks the existing URL scheme deep-link handling.
-
-**Do this instead:** Show `GitHubBrowseView` as a `.sheet` from `SkillsView`/`PluginsView`, or as a `NavigationLink` push within the Browser `NavigationStack`.
-
-### Anti-Pattern 2: URLSession GitHub calls directly from iOS ViewModels
-
-**What people do:** Add `URLSession` calls to `api.github.com` directly in `SkillsViewModel`.
-
-**Why it's wrong:** Duplicates the existing `GitHubService` on the backend, splits rate-limit quota, adds GitHub token management to the iOS layer.
-
-**Do this instead:** Call existing `GET /skills/search?q=`. The backend handles GitHub entirely.
-
-### Anti-Pattern 3: Singleton ViewModel for shared GitHub state
-
-**What people do:** Create a `GitHubViewModel` singleton shared between Skills and Plugins browse.
-
-**Why it's wrong:** Established pattern is per-screen `@State` ViewModels. Singletons carry stale state across view lifecycles.
-
-**Do this instead:** `SkillsViewModel` owns its own `githubResults: [GitHubSearchResult]` and `isGitHubLoading: Bool`. Same for `PluginsViewModel`. Separate state, same backing API.
-
-### Anti-Pattern 4: Reading config via direct file path from iOS
-
-**What people do:** Use `FileManager` to read `~/.claude/settings.json` from the iOS app by guessing a path via SSH or hardcoded path assumption.
-
-**Why it's wrong:** iOS sandbox prevents this. The Vapor backend is the config broker — it runs on macOS with full filesystem access.
-
-**Do this instead:** All config access via `APIClient.get("/config")` and `APIClient.put("/config")`.
-
-### Anti-Pattern 5: Blocking the NIO event loop in new backend handlers
-
-**What people do:** Add synchronous network calls (e.g., `URLSession.shared.data(from:)`) inside new Vapor handlers without async/await.
-
-**Why it's wrong:** Blocks NIO event loop threads, starving other requests.
-
-**Do this instead:** Follow the existing pattern in `FleetController.health()` — use `async/await` with `URLSession` (which is async-compatible in Swift 5.10+) or run blocking work in a detached `Task`.
-
----
+| Concern | Current State | v5.0 Impact |
+|---------|--------------|-------------|
+| File count | 149 iOS + 14 macOS + 52 backend + 26 shared = 241 | +5-10 new files, ~40 modified |
+| ViewModel count | 18 | No new VMs needed (existing ones extended) |
+| Backend controllers | 15 | 15 (Fleet renamed, no new controllers) |
+| API endpoints | ~50 | +4 new (config/cascade, skills/github/search, skills/github/install, plugins equivalents) |
+| Database migrations | 8 | 8 (no schema changes needed) |
+| Build time impact | ~30s iOS, ~20s macOS | Minimal -- no new targets except Share Extension |
 
 ## Sources
 
-All findings based on direct file inspection:
-
-- `Sources/ILSBackend/Controllers/ConfigController.swift` — existing config routes and `FileSystemService` usage
-- `Sources/ILSBackend/Controllers/FleetController.swift` — health check HTTP proxy pattern (the model for remote config fetch)
-- `Sources/ILSBackend/Controllers/SkillsController.swift` — GitHub search and install endpoints (confirmed complete)
-- `Sources/ILSBackend/Controllers/PluginsController.swift` — install/enable/disable/uninstall endpoints (confirmed complete)
-- `Sources/ILSShared/Models/ClaudeConfig.swift` — full field inventory
-- `Sources/ILSShared/DTOs/ResponseDTOs.swift` — `ConfigProfiles` and `ConfigOverride` already present (lines 227–272)
-- `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — `ActiveScreen` enum, hamburger pattern, screen routing
-- `ILSApp/ILSApp/Views/Settings/SettingsView.swift` — section composition pattern
-- `ILSApp/ILSApp/Views/Fleet/HostProfilesView.swift` — existing host profile UI
-- `ILSApp/ILSApp/ViewModels/SettingsViewModel.swift` — existing config load/save pattern
-- `ILSApp/ILSApp/ViewModels/HostProfilesViewModel.swift` — fleet CRUD + health polling
-- `ILSApp/ILSApp/Services/APIClient.swift` — caching, path prefixing, per-endpoint TTLs
-- `.planning/PROJECT.md` — v3.1 scope and constraints
-
-Confidence: HIGH — all integration points verified against actual source, not inferred.
-
----
-*Architecture research for: ILS iOS/macOS v3.1 feature integration*
-*Researched: 2026-02-24*
+- Codebase analysis: all 241 Swift files examined
+- Existing patterns: verified against SidebarRootView, APIClient, SettingsViewModel, ConfigController
+- ConfigOverride DTO: Sources/ILSShared/DTOs/ResponseDTOs.swift (already models cascade)
+- Fleet rename state: 8 iOS files, 3 shared files, 2 backend files still use Fleet types
+- node_modules filter: Sources/ILSBackend/Services/SkillsFileService.swift line 143 (pre-satisfied)
+- v4.0 audit: 123 evidence artifacts, all 34 requirements PASS
+- Confidence: HIGH -- all integration points verified against actual source code

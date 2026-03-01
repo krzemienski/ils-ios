@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import ILSShared
+import os
 #if os(iOS)
 import UIKit
 #endif
@@ -21,7 +22,9 @@ class SSEClient {
         case reconnecting(attempt: Int)
     }
 
-    private var streamTask: Task<Void, Never>?
+    // @ObservationIgnored: Internal lifecycle state, not view-observable.
+    // Required so deinit (nonisolated) can access them for safety-net cancellation.
+    @ObservationIgnored private var streamTask: Task<Void, Never>?
     private let baseURL: String
     private var currentRequest: ChatStreamRequest?
     private var reconnectAttempts = 0
@@ -30,7 +33,7 @@ class SSEClient {
     private let session: URLSession
     private var lastEventId: String?
     #if os(iOS)
-    private var backgroundObserver: NSObjectProtocol?
+    @ObservationIgnored private var backgroundObserver: NSObjectProtocol?
     #endif
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
@@ -51,6 +54,8 @@ class SSEClient {
         // ENRG-02: Intentionally false — SSE streaming should not consume metered data in Low Data Mode.
         // Users can still use the app with cached data; streaming resumes when Low Data Mode is disabled.
         config.allowsConstrainedNetworkAccess = false
+        // PLAT-04: Respect user preference for cellular data access (defaults to true).
+        config.allowsCellularAccess = UserDefaults.standard.object(forKey: "allowsCellularAccess") as? Bool ?? true
         self.session = URLSession(configuration: config)
 
         // ENRG-05: Cancel active SSE stream on background to save battery radio.
@@ -69,9 +74,21 @@ class SSEClient {
         #endif
     }
 
+    /// Safety-net deinit: cancels stream task and removes NotificationCenter observer
+    /// if cleanup() was not called from the view lifecycle. Primary cleanup path
+    /// remains cleanup() called from view's onDisappear.
+    /// Task.cancel() and NotificationCenter.removeObserver() are thread-safe.
+    deinit {
+        streamTask?.cancel()
+        #if os(iOS)
+        if let observer = backgroundObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        #endif
+    }
+
     /// Tear down session and cancel in-flight tasks.
-    /// Call from view's onDisappear; replaces deinit-based cleanup
-    /// which cannot safely access @MainActor state.
+    /// Call from view's onDisappear for full cleanup including URLSession invalidation.
     func cleanup() {
         // MEM-05: Remove background observer to prevent retain cycle / stale notifications.
         #if os(iOS)
@@ -170,7 +187,7 @@ class SSEClient {
             let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
-                    if await lastActivity.secondsSinceLastActivity() > watchdogTimeout {
+                    if lastActivity.secondsSinceLastActivity() > watchdogTimeout {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in \(Int(watchdogTimeout))s", category: "sse")
                         throw URLError(.timedOut)
                     }
@@ -182,7 +199,7 @@ class SSEClient {
             var currentData = ""
 
             for try await line in asyncBytes.lines {
-                await lastActivity.touch() // Reset on ANY received line
+                lastActivity.touch() // Reset on ANY received line
 
                 if line.hasPrefix("event:") {
                     currentEvent = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
@@ -329,15 +346,18 @@ class SSEClient {
     }
 }
 
-/// Thread-safe tracker for last SSE activity timestamp
-private actor LastActivityTracker {
-    private var lastActivity = Date()
+/// Thread-safe tracker for last SSE activity timestamp.
+/// Uses OSAllocatedUnfairLock instead of actor to avoid actor-hop overhead
+/// on every received SSE line (hot path during streaming).
+private final class LastActivityTracker: Sendable {
+    private let storage = OSAllocatedUnfairLock(initialState: Date())
 
     func touch() {
-        lastActivity = Date()
+        storage.withLock { $0 = Date() }
     }
 
     func secondsSinceLastActivity() -> TimeInterval {
-        Date().timeIntervalSince(lastActivity)
+        let last = storage.withLock { $0 }
+        return Date().timeIntervalSince(last)
     }
 }

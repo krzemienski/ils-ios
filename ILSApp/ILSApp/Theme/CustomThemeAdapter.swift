@@ -199,6 +199,17 @@ struct CustomThemeAdapter: AppTheme {
         }
     }
 
+    // MARK: - MeshGradient
+
+    var meshGradientColors: [String]? {
+        guard let config = customTheme.meshGradient, config.isValid else { return nil }
+        return config.colors
+    }
+
+    var meshGradientAnimated: Bool {
+        customTheme.meshGradient?.animated ?? false
+    }
+
     var isLight: Bool {
         // Detect light theme based on background brightness
         guard let bgHex = customTheme.colors?.background else {

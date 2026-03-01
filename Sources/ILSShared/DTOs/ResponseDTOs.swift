@@ -1,86 +1,7 @@
 import Foundation
 
-// MARK: - Stats Response
-
-/// Dashboard statistics response.
-public struct StatsResponse: Codable, Sendable {
-    /// Project statistics.
-    public let projects: CountStat
-    /// Session statistics.
-    public let sessions: SessionStat
-    /// Skill statistics.
-    public let skills: CountStat
-    /// MCP server statistics.
-    public let mcpServers: MCPStat
-    /// Plugin statistics.
-    public let plugins: PluginStat
-
-    public init(
-        projects: CountStat,
-        sessions: SessionStat,
-        skills: CountStat,
-        mcpServers: MCPStat,
-        plugins: PluginStat
-    ) {
-        self.projects = projects
-        self.sessions = sessions
-        self.skills = skills
-        self.mcpServers = mcpServers
-        self.plugins = plugins
-    }
-}
-
-/// Basic count statistic with optional active count.
-public struct CountStat: Codable, Sendable {
-    /// Total count.
-    public let total: Int
-    /// Active count.
-    public let active: Int?
-
-    public init(total: Int, active: Int? = nil) {
-        self.total = total
-        self.active = active
-    }
-}
-
-/// Session count statistics.
-public struct SessionStat: Codable, Sendable {
-    /// Total sessions.
-    public let total: Int
-    /// Currently active sessions.
-    public let active: Int
-
-    public init(total: Int, active: Int) {
-        self.total = total
-        self.active = active
-    }
-}
-
-/// MCP server health statistics.
-public struct MCPStat: Codable, Sendable {
-    /// Total MCP servers.
-    public let total: Int
-    /// Healthy MCP servers.
-    public let healthy: Int
-
-    public init(total: Int, healthy: Int) {
-        self.total = total
-        self.healthy = healthy
-    }
-}
-
-/// Plugin installation statistics.
-public struct PluginStat: Codable, Sendable {
-    /// Total plugins.
-    public let total: Int
-    /// Enabled plugins.
-    public let enabled: Int
-
-    public init(total: Int, enabled: Int) {
-        self.total = total
-        self.enabled = enabled
-    }
-}
+/// Backward-compatible alias. Prefer `DashboardStats` in new code.
+public typealias StatsResponse = DashboardStats
 
 // MARK: - Project Group Info
 
@@ -231,11 +152,14 @@ public struct ConfigProfiles: Codable, Sendable {
     public let project: ConfigInfo?
     /// Local override config from .claude/settings.local.json
     public let local: ConfigInfo?
+    /// Managed config from system-wide managed settings
+    public let managed: ConfigInfo?
 
-    public init(user: ConfigInfo?, project: ConfigInfo?, local: ConfigInfo?) {
+    public init(user: ConfigInfo?, project: ConfigInfo?, local: ConfigInfo?, managed: ConfigInfo? = nil) {
         self.user = user
         self.project = project
         self.local = local
+        self.managed = managed
     }
 }
 
@@ -244,7 +168,7 @@ public struct ConfigOverride: Codable, Sendable {
     /// Configuration key
     public let key: String
     /// Which scope won the cascade
-    public let winningScope: String
+    public let winningScope: ConfigScope
     /// The winning value
     public let winningValue: String
     /// Value from user scope
@@ -253,21 +177,46 @@ public struct ConfigOverride: Codable, Sendable {
     public let projectValue: String?
     /// Value from local scope
     public let localValue: String?
+    /// Value from managed scope
+    public let managedValue: String?
 
     public init(
         key: String,
-        winningScope: String,
+        winningScope: ConfigScope,
         winningValue: String,
         userValue: String?,
         projectValue: String?,
-        localValue: String?
+        localValue: String?,
+        managedValue: String? = nil
     ) {
+        precondition(!key.isEmpty, "ConfigOverride key must not be empty")
         self.key = key
         self.winningScope = winningScope
         self.winningValue = winningValue
         self.userValue = userValue
         self.projectValue = projectValue
         self.localValue = localValue
+        self.managedValue = managedValue
+    }
+}
+
+/// Effective configuration with per-key scope annotations.
+///
+/// Returned by GET /config/effective. Contains the merged config
+/// (highest-precedence non-nil value for each key), per-key override
+/// annotations showing which scope won, and the raw profiles for debugging.
+public struct EffectiveConfig: Codable, Sendable {
+    /// Merged config values (highest-precedence non-nil for each key)
+    public let config: ClaudeConfig
+    /// Per-key annotations showing which scope won
+    public let overrides: [ConfigOverride]
+    /// All scope configs that were read (for debugging / UI display)
+    public let profiles: ConfigProfiles
+
+    public init(config: ClaudeConfig, overrides: [ConfigOverride], profiles: ConfigProfiles) {
+        self.config = config
+        self.overrides = overrides
+        self.profiles = profiles
     }
 }
 
@@ -275,12 +224,12 @@ public struct ConfigOverride: Codable, Sendable {
 
 /// Request to update Claude Code configuration.
 public struct UpdateConfigRequest: Codable, Sendable {
-    /// Configuration scope (e.g., "user", "project").
-    public let scope: String
+    /// Configuration scope (user, project, or local).
+    public let scope: ConfigScope
     /// Configuration content.
     public let content: ClaudeConfig
 
-    public init(scope: String, content: ClaudeConfig) {
+    public init(scope: ConfigScope, content: ClaudeConfig) {
         self.scope = scope
         self.content = content
     }
@@ -306,5 +255,150 @@ public struct ConfigValidationResult: Codable, Sendable {
     public init(isValid: Bool, errors: [String] = []) {
         self.isValid = isValid
         self.errors = errors
+    }
+}
+
+// MARK: - Plugin Update Info
+
+/// Response for plugin update availability check.
+public struct PluginUpdateInfo: Codable, Sendable {
+    /// Plugin name that was checked.
+    public let pluginName: String
+    /// Currently installed version.
+    public let currentVersion: String
+    /// Latest available version from remote.
+    public let latestVersion: String
+    /// Whether the latest version is newer than current.
+    public let updateAvailable: Bool
+    /// List of dependency names that are not installed locally.
+    public let unmetDependencies: [String]
+
+    public init(
+        pluginName: String,
+        currentVersion: String,
+        latestVersion: String,
+        updateAvailable: Bool,
+        unmetDependencies: [String] = []
+    ) {
+        self.pluginName = pluginName
+        self.currentVersion = currentVersion
+        self.latestVersion = latestVersion
+        self.updateAvailable = updateAvailable
+        self.unmetDependencies = unmetDependencies
+    }
+}
+
+// MARK: - Data Erasure
+
+/// Response from the GDPR "delete all my data" endpoint.
+///
+/// Reports per-table deletion counts so the caller can verify
+/// exactly what was removed.
+public struct DataErasureResponse: Codable, Sendable, Hashable {
+    /// Number of chat messages deleted.
+    public var messagesDeleted: Int
+    /// Number of chat sessions deleted.
+    public var sessionsDeleted: Int
+    /// Number of projects deleted.
+    public var projectsDeleted: Int
+    /// Number of custom themes deleted.
+    public var themesDeleted: Int
+    /// Number of fleet host configurations deleted.
+    public var fleetHostsDeleted: Int
+    /// Number of cached search results deleted.
+    public var cacheEntriesDeleted: Int
+
+    public init(
+        messagesDeleted: Int = 0,
+        sessionsDeleted: Int = 0,
+        projectsDeleted: Int = 0,
+        themesDeleted: Int = 0,
+        fleetHostsDeleted: Int = 0,
+        cacheEntriesDeleted: Int = 0
+    ) {
+        self.messagesDeleted = messagesDeleted
+        self.sessionsDeleted = sessionsDeleted
+        self.projectsDeleted = projectsDeleted
+        self.themesDeleted = themesDeleted
+        self.fleetHostsDeleted = fleetHostsDeleted
+        self.cacheEntriesDeleted = cacheEntriesDeleted
+    }
+}
+
+// MARK: - MCP Validation & Presets
+
+/// Result of validating an MCP server configuration before applying it.
+public struct MCPValidationResult: Codable, Sendable {
+    /// Whether the configuration is valid and safe to apply.
+    public let isValid: Bool
+    /// Validation error messages that must be resolved.
+    public let errors: [String]
+    /// Non-blocking warnings about the configuration.
+    public let warnings: [String]
+
+    public init(isValid: Bool, errors: [String] = [], warnings: [String] = []) {
+        self.isValid = isValid
+        self.errors = errors
+        self.warnings = warnings
+    }
+}
+
+/// Response containing the list of preset MCP server configurations.
+public struct MCPPresetListResponse: Codable, Sendable {
+    /// Available preset configurations grouped for display.
+    public let presets: [MCPPreset]
+
+    public init(presets: [MCPPreset]) {
+        self.presets = presets
+    }
+}
+
+// MARK: - Suggestion Responses
+
+/// A suggested past session relevant to the current context.
+public struct SessionSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested session.
+    public let session: ChatSession
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        session: ChatSession,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.session = session
+        self.score = score
+        self.reason = reason
+    }
+}
+
+/// A suggested skill relevant to the current project or context.
+public struct SkillSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested skill.
+    public let skill: Skill
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        skill: Skill,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.skill = skill
+        self.score = score
+        self.reason = reason
     }
 }

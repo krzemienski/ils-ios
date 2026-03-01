@@ -2,10 +2,19 @@ import SwiftUI
 
 /// Borderless AI assistant message card — text directly on black background.
 /// Thin leading accent bar provides visual anchor. No glass effect.
-struct AssistantCard: View {
+struct AssistantCard: View, Equatable {
     let message: ChatMessage
     var onRetry: ((ChatMessage) -> Void)?
     var onDelete: ((ChatMessage) -> Void)?
+
+    static func == (lhs: AssistantCard, rhs: AssistantCard) -> Bool {
+        lhs.message.id == rhs.message.id &&
+        lhs.message.text == rhs.message.text &&
+        lhs.message.toolCalls.count == rhs.message.toolCalls.count &&
+        lhs.message.toolResults.count == rhs.message.toolResults.count &&
+        lhs.message.cost == rhs.message.cost &&
+        lhs.message.tokenCount == rhs.message.tokenCount
+    }
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -72,7 +81,7 @@ struct AssistantCard: View {
                     showCopyConfirmation = false
                 }
             } label: {
-                Label("Copy Markdown", systemImage: "doc.on.doc")
+                Label("Copy", systemImage: "doc.on.doc")
             }
 
             if let onRetry {

@@ -10,6 +10,7 @@ import ILSShared
 struct PluginConfigView: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
+    @Environment(PluginsViewModel.self) private var pluginsVM
 
     let plugin: Plugin
     let onToggleEnabled: (Plugin) async -> Void
@@ -19,6 +20,7 @@ struct PluginConfigView: View {
     @State private var isCheckingUpdates = false
     @State private var updateAvailable = false
     @State private var showUninstallConfirmation = false
+    @State private var latestVersionText: String?
 
     var body: some View {
         ScrollView {
@@ -28,6 +30,7 @@ struct PluginConfigView: View {
                 controlsSection
                 commandsSection
                 agentsSection
+                dependenciesSection
                 dangerZone
             }
             .padding(theme.spacingMD)
@@ -168,9 +171,16 @@ struct PluginConfigView: View {
                                 .progressViewStyle(.circular)
                                 .scaleEffect(0.8)
                         } else if updateAvailable {
-                            Text("Update Available")
-                                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                                .foregroundStyle(theme.success)
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text("Update Available")
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                                    .foregroundStyle(theme.success)
+                                if let latest = latestVersionText {
+                                    Text("v\(latest)")
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textTertiary)
+                                }
+                            }
                         }
                     }
                     .padding(theme.spacingMD)
@@ -313,8 +323,49 @@ struct PluginConfigView: View {
     private func checkForUpdates() async {
         isCheckingUpdates = true
         defer { isCheckingUpdates = false }
-        // TODO: Connect to real update endpoint when available
-        try? await Task.sleep(for: .seconds(1.0))
-        updateAvailable = false
+        if let info = await pluginsVM.checkForUpdate(pluginName: plugin.name) {
+            updateAvailable = info.updateAvailable
+            latestVersionText = info.updateAvailable ? info.latestVersion : nil
+        }
+    }
+
+    // MARK: - Dependencies
+
+    @ViewBuilder
+    private var dependenciesSection: some View {
+        if let deps = plugin.dependencies, !deps.isEmpty {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                sectionTitle("Dependencies (\(deps.count))")
+
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    ForEach(deps, id: \.self) { dep in
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: "shippingbox")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.entityPlugin)
+                                .frame(width: 20)
+                            Text(dep)
+                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                            Spacer()
+                            if isDepInstalled(dep) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(theme.success)
+                            } else {
+                                Text("Missing")
+                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                                    .foregroundStyle(theme.warning)
+                            }
+                        }
+                    }
+                }
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+        }
+    }
+
+    private func isDepInstalled(_ depName: String) -> Bool {
+        pluginsVM.plugins.contains { $0.name == depName }
     }
 }

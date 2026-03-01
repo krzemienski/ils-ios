@@ -252,19 +252,25 @@ struct FileSystemService {
     // MARK: - Claude Config Settings
 
     /// Read Claude configuration for a given scope.
-    /// - Parameter scope: Configuration scope ("user", "project", or "local")
+    /// - Parameter scope: Configuration scope (user, project, or local)
     /// - Returns: ConfigInfo with content and metadata
-    func readConfig(scope: String) throws -> ConfigInfo {
+    func readConfig(scope: ConfigScope) throws -> ConfigInfo {
         try config.readConfig(scope: scope)
     }
 
     /// Write Claude configuration to a given scope.
     /// - Parameters:
-    ///   - scope: Configuration scope ("user" only currently supported for writes)
+    ///   - scope: Configuration scope (currently only .user is supported for writes)
     ///   - content: ClaudeConfig object to write
     /// - Returns: ConfigInfo with updated content
-    func writeConfig(scope: String, content: ClaudeConfig) throws -> ConfigInfo {
+    func writeConfig(scope: ConfigScope, content: ClaudeConfig) throws -> ConfigInfo {
         try config.writeConfig(scope: scope, content: content)
+    }
+
+    /// Read effective (merged) configuration across all scopes.
+    /// - Returns: EffectiveConfig with merged values and per-key scope annotations
+    func readEffectiveConfig() -> EffectiveConfig {
+        config.readEffectiveConfig()
     }
 
     // MARK: - Session Scanning
@@ -354,15 +360,16 @@ struct FileSystemService {
 
             // Extract install info
             let installPath = latestInstall["installPath"] as? String
-            let version = latestInstall["version"] as? String
+            var version = latestInstall["version"] as? String
 
             // Check enabled status (default to true if not specified)
             let isEnabled = enabledPlugins[pluginKey] ?? true
 
-            // Try to read plugin manifest for description, commands, agents
+            // Try to read plugin manifest for description, commands, agents, dependencies
             var description: String?
             var commands: [String] = []
             var agents: [String] = []
+            var dependencies: [String] = []
 
             if let path = installPath {
                 // Try to read plugin.json or manifest
@@ -372,9 +379,27 @@ struct FileSystemService {
                 if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
                    let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
                     description = manifest["description"] as? String
+                    // Extract version from manifest (more accurate than installed_plugins.json)
+                    if let manifestVersion = manifest["version"] as? String {
+                        version = manifestVersion
+                    }
+                    // Extract dependencies -- support both [String] and [{"name": String}] formats
+                    if let depsArray = manifest["dependencies"] as? [String] {
+                        dependencies = depsArray
+                    } else if let depsObjects = manifest["dependencies"] as? [[String: Any]] {
+                        dependencies = depsObjects.compactMap { $0["name"] as? String }
+                    }
                 } else if let manifestData = try? Data(contentsOf: URL(fileURLWithPath: altManifestPath)),
                           let manifest = try? JSONSerialization.jsonObject(with: manifestData) as? [String: Any] {
                     description = manifest["description"] as? String
+                    if let manifestVersion = manifest["version"] as? String {
+                        version = manifestVersion
+                    }
+                    if let depsArray = manifest["dependencies"] as? [String] {
+                        dependencies = depsArray
+                    } else if let depsObjects = manifest["dependencies"] as? [[String: Any]] {
+                        dependencies = depsObjects.compactMap { $0["name"] as? String }
+                    }
                 }
 
                 // Check for commands directory
@@ -401,7 +426,8 @@ struct FileSystemService {
                 version: version,
                 commands: commands.isEmpty ? nil : commands,
                 agents: agents.isEmpty ? nil : agents,
-                path: installPath
+                path: installPath,
+                dependencies: dependencies.isEmpty ? nil : dependencies
             ))
         }
 

@@ -1,236 +1,414 @@
-# Stack Research
+# Technology Stack
 
-**Domain:** iOS/macOS SwiftUI client — v3.1 new feature additions only
-**Researched:** 2026-02-24
-**Confidence:** HIGH (all findings grounded in current codebase + existing resolved packages)
+**Project:** ILS iOS/macOS v5.0 -- Cross-Platform Feature Completion & 30-Gate Audit
+**Researched:** 2026-02-27
+**Overall confidence:** HIGH (grounded in codebase analysis + Apple framework docs + verified library research)
 
 ---
 
 ## Scope: What This File Covers
 
-This document covers ONLY the stack additions/changes required for v3.1 new features:
+Stack additions and changes needed ONLY for v5.0 new features:
 
-1. Host CLI config sync (reading `~/.claude/settings.json` from connected host)
-2. GitHub skill/plugin browse + install
-3. Host Profiles redesign (Fleet rename + multi-host switching UX)
-4. Navigation/UX changes (side menu from all screens, session back button)
-
-**Everything in this file describes net-new needs.** The existing stack (SwiftUI, Vapor 4, Fluent/SQLite, Citadel, Yams, Splash, MarkdownUI, SSEClient, APIClient actor) is already validated and requires no version changes or new packages for these features.
+1. **Config inheritance visualization** -- showing CLI -> backend -> mobile settings chain
+2. **GitHub API integration** -- browsing/installing skills and plugins from GitHub repos
+3. **Hooks management UI** -- CRUD for Claude Code hooks (currently read-only)
+4. **macOS feature parity** -- Handoff, drag-and-drop, additional keyboard shortcuts, menu bar items
+5. **"Fleet" -> "Host Profiles" rename** -- API endpoint and model name migration
+6. **node_modules filtering** -- already exists in backend, needs UI-level awareness
+7. **30-gate validation framework** -- screenshot-based evidence collection
 
 ---
 
-## What Already Exists — Do NOT Re-Add
+## What Already Exists -- Do NOT Re-Add
 
-| Capability | Already In Stack | Location |
-|------------|-----------------|----------|
-| SSH command execution | Citadel (iOS + macOS Xcode targets, `XCRemoteSwiftPackageReference`) | `ILSApp/ILSApp/Services/CitadelSSHService.swift` |
-| Config file read/write | `ConfigFileService` + `ConfigController` | `Sources/ILSBackend/` — reads all three scopes (user/project/local) |
-| `ClaudeConfig` model | `ILSShared/Models/ClaudeConfig.swift` | Covers model, permissions, hooks, env, plugins, theme, status line |
-| GitHub Code Search | `GitHubService.swift` | Already searches `filename:SKILL.md`, fetches raw content, caches, handles rate limits |
-| Fleet/Host model | `ILSShared/Models/FleetHost.swift` | `HostProfile` typealias already present; id, name, host, port, backendPort, isActive, healthStatus |
-| Fleet CRUD backend | `FleetController.swift` | GET list, POST register, POST activate (atomic transaction), DELETE, GET health |
-| Markdown rendering | `swift-markdown-ui` / `MarkdownUI` | Linked in Xcode project for both iOS and macOS targets |
-| YAML parsing | Yams 5.4.0 (resolved) | Backend only, for skill file parsing |
-| NavigationStack + sheet sidebar | SwiftUI native | `SidebarRootView.swift` — iPhone uses `.sheet` sidebar + `NavigationStack`; iPad uses `NavigationSplitView` |
+| Capability | Current State | Location |
+|------------|---------------|----------|
+| SwiftUI + @Observable | iOS 17+/macOS 14+ | All ViewModels |
+| Vapor 4 backend + Fluent/SQLite | Port 9999, /api/v1 prefix | Sources/ILSBackend/ |
+| APIClient (actor, caching, retry) | GET/POST/PUT/DELETE with dedup | Services/APIClient.swift |
+| SSEClient for streaming | ChatView real-time | Services/SSEClient.swift |
+| ConfigScope enum (user/project/local) | Already in ILSShared | Models/MCPServer.swift |
+| ClaudeConfig + HooksConfig models | Full Codable structs | Models/ClaudeConfig.swift |
+| ConfigController (GET/PUT/validate) | Backend routes /config | Controllers/ConfigController.swift |
+| HooksManagementView (read-only) | Displays hooks from config | Views/Hooks/HooksManagementView.swift |
+| HooksViewModel (read-only) | Flattens hook groups for display | ViewModels/HooksViewModel.swift |
+| ConfigEditorViewModel | Raw JSON editor for configs | ViewModels/ConfigEditorViewModel.swift |
+| HostProfilesViewModel | Fleet CRUD with health polling | ViewModels/HostProfilesViewModel.swift |
+| FleetHost model (+ HostProfile alias) | Full Codable struct | Models/FleetHost.swift |
+| macOS WindowManager | Multi-window, frame persistence | Managers/WindowManager.swift |
+| macOS ILSCommands | Keyboard shortcuts via .keyboardShortcut | Commands/ILSCommands.swift |
+| macOS AppDelegate | Menu bar (File/Edit/View/Window) | AppDelegate.swift |
+| node_modules filtering | excludedDirectories set | Services/SkillsFileService.swift |
+| MarkdownUI, HighlightSwift, Citadel, GRDB | Already in project.yml | SPM dependencies |
+| Yams, Splash | Already in Package.swift | SPM dependencies |
+| StoreKit 2 / FeatureGate | Premium subscriptions | Services/FeatureGate.swift |
+| xcrun simctl + idb | Screenshot/deep link/tap automation | Verified on machine |
 
 ---
 
 ## Recommended Stack Additions
 
-**No new SPM packages or Xcode package references are required.** All four feature areas are implementable with what's already linked. Adding packages for this scope would increase build complexity and binary size without providing any capability the existing stack lacks.
+### Feature 1: Config Inheritance Visualization
 
-### Capabilities to Enable From Existing Stack
+**New libraries needed: NONE**
 
-| Existing Asset | Use For v3.1 | Integration Point |
-|---------------|-------------|-------------------|
-| `CitadelSSHService.executeCommand` | Read remote host's `~/.claude/settings.json` over SSH | `SettingsViewModel` calls new backend endpoint that proxies SSH read for active fleet host |
-| `ConfigController GET /config?scope=user` | Local host config sync | Already works — backend reads from host filesystem. Expose merged defaults via new `/config/defaults` endpoint |
-| `ConfigFileService` | Backend-side config merge (user + project scopes) | Add a `mergedDefaults()` method that overlays project scope on top of user scope |
-| `GitHubService.searchSkills` | Extend to plugin search | Add `searchPlugins(query:)` method using `filename:PLUGIN.md` search query — identical pattern, different filename |
-| `GitHubService.fetchRawContent` | Preview skill/plugin content before install | Already fetches raw GitHub file content; wire to a preview sheet in `BrowserView` |
-| `FleetHost` / `HostProfile` typealias | Host Profiles redesign | Model is correct as-is; rename is cosmetic (view names, UI labels, route comments) |
-| `FleetController POST /:id/activate` | Multi-host switching | Already deactivates all hosts then activates selected one in a DB transaction |
-| `SidebarRootView` toolbar pattern | Side menu from all screens | Add `.toolbar` modifier with sidebar button to every top-level screen; `SidebarRootView` already owns the sidebar sheet state |
-| `navigationPath` `@State<NavigationPath>` | Session back button | Already declared in `SidebarRootView`; push `ChatSession` onto path from any screen using existing `navigationDestination` |
+Use existing `ConfigController` GET endpoint with scope parameter. The backend already supports `?scope=user`, `?scope=project`, and `?scope=local`. The mobile app already has `ConfigEditorViewModel` and `SettingsViewModel` that load config by scope.
 
----
+| Component | What to Build | Technology | Why |
+|-----------|---------------|------------|-----|
+| ConfigInheritanceViewModel | Load all 3 scopes, compute effective values | Swift @Observable | Extends existing pattern; no new deps |
+| ConfigInheritanceView | Tree/table showing key -> value -> winning scope | SwiftUI List + DisclosureGroup | Native SwiftUI; matches existing UI patterns |
+| ConfigDiffHelper | Compare configs across scopes, flag overrides | Foundation (Codable reflection) | Pure Swift struct comparison |
 
-## Feature-by-Feature Stack Analysis
+**API integration point:** Call `GET /config?scope=user`, `GET /config?scope=project`, `GET /config?scope=local` in parallel using existing `APIClient.get()`. The `ConfigInfo` response already includes `scope`, `path`, `content`, and `isValid` -- everything needed for inheritance display.
 
-### Feature 1: Host CLI Config Sync
+**Backend change needed:** Add `GET /config/effective` endpoint that returns the merged config with winning-scope annotations per key. This avoids client-side merge logic. The `ConfigValidationResult` DTO in `ResponseDTOs.swift` already has a `winningScope: ConfigScope` field, confirming the backend was designed for this.
 
-**What's needed:** Surface the connected host's `~/.claude/settings.json` defaults in the iOS Settings screen, with visual indicators showing which values come from the host vs. are overridden locally.
-
-**How the existing stack handles it:**
-
-The `ConfigController` (`GET /api/v1/config?scope=user`) already reads `~/.claude/settings.json` from the machine running the Vapor backend. Since the backend runs on the host (not the iOS device), calling this endpoint from the iOS `APIClient` already returns the host's config. The `ClaudeConfig` Codable model in `ILSShared` already covers every relevant field (model, permissions, hooks, env, plugins, theme).
-
-**What needs to be built (code, not new tech):**
-
-1. `GET /api/v1/config/defaults` backend endpoint — returns a merged `ClaudeConfig` where project-scope settings overlay user-scope settings. This is a new route and a `mergedDefaults()` method on `ConfigFileService`, not a new library.
-
-2. `HostConfigViewModel` in the iOS app — calls `/config/defaults`, stores the result, and compares against locally-stored user overrides. Pure `@Observable` Swift code.
-
-3. UI overlay indicators in `SettingsView` — small "From host" badges on fields whose values come from the host config. Pure SwiftUI.
-
-**For remote hosts (non-local fleet hosts):** Use `CitadelSSHService.executeCommand("cat ~/.claude/settings.json")` to read the file over SSH, then decode the JSON string as `ClaudeConfig`. This requires no new library — `CitadelSSHService` already supports arbitrary command execution and the `ClaudeConfig` Codable model handles deserialization.
-
-**Confidence:** HIGH. The complete data path exists; the work is wiring, not technology.
+**Confidence:** HIGH -- all models and endpoints already exist; this is UI composition work.
 
 ---
 
-### Feature 2: GitHub Skill/Plugin Browse + Install
+### Feature 2: GitHub API Integration (Browse/Install Skills & Plugins)
 
-**What's needed:** Browse GitHub for skills and plugins, preview content, install to the host's Claude Code directories.
+**New libraries needed: NONE -- use URLSession directly**
 
-**How the existing stack handles it:**
+| Decision | Choice | Why |
+|----------|--------|-----|
+| HTTP client | URLSession (existing APIClient pattern) | Project already uses URLSession exclusively; adding Alamofire or OctoKit.swift would introduce a second HTTP stack for marginal benefit |
+| GitHub API version | REST API v3 | Stable, well-documented, sufficient for repo browsing |
+| Authentication | Optional GitHub PAT via Settings | Unauthenticated: 60 req/hr. Authenticated: 5,000 req/hr. Search API: 10/min unauth, 30/min auth |
 
-`GitHubService` already implements:
-- GitHub Code Search API (`GET https://api.github.com/search/code?q=...+filename:SKILL.md`) via Vapor's `Client`
-- Raw file fetch (`raw.githubusercontent.com`)
-- Rate limit header monitoring (logs warning at <10 remaining requests)
-- `GITHUB_TOKEN` env var support for 30 req/min (vs 10 unauthenticated)
-- Result caching via `IndexingService` (keyed by query+page+perPage)
+**Why NOT OctoKit.swift:** OctoKit.swift (nerdishbynature/octokit.swift, v0.11+) covers Users, Repos, Stars, Issues -- but NOT the endpoints we need most (repository contents tree, file download, search with topic filters). We need exactly 4 GitHub API endpoints, all trivially callable via URLSession:
 
-**What needs to be built (code, not new tech):**
+| Endpoint | Purpose | Rate Limit (unauth) |
+|----------|---------|---------------------|
+| `GET /search/repositories?q=topic:claude-code-skill` | Browse available skill repos | 10/min |
+| `GET /repos/{owner}/{repo}/contents/{path}` | List files in a skill/plugin repo | 60/hr |
+| `GET /repos/{owner}/{repo}/readme` | Show repo README for preview | 60/hr |
+| Raw content URL (`raw.githubusercontent.com`) | Download skill .md files | No API limit |
 
-1. `searchPlugins(query:page:perPage:)` on `GitHubService` — identical to `searchSkills` but with `filename:PLUGIN.md`. 10 lines of code.
+**Implementation approach:**
 
-2. Install endpoint: `POST /api/v1/github/install` — accepts `{type: "skill"|"plugin", owner, repo, path}`, fetches raw content via `fetchRawContent`, then writes the file to the appropriate host directory using `FileManager` (for local host) or `CitadelSSHService.executeCommand("mkdir -p ~/.claude/skills && cat > ...")` for remote hosts.
+| Component | What to Build | Location |
+|-----------|---------------|----------|
+| GitHubAPIClient | Actor wrapping URLSession for GitHub REST v3 | New: Services/GitHubAPIClient.swift |
+| GitHubRepository model | Codable struct for search results | New: in ILSShared or local Models/ |
+| GitHubBrowseViewModel | Search, list, preview GitHub repos | New: ViewModels/GitHubBrowseViewModel.swift |
+| GitHubBrowseView | Search bar + repo list + detail sheet | New: Views/Browser/GitHubBrowseView.swift |
+| SkillInstaller service | Download .md files, write to skills directory | New: Services/SkillInstaller.swift |
 
-3. iOS `BrowserViewModel` extension — calls search and install endpoints, manages install state per item. Pure `@Observable` Swift.
+**Caching strategy:** Cache search results and repo contents in NSCache (same pattern as APIClient) with 5-minute TTL for search results, 30-minute TTL for repo contents.
 
-4. UI: status badges (Installed, Available, Update available) in `BrowserView`. Pure SwiftUI.
+**Rate limit handling:** Track `X-RateLimit-Remaining` header from GitHub responses. Show warning badge in UI when < 10 remaining. Disable search when exhausted. Display reset time from `X-RateLimit-Reset`.
 
-**Rate limiting:** The existing `IndexingService` cache handles the 10/30 req/min constraint for search. Raw content fetches are not rate-limited by the Code Search quota — they go to `raw.githubusercontent.com` which is served by CDN.
+**Token storage:** Store optional GitHub PAT in Keychain using existing `KeychainService` (already used for API key in APIClient). Surface in Settings under a "GitHub" section.
 
-**What NOT to add:** Do not add `octokit.swift` or any GitHub SDK. The existing bespoke `GitHubService` covers all needed endpoints with proper caching and rate limit handling. A full SDK adds 30+ source files for 3 API endpoints.
-
-**Confidence:** HIGH. Search and content fetch already work; install is filesystem + optional SSH write.
-
----
-
-### Feature 3: Host Profiles Redesign
-
-**What's needed:** Rename "Fleet" to "Host Profiles" throughout the UI, add visible active-profile indicator, make host switching prominent.
-
-**How the existing stack handles it:**
-
-- `FleetHost.swift` already has `public typealias HostProfile = FleetHost` — the rename hook is in place.
-- `isActive` field + `POST /fleet/:id/activate` already implement exclusive activation via atomic DB transaction.
-- `FleetController.index` already sorts active host first in the response.
-- `FleetListResponse` already includes `activeHostId`.
-
-**What needs to be built (code, not new tech):**
-
-1. New `GET /api/v1/fleet/active` convenience endpoint — returns just the active host without fetching the full list. Used by the home screen and sidebar to show the active profile indicator without over-fetching. 10 lines of controller code.
-
-2. iOS `HostProfileSwitcherView` — a `.sheet` or toolbar popover listing profiles with a checkmark/indicator on the active one, and a tap-to-switch action. Uses existing `FleetViewModel` data and the existing activate endpoint.
-
-3. Rename all UI labels from "Fleet" to "Host Profiles" — view names, navigation titles, sidebar item label. No model changes.
-
-4. Active profile indicator in the sidebar — a small badge or subtitle showing the active host name. Pure SwiftUI addition to `SidebarView`.
-
-**What NOT to add:** Do not create a new `HostProfile` Fluent model. The `FleetHostModel` is the right data store; adding a second model would require migrations and dual-write logic. The `HostProfile` typealias is the correct abstraction boundary.
-
-**Confidence:** HIGH. No architectural gap — the work is UI and one convenience endpoint.
+**Confidence:** HIGH -- URLSession is proven in this codebase; GitHub REST API v3 is stable and well-documented.
 
 ---
 
-### Feature 4: Navigation/UX Overhaul
+### Feature 3: Hooks Management UI (CRUD)
 
-**What's needed:** Side menu accessible from all screens (not just home), reliable session back button, home screen layout improvements.
+**New libraries needed: NONE**
 
-**How the existing stack handles it:**
+The current `HooksManagementView` is read-only (displays hooks from config). CRUD requires:
 
-`SidebarRootView` already implements the correct architecture:
-- iPhone: `NavigationStack` with a `.sheet` sidebar triggered by a toolbar button. The sidebar sheet state (`isSidebarOpen`) is owned by `SidebarRootView`.
-- iPad: `NavigationSplitView` with a persistent sidebar column and `NavigationSplitViewVisibility` state.
-- `navigationPath: NavigationPath` `@State` is declared in `SidebarRootView` and passed down for push navigation.
+| Component | What to Build | Technology |
+|-----------|---------------|------------|
+| HookEditorView | Form for creating/editing a hook | SwiftUI Form + TextField + Picker |
+| HookEditorViewModel | Validate + serialize hook changes | @Observable, existing ClaudeConfig models |
+| Updated HooksManagementView | Add swipe-to-delete, add button, edit tap | SwiftUI .swipeActions + NavigationLink |
 
-**What needs to be built (code, not new tech):**
+**Backend integration:** Hooks are stored in `~/.claude/settings.json` (user scope) or `.claude/settings.json` (project scope). The existing `PUT /config` endpoint already writes full config. The CRUD flow is:
 
-1. Sidebar toolbar button on every top-level screen — currently only some screens have it. Add a consistent `.toolbar { ToolbarItem(placement: .navigationBarLeading) { SidebarToggleButton() } }` to every screen's root view. Pure SwiftUI.
+1. `GET /config?scope=user` -- load current config
+2. Modify the `hooks` property of the `ClaudeConfig` struct in memory
+3. `POST /config/validate` -- validate before saving
+4. `PUT /config` -- write back the full config with updated hooks
 
-2. Session back button — push `ChatSession` onto `navigationPath` from the sessions list row tap (instead of using `.sheet` presentation). This changes chat presentation from modal to push-navigation, enabling the system back button. The `navigationDestination(for: ChatSession.self)` handler is the right pattern (SwiftUI iOS 16+, already available in iOS 17 target).
+No new backend endpoints needed. The `ClaudeConfig`, `HooksConfig`, `HookGroup`, and `HookDefinition` structs in ILSShared are already fully `Codable` with `var` properties (mutable).
 
-3. Home screen layout — purely compositional SwiftUI layout changes; no navigation architecture changes needed.
+**Form fields for HookEditorView:**
 
-**Key constraint:** `SidebarRootView`'s `isSidebarOpen` sheet state must remain the single source of truth. Do not duplicate sidebar state in individual screen ViewModels — pass the binding down or use `@Environment`.
+| Field | Type | Validation |
+|-------|------|------------|
+| Event Type | Picker (5 options) | Required |
+| Matcher (regex) | TextField | Optional; validate regex syntax |
+| Hook Type | Picker ("command") | Required; currently only "command" |
+| Command | TextField (multiline) | Required; non-empty |
 
-**What NOT to add:** Do not add a tab bar. The sidebar-first pattern is correct for 8+ top-level screens; a tab bar caps at 5 items and would require an information architecture redesign. Do not add a third-party navigation library (Coordinator pattern libraries, Router frameworks) — SwiftUI native `NavigationStack` + `navigationDestination` covers all needed push navigation.
-
-**Confidence:** HIGH. The architecture already supports all required changes; the work is consistent application of the existing patterns.
+**Confidence:** HIGH -- all models exist and are mutable; backend already supports full config write-back.
 
 ---
 
-## Installation
+### Feature 4: macOS Feature Parity
 
-No new packages to install. No `swift package update` or Xcode package reference additions needed.
+**New libraries needed: NONE for core parity. One OPTIONAL addition.**
 
-All v3.1 feature work is:
-- New Swift source files (ViewModels, Services, View components)
-- New backend controller methods/routes
-- Model extensions in `ILSShared` (if any DTO additions are needed)
+All macOS parity features use built-in Apple frameworks:
+
+#### 4a. Handoff (NSUserActivity)
+
+| Technology | API | Min OS | Status |
+|------------|-----|--------|--------|
+| NSUserActivity | Foundation | macOS 10.10+ / iOS 8+ | Built-in |
+| `.userActivity()` modifier | SwiftUI | iOS 14+ / macOS 11+ | Built-in |
+| `.onContinueUserActivity()` modifier | SwiftUI | iOS 14+ / macOS 11+ | Built-in |
+
+**Implementation:** Register `NSUserActivity` with type `com.ils.app.viewing-session` when user views a session. Include `sessionId` in `userInfo`. On the other device, `.onContinueUserActivity` picks it up and navigates to the same session via deep link routing (already exists in `AppState.handleURL`).
+
+**Requirements:**
+- Same Team ID signing (already: `HC36V7B67Z` on both targets)
+- Add `NSUserActivityTypes` to both Info.plist files
+- iCloud entitlement (already present in entitlements files)
+
+#### 4b. Keyboard Shortcuts (additional)
+
+| Technology | API | Status |
+|------------|-----|--------|
+| `.keyboardShortcut()` modifier | SwiftUI | Already used in ILSCommands.swift |
+| `Commands` protocol | SwiftUI | Already used in ILSCommands.swift |
+
+**What exists:** Navigate (Cmd+1-6), New Session (Cmd+N), Session actions (Cmd+Shift+R/F/E), Expand/Collapse (Cmd+Opt+E).
+
+**What to add:** Search (Cmd+K for command palette), Quick Switch (Cmd+Shift+O for session picker), Refresh (Cmd+R), Toggle Inspector (Cmd+Opt+I). All via existing `ILSCommands` + `NotificationCenter` pattern.
+
+**No third-party library needed.** The existing `.keyboardShortcut()` SwiftUI modifier handles all in-app shortcuts. The `sindresorhus/KeyboardShortcuts` package (v2.4.0) is only needed for *global* hotkeys (app in background) -- which is out of scope for v5.0.
+
+#### 4c. Drag and Drop
+
+| Technology | API | Min OS |
+|------------|-----|--------|
+| `.draggable()` / `.dropDestination()` | SwiftUI (Transferable) | iOS 16+ / macOS 13+ |
+| `UTType` | UniformTypeIdentifiers | iOS 14+ / macOS 11+ |
+
+**Use cases:**
+- Drag session from sidebar to open in new window (macOS)
+- Drop .md skill files onto Browser view to install
+- Drag hook definitions to reorder
+
+**Implementation:** Make `ChatSession` conform to `Transferable` (it already conforms to `Codable` + `Identifiable`). Use `.draggable(session)` on session rows and `.dropDestination(for: ChatSession.self)` on window targets.
+
+**Import needed:** `import UniformTypeIdentifiers` -- already a system framework, no SPM addition.
+
+#### 4d. Menu Bar Enhancements
+
+Already have full menu bar via `AppDelegate.setupMenuBar()` and `ILSCommands`. Additional items (Hooks, Host Profiles) are just new `CommandMenu` entries or `Button` items in existing menus. Pure SwiftUI.
+
+#### 4e. Missing macOS Views
+
+| iOS View | macOS Equivalent | Status |
+|----------|-----------------|--------|
+| HooksManagementView | Need MacHooksView or shared | Missing |
+| HostProfilesView | Need MacHostProfilesView or shared | Missing |
+| ThemeEditorView | Need MacThemeEditorView or shared | Missing |
+| BrowserView tabs | Need Mac browser with sidebar | Missing |
+| SystemMonitorView | Need MacSystemView or shared | Missing |
+
+**Approach:** The macOS target already includes iOS source files (see `project.yml` -- ILSMacApp target sources include `ILSApp/` directory with exclusions). Most views use `#if os(iOS)` / `#if os(macOS)` for platform differences. New views should follow this pattern rather than creating separate Mac-only views where possible.
+
+**Confidence:** HIGH -- all APIs are built-in Apple frameworks already available at the project's deployment targets.
+
+---
+
+### Feature 5: "Fleet" -> "Host Profiles" Rename
+
+**New libraries needed: NONE**
+
+This is a pure refactor -- rename across 6 files. The `HostProfile` typealias already exists in `FleetHost.swift`:
+
+```swift
+public typealias HostProfile = FleetHost
+```
+
+**Files to update:**
+
+| File | Change |
+|------|--------|
+| `FleetHost.swift` | Rename struct (keep typealias for backward compat) |
+| `FleetDTOs.swift` | Rename DTOs |
+| `FleetController.swift` | Rename controller, keep `/fleet` routes as aliases |
+| `HostProfilesViewModel.swift` | Already uses "HostProfiles" naming |
+| `Views/Fleet/HostProfilesView.swift` | Already uses "Host Profiles" naming |
+| `Views/Fleet/HostProfileDetailView.swift` | Already uses correct naming |
+
+**API migration strategy:** Add new `/host-profiles` routes alongside existing `/fleet` routes in the backend. Deprecate `/fleet` after one release cycle. Frontend switches to new endpoints immediately.
+
+**Confidence:** HIGH -- typealias already exists; most UI code already uses the new name.
+
+---
+
+### Feature 6: node_modules Filtering
+
+**New libraries needed: NONE**
+
+Backend `SkillsFileService.swift` already has the exclusion set:
+
+```swift
+private static let excludedDirectories: Set<String> = [
+    "node_modules", ".git", "__pycache__", ".venv", "venv",
+    ".build", "build", "dist", ".cache", ".npm", ".yarn",
+    "vendor", "Pods", ".swiftpm", "examples", "tests", "test"
+]
+```
+
+**What might be missing:** Verify that `SessionFileService`, `FileSystemService`, and `ProjectsController` also skip these directories when scanning. The `SystemMetricsService` file scanning (`contentsOfDirectory`) should also apply the filter. This is a backend audit task, not a new library.
+
+**Confidence:** HIGH -- the filter exists; needs coverage audit across all file-scanning services.
+
+---
+
+### Feature 7: 30-Gate Validation Framework
+
+**New libraries needed: NONE**
+
+Same tooling as v3.5 validation (documented in prior STACK.md):
+
+| Tool | Purpose | Status |
+|------|---------|--------|
+| `xcrun simctl io screenshot` | Screenshot capture | Verified on machine |
+| `xcrun simctl openurl` | Deep link navigation | Verified on machine |
+| `xcrun simctl status_bar override` | Clean status bar for evidence | Verified on machine |
+| `idb describe operation:all` | Accessibility tree for coordinates | Verified on machine |
+
+**Evidence structure for 30-gate:**
+
+```
+evidence/phase-{NN}-{name}/
+  screenshots/
+    {gate-id}-{description}.png
+  VERDICT.md
+```
+
+The `evidence/` directory already exists at project root with `AUDIT-STATE.md`. Gate verdicts VG-01 and VG-02 already PASS from prior session.
+
+**Confidence:** HIGH -- all tooling verified; pattern established in v3.5 and v4.0.
+
+---
+
+## Full Stack Summary (v5.0)
+
+### No New SPM Packages
+
+Zero new Swift Package Manager dependencies are needed for v5.0. Every feature is implementable with:
+
+- **Foundation** (URLSession, JSONEncoder/Decoder, NSUserActivity, FileManager)
+- **SwiftUI** (.keyboardShortcut, .draggable/.dropDestination, .userActivity, DisclosureGroup, Form)
+- **UniformTypeIdentifiers** (UTType for drag-and-drop, already a system framework)
+- **AppKit** (NSMenu, NSWindow -- already imported in macOS target)
+
+### New Swift Files to Create
+
+| File | Feature | Purpose |
+|------|---------|---------|
+| `Services/GitHubAPIClient.swift` | GitHub browse | Actor wrapping URLSession for GitHub REST v3 |
+| `Models/GitHubModels.swift` | GitHub browse | Codable structs for search/contents responses |
+| `ViewModels/GitHubBrowseViewModel.swift` | GitHub browse | Search, list, preview state |
+| `Views/Browser/GitHubBrowseView.swift` | GitHub browse | Search + repo list + install UI |
+| `Services/SkillInstaller.swift` | GitHub install | Download and write skill files |
+| `Views/Hooks/HookEditorView.swift` | Hooks CRUD | Create/edit hook form |
+| `ViewModels/ConfigInheritanceViewModel.swift` | Config viz | Multi-scope config loading + diff |
+| `Views/Settings/ConfigInheritanceView.swift` | Config viz | Inheritance tree visualization |
+
+### Existing Files to Modify
+
+| File | Change | Feature |
+|------|--------|---------|
+| `HooksManagementView.swift` | Add create/edit/delete UI | Hooks CRUD |
+| `HooksViewModel.swift` | Add save/delete methods | Hooks CRUD |
+| `ILSCommands.swift` | Add Cmd+K, Cmd+Shift+O shortcuts | macOS parity |
+| `AppDelegate.swift` | Add Host Profiles, Hooks menu items | macOS parity |
+| `ILSMacApp.swift` | Add .userActivity() modifier | Handoff |
+| `ILSAppApp.swift` | Add .userActivity() + .onContinueUserActivity() | Handoff |
+| `Info.plist` (both) | Add NSUserActivityTypes | Handoff |
+| `FleetController.swift` | Add `/host-profiles` route aliases | Rename |
+| `SettingsView.swift` | Add GitHub token section, config inheritance link | Settings |
+| `BrowserView.swift` | Add GitHub tab | GitHub browse |
+
+---
+
+## What NOT to Add
+
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| OctoKit.swift | Only covers Users/Repos/Stars/Issues, NOT contents/tree/search-by-topic; adds dependency for 4 endpoints | Direct URLSession with Codable models |
+| Alamofire | Project uses URLSession exclusively; second HTTP stack adds complexity | Existing URLSession pattern in APIClient |
+| sindresorhus/KeyboardShortcuts | Only needed for global hotkeys (app in background); all v5.0 shortcuts are in-app | SwiftUI `.keyboardShortcut()` modifier |
+| SwiftUI Charts | No charting features in v5.0 scope | N/A |
+| Any testing framework | Project mandate: no mocks, no stubs, no test files | Functional validation with simctl |
+| Firebase / Analytics SDK | Not in scope | N/A |
+| Combine | Project uses async/await throughout; Combine would be a regression | Swift Concurrency (async/await, Task, actor) |
 
 ---
 
 ## Alternatives Considered
 
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| Extend `GitHubService` with plugin search | Add `octokit.swift` (v0.15+) | 30+ source files for 3 API endpoints; existing service already handles rate limits and caching |
-| `CitadelSSHService.executeCommand` for remote config reads | Separate HTTP endpoint on remote host | Requires remote backend to be running; SSH works regardless of remote backend state |
-| `HostProfile` typealias (cosmetic rename only) | New `HostProfile` Fluent model replacing `FleetHostModel` | Would require DB migration, new backend routes, model mapping layer — all for a rename |
-| `NavigationStack` push for chat sessions | Modal `.sheet` for all session navigation | Sheets block the back-navigation mental model; push navigation gives the system back button for free |
-| Backend computes merged config (`/config/defaults`) | iOS client fetches all scopes and merges client-side | Server-side merge is testable, keeps business logic in one place, reduces iOS API calls from 3 to 1 |
-| Single `SidebarToggleButton` component in toolbar | Per-screen sidebar open logic | Consistency requires one component definition, applied uniformly |
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| GitHub API | Direct URLSession | OctoKit.swift v0.11 | Missing key endpoints (contents/tree, topic search); adds 500+ stars but thin coverage of what we need |
+| GitHub API | Direct URLSession | swift-openapi-generator | Massive code generation overhead for 4 endpoints; overkill |
+| Config inheritance | Multi-scope GET + client merge | New backend endpoint | Could go either way; `ConfigValidationResult.winningScope` suggests backend was designed for this |
+| Hooks CRUD | Modify full config via PUT /config | New PATCH /config/hooks endpoint | PUT full config is simpler and already works; PATCH adds backend complexity |
+| macOS shortcuts | SwiftUI .keyboardShortcut() | sindresorhus/KeyboardShortcuts v2.4.0 | Only needed for global hotkeys; all v5.0 shortcuts work when app is focused |
+| Drag-and-drop | SwiftUI .draggable/.dropDestination | NSItemProvider (legacy API) | Modern Transferable API is cleaner and type-safe; available at our deployment target |
+| Fleet rename | Dual routes + typealias | Hard rename | Typealias preserves backward compatibility during migration |
 
 ---
 
-## What NOT to Use
+## Installation
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| `octokit.swift` | Large dependency for 3 endpoints; `GitHubService` already does the work | Extend `GitHubService` with `searchPlugins` method |
-| GitHub GraphQL API | More complex than REST for file search; requires separate parsing setup | GitHub REST Code Search v3 (already in use, stable) |
-| SwiftData for Host Profiles | Codebase is on Fluent/SQLite; mixing ORMs creates dual migration paths | Continue with `FleetHostModel` (Fluent) |
-| `AsyncHTTPClient` in iOS app | NIO-based, adds complexity; URLSession is correct for iOS networking | `APIClient` actor (already handles all backend calls via URLSession) |
-| Third-party navigation/coordinator frameworks | `NavigationStack` + `navigationDestination` covers all needed patterns | SwiftUI native navigation (already in `SidebarRootView`) |
-| Separate "profiles" REST resource on backend | Model already exists as `/fleet`; duplication creates sync bugs | Add `GET /fleet/active` convenience endpoint on existing route group |
+No new packages to install. Zero changes to `Package.swift` or `project.yml` dependencies.
 
----
+```bash
+# Existing build commands remain unchanged
+xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp \
+  -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet
 
-## Version Compatibility
+xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp \
+  -destination 'platform=macOS' -quiet
 
-No version changes required. All existing packages are compatible with the v3.1 additions.
-
-| Component | Resolved Version | v3.1 Impact |
-|-----------|-----------------|-------------|
-| Vapor | 4.121.1 | Adding controller methods only — no API changes |
-| Fluent | 4.13.0 | No new migrations for Host Profiles rename |
-| Yams | 5.4.0 | Available in backend if YAML skill/plugin parsing is needed |
-| Citadel | Xcode-managed (no SPM pin) | No new Citadel APIs needed; `executeCommand` is already used |
-| MarkdownUI | Xcode-managed | Skill/plugin preview content uses existing Markdown rendering |
-| swift-markdown-ui | Xcode-managed | Same as above |
+PORT=9999 swift run ILSBackend
+```
 
 ---
 
 ## Sources
 
-- Codebase: `Sources/ILSBackend/Services/GitHubService.swift` — GitHub Code Search + raw fetch, rate limit handling, caching: HIGH confidence (direct inspection)
-- Codebase: `Sources/ILSBackend/Services/ConfigFileService.swift` — three-scope config read/write: HIGH confidence
-- Codebase: `Sources/ILSBackend/Controllers/ConfigController.swift` — existing GET/PUT/validate routes: HIGH confidence
-- Codebase: `Sources/ILSBackend/Controllers/FleetController.swift` — CRUD + activate with atomic DB transaction: HIGH confidence
-- Codebase: `Sources/ILSShared/Models/FleetHost.swift` — `HostProfile` typealias confirmed present: HIGH confidence
-- Codebase: `Sources/ILSShared/Models/ClaudeConfig.swift` — full config model with all relevant fields: HIGH confidence
-- Codebase: `ILSApp/ILSApp/Services/CitadelSSHService.swift` — `executeCommand` for SSH command execution: HIGH confidence
-- Codebase: `ILSApp/ILSApp.xcodeproj/project.pbxproj` — Citadel, MarkdownUI linked to both iOS and macOS targets: HIGH confidence
-- Codebase: `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — NavigationStack + NavigationSplitView architecture: HIGH confidence
-- Codebase: `Package.resolved` — full resolved dependency graph, no version gaps: HIGH confidence
-- GitHub REST API (training knowledge): Code Search `GET /search/code`, `filename:` qualifier, rate limits (10 unauth / 30 with token per minute): MEDIUM confidence (stable API since 2013, unlikely to have changed)
+- **Codebase analysis** (HIGH confidence):
+  - `ILSApp/project.yml` -- existing SPM dependencies, target structure, deployment targets
+  - `Package.swift` -- backend dependencies (Vapor 4.89+, Fluent 4.9+, Yams 5.0+, Splash 0.16+)
+  - `Sources/ILSShared/Models/ClaudeConfig.swift` -- ClaudeConfig, HooksConfig, HookGroup, HookDefinition, ConfigInfo, ConfigScope
+  - `Sources/ILSShared/Models/FleetHost.swift` -- FleetHost struct, HostProfile typealias
+  - `Sources/ILSShared/DTOs/ResponseDTOs.swift` -- ConfigValidationResult.winningScope
+  - `Sources/ILSBackend/Controllers/ConfigController.swift` -- GET/PUT/validate routes
+  - `Sources/ILSBackend/Services/SkillsFileService.swift` -- excludedDirectories set with node_modules
+  - `ILSApp/ILSApp/Services/APIClient.swift` -- actor-based HTTP client with caching
+  - `ILSApp/ILSApp/ViewModels/HooksViewModel.swift` -- read-only hook display
+  - `ILSApp/ILSApp/Views/Hooks/HooksManagementView.swift` -- read-only hooks UI
+  - `ILSApp/ILSMacApp/Commands/ILSCommands.swift` -- existing keyboard shortcuts
+  - `ILSApp/ILSMacApp/AppDelegate.swift` -- existing menu bar setup
+  - `ILSApp/ILSMacApp/ILSMacApp.swift` -- .handlesExternalEvents already used
+  - `ILSApp/ILSMacApp/Managers/WindowManager.swift` -- multi-window management
+
+- **Apple documentation** (HIGH confidence):
+  - [NSUserActivity | Apple Developer Documentation](https://developer.apple.com/documentation/foundation/nsuseractivity)
+  - [Continuing User Activities with Handoff](https://developer.apple.com/documentation/Foundation/continuing-user-activities-with-handoff)
+  - [keyboardShortcut(_:modifiers:) | Apple Developer Documentation](https://developer.apple.com/documentation/swiftui/view/keyboardshortcut(_:modifiers:))
+  - [Adopting drag and drop using SwiftUI | Apple Developer Documentation](https://developer.apple.com/documentation/SwiftUI/Adopting-drag-and-drop-using-SwiftUI)
+
+- **GitHub API documentation** (HIGH confidence):
+  - [REST API endpoints for repository contents](https://docs.github.com/en/rest/repos/contents)
+  - [Rate limits for the REST API](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+  - [Updated rate limits for unauthenticated requests (2025-05)](https://github.blog/changelog/2025-05-08-updated-rate-limits-for-unauthenticated-requests/)
+
+- **Library evaluation** (MEDIUM confidence):
+  - [OctoKit.swift](https://github.com/nerdishbynature/octokit.swift) -- evaluated v0.11+, 519 stars, covers Users/Repos/Stars/Issues but not contents/tree/topic-search
+  - [sindresorhus/KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) -- evaluated v2.4.0, macOS only, global hotkeys; not needed for in-app shortcuts
+  - [SwiftUI keyboard shortcuts tutorial](https://www.hackingwithswift.com/quick-start/swiftui/how-to-add-keyboard-shortcuts-using-keyboardshortcut)
+  - [SwiftUI drag and drop tutorial](https://www.hackingwithswift.com/quick-start/swiftui/how-to-support-drag-and-drop-in-swiftui)
 
 ---
 
-*Stack research for: ILS iOS/macOS v3.1 — Host CLI config sync, GitHub browse/install, Host Profiles redesign, Navigation/UX overhaul*
-*Researched: 2026-02-24*
+*Stack research for: ILS iOS/macOS v5.0 -- Cross-Platform Feature Completion & 30-Gate Audit*
+*Researched: 2026-02-27*

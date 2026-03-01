@@ -1,201 +1,135 @@
-# Requirements: ILS iOS/macOS v3.1
+# Requirements: ILS iOS/macOS v5.0
 
-**Defined:** 2026-02-24
+**Defined:** 2026-02-27
 **Core Value:** Every screen works correctly, reflects the connected host's configuration, and provides a polished native experience
 
-## v3.1 Requirements
+## v5.0 Requirements
 
-Requirements for v3.1 milestone (Comprehensive Audit, Bug Fix & UX Overhaul). Each maps to roadmap phases starting at Phase 33. Source: `.planning/research/` (4 research files, 109KB, from 2026-02-24).
+Requirements for v5.0 milestone (Cross-Platform Feature Completion & 30-Gate Audit). Each maps to roadmap phases starting at Phase 49. Source: `.planning/research/SUMMARY.md` + MILESTONE-CONTEXT.md scope decisions.
 
-### Navigation & UX
+### Foundation
 
-- [x] **NAV-01**: Hamburger/side menu accessible from ALL screens — child views must not add conflicting `.topBarLeading` toolbar items
-- [x] **NAV-02**: Chat session has a back button to return to sessions list — requires ActiveScreen push/pop instead of flat enum swap
-- [x] **NAV-03**: Home screen layout polish — stats cards, quick actions ordering, consistent spacing
-- [x] **NAV-04**: Sidebar shows active host name indicator below header
-- [x] **NAV-05**: Deep link navigation works consistently across all registered `ils://` routes
+- [ ] **FOUND-01**: "Fleet" terminology replaced with "Host Profiles" across all Swift files, API routes (with backward-compatible aliasing), deep links, and UI labels
+- [ ] **FOUND-02**: Skills file scanning verified to exclude node_modules directories
+- [ ] **FOUND-03**: Validation evidence pipeline captures screenshots and gate tracking artifacts to evidence/ directory
 
-### Host Profiles
+### Config & Settings
 
-- [x] **HP-01**: Host activation propagates to `AppState.serverURL` — `HostProfilesViewModel` uses `AppState` injection, not standalone `APIClient()` (CRITICAL)
-- [x] **HP-02**: All ViewModels reload data on host switch — reactive invalidation via `AppState` observable change
-- [x] **HP-03**: Active profile indicator visible on list row and sidebar
-- [x] **HP-04**: Health status badges per host with colored dot
-- [x] **HP-05**: Fleet → Host Profiles naming consistency in all UI strings and navigation
+- [x] **CFG-01**: Config cascade visualization shows "inherited from host" vs "custom override" badges on each setting
+- [x] **CFG-02**: System prompt and model defaults inherited from connected host CLI configuration, not hardcoded
+- [x] **CFG-03**: Info tooltips (>=20 words) on tool controls, permissions, and settings sections
 
-### Settings & Config Sync
+### Skills, Plugins & Hooks
 
-- [ ] **CFG-01**: Display effective config values pulled from connected host CLI (`~/.claude/settings.json`)
-- [ ] **CFG-02**: `InheritanceBadge` (Host Default / Custom) applied to ALL settings fields, not just model and two toggles
-- [ ] **CFG-03**: Config auto-refresh on reconnect and host switch (`onChange(appState.isConnected)`)
-- [ ] **CFG-04**: Explanatory tooltip (`SettingsInfoButton`) on every settings field — full coverage
-- [ ] **CFG-05**: Write allowlist prevents CLI field deletion — `hooks`, `env`, `permissions`, `statusLine` never included in write payloads
-- [ ] **CFG-06**: System prompt field displayed (read-only if inherited from host)
-- [ ] **CFG-07**: Inline edit uses read-then-patch pattern — load fresh config, apply minimal delta, PUT back
+- [x] **SKILL-01**: User can browse GitHub for skills with search, category filtering, and preview
+- [x] **SKILL-02**: User can install skills from GitHub with progress indication and error handling
+- [x] **SKILL-03**: User can browse GitHub for plugins with search, category filtering, and preview
+- [x] **SKILL-04**: User can install plugins from GitHub with progress indication and error handling
+- [x] **SKILL-05**: Hooks management screen supports all 16 Claude Code event types (expanded from 5)
+- [x] **SKILL-06**: User can create, edit, and delete hooks with 4 handler types (command, prompt, agent, http)
+- [x] **SKILL-07**: Skills and plugins display active/inactive status indicators with toggle capability
 
-### Browse, Skills & Plugins
+### Profiles
 
-- [ ] **BRW-01**: GitHub skill search returns results with name, description, stars, repo path
-- [ ] **BRW-02**: Per-item install progress indicator (not global `isLoading` blocking entire list)
-- [ ] **BRW-03**: Installed state badge on GitHub search result rows
-- [ ] **BRW-04**: Plugin GitHub browse UI in Plugins tab (symmetry with skills tab)
-- [ ] **BRW-05**: Enable/disable toggle inline on installed skill and plugin rows
-- [ ] **BRW-06**: GitHub `fetchRawContent` branch detection — not hardcoded to `main`; try default branch
-- [ ] **BRW-07**: Rate limit 429 shows actionable error: "GitHub limit reached. Set GITHUB_TOKEN on host."
-- [ ] **BRW-08**: Uninstall from browse tab via context menu on installed items
+- [ ] **PROF-01**: Profile switching updates settings context with visual feedback showing which host's config is active
+- [ ] **PROF-02**: System monitor shows real-time CPU, memory, disk, and network metrics from connected host
 
-### System Monitor & Themes
+### Navigation
 
-- [ ] **SYS-01**: System monitor displays real-time metrics from connected host
-- [ ] **SYS-02**: Theme default loading works on fresh app launch
-- [ ] **SYS-03**: Cross-platform theme consistency (iOS, iPadOS, macOS)
+- [ ] **NAV-01**: Home screen displays quick action shortcuts above recent sessions
+- [ ] **NAV-02**: Home recent sessions list matches dedicated Sessions screen data exactly
 
-### Cross-Platform Validation
+### Backend API
 
-- [ ] **XP-01**: macOS builds with zero errors after all v3.1 changes
-- [ ] **XP-02**: All v1.0 audit REQs (REQ-01 through REQ-15) remain PASS
-- [ ] **XP-03**: iOS/iPadOS/macOS feature parity verified for all v3.1 changes
+- [x] **API-01**: All API endpoints return expected JSON structures with proper HTTP error codes (not 200-with-error)
+- [x] **API-02**: GET /config/effective endpoint returns merged config with winning-scope annotations per key
 
----
+### Validation -- 30-Gate Audit
 
-## v1.5 Requirements (COMPLETE)
+- [ ] **GATE-01**: Visual audit -- iPhone screens with numbered screenshot evidence (>=15 artifacts)
+- [ ] **GATE-02**: Visual audit -- iPad screens with numbered screenshot evidence (>=15 artifacts)
+- [ ] **GATE-03**: Visual audit -- Mac screens with numbered screenshot evidence (>=10 artifacts)
+- [ ] **GATE-04**: Functional audit -- end-to-end verification of all feature areas across platforms
+- [ ] **GATE-05**: Bug hunt -- >=20 edge case scenarios tested (offline, empty states, accessibility, memory)
 
-<details>
-<summary>v1.5 — All 50 requirements PASS (shipped 2026-02-24)</summary>
+## Validated (Previous Milestones)
 
-### v1.5 Requirements Detail
+- v1.0: REQ-01 through REQ-15 -- All PASS (sidebar nav, settings, skills/plugins/hooks, system monitor, host profiles, quick actions, tooltips, themes, MCP, backend API, visual consistency, sessions)
+- v2.0: LAUNCH-01/02, NET-01/02/03, MEM-01/02/03, BATT-01/02/03, RENDER-01/02/03, COMPAT-01/02, TEST-01/02/03/04 -- Performance optimization complete
+- v3.0: 165 audit issues remediated across Phases 18-24
+- v1.5: 70/70 audit findings resolved
+- v3.1: NAV-01..05, HP-01..05, CFG-01..07, BRW-01..08, SYS-01..03, XP-01..03 -- 31/31 PASS
+- v3.5: IPH-01..13, DL-01..06, GATE-01/03/04/05 -- iPhone 23/23 PASS
+- v4.0: UI-01..06, PLAT-01..08, DATA-01..06, SEC-01..05, ECO-01..04, AUDIT-01..05 -- 34/34 PASS, 123 evidence artifacts
 
-Requirements for v1.5 milestone. Each maps to roadmap phases starting at Phase 25. Source: `scratch/audit-findings-2026-02-24.md` (70 issues from 16 parallel agents, 10 already fixed in commit c57690f).
+## Future Requirements
 
-### Testing
+### macOS Feature Parity (v6.0)
 
-- [x] **TEST-01**: All sleep()/Thread.sleep() calls in tests replaced with condition-based waiting (XCTNSPredicateExpectation or poll loops)
-- [x] **TEST-02**: ErrorHandlingTests sleep instances (15 sites) replaced with condition-based waiting
-- [x] **TEST-03**: FeatureGateTests sleep instances (10 sites) replaced with condition-based waiting
-- [x] **TEST-04**: Scenario03_StreamingAndCancellation sleep instances (6 sites) replaced with async expectations
-- [x] **TEST-05**: UI test startup time reduced (shared XCUIApplication or test grouping to avoid 15-45s per test)
-- [x] **TEST-06**: ILSBackendTests placeholder replaced with meaningful Swift Testing tests
-- [x] **TEST-07**: ILSSharedTests placeholder replaced with meaningful Swift Testing tests
-- [x] **TEST-08**: Swift Testing framework adopted for new test files (`import Testing`, `@Test`, `#expect`)
-- [x] **TEST-09**: NavigationTests.swift instance var `app` moved to setUp
-- [x] **TEST-10**: Test data factories/builders created for common test objects
-- [x] **TEST-11**: Test parallelization configured in test plan
+- **MAC-01**: Drag-and-drop support for sessions, files into chat
+- **MAC-02**: Handoff (NSUserActivity) for cross-device session continuation
+- **MAC-03**: Menu bar completeness (File, Edit, View, Session menus)
+- **MAC-04**: Keyboard shortcuts beyond existing set
+- **MAC-05**: AppleScript/Automator support
+- **MAC-06**: Share Extension
+- **MAC-07**: Stage Manager window optimization
 
-### Concurrency
+### Extended Validation (v6.0+)
 
-- [x] **CONC-01**: TeamsExecutorService non-Sendable Process in Task.detached resolved (H-C1)
-- [x] **CONC-02**: WebSocketService ws.onText Task uses [weak self] or Sendable capture (H-C2)
-- [x] **CONC-03**: ProjectsViewModel unnecessary Task.detached replaced (MED-03)
-- [x] **CONC-04**: SpotlightIndexer completion handler converted to async/await (MED-04)
-- [x] **CONC-05**: PollingManager unowned reference design reviewed and documented (MED-01)
-- [x] **CONC-06**: SubscriptionManager.init Tasks deferred until after full initialization (MED-06)
-- [x] **CONC-07**: SystemMetricsService continuation double-resume risk eliminated (MED-07)
-- [x] **CONC-08**: NotificationManager.checkAuthorizationStatus capture fixed (MED-05)
-- [x] **CONC-09**: TunnelService terminationHandler capture uses [weak self] (MMED-01)
-- [x] **CONC-10**: ClaudeExecutorService.useAgentSDK mutable static resolved (Swift 6 blocker) (MMED-02)
-- [x] **CONC-11**: sendPermissionResponse isolation verified (MMED-03)
-- [x] **CONC-12**: LowPowerModeMonitor nonisolated(unsafe) replaced (MMED-04)
-- [x] **CONC-13**: AppLogger.recentLogs Task.detached pattern corrected (MED-08)
-- [x] **CONC-14**: DashboardViewModel.loadAll informational pattern documented (MED-02)
-- [x] **CONC-15**: @unchecked Sendable extensions for Vapor reviewed (LOW-C1)
-- [x] **CONC-16**: IndexingService Sendable conformance compiler-verified (LOW-C2)
-- [x] **CONC-17**: PollingManager @Observable intentional omission documented (LOW-C3)
+- **EXT-01**: RTL layout (Arabic) support
+- **EXT-02**: Dark mode screenshot captures for all screens
+- **EXT-03**: iPad mini compact size class testing
+- **EXT-04**: Chat streaming E2E validation (requires Claude CLI)
+- **EXT-05**: Premium vs free tier state validation on both devices
 
-### Energy
-
-- [x] **ENRG-01**: ConnectionBanner .ultraThinMaterial over streaming content optimized (H-E3)
-- [x] **ENRG-02**: SSEClient allowsConstrainedNetworkAccess properly configured (H-E4)
-- [x] **ENRG-03**: Fleet health polling adds LPM interval doubling (MED-E1)
-- [x] **ENRG-04**: AppLogger flush timer increased to 10s (MED-E2)
-- [x] **ENRG-05**: GlowEffect double-shadow GPU passes reduced (MED-E3)
-- [x] **ENRG-06**: macOS WindowManager UserDefaults throttled (MED-E4)
-- [x] **ENRG-07**: AppLogger synchronous disk write path addressed (LOW-E1)
-- [x] **ENRG-08**: SyncCoordinator debounce increased to 500ms (LOW-E2)
-
-### Memory
-
-- [x] **MEM-01**: PollingManager unowned reference crash risk resolved (H-M2)
-- [x] **MEM-02**: NSWindow delegate cycle in WindowManager broken (MED-M1)
-- [x] **MEM-03**: NotificationManager UNUserNotificationCenter delegate lifecycle (MED-M2)
-- [x] **MEM-04**: SyncCoordinator observer singleton cleanup (MED-M3)
-- [x] **MEM-05**: SSEClient observer removal in cleanup() (MED-M4)
-- [x] **MEM-06**: TeamsExecutorService NSTask held 5s post-termination (LOW-M1)
-- [x] **MEM-07**: DispatchWorkItem timeout NSTask/Pipe 300s without cancel (LOW-M2)
-- [x] **MEM-08**: AppLogger flush timer false positive documented (LOW-M3)
-
-### SwiftUI Performance
-
-- [x] **UIPERF-01**: TunnelSettingsView CIFilter QR generation verified off-thread (H-SP2)
-- [x] **UIPERF-02**: MacSessionsListView local computed filter cached (MED-SP1)
-- [x] **UIPERF-03**: MacProjectsListView local computed filter cached (MED-SP2)
-- [x] **UIPERF-04**: ToolCallAccordion repeated .contains() per tick replaced (MED-SP3)
-- [x] **UIPERF-05**: BrowserView non-lazy VStack converted to lazy (MED-SP4)
-- [x] **UIPERF-06**: Duplicate formatModelName() uses shared ClaudeModel.displayName (LOW-SP1)
-
-### Swift 6 Preparation
-
-- [x] **SWIFT6-01**: ClaudeExecutorService.useAgentSDK mutable static var resolved for strict concurrency
-- [x] **SWIFT6-02**: TeamsExecutorService.shutdownTeammate non-Sendable Process crossing resolved
-- [x] **SWIFT6-03**: Build verified with -strict-concurrency=targeted (no new errors introduced)
-
-**v1.5 Coverage:** 50/50 requirements complete (shipped 2026-02-24)
-
-</details>
-
-## Out of Scope (v3.1)
+## Out of Scope (v5.0)
 
 | Feature | Reason |
 |---------|--------|
+| macOS feature parity (keyboard shortcuts, drag-drop, Handoff) | User deferred to v6.0 during milestone init |
 | App Store submission | Separate milestone |
-| Android/web platform support | Not applicable |
+| Android/web platform support | Out of product scope |
+| Certificate pinning | Local-first usage model makes this unnecessary |
+| Testing infrastructure | Per project rules: no mocks, stubs, test doubles, or unit tests |
+| RTL/Arabic layout | Low user demand |
 | Full Swift 6 strict mode | Already at `targeted` level |
-| Backend rewrite | Incremental changes only as needed |
-| Scope waterfall visualiser | Deferred to v3.2+ (needs significant new API) |
-| GitHub README preview before install | Deferred to v3.1.x (needs new endpoint) |
-| Install progress with backend log streaming | Deferred to v3.2+ (needs SSE endpoint) |
 
-## Traceability (v3.1)
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| NAV-01 | 33 | Open |
-| NAV-02 | 33 | Open |
-| NAV-03 | 33 | Open |
-| NAV-04 | 33 | Open |
-| NAV-05 | 33 | Open |
-| HP-01 | 34 | Open |
-| HP-02 | 34 | Open |
-| HP-03 | 34 | Open |
-| HP-04 | 34 | Open |
-| HP-05 | 34 | Open |
-| CFG-01 | 35 | Open |
-| CFG-02 | 35 | Open |
-| CFG-03 | 35 | Open |
-| CFG-04 | 35 | Open |
-| CFG-05 | 35 | Open |
-| CFG-06 | 35 | Open |
-| CFG-07 | 35 | Open |
-| BRW-01 | 36 | Open |
-| BRW-02 | 36 | Open |
-| BRW-03 | 36 | Open |
-| BRW-04 | 36 | Open |
-| BRW-05 | 36 | Open |
-| BRW-06 | 36 | Open |
-| BRW-07 | 36 | Open |
-| BRW-08 | 36 | Open |
-| SYS-01 | 37 | Open |
-| SYS-02 | 37 | Open |
-| SYS-03 | 37 | Open |
-| XP-01 | 38 | Open |
-| XP-02 | 38 | Open |
-| XP-03 | 38 | Open |
+| FOUND-01 | Phase 49 | Pending |
+| FOUND-02 | Phase 54 | Pending |
+| FOUND-03 | Phase 49 | Pending |
+| CFG-01 | Phase 51 | Complete |
+| CFG-02 | Phase 51 | Complete |
+| CFG-03 | Phase 51 | Complete |
+| SKILL-01 | Phase 53 | Complete |
+| SKILL-02 | Phase 53 | Complete |
+| SKILL-03 | Phase 53 | Complete |
+| SKILL-04 | Phase 53 | Complete |
+| SKILL-05 | Phase 52 | Complete |
+| SKILL-06 | Phase 52 | Complete |
+| SKILL-07 | Phase 52 | Complete |
+| PROF-01 | Phase 54 | Pending |
+| PROF-02 | Phase 54 | Pending |
+| NAV-01 | Phase 54 | Pending |
+| NAV-02 | Phase 54 | Pending |
+| API-01 | Phase 50 | Complete |
+| API-02 | Phase 50 | Complete |
+| GATE-01 | Phase 55 | Pending |
+| GATE-02 | Phase 55 | Pending |
+| GATE-03 | Phase 55 | Pending |
+| GATE-04 | Phase 56 | Pending |
+| GATE-05 | Phase 56 | Pending |
 
 **Coverage:**
-- v3.1 requirements: 31 total
-- Mapped to phases: 31/31 (100%)
-- Complete: 0
-- Open: 31
+- v5.0 requirements: 24 total
+- Mapped to phases: 24
+- Unmapped: 0
 
 ---
-*Requirements defined: 2026-02-24*
-*Last updated: 2026-02-24 — v3.1 milestone started*
+*Requirements defined: 2026-02-27*
+*Last updated: 2026-02-27 after roadmap creation -- traceability complete*

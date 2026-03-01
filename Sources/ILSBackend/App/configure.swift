@@ -31,7 +31,7 @@ func configure(_ app: Application) async throws {
         allowedMethods: [.GET, .POST, .PUT, .DELETE, .PATCH, .OPTIONS],
         allowedHeaders: [
             .accept, .authorization, .contentType, .origin, .xRequestedWith,
-            .init("X-Session-ID"), .init("X-Project-ID")
+            .init("X-Session-ID"), .init("X-Project-ID"), .init("X-Admin-Token")
         ],
         allowCredentials: true
     )
@@ -51,8 +51,9 @@ func configure(_ app: Application) async throws {
     let rateLimitStorage = RateLimitStorage()
     app.middleware.use(RateLimitMiddleware(storage: rateLimitStorage))
 
-    // Request size limits
-    app.routes.defaultMaxBodySize = "10mb"
+    // Request size limits (configurable via ILS_MAX_BODY_MB env var, default: 10)
+    let maxBodyMB = Int(Environment.get("ILS_MAX_BODY_MB") ?? "10") ?? 10
+    app.routes.defaultMaxBodySize = .init(integerLiteral: maxBodyMB * 1_048_576)
 
     // Database configuration
     // SQLiteConfiguration.enableForeignKeys defaults to true, which issues
@@ -78,6 +79,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateFleetHosts())
     // v3.0 — Performance indexes
     app.migrations.add(AddDatabaseIndexes())
+    // v4.0 — Ecosystem polish
+    app.migrations.add(AddMeshGradientToThemes())
 
     // Run migrations
     try await app.autoMigrate()

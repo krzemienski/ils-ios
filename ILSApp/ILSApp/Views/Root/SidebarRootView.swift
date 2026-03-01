@@ -143,8 +143,9 @@ struct SidebarRootView: View {
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let screen = intent else { return }
 
-            // Handle browser segment intent for deep links
-            if case .browser = screen, let segmentIntent = appState.browserSegmentIntent {
+            // Consume browser segment intent BEFORE setting activeScreen so that
+            // BrowserView receives the correct initialSegment and a fresh .id().
+            if screen == .browser, let segmentIntent = appState.browserSegmentIntent {
                 browserSegment = segmentIntent
                 appState.browserSegmentIntent = nil
             }
@@ -286,6 +287,9 @@ struct SidebarRootView: View {
                     hooksScreen
                 }
             }
+            .id(activeScreen.storageKey)
+            .transition(.opacity)
+            .animation(reduceMotion ? .none : .easeInOut(duration: 0.2), value: activeScreen)
             .safeAreaInset(edge: .top, spacing: 0) {
                 OfflineIndicator(isOffline: appState.isOffline)
                     .animation(
@@ -390,6 +394,7 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var browserScreen: some View {
         BrowserView(initialSegment: browserSegment)
+            .id(browserSegment)
     }
 
     @ViewBuilder
@@ -404,7 +409,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private var themesScreen: some View {
-        ThemesListView()
+        ThemePickerView()
     }
 
     @ViewBuilder

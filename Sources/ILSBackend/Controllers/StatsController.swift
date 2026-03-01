@@ -125,7 +125,7 @@ struct StatsController: RouteCollection {
     /// GET /settings - Get raw settings from ~/.claude/settings.json
     @Sendable
     func settings(req: Request) async throws -> APIResponse<ClaudeConfig> {
-        let config = try fileSystem.readConfig(scope: "user")
+        let config = try fileSystem.readConfig(scope: .user)
         return APIResponse(
             success: true,
             data: config.content

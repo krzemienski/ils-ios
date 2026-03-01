@@ -4,14 +4,11 @@ import ILSShared
 
 @Observable
 @MainActor
-class DashboardViewModel {
+class DashboardViewModel: BaseViewModel {
     var stats: StatsResponse?
     var recentSessions: [ChatSession] = []
-    var isLoading = false
-    var error: Error?
     var totalCost: Double = 0.0
-
-    private var client: APIClient?
+    var lastUpdated: Date?
 
     // Sparkline data (synthetic from recent sessions for visual interest)
     var sessionSparkline: [Double] { generateSparkline(count: 8, seed: stats?.sessions.total ?? 0) }
@@ -22,12 +19,6 @@ class DashboardViewModel {
     /// Formatted total cost as "$X.XX"
     var formattedTotalCost: String {
         String(format: "$%.2f", totalCost)
-    }
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
     }
 
     /// Empty state text for UI display
@@ -82,6 +73,7 @@ class DashboardViewModel {
             let response: APIResponse<StatsResponse> = try await client.get("/stats")
             if let data = response.data {
                 stats = data
+                lastUpdated = Date()
             }
         } catch {
             self.error = error

@@ -4,7 +4,7 @@ import ILSShared
 struct ConfigEditorView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) private var appState
-    let scope: String
+    let scope: ConfigScope
     @State private var viewModel = ConfigEditorViewModel()
     @State private var configText = ""
     @State private var originalConfigText = ""
@@ -57,7 +57,7 @@ struct ConfigEditorView: View {
             }
         }
         .background(theme.bgPrimary)
-        .navigationTitle("\(scope.capitalized) Settings")
+        .navigationTitle("\(scope.rawValue.capitalized) Settings")
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif

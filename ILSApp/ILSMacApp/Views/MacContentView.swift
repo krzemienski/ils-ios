@@ -51,12 +51,15 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 // enables deep link handling across platforms via the same route definitions.
 struct MacContentView: View {
     @Environment(AppState.self) var appState
+    @Environment(ThemeManager.self) private var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
     @State private var activeScreen: ActiveScreen = .home
+    /// Initial segment selection forwarded to ``BrowserView`` when navigation is triggered via deep link.
+    @State private var browserSegment: BrowserSegment = .mcp
 
     /// Comma-separated project names whose DisclosureGroups are expanded, persisted across app launches.
     @AppStorage("macExpandedProjects") private var expandedProjectsStorage: String = ""
@@ -98,6 +101,9 @@ struct MacContentView: View {
             sessionsViewModel.configure(client: appState.apiClient)
             await sessionsViewModel.loadProjectGroups()
 
+            // Load custom themes from backend on cold start (parity with iOS SidebarRootView)
+            await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
+
             // Index sessions in Spotlight after loading
             let allSessions = sessionsViewModel.projectSessions.values.flatMap { $0 }
             SpotlightIndexer.shared.indexSessions(Array(allSessions))
@@ -106,9 +112,24 @@ struct MacContentView: View {
             guard let intent else { return }
             handleNavigationIntent(intent)
         }
+        .onChange(of: appState.serverURL) { _, _ in
+            sessionsViewModel.configure(client: appState.apiClient)
+            Task {
+                await sessionsViewModel.loadProjectGroups()
+                await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
+            }
+        }
+        .onChange(of: activeScreen) { _, newScreen in
+            switch newScreen {
+            case .home, .chat:
+                columnVisibility = .all
+            default:
+                columnVisibility = .doubleColumn
+            }
+        }
         // Observe menu bar command notifications
         .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
-            let newSession = ChatSession(name: "New Session", model: "sonnet")
+            let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
             activeScreen = .chat(newSession)
         }
         .onReceive(NotificationCenter.default.publisher(for: .ilsNavigateTo)) { notification in
@@ -150,11 +171,26 @@ struct MacContentView: View {
                 }
             }
         }
+        // A4: Handle notification tap from NotificationManager — navigate to the session
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenSessionFromNotification"))) { notification in
+            guard let sessionId = notification.object as? UUID else { return }
+            Task {
+                do {
+                    let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString)")
+                    if let session = response.data {
+                        activeScreen = .chat(session)
+                        selectedSection = .home
+                    }
+                } catch {
+                    // Session not found or network error — ignore and let app stay on current screen
+                }
+            }
+        }
         .onKeyPress(.init("/")) {
             isSearchFocused = true
             return .handled
         }
-        .sheet(isPresented: Bindable(appState).showOnboarding) {
+        .sheet(isPresented: $appState.showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)
@@ -195,6 +231,22 @@ struct MacContentView: View {
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Connection status")
+                    .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
+
+                    // Active host indicator
+                    if let hostName = appState.activeHostName {
+                        HStack(spacing: theme.spacingXS) {
+                            Image(systemName: "desktopcomputer")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                            Text(hostName)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                                .lineLimit(1)
+                        }
                     }
                 }
                 .padding(.vertical, theme.spacingSM)
@@ -246,9 +298,15 @@ struct MacContentView: View {
                     .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
-                Text("\(sessionsViewModel.totalCount)")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
+                if !sessionsViewModel.debouncedSearchText.isEmpty {
+                    Text("\(sessionsViewModel.filteredCount) of \(sessionsViewModel.totalCount)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                } else {
+                    Text("\(sessionsViewModel.totalCount)")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.top, theme.spacingMD)
@@ -264,9 +322,12 @@ struct MacContentView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .focused($isSearchFocused)
+                    .onChange(of: sessionsViewModel.searchText) { _, _ in
+                        sessionsViewModel.scheduleSearchDebounce()
+                    }
                 if !sessionsViewModel.searchText.isEmpty {
                     Button {
-                        sessionsViewModel.searchText = ""
+                        sessionsViewModel.clearSearch()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -303,7 +364,7 @@ struct MacContentView: View {
 
             // New Session button
             Button {
-                let newSession = ChatSession(name: "New Session", model: "sonnet")
+                let newSession = ChatSession(name: "New Session", model: AppConstants.defaultModel)
                 activeScreen = .chat(newSession)
             } label: {
                 HStack(spacing: theme.spacingSM) {
@@ -340,13 +401,14 @@ struct MacContentView: View {
                 }
             )
         case .chat(let session):
-            ChatView(session: session)
+            MacChatView(session: session)
         case .system:
             SystemMonitorView()
         case .settings:
-            SettingsView()
+            MacSettingsView()
         case .browser:
-            BrowserView()
+            BrowserView(initialSegment: browserSegment)
+                .id(browserSegment)
         case .teams:
             AgentTeamsListView(apiClient: appState.apiClient)
         case .hostProfiles:
@@ -543,8 +605,15 @@ struct MacContentView: View {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 encoder.dateEncodingStrategy = .iso8601
-                if let data = try? encoder.encode(session) {
-                    try? data.write(to: url)
+                do {
+                    let data = try encoder.encode(session)
+                    try data.write(to: url)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save JSON: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
                 }
             }
         }
@@ -572,12 +641,27 @@ struct MacContentView: View {
                     md += "- **Project:** \(projectName)\n"
                 }
                 md += "\n---\n"
-                try? md.write(to: url, atomically: true, encoding: .utf8)
+                do {
+                    try md.write(to: url, atomically: true, encoding: .utf8)
+                } catch {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "Could not save Markdown: \(error.localizedDescription)"
+                    alert.alertStyle = .warning
+                    alert.runModal()
+                }
             }
         }
     }
 
     private func handleNavigationIntent(_ intent: ActiveScreen) {
+        // Consume browser segment intent BEFORE setting activeScreen so that
+        // BrowserView receives the correct initialSegment and a fresh .id().
+        if intent == .browser, let segmentIntent = appState.browserSegmentIntent {
+            browserSegment = segmentIntent
+            appState.browserSegmentIntent = nil
+        }
+
         // Sync sidebar selection for non-chat screens
         switch intent {
         case .home: selectedSection = .home
@@ -625,6 +709,7 @@ struct MacSessionRow: View {
         }
         .padding(.vertical, theme.spacingXS)
     }
+
 }
 
 #Preview {

@@ -71,7 +71,8 @@ struct ThemesController: RouteCollection {
             typography: input.typography,
             spacing: input.spacing,
             cornerRadius: input.cornerRadius,
-            shadows: input.shadows
+            shadows: input.shadows,
+            meshGradient: input.meshGradient
         )
 
         try await theme.save(on: req.db)
@@ -151,6 +152,9 @@ struct ThemesController: RouteCollection {
         }
         if let shadows = input.shadows {
             theme.shadows = shadows
+        }
+        if let meshGradient = input.meshGradient {
+            theme.meshGradient = meshGradient
         }
 
         try await theme.save(on: req.db)

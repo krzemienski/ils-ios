@@ -1,334 +1,302 @@
-# Feature Research
+# Feature Landscape
 
-**Domain:** Native iOS/macOS client for Claude Code CLI — v3.1 new feature areas
-**Researched:** 2026-02-24
-**Confidence:** HIGH (grounded in existing codebase + Claude Code docs + iOS HIG + web research)
+**Domain:** Native iOS/macOS client for Claude Code (v5.0 new features)
+**Researched:** 2026-02-27
+**Overall confidence:** HIGH
 
----
+## Scope
 
-## Scope Framing
+This document covers the five v5.0 feature domains:
 
-This research covers the **four new feature areas** added in v3.1. Existing functionality (chat,
-sessions, themes, system monitor, etc.) is already built and out of scope here. The question
-per feature area is: what does the user expect, what differentiates us, and what should we
-explicitly not build?
+1. Config inheritance (CLI -> backend -> mobile settings cascade)
+2. GitHub browse/install (skill/plugin marketplace)
+3. Hooks management (CRUD operations for Claude Code hooks)
+4. macOS parity (platform-specific features)
+5. Profile switching (host profile cascade through settings)
 
-Feature areas researched:
-1. Host CLI config sync with inheritance indicators
-2. GitHub skill/plugin browse-and-install
-3. Host Profiles redesign (multi-host switching, context reload)
-4. Navigation/UX overhaul (side menu, back button, home layout)
+Features are assessed against what already exists in ILS (substantial app with 10+ screens, 19 view models, 16 backend controllers, 13 themes, premium gating, and basic versions of hooks display, fleet/host profiles, and config editing).
 
 ---
 
-## Feature Landscape
+## Table Stakes
 
-### 1. Host CLI Config Sync / Inheritance
+Features users expect from a Claude Code management client at this maturity level. Missing any of these makes the app feel incomplete relative to what the CLI already provides.
 
-#### Table Stakes (Users Expect These)
+### 1. Config Inheritance Visualization
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Display current effective config values pulled from host | App showing settings that differ from the CLI loses user trust immediately | LOW | Backend `/config?scope=user` exists; `SettingsViewModel.loadConfig()` already fetches it |
-| Show which scope owns each value (user / project / enterprise) | Claude Code has a 6-level precedence chain (Enterprise > CLI > Local Project > Shared Project > User > Defaults); users need to know why a value is what it is | MEDIUM | `ConfigInfo` already carries `scope` and `path`; need to surface per-field, not just per-file |
-| "Host Default" badge on inherited (nil) fields | Signals "this is not your override" at a glance without requiring docs | LOW | `InheritanceBadge` already exists in `SettingsConfigSection`; pattern needs to be applied consistently to ALL settings fields, not only model and two toggles |
-| "Custom" badge on overridden fields | Signals "you changed this" so user can find and revert their overrides | LOW | Same `InheritanceBadge` component, `isInherited: false` branch already styled |
-| Refresh config on reconnect / host switch | Settings must reload when the active host changes or connection drops/recovers | LOW | `loadConfig()` already called in `loadAll()` on `.task`; needs `onChange(appState.isConnected)` trigger consistently |
-| Explanatory tooltip per setting | Users unfamiliar with Claude Code CLI options need context for each field | LOW | `SettingsInfoButton` popover already built; coverage is partial — needs to reach every field |
+| Multi-scope config loading (user/project/local) | Claude Code CLI has 4+ scopes; mobile must show all | Medium | Existing `ConfigController`, `ConfigScope` enum |
+| "Inherited" vs "Overridden" badges per setting | Users need to see where a value comes from and what it overrides | Medium | Existing `ConfigOverride` DTO (already has `winningScope`, `userValue`, `projectValue`, `localValue`) |
+| Scope picker in config editor | User must choose which scope to edit (user vs project vs local) | Low | Existing `ConfigEditorView` with `scope` parameter |
+| Merged/effective config view | Show the final computed config after all scopes merge | Medium | New backend endpoint to return merged config |
+| Read-only display for managed scope | Managed settings cannot be overridden; show them locked | Low | New `managed` case in `ConfigScope` enum |
 
-#### Differentiators (Competitive Advantage)
+**Why table stakes:** The CLI's `/status` command already shows settings and their source scopes. The mobile client currently only fetches one scope at a time (`/config?scope=user`). Users who manage settings across multiple projects will be confused if the mobile app doesn't show where values actually come from.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| System prompt field displayed (read-only if inherited) | System prompt is the most impactful config key for power users; it is not rendered in Settings at all today | MEDIUM | `ClaudeConfig.systemPrompt` exists in `ILSShared`; add a read-only text block with InheritanceBadge |
-| Inline edit of user-scope settings with immediate round-trip save | Write-back closes the "read-only observer" gap; users expect iOS Settings to be editable, not just a mirror | MEDIUM | `saveConfig()` and `saveConfigToggle()` already exist; need to wire remaining fields (system prompt, env vars, status line) |
-| Project-scope config section alongside user-scope | Power CLI users work in multiple projects with different settings; seeing both scopes is expected by anyone who uses `claude config --project` | MEDIUM | `loadConfig(scope: "project")` already takes a scope param; need a scope-picker tab or dual-section layout in SettingsConfigSection |
-| Scope waterfall visualiser — show all three layers for one key with override arrows | Makes the inheritance chain tangible; no other Claude Code client does this | HIGH | Needs backend to return merged + per-scope values simultaneously; significant new API work; defer to v3.2+ |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| API key editing from the iOS app | Users want a single pane of glass | Security: API keys must not transit through ILS backend in plaintext; Keychain storage on the host is correct | Show masked key + source (env var, config file); provide the `claude config set apiKey` terminal command hint |
-| Full raw JSON editor as the primary config UI | Power users want direct access | Raw JSON is error-prone with no schema validation; one syntax error silently breaks Claude Code sessions | Keep existing `ConfigEditorView` as an advanced opt-in; default UI uses structured fields with badges |
-| Automatic config write-back without confirmation | Seamless experience | Silently overwriting project-scope config (checked into git) affects teammates | Show confirmation sheet noting scope and file path before saving; distinguish user vs project scope writes |
-
----
-
-### 2. GitHub Skill/Plugin Browse and Install
-
-#### Table Stakes (Users Expect These)
+### 2. Hooks Read/Display with Full Event Type Coverage
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Search GitHub for skills by keyword | Users expect to find skills the way they find npm packages — search first, browse second | LOW | `SkillsViewModel.searchGitHub()` → `GET /skills/search?q=` already implemented; UI section `githubBrowseSection` exists in `BrowserView` |
-| Display result name, description, star count, repo path | Same metadata pattern as App Store or npm; stars = social proof | LOW | `GitHubSearchResult` model carries all four fields; `gitHubResultRow()` renders them |
-| One-tap install with per-item progress indicator | Friction-free install is the baseline expectation; a multi-step wizard is a differentiator, not a requirement | MEDIUM | `installFromGitHub()` → `POST /skills/install` exists; currently uses global `isLoading` flag, blocking the entire list during any install |
-| Per-item install spinner (not global spinner) | If the spinner blocks the entire list, users cannot browse while installing | MEDIUM | Need `installingSkills: Set<String>` in `SkillsViewModel` — mirrors the `installingPlugins: Set<String>` pattern already in `PluginsViewModel` |
-| Post-install "Installed" state badge on result row | User needs confirmation without leaving the browse list | MEDIUM | No installed-state tracking on `gitHubResultRow()`; compare result.repository against installed `skills` array |
-| Plugin GitHub browse (not just skills) | Plugins and skills both come from GitHub repos; users expect symmetry between the two tabs | MEDIUM | `PluginsViewModel.searchMarketplace()` and `addMarketplace()` exist; no GitHub browse UI in the Plugins tab yet — skills tab has it, plugins do not |
-| Enable/disable installed skill or plugin from Browse | After install, users want to control active state without navigating to a separate detail screen | LOW | Skill toggle: `toggleSkillActive()` exists. Plugin enable/disable: `enablePlugin()/disablePlugin()` exist. Both need an inline toggle in the row or detail sheet |
+| Display all 16 hook event types | Claude Code now has 16 event types; ILS only shows 5 | Low | Existing `HooksConfig` model needs new fields |
+| Hook type badges (command/prompt/agent/http) | Four hook types exist; users need to see which is configured | Low | Existing `HookDefinition` model (add `type` variants) |
+| Matcher pattern display with regex highlighting | Matchers are regexes that control when hooks fire; crucial context | Low | Already displayed but could use syntax highlighting |
+| Hook source/scope indicator | Show whether hook came from user, project, local, or plugin | Medium | Need scope info from backend per hook group |
+| Expandable hook detail with full JSON preview | Power users want to see the raw hook config for debugging | Low | Existing `GlassCard` pattern + JSON formatter |
 
-#### Differentiators (Competitive Advantage)
+**Why table stakes:** The current `HooksManagementView` is read-only and shows only 5 of the 16 event types (`SessionStart`, `SubagentStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`). Missing: `PermissionRequest`, `PostToolUseFailure`, `Notification`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `SessionEnd`. Users configure hooks in their settings files and need to verify they're correct. Without seeing all event types, hook debugging requires switching back to the CLI.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Uninstall from Browse tab via context menu | Closes the install/uninstall loop without requiring the detail view | LOW | `deleteSkill()` and `uninstallPlugin()` exist; add `.contextMenu` with "Remove" on installed rows |
-| Trending / featured skills list (stars-sorted default query) | Discovery without search intent — browse mode for users who do not know what they want | MEDIUM | Backend can return a default query (e.g. `topic:claude-skill sort:stars`); no new GitHub API work required |
-| GitHub repo README preview before install | Reduces blind installs — user can see what the skill does before committing | HIGH | Needs new backend endpoint to fetch README markdown; render using existing `MarkdownTextView`; defer to v3.1.x |
-| Install progress with backend log streaming | Long-running git clone shows real progress instead of a blocking spinner | HIGH | Requires SSE endpoint for install operations; significant backend work; defer to v3.2+ |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| App Store-style review/rating system for skills | Makes the marketplace feel legitimate | Requires a hosted review backend, moderation, and accounts — out of scope for a dev tool client | Show GitHub stars as social proof; link to GitHub Issues for community feedback |
-| Automatic update checks for installed skills | "Keep skills up to date" sounds good | Silently pulling new skill versions can break saved prompts; Claude Code CLI treats skills as local files the user owns | Surface "newer version available" badge and let user pull manually |
-| Browse arbitrary GitHub repos as a general file browser | Power users want raw GitHub access | Scope creep that duplicates GitHub.com; adds complexity without native value | Keep scope to repos tagged for Claude Code skills/plugins |
-
----
-
-### 3. Host Profiles Redesign (Multi-Host Switching)
-
-#### Table Stakes (Users Expect These)
+### 3. Plugin/Skill Browser with Enhanced Metadata
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Active profile indicator visible on the list row | Users need instant visual confirmation of "which host am I on" | LOW | `HostProfilesView.hostProfileRow()` already shows an "Active" capsule badge when `host.id == viewModel.activeHostId` — this is done |
-| One-tap host switch with immediate feedback | Switching hosts is a primary action; it must not require navigating into detail | LOW | `viewModel.activate(id)` fires `POST /fleet/{id}/activate` and updates `activeHostId` locally — this is done |
-| App-wide context reload on host switch | After switching hosts, sessions, skills, plugins, and config must all reflect the new host | HIGH | Critical missing piece: `activate()` updates the backend but `AppState.apiClient` still points to the old host URL; need to propagate the switch to `AppState` and trigger reload of all ViewModels |
-| Health status badge per host | Users with multiple hosts need to see which are reachable before switching | LOW | Health polling already works (`startHealthPolling()` / `refreshAllHealth()`); colored dot renders via `healthBadge()` |
-| Add new host flow | Without adding hosts, the screen is an empty state | LOW | `SSHSetupView` exists and is linked from the toolbar `+` button |
-| Remove host with destructive confirmation | Accidental deletions are not recoverable | LOW | `viewModel.remove(id)` exists in context menu; no confirmation sheet today |
-| Empty state with onboarding prompt | First-launch experience when no hosts exist | LOW | `EmptyEntityState` already renders with "Add a host profile" description |
+| Browse installed plugins with version, author, description | Users need to see what plugins are active and their metadata | Low | Existing `PluginsViewModel`, `PluginConfigView` (partially built in Phase 47 ECO-01) |
+| Browse installed skills with frontmatter info | Skills are the primary extensibility mechanism; need visibility into `disable-model-invocation`, `allowed-tools`, `context` | Medium | Existing skill detail view needs frontmatter parsing |
+| Search across skills by name/description/keyword | 1000+ skills exist; search is mandatory | Low | Already implemented in `BrowserView` |
+| Plugin update available indicator | Users need to know when newer versions exist | Low | Existing plugin versioning (ECO-01 from v4.0) has update check endpoint |
+| Skill detail view showing invocation type | Show whether skill is user-invocable, model-invocable, or both | Medium | Parse frontmatter from SKILL.md content |
 
-#### Differentiators (Competitive Advantage)
+**Why table stakes:** The browser already shows skills, plugins, and MCP servers. But the Claude Code ecosystem has matured significantly with the marketplace system, plugin manifests (`plugin.json`), and skill frontmatter. The mobile app needs to surface this richer metadata to match what CLI users see via `/plugin list` and `/skills`.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Quick-switch from sidebar header or persistent toolbar | Switching hosts is a cross-cutting concern; burying it behind a screen is a UX tax on power users with many hosts | MEDIUM | Add a host-picker `Menu` to the sidebar header; no new ViewModel needed, surface `activate()` from an always-accessible point |
-| Per-host config preview on profile detail | Show a read-only summary of the target host's effective Claude Code config before committing the switch | MEDIUM | Needs a temporary `APIClient` pointed at the new host's URL to fetch `/config` before activating |
-| Connection test before switch ("Can I reach this host?") | Prevents switching to an unreachable host and being stuck in an error state | LOW | `HostProfileDetailView` has lifecycle Start/Stop/Restart; a health check ping before `activate()` is straightforward |
-| Last-connected timestamp per host | Surfaces which hosts are actively used vs stale | LOW | `lastHealthCheck` already on `FleetHost`; show "Last seen: 3 min ago" on each row |
-
-#### Anti-Features
-
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Simultaneous multi-host view (merged sessions from all hosts) | "See everything at once" | Requires multiplexed API clients, cross-host identity disambiguation, and data model changes — massive complexity | Show sessions filtered to the active host; let users switch to browse another host's sessions |
-| Auto-switch to the fastest or healthiest host | Intelligent routing | Silently switching active hosts mid-session is disorienting; users lose track of where their work lives | Surface health status prominently; let users manually switch with one tap |
-| Host groups or tags | Organisation for power users with many hosts | Adds UI complexity that benefits very few users at current scale | Sort hosts alphabetically with active host always first |
-
----
-
-### 4. Navigation / UX Overhaul
-
-#### Table Stakes (Users Expect These)
+### 4. macOS Keyboard Shortcuts
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Hamburger menu accessible from every screen at every navigation depth | If a user navigates deep into a Chat view, they expect to reach the sidebar without back-tapping through the entire stack | LOW | `SidebarRootView` adds the hamburger to the `NavigationStack` toolbar; the issue is that `ChatView` can push sub-views (e.g. `SkillDetailView`) onto the stack, where the toolbar back button visually competes with the hamburger — needs verification and fix at all depths |
-| Back button in ChatView returning to the originating screen | Users navigate into Chat from Home or Sessions; tapping back should return them there, not swap to a blank home state | HIGH | `ActiveScreen` is a flat enum — there is no navigation history between screens; switching `activeScreen` to `.chat(session)` loses the origin; requires NavigationPath approach |
-| Home screen layout correct and current | Home is the entry point; stale stats or broken layout degrades first impressions | LOW | `HomeView` exists; layout audit needed for spacing, empty states, and stat card accuracy |
-| Session list count on Home matches actual data | The stat card must match `/sessions` endpoint count | LOW | `DashboardViewModel` loads from `/stats`; verify against actual session count |
-| Side menu swipe gesture from left edge on all screens | iOS users expect the left-edge swipe to open the sidebar — it is a platform convention | LOW | `edgeSwipeGesture` already implemented in `SidebarRootView` with 30pt edge zone; verify it works from within ChatView and nested sub-views |
-| Consistent `.inlineNavigationBarTitle()` on all screens | Large title vs inline title mismatch between screens looks unpolished and unintentional | LOW | Most screens already call `.inlineNavigationBarTitle()`; audit for missing instances in the nine `ActiveScreen` destinations |
+| Cmd+N for new session | Standard macOS shortcut | Low | Existing `NotificationCenter` publisher `.ilsCreateNewSession` |
+| Cmd+F for search/filter | Standard find shortcut; should focus search field | Low | Existing `isSearchFocused` state + `/` key handler in `MacContentView` |
+| Cmd+, for Settings | Universal macOS Settings shortcut | Low | Existing `MacSettingsView` |
+| Cmd+1/2/3... for sidebar sections | Standard sidebar navigation | Low | Existing `SidebarSection` enum with 8 cases |
+| Cmd+W to close session/window | Standard close shortcut | Low | Existing `WindowManager` |
+| Cmd+Shift+N for new window | Standard new-window shortcut | Low | Existing `openSessionWindow()` |
 
-#### Differentiators (Competitive Advantage)
+**Why table stakes:** macOS users muscle-memory these shortcuts. The app already handles `/` for search focus and has `NotificationCenter` publishers for menu commands, but keyboard shortcuts are not wired to SwiftUI `.keyboardShortcut()` modifiers on `Commands` menu items. This is the bare minimum for feeling like a real Mac app.
+
+### 5. macOS Menu Bar Integration
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| File menu with New Session, Close Window | Standard macOS File menu | Low | Standard SwiftUI `Commands` |
+| Edit menu with standard Cut/Copy/Paste/Select All | SwiftUI provides defaults but needs verification | Low | Standard SwiftUI |
+| View menu with sidebar toggle | Standard macOS View menu pattern | Low | Existing `columnVisibility` state |
+| Session menu with Rename/Fork/Export/Delete | Already wired via NotificationCenter publishers | Low | Existing `.ilsRenameSession`, `.ilsForkSession`, etc. |
+| Window menu with standard management | Multiple windows via `WindowManager.shared` | Low | Existing `SessionWindowView` |
+
+**Why table stakes:** The macOS app already posts notifications for session operations and handles them in `MacContentView.onReceive()`. But these are programmatic triggers, not proper `Commands` menu items with keyboard shortcuts visible in the menu bar. Users expect to see and discover these through the menu.
+
+### 6. Host Profile Activation Cascades Settings
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Switching host reloads config from new backend | When active host changes, all settings should refresh | Medium | Existing `HostProfilesViewModel.activate()` calls `appState.updateServerURL()` |
+| Config scope shows host-specific context | After switching hosts, config viewer should reflect that host's settings | Low | Existing `ConfigController` reads from filesystem on backend side |
+| Active host indicator in Settings | Settings should show which host's config is being displayed/edited | Low | Existing `appState.activeHostName` |
+| Hooks reload on host switch | Different hosts may have different hooks configured | Low | Existing `onChange(of: appState.serverURL)` in `HooksManagementView` |
+
+**Why table stakes:** The existing `HostProfilesViewModel.activate()` already updates the server URL and triggers reloads via `appState.updateServerURL()`. Most views have `onChange(of: appState.serverURL)` handlers that refresh data. But the Settings and Config views don't visually acknowledge that their content is now from a different host. Users will be confused editing settings without knowing which backend they apply to.
+
+---
+
+## Differentiators
+
+Features that set the app apart from using the CLI directly. Not expected, but create real value.
+
+### 1. Config Diff View
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| NavigationPath-based chat navigation (chat as a pushed view, not a screen swap) | Enables a real "back to sessions" system back button instead of the current screen-swap model; matches iOS platform feel exactly | HIGH | Requires changing `ActiveScreen.chat` from a root-level enum case to a `navigationPath.append()` push; affects `SidebarRootView`, `HomeView`, `ChatView`; `@SceneStorage` chat restoration logic (`lastChatSessionId`) must be rethought |
-| Quick-action in Chat to start new session or switch project | Reduces round-trips from Chat back to Home | MEDIUM | Chat toolbar already has a menu; extend rather than redesign |
-| macOS keyboard shortcuts for sidebar navigation (Cmd+1…Cmd+9) | macOS users expect keyboard navigation as a first-class interaction | LOW | `.keyboardShortcut()` on sidebar items; macOS `NavigationSplitView` is already persistent |
+| Side-by-side scope comparison | Visually compare user vs project vs local config | High | New UI component, three concurrent API calls |
+| Highlight conflicts/overrides | Color-code settings overridden at a more specific scope | Medium | Existing `ConfigOverride` DTO provides all data needed |
+| "What would change?" preview | Before saving, show which effective settings would change | High | Config merge logic on backend or client |
 
-#### Anti-Features
+**Value:** No CLI equivalent exists. The CLI's `/status` shows current effective values but not a visual comparison across scopes. This is a unique mobile/desktop advantage over terminal UX.
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Tab bar replacing the sidebar | "Tabs are more discoverable" | The app has 9+ screens; iOS tab bar supports 5 before "More" degrades UX; sidebar was deliberately chosen for this app's information architecture | Keep sidebar; improve discoverability by showing screen names alongside icons in the sidebar |
-| Breadcrumb trail across navigation levels | Users want to know "where they are" | Breadcrumbs duplicate what NavigationStack's title and back button already communicate; adds visual clutter | Use inline navigation titles consistently; back button label shows the parent screen name automatically |
-| Swipe-left/right to navigate between peer screens | "Feels fluid" | Peer-level swipe conflicts with list swipe-to-delete, scroll views, and the sidebar swipe gesture — creates gesture ambiguity | Sidebar handles peer-level navigation; swipe is reserved for within-screen actions |
+### 2. Hooks CRUD (Create/Update/Delete)
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Create new hook via form UI | Add hooks without hand-editing JSON -- select event type, set matcher, define command | High | New `HookEditorView`, backend `PUT /config` with hook mutations |
+| Edit existing hook inline | Modify command, matcher, or type without opening a text editor | Medium | Parse and re-serialize hooks within `ClaudeConfig` |
+| Delete hook with confirmation | Remove hooks safely | Medium | Config write with hooks removed |
+| Toggle hook enabled/disabled | Temporarily disable a hook without deleting it | Medium | No native Claude Code concept; would need app-level convention |
+| Hook execution log/history | See when hooks fired, exit codes, duration | High | Requires new backend endpoint or log file parsing |
+
+**Value:** Editing hooks currently requires manually editing JSON files. A visual editor for hooks would be a significant DX improvement, especially for the newer `prompt` and `agent` hook types which have complex configuration (LLM evaluation criteria, agent tool access, etc.).
+
+### 3. Marketplace Discovery and Install
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Browse marketplace catalogs | Show available plugins from registered marketplaces with categories and tags | High | New backend endpoint to fetch/cache marketplace.json from registered sources |
+| One-tap plugin install | Install a plugin directly from the browse UI | High | Backend needs to invoke `claude plugin install` or equivalent git clone |
+| Marketplace registration UI | Add new marketplace sources (GitHub repo, URL) from the app | Medium | Backend endpoint for marketplace management |
+| Plugin update notifications | Badge/indicator when installed plugins have newer versions | Medium | Existing plugin versioning (ECO-01 from v4.0) |
+| Skill preview before install | Show SKILL.md content and frontmatter before committing | Medium | Fetch and render markdown from marketplace source |
+
+**Value:** The CLI experience for marketplace browsing (`/plugin marketplace add`, `/plugin install`) is sequential and text-based. A visual catalog with categories, search, and one-tap install would be a "mobile App Store" experience for Claude Code extensions. Marketplace schema supports `category`, `tags`, `keywords`, `description`, `author`, `version`, and `homepage` -- all ideal for visual browsing.
+
+### 4. macOS Handoff / Continuity
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Continue session viewing between iPhone and Mac | Start browsing a session on iPhone, pick up on Mac | Medium | `NSUserActivity` with SwiftUI `userActivity()` and `onContinueUserActivity()` modifiers |
+| Universal clipboard for session content | Copy session text on Mac, paste on iPhone | Low | Automatic if same iCloud account (standard Continuity) |
+| Drag-and-drop sessions between macOS windows | Drag session from list to new window | Medium | `Transferable` protocol, `draggable()`/`dropDestination()` modifiers |
+
+**Value:** Unique cross-platform experience that no web-based Claude Code client can match. Moving between devices seamlessly leverages the native advantage of having both iOS and macOS apps from the same codebase.
+
+### 5. macOS Multi-Window Panels
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Open config editor in separate window | Edit config while viewing sessions in main window | Medium | New `WindowGroup` scene |
+| System monitor as detachable panel | Always-visible system metrics while working | Medium | New `WindowGroup` scene |
+| Stage Manager awareness | Proper window sizing and grouping | Low | `defaultSize()` and `windowResizability()` modifiers |
+
+**Value:** The macOS app already supports opening sessions in new windows via `WindowManager.shared.openSessionWindow()`. Extending this to config, system monitor, and hooks creates a true multi-pane desktop experience impossible on mobile.
+
+### 6. Config History / Rollback
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Config change history with rollback | See what changed and revert to previous config | High | Claude Code auto-backs up 5 most recent configs; backend could expose these |
+| Before/after diff on config saves | Show exactly what changed before committing | Medium | Diff existing config vs proposed changes |
+
+**Value:** Claude Code auto-backs up the 5 most recent config files. Exposing this through the mobile app as a visual history with rollback would be a unique safety net that even the CLI doesn't offer as a polished feature.
+
+---
+
+## Anti-Features
+
+Features to explicitly NOT build.
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Raw JSON text editor for hooks** | Error-prone; users create invalid JSON, break matchers, misconfigure hook types. The existing `ConfigEditorView` does raw editing already -- hooks specifically need structured forms. | Build structured hook editor with form fields, dropdowns for event types, and validation before serializing to JSON |
+| **Auto-sync config changes to CLI in real-time** | Config files are on the host filesystem; mobile talks to a backend. Real-time sync requires file watchers, WebSocket push, and conflict resolution. Disproportionate complexity. | Manual refresh with pull-to-refresh; show "last loaded" timestamp with cache freshness indicators (already built in v4.0 DATA-03) |
+| **Plugin marketplace with user reviews/ratings** | Building a review system is a product in itself. Claude Code's marketplace is a JSON catalog, not a social platform. Reviews belong upstream. | Show GitHub stars if available from marketplace metadata; link to source repo for community feedback |
+| **Hook execution from mobile** | Hooks are shell commands, HTTP endpoints, or LLM prompts that run on the host. Remote execution has severe security implications. | Display hook config for debugging; provide "Edit Config" to modify; show execution logs if backend captures them |
+| **Full config editor for managed scope** | Managed settings are enterprise-deployed and cannot be overridden by design. An editor creates false expectations. | Show managed settings as read-only with a "Managed by organization" badge and lock icon |
+| **macOS menu bar extra (background agent)** | A persistent menu bar utility requires a separate process, LaunchAgent, and fundamental architecture changes. The app is a session viewer, not a daemon. | Focus on main window experience; add a Dock menu with quick actions instead |
+| **macOS Touch Bar support** | Apple discontinued Touch Bar on all current Mac models. `ILSMacApp/TouchBar/` directory exists but investment here is wasted. | Remove or ignore Touch Bar code; invest in keyboard shortcuts and menu bar |
+| **Inline hook testing/dry-run** | Running hooks with test inputs from mobile requires remote execution. Complex, security-sensitive, out of scope. | Show the JSON input schema per event type so users understand what their hooks receive |
+| **Plugin auto-update from mobile** | Auto-updating plugins requires git operations on the host filesystem. The backend would need to shell out to git, npm, or pip. | Show update-available badges; link to CLI command for updating; defer actual updates to CLI |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[GitHub Skills Install — Per-item State]
-    └──requires──> [SkillsViewModel.installingSkills: Set<String>]
-                       └──mirrors──> [PluginsViewModel.installingPlugins — already exists]
+ConfigScope Enum Update (add "managed" case)
+  |-> Config Inheritance Visualization (table stakes)
+  |     |-> Config Diff View (differentiator)
+  |     |-> Config History (differentiator)
+  |
+  |-> Settings Host-Awareness (table stakes)
+        |-> Profile Switching Cascade (table stakes)
 
-[GitHub Plugin Browse UI]
-    └──requires──> [Browse section added to BrowserView.pluginsContent]
-                       └──reuses──> [PluginsViewModel.searchMarketplace() — already exists]
+HooksConfig Model Update (add 11 missing event types + hook type variants)
+  |-> Hooks Full Display (table stakes)
+  |     |-> Hooks CRUD Editor (differentiator)
 
-[Host Switch — Context Reload]
-    └──requires──> [AppState.serverURL update on activate()]
-                       └──requires──> [All ViewModels reload on isConnected change]
-                                          └──pattern exists in──> [BrowserView.onChange(appState.isConnected)]
+Existing BrowserView + PluginsViewModel
+  |-> Plugin Metadata Enhancement (table stakes)
+  |     |-> Marketplace Discovery (differentiator)
+  |           |-> One-Tap Install (differentiator)
 
-[NavigationPath Chat Navigation]
-    └──requires──> [Chat pushed onto NavigationStack path, not ActiveScreen root swap]
-                       └──conflicts──> [@SceneStorage("lastChatSessionId") restoration]
-                                          └──must resolve before adopting NavigationPath]
+Existing MacContentView + NotificationCenter Publishers
+  |-> Keyboard Shortcuts via Commands {} (table stakes)
+  |-> Menu Bar Integration (table stakes)
+  |     |-> Multi-Window Panels (differentiator)
+  |
+  Existing NSUserActivity support in SwiftUI
+  |-> Handoff / Continuity (differentiator)
 
-[Config Sync — Project Scope Section]
-    └──requires──> [Scope switcher UI in SettingsConfigSection]
-                       └──reuses──> [loadConfig(scope: "project") — already in SettingsViewModel]
-
-[InheritanceBadge on all config fields]
-    └──requires──> [Backend returning per-field nil vs explicit values — already the contract]
-                       └──enhances──> [Scope waterfall visualiser — future differentiator, v3.2+]
-
-[Quick-switch from Sidebar]
-    └──requires──> [HostProfilesViewModel accessible from SidebarView]
-                       └──requires──> [HostProfilesViewModel or AppState exposes host list]
+Existing HostProfilesViewModel.activate()
+  |-> Profile Activation Cascade (table stakes)
+  |     |-> Settings Host-Awareness (table stakes)
 ```
 
-### Dependency Notes
+### Critical Path
 
-- **GitHub install requires per-item state:** The global `isLoading` flag in `SkillsViewModel` blocks the entire list during install. `PluginsViewModel` already uses `installingPlugins: Set<String>` — replicate this exact pattern in `SkillsViewModel`.
-- **Host switch context reload is the highest-risk dependency:** `HostProfilesViewModel.activate()` fires the API call and updates local state but does not update `AppState.serverURL`. The app-wide reload (sessions, settings, browser data) will not happen without wiring these. This is the most architecturally impactful change in v3.1.
-- **NavigationPath chat conflicts with @SceneStorage:** Moving chat from a root screen to a pushed view breaks the current `@SceneStorage("lastChatSessionId")` restoration pattern. This must be designed before implementation, not discovered during it.
-- **Config project-scope section enhances but does not block config sync:** Showing user-scope config with InheritanceBadges (already largely wired) is the v3.1 baseline. Project-scope is a follow-on within the same milestone if time permits.
-
----
-
-## MVP Definition
-
-### Launch With (v3.1 baseline — all four areas must ship)
-
-**Config Sync:**
-- [ ] InheritanceBadge applied consistently to ALL settings fields (not just model + two toggles) — LOW complexity, high visibility
-- [ ] System prompt field displayed in Settings (read-only if inherited from host config) — MEDIUM complexity, critical for power users
-- [ ] Config reload on host switch and on reconnect — LOW complexity, correctness requirement
-
-**GitHub Browse / Install:**
-- [ ] Per-item `installingSkills: Set<String>` in `SkillsViewModel` — MEDIUM complexity, fixes blocking UX bug
-- [ ] Post-install "Installed" state badge on GitHub result rows — MEDIUM complexity, closes the install feedback loop
-- [ ] GitHub browse section added to Plugins tab — MEDIUM complexity, symmetry expectation with Skills tab
-
-**Host Profiles:**
-- [ ] App-wide context reload when host is switched (`activate()` → `AppState` → reload trigger) — HIGH complexity, correctness requirement
-- [ ] Remove host destructive confirmation sheet — LOW complexity, prevents accidental data loss
-- [ ] Quick-switch from sidebar header Menu — MEDIUM complexity, discoverability improvement
-
-**Navigation:**
-- [ ] Hamburger button visible and tappable from ChatView and all ChatView sub-views — LOW complexity, accessibility bug fix
-- [ ] Home screen layout audit and fix — LOW complexity
-- [ ] Consistent `.inlineNavigationBarTitle()` across all nine ActiveScreen destinations — LOW complexity
-
-### Add After Validation (v3.1.x)
-
-- [ ] NavigationPath-based Chat navigation (real back button to sessions list) — HIGH complexity; own dedicated phase after baseline ships
-- [ ] System prompt inline edit from Settings — MEDIUM complexity
-- [ ] Per-host config preview before switching — MEDIUM complexity
-- [ ] README preview before skill install — HIGH complexity; requires new backend endpoint
-
-### Future Consideration (v3.2+)
-
-- [ ] Scope waterfall visualiser (all three config layers for one key) — HIGH complexity + new backend API
-- [ ] Install progress SSE streaming — HIGH complexity + new backend endpoint
-- [ ] macOS keyboard shortcuts for sidebar navigation — LOW complexity but low value until macOS user base grows
-- [ ] Automatic "newer version available" badge for installed skills — MEDIUM complexity + GitHub polling
+1. **ILSShared model changes** -- `ConfigScope` (add `managed`), `HooksConfig` (add 11 event type fields), `HookDefinition` (add prompt/agent/http type support). These unblock both config inheritance and hooks features across iOS and macOS.
+2. **Backend endpoints** -- Merged/effective config endpoint, config overrides endpoint, marketplace catalog endpoint.
+3. **UI features** -- Build on updated models and endpoints. Config inheritance view, expanded hooks display, enhanced plugin/skill browser.
+4. **macOS features** -- Keyboard shortcuts and menu bar are largely independent of the model/backend work and can proceed in parallel.
+5. **Profile switching** -- Verify and fix gaps in the existing `onChange(of: appState.serverURL)` cascade across all views.
 
 ---
 
-## Feature Prioritization Matrix
+## MVP Recommendation
 
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| InheritanceBadge on all settings fields | HIGH | LOW | P1 |
-| System prompt display in Settings | HIGH | MEDIUM | P1 |
-| Config reload on host switch | HIGH | LOW | P1 |
-| Per-item install spinner (skills) | HIGH | MEDIUM | P1 |
-| Post-install state badge on GitHub rows | HIGH | MEDIUM | P1 |
-| GitHub browse section in Plugins tab | HIGH | MEDIUM | P1 |
-| App-wide context reload on host switch | HIGH | HIGH | P1 |
-| Hamburger accessible from Chat sub-views | HIGH | LOW | P1 |
-| Remove host confirmation sheet | MEDIUM | LOW | P1 |
-| Home layout audit and fix | MEDIUM | LOW | P1 |
-| Consistent inline navigation titles | MEDIUM | LOW | P1 |
-| Quick-switch host from sidebar | MEDIUM | MEDIUM | P2 |
-| NavigationPath chat navigation | HIGH | HIGH | P2 |
-| System prompt inline edit | MEDIUM | MEDIUM | P2 |
-| Per-host config preview before switch | MEDIUM | MEDIUM | P2 |
-| Project-scope config section | MEDIUM | MEDIUM | P2 |
-| Uninstall from Browse context menu | LOW | LOW | P2 |
-| Trending skills default query | LOW | MEDIUM | P3 |
-| README preview before skill install | MEDIUM | HIGH | P3 |
-| Scope waterfall visualiser | LOW | HIGH | P3 |
-| Install progress SSE streaming | LOW | HIGH | P3 |
+### Must Have (ship v5.0 without these = incomplete)
 
-**Priority key:**
-- P1: Must have for v3.1 launch — correctness, completeness, or blocking UX issues
-- P2: Should have — add in follow-up phases within v3.1 if P1 leaves capacity
-- P3: Nice to have — defer to v3.2+
+1. **Config inheritance visualization** with scope badges (user/project/local/managed) and "Inherited"/"Overridden" indicators. The `ConfigOverride` DTO already provides `winningScope`, `userValue`, `projectValue`, `localValue` -- the backend and UI need to use them. Add a scope picker to `ConfigEditorView` and a merged/effective config summary view.
 
----
+2. **Hooks display for all 16 event types** with hook type badges (command/prompt/agent/http). The current `HooksConfig` model only covers 5 events. Add: `PermissionRequest`, `PostToolUseFailure`, `Notification`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `SessionEnd`.
 
-## Complexity Notes per Feature Area
+3. **macOS keyboard shortcuts** (Cmd+N, Cmd+F, Cmd+,, Cmd+1/2/3) and proper menu bar items via SwiftUI `Commands` in the `App` declaration. The `NotificationCenter` publishers already exist; wiring them to `Commands` with `.keyboardShortcut()` is straightforward.
 
-| Feature Area | Baseline Complexity | Risky Sub-feature | Risk Reason |
-|---|---|---|---|
-| Config sync | LOW–MEDIUM | App-wide reload on host switch | Touches AppState + all ViewModels; cross-cutting concern with no existing propagation path |
-| GitHub browse/install | LOW–MEDIUM | Per-item install state | Simple pattern port from `PluginsViewModel`; risk is low if done precisely |
-| Host Profiles redesign | MEDIUM | Context reload propagation | `activate()` currently isolated to `HostProfilesViewModel`; wiring to `AppState` is new architecture |
-| Navigation overhaul | LOW–MEDIUM | NavigationPath chat navigation | Structural change to the root navigation model; conflicts with `@SceneStorage` chat restoration |
+4. **Profile switching cascades** through settings. When `HostProfilesViewModel.activate()` fires, config editor and hooks views must reload from the new backend. The existing `onChange(of: appState.serverURL)` handlers in most views handle this -- verify and fix gaps. Add visual indicator of which host's settings are being shown.
+
+5. **Plugin/skill browser enhancements** with version info, update indicators, and skill frontmatter display. Most of this was partially built in Phase 47 (ECO-01, ECO-02); needs completion and metadata expansion.
+
+### Should Have (target for v5.0 but deferrable)
+
+6. **Hooks CRUD editor** -- structured form for creating/editing hooks. High value but high complexity. Acceptable to ship with read-only hooks + "Edit Config" button to the raw JSON editor.
+
+7. **Marketplace browsing** -- visual catalog of available plugins from registered marketplaces. Requires significant new backend work (fetching remote marketplace.json, caching, presenting catalog). Can ship with local-only plugin management initially.
+
+8. **macOS menu bar with full Commands** -- proper File, Edit, View, Session, and Window menus with all keyboard shortcuts. Medium effort, high polish.
+
+### Defer (v6.0+)
+
+9. Config diff view (side-by-side scope comparison)
+10. Handoff / Continuity (cross-device session viewing)
+11. Config history with rollback (leveraging Claude Code's auto-backup files)
+12. Marketplace install from mobile (backend CLI invocation)
+13. Multi-window panels for config/system monitor/hooks (macOS)
+14. Hook execution logs/history
 
 ---
 
-## Dependencies on Existing Screens and Components
+## Complexity Budget
 
-| New Feature | Existing Screen / Component | Dependency Type |
-|---|---|---|
-| Config sync badges on all fields | `SettingsConfigSection` + `InheritanceBadge` | Extend — badge exists, needs broader application to all fields |
-| System prompt display | `SettingsConfigSection.generalSettingsSection` | Add field — no UI exists today |
-| GitHub skills install per-item state | `BrowserView.githubBrowseSection` + `SkillsViewModel` | Extend — add `installingSkills: Set<String>`, mirror `PluginsViewModel` pattern |
-| GitHub plugins browse UI | `BrowserView.pluginsContent` | Add section — mirror existing `githubBrowseSection` in Skills tab |
-| Host switch context reload | `HostProfilesViewModel.activate()` + `AppState` | New link — `activate()` must notify `AppState` to update `serverURL` and trigger reconnect |
-| Sidebar quick-switch | `SidebarView` header | Add `Menu` — host list from `HostProfilesViewModel` or `AppState` |
-| Chat hamburger visibility | `SidebarRootView.mainContent(showHamburger:)` + `ChatView` sub-views | Verify + fix — toolbar hamburger may be obscured by NavigationStack back button at depth |
-| Inline navigation titles | All nine `ActiveScreen` destination views | Audit — apply `.inlineNavigationBarTitle()` where missing |
-| Remove host confirmation | `HostProfilesView.hostProfileRow()` context menu | Add `.confirmationDialog` before calling `viewModel.remove(id)` |
+| Feature Area | Table Stakes Effort | Differentiator Effort | Total |
+|-------------|--------------------|-----------------------|-------|
+| Config Inheritance | 3-4 days | +2-3 days (diff view) | 5-7 days |
+| Hooks Management | 2-3 days (display) | +4-5 days (CRUD editor) | 6-8 days |
+| Plugin/Skill Browser | 1-2 days (metadata) | +5-6 days (marketplace) | 6-8 days |
+| macOS Parity | 2-3 days (shortcuts+menus) | +2-3 days (Handoff, multi-window) | 4-6 days |
+| Profile Switching | 1-2 days | N/A | 1-2 days |
+| **Total** | **9-14 days** | **+13-17 days** | **22-31 days** |
 
----
-
-## iOS HIG Grounding
-
-**Side menu pattern (MEDIUM confidence — HIG + existing implementation):**
-Apple HIG does not prescribe a side menu for iPhone. The preferred patterns are tab bar (up to 5 destinations) or `NavigationSplitView` (iPad). The existing ZStack overlay sidebar is a well-established community pattern for apps with more than 5 top-level destinations. The existing implementation is architecturally correct. The remaining risk is gesture conflict: the 30pt edge zone for swipe-open must be verified against SwiftUI scroll gesture recognisers inside `ChatView`.
-
-**Back button pattern (HIGH confidence — Apple WWDC22 + NavigationStack docs):**
-The SwiftUI-idiomatic back button comes from `NavigationStack` + `NavigationPath`. The current implementation swaps `activeScreen` at the root level, giving no navigation history and therefore no back button. The correct fix is to push `ChatView` onto the `NavigationStack` path rather than swapping the root screen. This is documented in Apple's WWDC22 session "SwiftUI cookbook for navigation."
-
-**Profile switching pattern (MEDIUM confidence — WhatsApp, Slack, GitHub mobile):**
-The platform norm for multi-account switching is: active profile indicated by a checkmark or accent badge in a list; switching is a single tap with a brief loading indicator; the entire app reloads its data to reflect the new context. The existing "Active" capsule in `HostProfilesView` follows this pattern. The missing piece is the data reload propagation.
-
-**Config inheritance UI (HIGH confidence — codebase analysis):**
-`InheritanceBadge` + `SettingsInfoButton` are already designed correctly. The pattern is: nil value = inherited (Host Default badge with link icon), explicit value = custom (Custom badge with pencil icon). This is the same mental model as Xcode's build settings "Inherited from target" vs overridden values. The gap is coverage — only 2–3 fields use it today; the remaining settings fields are undecorated.
+Table stakes alone: approximately 2 weeks of focused execution.
+With key differentiators (hooks CRUD + marketplace browse): approximately 4 weeks.
 
 ---
 
 ## Sources
 
-- Codebase: `ILSApp/ILSApp/Views/Browser/BrowserView.swift` — GitHub browse section, plugins content, skills content, install flow
-- Codebase: `ILSApp/ILSApp/Views/Settings/SettingsConfigSection.swift` — InheritanceBadge, SettingsInfoButton, config field coverage
-- Codebase: `ILSApp/ILSApp/Views/Fleet/HostProfilesView.swift` — active badge, health polling, activate/remove
-- Codebase: `ILSApp/ILSApp/Views/Fleet/HostProfileDetailView.swift` — lifecycle controls, logs, health display
-- Codebase: `ILSApp/ILSApp/Views/Root/SidebarRootView.swift` — ActiveScreen enum, hamburger, edge swipe, NavigationStack root architecture
-- Codebase: `ILSApp/ILSApp/ViewModels/SkillsViewModel.swift` — GitHub search/install implementation, global isLoading limitation
-- Codebase: `ILSApp/ILSApp/ViewModels/PluginsViewModel.swift` — `installingPlugins: Set<String>` pattern to replicate, marketplace search
-- Codebase: `ILSApp/ILSApp/ViewModels/HostProfilesViewModel.swift` — `activate()`, health polling, AppState propagation gap
-- Codebase: `ILSApp/ILSApp/ViewModels/SettingsViewModel.swift` — `loadConfig(scope:)`, `saveConfig()`, scope handling
-- [Claude Code settings docs](https://code.claude.com/docs/en/settings) — 6-level config precedence chain (Enterprise > CLI > Local Project > Shared Project > User > Defaults)
-- [Claude Code settings reference](https://claudefa.st/blog/guide/settings-reference) — scope system, file locations, merging rules
-- [Apple WWDC22 — SwiftUI cookbook for navigation](https://developer.apple.com/videos/play/wwdc2022/10054/) — NavigationStack + NavigationPath back button pattern
-- [Mastering Navigation in SwiftUI 2025](https://medium.com/@dinaga119/mastering-navigation-in-swiftui-the-2025-guide-to-clean-scalable-routing-bbcb6dbce929) — NavigationStack best practices, coordinator pattern
-- [Account switcher UX patterns](https://medium.com/ux-power-tools/ways-to-design-account-switchers-app-switchers-743e05372ede) — active indicator, context reload, single-tap switch norms
+### Official Documentation (HIGH confidence)
+- [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks) -- 16 event types, matcher patterns, hook handler types (command/prompt/agent/http), JSON schemas
+- [Claude Code Settings Reference](https://code.claude.com/docs/en/settings) -- Full settings keys, scope precedence (managed > local > project > user), merge behavior, permission rules
+- [Claude Code Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces) -- Marketplace schema, plugin sources (GitHub/npm/pip/git URL), distribution model
+- [Claude Code Skills](https://code.claude.com/docs/en/skills) -- Skill file format, frontmatter reference, invocation control, supporting files
 
----
+### Community / Guides (MEDIUM confidence)
+- [Claude Code Hooks Power User Guide](https://claude.com/blog/how-to-configure-hooks)
+- [Building macOS Apps with SwiftUI (2026)](https://oneuptime.com/blog/post/2026-02-02-swiftui-macos-applications/view)
+- [macOS Menu Bar App Best Practices](https://medium.com/@p_anhphong/what-i-learned-building-a-native-macos-menu-bar-app-eacbc16c2e14)
+- [SwiftUI Handoff with NSUserActivity](https://www.hackingwithswift.com/quick-start/swiftui/how-to-continue-an-nsuseractivity-in-swiftui)
+- [Customizing macOS Menu Bar in SwiftUI](https://danielsaidi.com/blog/2023/11/22/customizing-the-macos-menu-bar-in-swiftui)
 
-*Feature research for: ILS iOS/macOS v3.1 — Config sync, GitHub browse/install, Host Profiles redesign, Navigation overhaul*
-*Researched: 2026-02-24*
+### Codebase Analysis (HIGH confidence)
+- `ILSShared/Models/ClaudeConfig.swift` -- `HooksConfig` covers 5 of 16 event types; `HookDefinition` has `type` and `command` only
+- `ILSShared/DTOs/ResponseDTOs.swift` -- `ConfigOverride` DTO already models scope cascade with `winningScope`, `userValue`, `projectValue`, `localValue`
+- `ILSShared/Models/MCPServer.swift` -- `ConfigScope` enum has user/project/local (missing managed)
+- `HooksManagementView.swift` -- Read-only display, 5 event types, no CRUD capability
+- `HostProfilesViewModel.swift` -- Activation cascades server URL via `appState.updateServerURL()` but settings views don't show which host is active
+- `MacContentView.swift` -- NotificationCenter publishers exist for session operations; keyboard shortcut `/` wired; `SidebarSection` enum has 8 cases
+- `MacSettingsView.swift` -- Tabbed settings view with 5 tabs, no connection to hooks or config inheritance visualization
+- `ConfigController.swift` -- Supports GET/PUT/validate for single scope; no merged/effective config endpoint
+- `PluginConfigView` + `PluginsViewModel` -- Plugin version display partially built in Phase 47 ECO-01

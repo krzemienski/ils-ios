@@ -4,17 +4,16 @@ import ILSShared
 
 @MainActor
 @Observable
-class MCPViewModel {
+class MCPViewModel: BaseViewModel {
     var servers: [MCPServer] = []
-    var isLoading = false
-    var error: Error?
     var searchText = ""
     var selectedScope: String = "user"
 
     // Spec 012: Health monitoring
     var lastHealthCheck: Date?
     var isHealthChecking = false
-    @ObservationIgnored private var healthTimer: Task<Void, Never>?
+    var lastUpdated: Date?
+    @ObservationIgnored nonisolated(unsafe) private var healthTimer: Task<Void, Never>?
 
     // Spec 018: Batch operations
     var isSelecting = false
@@ -22,19 +21,11 @@ class MCPViewModel {
 
     var selectedCount: Int { selectedServerIDs.count }
 
-    private var client: APIClient?
-
     /// Precomputed lowercase search strings keyed by server, rebuilt when servers change
     private var searchCache: [(server: MCPServer, searchText: String)] = []
 
-    init() {}
-
     deinit {
         healthTimer?.cancel()
-    }
-
-    func configure(client: APIClient) {
-        self.client = client
     }
 
     /// Filtered servers based on search text using precomputed lowercase cache
@@ -77,12 +68,27 @@ class MCPViewModel {
         isLoading = true
         error = nil
 
+        // Cache-first: show cached data immediately while network request is in flight
+        if servers.isEmpty {
+            let cached = await CacheService.shared.getCachedMCPServers()
+            if !cached.isEmpty {
+                servers = cached
+                rebuildSearchCache()
+                AppLogger.shared.info("Loaded \(cached.count) MCP servers from cache", category: "mcp")
+            }
+        }
+
         do {
             let path = refresh ? "/mcp?refresh=true" : "/mcp"
             let response: APIResponse<ListResponse<MCPServer>> = try await client.get(path)
             if let data = response.data {
                 servers = data.items
                 rebuildSearchCache()
+                lastUpdated = Date()
+                // CONC-03: Use Task instead of Task.detached — CacheService actor handles isolation.
+                Task {
+                    await CacheService.shared.cacheMCPServers(data.items)
+                }
             }
         } catch {
             self.error = error
@@ -101,13 +107,14 @@ class MCPViewModel {
         await loadServers()
     }
 
-    func addServer(name: String, command: String, args: [String], scope: String) async -> MCPServer? {
+    func addServer(name: String, command: String, args: [String], env: [String: String]? = nil, scope: String) async -> MCPServer? {
         guard let client else { return nil }
         do {
             let request = CreateMCPRequest(
                 name: name,
                 command: command,
                 args: args,
+                env: env,
                 scope: MCPScope(rawValue: scope)
             )
             let response: APIResponse<MCPServer> = try await client.post("/mcp", body: request)
@@ -146,6 +153,7 @@ class MCPViewModel {
             if let data = response.data {
                 servers = data.items
                 rebuildSearchCache()
+                lastUpdated = Date()
             }
         } catch {
             self.error = error
@@ -156,24 +164,17 @@ class MCPViewModel {
     }
 
     // MARK: - Spec 012: Health Monitoring
-    //
-    // E-MED-5: MCPViewModel health polling is intentionally separate from PollingManager.
-    // PollingManager handles the global backend connectivity check (health endpoint).
-    // MCPViewModel polls the /mcp endpoint specifically to refresh server statuses,
-    // which is different data from the general health check. Consolidation would mix
-    // concerns: "is the backend reachable?" vs "what's the MCP server status?"
-    //
-    // E-MED-6: Adaptive polling by battery level is deferred. iOS already manages
-    // background activity via Low Power Mode (which reduces CPU/network). The app
-    // connects to localhost in typical usage, making battery-adaptive polling
-    // over-engineering for the current deployment model.
 
     func startHealthPolling(interval: TimeInterval = 30) {
         stopHealthPolling()
         healthTimer = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.checkHealth()
-                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                // ENRG-CRIT: Respect Low Power Mode — increase interval to 120s when active
+                let effectiveInterval = ProcessInfo.processInfo.isLowPowerModeEnabled
+                    ? max(interval, 120)
+                    : interval
+                try? await Task.sleep(nanoseconds: UInt64(effectiveInterval * 1_000_000_000))
             }
         }
     }
@@ -184,15 +185,9 @@ class MCPViewModel {
     }
 
     func checkHealth() async {
-        guard let client else { return }
         isHealthChecking = true
-        do {
-            // Only check reachability — do not reload full server list
-            let _: APIResponse<ListResponse<MCPServer>> = try await client.get("/mcp")
-            lastHealthCheck = Date()
-        } catch {
-            AppLogger.shared.warning("MCP health check failed: \(error.localizedDescription)", category: "mcp")
-        }
+        await loadServers()
+        lastHealthCheck = Date()
         isHealthChecking = false
     }
 
@@ -223,10 +218,10 @@ class MCPViewModel {
         isSelecting = false
     }
 
-    func updateServer(name: String, command: String, args: [String], scope: String) async -> MCPServer? {
+    func updateServer(name: String, command: String, args: [String], env: [String: String]? = nil, scope: String) async -> MCPServer? {
         guard let client else { return nil }
         do {
-            let request = CreateMCPRequest(name: name, command: command, args: args, scope: MCPScope(rawValue: scope))
+            let request = CreateMCPRequest(name: name, command: command, args: args, env: env, scope: MCPScope(rawValue: scope))
             let response: APIResponse<MCPServer> = try await client.put("/mcp/\(name)", body: request)
             if let server = response.data {
                 if let index = servers.firstIndex(where: { $0.name == name }) {
@@ -240,5 +235,116 @@ class MCPViewModel {
             AppLogger.shared.error("Failed to update MCP server '\(name)': \(error.localizedDescription)", category: "mcp")
         }
         return nil
+    }
+
+    // MARK: - Logs, Validation & Presets
+
+    /// Preset MCP server configurations loaded from the backend.
+    var presets: [MCPPreset] = []
+
+    /// Fetch recent log entries for a specific MCP server.
+    /// - Parameters:
+    ///   - server: The MCP server to fetch logs for.
+    ///   - limit: Maximum number of log entries to return (clamped by backend to 1–500).
+    /// - Returns: Array of log entries, or empty array on failure.
+    func fetchLogs(for server: MCPServer, limit: Int = 100) async -> [MCPLogEntry] {
+        guard let client else { return [] }
+        do {
+            let response: APIResponse<MCPLogsResponse> = try await client.get("/mcp/\(server.name)/logs?limit=\(limit)")
+            return response.data?.logs ?? []
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to fetch logs for MCP server '\(server.name)': \(error.localizedDescription)", category: "mcp")
+            return []
+        }
+    }
+
+    /// Validate an MCP server configuration against the backend before saving.
+    /// - Parameters:
+    ///   - name: Proposed server name.
+    ///   - command: Executable command.
+    ///   - args: Command-line arguments.
+    ///   - env: Environment variables.
+    ///   - scope: Configuration scope.
+    /// - Returns: Validation result with errors and warnings, or nil on request failure.
+    func validateConfig(
+        name: String,
+        command: String,
+        args: [String],
+        env: [String: String]?,
+        scope: String
+    ) async -> MCPValidationResult? {
+        guard let client else { return nil }
+        do {
+            let request = CreateMCPRequest(
+                name: name,
+                command: command,
+                args: args,
+                env: env,
+                scope: MCPScope(rawValue: scope)
+            )
+            let response: APIResponse<MCPValidationResult> = try await client.post("/mcp/validate", body: request)
+            return response.data
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to validate MCP config for '\(name)': \(error.localizedDescription)", category: "mcp")
+            return nil
+        }
+    }
+
+    /// Load preset MCP server configurations from the backend.
+    /// Results are stored in the `presets` property.
+    func loadPresets() async {
+        guard let client else { return }
+        do {
+            let response: APIResponse<MCPPresetListResponse> = try await client.get("/mcp/presets")
+            if let data = response.data {
+                presets = data.presets
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to load MCP presets: \(error.localizedDescription)", category: "mcp")
+        }
+    }
+
+    // MARK: - Enable/Disable
+
+    /// Toggle the enabled state of an MCP server.
+    func toggleEnabled(_ server: MCPServer) async {
+        if server.isEnabled {
+            await disableServer(server)
+        } else {
+            await enableServer(server)
+        }
+    }
+
+    /// Enable an MCP server by adding it to the active configuration.
+    func enableServer(_ server: MCPServer) async {
+        guard let client else { return }
+        do {
+            let _: APIResponse<EnabledResponse> = try await client.post("/mcp/\(server.name)/enable", body: EmptyBody())
+            if let index = servers.firstIndex(where: { $0.id == server.id }) {
+                servers[index].isEnabled = true
+                rebuildSearchCache()
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to enable MCP server '\(server.name)': \(error.localizedDescription)", category: "mcp")
+        }
+    }
+
+    /// Disable an MCP server by removing it from the active configuration.
+    func disableServer(_ server: MCPServer) async {
+        guard let client else { return }
+        do {
+            let _: APIResponse<EnabledResponse> = try await client.post("/mcp/\(server.name)/disable", body: EmptyBody())
+            if let index = servers.firstIndex(where: { $0.id == server.id }) {
+                servers[index].isEnabled = false
+                rebuildSearchCache()
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to disable MCP server '\(server.name)': \(error.localizedDescription)", category: "mcp")
+        }
     }
 }

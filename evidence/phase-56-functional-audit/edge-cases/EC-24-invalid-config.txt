@@ -1,0 +1,4 @@
+{"success":false,"error":"Missing required field: scope","code":"VALIDATION_ERROR","reason":"Missing required field: scope"}
+HTTP Status: 422
+Expected: 400/422 for invalid payload. Got proper validation error.
+PASS -- backend rejects invalid config payloads.

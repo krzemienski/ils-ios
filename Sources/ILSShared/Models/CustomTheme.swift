@@ -1,5 +1,31 @@
 import Foundation
 
+/// Configuration for MeshGradient theme backgrounds.
+/// Uses a 3x3 grid of colors interpolated across control points.
+public struct MeshGradientConfig: Codable, Sendable, Hashable {
+    /// Whether mesh gradient background is enabled for this theme.
+    public var enabled: Bool
+    /// Hex color strings for the 3x3 grid (exactly 9 required).
+    public var colors: [String]
+    /// Whether the gradient should animate (default false, animation is expensive).
+    public var animated: Bool
+
+    public init(
+        enabled: Bool = false,
+        colors: [String] = [],
+        animated: Bool = false
+    ) {
+        self.enabled = enabled
+        self.colors = colors
+        self.animated = animated
+    }
+
+    /// Validates that exactly 9 colors are provided for the 3x3 grid.
+    public var isValid: Bool {
+        enabled && colors.count == 9
+    }
+}
+
 /// Custom theme with user-defined design tokens for UI customization.
 public struct CustomTheme: Codable, Sendable, Identifiable, Hashable {
     public let id: UUID
@@ -17,6 +43,7 @@ public struct CustomTheme: Codable, Sendable, Identifiable, Hashable {
     public var spacing: SpacingTokens?
     public var cornerRadius: CornerRadiusTokens?
     public var shadows: ShadowTokens?
+    public var meshGradient: MeshGradientConfig?
 
     /// Creates a new custom theme.
     /// - Parameters:
@@ -32,6 +59,7 @@ public struct CustomTheme: Codable, Sendable, Identifiable, Hashable {
     ///   - spacing: Optional spacing design tokens.
     ///   - cornerRadius: Optional corner radius design tokens.
     ///   - shadows: Optional shadow design tokens.
+    ///   - meshGradient: Optional MeshGradient background configuration.
     public init(
         id: UUID = UUID(),
         name: String,
@@ -44,7 +72,8 @@ public struct CustomTheme: Codable, Sendable, Identifiable, Hashable {
         typography: TypographyTokens? = nil,
         spacing: SpacingTokens? = nil,
         cornerRadius: CornerRadiusTokens? = nil,
-        shadows: ShadowTokens? = nil
+        shadows: ShadowTokens? = nil,
+        meshGradient: MeshGradientConfig? = nil
     ) {
         precondition(!name.isEmpty, "CustomTheme name must not be empty")
         self.id = id
@@ -59,6 +88,7 @@ public struct CustomTheme: Codable, Sendable, Identifiable, Hashable {
         self.spacing = spacing
         self.cornerRadius = cornerRadius
         self.shadows = shadows
+        self.meshGradient = meshGradient
     }
 }
 

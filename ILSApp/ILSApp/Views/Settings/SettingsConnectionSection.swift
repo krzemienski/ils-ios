@@ -76,6 +76,31 @@ struct SettingsConnectionSection: View {
             Text("Configure the ILS backend server address")
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
+
+            // PLAT-04: Cellular data toggle — controls whether network requests
+            // are allowed over cellular connections.
+            #if os(iOS)
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Toggle(isOn: Binding(
+                    get: { UserDefaults.standard.bool(forKey: "allowsCellularAccess") },
+                    set: { newValue in
+                        UserDefaults.standard.set(newValue, forKey: "allowsCellularAccess")
+                    }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Use Cellular Data")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("Allow connections over cellular networks")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                .tint(theme.accent)
+                .padding(theme.spacingMD)
+                .modifier(GlassCard())
+            }
+            #endif
         }
     }
 

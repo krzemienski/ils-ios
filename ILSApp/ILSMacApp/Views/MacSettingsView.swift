@@ -37,6 +37,7 @@ struct MacSettingsView: View {
     @AppStorage("defaultModel") var defaultModel: String = "claude-sonnet-4-20250514"
     @AppStorage("enableAgentTeams") var enableAgentTeams: Bool = false
     @AppStorage("enableDebugMode") var enableDebugMode: Bool = false
+    @AppStorage("showSessionSuggestions") var showSessionSuggestions: Bool = true
 
     let availableModels = [
         "claude-sonnet-4-20250514",
@@ -109,13 +110,27 @@ struct MacSettingsView: View {
 
             VStack(alignment: .leading, spacing: theme.spacingMD) {
                 settingRow(label: "Default Model") {
-                    Picker("Default Model", selection: $defaultModel) {
+                    Picker("Default Model", selection: Binding(
+                        get: {
+                            viewModel.effectiveConfig?.config.model ?? viewModel.config?.content.model ?? defaultModel
+                        },
+                        set: { newModel in
+                            defaultModel = newModel  // Keep local fallback in sync
+                            viewModel.updateModel(newModel)
+                        }
+                    )) {
                         ForEach(availableModels, id: \.self) { model in
                             Text(ClaudeModel.displayNameForID(model)).tag(model)
                         }
                     }
                     .pickerStyle(.menu)
                     .frame(width: 200)
+                }
+
+                HStack(spacing: theme.spacingSM) {
+                    InheritanceBadge(isInherited: viewModel.isInherited(key: "model"))
+                    Spacer()
+                    SettingsInfoButton(text: "The Claude model used for new conversations and chat sessions. When set to 'inherited', the model configured in your host's Claude CLI settings (via `claude config set model`) is used automatically. Override this locally to use a different model on this device.")
                 }
 
                 Divider()
@@ -127,6 +142,24 @@ struct MacSettingsView: View {
                 }
 
                 Text("Enable experimental multi-agent collaboration features")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+
+                HStack(spacing: theme.spacingSM) {
+                    InheritanceBadge(isInherited: false)
+                    Spacer()
+                    SettingsInfoButton(text: "Experimental feature that enables coordination of multiple AI agents working together on complex tasks. Agent Teams is a local-only setting stored on your device and is not synced with your host CLI configuration.")
+                }
+
+                Divider()
+
+                settingRow(label: "Session Suggestions") {
+                    Toggle("", isOn: $showSessionSuggestions)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+
+                Text("Show smart suggestions when starting a new session")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
@@ -157,6 +190,11 @@ struct MacSettingsView: View {
                     .frame(width: 200)
                 }
 
+                HStack(spacing: theme.spacingSM) {
+                    Spacer()
+                    SettingsInfoButton(text: "Selects the visual theme for the ILS app interface. Themes control colors, typography, spacing, and corner radius throughout the app. This is a local preference stored on your device and is separate from the Claude CLI color scheme setting.")
+                }
+
                 Divider()
 
                 settingRow(label: "Color Scheme") {
@@ -172,6 +210,12 @@ struct MacSettingsView: View {
                 Text("Choose how the app appears")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
+
+                HStack(spacing: theme.spacingSM) {
+                    InheritanceBadge(isInherited: viewModel.isInherited(key: "theme"))
+                    Spacer()
+                    SettingsInfoButton(text: "Controls whether the app uses light mode, dark mode, or follows your device's system appearance setting. When inherited, the color scheme configured in your host's Claude CLI theme settings is applied. Override locally to customize appearance on this device.")
+                }
             }
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
@@ -280,6 +324,12 @@ struct MacSettingsView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
+                HStack(spacing: theme.spacingSM) {
+                    InheritanceBadge(isInherited: false)
+                    Spacer()
+                    SettingsInfoButton(text: "Enables verbose debug logging for troubleshooting connection issues, API errors, and unexpected behavior. Debug logs appear in the system console and can help diagnose problems with your ILS backend or Claude Code sessions.")
+                }
+
                 Divider()
 
                 settingRow(label: "Cache") {
@@ -294,6 +344,11 @@ struct MacSettingsView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
 
+                HStack(spacing: theme.spacingSM) {
+                    Spacer()
+                    SettingsInfoButton(text: "Removes all locally cached API responses, forcing the app to fetch fresh data from the backend on next load. Use this if you notice stale session lists, outdated config values, or display inconsistencies after backend changes.")
+                }
+
                 Divider()
 
                 settingRow(label: "Reset") {
@@ -306,6 +361,11 @@ struct MacSettingsView: View {
                 Text("Restore all settings to their default values")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
+
+                HStack(spacing: theme.spacingSM) {
+                    Spacer()
+                    SettingsInfoButton(text: "Restores all local macOS app settings to their factory default values, including the default model, color scheme, theme, and experimental feature flags. This does not affect your host CLI configuration or backend data.")
+                }
             }
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
@@ -472,6 +532,7 @@ struct MacSettingsView: View {
         defaultModel = "claude-sonnet-4-20250514"
         enableAgentTeams = false
         enableDebugMode = false
+        showSessionSuggestions = true
         serverURL = "http://localhost:9999"
         themeManager.setTheme("obsidian")
     }

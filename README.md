@@ -63,6 +63,18 @@ ils-ios/
 └── ils.sqlite                 # SQLite database (auto-created)
 ```
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Detailed system design, data flow diagrams, and technical decisions |
+| [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md) | Backend deployment options: dev, launchd, Homebrew, Docker, PM2 |
+| [docs/API.md](docs/API.md) | Full API reference (2,700+ lines) for all endpoints and schemas |
+| [DESIGN.md](DESIGN.md) | Design system, color tokens, typography, and UI component guidelines |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines, branching strategy, and PR checklist |
+| [CHANGELOG.md](CHANGELOG.md) | Release history and version notes |
+| [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
+
 ## Prerequisites
 
 - **macOS** 15.0+ (Sequoia or later)
@@ -333,6 +345,7 @@ The `scripts/` directory contains automation tools:
 | `setup.sh` | Initial project setup and dependencies |
 | `install-backend-service.sh` | Install backend as system service |
 | `run_regression_tests.sh` | Run full regression test suite |
+| `api-audit.sh` | Audit API endpoint coverage between backend and iOS client |
 | `reinstall-plugins.sh` | Reinstall all plugins |
 | `bootstrap-remote.sh` | Bootstrap remote host setup |
 | `remote-access` | Remote access configuration |
