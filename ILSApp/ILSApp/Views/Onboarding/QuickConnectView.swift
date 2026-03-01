@@ -28,6 +28,9 @@ struct QuickConnectView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     @State private var viewModel = QuickConnectViewModel()
+    #if os(iOS)
+    @State private var isShowingQRScanner = false
+    #endif
 
     var body: some View {
         ScrollView {
@@ -42,6 +45,31 @@ struct QuickConnectView: View {
 
                 if let result = viewModel.connectionResult, !viewModel.showSteps {
                     resultBanner(result)
+
+                    if viewModel.isShowingTroubleshooting,
+                       case .failure(let message) = viewModel.connectionResult {
+                        TroubleshootingView(
+                            errorMessage: message,
+                            onRetry: {
+                                viewModel.isShowingTroubleshooting = false
+                                Task {
+                                    let success = await viewModel.connect(appState: appState)
+                                    if success {
+                                        try? await Task.sleep(nanoseconds: 1_500_000_000)
+                                        dismiss()
+                                    } else {
+                                        viewModel.isShowingTroubleshooting = true
+                                    }
+                                }
+                            },
+                            onSetupNewServer: {
+                                dismiss()
+                            }
+                        )
+                        .padding(theme.spacingMD)
+                        .background(theme.bgSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                    }
                 }
 
                 if viewModel.showConnectedState, let info = viewModel.backendInfo {
@@ -72,6 +100,14 @@ struct QuickConnectView: View {
                 viewModel.localURL = appState.serverURL
             }
         }
+        #if os(iOS)
+        .sheet(isPresented: $isShowingQRScanner) {
+            QRScannerView { scanned in
+                viewModel.tunnelURL = scanned
+                viewModel.selectedMode = .tunnel
+            }
+        }
+        #endif
     }
 
     // MARK: - Mode Picker
@@ -141,6 +177,30 @@ struct QuickConnectView: View {
                 #endif
                 .accessibilityIdentifier("server-url-field")
                 .accessibilityLabel("Server URL")
+
+            HStack {
+                Spacer()
+                Button {
+                    Task {
+                        await viewModel.autoDetectLocal(appState: appState)
+                    }
+                } label: {
+                    if viewModel.isAutoDetecting {
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text("Detecting…")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        }
+                    } else {
+                        Label("Auto Detect", systemImage: "antenna.radiowaves.left.and.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    }
+                }
+                .foregroundColor(theme.accent)
+                .disabled(viewModel.isAutoDetecting)
+                .accessibilityLabel(viewModel.isAutoDetecting ? "Detecting local server" : "Auto detect local server")
+            }
         }
         .padding(theme.spacingMD)
         .background(theme.bgSecondary)
@@ -214,6 +274,20 @@ struct QuickConnectView: View {
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundColor(theme.warning)
             }
+
+            #if os(iOS)
+            HStack {
+                Spacer()
+                Button {
+                    isShowingQRScanner = true
+                } label: {
+                    Label("Scan QR Code", systemImage: "qrcode.viewfinder")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundColor(theme.accent)
+                }
+                .accessibilityLabel("Scan QR code for tunnel URL")
+            }
+            #endif
         }
         .padding(theme.spacingMD)
         .background(theme.bgSecondary)
@@ -294,10 +368,13 @@ struct QuickConnectView: View {
     private var connectButton: some View {
         AccentButton("Connect", isLoading: viewModel.isConnecting) {
             Task {
+                viewModel.isShowingTroubleshooting = false
                 let success = await viewModel.connect(appState: appState)
                 if success {
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
                     dismiss()
+                } else {
+                    viewModel.isShowingTroubleshooting = true
                 }
             }
         }

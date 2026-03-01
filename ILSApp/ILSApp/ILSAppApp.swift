@@ -48,6 +48,34 @@ struct ILSAppApp: App {
                             UserDefaults.standard.set(currentCount, forKey: "appOpenCount")
                             ThemeTip.appOpenCount = currentCount
                             MCPBrowserTip.appOpenCount = currentCount
+                            SkippedTourTip.appOpenCount = currentCount
+
+                            // Compute onboarding window: progressive tips only show within
+                            // the first 7 days after onboarding completion.
+                            let isWithinOnboardingWindow: Bool
+                            if let completionDate = UserDefaults.standard.object(
+                                forKey: "onboardingCompletionDate"
+                            ) as? Date {
+                                let daysSince = Calendar.current.dateComponents(
+                                    [.day],
+                                    from: completionDate,
+                                    to: Date()
+                                ).day ?? Int.max
+                                isWithinOnboardingWindow = daysSince < 7
+                            } else {
+                                isWithinOnboardingWindow = false
+                            }
+                            CommandPaletteTip.isWithinOnboardingWindow = isWithinOnboardingWindow
+                            ThemeTip.isWithinOnboardingWindow = isWithinOnboardingWindow
+                            MCPBrowserTip.isWithinOnboardingWindow = isWithinOnboardingWindow
+                            TeamsTip.isWithinOnboardingWindow = isWithinOnboardingWindow
+
+                            // Surface the skipped-tour tip for users who skipped onboarding
+                            // but have not yet completed the feature tour.
+                            let tourSkipped = UserDefaults.standard.bool(forKey: "onboardingSkipped")
+                            let tourDone = UserDefaults.standard.bool(forKey: "featureTourCompleted")
+                            SkippedTourTip.tourWasSkipped = tourSkipped && !tourDone
+
                             await CacheService.shared.initialize()
                         }
                         #if os(iOS)
