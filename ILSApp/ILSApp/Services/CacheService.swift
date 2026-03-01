@@ -195,6 +195,33 @@ actor CacheService {
         }
     }
 
+    // MARK: - Teams
+
+    /// Cache a list of teams.
+    func cacheTeams(_ teams: [AgentTeam]) async {
+        do {
+            try await db.saveTeams(teams)
+        } catch {
+            AppLogger.shared.error(
+                "Failed to cache teams: \(error.localizedDescription)",
+                category: "cache"
+            )
+        }
+    }
+
+    /// Retrieve cached teams.
+    func getCachedTeams() async -> [AgentTeam] {
+        do {
+            return try await db.fetchTeams()
+        } catch {
+            AppLogger.shared.error(
+                "Failed to fetch cached teams: \(error.localizedDescription)",
+                category: "cache"
+            )
+            return []
+        }
+    }
+
     // MARK: - Cache Management
 
     /// Clear all cached data.
