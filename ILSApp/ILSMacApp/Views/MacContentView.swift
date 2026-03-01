@@ -382,6 +382,8 @@ struct MacContentView: View {
             ThemesListView()
         case .hooks:
             HooksManagementView()
+        case .permissions:
+            PermissionHistoryView()
         }
     }
 
@@ -623,6 +625,7 @@ struct MacContentView: View {
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
         case .chat: selectedSection = .home
+        case .permissions: selectedSection = .settings
         }
         activeScreen = intent
         appState.navigationIntent = nil
