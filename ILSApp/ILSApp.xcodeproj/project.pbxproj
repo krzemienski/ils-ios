@@ -48,6 +48,7 @@
 		08CA0507D6E3EFEEF56E4682 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 402B977AA6C4850AA23BDB0E /* AppTheme.swift */; };
 		0AF85229F311A27F4C4D0D35 /* AgentTeamsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE41ED8B341B393213181A2 /* AgentTeamsListView.swift */; };
 		0B3B614F335CB389D28016D7 /* HooksViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8911A1661FBAAAB37B3E9A26 /* HooksViewModel.swift */; };
+		C9D1E4F6A8B0C3D5E7F9A1B4 /* OfflineCacheSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B9C2D4E6F8A1B3C5D7E9F2 /* OfflineCacheSettingsView.swift */; };
 		0B795C2658DA7688801A82A6 /* SettingsConnectionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */; };
 		0D8CFF51DD0BA0239AA6718F /* ErrorMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EED2EA5CED6B30EE2D3364D /* ErrorMessageView.swift */; };
 		0DEA24A0F1FF445652963E8C /* ThemeMetadataSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6FFAF97C7ACBEDC63BAD3C /* ThemeMetadataSection.swift */; };
@@ -99,6 +100,7 @@
 		25150C087CAEB4B3A643C6D6 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */; };
 		26B89816D115402D4EC07DCF /* SessionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634B53732914E58E3AAD3092 /* SessionWidget.swift */; };
 		278786B467D104A12CD0BF09 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DEE8624B9BCC400474F4F46 /* AppConstants.swift */; };
+		B8C0D3E5F7A9B2C4D6E8F0A3 /* OfflineCacheSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B9C2D4E6F8A1B3C5D7E9F2 /* OfflineCacheSettingsView.swift */; };
 		2861DF0F0B3AE3315C8A640D /* SettingsConnectionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */; };
 		2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C934E92FC1D3804790EA3977 /* SessionInfoView.swift */; };
 		28CA248D91D2DCEDBC2EEB29 /* ConnectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */; };
@@ -590,6 +592,7 @@
 		34CA914CC9CC730BF84E8A34 /* ToolCallAccordion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolCallAccordion.swift; sourceTree = "<group>"; };
 		35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickConnectViewModel.swift; sourceTree = "<group>"; };
 		355970174A5C4F9FB4F1C8B2 /* ThemeSliderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSliderRow.swift; sourceTree = "<group>"; };
+		A7B9C2D4E6F8A1B3C5D7E9F2 /* OfflineCacheSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineCacheSettingsView.swift; sourceTree = "<group>"; };
 		35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConnectionSection.swift; sourceTree = "<group>"; };
 		39E2E2D610433EEF6DEB506A /* PaperTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperTheme.swift; sourceTree = "<group>"; };
 		3A5F82ABB45EB40D8130FBC5 /* AdvancedOptionsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedOptionsSheet.swift; sourceTree = "<group>"; };
@@ -1012,6 +1015,7 @@
 				24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */,
 				1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */,
 				35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */,
+				A7B9C2D4E6F8A1B3C5D7E9F2 /* OfflineCacheSettingsView.swift */,
 				5A2839D9B4F57064D597B4D3 /* SettingsView.swift */,
 				276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */,
 				16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */,
@@ -1917,6 +1921,7 @@
 				AFB2F0196A4B23CDC4E2AA58 /* SettingsAppearanceSection.swift in Sources */,
 				C6D516D0B12632DD577997BE /* SettingsConfigSection.swift in Sources */,
 				2861DF0F0B3AE3315C8A640D /* SettingsConnectionSection.swift in Sources */,
+				B8C0D3E5F7A9B2C4D6E8F0A3 /* OfflineCacheSettingsView.swift in Sources */,
 				D274CFF4D4B6D6521ABE75F0 /* SettingsView.swift in Sources */,
 				9138C1BC26EAD042F2AB2F32 /* SettingsViewModel.swift in Sources */,
 				AB0127F0C4093D3564679661 /* SetupViewModel.swift in Sources */,
@@ -2156,6 +2161,7 @@
 				7E20D349B94982ECBD47D88D /* SettingsAppearanceSection.swift in Sources */,
 				D442E177F99016622A2B12BD /* SettingsConfigSection.swift in Sources */,
 				0B795C2658DA7688801A82A6 /* SettingsConnectionSection.swift in Sources */,
+				C9D1E4F6A8B0C3D5E7F9A1B4 /* OfflineCacheSettingsView.swift in Sources */,
 				E3636731594B2808A893643F /* SettingsView.swift in Sources */,
 				32AA980EC98A8A99A588BCF3 /* SettingsViewModel.swift in Sources */,
 				7DB91923C08F5FAE3ED4DFF3 /* SetupViewModel.swift in Sources */,

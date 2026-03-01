@@ -16,6 +16,7 @@ struct SettingsConnectionSection: View {
 
     let onTestConnection: () -> Void
     let onSaveServerSettings: () -> Void
+    var onSyncNow: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -68,6 +69,24 @@ struct SettingsConnectionSection: View {
 
                 AccentButton("Test Connection", isLoading: viewModel.isTestingConnection) {
                     onTestConnection()
+                }
+
+                if appState.isConnected, let syncNow = onSyncNow {
+                    Divider().background(theme.borderSubtle)
+                    Button {
+                        syncNow()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            Text("Sync Now")
+                                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                    }
+                    .accessibilityLabel("Sync data from server")
                 }
             }
             .padding(theme.spacingMD)
