@@ -536,6 +536,7 @@
 			proxyType = 1;
 			remoteGlobalIDString = AB6F4F861DC7592BED6D0F4B;
 			remoteInfo = ILSMacApp;
+		};
 		F24ABCC3D5E73AF803E19213 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = EF21AB5EEE4667421D71D6B8 /* Project object */;
@@ -1721,6 +1722,7 @@
 					CC11DD22EE33FF44AA55BB10 = {
 						DevelopmentTeam = HC36V7B67Z;
 						TestTargetID = AB6F4F861DC7592BED6D0F4B;
+					};
 					BA4C9F3D2E1087A56B74CE02 = {
 						DevelopmentTeam = HC36V7B67Z;
 					};
@@ -2355,6 +2357,7 @@
 			isa = PBXTargetDependency;
 			target = AB6F4F861DC7592BED6D0F4B /* ILSMacApp */;
 			targetProxy = CC11DD22EE33FF44AA55BB08 /* PBXContainerItemProxy */;
+		};
 		E139ABB2C4D629E7F2D08102 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BA4C9F3D2E1087A56B74CE02 /* ILSWidgets */;
@@ -2790,6 +2793,7 @@
 				TEST_TARGET_NAME = ILSMacApp;
 			};
 			name = Release;
+		};
 		C57DEF067BAA6D1B36147546 /* Build configuration list for PBXNativeTarget "ILSWidgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
