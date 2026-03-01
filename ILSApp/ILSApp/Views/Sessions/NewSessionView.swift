@@ -681,10 +681,9 @@ struct NewSessionView: View {
 
     @ViewBuilder
     private var actionButton: some View {
-        AccentButton(actionButtonTitle, icon: actionButtonIcon, isLoading: sessionViewModel.isCreating) {
+        AccentButton(actionButtonTitle, icon: actionButtonIcon, isLoading: sessionViewModel.isCreating, isFullWidth: true) {
             performAction()
         }
-        .frame(maxWidth: .infinity)
         .disabled(!actionButtonEnabled)
         .padding(.top, theme.spacingSM)
         .accessibilityIdentifier("start-session-button")
