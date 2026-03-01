@@ -18,10 +18,12 @@ struct MCPPresetsView: View {
     @State private var searchText = ""
     @State private var selectedCategory: MCPPresetCategory? = nil
     @FocusState private var isSearchFocused: Bool
+    @State private var filteredPresets: [MCPPreset] = []
+    @State private var availableCategories: [MCPPresetCategory] = []
 
-    // MARK: - Filtered Presets
+    // MARK: - Filter Computation
 
-    private var filteredPresets: [MCPPreset] {
+    private func computeFilteredPresets() -> [MCPPreset] {
         var results = viewModel.presets
 
         if let category = selectedCategory {
@@ -40,9 +42,14 @@ struct MCPPresetsView: View {
         return results
     }
 
-    private var availableCategories: [MCPPresetCategory] {
+    private func computeAvailableCategories() -> [MCPPresetCategory] {
         let usedCategories = Set(viewModel.presets.map(\.category))
         return MCPPresetCategory.allCases.filter { usedCategories.contains($0) }
+    }
+
+    private func refreshFilters() {
+        filteredPresets = computeFilteredPresets()
+        availableCategories = computeAvailableCategories()
     }
 
     // MARK: - Body
@@ -99,7 +106,11 @@ struct MCPPresetsView: View {
                 if viewModel.presets.isEmpty {
                     await viewModel.loadPresets()
                 }
+                refreshFilters()
             }
+            .onChange(of: searchText) { _, _ in refreshFilters() }
+            .onChange(of: selectedCategory) { _, _ in refreshFilters() }
+            .onChange(of: viewModel.presets) { _, _ in refreshFilters() }
         }
     }
 

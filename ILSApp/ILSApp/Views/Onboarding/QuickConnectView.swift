@@ -51,16 +51,7 @@ struct QuickConnectView: View {
                         TroubleshootingView(
                             errorMessage: message,
                             onRetry: {
-                                viewModel.isShowingTroubleshooting = false
-                                Task {
-                                    let success = await viewModel.connect(appState: appState)
-                                    if success {
-                                        try? await Task.sleep(nanoseconds: 1_500_000_000)
-                                        dismiss()
-                                    } else {
-                                        viewModel.isShowingTroubleshooting = true
-                                    }
-                                }
+                                Task { await viewModel.connectAndFinish(appState: appState) }
                             },
                             onSetupNewServer: {
                                 dismiss()
@@ -367,20 +358,14 @@ struct QuickConnectView: View {
 
     private var connectButton: some View {
         AccentButton("Connect", isLoading: viewModel.isConnecting) {
-            Task {
-                viewModel.isShowingTroubleshooting = false
-                let success = await viewModel.connect(appState: appState)
-                if success {
-                    try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    dismiss()
-                } else {
-                    viewModel.isShowingTroubleshooting = true
-                }
-            }
+            Task { await viewModel.connectAndFinish(appState: appState) }
         }
         .frame(maxWidth: .infinity)
         .disabled(!viewModel.isConnectEnabled)
         .accessibilityIdentifier("connect-button")
+        .onChange(of: viewModel.shouldDismiss) { _, shouldDismiss in
+            if shouldDismiss { dismiss() }
+        }
     }
 
     // MARK: - Recent Section

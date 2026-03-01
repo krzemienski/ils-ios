@@ -23,8 +23,12 @@ struct ShareSheet: UIViewControllerRepresentable {
     /// Share text content as a file in Caches (survives backgrounding, cleaned up after share).
     init(text: String, fileName: String) {
         let data = Data(text.utf8)
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("ShareExports", isDirectory: true)
+        guard let baseCachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            self.activityItems = [text]
+            self.tempURLs = []
+            return
+        }
+        let cachesDir = baseCachesDir.appendingPathComponent("ShareExports", isDirectory: true)
         try? FileManager.default.createDirectory(at: cachesDir, withIntermediateDirectories: true)
         let fileURL = cachesDir.appendingPathComponent(fileName)
         do {

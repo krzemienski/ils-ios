@@ -348,7 +348,6 @@ struct SettingsView: View {
                 model: config.model ?? SettingsViewModel.defaultModelID,
                 colorScheme: scheme
             )
-            await viewModel.loadConfig()
         }
     }
 

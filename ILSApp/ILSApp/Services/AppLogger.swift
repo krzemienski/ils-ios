@@ -102,9 +102,10 @@ final class AppLogger: Sendable {
         let entriesToFlush: [String]? = state.withLock { s in
             s.buffer.append(entry)
             if s.buffer.count >= self.maxBufferSize {
-                let current = s.buffer
-                s.buffer.removeAll(keepingCapacity: true)
-                return current
+                // SPERF-MED-9: swap moves the buffer out in O(1) instead of copying.
+                var toFlush: [String] = []
+                swap(&toFlush, &s.buffer)
+                return toFlush
             }
             return nil
         }
@@ -114,13 +115,14 @@ final class AppLogger: Sendable {
         }
     }
 
-    /// Timer-driven flush — acquires lock, drains buffer, writes outside lock
+    /// Timer-driven flush — acquires lock, drains buffer, writes outside lock.
+    /// SPERF-MED-9: Uses swap to move the buffer out in O(1) instead of copying.
     private func timerFlush() {
         let entries = state.withLock { s -> [String] in
             guard !s.buffer.isEmpty else { return [] }
-            let current = s.buffer
-            s.buffer.removeAll(keepingCapacity: true)
-            return current
+            var toFlush: [String] = []
+            swap(&toFlush, &s.buffer)
+            return toFlush
         }
         if !entries.isEmpty {
             writeEntriesToDisk(entries)

@@ -266,18 +266,31 @@ struct StreamingService {
                         toolCalls: toolCalls.isEmpty ? nil : "[\(toolCalls.joined(separator: ","))]",
                         toolResults: toolResults.isEmpty ? nil : "[\(toolResults.joined(separator: ","))]"
                     )
-                    try? await assistantMessage.save(on: request.db)
+                    // DB-HIGH: Log save failures instead of silently dropping them.
+                    do {
+                        try await assistantMessage.save(on: request.db)
+                    } catch {
+                        request.logger.error("Failed to save assistant message: \(error)")
+                    }
 
                     // Update session with Claude session ID and cost
-                    if let session = try? await SessionModel.find(sessionId, on: request.db) {
-                        if let claudeId = claudeSessionId {
-                            session.claudeSessionId = claudeId
+                    do {
+                        if let session = try await SessionModel.find(sessionId, on: request.db) {
+                            if let claudeId = claudeSessionId {
+                                session.claudeSessionId = claudeId
+                            }
+                            session.messageCount += 1
+                            if let cost = totalCostUSD {
+                                session.totalCostUSD = (session.totalCostUSD ?? 0) + cost
+                            }
+                            do {
+                                try await session.save(on: request.db)
+                            } catch {
+                                request.logger.error("Failed to update session metadata: \(error)")
+                            }
                         }
-                        session.messageCount += 1
-                        if let cost = totalCostUSD {
-                            session.totalCostUSD = (session.totalCostUSD ?? 0) + cost
-                        }
-                        try? await session.save(on: request.db)
+                    } catch {
+                        request.logger.error("Failed to find session for metadata update: \(error)")
                     }
 
                     // Send message ID in a custom event for client correlation
@@ -296,7 +309,12 @@ struct StreamingService {
                         toolCalls: toolCalls.isEmpty ? nil : "[\(toolCalls.joined(separator: ","))]",
                         toolResults: toolResults.isEmpty ? nil : "[\(toolResults.joined(separator: ","))]"
                     )
-                    try? await assistantMessage.save(on: request.db)
+                    // DB-HIGH: Log partial save failures instead of silently dropping them.
+                    do {
+                        try await assistantMessage.save(on: request.db)
+                    } catch let saveError {
+                        request.logger.error("Failed to save partial assistant message: \(saveError)")
+                    }
                 }
                 throw error
             }

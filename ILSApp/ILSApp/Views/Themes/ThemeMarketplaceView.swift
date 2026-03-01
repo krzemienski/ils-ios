@@ -56,7 +56,7 @@ struct ThemeMarketplaceView: View {
     @State private var importError: String?
     @State private var showImportError = false
     @State private var exportData: Data?
-    @State private var cachedFilteredThemes: [any AppTheme] = []
+    @State private var cachedFilteredThemes: [ThemeSnapshot] = []
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -138,18 +138,18 @@ struct ThemeMarketplaceView: View {
         }
     }
 
-    private func themeCard(for builtinTheme: any AppTheme) -> some View {
-        let isActive = builtinTheme.id == themeManager.currentTheme.id
+    private func themeCard(for snapshot: ThemeSnapshot) -> some View {
+        let isActive = snapshot.id == themeManager.currentTheme.id
         return ThemePreviewCard(
-            themeName: builtinTheme.name,
+            themeName: snapshot.name,
             author: "ILS Team",
-            bgColor: builtinTheme.bgPrimary,
-            accentColor: builtinTheme.accent,
-            textColor: builtinTheme.textPrimary,
-            secondaryTextColor: builtinTheme.textSecondary,
+            bgColor: snapshot.bgPrimary,
+            accentColor: snapshot.accent,
+            textColor: snapshot.textPrimary,
+            secondaryTextColor: snapshot.textSecondary,
             isActive: isActive,
             onTap: {
-                themeManager.setTheme(builtinTheme.id)
+                themeManager.setTheme(snapshot.id)
             }
         )
     }
@@ -245,7 +245,7 @@ struct ThemeMarketplaceView: View {
 
     // MARK: - Filtered Themes
 
-    private func computeFilteredThemes() -> [any AppTheme] {
+    private func computeFilteredThemes() -> [ThemeSnapshot] {
         let themes = themeManager.availableThemes
 
         let categoryFiltered: [any AppTheme]
@@ -257,12 +257,15 @@ struct ThemeMarketplaceView: View {
             }
         }
 
+        let filtered: [any AppTheme]
         if searchText.isEmpty {
-            return categoryFiltered
+            filtered = categoryFiltered
+        } else {
+            filtered = categoryFiltered.filter { t in
+                t.name.localizedCaseInsensitiveContains(searchText)
+            }
         }
-        return categoryFiltered.filter { t in
-            t.name.localizedCaseInsensitiveContains(searchText)
-        }
+        return filtered.map { ThemeSnapshot($0) }
     }
 
     // MARK: - Import / Export

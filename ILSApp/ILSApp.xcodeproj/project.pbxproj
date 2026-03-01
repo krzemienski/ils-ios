@@ -120,7 +120,6 @@
 		2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B121B5870E59B111E9F54CFC /* AssistantCard.swift */; };
 		DC38FED474DD498BA99AB623 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */; };
 		2DE2E7CD15D3686175AEEA34 /* Scenario04_ErrorHandlingAndRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B8FAB1246E8DB2AF699A5B5 /* Scenario04_ErrorHandlingAndRecovery.swift */; };
-		2F0EAF3FFE0122F9369FDE92 /* MacDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */; };
 		2F35F33131F061E873FBC02F /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06A8A5DC276AB8E77D502627 /* SSEClient.swift */; };
 		3013A38F73E6762D7FB50E77 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
 		B4C5D6E7F8901234567AABBC /* ICloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F901234567AABB /* ICloudSyncSettingsView.swift */; };
@@ -613,7 +612,6 @@
 		4DEE8624B9BCC400474F4F46 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
 		4E9B5E6B89F44F28BF3AE9AA /* AsyncOperationBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperationBanner.swift; sourceTree = "<group>"; };
-		5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDashboardView.swift; sourceTree = "<group>"; };
 		50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
 		5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestModal.swift; sourceTree = "<group>"; };
 		C4E1D287F5A30B94E62F1A3C /* RelatedSessionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedSessionsPanel.swift; sourceTree = "<group>"; };
@@ -1244,7 +1242,6 @@
 			children = (
 				869B654B4F7CD919CFF60F91 /* MacChatView.swift */,
 				539D04AB39A919A399C23320 /* MacContentView.swift */,
-				5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */,
 				F0B4BF71D7F947143FA895AC /* MacProjectsListView.swift */,
 				F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */,
 				175D6193694B4485A690BA10 /* MacBackendSettingsView.swift */,
@@ -2080,7 +2077,6 @@
 				BCFCBE145C3FD9264131AA00 /* MCPViewModel.swift in Sources */,
 				0221D6435E5A81ABB9009818 /* MacChatView.swift in Sources */,
 				9D3460E0164ED35EF5FB5F39 /* MacContentView.swift in Sources */,
-				2F0EAF3FFE0122F9369FDE92 /* MacDashboardView.swift in Sources */,
 				A4EDEE8198F803F4DF97D6E8 /* MacProjectsListView.swift in Sources */,
 				CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */,
 				9E0F40446D0B97394A92F04F /* MacSettingsView.swift in Sources */,

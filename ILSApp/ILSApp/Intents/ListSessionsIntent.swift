@@ -8,7 +8,7 @@ struct ListSessionsIntent: AppIntent {
     static var description = IntentDescription("List recent Claude Code sessions and their status")
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ShowsSnippetView {
-        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
         guard let url = URL(string: "\(baseURL)/api/v1/sessions?page=1&limit=10") else {
             return .result(value: "Error: Invalid server URL", view: SessionSnippetView(mode: .list([])))
         }

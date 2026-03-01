@@ -249,7 +249,7 @@ final class SSHViewModel {
 
     /// Starts SSH local port forwarding. Binds to 127.0.0.1:localPort and tunnels
     /// traffic to remoteHost:remotePort through the active SSH connection.
-    /// - Returns: Server URL string (e.g., "http://localhost:8080")
+    /// - Returns: Server URL string (e.g., "http://localhost:9999")
     func startPortForwarding(localPort: Int, remoteHost: String = "localhost", remotePort: Int) async throws -> String {
         return try await sshService.startPortForwarding(
             localPort: localPort,

@@ -95,6 +95,10 @@ final class MetricsWebSocketClient {
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
+        // NET-MED-3: Invalidate URLSession to release delegate strong reference and
+        // close idle connections. Create a fresh session for the next connect() cycle.
+        session.invalidateAndCancel()
+        session = URLSession(configuration: .default)
         // Reset failure state so a subsequent connect() starts fresh (MEMORY.md bug fix)
         wsFailureCount = 0
         reconnectAttempts = 0
@@ -192,10 +196,9 @@ final class MetricsWebSocketClient {
 
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
         if history.count >= maxHistorySize {
-            // Avoid O(n) removeFirst() by rebuilding from suffix.
-            // suffix() returns an ArraySlice (O(1)), Array init copies only the
-            // retained elements once. Net cost: one O(k) copy vs O(k) shift per tick.
-            history = Array(history.suffix(maxHistorySize - 1))
+            // O(1) amortised: removeFirst shifts elements but for a fixed-size 60-element
+            // sliding window the constant factor is negligible vs. suffix+Array(init) copy.
+            history.removeFirst()
         }
         history.append(MetricDataPoint(timestamp: date, value: value))
     }

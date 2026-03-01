@@ -6,6 +6,8 @@ import ILSShared
 enum ConnectionDefaults {
     static let host = "localhost"
     static let port = 9999
+    // Intentionally "http" — the default connection is localhost-only.
+    // Remote/tunnel connections use user-configured URLs (which may be https).
     static let scheme = "http"
 
     /// Build default URL from components.

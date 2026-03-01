@@ -39,6 +39,7 @@ class QuickConnectViewModel {
     // MARK: - Auto Detection & Troubleshooting
     var isAutoDetecting = false
     var isShowingTroubleshooting = false
+    var shouldDismiss = false
 
     // MARK: - History
     var connectionHistory: [String] = []
@@ -210,6 +211,21 @@ class QuickConnectViewModel {
             showSteps = false
             HapticManager.notification(.error)
             return false
+        }
+    }
+
+    /// Connect and dismiss the view on success, or show troubleshooting on failure.
+    ///
+    /// Sets ``shouldDismiss`` to `true` after a brief delay on success so that the
+    /// view can observe the change and call `dismiss()`.
+    func connectAndFinish(appState: AppState) async {
+        isShowingTroubleshooting = false
+        let success = await connect(appState: appState)
+        if success {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            shouldDismiss = true
+        } else {
+            isShowingTroubleshooting = true
         }
     }
 

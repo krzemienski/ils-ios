@@ -124,6 +124,8 @@ struct SidebarRootView: View {
     private let networkMonitor = NetworkMonitor.shared
     /// Activity feed view model, instantiated once and reused by ``ActivityFeedView``.
     @State private var activityFeedVM = ActivityFeedViewModel()
+    /// NavigationStack path for programmatic push-navigation within the active screen.
+    @State private var navigationPath = NavigationPath()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -276,7 +278,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 switch activeScreen {
                 case .home:

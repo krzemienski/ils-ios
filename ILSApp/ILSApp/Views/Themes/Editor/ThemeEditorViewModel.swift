@@ -643,6 +643,11 @@ class ThemeEditorViewModel {
             let exportDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
                 .appendingPathComponent("ThemeExports", isDirectory: true)
             try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
+            // STOR-HIGH: Exclude export cache from iCloud/iTunes backup
+            var resourceValues = URLResourceValues()
+            resourceValues.isExcludedFromBackup = true
+            var mutableExportDir = exportDir
+            try? mutableExportDir.setResourceValues(resourceValues)
             let fileURL = exportDir.appendingPathComponent(fileName)
 
             try jsonData.write(to: fileURL)

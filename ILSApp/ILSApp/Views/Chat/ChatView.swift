@@ -185,12 +185,7 @@ struct ChatView: View {
                     cacheCreateTokens: viewModel.contextCacheCreateTokens,
                     onForkSession: {
                         sheets.showContextWindowDetail = false
-                        Task {
-                            if let forked = await viewModel.forkSession() {
-                                actions.forkedSession = forked
-                                sheets.showForkAlert = true
-                            }
-                        }
+                        Task { await viewModel.performFork() }
                     },
                     onDismiss: { sheets.showContextWindowDetail = false }
                 )
@@ -208,6 +203,13 @@ struct ChatView: View {
         }
         .navigationDestination(item: $actions.navigateToRelated) { session in
             ChatView(session: session)
+        }
+        .onChange(of: viewModel.forkResult) { _, forked in
+            if let forked {
+                actions.forkedSession = forked
+                sheets.showForkAlert = true
+                viewModel.forkResult = nil
+            }
         }
         .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
             if newValue != nil {

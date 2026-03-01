@@ -24,6 +24,12 @@ actor CitadelSSHService {
     /// Map of localPort → active NIO Channel (server side of the forwarding).
     private var portForwardings: [Int: Channel] = [:]
 
+    /// MEM-HIGH-2: Safety-net deinit cancels monitoringTask if disconnect() was not called.
+    /// Task.cancel() is thread-safe and valid from nonisolated deinit context.
+    deinit {
+        monitoringTask?.cancel()
+    }
+
     // MARK: - Connection Info
 
     struct ConnectionInfo {

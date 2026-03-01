@@ -262,13 +262,19 @@ final class BackendLifecycleManager {
         await checkPortConflict()
     }
 
+    /// Dedicated URLSession for health checks with a 5-second timeout.
+    private static let healthSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 5
+        return URLSession(configuration: config)
+    }()
+
     /// Return true if GET http://localhost:9999/health responds with HTTP 2xx.
     private func pingHealthEndpoint() async -> Bool {
         guard let url = URL(string: "http://localhost:9999/health") else { return false }
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 5
+        let request = URLRequest(url: url)
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await Self.healthSession.data(for: request)
             if let http = response as? HTTPURLResponse {
                 return (200..<300).contains(http.statusCode)
             }
@@ -313,11 +319,21 @@ final class BackendLifecycleManager {
         try? await center.add(request)
     }
 
+    // MARK: - Log Directory
+
+    /// Application Support log directory path for backend logs.
+    static var logDirectoryPath: String {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let logDir = appSupport.appendingPathComponent("ILS", isDirectory: true)
+        try? FileManager.default.createDirectory(at: logDir, withIntermediateDirectories: true)
+        return logDir.path
+    }
+
     // MARK: - Log Reading
 
-    /// Reload the last \(logTailLines) lines from /tmp/ils-backend.log.
+    /// Reload the last \(logTailLines) lines from the backend log.
     func refreshLogs() async {
-        let logPath = "/tmp/ils-backend.log"
+        let logPath = "\(Self.logDirectoryPath)/ils-backend.log"
         guard let content = try? String(contentsOfFile: logPath, encoding: .utf8) else {
             return
         }
@@ -437,9 +453,9 @@ final class BackendLifecycleManager {
             <key>KeepAlive</key>
             <false/>
             <key>StandardOutPath</key>
-            <string>/tmp/ils-backend.log</string>
+            <string>\(Self.logDirectoryPath)/ils-backend.log</string>
             <key>StandardErrorPath</key>
-            <string>/tmp/ils-backend.error.log</string>
+            <string>\(Self.logDirectoryPath)/ils-backend.error.log</string>
         </dict>
         </plist>
         """
