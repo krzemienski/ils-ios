@@ -43,9 +43,11 @@ struct AccentButton: View {
                     ProgressView()
                         .tint(theme.textOnAccent)
                         .controlSize(.small)
+                        .transition(.opacity.combined(with: .scale(scale: 0.7)))
                 } else if let icon {
                     Image(systemName: icon)
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .transition(.opacity.combined(with: .scale(scale: 0.7)))
                 }
                 Text(title)
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
@@ -58,6 +60,7 @@ struct AccentButton: View {
             .scaleEffect(isPressed ? 0.85 : 1.0)
             .opacity(isPressed ? 0.8 : 1.0)
             .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isLoading)
         }
         .disabled(isLoading)
         .opacity(isLoading ? 0.7 : (isEnabled ? 1.0 : 0.5))
