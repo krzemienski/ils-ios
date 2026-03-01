@@ -50,4 +50,9 @@ enum AppConstants {
 
     /// UserDefaults key for the command palette per-command usage counts (JSON-encoded [String: Int]).
     static let commandPaletteUsageCountKey = "commandPaletteUsageCount"
+
+    // MARK: - Keyboard Shortcut Keys
+
+    /// UserDefaults key for custom keyboard shortcut bindings (JSON-encoded [String: KeyboardShortcutConfig]).
+    static let keyboardShortcutBindingsKey = "keyboardShortcutBindings"
 }
