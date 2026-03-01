@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import ILSShared
 
 /// Multi-control input bar for composing and sending messages to Claude.
@@ -46,6 +47,10 @@ struct ChatInputBar: View {
     let onCommandPalette: () -> Void
     /// Called to open the advanced chat options sheet.
     let onAdvancedOptions: () -> Void
+    /// Pending message attachments (images, files). Shown in `AttachmentPreviewStrip`.
+    var attachments: Binding<[MessageAttachment]> = .constant([])
+    /// Called when the user taps the paperclip button to open the attachment picker.
+    var onAttachmentTap: (() -> Void)? = nil
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -65,8 +70,15 @@ struct ChatInputBar: View {
             // Top border
             theme.divider.frame(height: 0.5)
 
+            // Attachment preview strip — shown when there are pending attachments
+            if !attachments.wrappedValue.isEmpty {
+                AttachmentPreviewStrip(attachments: attachments)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             HStack(spacing: theme.spacingSM) {
                 commandPaletteButton
+                attachmentButton
                 optionsButton
                 textField
                 if isStreaming {
@@ -94,6 +106,22 @@ struct ChatInputBar: View {
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
+    }
+
+    private var attachmentButton: some View {
+        Button {
+            onAttachmentTap?()
+        } label: {
+            Image(systemName: "paperclip")
+                .font(.system(size: 20))
+                .foregroundStyle(isDisabled ? theme.textTertiary : theme.textSecondary)
+        }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
+        .disabled(isDisabled)
+        .accessibilityLabel("Add attachment")
+        .accessibilityHint("Opens the attachment picker")
+        .accessibilityIdentifier("attachment-button")
     }
 
     private var optionsButton: some View {
@@ -124,6 +152,7 @@ struct ChatInputBar: View {
             .focusRing(isFocused: isInputFocused, cornerRadius: theme.cornerRadius)
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
+            .imagePasteHandler(attachments: attachments)
     }
 
     private var cancelButton: some View {
@@ -169,5 +198,38 @@ struct ChatInputBar: View {
         .accessibilityIdentifier("send-button")
         .accessibilityLabel("Send message")
         .accessibilityHint("Sends the current message to Claude")
+    }
+}
+
+// MARK: - Platform Paste Helper
+
+private extension View {
+    /// Attaches an image-paste handler appropriate for the current platform.
+    ///
+    /// - On macOS: uses `.onPasteCommand(of:perform:)` to intercept Cmd+V with image data.
+    /// - On iOS: no-op (clipboard paste is available via the attachment picker sheet).
+    @ViewBuilder
+    func imagePasteHandler(attachments: Binding<[MessageAttachment]>) -> some View {
+        #if os(macOS)
+        self.onPasteCommand(of: [UTType.image]) { providers in
+            for provider in providers {
+                provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                    guard let data,
+                          let compressed = ImageCompressionService.compress(data: data, mimeType: "image/jpeg") else { return }
+                    let attachment = MessageAttachment(
+                        mimeType: compressed.mimeType,
+                        data: compressed.data.base64EncodedString(),
+                        width: compressed.width,
+                        height: compressed.height
+                    )
+                    DispatchQueue.main.async {
+                        attachments.wrappedValue.append(attachment)
+                    }
+                }
+            }
+        }
+        #else
+        self
+        #endif
     }
 }

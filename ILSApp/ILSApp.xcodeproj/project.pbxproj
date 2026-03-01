@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B1C2D3E400000002AABBCCDD /* ImageCompressionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E400000001AABBCCDD /* ImageCompressionService.swift */; };
+		B1C2D3E400000003AABBCCDD /* ImageCompressionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E400000001AABBCCDD /* ImageCompressionService.swift */; };
+		A1B2C3D400000002AABBCCDD /* AttachmentPreviewStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000001AABBCCDD /* AttachmentPreviewStrip.swift */; };
+		A1B2C3D400000003AABBCCDD /* AttachmentPreviewStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000001AABBCCDD /* AttachmentPreviewStrip.swift */; };
+		A1B2C3D400000005AABBCCDD /* AttachmentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004AABBCCDD /* AttachmentPickerSheet.swift */; };
+		A1B2C3D400000006AABBCCDD /* AttachmentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000004AABBCCDD /* AttachmentPickerSheet.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		0116261DC4C2DAD124FAB937 /* SkillDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0617F20B854A6A31E51BE659 /* SkillDetailView.swift */; };
 		0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E32DD92F87322D4834E67C /* SessionExporter.swift */; };
@@ -440,6 +446,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B1C2D3E400000001AABBCCDD /* ImageCompressionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCompressionService.swift; sourceTree = "<group>"; };
+		A1B2C3D400000001AABBCCDD /* AttachmentPreviewStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentPreviewStrip.swift; sourceTree = "<group>"; };
+		A1B2C3D400000004AABBCCDD /* AttachmentPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentPickerSheet.swift; sourceTree = "<group>"; };
 		007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserMessageCard.swift; sourceTree = "<group>"; };
 		025F7DAE8CFF9D558461F3F5 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
@@ -1112,6 +1121,7 @@
 				D80552C5B47B45FB0F4A2E25 /* APIClient.swift */,
 				8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */,
 				C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */,
+				B1C2D3E400000001AABBCCDD /* ImageCompressionService.swift */,
 				8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */,
 				F48795057C7081556FF5B265 /* ConnectionManager.swift */,
 				50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */,
@@ -1291,6 +1301,8 @@
 			children = (
 				3A5F82ABB45EB40D8130FBC5 /* AdvancedOptionsSheet.swift */,
 				B121B5870E59B111E9F54CFC /* AssistantCard.swift */,
+				A1B2C3D400000004AABBCCDD /* AttachmentPickerSheet.swift */,
+				A1B2C3D400000001AABBCCDD /* AttachmentPreviewStrip.swift */,
 				7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */,
 				18502885F5B6E45B14619177 /* ChatMessageList.swift */,
 				5D406A95CF1DAFB1A1D7DAF2 /* ChatView.swift */,
@@ -1521,9 +1533,12 @@
 				08CA0507D6E3EFEEF56E4682 /* AppTheme.swift in Sources */,
 				1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
+				A1B2C3D400000005AABBCCDD /* AttachmentPickerSheet.swift in Sources */,
+				A1B2C3D400000002AABBCCDD /* AttachmentPreviewStrip.swift in Sources */,
 				05B9BAF492B57A8F4BEFD565 /* BashGrammar.swift in Sources */,
 				9C30563A1ED1E15628E54487 /* BrowserView.swift in Sources */,
 				84A0C3EB7D957139BF54D41B /* CacheService.swift in Sources */,
+				B1C2D3E400000002AABBCCDD /* ImageCompressionService.swift in Sources */,
 				6FF2FE7DC2E16FC1CCC1DADB /* CacheStatusView.swift in Sources */,
 				6010F25359C148A4CF2D04E3 /* CarbonTheme.swift in Sources */,
 				50DD63730F1AC7ACDE6E9A86 /* ChatInputBar.swift in Sources */,
@@ -1711,9 +1726,12 @@
 				C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */,
 				BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,
+				A1B2C3D400000006AABBCCDD /* AttachmentPickerSheet.swift in Sources */,
+				A1B2C3D400000003AABBCCDD /* AttachmentPreviewStrip.swift in Sources */,
 				BBCDB1B897FFADCE8BA88E24 /* BashGrammar.swift in Sources */,
 				5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */,
 				834A2D8B4FE2267C537917D3 /* CacheService.swift in Sources */,
+				B1C2D3E400000003AABBCCDD /* ImageCompressionService.swift in Sources */,
 				A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */,
 				DCE1AFC3B6111D22EA4B7526 /* CarbonTheme.swift in Sources */,
 				3ECD0B190A2B788BC969453C /* ChatInputBar.swift in Sources */,
