@@ -1,4 +1,5 @@
 import Foundation
+import os
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)
@@ -83,8 +84,11 @@ actor SystemMetricsService {
     func getProcesses() async -> [SystemProcessInfo] {
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                // Guard against double-resume: timeout and normal path can race
-                var hasResumed = false
+                // CONC: OSAllocatedUnfairLock eliminates the data race between the timeout
+                // DispatchWorkItem (writing true) and the main read path (reading the flag).
+                // Previously `var Bool` was mutated from two concurrent GCD contexts without
+                // synchronisation, causing a Swift 6 data-race warning.
+                let hasResumed = OSAllocatedUnfairLock<Bool>(initialState: false)
 
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: "/bin/ps")
@@ -98,8 +102,12 @@ actor SystemMetricsService {
                 // 5-second timeout: terminate the process and resume if it hangs
                 let timeoutItem = DispatchWorkItem {
                     process.terminate()
-                    if !hasResumed {
-                        hasResumed = true
+                    let claimed = hasResumed.withLock { state -> Bool in
+                        guard !state else { return false }
+                        state = true
+                        return true
+                    }
+                    if claimed {
                         continuation.resume(returning: [])
                     }
                 }
@@ -118,8 +126,12 @@ actor SystemMetricsService {
                     process.waitUntilExit()
                     timeoutItem.cancel()
 
-                    guard !hasResumed else { return }
-                    hasResumed = true
+                    let claimed = hasResumed.withLock { state -> Bool in
+                        guard !state else { return false }
+                        state = true
+                        return true
+                    }
+                    guard claimed else { return }
 
                     guard let output = String(data: data, encoding: .utf8) else {
                         continuation.resume(returning: [])
@@ -130,9 +142,14 @@ actor SystemMetricsService {
                     continuation.resume(returning: results)
                 } catch {
                     timeoutItem.cancel()
-                    guard !hasResumed else { return }
-                    hasResumed = true
-                    continuation.resume(returning: [])
+                    let claimed = hasResumed.withLock { state -> Bool in
+                        guard !state else { return false }
+                        state = true
+                        return true
+                    }
+                    if claimed {
+                        continuation.resume(returning: [])
+                    }
                 }
             }
         }
