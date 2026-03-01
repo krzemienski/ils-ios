@@ -12,9 +12,11 @@
 		373FECEEE6872F6E898AE3A3 /* AlertThresholdSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */; };
 		A22D2B4C7773EFB999117AC7 /* AlertThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */; };
 		1F5CC7A30FC95731224260C6 /* AlertThresholdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */; };
+		E7C4F901B2DA3845F6A1C290 /* AlertHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A3B72CD91E4560A2B83F15 /* AlertHistoryView.swift */; };
 		D202F781C3598C233C2267BB /* AlertThresholdSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */; };
 		93DEFF05C0D7B8A34856FEA1 /* AlertThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */; };
 		C7239E9FDB0BB455ECB8E08D /* AlertThresholdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */; };
+		D1B89E427F53C60E4A92B381 /* AlertHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A3B72CD91E4560A2B83F15 /* AlertHistoryView.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		031C9457D5594277A7BC8DDD /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
 		B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */; };
@@ -536,6 +538,7 @@
 		CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacNavigationTests.swift; sourceTree = "<group>"; };
 		CC11DD22EE33FF44AA55BB03 /* ILSMacAppUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ILSMacAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThresholdSettingsView.swift; sourceTree = "<group>"; };
+		F8A3B72CD91E4560A2B83F15 /* AlertHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertHistoryView.swift; sourceTree = "<group>"; };
 		225043B3EF9CD62C8E2363E3 /* AlertThreshold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThreshold.swift; sourceTree = "<group>"; };
 		BCF70F8DDCD8B91EACAAD5F2 /* AlertThresholdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThresholdManager.swift; sourceTree = "<group>"; };
 		007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
@@ -894,6 +897,7 @@
 				9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */,
 				56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */,
 				34074F26D0E469BFF38C923B /* AlertThresholdSettingsView.swift */,
+				F8A3B72CD91E4560A2B83F15 /* AlertHistoryView.swift */,
 				03E11049F41DFFB7A80801AB /* SystemMonitorView.swift */,
 			);
 			path = System;
@@ -1990,6 +1994,7 @@
 				373FECEEE6872F6E898AE3A3 /* AlertThresholdSettingsView.swift in Sources */,
 				A22D2B4C7773EFB999117AC7 /* AlertThreshold.swift in Sources */,
 				1F5CC7A30FC95731224260C6 /* AlertThresholdManager.swift in Sources */,
+				E7C4F901B2DA3845F6A1C290 /* AlertHistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2236,6 +2241,7 @@
 				D202F781C3598C233C2267BB /* AlertThresholdSettingsView.swift in Sources */,
 				93DEFF05C0D7B8A34856FEA1 /* AlertThreshold.swift in Sources */,
 				C7239E9FDB0BB455ECB8E08D /* AlertThresholdManager.swift in Sources */,
+				D1B89E427F53C60E4A92B381 /* AlertHistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
