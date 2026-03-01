@@ -87,10 +87,8 @@ struct BackendHealthDashboardView: View {
         .task {
             await viewModel.loadBackends()
             await refresh()
-            viewModel.startHealthPolling()
-        }
-        .onDisappear {
-            viewModel.stopHealthPolling()
+            // Do NOT start/stop global health polling here; that is managed
+            // exclusively by AppState.handleScenePhase to avoid lifecycle conflicts.
         }
     }
 

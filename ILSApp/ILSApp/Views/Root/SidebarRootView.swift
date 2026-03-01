@@ -20,6 +20,7 @@ enum ActiveScreen: Hashable {
     case hooks
     case activityFeed
     case backends
+    case unifiedSessions
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -38,6 +39,7 @@ enum ActiveScreen: Hashable {
         case .hooks: return "hooks"
         case .activityFeed: return "activityFeed"
         case .backends: return "backends"
+        case .unifiedSessions: return "unifiedSessions"
         }
     }
 
@@ -54,6 +56,7 @@ enum ActiveScreen: Hashable {
         case "hooks": return .hooks
         case "activityFeed": return .activityFeed
         case "backends": return .backends
+        case "unifiedSessions": return .unifiedSessions
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -309,6 +312,8 @@ struct SidebarRootView: View {
                     activityFeedScreen
                 case .backends:
                     backendsScreen
+                case .unifiedSessions:
+                    unifiedSessionsScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -462,6 +467,13 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var backendsScreen: some View {
         BackendConnectionsView()
+    }
+
+    @ViewBuilder
+    private var unifiedSessionsScreen: some View {
+        UnifiedSessionsView(onSessionSelected: { tagged in
+            navigateToChat(tagged.session)
+        })
     }
 
     // MARK: - Chat Navigation

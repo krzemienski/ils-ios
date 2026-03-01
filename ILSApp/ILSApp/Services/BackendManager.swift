@@ -96,11 +96,20 @@ final class BackendManager {
     }
 
     /// Marks a backend as active and persists the change across all profiles.
+    /// Posts `.backendDidActivate` so that `AppState` can update `serverURL` for backward compat.
     func setActive(id: UUID) async {
         activeBackendId = id
         for i in backends.indices {
             backends[i].isActive = backends[i].id == id
             await store.save(backends[i])
+        }
+        // Notify AppState to update its serverURL for backward compat (AC: quick switch)
+        if let activeURL = backends.first(where: { $0.id == id })?.url {
+            NotificationCenter.default.post(
+                name: .backendDidActivate,
+                object: nil,
+                userInfo: ["url": activeURL]
+            )
         }
     }
 

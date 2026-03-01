@@ -11,6 +11,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
+    case allSessions = "All Sessions"
     case hostProfiles = "Host Profiles"
     case backends = "Backends"
     case themes = "Themes"
@@ -25,6 +26,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
+        case .allSessions: return "list.bullet.rectangle"
         case .hostProfiles: return "desktopcomputer"
         case .backends: return "server.rack"
         case .themes: return "paintpalette.fill"
@@ -39,6 +41,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
+        case .allSessions: return .unifiedSessions
         case .hostProfiles: return .hostProfiles
         case .backends: return .backends
         case .themes: return .themes
@@ -431,6 +434,10 @@ struct MacContentView: View {
             }
         case .backends:
             BackendConnectionsView()
+        case .unifiedSessions:
+            UnifiedSessionsView(onSessionSelected: { tagged in
+                activeScreen = .chat(tagged.session)
+            })
         }
     }
 
@@ -687,6 +694,7 @@ struct MacContentView: View {
         case .backends: selectedSection = .backends
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
+        case .unifiedSessions: selectedSection = .allSessions
         case .chat: selectedSection = .home
         case .activityFeed: selectedSection = .home
         }

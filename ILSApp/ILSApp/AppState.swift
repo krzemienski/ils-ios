@@ -33,6 +33,9 @@ class AppState {
     let iCloudSyncManager: ICloudSyncManager
     let backendManager: BackendManager
 
+    /// Observer token for `.backendDidActivate` — used to update `serverURL` on backend switch.
+    @ObservationIgnored private var backendActivateObserver: NSObjectProtocol?
+
     // MARK: - Computed Helpers
 
     /// True when two or more backend connections are registered.
@@ -81,6 +84,24 @@ class AppState {
         // Load persisted backend connections asynchronously on first launch.
         Task {
             await backendManager.loadBackends()
+        }
+
+        // Observe active-backend switches and update serverURL for backward compat.
+        backendActivateObserver = NotificationCenter.default.addObserver(
+            forName: .backendDidActivate,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let url = notification.userInfo?["url"] as? String else { return }
+            Task { @MainActor [weak self] in
+                self?.updateServerURL(url)
+            }
+        }
+    }
+
+    deinit {
+        if let observer = backendActivateObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 
@@ -210,6 +231,8 @@ class AppState {
             navigationIntent = .teams
         case "activity":
             navigationIntent = .activityFeed
+        case "unified-sessions", "all-sessions":
+            navigationIntent = .unifiedSessions
         default:
             break
         }

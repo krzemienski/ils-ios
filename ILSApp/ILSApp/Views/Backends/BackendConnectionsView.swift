@@ -119,9 +119,10 @@ struct BackendConnectionsView: View {
         }
         .task {
             await viewModel.loadBackends()
+            // Trigger an immediate poll on appear without interfering with
+            // the background polling task owned by AppState.handleScenePhase.
+            await viewModel.pollNow()
         }
-        .onAppear { viewModel.startHealthPolling() }
-        .onDisappear { viewModel.stopHealthPolling() }
         .overlay(alignment: .top) {
             if showSwitchBanner {
                 HStack(spacing: theme.spacingSM) {
