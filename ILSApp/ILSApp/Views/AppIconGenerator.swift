@@ -97,7 +97,7 @@ struct AppIconGenerator: View {
             }
         }
         .frame(width: size, height: size)
-        .drawingGroup() // Offload shadow compositing to Metal
+        // drawingGroup() removed: Metal rasterization breaks UIKit-backed controls (Toggle, TextField, Picker)
     }
 }
 

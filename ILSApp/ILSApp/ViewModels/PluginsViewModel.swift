@@ -4,10 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class PluginsViewModel {
+class PluginsViewModel: BaseViewModel {
     var plugins: [Plugin] = []
-    var isLoading = false
-    var error: Error?
     var searchText = ""
     var marketplaceSearchText = ""
     var selectedCategory: String = "All"
@@ -23,19 +21,16 @@ class PluginsViewModel {
     var lastUpdated: Date?
     @ObservationIgnored private var countdownTask: Task<Void, Never>?
 
-    private var client: APIClient?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
 
-    init() {}
+    /// Precomputed lowercase search strings keyed by plugin, rebuilt when plugins change
+    @ObservationIgnored private var searchCache: [(plugin: Plugin, searchText: String)] = []
 
     deinit {
         searchTask?.cancel()
         countdownTask?.cancel()
     }
 
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -66,14 +61,23 @@ class PluginsViewModel {
         return baseFiltered.filter { $0.marketplace == selectedCategory }
     }
 
-    /// Filtered plugins based on search text
+    /// Filtered plugins based on search text using precomputed lowercase cache
     var filteredPlugins: [Plugin] {
-        if searchText.isEmpty {
-            return plugins
-        }
-        return plugins.filter { plugin in
-            plugin.name.localizedCaseInsensitiveContains(searchText) ||
-            (plugin.description?.localizedCaseInsensitiveContains(searchText) ?? false)
+        guard !searchText.isEmpty else { return plugins }
+        let query = searchText.lowercased()
+        return searchCache
+            .filter { $0.searchText.contains(query) }
+            .map(\.plugin)
+    }
+
+    /// Rebuild the lowercase search cache when plugins array changes
+    private func rebuildSearchCache() {
+        searchCache = plugins.map { plugin in
+            let text = [
+                plugin.name.lowercased(),
+                plugin.description?.lowercased() ?? ""
+            ].joined(separator: " ")
+            return (plugin, text)
         }
     }
 
@@ -82,11 +86,26 @@ class PluginsViewModel {
         isLoading = true
         error = nil
 
+        // Cache-first: show cached data immediately while fetching from API
+        if plugins.isEmpty {
+            let cached = await CacheService.shared.getCachedPlugins()
+            if !cached.isEmpty {
+                plugins = cached
+                rebuildSearchCache()
+                AppLogger.shared.info("Loaded \(cached.count) plugins from cache", category: "plugins")
+            }
+        }
+
         do {
             let response: APIResponse<ListResponse<Plugin>> = try await client.get("/plugins")
             if let data = response.data {
                 plugins = data.items
                 lastUpdated = Date()
+                rebuildSearchCache()
+                // CONC-03: Use Task instead of Task.detached — CacheService actor handles isolation.
+                Task {
+                    await CacheService.shared.cachePlugins(data.items)
+                }
             }
         } catch {
             self.error = error
@@ -108,6 +127,7 @@ class PluginsViewModel {
             let response: APIResponse<Plugin> = try await client.post("/plugins/install", body: request)
             if let plugin = response.data {
                 plugins.append(plugin)
+                rebuildSearchCache()
             }
         } catch {
             self.error = error
@@ -121,6 +141,7 @@ class PluginsViewModel {
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/plugins/\(plugin.name)")
             plugins.removeAll { $0.id == plugin.id }
+            rebuildSearchCache()
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to uninstall plugin '\(plugin.name)': \(error.localizedDescription)", category: "plugins")
@@ -135,6 +156,7 @@ class PluginsViewModel {
                 var updated = plugins[index]
                 updated.isEnabled = true
                 plugins[index] = updated
+                rebuildSearchCache()
             }
         } catch {
             self.error = error
@@ -150,6 +172,7 @@ class PluginsViewModel {
                 var updated = plugins[index]
                 updated.isEnabled = false
                 plugins[index] = updated
+                rebuildSearchCache()
             }
         } catch {
             self.error = error

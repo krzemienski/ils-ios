@@ -22,9 +22,9 @@ struct ScreenshotProtectionModifier: ViewModifier {
                         }
                     }
                     .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.2), value: scenePhase)
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: scenePhase)
     }
 }
 
