@@ -186,26 +186,14 @@
   },
   "qa_signoff": {
     "status": "fixes_applied",
-    "timestamp": "2026-03-01T16:40:00.000000+00:00",
     "qa_session": 1,
-    "report_file": "qa_report.md",
-    "tests_passed": {
-      "unit": "N/A",
-      "integration": "N/A",
-      "e2e": "N/A",
-      "build_ios": "** BUILD SUCCEEDED **",
-      "build_macos": "** BUILD SUCCEEDED **"
-    },
-    "verified_by": "qa_agent",
-    "notes": "All 5 acceptance criteria independently confirmed: Canvas grep=0, iOS BUILD SUCCEEDED, macOS BUILD SUCCEEDED, .resizable(.tile) confirmed at line 211, OSAllocatedUnfairLock confirmed at line 166. No production code changes — investigation workflow verifying pre-existing optimization.",
-    "fix_session": 1,
-    "issues_fixed": [
+    "issues_found": [
       {
-        "title": "Rebase from master",
-        "fix_commit": "998fccc",
-        "description": "Branch rebased cleanly onto local master (5 new master commits: theme tokens, font fixes, MarketplaceValue, Python SDK, streaming text fix). No conflicts. All 3 investigation commits preserved. CyberpunkEffects.swift unchanged."
+        "description": "Rebased branch onto local master (5 commits ahead). Clean rebase, no conflicts."
       }
     ],
+    "tests_passed": {},
+    "timestamp": "2026-03-01T16:52:31.360918+00:00",
     "ready_for_qa_revalidation": true
   },
   "executionPhase": "qa_fixing",
@@ -213,7 +201,7 @@
   "planStatus": "review",
   "updated_at": "2026-03-01T16:56:00.000Z",
   "recoveryNote": "Task recovered from stuck state at 2026-03-01T16:23:51.285Z",
-  "last_updated": "2026-03-01T16:34:43.540742+00:00",
+  "last_updated": "2026-03-01T16:52:31.360924+00:00",
   "xstateState": "qa_review",
   "lastEvent": {
     "eventId": "b94e24de-4067-4445-8435-5f23288e6cf9",
