@@ -18,6 +18,7 @@ enum ActiveScreen: Hashable {
     case hostProfiles
     case themes
     case hooks
+    case activityFeed
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -34,6 +35,7 @@ enum ActiveScreen: Hashable {
         case .hostProfiles: return "hostProfiles"
         case .themes: return "themes"
         case .hooks: return "hooks"
+        case .activityFeed: return "activityFeed"
         }
     }
 
@@ -48,6 +50,7 @@ enum ActiveScreen: Hashable {
         case "fleet", "hostProfiles": return .hostProfiles  // "fleet" kept for backward compat
         case "themes": return .themes
         case "hooks": return .hooks
+        case "activityFeed": return .activityFeed
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -119,6 +122,8 @@ struct SidebarRootView: View {
     @State private var connectionEvent: ConnectionEvent? = nil
     /// Shared network reachability monitor used to detect connection loss and restore events.
     private let networkMonitor = NetworkMonitor.shared
+    /// Activity feed view model, instantiated once and reused by ``ActivityFeedView``.
+    @State private var activityFeedVM = ActivityFeedViewModel()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -185,6 +190,7 @@ struct SidebarRootView: View {
         }
         .task {
             sessionsVM.configure(client: appState.apiClient)
+            activityFeedVM.configure(client: appState.apiClient)
             await sessionsVM.loadSessions(refresh: true)
             // Load custom themes from backend and register with ThemeManager
             // This allows custom themes to appear in ThemePickerView alongside built-ins
@@ -204,6 +210,7 @@ struct SidebarRootView: View {
         }
         .onChange(of: appState.serverURL) { _, _ in
             sessionsVM.configure(client: appState.apiClient)
+            activityFeedVM.configure(client: appState.apiClient)
             Task {
                 await sessionsVM.loadSessions(refresh: true)
                 await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
@@ -294,6 +301,8 @@ struct SidebarRootView: View {
                     themesScreen
                 case .hooks:
                     hooksScreen
+                case .activityFeed:
+                    activityFeedScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -431,6 +440,16 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var hooksScreen: some View {
         HooksManagementView()
+    }
+
+    @ViewBuilder
+    private var activityFeedScreen: some View {
+        ActivityFeedView(viewModel: activityFeedVM) { sessionId in
+            if let uuid = UUID(uuidString: sessionId),
+               let session = sessionsVM.session(byID: uuid) {
+                navigateToChat(session)
+            }
+        }
     }
 
     // MARK: - Chat Navigation
