@@ -22,13 +22,15 @@ class SessionMonitorService {
     /// Display names keyed by session ID for notification titles.
     private var sessionNames: [UUID: String] = [:]
 
-    /// Weak reference to the API client used for polling.
-    private weak var apiClient: APIClient?
+    /// API client used for polling. Strong reference so a reconstructed client
+    /// (after app termination + BGTask relaunch) is retained for the duration of the task.
+    private var apiClient: APIClient?
 
     // MARK: - UserDefaults Keys
 
     private static let idsKey = "sessionMonitor_ids"
     private static let namesKey = "sessionMonitor_names"
+    private static let serverURLKey = "sessionMonitor_serverURL"
 
     private init() {}
 
@@ -42,6 +44,8 @@ class SessionMonitorService {
         monitoredSessionIDs.insert(session.id)
         sessionNames[session.id] = session.displayName
         self.apiClient = apiClient
+        // Persist base URL so a fresh BGTask process can reconstruct the client.
+        UserDefaults.standard.set(apiClient.baseURL, forKey: Self.serverURLKey)
         persistToDisk()
         AppLogger.shared.info(
             "SessionMonitor: now watching \(monitoredSessionIDs.count) session(s)",
@@ -148,6 +152,14 @@ class SessionMonitorService {
                 guard let uuid = UUID(uuidString: key) else { return nil }
                 return (uuid, value)
             })
+        }
+
+        // Reconstruct API client from persisted server URL if not already set.
+        // This handles the case where the app was terminated by iOS and later relaunched
+        // by BGTaskScheduler — apiClient is nil in the new process.
+        if apiClient == nil,
+           let urlString = UserDefaults.standard.string(forKey: Self.serverURLKey) {
+            self.apiClient = APIClient(baseURL: urlString)
         }
 
         AppLogger.shared.info(

@@ -19,6 +19,19 @@ struct ILSAppApp: App {
 
     init() {
         #if os(iOS)
+        // Register default values for notification preferences. These are only used when
+        // the user has never explicitly set the preference (i.e., on fresh install before
+        // visiting Settings). UserDefaults.register does NOT overwrite existing user values.
+        UserDefaults.standard.register(defaults: [
+            "notif_sessionCompleteAlerts": true,
+            "notif_sessionErrorAlerts": true,
+            "notif_mcpOfflineAlerts": true,
+            "notif_mcpOnlineAlerts": false,
+            "notif_quietHoursEnabled": false,
+            "notif_quietStartHour": 22,
+            "notif_quietEndHour": 7
+        ])
+
         // BGTaskScheduler.shared.register must be called before the app finishes launching.
         // Registering here in init() satisfies that requirement.
         BGTaskScheduler.shared.register(
