@@ -102,4 +102,10 @@ final class BackendConnectionsViewModel {
     func stopHealthPolling() {
         backendManager.stopHealthPolling()
     }
+
+    /// Fires an immediate single health check on all backends without waiting for the next
+    /// scheduled poll interval. Used by the refresh button in ``BackendHealthDashboardView``.
+    func pollNow() async {
+        await backendManager.pollNow()
+    }
 }

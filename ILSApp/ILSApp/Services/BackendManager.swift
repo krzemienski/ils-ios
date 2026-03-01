@@ -119,6 +119,14 @@ final class BackendManager {
 
     // MARK: - Health Polling
 
+    /// Performs a single immediate health check on all backends, updating their status now.
+    ///
+    /// Unlike ``startHealthPolling(interval:)`` which sleeps before the first poll,
+    /// `pollNow()` fires the health check immediately and awaits completion.
+    func pollNow() async {
+        await pollAllBackends()
+    }
+
     /// Starts periodic health checks on all backends.
     ///
     /// - Parameter interval: Polling base interval in seconds (defaults to 30 s).
