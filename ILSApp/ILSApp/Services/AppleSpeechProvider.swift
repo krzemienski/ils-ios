@@ -206,6 +206,7 @@ enum SpeechError: LocalizedError {
 }
 
 #else
+import Foundation
 // macOS stub — voice input is iOS-only
 final class AppleSpeechProvider: SpeechRecognitionProvider {
     var state: SpeechRecognitionState { .error("Not available on macOS") }

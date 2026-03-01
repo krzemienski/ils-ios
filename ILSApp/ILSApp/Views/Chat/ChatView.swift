@@ -75,6 +75,10 @@ struct ChatView: View {
     @State private var chatOptionsConfig = ChatOptionsConfig()
     /// Debounced task for persisting draft text to UserDefaults (DATA-05).
     @State private var draftPersistTask: Task<Void, Never>?
+    /// Service managing speech recognition for voice input (iOS only).
+    #if os(iOS)
+    @State private var speechService = SpeechRecognitionService()
+    #endif
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -224,8 +228,38 @@ struct ChatView: View {
 
             theme.divider.frame(height: 0.5)
 
+            #if os(iOS)
+            if speechService.isRecording {
+                VoiceInputOverlay(
+                    transcribedText: .init(
+                        get: { speechService.transcribedText },
+                        set: { _ in }
+                    ),
+                    audioLevel: CGFloat(speechService.audioLevel),
+                    onDone: { text in
+                        speechService.stopRecording()
+                        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            if inputText.isEmpty {
+                                inputText = text
+                            } else {
+                                inputText += " " + text
+                            }
+                            isInputFocused = true
+                        }
+                    },
+                    onCancel: {
+                        speechService.cancelRecording()
+                    }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            #endif
+
             bottomBar
         }
+        #if os(iOS)
+        .animation(.easeInOut(duration: 0.25), value: speechService.isRecording)
+        #endif
     }
 
     /// Conditionally shows a streaming or connection status indicator at the top of the view.
@@ -275,6 +309,26 @@ struct ChatView: View {
 
     /// Chat input bar for composing and sending messages to Claude.
     private var bottomBar: some View {
+        chatInputBar
+            .focused($isInputFocused)
+    }
+
+    @ViewBuilder
+    private var chatInputBar: some View {
+        #if os(iOS)
+        ChatInputBar(
+            text: $inputText,
+            isStreaming: viewModel.isStreaming,
+            isDisabled: viewModel.isLoadingHistory,
+            hasCustomOptions: chatOptionsConfig.hasCustomOptions,
+            onSend: sendMessage,
+            onCancel: { viewModel.cancel() },
+            onCommandPalette: { sheets.showCommandPalette = true },
+            onAdvancedOptions: { sheets.showAdvancedOptions = true },
+            onVoiceInput: { toggleVoiceInput() },
+            isRecording: speechService.isRecording
+        )
+        #else
         ChatInputBar(
             text: $inputText,
             isStreaming: viewModel.isStreaming,
@@ -285,7 +339,7 @@ struct ChatView: View {
             onCommandPalette: { sheets.showCommandPalette = true },
             onAdvancedOptions: { sheets.showAdvancedOptions = true }
         )
-        .focused($isInputFocused)
+        #endif
     }
 
     /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
@@ -386,6 +440,21 @@ struct ChatView: View {
     }
 
     // MARK: - Actions
+
+    #if os(iOS)
+    /// Toggle voice input recording on or off.
+    private func toggleVoiceInput() {
+        if speechService.isRecording {
+            speechService.stopRecording()
+        } else {
+            Task {
+                let granted = await speechService.requestPermissions()
+                guard granted else { return }
+                try? await speechService.startRecording()
+            }
+        }
+    }
+    #endif
 
     /// Resend the most recent user message after a connection error.
     private func retryLastMessage() {

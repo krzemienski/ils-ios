@@ -97,7 +97,7 @@ final class SpeechRecognitionService {
     /// Transcribed text updates in real-time via ``transcribedText``.
     /// Audio levels update at ~60fps via ``audioLevel``.
     func startRecording() async throws {
-        guard permissionStatus == .authorized || provider.isAuthorized else {
+        if !(permissionStatus == .authorized || provider.isAuthorized) {
             let granted = await requestPermissions()
             guard granted else {
                 recordingState = .error("Microphone or speech recognition access denied")

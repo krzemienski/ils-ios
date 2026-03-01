@@ -143,6 +143,16 @@
 		4F5736F79DB3678F90F5A525 /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126022DAC2872BEEF6363538 /* MetricChart.swift */; };
 		4FFC7EF2ADB85FB1BAC4E0DF /* HostProfileDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E458E0F73BE10EE4A59B8143 /* HostProfileDetailViewModel.swift */; };
 		50DD63730F1AC7ACDE6E9A86 /* ChatInputBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */; };
+		BB1111111111111111111111 /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* SpeechRecognitionService.swift */; };
+		BB2222222222222222222222 /* SpeechRecognitionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* SpeechRecognitionProvider.swift */; };
+		BB3333333333333333333333 /* AppleSpeechProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* AppleSpeechProvider.swift */; };
+		BB4444444444444444444444 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* VoiceInputOverlay.swift */; };
+		BB5555555555555555555555 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555555555555555555555 /* AudioWaveformView.swift */; };
+		CC1111111111111111111111 /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* SpeechRecognitionService.swift */; };
+		CC2222222222222222222222 /* SpeechRecognitionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* SpeechRecognitionProvider.swift */; };
+		CC3333333333333333333333 /* AppleSpeechProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* AppleSpeechProvider.swift */; };
+		CC4444444444444444444444 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* VoiceInputOverlay.swift */; };
+		CC5555555555555555555555 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555555555555555555555 /* AudioWaveformView.swift */; };
 		5152C5E755767492187CF54A /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CA914CC9CC730BF84E8A34 /* ToolCallAccordion.swift */; };
 		519EAFAB2935A2070E08C7BB /* checkpoint-2026-02-13T02-32-52-924Z.json in Resources */ = {isa = PBXBuildFile; fileRef = 862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */; };
 		51A88357FAE07DB0E459965D /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */; };
@@ -559,6 +569,11 @@
 		7C748DE91CEA4C3A823DD3A8 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		7C8832C537298BC59A575FF3 /* PythonGrammar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonGrammar.swift; sourceTree = "<group>"; };
 		7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputBar.swift; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* SpeechRecognitionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionProvider.swift; sourceTree = "<group>"; };
+		AA3333333333333333333333 /* AppleSpeechProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSpeechProvider.swift; sourceTree = "<group>"; };
+		AA4444444444444444444444 /* VoiceInputOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputOverlay.swift; sourceTree = "<group>"; };
+		AA5555555555555555555555 /* AudioWaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioWaveformView.swift; sourceTree = "<group>"; };
 		7FE8A18EC92A35C2625C719B /* ThemeEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeEditorViewModel.swift; sourceTree = "<group>"; };
 		821CFEE940D55731D5E8D672 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeonNoirTheme.swift; sourceTree = "<group>"; };
@@ -1110,6 +1125,7 @@
 			isa = PBXGroup;
 			children = (
 				D80552C5B47B45FB0F4A2E25 /* APIClient.swift */,
+				AA3333333333333333333333 /* AppleSpeechProvider.swift */,
 				8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */,
 				C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */,
 				8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */,
@@ -1123,6 +1139,8 @@
 				0D259013682B0E76D248995F /* PerformanceMonitor.swift */,
 				2EE82C913049A620A077F141 /* PollingManager.swift */,
 				C762E18BD102C1442B83A33F /* SessionExportService.swift */,
+				AA2222222222222222222222 /* SpeechRecognitionProvider.swift */,
+				AA1111111111111111111111 /* SpeechRecognitionService.swift */,
 				06A8A5DC276AB8E77D502627 /* SSEClient.swift */,
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
 				54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */,
@@ -1290,6 +1308,7 @@
 			isa = PBXGroup;
 			children = (
 				3A5F82ABB45EB40D8130FBC5 /* AdvancedOptionsSheet.swift */,
+				AA5555555555555555555555 /* AudioWaveformView.swift */,
 				B121B5870E59B111E9F54CFC /* AssistantCard.swift */,
 				7F10FABB1DF190FECE02D414 /* ChatInputBar.swift */,
 				18502885F5B6E45B14619177 /* ChatMessageList.swift */,
@@ -1304,6 +1323,7 @@
 				92DA7EA27E512C2573284699 /* SystemMessageView.swift */,
 				530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */,
 				01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */,
+				AA4444444444444444444444 /* VoiceInputOverlay.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -1527,6 +1547,11 @@
 				6FF2FE7DC2E16FC1CCC1DADB /* CacheStatusView.swift in Sources */,
 				6010F25359C148A4CF2D04E3 /* CarbonTheme.swift in Sources */,
 				50DD63730F1AC7ACDE6E9A86 /* ChatInputBar.swift in Sources */,
+				BB3333333333333333333333 /* AppleSpeechProvider.swift in Sources */,
+				BB5555555555555555555555 /* AudioWaveformView.swift in Sources */,
+				BB2222222222222222222222 /* SpeechRecognitionProvider.swift in Sources */,
+				BB1111111111111111111111 /* SpeechRecognitionService.swift in Sources */,
+				BB4444444444444444444444 /* VoiceInputOverlay.swift in Sources */,
 				55A05EF9235C2548B1C8ED3A /* ChatMessage.swift in Sources */,
 				1C4288F6BD1A14FB37DD2EA1 /* ChatMessageList.swift in Sources */,
 				B5A6B7EE2A10BDA5BD6BCB12 /* ChatView.swift in Sources */,
@@ -1717,6 +1742,11 @@
 				A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */,
 				DCE1AFC3B6111D22EA4B7526 /* CarbonTheme.swift in Sources */,
 				3ECD0B190A2B788BC969453C /* ChatInputBar.swift in Sources */,
+				CC3333333333333333333333 /* AppleSpeechProvider.swift in Sources */,
+				CC5555555555555555555555 /* AudioWaveformView.swift in Sources */,
+				CC2222222222222222222222 /* SpeechRecognitionProvider.swift in Sources */,
+				CC1111111111111111111111 /* SpeechRecognitionService.swift in Sources */,
+				CC4444444444444444444444 /* VoiceInputOverlay.swift in Sources */,
 				16676D91D0619FADFC06C480 /* ChatMessage.swift in Sources */,
 				8D4E73909DF2B5040331F415 /* ChatMessageList.swift in Sources */,
 				4B3853AD5AD9BC3BF06BC9B2 /* ChatTouchBarProvider.swift in Sources */,
