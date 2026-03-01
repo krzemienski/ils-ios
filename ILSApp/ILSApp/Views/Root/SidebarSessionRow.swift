@@ -10,7 +10,9 @@ import ILSShared
 /// active → `entitySession`, completed → `success`, cancelled → `warning`,
 /// error → `error`.  When ``isActive`` is `true` the dot switches to `accent` and
 /// the row receives a light accent background with semibold text to communicate the
-/// currently open session.
+/// currently open session.  Tapping the row triggers a scale/opacity press animation
+/// via ``RowButtonStyle``; the animation is suppressed when
+/// `accessibilityReduceMotion` is enabled.
 ///
 /// ## Topics
 /// ### Inputs
