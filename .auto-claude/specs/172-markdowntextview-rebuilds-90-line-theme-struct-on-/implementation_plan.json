@@ -3,11 +3,11 @@
   "workflow_type": "simple",
   "workflow_rationale": "The fix was already applied in commit 82ead44 as part of a comprehensive audit. The chatTheme computed property has been replaced with @State cachedTheme + onChange(of: theme.id) caching. This task requires only verifying the fix is correct and both iOS/macOS builds succeed.",
   "created_at": "2026-02-28T21:03:20.690Z",
-  "updated_at": "2026-02-28T21:15:30.615Z",
-  "status": "human_review",
-  "planStatus": "review",
+  "updated_at": "2026-03-01T01:52:47.802Z",
+  "status": "done",
+  "planStatus": "completed",
   "spec_file": "spec.md",
-  "xstateState": "human_review",
+  "xstateState": "done",
   "executionPhase": "complete",
   "phases": [
     {
@@ -163,6 +163,5 @@
     }
   },
   "qa_signoff": null,
-  "last_updated": "2026-02-28T21:15:30.275926+00:00",
-  "reviewReason": "completed"
+  "last_updated": "2026-02-28T21:15:30.275926+00:00"
 }

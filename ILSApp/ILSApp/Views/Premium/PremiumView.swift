@@ -53,7 +53,7 @@ struct PremiumView: View {
                 .padding(.top, theme.spacingLG)
 
             Text("Unlock ILS Premium")
-                .font(.system(size: theme.fontTitle1, weight: .bold, design: .default))
+                .font(.system(size: theme.fontTitle1, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Text("Supercharge your Claude Code experience")

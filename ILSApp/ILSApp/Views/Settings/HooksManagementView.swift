@@ -222,7 +222,7 @@ struct HooksManagementView: View {
                             Text("Edit Config")
                                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingSM)
                         .background(theme.accent)

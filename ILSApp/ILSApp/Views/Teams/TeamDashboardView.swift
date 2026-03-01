@@ -146,7 +146,7 @@ struct TeamDashboardView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack {
                 Image(systemName: systemImage)
-                    .font(.system(size: 20, design: theme.fontDesign))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(color)
                 Spacer()
             }
@@ -174,7 +174,7 @@ struct TeamDashboardView: View {
     private func workloadCard(_ workload: TeamMetricsResponse.WorkloadDistribution) -> some View {
         VStack(spacing: theme.spacingSM) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: theme.spacingXS) {
                     Text(workload.agentName)
                         .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
@@ -186,7 +186,7 @@ struct TeamDashboardView: View {
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 4) {
+                VStack(alignment: .trailing, spacing: theme.spacingXS) {
                     Text(String(format: "%.0f%%", workload.utilization))
                         .font(.system(size: theme.fontBody, weight: .bold, design: theme.fontDesign))
                         .foregroundStyle(healthColor(for: workload.utilization))
@@ -236,7 +236,7 @@ struct TeamDashboardView: View {
     private func errorView(_ error: String) -> some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 32, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle1, design: theme.fontDesign))
                 .foregroundStyle(theme.warning)
 
             Text("Failed to load metrics")

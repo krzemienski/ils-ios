@@ -60,7 +60,7 @@ struct ContextWindowDetailSheet: View {
         switch percent {
         case ..<0.80: return theme.accent
         case 0.80..<0.90: return theme.warning
-        case 0.90..<0.95: return .orange
+        case 0.90..<0.95: return theme.warning
         default: return theme.error
         }
     }
@@ -237,7 +237,7 @@ struct ContextWindowDetailSheet: View {
                     description: "Claude responses this turn",
                     systemImage: "arrow.turn.down.right",
                     tokens: outputTokens,
-                    color: .orange
+                    color: theme.warning
                 )
             }
             .glassCard(padding: 0)
