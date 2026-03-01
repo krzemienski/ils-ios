@@ -2710,6 +2710,64 @@ curl http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6/hea
 
 ---
 
+## Data Erasure
+
+The Data Erasure API provides a single destructive endpoint to completely wipe all local ILS data. This is intended for GDPR compliance ("right to be forgotten"), factory-reset workflows, and development/testing teardown. **This action is irreversible.**
+
+### Erase All Data
+
+**Endpoint:** `DELETE /api/v1/data/all`
+**Description:** Permanently deletes all ILS-managed local data including sessions, projects, configuration, skills, plugins, MCP server registrations, themes, host profiles, and any cached or persisted state. This operation is irreversible and intended for GDPR right-to-erasure compliance or full factory reset.
+
+**Request Body:** None required.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "All ILS data has been erased successfully.",
+    "erasedAt": "2026-02-15T12:34:56Z"
+  },
+  "error": null
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `message` | string | Human-readable confirmation of the erasure |
+| `erasedAt` | ISO8601 | Timestamp when the erasure was performed |
+
+**Error Responses:**
+- `500 Internal Server Error` — Erasure failed partway through; data may be in an inconsistent state
+
+**⚠️ WARNING:** This endpoint permanently deletes all data. There is no undo. Use with caution.
+
+**GDPR Note:** This endpoint fulfils the "right to erasure" (Article 17 GDPR) requirement by removing all personally identifiable information stored by ILS on the local device.
+
+**Example:**
+
+```bash
+# Erase all ILS data (IRREVERSIBLE)
+curl -X DELETE http://localhost:9999/api/v1/data/all
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "All ILS data has been erased successfully.",
+    "erasedAt": "2026-02-15T12:34:56Z"
+  },
+  "error": null
+}
+```
+
+---
+
 ## WebSocket Protocol
 
 The WebSocket protocol provides bidirectional real-time communication for chat sessions.
