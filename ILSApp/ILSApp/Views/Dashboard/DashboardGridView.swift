@@ -72,6 +72,7 @@ struct DashboardGridView: View {
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(DashboardLayoutStore.self) private var layoutStore
 
     /// Tracks the widget being dragged so we can dim its tile.
     @State private var draggingWidgetID: UUID?
@@ -115,6 +116,11 @@ struct DashboardGridView: View {
                     ForEach(row.widgets) { widget in
                         widgetSlot(for: widget)
                             .opacity(draggingWidgetID == widget.id ? 0.4 : 1.0)
+                            .widgetSizeSelector(
+                                widget: widget,
+                                layout: layout,
+                                layoutStore: layoutStore
+                            )
                             #if os(iOS)
                             .onDrag {
                                 guard isEditMode else { return NSItemProvider() }
@@ -468,6 +474,7 @@ private struct ProjectStatusSlot: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
     }
+    .environment(DashboardLayoutStore())
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     .background(ThemeSnapshot(ObsidianTheme()).bgPrimary)
 }
