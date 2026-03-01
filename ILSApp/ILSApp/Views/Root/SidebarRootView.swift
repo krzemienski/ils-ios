@@ -380,11 +380,14 @@ struct SidebarRootView: View {
                         .accessibilityHint("Opens navigation sidebar")
                     }
                     #endif
-                } else if ipadSidebarCollapsed, let showSidebar = onShowIPadSidebar {
-                    // IPAD-SPLIT-2: iPad Split View — sidebar was auto-collapsed by the system
-                    // (e.g., at 1/3 screen width). Show a restore button so the user can expand
-                    // it again without needing to know to drag from the edge.
-                    #if os(iOS)
+                }
+                // IPAD-SPLIT-2: iPad Split View — sidebar was auto-collapsed by the system
+                // (e.g., at 1/3 screen width). Show a restore button so the user can expand
+                // it again without needing to know to drag from the edge.
+                // Kept as a separate #if os(iOS) block to avoid an empty else-if branch on macOS
+                // (ToolbarContentBuilder requires an expression in every branch).
+                #if os(iOS)
+                if !showHamburger, ipadSidebarCollapsed, let showSidebar = onShowIPadSidebar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: showSidebar) {
                             Image(systemName: "sidebar.left")
@@ -394,8 +397,8 @@ struct SidebarRootView: View {
                         .accessibilityLabel("Show sidebar")
                         .accessibilityHint("Shows navigation sidebar")
                     }
-                    #endif
                 }
+                #endif
             }
         }
         .tint(theme.accent)
