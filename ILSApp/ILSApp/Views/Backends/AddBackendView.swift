@@ -66,7 +66,9 @@ struct AddBackendView: View {
             }
             .background(theme.bgPrimary)
             .navigationTitle("Add Backend")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

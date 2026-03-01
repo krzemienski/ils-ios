@@ -12,6 +12,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     case browser = "Browse"
     case teams = "Agent Teams"
     case hostProfiles = "Host Profiles"
+    case backends = "Backends"
     case themes = "Themes"
     case hooks = "Hooks"
     case settings = "Settings"
@@ -25,6 +26,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
         case .hostProfiles: return "desktopcomputer"
+        case .backends: return "server.rack"
         case .themes: return "paintpalette.fill"
         case .hooks: return "bolt.fill"
         case .settings: return "gearshape.fill"
@@ -38,6 +40,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .browser: return .browser
         case .teams: return .teams
         case .hostProfiles: return .hostProfiles
+        case .backends: return .backends
         case .themes: return .themes
         case .hooks: return .hooks
         case .settings: return .settings
@@ -426,6 +429,8 @@ struct MacContentView: View {
                     activeScreen = .chat(ChatSession(id: uuid, name: "Session"))
                 }
             }
+        case .backends:
+            BackendConnectionsView()
         }
     }
 
@@ -679,6 +684,7 @@ struct MacContentView: View {
         case .browser: selectedSection = .browser
         case .teams: selectedSection = .teams
         case .hostProfiles: selectedSection = .hostProfiles
+        case .backends: selectedSection = .backends
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
         case .chat: selectedSection = .home
