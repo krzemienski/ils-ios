@@ -72,6 +72,7 @@
 		1A3BD36BCCDBF50CF8EA735E /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */; };
 		E5B7291CF843A06D9E253B48 /* ICloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9A832BDE714E5C82A79B01 /* ICloudSyncManager.swift */; };
 		AA11BB22CC33DD44EE55FF06 /* SessionBookmarksManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */; };
+		AA22BB33CC44DD55EE66FF07 /* SkillFavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66AA11BB22CC33DD44EE55 /* SkillFavoritesManager.swift */; };
 		1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A5E088C4FDB1B4F32EED35 /* AppTips.swift */; };
 		1AD445E68A4CE66079ED20C3 /* GhostProtocolTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADD83017F56B561B81A06BB /* GhostProtocolTheme.swift */; };
 		1B0EE5702C6F028E1DB60D34 /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EA7FD28E495E5F00323DDA45 /* HighlightSwift */; };
@@ -90,6 +91,7 @@
 		22F9854D3C5AB0DC6518F326 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */; };
 		D4C6180BE732F95A8D142C37 /* ICloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9A832BDE714E5C82A79B01 /* ICloudSyncManager.swift */; };
 		CC33DD44EE55FF66AA11BB02 /* SessionBookmarksManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */; };
+		DD44EE55FF66AA11BB22CC03 /* SkillFavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66AA11BB22CC33DD44EE55 /* SkillFavoritesManager.swift */; };
 		241E79C7CE232C53DC197469 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52FFD26C242D9641EFF5D8D /* CodeBlockView.swift */; };
 		246D2629E29830ECDF5A57D5 /* ThemePreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */; };
 		24D62F464A17880544BFF3F0 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9931211AAA50959FAEC7FE5C /* ProgressRing.swift */; };
@@ -776,6 +778,7 @@
 		E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		FC9A832BDE714E5C82A79B01 /* ICloudSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudSyncManager.swift; sourceTree = "<group>"; };
 		BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBookmarksManager.swift; sourceTree = "<group>"; };
+		FF66AA11BB22CC33DD44EE55 /* SkillFavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillFavoritesManager.swift; sourceTree = "<group>"; };
 		E45286C1C9773FE7BBB9D215 /* ConfigEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigEditorView.swift; sourceTree = "<group>"; };
 		E458E0F73BE10EE4A59B8143 /* HostProfileDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostProfileDetailViewModel.swift; sourceTree = "<group>"; };
 		E489C56C978287BD1DD024E7 /* CreateTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTeamView.swift; sourceTree = "<group>"; };
@@ -1300,6 +1303,7 @@
 				2EE82C913049A620A077F141 /* PollingManager.swift */,
 				C762E18BD102C1442B83A33F /* SessionExportService.swift */,
 				BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */,
+				FF66AA11BB22CC33DD44EE55 /* SkillFavoritesManager.swift */,
 				06A8A5DC276AB8E77D502627 /* SSEClient.swift */,
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
 				54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */,
@@ -1897,6 +1901,7 @@
 				463B015435784E8287DD84C3 /* SessionSnippetView.swift in Sources */,
 				20FB190430C47A5FD65C6EA7 /* SessionExportService.swift in Sources */,
 				AA11BB22CC33DD44EE55FF06 /* SessionBookmarksManager.swift in Sources */,
+				AA22BB33CC44DD55EE66FF07 /* SkillFavoritesManager.swift in Sources */,
 				0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */,
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
@@ -2133,6 +2138,7 @@
 				6880C48A7ACB455EAE94CB6F /* SessionSnippetView.swift in Sources */,
 				F6E04D2995D19353AE7B687C /* SessionExportService.swift in Sources */,
 				CC33DD44EE55FF66AA11BB02 /* SessionBookmarksManager.swift in Sources */,
+				DD44EE55FF66AA11BB22CC03 /* SkillFavoritesManager.swift in Sources */,
 				EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */,
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
