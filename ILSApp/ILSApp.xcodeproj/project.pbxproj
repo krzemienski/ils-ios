@@ -427,6 +427,14 @@
 		FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
+		0880C9BD509C8A2CAE47CCA0 /* FuzzyMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FECA22AE039ABB645A202403 /* FuzzyMatcher.swift */; };
+		33418863FAA4E56A7FFB4097 /* CommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8ED68ACADD055F3A2D49F30 /* CommandRegistry.swift */; };
+		3EB2196CB9758845BD921CCE /* KeyboardShortcutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79755CB174F407F3792BD73B /* KeyboardShortcutStore.swift */; };
+		0651D413A898EFE6D1A5C95E /* GlobalCommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F23503A4A08B1EE4713D89 /* GlobalCommandPaletteView.swift */; };
+		5AF6F01CE445E08E937F90D1 /* FuzzyMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = FECA22AE039ABB645A202403 /* FuzzyMatcher.swift */; };
+		A658599B6D2EDE1222900054 /* CommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8ED68ACADD055F3A2D49F30 /* CommandRegistry.swift */; };
+		F7F2EF5732C4B9417A81D221 /* KeyboardShortcutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79755CB174F407F3792BD73B /* KeyboardShortcutStore.swift */; };
+		009084D210CCAD795BD23544 /* GlobalCommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F23503A4A08B1EE4713D89 /* GlobalCommandPaletteView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -673,6 +681,10 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		FECA22AE039ABB645A202403 /* FuzzyMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FuzzyMatcher.swift; sourceTree = "<group>"; };
+		F8ED68ACADD055F3A2D49F30 /* CommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRegistry.swift; sourceTree = "<group>"; };
+		79755CB174F407F3792BD73B /* KeyboardShortcutStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutStore.swift; sourceTree = "<group>"; };
+		09F23503A4A08B1EE4713D89 /* GlobalCommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalCommandPaletteView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -980,6 +992,7 @@
 			children = (
 				4DEE8624B9BCC400474F4F46 /* AppConstants.swift */,
 				17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */,
+				FECA22AE039ABB645A202403 /* FuzzyMatcher.swift */,
 				64417034D7BE8F3619B3BC06 /* HapticManager.swift */,
 				7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */,
 				DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */,
@@ -1087,6 +1100,7 @@
 				6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */,
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
+				7F4A1CBBA45C5E76936D6886 /* CommandPalette */,
 				3FCDD95699E33E1A571D74BB /* Components */,
 				4C557C8746D41751E699EBCA /* Home */,
 				49504EDF5094AD1D30ECB653 /* Hooks */,
@@ -1106,6 +1120,14 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		7F4A1CBBA45C5E76936D6886 /* CommandPalette */ = {
+			isa = PBXGroup;
+			children = (
+				09F23503A4A08B1EE4713D89 /* GlobalCommandPaletteView.swift */,
+			);
+			path = CommandPalette;
+			sourceTree = "<group>";
+		};
 		BA480E94C563D561E67BEEF5 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -1113,9 +1135,11 @@
 				8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */,
 				C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */,
 				8B679B2479FFA9B0D0742CF6 /* CitadelSSHService.swift */,
+				F8ED68ACADD055F3A2D49F30 /* CommandRegistry.swift */,
 				F48795057C7081556FF5B265 /* ConnectionManager.swift */,
 				50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */,
 				7C748DE91CEA4C3A823DD3A8 /* KeychainService.swift */,
+				79755CB174F407F3792BD73B /* KeyboardShortcutStore.swift */,
 				AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */,
 				46932032F4DF6279A9709E95 /* LowPowerModeMonitor.swift */,
 				086281B052347B8C9884124C /* MetricsWebSocketClient.swift */,
@@ -1534,6 +1558,7 @@
 				6E34C5445A2760CEE34B49CE /* CitadelSSHService.swift in Sources */,
 				241E79C7CE232C53DC197469 /* CodeBlockView.swift in Sources */,
 				42C80AD52ED864B490D75042 /* CommandPaletteView.swift in Sources */,
+				33418863FAA4E56A7FFB4097 /* CommandRegistry.swift in Sources */,
 				AE9F57A8598D9A28E1C940DD /* ConfigEditorView.swift in Sources */,
 				D18F6B5DB10E4016BC0C8632 /* ConfigEditorViewModel.swift in Sources */,
 				139C4F2D9EC4EC2D64965BF0 /* ConnectionBanner.swift in Sources */,
@@ -1550,6 +1575,7 @@
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
 				A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */,
+				0880C9BD509C8A2CAE47CCA0 /* FuzzyMatcher.swift in Sources */,
 				7E6BD3A49163916A20308543 /* EmptyEntityState.swift in Sources */,
 				AC9AF89418E34C18F82F6EB6 /* EntityBadge.swift in Sources */,
 				1683DA948E66E712FCA602B2 /* EntityType.swift in Sources */,
@@ -1559,6 +1585,7 @@
 				3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */,
 				BD794553406B0E1E893D5D10 /* FileBrowserViewModel.swift in Sources */,
 				436203F1ECBB5A3566E37C71 /* GetSessionInfoIntent.swift in Sources */,
+				0651D413A898EFE6D1A5C95E /* GlobalCommandPaletteView.swift in Sources */,
 				1AD445E68A4CE66079ED20C3 /* GhostProtocolTheme.swift in Sources */,
 				97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */,
 				6A1E87A92394F16EFC6DDA1D /* GlassCard.swift in Sources */,
@@ -1582,6 +1609,7 @@
 				641164270E6BB7627B69ADC0 /* ILSTheme.swift in Sources */,
 				0E8BE7A9061ED6F1A0F5553C /* JavaScriptGrammar.swift in Sources */,
 				AB5CA0482D20AB42EDFFEEDD /* KeychainService.swift in Sources */,
+				3EB2196CB9758845BD921CCE /* KeyboardShortcutStore.swift in Sources */,
 				7666DDC50F812E38DC02D4F7 /* LaunchScreenView.swift in Sources */,
 				46A28AD0491373CD08B47A82 /* LocalDatabase.swift in Sources */,
 				81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */,
@@ -1725,6 +1753,7 @@
 				FE3FF3C3B777C6E27B42FCA1 /* CitadelSSHService.swift in Sources */,
 				7881297466215E48E11C6D37 /* CodeBlockView.swift in Sources */,
 				A2CD3C1A6CDF29B50C78F3F5 /* CommandPaletteView.swift in Sources */,
+				A658599B6D2EDE1222900054 /* CommandRegistry.swift in Sources */,
 				C0AC294D7A88CB4D0A765EB6 /* ConfigEditorView.swift in Sources */,
 				541CF79CF153E500D4C7A1C7 /* ConfigEditorViewModel.swift in Sources */,
 				131E72EAFA534A0191854177 /* ConnectionBanner.swift in Sources */,
@@ -1741,6 +1770,7 @@
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
 				C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */,
 				90D58E27CFDEB9AB8BFEFEAD /* EmberTheme.swift in Sources */,
+				5AF6F01CE445E08E937F90D1 /* FuzzyMatcher.swift in Sources */,
 				BA24410DCE90789BC26C03DE /* EmptyEntityState.swift in Sources */,
 				8388292832A6A2D84263617A /* EntityBadge.swift in Sources */,
 				A6B1F359D0276E09406C350F /* EntityType.swift in Sources */,
@@ -1750,6 +1780,7 @@
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AA317934D4936BCE1D3FAFE6 /* FileBrowserViewModel.swift in Sources */,
 				AF776B6CC6CDA97E71F1466C /* GetSessionInfoIntent.swift in Sources */,
+				009084D210CCAD795BD23544 /* GlobalCommandPaletteView.swift in Sources */,
 				021CE9A40CA38D09371544DD /* GhostProtocolTheme.swift in Sources */,
 				614ADE90776981AC136C0148 /* GitHubPreviewView.swift in Sources */,
 				37966728A2EB40050DC24223 /* GlassCard.swift in Sources */,
@@ -1774,6 +1805,7 @@
 				F0F643AE7F2B275AFC610602 /* ILSTheme.swift in Sources */,
 				09D4E4D09ACEC367BA1A7F8D /* JavaScriptGrammar.swift in Sources */,
 				89E4A2CEA791B8E3E2D9473B /* KeychainService.swift in Sources */,
+				F7F2EF5732C4B9417A81D221 /* KeyboardShortcutStore.swift in Sources */,
 				4A25CC33FA5ED049DB704652 /* LaunchScreenView.swift in Sources */,
 				8DC8290512BF30B7D1574021 /* LocalDatabase.swift in Sources */,
 				1EA9202F785FC72DF260B40F /* LogViewerView.swift in Sources */,
