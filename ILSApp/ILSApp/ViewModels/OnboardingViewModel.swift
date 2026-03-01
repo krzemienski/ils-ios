@@ -24,6 +24,7 @@ class OnboardingViewModel {
         static let onboardingCompletionDate = "onboardingCompletionDate"
         static let featureTourCompleted = "featureTourCompleted"
         static let onboardingSkipped = "onboardingSkipped"
+        static let firstSessionWizardShown = "firstSessionWizardShown"
     }
 
     // MARK: - Wizard State
@@ -66,6 +67,11 @@ class OnboardingViewModel {
     /// True once the feature tour has been completed.
     var hasCompletedTour: Bool {
         featureTourCompleted
+    }
+
+    /// True once the first session wizard has been shown to the user.
+    var firstSessionWizardShown: Bool {
+        UserDefaults.standard.bool(forKey: Keys.firstSessionWizardShown)
     }
 
     /// True when contextual feature tips should be surfaced — within the first 7 days
@@ -128,11 +134,17 @@ class OnboardingViewModel {
         featureTourCompleted = true
     }
 
+    /// Record that the first session wizard has been shown (one-time flag).
+    func markFirstSessionWizardShown() {
+        UserDefaults.standard.set(true, forKey: Keys.firstSessionWizardShown)
+    }
+
     /// Reset all onboarding state (useful for debugging / re-running onboarding).
     func resetOnboarding() {
         UserDefaults.standard.removeObject(forKey: Keys.onboardingCompletionDate)
         UserDefaults.standard.removeObject(forKey: Keys.featureTourCompleted)
         UserDefaults.standard.removeObject(forKey: Keys.onboardingSkipped)
+        UserDefaults.standard.removeObject(forKey: Keys.firstSessionWizardShown)
         currentStep = .welcome
         didSkip = false
     }
