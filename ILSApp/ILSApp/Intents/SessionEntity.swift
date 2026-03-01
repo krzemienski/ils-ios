@@ -6,8 +6,8 @@ import Foundation
 /// App Entity representing a Claude Code session for Siri and Shortcuts integration.
 @available(iOS 16.0, *)
 struct SessionEntity: AppEntity {
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Session")
-    static var defaultQuery = SessionEntityQuery()
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Session")
+    static let defaultQuery = SessionEntityQuery()
 
     var id: String
     var name: String

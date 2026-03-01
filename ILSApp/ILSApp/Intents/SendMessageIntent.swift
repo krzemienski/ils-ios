@@ -7,8 +7,8 @@ import Foundation
 /// The actual response streams asynchronously via SSE in the app.
 @available(iOS 16.0, *)
 struct SendMessageIntent: AppIntent {
-    static var title: LocalizedStringResource = "Send Message to Session"
-    static var description = IntentDescription("Send a message to a Claude Code session via ILS")
+    static let title: LocalizedStringResource = "Send Message to Session"
+    static let description = IntentDescription("Send a message to a Claude Code session via ILS")
 
     @Parameter(title: "Session")
     var session: SessionEntity

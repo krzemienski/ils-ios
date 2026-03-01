@@ -16,8 +16,8 @@ enum IntentURLSession {
 /// Creates a new Claude Code session via the ILS backend.
 @available(iOS 16.0, *)
 struct CreateSessionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Create New Session"
-    static var description = IntentDescription("Create a new Claude Code session in ILS")
+    static let title: LocalizedStringResource = "Create New Session"
+    static let description = IntentDescription("Create a new Claude Code session in ILS")
 
     @Parameter(title: "Name", default: "New Session")
     var name: String
@@ -148,8 +148,8 @@ enum SessionModel: String, AppEnum {
     case opus
     case haiku
 
-    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Model")
-    static var caseDisplayRepresentations: [SessionModel: DisplayRepresentation] = [
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Model")
+    static let caseDisplayRepresentations: [SessionModel: DisplayRepresentation] = [
         .sonnet: "Sonnet",
         .opus: "Opus",
         .haiku: "Haiku"

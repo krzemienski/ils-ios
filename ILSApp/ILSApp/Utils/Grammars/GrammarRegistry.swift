@@ -1,4 +1,5 @@
-import Splash
+// CONC-18: @preconcurrency suppresses Sendable warnings from the pre-Swift-6 Splash library.
+@preconcurrency import Splash
 
 /// Namespace for resolving language identifiers to Splash Grammar instances.
 /// Swift is handled as a special case using Splash's native SwiftGrammar;

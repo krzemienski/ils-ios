@@ -1,5 +1,7 @@
 #if canImport(UIKit)
-import MetricKit
+// CONC-27: @preconcurrency suppresses Sendable warnings for MXMetricPayload and
+// MXDiagnosticPayload which pre-date Swift 6 and lack Sendable conformance.
+@preconcurrency import MetricKit
 
 /// MetricKit subscriber that receives daily aggregated performance data and diagnostic payloads
 /// from real user devices. Logs launch time histograms, peak memory, and crash/hang diagnostics
@@ -32,38 +34,36 @@ final class PerformanceMonitor: NSObject, MXMetricManagerSubscriber {
 
     /// MetricKit delivers on arbitrary background queue — `nonisolated` with actor hop.
     nonisolated func didReceive(_ payloads: [MXMetricPayload]) {
+        // CONC-27: MXMetricPayload is non-Sendable (pre-Swift-6 MetricKit type). Extract all
+        // log Strings HERE on the background delivery queue before the actor-boundary hop.
+        // Task { @MainActor in } only receives [String], which is Sendable — no warning.
+        var messages: [String] = []
+        for payload in payloads {
+            if let launch = payload.applicationLaunchMetrics {
+                messages.append("MetricKit launch: timeToFirstDraw=\(launch.histogrammedTimeToFirstDraw)")
+            }
+            if let memory = payload.memoryMetrics {
+                messages.append("MetricKit memory: peak=\(memory.peakMemoryUsage)")
+            }
+            messages.append("MetricKit payload: \(payload.jsonRepresentation())")
+        }
         Task { @MainActor in
-            for payload in payloads {
-                if let launch = payload.applicationLaunchMetrics {
-                    AppLogger.shared.info(
-                        "MetricKit launch: timeToFirstDraw=\(launch.histogrammedTimeToFirstDraw)",
-                        category: "performance"
-                    )
-                }
-
-                if let memory = payload.memoryMetrics {
-                    AppLogger.shared.info(
-                        "MetricKit memory: peak=\(memory.peakMemoryUsage)",
-                        category: "performance"
-                    )
-                }
-
-                AppLogger.shared.info(
-                    "MetricKit payload: \(payload.jsonRepresentation())",
-                    category: "performance"
-                )
+            for message in messages {
+                AppLogger.shared.info(message, category: "performance")
             }
         }
     }
 
     /// MetricKit delivers on arbitrary background queue — `nonisolated` with actor hop.
     nonisolated func didReceive(_ payloads: [MXDiagnosticPayload]) {
+        // CONC-27: MXDiagnosticPayload is non-Sendable. Extract Strings before actor hop.
+        var messages: [String] = []
+        for payload in payloads {
+            messages.append("MetricKit diagnostic: \(payload.jsonRepresentation())")
+        }
         Task { @MainActor in
-            for payload in payloads {
-                AppLogger.shared.error(
-                    "MetricKit diagnostic: \(payload.jsonRepresentation())",
-                    category: "performance"
-                )
+            for message in messages {
+                AppLogger.shared.error(message, category: "performance")
             }
         }
     }

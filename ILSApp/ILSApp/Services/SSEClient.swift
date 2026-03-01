@@ -1,4 +1,6 @@
-import Foundation
+// CONC-22: @preconcurrency suppresses Sendable warnings from URLSession task group patterns.
+// URLSession is @unchecked Sendable but its key paths trigger false positives in strict mode.
+@preconcurrency import Foundation
 import Observation
 import ILSShared
 import os
@@ -170,26 +172,11 @@ class SSEClient {
         }
 
         do {
-            // Race connection against 60s timeout
-            // H-C3: Capture session locally to avoid implicit strong self in TaskGroup.addTask.
+            // Race connection against 60s timeout.
+            // CONC-33: Use nonisolated static helper so the TaskGroup.addTask closures
+            // are not created in a @MainActor context, avoiding SE-0430 'sending' warnings.
             let urlSession = self.session
-            let (asyncBytes, response) = try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
-                // Connection task
-                group.addTask {
-                    try await urlSession.bytes(for: urlRequest)
-                }
-
-                // Timeout task
-                group.addTask {
-                    try await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
-                    throw URLError(.timedOut)
-                }
-
-                // Return first to complete, cancel the other
-                let result = try await group.next()!
-                group.cancelAll()
-                return result
-            }
+            let (asyncBytes, response) = try await Self.fetchBytes(session: urlSession, request: urlRequest)
 
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
@@ -360,6 +347,30 @@ class SSEClient {
             assistantMessageId = event.assistantMessageId
         } catch {
             AppLogger.shared.error("Failed to decode messageId event: \(error)", category: "sse")
+        }
+    }
+
+    /// CONC-33: nonisolated static helper so TaskGroup.addTask closures are NOT created
+    /// in a @MainActor context, eliminating SE-0430 'sending' warnings at the addTask call site.
+    /// URLSession and URLRequest are both Sendable so passing them across the actor boundary is safe.
+    nonisolated private static func fetchBytes(
+        session: URLSession,
+        request: URLRequest
+    ) async throws -> (URLSession.AsyncBytes, URLResponse) {
+        try await withThrowingTaskGroup(of: (URLSession.AsyncBytes, URLResponse).self) { group in
+            // Connection task
+            group.addTask {
+                try await session.bytes(for: request)
+            }
+            // Timeout task
+            group.addTask {
+                try await Task.sleep(nanoseconds: 60_000_000_000) // 60 seconds
+                throw URLError(.timedOut)
+            }
+            // Return first to complete, cancel the other
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
         }
     }
 

@@ -1,5 +1,7 @@
 import Foundation
-import Citadel
+// CONC-29: @preconcurrency suppresses Sendable warnings for Citadel types (SSHClient)
+// which pre-date Swift 6 and lack Sendable conformance.
+@preconcurrency import Citadel
 import Crypto
 import NIO
 import NIOSSH

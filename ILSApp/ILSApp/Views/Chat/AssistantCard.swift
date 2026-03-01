@@ -7,7 +7,7 @@ struct AssistantCard: View, Equatable {
     var onRetry: ((ChatMessage) -> Void)?
     var onDelete: ((ChatMessage) -> Void)?
 
-    static func == (lhs: AssistantCard, rhs: AssistantCard) -> Bool {
+    nonisolated static func == (lhs: AssistantCard, rhs: AssistantCard) -> Bool {
         lhs.message.id == rhs.message.id &&
         lhs.message.text == rhs.message.text &&
         lhs.message.toolCalls.count == rhs.message.toolCalls.count &&

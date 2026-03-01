@@ -1,5 +1,6 @@
 import Foundation
-import Splash
+// CONC-18: @preconcurrency suppresses Sendable warnings from the pre-Swift-6 Splash library.
+@preconcurrency import Splash
 
 // MARK: - Private Rule Types for HTML, CSS, and Markdown
 

@@ -1014,7 +1014,7 @@ struct BrowserRowView: View, Equatable {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    static func == (lhs: BrowserRowView, rhs: BrowserRowView) -> Bool {
+    nonisolated static func == (lhs: BrowserRowView, rhs: BrowserRowView) -> Bool {
         lhs.name == rhs.name &&
         lhs.subtitle == rhs.subtitle &&
         lhs.status == rhs.status &&
@@ -1083,7 +1083,7 @@ struct PluginRowView: View, Equatable {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    static func == (lhs: PluginRowView, rhs: PluginRowView) -> Bool {
+    nonisolated static func == (lhs: PluginRowView, rhs: PluginRowView) -> Bool {
         lhs.plugin.id == rhs.plugin.id &&
         lhs.plugin.name == rhs.plugin.name &&
         lhs.plugin.isEnabled == rhs.plugin.isEnabled &&

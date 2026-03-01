@@ -96,8 +96,10 @@ struct ServerStatusEntry: TimelineEntry {
 // MARK: - Widget Data Provider
 
 /// Fetches data from the ILS backend or UserDefaults cache for widget timeline updates.
+// CONC-24: @unchecked Sendable — stored properties are `UserDefaults?` (@unchecked Sendable)
+// and a static URLSession. This struct is copied by value across task boundaries.
 @available(iOS 17.0, *)
-struct WidgetDataProvider {
+struct WidgetDataProvider: @unchecked Sendable {
     private let defaults = UserDefaults(suiteName: widgetAppGroupSuite)
 
     /// Configured URLSession for background widget fetches.

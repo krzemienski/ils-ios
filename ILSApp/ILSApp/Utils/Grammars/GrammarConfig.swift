@@ -93,6 +93,13 @@ struct GrammarConfig {
 /// 5. `KeywordRule`        — only if `config.keywords` is non-empty
 /// 6. `CallRule`           — only if `config.includeCallRule`
 /// 7. `config.extraRules`  — appended verbatim at the end
+// CONC-16: @unchecked Sendable — all stored properties are `let` (effectively immutable).
+// `extraRules: [any SyntaxRule]` prevents automatic synthesis because SyntaxRule (from Splash)
+// is not Sendable, but the array is set once at init and never mutated.
+extension GrammarConfig: @unchecked Sendable {}
+
+// MARK: - Data-Driven Grammar
+
 struct DataDrivenGrammar: Grammar {
     /// The configuration that drives rule generation and tokenisation.
     let config: GrammarConfig

@@ -1,6 +1,8 @@
 import Foundation
 import Observation
-import ILSShared
+// CONC-21: @preconcurrency suppresses Sendable warnings for ILSShared types (PaginatedResponse,
+// ChatSession) defined before strict concurrency. These types are safe across actor boundaries.
+@preconcurrency import ILSShared
 
 /// View model for session list and management.
 ///

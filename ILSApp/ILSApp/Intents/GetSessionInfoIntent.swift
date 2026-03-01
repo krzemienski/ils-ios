@@ -5,8 +5,8 @@ import SwiftUI
 /// Returns detailed information about a Claude Code session.
 @available(iOS 16.0, *)
 struct GetSessionInfoIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Session Info"
-    static var description = IntentDescription("Get information about a Claude Code session")
+    static let title: LocalizedStringResource = "Get Session Info"
+    static let description = IntentDescription("Get information about a Claude Code session")
 
     @Parameter(title: "Session")
     var session: SessionEntity

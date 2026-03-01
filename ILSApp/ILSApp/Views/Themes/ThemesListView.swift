@@ -32,7 +32,10 @@ struct ThemesListView: View {
     /// View model managing the theme list, loading state, and API interactions.
     @State private var viewModel = ThemesViewModel()
 
-    private static let jsonDecoder: JSONDecoder = {
+    // CONC-30: nonisolated removes implicit @MainActor isolation from this static property
+    // so it can be accessed from Task.detached. JSONDecoder is Sendable so nonisolated(unsafe)
+    // is unnecessary and produces a compiler warning — plain nonisolated suffices.
+    nonisolated private static let jsonDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return decoder

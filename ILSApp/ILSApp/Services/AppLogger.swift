@@ -14,7 +14,9 @@ final class AppLogger: Sendable {
     private let logger: Logger
     private let logFileURL: URL
     private let maxLogSize = 5_000_000 // 5MB
-    private static let iso8601Formatter = ISO8601DateFormatter()
+    // CONC-15: nonisolated(unsafe) — ISO8601DateFormatter is not Sendable in the SDK,
+    // but this instance is created once at startup and only used for formatting (no mutation).
+    nonisolated(unsafe) private static let iso8601Formatter = ISO8601DateFormatter()
 
     // MARK: - Buffered Writing
 

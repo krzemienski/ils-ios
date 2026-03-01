@@ -1,6 +1,18 @@
 #if canImport(WidgetKit)
-import WidgetKit
+// CONC-28: @preconcurrency suppresses Sendable warnings for WidgetKit TimelineProvider
+// completion callbacks, which pre-date Swift 6 and lack @Sendable annotations.
+@preconcurrency import WidgetKit
 import SwiftUI
+
+// MARK: - Sendable Completion Wrapper
+
+/// Wraps a WidgetKit completion callback (which lacks @Sendable) as @unchecked Sendable
+/// so it can be safely captured by a Task. WidgetKit guarantees correct thread handling
+/// for these callbacks — the @unchecked annotation is an explicit trust-the-framework call.
+private final class SendableCompletion<T>: @unchecked Sendable {
+    let call: (T) -> Void
+    init(_ completion: @escaping (T) -> Void) { self.call = completion }
+}
 
 // MARK: - Server Status Timeline Provider
 
@@ -17,20 +29,27 @@ struct ServerStatusTimelineProvider: TimelineProvider {
             completion(.placeholder)
             return
         }
-        Task {
-            let entry = await dataProvider.fetchServerStatus()
-            completion(entry)
+        // CONC-28: Wrap non-@Sendable WidgetKit completion in SendableCompletion box so Task
+        // can capture it without a 'passing closure as sending parameter' warning.
+        let provider = dataProvider
+        let box = SendableCompletion(completion)
+        Task { [provider, box] in
+            let entry = await provider.fetchServerStatus()
+            box.call(entry)
         }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<ServerStatusEntry>) -> Void) {
-        Task {
-            let entry = await dataProvider.fetchServerStatus()
+        // CONC-28: Wrap non-@Sendable WidgetKit completion in SendableCompletion box.
+        let provider = dataProvider
+        let box = SendableCompletion(completion)
+        Task { [provider, box] in
+            let entry = await provider.fetchServerStatus()
 
             // Refresh every 15 minutes
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-            completion(timeline)
+            box.call(timeline)
         }
     }
 }

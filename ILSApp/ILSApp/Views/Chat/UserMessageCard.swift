@@ -25,7 +25,7 @@ struct UserMessageCard: View, Equatable {
     /// When `nil`, the delete option is omitted from the menu.
     var onDelete: ((ChatMessage) -> Void)?
 
-    static func == (lhs: UserMessageCard, rhs: UserMessageCard) -> Bool {
+    nonisolated static func == (lhs: UserMessageCard, rhs: UserMessageCard) -> Bool {
         lhs.message.id == rhs.message.id &&
         lhs.message.text == rhs.message.text
     }

@@ -19,7 +19,7 @@ actor APIClient {
 
     /// In-flight GET tasks keyed by path. Actor isolation makes this thread-safe.
     /// Concurrent GET requests to the same path share a single network call.
-    private var inFlightGETs: [String: Task<Any, Error>] = [:]
+    private var inFlightGETs: [String: Task<any Sendable, Error>] = [:]
 
     /// ETag backing store for conditional HTTP requests.
     ///
@@ -186,7 +186,7 @@ actor APIClient {
     // witness-table cost (~5ns/call) which is negligible vs. network latency. Manual
     // @_specialize is reserved for hot-loop generics (>10K calls/sec), not RPC wrappers.
 
-    func get<T: Decodable>(_ path: String, cacheTTL: TimeInterval? = nil) async throws -> T {
+    func get<T: Decodable & Sendable>(_ path: String, cacheTTL: TimeInterval? = nil) async throws -> T {
         let cacheKey = path as NSString
         let effectiveTTL = cacheTTL ?? ttl(for: path)
 
@@ -210,7 +210,7 @@ actor APIClient {
         }
 
         // Wrap the network call in a Task stored in inFlightGETs so concurrent callers share it
-        let task = Task<Any, Error> { [baseURL, decoder] in
+        let task = Task<any Sendable, Error> { [baseURL, decoder] in
             defer { self.inFlightGETs[path] = nil }
 
             guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
@@ -251,7 +251,7 @@ actor APIClient {
                     forKey: cacheKey,
                     cost: cost
                 )
-                return decoded as Any
+                return decoded as any Sendable
             }
 
             try self.validateResponse(response, data: data)
@@ -279,12 +279,12 @@ actor APIClient {
                 self.conditionalCacheByteCount += delta
             }
 
-            return decoded as Any
+            return decoded as any Sendable
         }
         inFlightGETs[path] = task
 
         let result = try await task.value
-        // Safe downcast — created as T above. Fall through should not happen but handles edge cases.
+        // Safe downcast — created as T above via `decoded as any Sendable`. Fall through handles edge cases.
         guard let typed = result as? T else {
             throw APIError.decodingError(
                 DecodingError.typeMismatch(T.self, .init(codingPath: [], debugDescription: "In-flight result type mismatch"))
@@ -293,7 +293,7 @@ actor APIClient {
         return typed
     }
 
-    func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+    func post<T: Decodable & Sendable, B: Encodable>(_ path: String, body: B) async throws -> T {
         guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
             throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
         }
@@ -313,7 +313,7 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
-    func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+    func put<T: Decodable & Sendable, B: Encodable>(_ path: String, body: B) async throws -> T {
         guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
             throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
         }
@@ -333,7 +333,7 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
-    func delete<T: Decodable>(_ path: String) async throws -> T {
+    func delete<T: Decodable & Sendable>(_ path: String) async throws -> T {
         guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
             throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
         }
@@ -393,7 +393,7 @@ actor APIClient {
         let name: String
     }
 
-    func renameSession<T: Decodable>(id: UUID, name: String) async throws -> T {
+    func renameSession<T: Decodable & Sendable>(id: UUID, name: String) async throws -> T {
         let body = RenameBody(name: name)
         return try await put("/sessions/\(id.uuidString)", body: body)
     }
@@ -498,10 +498,15 @@ struct APIResponse<T: Decodable>: Decodable {
     let data: T?
     let error: APIErrorDetail?
 }
+// CONC-19: @unchecked Sendable — struct has `let` properties only, so value semantics
+// make it safe to send across concurrency boundaries regardless of T's Sendable status.
+// Unconditional (vs conditional `where T: Sendable`) so callers using non-Sendable T
+// (e.g. PaginatedResponse<ChatSession> before ChatSession gets Sendable) don't warn.
+extension APIResponse: @unchecked Sendable {}
 
 /// App-side error detail from backend responses (Decodable only).
 /// Separate from ILSShared's APIError which requires Codable & Sendable.
-struct APIErrorDetail: Decodable {
+struct APIErrorDetail: Decodable, Sendable {
     let code: String
     let message: String
 }
@@ -510,10 +515,12 @@ struct ListResponse<T: Decodable>: Decodable {
     let items: [T]
     let total: Int
 }
+// CONC-19: @unchecked Sendable — same reasoning as APIResponse above.
+extension ListResponse: @unchecked Sendable {}
 
 // MARK: - Health Response
 
-struct HealthResponse: Decodable {
+struct HealthResponse: Decodable, Sendable {
     let status: String
     let version: String?
     let claudeAvailable: Bool?
