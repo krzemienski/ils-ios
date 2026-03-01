@@ -39,7 +39,7 @@ let package = Package(
             path: "Sources/ILSShared",
             exclude: ["Models/CLAUDE.md"],
             swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency=targeted")
+                .enableExperimentalFeature("StrictConcurrency=complete")
             ]
         ),
         // Vapor backend
