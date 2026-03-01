@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UserNotifications
 import ILSShared
 
 @Observable
@@ -37,6 +38,8 @@ final class UsageDashboardViewModel {
     // MARK: - Private
 
     private var client: APIClient?
+    /// Prevents duplicate notifications for the same threshold crossing.
+    private var hasNotifiedThresholdCrossing = false
 
     // MARK: - Init
 
@@ -108,6 +111,7 @@ final class UsageDashboardViewModel {
                     "Loaded usage metrics: \(data.totalMessages) messages, period=\(selectedPeriod.rawValue)",
                     category: "usage"
                 )
+                checkAndScheduleAlert()
             }
         } catch {
             self.error = error
@@ -121,6 +125,57 @@ final class UsageDashboardViewModel {
     /// Retry loading after an error.
     func retryLoad() async {
         await loadAll()
+    }
+
+    // MARK: - Export
+
+    // MARK: - Alert Notifications
+
+    /// Evaluates whether a threshold-crossing notification should be sent and fires it if so.
+    ///
+    /// - A notification fires once per threshold crossing. The flag resets when consumption
+    ///   drops back below the threshold so the user is notified again on a future crossing.
+    private func checkAndScheduleAlert() {
+        guard alertsEnabled else {
+            hasNotifiedThresholdCrossing = false
+            return
+        }
+        if isNearingLimit {
+            guard !hasNotifiedThresholdCrossing else { return }
+            hasNotifiedThresholdCrossing = true
+            let pct = Int(rateLimitPercentage)
+            let summary = rateLimitSummary
+            scheduleRateLimitNotification(percentage: pct, summary: summary)
+        } else {
+            hasNotifiedThresholdCrossing = false
+        }
+    }
+
+    /// Requests notification permission (if not yet granted) and fires an immediate local notification.
+    private func scheduleRateLimitNotification(percentage: Int, summary: String) {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            guard granted else { return }
+
+            let content = UNMutableNotificationContent()
+            content.title = "Rate Limit Alert"
+            content.body = "You've used \(percentage)% of your Claude rate limit (\(summary) messages). Consider pausing to let the window reset."
+            content.sound = .default
+
+            let request = UNNotificationRequest(
+                identifier: "usage.rateLimit.threshold",
+                content: content,
+                trigger: nil // deliver immediately
+            )
+            center.add(request) { error in
+                if let error {
+                    AppLogger.shared.error(
+                        "Failed to deliver rate limit notification: \(error.localizedDescription)",
+                        category: "usage"
+                    )
+                }
+            }
+        }
     }
 
     // MARK: - Export

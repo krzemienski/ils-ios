@@ -519,8 +519,48 @@ struct HomeView: View {
                     )
                 }
                 .shimmerIfActive(isRefreshing)
+
+                // Rate limit mini-card
+                if let rateLimit = dashboardVM.rateLimitStatus {
+                    rateLimitMiniCard(rateLimit)
+                        .shimmerIfActive(isRefreshing)
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private func rateLimitMiniCard(_ status: RateLimitStatus) -> some View {
+        let fraction = status.consumptionFraction
+        let color: Color = fraction >= 0.8 ? theme.error : (fraction >= 0.6 ? theme.warning : theme.success)
+        let summary = "\(status.messagesUsed) / \(status.messagesLimit)"
+
+        VStack(alignment: .leading, spacing: theme.spacingXS) {
+            HStack {
+                Image(systemName: "gauge.with.needle")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(color)
+                    .accessibilityHidden(true)
+                Text("Rate Limit")
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                Spacer()
+                Text(summary)
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(color)
+            }
+            ProgressView(value: fraction, total: 1.0)
+                .progressViewStyle(.linear)
+                .tint(color)
+                .scaleEffect(x: 1, y: 1.2, anchor: .center)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingXS)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Rate limit: \(summary) messages, \(Int(fraction * 100)) percent consumed")
     }
 
     @ViewBuilder

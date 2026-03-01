@@ -509,10 +509,13 @@ private struct AlertSettingsSheet: View {
                                     get: { Double(viewModel.alertThreshold) },
                                     set: { viewModel.alertThreshold = Int($0) }
                                 ),
-                                in: 50...100,
+                                in: 50...95,
                                 step: 5
                             )
                             .tint(theme.accent)
+                            Text("You'll receive a notification when rate limit consumption reaches this percentage.")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
                         }
                     }
                 }
@@ -520,7 +523,7 @@ private struct AlertSettingsSheet: View {
                 Section("About Rate Limits") {
                     Text(
                         "Claude Pro accounts share a rate limit of approximately 45 messages per 5-hour window. " +
-                        "This dashboard tracks messages sent through ILS sessions."
+                        "This dashboard tracks messages sent through ILS sessions. Alerts fire once per threshold crossing and reset automatically."
                     )
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)

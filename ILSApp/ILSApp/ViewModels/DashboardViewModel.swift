@@ -9,6 +9,8 @@ class DashboardViewModel: BaseViewModel {
     var recentSessions: [ChatSession] = []
     var totalCost: Double = 0.0
     var lastUpdated: Date?
+    /// Current rate-limit status loaded alongside dashboard stats (non-fatal if unavailable).
+    var rateLimitStatus: RateLimitStatus?
 
     // Sparkline data (synthetic from recent sessions for visual interest)
     var sessionSparkline: [Double] { generateSparkline(count: 8, seed: stats?.sessions.total ?? 0) }
@@ -46,13 +48,12 @@ class DashboardViewModel: BaseViewModel {
             }
         }
 
-        // SPERF-04: Run loadStats and loadRecentActivity in parallel.
-        // Both write to different @Observable properties (stats vs recentSessions).
-        // The actual network calls run on the APIClient actor, so async let allows
-        // both requests to be in-flight simultaneously rather than waiting sequentially.
+        // SPERF-04: Run loadStats, loadRecentActivity, and loadRateLimitStatus in parallel.
+        // All write to different @Observable properties so concurrent execution is safe.
         async let statsResult: Void = loadStats()
         async let recentResult: Void = loadRecentActivity()
-        _ = await (statsResult, recentResult)
+        async let rateLimitResult: Void = loadRateLimitStatus()
+        _ = await (statsResult, recentResult, rateLimitResult)
         computeTotalCost()
 
         // Cache the fresh recent sessions
@@ -78,6 +79,23 @@ class DashboardViewModel: BaseViewModel {
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to load stats: \(error.localizedDescription)", category: "dashboard")
+        }
+    }
+
+    /// Load current rate-limit status from the daily usage endpoint.
+    /// Non-fatal: errors are logged but do not affect other dashboard data.
+    func loadRateLimitStatus() async {
+        guard let client else { return }
+        do {
+            let response: APIResponse<UsageMetrics> = try await client.get("/usage?period=daily")
+            if let data = response.data {
+                rateLimitStatus = data.rateLimitStatus
+            }
+        } catch {
+            AppLogger.shared.info(
+                "Rate limit status unavailable on home dashboard: \(error.localizedDescription)",
+                category: "dashboard"
+            )
         }
     }
 
