@@ -446,6 +446,25 @@
 		FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
+		AAAA00000000000000000001 /* DashboardWidgetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3358437AC3C347869B95035B /* DashboardWidgetType.swift */; };
+		AAAA00000000000000000002 /* DashboardWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B84C1FE24948E9A9CC1296 /* DashboardWidget.swift */; };
+		AAAA00000000000000000003 /* DashboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* DashboardLayout.swift */; };
+		AAAA00000000000000000004 /* DashboardLayoutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* DashboardLayoutStore.swift */; };
+		AAAA00000000000000000005 /* DashboardWidgetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* DashboardWidgetViewModel.swift */; };
+		AAAA00000000000000000006 /* WidgetContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* WidgetContainerView.swift */; };
+		AAAA00000000000000000007 /* DashboardGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F2A4B6C8D0E2F4A6B8C0D2 /* DashboardGridView.swift */; };
+		AAAA00000000000000000008 /* ActiveSessionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* ActiveSessionsWidget.swift */; };
+		AAAA00000000000000000009 /* RecentSessionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* RecentSessionsWidget.swift */; };
+		AAAA0000000000000000000A /* QuickActionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B9C0D1E2F3A4B5C6D7E8F9 /* QuickActionsWidget.swift */; };
+		AAAA0000000000000000000B /* FavoritesWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D1E2F3A4B5C6D7E8F9A0B1 /* FavoritesWidget.swift */; };
+		AAAA0000000000000000000C /* ProjectStatusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F3A4B5C6D7E8F9A0B1C2D3 /* ProjectStatusWidget.swift */; };
+		AAAA0000000000000000000D /* TeamActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F9A0B1C2D3E4F5 /* TeamActivityWidget.swift */; };
+		AAAA0000000000000000000E /* SystemMetricsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D7E8F9A0B1C2D3E4F5A6B7 /* SystemMetricsWidget.swift */; };
+		AAAA0000000000000000000F /* UsageStatsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F9A0B1C2D3E4F5A6B7C8D9 /* UsageStatsWidget.swift */; };
+		AAAA00000000000000000010 /* AddWidgetSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1122334455667788990011 /* AddWidgetSheet.swift */; };
+		AAAA00000000000000000011 /* WidgetSizeSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1122334455667788990011 /* WidgetSizeSelector.swift */; };
+		AAAA00000000000000000012 /* DashboardLayoutPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1122334455667788990011 /* DashboardLayoutPickerView.swift */; };
+		AAAA00000000000000000013 /* DashboardSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F6A7B8C9D0E1 /* DashboardSettingsSection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1985,6 +2004,25 @@
 				69B49241EE62B52643029E85 /* WidgetBundle.swift in Sources */,
 				F276A16D5AE2E3F7EC2DC5B8 /* WidgetDataProvider.swift in Sources */,
 				14CA4BF383D513A6B6617243 /* WindowManager.swift in Sources */,
+				AAAA00000000000000000001 /* DashboardWidgetType.swift in Sources */,
+				AAAA00000000000000000002 /* DashboardWidget.swift in Sources */,
+				AAAA00000000000000000003 /* DashboardLayout.swift in Sources */,
+				AAAA00000000000000000004 /* DashboardLayoutStore.swift in Sources */,
+				AAAA00000000000000000005 /* DashboardWidgetViewModel.swift in Sources */,
+				AAAA00000000000000000006 /* WidgetContainerView.swift in Sources */,
+				AAAA00000000000000000007 /* DashboardGridView.swift in Sources */,
+				AAAA00000000000000000008 /* ActiveSessionsWidget.swift in Sources */,
+				AAAA00000000000000000009 /* RecentSessionsWidget.swift in Sources */,
+				AAAA0000000000000000000A /* QuickActionsWidget.swift in Sources */,
+				AAAA0000000000000000000B /* FavoritesWidget.swift in Sources */,
+				AAAA0000000000000000000C /* ProjectStatusWidget.swift in Sources */,
+				AAAA0000000000000000000D /* TeamActivityWidget.swift in Sources */,
+				AAAA0000000000000000000E /* SystemMetricsWidget.swift in Sources */,
+				AAAA0000000000000000000F /* UsageStatsWidget.swift in Sources */,
+				AAAA00000000000000000010 /* AddWidgetSheet.swift in Sources */,
+				AAAA00000000000000000011 /* WidgetSizeSelector.swift in Sources */,
+				AAAA00000000000000000012 /* DashboardLayoutPickerView.swift in Sources */,
+				AAAA00000000000000000013 /* DashboardSettingsSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

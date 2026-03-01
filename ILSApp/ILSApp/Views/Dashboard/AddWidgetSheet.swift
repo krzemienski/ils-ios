@@ -56,15 +56,25 @@ struct AddWidgetSheet: View {
                 }
             }
             .navigationTitle("Add Widget")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
                 }
+                #else
+                ToolbarItem {
+                    Button("Done") { dismiss() }
+                }
+                #endif
             }
         }
+        #if os(iOS)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        #endif
     }
 
     // MARK: - Sub-views
@@ -86,7 +96,11 @@ struct AddWidgetSheet: View {
                     ))
             }
         }
+        #if os(iOS)
         .listStyle(.insetGrouped)
+        #else
+        .listStyle(.inset)
+        #endif
     }
 
     private var emptyState: some View {

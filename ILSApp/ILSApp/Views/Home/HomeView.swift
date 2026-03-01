@@ -30,7 +30,8 @@ struct HomeView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     /// Persists and manages all dashboard layouts, including the active layout selection.
-    @State private var layoutStore = DashboardLayoutStore()
+    /// Injected from the app-level environment so a single store instance is shared app-wide.
+    @Environment(DashboardLayoutStore.self) private var layoutStore
     /// Whether the dashboard grid is in edit mode (shows remove / reorder controls).
     @State private var isEditMode = false
     /// Whether a pull-to-refresh reload is currently in flight.
@@ -90,6 +91,7 @@ struct HomeView: View {
         .background(theme.bgPrimary)
         .navigationTitle("Home")
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     showLayoutPicker = true
@@ -99,6 +101,17 @@ struct HomeView: View {
                 .accessibilityLabel("Dashboard Layout")
                 .accessibilityHint("Opens the layout picker to customise your dashboard")
             }
+            #else
+            ToolbarItem {
+                Button {
+                    showLayoutPicker = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel("Dashboard Layout")
+                .accessibilityHint("Opens the layout picker to customise your dashboard")
+            }
+            #endif
         }
         .sheet(isPresented: $showLayoutPicker) {
             NavigationStack {
@@ -268,6 +281,7 @@ struct HomeView: View {
     NavigationStack {
         HomeView(sessionsVM: SessionsViewModel())
             .environment(AppState())
+            .environment(DashboardLayoutStore())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

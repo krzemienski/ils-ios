@@ -115,6 +115,7 @@ struct DashboardGridView: View {
                     ForEach(row.widgets) { widget in
                         widgetSlot(for: widget)
                             .opacity(draggingWidgetID == widget.id ? 0.4 : 1.0)
+                            #if os(iOS)
                             .onDrag {
                                 guard isEditMode else { return NSItemProvider() }
                                 draggingWidgetID = widget.id
@@ -134,12 +135,14 @@ struct DashboardGridView: View {
                                 }
                                 return true
                             }
+                            #endif
                     }
                 }
             }
         }
         .animation(.spring(), value: layout.widgets.map(\.id))
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(isEditMode ? "Done" : "Edit") {
                     withAnimation(.spring()) {
@@ -147,6 +150,15 @@ struct DashboardGridView: View {
                     }
                 }
             }
+            #else
+            ToolbarItem {
+                Button(isEditMode ? "Done" : "Edit") {
+                    withAnimation(.spring()) {
+                        isEditMode.toggle()
+                    }
+                }
+            }
+            #endif
         }
     }
 
@@ -452,7 +464,9 @@ private struct ProjectStatusSlot: View {
             .padding()
         }
         .navigationTitle("Dashboard")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     .background(ThemeSnapshot(ObsidianTheme()).bgPrimary)
