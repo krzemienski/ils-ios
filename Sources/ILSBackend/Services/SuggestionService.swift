@@ -12,7 +12,7 @@ actor SuggestionInteractionStore {
     /// Record a click interaction for a given target.
     /// - Parameter targetId: The session ID or skill identifier that was clicked.
     func recordClick(targetId: String) {
-        clickCounts[targetId, default: 0] += 1
+        clickCounts[targetId.lowercased(), default: 0] += 1
     }
 
     /// Retrieve the current click counts snapshot.
