@@ -69,7 +69,9 @@ struct AttachmentPickerSheet: View {
                 }
             }
             .navigationTitle("Add Attachment")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onDismiss)

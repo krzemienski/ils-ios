@@ -37,8 +37,8 @@ struct AttachmentPreviewStrip: View {
             // Thumbnail content
             Group {
                 if attachment.mimeType.hasPrefix("image/"),
-                   let uiImage = decodeImage(from: attachment.data) {
-                    Image(uiImage: uiImage)
+                   let image = decodedImage(from: attachment.data) {
+                    image
                         .resizable()
                         .scaledToFill()
                 } else {
@@ -93,8 +93,16 @@ struct AttachmentPreviewStrip: View {
 
     // MARK: - Helpers
 
-    private func decodeImage(from base64: String) -> UIImage? {
+    /// Decodes a base64 string into a SwiftUI `Image` using the appropriate
+    /// platform type (`UIImage` on iOS, `NSImage` on macOS).
+    private func decodedImage(from base64: String) -> Image? {
         guard let data = Data(base64Encoded: base64) else { return nil }
-        return UIImage(data: data)
+        #if os(iOS)
+        guard let uiImage = UIImage(data: data) else { return nil }
+        return Image(uiImage: uiImage)
+        #elseif os(macOS)
+        guard let nsImage = NSImage(data: data) else { return nil }
+        return Image(nsImage: nsImage)
+        #endif
     }
 }
