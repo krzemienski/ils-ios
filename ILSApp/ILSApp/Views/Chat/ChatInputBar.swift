@@ -120,6 +120,7 @@ struct ChatInputBar: View {
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
+        .accessibilityHint("Opens advanced chat options")
     }
 
     private var textField: some View {
