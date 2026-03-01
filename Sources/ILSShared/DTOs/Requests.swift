@@ -156,6 +156,41 @@ public struct RecentSessionsResponse: Codable, Sendable {
 
 // MARK: - Chat Requests
 
+/// An attachment included with a chat message (image, file, screenshot).
+///
+/// Attachments are base64-encoded and sent inline with the chat request.
+/// The backend forwards them to Claude using the appropriate content block format.
+public struct MessageAttachment: Codable, Sendable {
+    /// Unique identifier for this attachment.
+    public let id: UUID
+    /// MIME type of the attachment (e.g., "image/jpeg", "image/png", "text/plain").
+    public let mimeType: String
+    /// Optional filename for the attachment.
+    public let filename: String?
+    /// Base64-encoded content of the attachment.
+    public let data: String
+    /// Image width in pixels (only set for image attachments).
+    public let width: Int?
+    /// Image height in pixels (only set for image attachments).
+    public let height: Int?
+
+    public init(
+        id: UUID = UUID(),
+        mimeType: String,
+        filename: String? = nil,
+        data: String,
+        width: Int? = nil,
+        height: Int? = nil
+    ) {
+        self.id = id
+        self.mimeType = mimeType
+        self.filename = filename
+        self.data = data
+        self.width = width
+        self.height = height
+    }
+}
+
 /// Request to stream a chat message via Server-Sent Events.
 ///
 /// Sends a prompt to Claude and receives streaming responses via SSE.
@@ -168,17 +203,21 @@ public struct ChatStreamRequest: Codable, Sendable {
     public let projectId: UUID?
     /// Additional chat options.
     public let options: ChatOptions?
+    /// Optional attachments (images, files, screenshots) to include with the message.
+    public let attachments: [MessageAttachment]?
 
     public init(
         prompt: String,
         sessionId: UUID? = nil,
         projectId: UUID? = nil,
-        options: ChatOptions? = nil
+        options: ChatOptions? = nil,
+        attachments: [MessageAttachment]? = nil
     ) {
         self.prompt = prompt
         self.sessionId = sessionId
         self.projectId = projectId
         self.options = options
+        self.attachments = attachments
     }
 }
 
