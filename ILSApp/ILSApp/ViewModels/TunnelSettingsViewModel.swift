@@ -13,6 +13,10 @@ class TunnelSettingsViewModel {
     var tunnelURL: String?
     var uptime: Int?
     var tunnelMode: String?
+    /// Detailed connection state derived from health checks.
+    var connectionState: TunnelConnectionState = .disconnected
+    /// Round-trip latency to the tunnel endpoint in milliseconds.
+    var latencyMs: Int?
 
     // MARK: - UI State
 
@@ -22,6 +26,15 @@ class TunnelSettingsViewModel {
     var notInstalled = false
     var installURL: String?
     var keychainMigrationError: String?
+    /// Whether the user explicitly wants the tunnel running (persists intent across reconnects).
+    var userWantsRunning = false
+    /// Whether the system is currently attempting an automatic reconnect.
+    var isAutoReconnecting = false
+
+    // MARK: - Access Log
+
+    /// Recent tunnel log entries for display in the UI.
+    var accessLog: [TunnelLogEntry] = []
 
     // MARK: - Custom Domain Credentials
 
@@ -30,9 +43,16 @@ class TunnelSettingsViewModel {
     var cfDomain = ""
 
     private var client: APIClient?
+    // nonisolated(unsafe) allows Task cancellation from deinit (Task is Sendable)
+    nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
+    private var networkObserver: NSObjectProtocol?
 
     func configure(client: APIClient) {
         self.client = client
+    }
+
+    deinit {
+        pollingTask?.cancel()
     }
 
     /// Whether all three custom-domain fields are non-empty.
@@ -53,6 +73,11 @@ class TunnelSettingsViewModel {
             tunnelURL = status.url
             uptime = status.uptime
             tunnelMode = status.mode
+            if let state = status.connectionState {
+                connectionState = state
+            } else {
+                connectionState = status.running ? .connected : .disconnected
+            }
             notInstalled = false
             errorMessage = nil
         } catch let apiError as APIError {
@@ -62,6 +87,33 @@ class TunnelSettingsViewModel {
             }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Fetches tunnel health metrics including latency and connection state.
+    func fetchHealth() async {
+        guard let client, isRunning else { return }
+        do {
+            let health: TunnelHealthResponse = try await client.get("/tunnel/health")
+            connectionState = health.connectionState
+            latencyMs = health.latencyMs
+            if let healthUptime = health.uptime {
+                uptime = healthUptime
+            }
+        } catch {
+            // Health endpoint is best-effort; don't surface errors to UI
+            AppLogger.shared.warning("Tunnel health fetch failed: \(error)", category: "tunnel")
+        }
+    }
+
+    /// Fetches recent tunnel log entries and updates accessLog.
+    func fetchLogs() async {
+        guard let client, isRunning else { return }
+        do {
+            let logs: TunnelLogsResponse = try await client.get("/tunnel/logs")
+            accessLog = logs.entries
+        } catch {
+            AppLogger.shared.warning("Tunnel logs fetch failed: \(error)", category: "tunnel")
         }
     }
 
@@ -77,6 +129,8 @@ class TunnelSettingsViewModel {
             let response: TunnelStartResponse = try await client.post("/tunnel/start", body: request)
             tunnelURL = response.url
             isRunning = true
+            userWantsRunning = true
+            connectionState = .connected
             notInstalled = false
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
@@ -101,8 +155,12 @@ class TunnelSettingsViewModel {
             let request = TunnelStartRequest()
             let _: TunnelStopResponse = try await client.post("/tunnel/stop", body: request)
             isRunning = false
+            userWantsRunning = false
             tunnelURL = nil
             uptime = nil
+            latencyMs = nil
+            connectionState = .disconnected
+            accessLog = []
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -134,6 +192,8 @@ class TunnelSettingsViewModel {
             let response: TunnelStartResponse = try await client.post("/tunnel/start", body: request)
             tunnelURL = response.url
             isRunning = true
+            userWantsRunning = true
+            connectionState = .connected
             notInstalled = false
         } catch let apiError as APIError {
             if case .httpError(let code) = apiError, code == 404 {
@@ -169,6 +229,61 @@ class TunnelSettingsViewModel {
         }
         cfTunnelName = defaults.string(forKey: "cfTunnelName") ?? ""
         cfDomain = defaults.string(forKey: "cfDomain") ?? ""
+    }
+
+    // MARK: - Polling
+
+    /// Starts a 10-second polling loop that refreshes tunnel status, health, and logs.
+    /// Cancels any existing polling task before starting a new one.
+    func startStatusPolling() {
+        pollingTask?.cancel()
+        pollingTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.fetchStatus()
+                if self.isRunning {
+                    await self.fetchHealth()
+                    await self.fetchLogs()
+                }
+                try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 seconds
+            }
+        }
+    }
+
+    /// Stops the active status polling loop.
+    func stopStatusPolling() {
+        pollingTask?.cancel()
+        pollingTask = nil
+    }
+
+    // MARK: - Network Change Observation
+
+    /// Observes network availability changes and triggers auto-reconnect when
+    /// the network is restored and the user previously wanted the tunnel running.
+    func observeNetworkChanges() {
+        if let existing = networkObserver {
+            NotificationCenter.default.removeObserver(existing)
+        }
+
+        networkObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                guard self.userWantsRunning && !self.isRunning else { return }
+                self.isAutoReconnecting = true
+                AppLogger.shared.info("Network restored — auto-reconnecting tunnel", category: "tunnel")
+                if self.cfToken.isEmpty {
+                    await self.startTunnel()
+                } else {
+                    await self.startNamedTunnel()
+                }
+                self.isAutoReconnecting = false
+            }
+        }
     }
 
     // MARK: - Helpers
