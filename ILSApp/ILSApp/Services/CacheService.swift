@@ -78,6 +78,7 @@ actor CacheService {
 
     /// Cache messages for a session.
     func cacheMessages(_ messages: [Message], forSession sessionId: UUID) async {
+        guard settings.isCachingEnabled(for: .messages) else { return }
         do {
             // Replace existing cached messages for this session
             try await db.deleteMessages(forSession: sessionId)
@@ -92,6 +93,7 @@ actor CacheService {
 
     /// Retrieve cached messages for a session.
     func getCachedMessages(forSession sessionId: UUID) async -> [Message] {
+        guard settings.isCachingEnabled(for: .messages) else { return [] }
         do {
             return try await db.fetchMessages(forSession: sessionId)
         } catch {
@@ -107,6 +109,7 @@ actor CacheService {
 
     /// Cache a list of projects.
     func cacheProjects(_ projects: [Project]) async {
+        guard settings.isCachingEnabled(for: .projects) else { return }
         do {
             try await db.saveProjects(projects)
         } catch {
@@ -119,6 +122,7 @@ actor CacheService {
 
     /// Retrieve cached projects.
     func getCachedProjects() async -> [Project] {
+        guard settings.isCachingEnabled(for: .projects) else { return [] }
         do {
             return try await db.fetchProjects()
         } catch {
@@ -134,6 +138,7 @@ actor CacheService {
 
     /// Cache a list of skills.
     func cacheSkills(_ skills: [Skill]) async {
+        guard settings.isCachingEnabled(for: .skills) else { return }
         do {
             try await db.saveSkills(skills)
         } catch {
@@ -146,6 +151,7 @@ actor CacheService {
 
     /// Retrieve cached skills.
     func getCachedSkills() async -> [Skill] {
+        guard settings.isCachingEnabled(for: .skills) else { return [] }
         do {
             return try await db.fetchSkills()
         } catch {
@@ -161,6 +167,7 @@ actor CacheService {
 
     /// Cache a list of MCP servers.
     func cacheMCPServers(_ servers: [MCPServer]) async {
+        guard settings.isCachingEnabled(for: .mcpServers) else { return }
         do {
             try await db.saveMCPServers(servers)
         } catch {
@@ -173,6 +180,7 @@ actor CacheService {
 
     /// Retrieve cached MCP servers.
     func getCachedMCPServers() async -> [MCPServer] {
+        guard settings.isCachingEnabled(for: .mcpServers) else { return [] }
         do {
             return try await db.fetchMCPServers()
         } catch {
@@ -188,6 +196,7 @@ actor CacheService {
 
     /// Cache a list of plugins.
     func cachePlugins(_ plugins: [Plugin]) async {
+        guard settings.isCachingEnabled(for: .plugins) else { return }
         do {
             try await db.savePlugins(plugins)
         } catch {
@@ -200,6 +209,7 @@ actor CacheService {
 
     /// Retrieve cached plugins.
     func getCachedPlugins() async -> [Plugin] {
+        guard settings.isCachingEnabled(for: .plugins) else { return [] }
         do {
             return try await db.fetchPlugins()
         } catch {
