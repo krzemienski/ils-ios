@@ -274,6 +274,12 @@
 		A500F3C208F7333117667685 /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AD4ECE9770812FE2B0982B /* PremiumView.swift */; };
 		A5205BCDF454A189210B7FBB /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */; };
 		A600C53F94A798900F91CE86 /* QuickConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4643F6E3E4AA86C2C2A2F64 /* QuickConnectView.swift */; };
+		4A523A9F361243EC9E5675B3 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594612DBA7F74B2AA5867689 /* QRScannerView.swift */; };
+		4CB9BEA1E9634710B761242F /* TroubleshootingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9157F7AA62B94E258D9E448D /* TroubleshootingView.swift */; };
+		64C00A18BBD247C0939D8B3B /* WelcomeCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C1613A45434750A624BC93 /* WelcomeCarouselView.swift */; };
+		BA72E8A010324E50BA9144F4 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594612DBA7F74B2AA5867689 /* QRScannerView.swift */; };
+		612A71DF5D9140C38656FA7F /* TroubleshootingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9157F7AA62B94E258D9E448D /* TroubleshootingView.swift */; };
+		260E65CF6DFA49BF86285248 /* WelcomeCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C1613A45434750A624BC93 /* WelcomeCarouselView.swift */; };
 		A6B1F359D0276E09406C350F /* EntityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9A4655E180715DDFB024576 /* EntityType.swift */; };
 		A78516F2705D5D8ACE7C8218 /* TypingIndicatorBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */; };
 		A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A7C4DEC0862087B19372E0 /* CacheStatusView.swift */; };
@@ -602,6 +608,9 @@
 		B16CC180F5E6B2E81E06C55C /* PluginConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginConfigView.swift; sourceTree = "<group>"; };
 		B3E32DD92F87322D4834E67C /* SessionExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionExporter.swift; sourceTree = "<group>"; };
 		B4643F6E3E4AA86C2C2A2F64 /* QuickConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickConnectView.swift; sourceTree = "<group>"; };
+		594612DBA7F74B2AA5867689 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		9157F7AA62B94E258D9E448D /* TroubleshootingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroubleshootingView.swift; sourceTree = "<group>"; };
+		82C1613A45434750A624BC93 /* WelcomeCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCarouselView.swift; sourceTree = "<group>"; };
 		B579302585432A18086CAF11 /* ServerSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupSheet.swift; sourceTree = "<group>"; };
 		B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
@@ -1032,6 +1041,9 @@
 				AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */,
 				8ECE4D8717C9C64D19FE78B2 /* OnboardingView.swift */,
 				B4643F6E3E4AA86C2C2A2F64 /* QuickConnectView.swift */,
+				594612DBA7F74B2AA5867689 /* QRScannerView.swift */,
+				9157F7AA62B94E258D9E448D /* TroubleshootingView.swift */,
+				82C1613A45434750A624BC93 /* WelcomeCarouselView.swift */,
 				B579302585432A18086CAF11 /* ServerSetupSheet.swift */,
 				8B54988B86A494CD21D10B91 /* SSHSetupView.swift */,
 			);
@@ -1615,6 +1627,9 @@
 				69BD26FFABCE9816AE439B06 /* ProjectsViewModel.swift in Sources */,
 				7D376024900007C6788CF019 /* PythonGrammar.swift in Sources */,
 				A600C53F94A798900F91CE86 /* QuickConnectView.swift in Sources */,
+				4A523A9F361243EC9E5675B3 /* QRScannerView.swift in Sources */,
+				4CB9BEA1E9634710B761242F /* TroubleshootingView.swift in Sources */,
+				64C00A18BBD247C0939D8B3B /* WelcomeCarouselView.swift in Sources */,
 				FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */,
 				2F35F33131F061E873FBC02F /* SSEClient.swift in Sources */,
 				E889BCB0D28DB2C5061D1041 /* SSHSetupView.swift in Sources */,
@@ -1814,6 +1829,9 @@
 				2C9CDEC04E7A3427BDCA9611 /* ProjectsViewModel.swift in Sources */,
 				73757B8AEF97F3EF934CFEE1 /* PythonGrammar.swift in Sources */,
 				ABC1601C068B187FE3CFCBD2 /* QuickConnectView.swift in Sources */,
+				BA72E8A010324E50BA9144F4 /* QRScannerView.swift in Sources */,
+				612A71DF5D9140C38656FA7F /* TroubleshootingView.swift in Sources */,
+				260E65CF6DFA49BF86285248 /* WelcomeCarouselView.swift in Sources */,
 				A0215E5E1541D648707ADB25 /* QuickConnectViewModel.swift in Sources */,
 				6D77C87FBBC7B9B3EB0BE3B5 /* SSEClient.swift in Sources */,
 				F3010037ABCA48302B4CE17F /* SSHSetupView.swift in Sources */,
