@@ -45,6 +45,11 @@ struct HomeView: View {
     @State private var sessionSearchText: String = ""
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isRegularWidth: Bool {
+        horizontalSizeClass == .regular
+    }
 
     private let createSessionTip = CreateSessionTip()
     private let commandPaletteTip = CommandPaletteTip()
@@ -369,8 +374,7 @@ struct HomeView: View {
                 .foregroundStyle(theme.textPrimary)
 
             LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: theme.spacingSM),
-                GridItem(.flexible(), spacing: theme.spacingSM)
+                GridItem(.adaptive(minimum: 160, maximum: 220), spacing: theme.spacingSM)
             ], spacing: theme.spacingSM) {
                 QuickActionCard(
                     icon: "plus.bubble.fill",
@@ -463,7 +467,12 @@ struct HomeView: View {
                     .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
-                LazyVGrid(columns: [
+                LazyVGrid(columns: isRegularWidth ? [
+                    GridItem(.flexible(), spacing: theme.spacingSM),
+                    GridItem(.flexible(), spacing: theme.spacingSM),
+                    GridItem(.flexible(), spacing: theme.spacingSM),
+                    GridItem(.flexible(), spacing: theme.spacingSM)
+                ] : [
                     GridItem(.flexible(), spacing: theme.spacingSM),
                     GridItem(.flexible(), spacing: theme.spacingSM)
                 ], spacing: theme.spacingSM) {
