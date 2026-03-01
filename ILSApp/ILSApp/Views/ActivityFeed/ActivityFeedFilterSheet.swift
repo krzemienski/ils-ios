@@ -50,7 +50,9 @@ struct ActivityFeedFilterSheet: View {
                 sessionSection
             }
             .navigationTitle("Filter Activity")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -66,6 +68,7 @@ struct ActivityFeedFilterSheet: View {
                     }
                     .fontWeight(.semibold)
                 }
+                #if os(iOS)
                 ToolbarItem(placement: .bottomBar) {
                     Button("Reset") {
                         HapticManager.impact(.light)
@@ -73,6 +76,15 @@ struct ActivityFeedFilterSheet: View {
                     }
                     .foregroundStyle(theme.error)
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button("Reset") {
+                        HapticManager.impact(.light)
+                        resetToDefaults()
+                    }
+                    .foregroundStyle(theme.error)
+                }
+                #endif
             }
             .onAppear {
                 populateFromFilter()

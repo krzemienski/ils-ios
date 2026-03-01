@@ -66,6 +66,8 @@ struct SettingsView: View {
 
                 dataPrivacySection
 
+                iCloudSyncSection
+
                 SettingsAboutSection(
                     viewModel: viewModel,
                     serverURL: serverURL
@@ -268,6 +270,50 @@ struct SettingsView: View {
     }
 
     // performDataDeletion() moved to SettingsViewModel
+
+    // MARK: - iCloud Sync Section
+
+    private var iCloudSyncSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("ICLOUD SYNC")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+                .padding(.horizontal, theme.spacingXS)
+
+            NavigationLink(destination: ICloudSyncSettingsView()) {
+                HStack {
+                    Label("iCloud Sync", systemImage: "icloud.and.arrow.up.and.down")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    syncStatusBadge
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+            }
+            .modifier(GlassCard())
+        }
+    }
+
+    @ViewBuilder
+    private var syncStatusBadge: some View {
+        let manager = ICloudSyncManager.shared
+        let color: Color = {
+            switch manager.syncStatus {
+            case .idle:     return manager.isSyncEnabled ? theme.success : theme.textTertiary
+            case .syncing:  return theme.accent
+            case .error:    return theme.error
+            case .disabled: return theme.textTertiary
+            }
+        }()
+        Circle()
+            .fill(color)
+            .frame(width: 8, height: 8)
+    }
 
     // MARK: - Server URL Management
 

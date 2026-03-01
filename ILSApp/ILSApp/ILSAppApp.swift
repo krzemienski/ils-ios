@@ -38,6 +38,7 @@ struct ILSAppApp: App {
                         withAnimation(.easeOut(duration: 0.2)) {
                             showLaunchScreen = false
                         }
+                        ICloudSyncManager.shared.syncPreferencesToCloud()
                         Task.detached(priority: .background) {
                             try? Tips.configure([
                                 .displayFrequency(.daily),
@@ -107,6 +108,9 @@ struct ILSAppApp: App {
         }
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
+            if newPhase == .active {
+                ICloudSyncManager.shared.syncPreferencesToCloud()
+            }
         }
     }
 }

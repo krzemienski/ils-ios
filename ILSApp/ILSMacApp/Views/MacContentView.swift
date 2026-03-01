@@ -54,6 +54,7 @@ struct MacContentView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
+    @State private var activityFeedVM = ActivityFeedViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -99,6 +100,7 @@ struct MacContentView: View {
         }
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
+            activityFeedVM.configure(client: appState.apiClient)
             await sessionsViewModel.loadProjectGroups()
 
             // Load custom themes from backend on cold start (parity with iOS SidebarRootView)
@@ -114,6 +116,7 @@ struct MacContentView: View {
         }
         .onChange(of: appState.serverURL) { _, _ in
             sessionsViewModel.configure(client: appState.apiClient)
+            activityFeedVM.configure(client: appState.apiClient)
             Task {
                 await sessionsViewModel.loadProjectGroups()
                 await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
@@ -417,6 +420,12 @@ struct MacContentView: View {
             ThemesListView()
         case .hooks:
             HooksManagementView()
+        case .activityFeed:
+            ActivityFeedView(viewModel: activityFeedVM) { sessionId in
+                if let uuid = UUID(uuidString: sessionId) {
+                    activeScreen = .chat(ChatSession(id: uuid, name: "Session"))
+                }
+            }
         }
     }
 
@@ -673,6 +682,7 @@ struct MacContentView: View {
         case .themes: selectedSection = .themes
         case .hooks: selectedSection = .hooks
         case .chat: selectedSection = .home
+        case .activityFeed: selectedSection = .home
         }
         activeScreen = intent
         appState.navigationIntent = nil
