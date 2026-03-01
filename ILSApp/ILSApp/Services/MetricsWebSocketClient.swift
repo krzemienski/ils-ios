@@ -188,6 +188,8 @@ final class MetricsWebSocketClient {
         appendDataPoint(to: &diskHistory, value: metrics.disk.percentage, at: now)
         appendDataPoint(to: &networkInHistory, value: Double(metrics.network.bytesIn), at: now)
         appendDataPoint(to: &networkOutHistory, value: Double(metrics.network.bytesOut), at: now)
+
+        AlertThresholdManager.shared.evaluate(metrics: metrics)
     }
 
     private func appendDataPoint(to history: inout [MetricDataPoint], value: Double, at date: Date) {
