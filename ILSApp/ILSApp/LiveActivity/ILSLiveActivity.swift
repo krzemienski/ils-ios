@@ -268,9 +268,10 @@ struct ChatStreamingCompactTrailing: View {
 /// Layout:
 /// ```
 /// ┌──────────────────────────────────────┐
-/// │ [icon]  Session Name                 │
-/// │ Claude is responding...     $0.0042  │
-/// │ 1,234 tokens                  0:42   │
+/// │ [icon]  Session Name         model   │
+/// │ ● Streaming               $0.0042   │
+/// │ "Preview of the response text..."   │
+/// │ 1,234 tokens                  0:42  │
 /// └──────────────────────────────────────┘
 /// ```
 @available(iOS 16.2, *)
@@ -307,6 +308,15 @@ struct ChatStreamingExpandedView: View {
                 Text(formatCost(state.cost))
                     .font(.caption.weight(.semibold).monospaced())
                     .foregroundStyle(LiveActivityColors.accent)
+            }
+
+            // Message preview (only when present)
+            if !state.messagePreview.isEmpty {
+                Text(state.messagePreview)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(LiveActivityColors.textSecondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
 
             // Bottom row: tokens + elapsed

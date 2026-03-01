@@ -131,11 +131,18 @@ struct ChatController: RouteCollection {
 
         req.logger.debug("[STREAM] executor.execute() returned stream, creating SSE response")
 
+        // Look up any registered Live Activity push token for this session.
+        // The token is set by the iOS client after starting a Live Activity;
+        // used to push content-state updates when the app is backgrounded.
+        let liveActivityToken = try? await SessionModel.find(sessionId, on: req.db)?
+            .liveActivityPushToken
+
         // Return SSE response with message persistence
         return StreamingService.createSSEResponseWithPersistence(
             from: stream,
             sessionId: sessionId,
             userMessageId: userMessageId,
+            liveActivityPushToken: liveActivityToken,
             on: req
         )
     }

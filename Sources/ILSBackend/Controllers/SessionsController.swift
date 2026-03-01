@@ -41,6 +41,7 @@ struct SessionsController: RouteCollection {
         sessions.get(":id", "messages", use: messages)
         sessions.get(":id", "messages", "search", use: searchSession)
         sessions.get(":id", "export", use: exportSession)
+        sessions.post(":id", "live-activity-token", use: registerLiveActivityToken)
 
         let transcriptGroup = sessions.grouped("transcript")
         transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
@@ -603,6 +604,42 @@ struct SessionsController: RouteCollection {
     ///
     /// Query parameters:
     /// - `format`: Export format — "json" (default), "markdown", or "text"
+    /// Register an APNs push token for Live Activity updates on a session.
+    ///
+    /// Called by the iOS app immediately after a Live Activity is started with
+    /// `pushType: .token`. The token is stored on the session record and used by
+    /// the backend to deliver content-state pushes when the SSE connection is
+    /// unavailable (app backgrounded).
+    ///
+    /// - Route: `POST /sessions/:id/live-activity-token`
+    /// - Body: `{"pushToken": "<hex-encoded token>"}`
+    /// - Returns: APIResponse with acknowledgment
+    @Sendable
+    func registerLiveActivityToken(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        struct TokenBody: Content {
+            let pushToken: String
+        }
+
+        let body = try req.content.decode(TokenBody.self)
+        guard !body.pushToken.isEmpty else {
+            throw Abort(.badRequest, reason: "pushToken must not be empty")
+        }
+
+        guard let session = try await SessionModel.find(id, on: req.db) else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        session.liveActivityPushToken = body.pushToken
+        try await session.save(on: req.db)
+
+        req.logger.info("[LiveActivity] Registered push token for session \(id.uuidString)")
+        return APIResponse(success: true, data: AcknowledgedResponse(acknowledged: true))
+    }
+
     ///
     /// Sets appropriate Content-Type and Content-Disposition headers for file downloads.
     ///

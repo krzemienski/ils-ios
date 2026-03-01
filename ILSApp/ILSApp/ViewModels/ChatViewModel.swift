@@ -231,6 +231,11 @@ class ChatViewModel {
                             let sessionIdString = self.sessionId?.uuidString.lowercased() ?? ""
                             let sessionName = self.sessionDisplayName ?? "Chat Session"
                             let model = self.sessionModel ?? "claude"
+                            // Register push token callback so APNs can update the
+                            // Live Activity when the app is backgrounded.
+                            if let client = self.apiClient {
+                                self.registerLiveActivityPushTokenCallback(apiClient: client)
+                            }
                             self.startLiveActivity(sessionId: sessionIdString, sessionName: sessionName, model: model)
                         }
                         #endif

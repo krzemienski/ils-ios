@@ -12,6 +12,10 @@ extension ChatViewModel {
     /// Delegates to `LiveActivityManager` which tracks one activity per session UUID,
     /// preventing duplicates when multiple sessions stream simultaneously.
     ///
+    /// The caller should set `LiveActivityManager.shared.onPushTokenRegistered` before
+    /// this call (done in `ChatViewModel.setupBindings`) so the APNs token is
+    /// registered with the backend for background push updates.
+    ///
     /// - Parameters:
     ///   - sessionId: UUID string for deep-link navigation to the session
     ///   - sessionName: Display name for the session
@@ -23,6 +27,33 @@ extension ChatViewModel {
             sessionName: sessionName,
             model: model
         )
+    }
+
+    /// Register the APNs push token callback on `LiveActivityManager`.
+    ///
+    /// Must be called with a non-nil `apiClient` before `startLiveActivity` so the
+    /// activity push token is forwarded to the backend as soon as ActivityKit
+    /// generates it. Registers a new closure on each call (one callback at a time).
+    ///
+    /// - Parameter apiClient: The authenticated `APIClient` instance for REST calls.
+    @available(iOS 16.2, *)
+    func registerLiveActivityPushTokenCallback(apiClient: APIClient) {
+        LiveActivityManager.shared.onPushTokenRegistered = { sid, token in
+            Task {
+                do {
+                    try await apiClient.registerLiveActivityToken(token, forSession: sid)
+                    AppLogger.shared.info(
+                        "Registered Live Activity push token for session \(sid)",
+                        category: "liveActivity"
+                    )
+                } catch {
+                    AppLogger.shared.error(
+                        "Failed to register Live Activity push token: \(error)",
+                        category: "liveActivity"
+                    )
+                }
+            }
+        }
     }
 
     /// Update the running Live Activity with new streaming data.

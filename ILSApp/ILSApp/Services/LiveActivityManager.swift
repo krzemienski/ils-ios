@@ -8,8 +8,16 @@ import ActivityKit
 /// Ensures each session maps to exactly one Live Activity, preventing duplicate
 /// activities when multiple Claude Code sessions stream simultaneously.
 ///
+/// Push token support: when `pushType: .token` is used, each activity generates a
+/// device-specific push token. Register this token with the backend so the server
+/// can send APNs Live Activity updates when the app is backgrounded.
+///
 /// Usage:
 /// ```swift
+/// // Set callback before starting (optional — for push token registration)
+/// LiveActivityManager.shared.onPushTokenRegistered = { sessionId, token in
+///     try? await apiClient.registerLiveActivityToken(token, forSession: sessionId)
+/// }
 /// // Start
 /// LiveActivityManager.shared.startActivity(sessionId: id, sessionName: name, model: model)
 /// // Update
@@ -26,6 +34,13 @@ final class LiveActivityManager {
     /// Maps session UUID string → its running Live Activity.
     private var activities: [String: Activity<ChatStreamingAttributes>] = [:]
 
+    /// Called when an activity's APNs push token is first available or changes.
+    ///
+    /// The token is hex-encoded and should be registered with the backend via
+    /// `APIClient.registerLiveActivityToken(_:forSession:)` so the server can
+    /// deliver push updates when the app is backgrounded.
+    var onPushTokenRegistered: ((String, String) -> Void)?
+
     private init() {}
 
     // MARK: - Public API
@@ -41,6 +56,15 @@ final class LiveActivityManager {
     func startActivity(sessionId: String, sessionName: String, model: String) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             AppLogger.shared.info("Live Activities not enabled by user", category: "liveActivity")
+            return
+        }
+
+        // iOS allows at most 5 concurrent Live Activities; guard to avoid silent rejection.
+        guard Activity<ChatStreamingAttributes>.activities.count < 5 else {
+            AppLogger.shared.warning(
+                "Live Activity limit reached (5 concurrent max). Cannot start for session \(sessionId)",
+                category: "liveActivity"
+            )
             return
         }
 
@@ -70,18 +94,40 @@ final class LiveActivityManager {
             let activity = try Activity.request(
                 attributes: attributes,
                 content: .init(state: initialState, staleDate: nil),
-                pushType: nil
+                pushType: .token
             )
             activities[sessionId] = activity
             AppLogger.shared.info(
                 "Started Live Activity \(activity.id) for session \(sessionId)",
                 category: "liveActivity"
             )
+
+            // Observe push token updates (fires once when token is first available,
+            // and again whenever APNs rotates the token).
+            observePushToken(for: activity, sessionId: sessionId)
         } catch {
             AppLogger.shared.error(
                 "Failed to start Live Activity for session \(sessionId): \(error)",
                 category: "liveActivity"
             )
+        }
+    }
+
+    /// Observe the activity's APNs push token and invoke `onPushTokenRegistered`
+    /// whenever a new token is available. Runs until the activity ends.
+    ///
+    /// The Task inherits the `@MainActor` context of `LiveActivityManager`, so
+    /// `onPushTokenRegistered` is always invoked on the main thread.
+    private func observePushToken(for activity: Activity<ChatStreamingAttributes>, sessionId: String) {
+        Task { [weak self] in
+            for await tokenData in activity.pushTokenUpdates {
+                let hexToken = tokenData.map { String(format: "%02x", $0) }.joined()
+                AppLogger.shared.info(
+                    "Live Activity push token updated for session \(sessionId)",
+                    category: "liveActivity"
+                )
+                self?.onPushTokenRegistered?(sessionId, hexToken)
+            }
         }
     }
 

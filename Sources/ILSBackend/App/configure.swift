@@ -84,6 +84,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddDatabaseIndexes())
     // v4.0 — Ecosystem polish
     app.migrations.add(AddMeshGradientToThemes())
+    // v5.0 — Live Activity push token support
+    app.migrations.add(AddLiveActivityTokenToSessions())
 
     // Run migrations
     try await app.autoMigrate()

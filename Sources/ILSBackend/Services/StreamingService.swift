@@ -183,16 +183,22 @@ struct StreamingService {
     /// Accumulates assistant response content (text, tool calls, tool results) during streaming
     /// and saves to database on stream completion. Updates session metadata (message count, cost).
     ///
+    /// When a `liveActivityPushToken` is provided and `APNsService` is configured,
+    /// sends APNs Live Activity content-state pushes on permission requests and
+    /// stream completion so backgrounded iOS clients stay updated.
+    ///
     /// - Parameters:
     ///   - stream: AsyncThrowingStream of StreamMessage events
     ///   - sessionId: Session UUID for database association
     ///   - userMessageId: User message UUID for correlation
+    ///   - liveActivityPushToken: Hex APNs push token (nil if no Live Activity registered)
     ///   - request: Vapor Request for database access and logging
     /// - Returns: Vapor Response with SSE content type and message ID headers
     static func createSSEResponseWithPersistence(
         from stream: AsyncThrowingStream<StreamMessage, Error>,
         sessionId: UUID,
         userMessageId: UUID,
+        liveActivityPushToken: String? = nil,
         on request: Request
     ) -> Response {
         let response = Response(status: .ok)
@@ -209,6 +215,7 @@ struct StreamingService {
             var toolResults: [String] = []
             var claudeSessionId: String?
             var totalCostUSD: Double?
+            let streamStartTime = Date()
 
             // Accumulate content during streaming
             let onMessage: (StreamMessage) -> Void = { message in
@@ -248,7 +255,49 @@ struct StreamingService {
                     claudeSessionId = resultMsg.sessionId
                     totalCostUSD = resultMsg.totalCostUSD
 
-                case .user, .streamEvent, .permission, .error:
+                    // Send APNs "end" push if a Live Activity token is registered.
+                    if let token = liveActivityPushToken {
+                        let elapsed = Int(Date().timeIntervalSince(streamStartTime))
+                        let contentState = APNsService.LiveActivityContentStatePayload(
+                            status: resultMsg.isError ? "error" : "completed",
+                            messagePreview: String(accumulatedContent.prefix(120)),
+                            tokenCount: resultMsg.usage?.outputTokens ?? 0,
+                            cost: resultMsg.totalCostUSD ?? 0.0,
+                            elapsedSeconds: elapsed
+                        )
+                        Task {
+                            await APNsService.shared.sendUpdate(
+                                to: token,
+                                contentState: contentState,
+                                event: .end,
+                                logger: request.logger
+                            )
+                        }
+                    }
+
+                case .permission:
+                    // Send APNs "update" push with waitingForInput status so the
+                    // backgrounded user knows input is required.
+                    if let token = liveActivityPushToken {
+                        let elapsed = Int(Date().timeIntervalSince(streamStartTime))
+                        let contentState = APNsService.LiveActivityContentStatePayload(
+                            status: "waitingForInput",
+                            messagePreview: String(accumulatedContent.prefix(120)),
+                            tokenCount: 0,
+                            cost: totalCostUSD ?? 0.0,
+                            elapsedSeconds: elapsed
+                        )
+                        Task {
+                            await APNsService.shared.sendUpdate(
+                                to: token,
+                                contentState: contentState,
+                                event: .update,
+                                logger: request.logger
+                            )
+                        }
+                    }
+
+                case .user, .streamEvent, .error:
                     break
                 }
             }

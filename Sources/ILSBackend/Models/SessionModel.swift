@@ -39,6 +39,14 @@ final class SessionModel: Model, Content, @unchecked Sendable {
     @OptionalField(key: "forked_from")
     var forkedFrom: UUID?
 
+    /// APNs push token for Live Activity updates (hex-encoded).
+    ///
+    /// Set by the iOS client after starting a Live Activity with `pushType: .token`.
+    /// Used by the backend to push content-state updates when the SSE connection
+    /// is unavailable (app backgrounded).
+    @OptionalField(key: "live_activity_push_token")
+    var liveActivityPushToken: String?
+
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
