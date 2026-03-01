@@ -1,8 +1,8 @@
 # ILS Backend API Reference
 
-**Version:** 1.1
+**Version:** 1.2
 **Base URL:** `http://localhost:9999`
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-03-01
 
 ## Table of Contents
 
@@ -3020,6 +3020,12 @@ The API does not currently implement CORS headers. For web clients, you may need
 ---
 
 ## Changelog
+
+**v1.2.0 (2026-03-01)**
+- Added Host Profiles endpoints (list, register, get, update, delete, activate, deactivate, health-check)
+- Added Data Erasure endpoint (POST /api/v1/erase-all-data)
+- Documented HostProfile model with all fields (id, name, host, port, apiKey, isActive, etc.)
+- Documented DataErasureController response format
 
 **v1.1.0 (2026-02-15)**
 - Added Teams endpoints (list, create, delete, spawn, shutdown, tasks, messages)
