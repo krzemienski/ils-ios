@@ -654,7 +654,7 @@ struct TunnelSettingsView: View {
                                 if viewModel.isToggling {
                                     ProgressView()
                                         .scaleEffect(0.8)
-                                        .tint(.white)
+                                        .tint(theme.textOnAccent)
                                 } else {
                                     Image(systemName: "play.fill")
                                 }

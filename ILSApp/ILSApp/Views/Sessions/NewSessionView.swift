@@ -23,6 +23,11 @@ struct NewSessionView: View {
     // search/filter state for project selection without affecting the main projects list.
     @State private var projectsViewModel = ProjectsViewModel()
     @State private var sessionViewModel = NewSessionViewModel()
+    /// View model for fetching contextually relevant session suggestions.
+    @State private var suggestionsVM = SuggestionsViewModel()
+    /// Whether to show related session suggestions (persisted across launches).
+    @AppStorage("showSessionSuggestions") private var showSessionSuggestions = true
+    /// The currently active creation mode; drives which form section is rendered.
     @State private var selectedMode: NewSessionMode = .project
     @State private var selectedProject: Project?
     @State private var selectedModel = "sonnet"
@@ -56,6 +61,38 @@ struct NewSessionView: View {
         "default", "acceptEdits", "plan", "bypassPermissions", "delegate", "dontAsk"
     ]
 
+    // MARK: - Validation
+
+    private var isMaxBudgetValid: Bool {
+        if maxBudget.isEmpty { return true }
+        guard let value = Double(maxBudget) else { return false }
+        return value > 0
+    }
+
+    private var isMaxTurnsValid: Bool {
+        if maxTurns.isEmpty { return true }
+        guard let value = Int(maxTurns) else { return false }
+        return value >= 1
+    }
+
+    private var maxBudgetError: String? {
+        if maxBudget.isEmpty { return nil }
+        guard let value = Double(maxBudget) else {
+            return "Enter a valid number (e.g. 5.00)"
+        }
+        if value <= 0 { return "Budget must be greater than zero" }
+        return nil
+    }
+
+    private var maxTurnsError: String? {
+        if maxTurns.isEmpty { return nil }
+        guard let value = Int(maxTurns) else {
+            return "Enter a whole number (e.g. 10)"
+        }
+        if value < 1 { return "Turns must be at least 1" }
+        return nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             modePicker
@@ -70,6 +107,8 @@ struct NewSessionView: View {
                     switch selectedMode {
                     case .project:
                         projectPickerSection
+                        relatedSessionsSection
+                        skillSuggestionsSection
                     case .fork:
                         forkSessionSection
                     case .newProject:
@@ -100,7 +139,18 @@ struct NewSessionView: View {
         .task {
             projectsViewModel.configure(client: appState.apiClient)
             sessionViewModel.configure(client: appState.apiClient)
+            suggestionsVM.configure(client: appState.apiClient)
             await projectsViewModel.loadProjects()
+        }
+        .task(id: selectedProject?.id) {
+            await suggestionsVM.loadSessionSuggestions(
+                context: sessionName,
+                projectName: selectedProject?.name
+            )
+            await suggestionsVM.loadSkillSuggestions(
+                projectName: selectedProject?.name,
+                context: sessionName
+            )
         }
         .task {
             await sessionViewModel.loadRecentSessions()
@@ -307,6 +357,112 @@ struct NewSessionView: View {
         .accessibilityLabel("\(project.name), \(project.path)")
     }
 
+    // MARK: - Related Sessions Section
+
+    /// Contextually relevant past sessions shown in `.project` mode to help reuse prior work.
+    ///
+    /// Only rendered when `showSessionSuggestions` is enabled and at least one session
+    /// suggestion has been fetched from the backend. Each row shows the session name,
+    /// project name, and a "Use" button that navigates directly into that session.
+    @ViewBuilder
+    private var relatedSessionsSection: some View {
+        if showSessionSuggestions && !suggestionsVM.sessionSuggestions.isEmpty {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                sectionLabel("Related Sessions")
+
+                ForEach(Array(suggestionsVM.sessionSuggestions.prefix(3))) { suggestion in
+                    HStack(spacing: theme.spacingSM) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(suggestion.session.name ?? "Unnamed Session")
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+
+                            if let projectName = suggestion.session.projectName {
+                                Text(projectName)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                                    .lineLimit(1)
+                            }
+                        }
+
+                        Spacer()
+
+                        Button("Use") {
+                            Task {
+                                await suggestionsVM.recordFeedback(
+                                    action: "click",
+                                    suggestionType: "session",
+                                    targetId: suggestion.session.id.uuidString
+                                )
+                                onCreated(suggestion.session)
+                                dismiss()
+                            }
+                        }
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                        .buttonStyle(.plain)
+                    }
+                    .padding(theme.spacingSM)
+                    .background(theme.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+            }
+            .accessibilityIdentifier("related-sessions")
+        }
+    }
+
+    /// Recommended skills shown in `.project` mode to help users discover useful capabilities.
+    ///
+    /// Only rendered when `showSessionSuggestions` is enabled and at least one skill
+    /// suggestion has been fetched from the backend. Each row shows the skill name,
+    /// optional description, and a "View" button that records feedback.
+    @ViewBuilder
+    private var skillSuggestionsSection: some View {
+        if showSessionSuggestions && !suggestionsVM.skillSuggestions.isEmpty {
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                sectionLabel("Recommended Skills")
+
+                ForEach(Array(suggestionsVM.skillSuggestions.prefix(3))) { suggestion in
+                    HStack(spacing: theme.spacingSM) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(suggestion.skill.name)
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                                .lineLimit(1)
+
+                            if let description = suggestion.skill.description {
+                                Text(description)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                                    .lineLimit(2)
+                            }
+                        }
+
+                        Spacer()
+
+                        Button("View") {
+                            Task {
+                                await suggestionsVM.recordFeedback(
+                                    action: "click",
+                                    suggestionType: "skill",
+                                    targetId: suggestion.skill.name
+                                )
+                            }
+                        }
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                        .buttonStyle(.plain)
+                    }
+                    .padding(theme.spacingSM)
+                    .background(theme.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                }
+            }
+            .accessibilityIdentifier("skill-suggestions")
+        }
+    }
+
     // MARK: - Fork Session Section
 
     @ViewBuilder
@@ -459,7 +615,7 @@ struct NewSessionView: View {
 
     @ViewBuilder
     private var configurationSection: some View {
-        DisclosureGroup("Configuration", isExpanded: $showConfig) {
+        DisclosureGroup(isExpanded: $showConfig) {
             VStack(spacing: theme.spacingMD) {
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     sectionLabel("Session Name")
@@ -480,9 +636,18 @@ struct NewSessionView: View {
                 limitsSection
             }
             .padding(.top, theme.spacingSM)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Configuration")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                if !showConfig {
+                    Text(configurationSummary)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
         }
-        .font(.system(size: theme.fontBody, design: theme.fontDesign))
-        .foregroundStyle(theme.textSecondary)
         .tint(theme.textTertiary)
         .padding(theme.spacingSM)
         .background(theme.bgSecondary)
@@ -570,6 +735,13 @@ struct NewSessionView: View {
             .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
             .focusRing(isFocused: focusedField == .systemPrompt, cornerRadius: theme.cornerRadiusSmall)
+
+            if !systemPrompt.isEmpty {
+                Text("\(systemPrompt.count) characters")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
     }
 
@@ -580,45 +752,61 @@ struct NewSessionView: View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             sectionLabel("Limits")
 
-            HStack {
-                Text("Max Budget (USD)")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                TextField("No limit", text: $maxBudget)
-                    #if os(iOS)
-                    .keyboardType(.decimalPad)
-                    #endif
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .frame(width: 100)
-                    .focused($focusedField, equals: .maxBudget)
-            }
-            .padding(theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            .focusRing(isFocused: focusedField == .maxBudget, cornerRadius: theme.cornerRadiusSmall)
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
+                HStack {
+                    Text("Max Budget (USD)")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    TextField("No limit", text: $maxBudget)
+                        #if os(iOS)
+                        .keyboardType(.decimalPad)
+                        #endif
+                        .multilineTextAlignment(.trailing)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .frame(width: 100)
+                        .focused($focusedField, equals: .maxBudget)
+                }
+                .padding(theme.spacingSM)
+                .background(theme.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .maxBudget, cornerRadius: theme.cornerRadiusSmall)
 
-            HStack {
-                Text("Max Turns")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                TextField("1", text: $maxTurns)
-                    #if os(iOS)
-                    .keyboardType(.numberPad)
-                    #endif
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .frame(width: 100)
-                    .focused($focusedField, equals: .maxTurns)
+                if let error = maxBudgetError {
+                    Text(error)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.error)
+                }
             }
-            .padding(theme.spacingSM)
-            .background(theme.bgTertiary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            .focusRing(isFocused: focusedField == .maxTurns, cornerRadius: theme.cornerRadiusSmall)
+
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
+                HStack {
+                    Text("Max Turns")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    TextField("1", text: $maxTurns)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .multilineTextAlignment(.trailing)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .frame(width: 100)
+                        .focused($focusedField, equals: .maxTurns)
+                }
+                .padding(theme.spacingSM)
+                .background(theme.bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: focusedField == .maxTurns, cornerRadius: theme.cornerRadiusSmall)
+
+                if let error = maxTurnsError {
+                    Text(error)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.error)
+                }
+            }
         }
     }
 
@@ -626,10 +814,9 @@ struct NewSessionView: View {
 
     @ViewBuilder
     private var actionButton: some View {
-        AccentButton(actionButtonTitle, icon: actionButtonIcon, isLoading: sessionViewModel.isCreating) {
+        AccentButton(actionButtonTitle, icon: actionButtonIcon, isLoading: sessionViewModel.isCreating, isFullWidth: true) {
             performAction()
         }
-        .frame(maxWidth: .infinity)
         .disabled(!actionButtonEnabled)
         .padding(.top, theme.spacingSM)
         .accessibilityIdentifier("start-session-button")
@@ -652,6 +839,7 @@ struct NewSessionView: View {
     }
 
     private var actionButtonEnabled: Bool {
+        guard isMaxBudgetValid && isMaxTurnsValid else { return false }
         switch selectedMode {
         case .project:
             return true
@@ -733,6 +921,15 @@ struct NewSessionView: View {
         case "dontAsk": return "Don't Ask"
         default: return mode
         }
+    }
+
+    // MARK: - Configuration Summary
+
+    var configurationSummary: String {
+        let modelPart = selectedModel.capitalized
+        let permissionPart = formattedMode(permissionMode)
+        let budgetPart = maxBudget.isEmpty ? "No limit" : "$\(maxBudget)"
+        return "\(modelPart) \u{00b7} \(permissionPart) \u{00b7} \(budgetPart)"
     }
 
     private var permissionDescription: String {

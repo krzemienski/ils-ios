@@ -106,7 +106,9 @@ struct HomeView: View {
             await tunnelVM.fetchStatus()
         }
         .refreshable {
-            HapticManager.impact(.medium)
+            #if os(iOS)
+            HapticManager.impact(.light)
+            #endif
             isRefreshing = true
             await dashboardVM.loadAll()
             await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
@@ -385,7 +387,7 @@ struct HomeView: View {
                 GridItem(.flexible(), spacing: theme.spacingSM),
                 GridItem(.flexible(), spacing: theme.spacingSM)
             ], spacing: theme.spacingSM) {
-                quickActionCard(
+                QuickActionCard(
                     icon: "plus.bubble.fill",
                     title: "New Session",
                     color: theme.entitySession
@@ -393,7 +395,7 @@ struct HomeView: View {
                     showNewSessionSheet = true
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "sparkles",
                     title: "Discover Skills",
                     subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
@@ -402,16 +404,17 @@ struct HomeView: View {
                     onNavigateToBrowser?(.skills)
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "server.rack",
                     title: "Configure MCP",
-                    subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
+                    subtitle: mcpHealthSubtitle(),
+                    subtitleColor: mcpHealthSubtitleColor(),
                     color: theme.entityMCP
                 ) {
                     onNavigateToBrowser?(.mcp)
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "puzzlepiece.extension.fill",
                     title: "Browse Plugins",
                     subtitle: statsSubtitle(dashboardVM.stats?.plugins.total),
@@ -420,7 +423,7 @@ struct HomeView: View {
                     onNavigateToBrowser?(.plugins)
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "gearshape.fill",
                     title: "Edit Settings",
                     color: theme.textSecondary
@@ -428,7 +431,7 @@ struct HomeView: View {
                     onNavigate?(.settings)
                 }
 
-                quickActionCard(
+                QuickActionCard(
                     icon: "gauge.with.dots.needle.33percent",
                     title: "System Monitor",
                     color: theme.entityMCP
@@ -440,42 +443,29 @@ struct HomeView: View {
         }
     }
 
-    @ViewBuilder
-    private func quickActionCard(
-        icon: String,
-        title: String,
-        subtitle: String? = nil,
-        color: Color,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: icon)
-                    .font(.system(size: 24, design: theme.fontDesign))
-                    .foregroundStyle(color)
-
-                Text(title)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingMD)
-            .modifier(GlassCard())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
-        .accessibilityHint("Double tap to open \(title)")
-    }
 
     private func statsSubtitle(_ count: Int?) -> String? {
         guard let count else { return nil }
         return "\(count)"
+    }
+
+    /// Returns a health-aware subtitle for the Configure MCP quick action card.
+    /// Shows "X/Y healthy" with a warning color when servers are unhealthy,
+    /// or the plain total count when all servers are healthy.
+    private func mcpHealthSubtitle() -> String? {
+        guard let mcpStats = dashboardVM.stats?.mcpServers else { return nil }
+        if mcpStats.healthy < mcpStats.total {
+            return "\(mcpStats.healthy)/\(mcpStats.total) healthy"
+        }
+        return "\(mcpStats.total)"
+    }
+
+    /// Returns `theme.warning` when any MCP server is unhealthy, otherwise `nil`
+    /// so the card falls back to the default `theme.textTertiary` subtitle color.
+    private func mcpHealthSubtitleColor() -> Color? {
+        guard let mcpStats = dashboardVM.stats?.mcpServers,
+              mcpStats.healthy < mcpStats.total else { return nil }
+        return theme.warning
     }
 
     // MARK: - Stats Section
@@ -572,6 +562,69 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value)")
+    }
+}
+
+// MARK: - Quick Action Card
+
+private struct QuickActionCard: View {
+    let icon: String
+    let title: String
+    let subtitle: String?
+    let subtitleColor: Color?
+    let color: Color
+    let action: () -> Void
+
+    @Environment(\.theme) private var theme: ThemeSnapshot
+    @State private var isPressed = false
+
+    init(
+        icon: String,
+        title: String,
+        subtitle: String? = nil,
+        subtitleColor: Color? = nil,
+        color: Color,
+        action: @escaping () -> Void
+    ) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.subtitleColor = subtitleColor
+        self.color = color
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: theme.spacingSM) {
+                Image(systemName: icon)
+                    .font(.system(size: 24, design: theme.fontDesign))
+                    .foregroundStyle(color)
+
+                Text(title)
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(subtitleColor ?? theme.textTertiary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingMD)
+            .modifier(GlassCard())
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+        .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
+        .accessibilityHint("Double tap to open \(title)")
     }
 }
 
