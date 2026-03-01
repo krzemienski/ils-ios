@@ -435,6 +435,8 @@
 		A658599B6D2EDE1222900054 /* CommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8ED68ACADD055F3A2D49F30 /* CommandRegistry.swift */; };
 		F7F2EF5732C4B9417A81D221 /* KeyboardShortcutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79755CB174F407F3792BD73B /* KeyboardShortcutStore.swift */; };
 		009084D210CCAD795BD23544 /* GlobalCommandPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09F23503A4A08B1EE4713D89 /* GlobalCommandPaletteView.swift */; };
+		8585327908BA4CEDB5886EB0 /* KeyboardShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36EBF5872D55450B915A57E2 /* KeyboardShortcutsView.swift */; };
+		1F4494538562467A9B7E3067 /* KeyboardShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36EBF5872D55450B915A57E2 /* KeyboardShortcutsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -546,6 +548,7 @@
 		64417034D7BE8F3619B3BC06 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		6467EED7EF5D1DC029D1DD90 /* FileBrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserViewModel.swift; sourceTree = "<group>"; };
 		64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
+		36EBF5872D55450B915A57E2 /* KeyboardShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsView.swift; sourceTree = "<group>"; };
 		6565D1348C399AC59657A9F3 /* ILSAppUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ILSAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6736A1D406EEE97A39A92D25 /* TeamTaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTaskListView.swift; sourceTree = "<group>"; };
 		677E11407A3F745C1D85E232 /* CustomThemeAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomThemeAdapter.swift; sourceTree = "<group>"; };
@@ -866,6 +869,7 @@
 				E45286C1C9773FE7BBB9D215 /* ConfigEditorView.swift */,
 				5264936CB2EEF18D3167704B /* LogViewerView.swift */,
 				64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */,
+				36EBF5872D55450B915A57E2 /* KeyboardShortcutsView.swift */,
 				958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */,
 				24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */,
 				1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */,
@@ -1627,6 +1631,7 @@
 				EEEDCB8AFE31EB3109B5ED66 /* NewSessionView.swift in Sources */,
 				8EFC8ABE8A64356720814CFF /* NewSessionViewModel.swift in Sources */,
 				3013A38F73E6762D7FB50E77 /* NotificationPreferencesView.swift in Sources */,
+				8585327908BA4CEDB5886EB0 /* KeyboardShortcutsView.swift in Sources */,
 				D27CDEB3FFF8814B55E98B49 /* ObsidianTheme.swift in Sources */,
 				E22DF7F6525F8DA5149951D2 /* OfflineIndicator.swift in Sources */,
 				3A428F89FADC77D6AD890B8F /* OnboardingView.swift in Sources */,
@@ -1830,6 +1835,7 @@
 				D49238EC3538EA2ABD3266C3 /* NewSessionViewModel.swift in Sources */,
 				43CC6416BC415173ABF41E24 /* NotificationManager.swift in Sources */,
 				FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */,
+				1F4494538562467A9B7E3067 /* KeyboardShortcutsView.swift in Sources */,
 				415FA9BEB8D7C968A1383F44 /* ObsidianTheme.swift in Sources */,
 				6555329D4958AC6721212189 /* OfflineIndicator.swift in Sources */,
 				D34412D635D61666C3E92EDE /* OnboardingView.swift in Sources */,
