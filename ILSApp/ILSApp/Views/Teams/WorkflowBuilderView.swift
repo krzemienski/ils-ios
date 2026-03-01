@@ -502,12 +502,12 @@ struct WorkflowNodeView: View {
             HStack(spacing: 4) {
                 if let taskId = node.taskId {
                     Text("#\(taskId)")
-                        .font(.system(size: 9, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 if dependencyCount > 0 {
                     Text("\(dependencyCount) dep\(dependencyCount == 1 ? "" : "s")")
-                        .font(.system(size: 9, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.info)
                 }
             }

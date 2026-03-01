@@ -203,7 +203,7 @@ struct AdvancedOptionsSheet: View {
                 .accessibilityLabel("System prompt text editor")
 
             Text("Append to System Prompt")
-                .font(.caption)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundColor(theme.textSecondary)
 
             TextEditor(text: $config.appendSystemPrompt)

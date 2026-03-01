@@ -24,14 +24,14 @@ struct MessageSearchResultRow: View {
                 // Role label + timestamp
                 HStack(spacing: theme.spacingXS) {
                     Text(roleName)
-                        .font(.system(size: 10, weight: .semibold, design: theme.fontDesign).leading(.tight))
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(roleIconColor)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                     Spacer()
 
                     Text(formattedTimestamp(result.createdAt))
-                        .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.textTertiary)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 }

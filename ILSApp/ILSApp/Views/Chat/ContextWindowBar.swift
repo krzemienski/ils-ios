@@ -95,7 +95,7 @@ struct ContextWindowBar: View {
                     .animation(.easeInOut(duration: 0.3), value: percent >= 0.80)
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: theme.fontCaption, weight: .semibold))
                     .foregroundStyle(theme.textTertiary)
             }
             .padding(.horizontal)

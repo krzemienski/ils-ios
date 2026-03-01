@@ -248,7 +248,7 @@ struct ThinkingView: View {
                         .foregroundStyle(theme.textPrimary)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 10, design: theme.fontDesign).leading(.tight))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign).leading(.tight))
                         .foregroundStyle(theme.textTertiary)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
