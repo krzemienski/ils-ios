@@ -55,13 +55,13 @@ struct ProjectsController: RouteCollection {
     }
 
     /// Flexible ISO8601 date parsers for fractional seconds
-    private static let flexibleISO8601: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let flexibleISO8601: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
 
-    private static let fallbackISO8601: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let fallbackISO8601: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f

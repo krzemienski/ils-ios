@@ -55,7 +55,7 @@ let package = Package(
             path: "Sources/ILSBackend",
             exclude: ["Scripts/claude_pty_wrapper.py", "Services/CLAUDE.md", "App/CLAUDE.md"],
             swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency=targeted")
+                .enableExperimentalFeature("StrictConcurrency=complete")
             ]
         ),
         // Tests

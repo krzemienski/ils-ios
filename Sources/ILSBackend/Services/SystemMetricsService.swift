@@ -269,7 +269,8 @@ actor SystemMetricsService {
             return MemoryMetrics(used: 0, total: 0, percentage: 0)
         }
 
-        let pageSize = UInt64(vm_kernel_page_size)
+        // getpagesize() is a function call (not a global var), safe for strict concurrency.
+        let pageSize = UInt64(getpagesize())
         let totalMemory = ProcessInfo.processInfo.physicalMemory
 
         let activePages = UInt64(stats.active_count)

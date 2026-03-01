@@ -7,7 +7,7 @@ import Yams
 ///
 /// Supports both directory-based skills (skill-name/SKILL.md) and standalone markdown files (skill-name.md).
 /// Parses YAML frontmatter for metadata (description, version, tags).
-struct SkillsFileService {
+struct SkillsFileService: @unchecked Sendable {
     private let fileManager = FileManager.default
 
     /// Cache TTL in seconds (default: 30s)

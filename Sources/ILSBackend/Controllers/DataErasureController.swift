@@ -20,33 +20,35 @@ struct DataErasureController: RouteCollection {
     /// - Returns: `APIResponse<DataErasureResponse>` with per-table deletion counts.
     @Sendable
     func deleteAllData(req: Request) async throws -> Response {
-        var counts = DataErasureResponse()
+        let counts = try await req.db.transaction { db -> DataErasureResponse in
+            var c = DataErasureResponse()
 
-        try await req.db.transaction { db in
             // Delete in FK-safe order: children before parents
             // 1. Messages (FK -> sessions.id)
-            counts.messagesDeleted = try await MessageModel.query(on: db).count()
+            c.messagesDeleted = try await MessageModel.query(on: db).count()
             try await MessageModel.query(on: db).delete()
 
             // 2. Sessions (parent of messages)
-            counts.sessionsDeleted = try await SessionModel.query(on: db).count()
+            c.sessionsDeleted = try await SessionModel.query(on: db).count()
             try await SessionModel.query(on: db).delete()
 
             // 3. Projects (no FK dependencies)
-            counts.projectsDeleted = try await ProjectModel.query(on: db).count()
+            c.projectsDeleted = try await ProjectModel.query(on: db).count()
             try await ProjectModel.query(on: db).delete()
 
             // 4. Themes (no FK dependencies)
-            counts.themesDeleted = try await ThemeModel.query(on: db).count()
+            c.themesDeleted = try await ThemeModel.query(on: db).count()
             try await ThemeModel.query(on: db).delete()
 
             // 5. Host profiles (no FK dependencies)
-            counts.fleetHostsDeleted = try await HostProfileModel.query(on: db).count()
+            c.fleetHostsDeleted = try await HostProfileModel.query(on: db).count()
             try await HostProfileModel.query(on: db).delete()
 
             // 6. Cached results (no FK dependencies)
-            counts.cacheEntriesDeleted = try await CachedResult.query(on: db).count()
+            c.cacheEntriesDeleted = try await CachedResult.query(on: db).count()
             try await CachedResult.query(on: db).delete()
+
+            return c
         }
 
         req.logger.info("GDPR data erasure complete: \(counts.messagesDeleted) messages, \(counts.sessionsDeleted) sessions, \(counts.projectsDeleted) projects, \(counts.themesDeleted) themes, \(counts.fleetHostsDeleted) host profiles, \(counts.cacheEntriesDeleted) cache entries deleted")
