@@ -55,17 +55,18 @@ struct ChatStreamingAttributes: ActivityAttributes {
 
 /// Static color constants matching the Obsidian/Cyberpunk dark aesthetic.
 /// WidgetKit views cannot access SwiftUI `@Environment`, so colors are declared as constants.
+/// Uses direct RGBA values to avoid dependency on AppTheme.swift (not available in Widget Extension).
 enum LiveActivityColors {
-    static let background = Color(hex: "0A0A0F")
-    static let backgroundSecondary = Color(hex: "111118")
-    static let accent = Color(hex: "00D4FF") // Cyan accent (Cyberpunk)
-    static let accentSecondary = Color(hex: "FF6933") // Orange accent (Obsidian)
-    static let textPrimary = Color(hex: "E8ECF0")
-    static let textSecondary = Color(hex: "888899")
-    static let success = Color(hex: "22C55E")
-    static let warning = Color(hex: "F59E0B")
-    static let destructive = Color(hex: "EF4444")
-    static let border = Color(hex: "1A1A2E")
+    static let background = Color(.sRGB, red: 10/255, green: 10/255, blue: 15/255)
+    static let backgroundSecondary = Color(.sRGB, red: 17/255, green: 17/255, blue: 24/255)
+    static let accent = Color(.sRGB, red: 0/255, green: 212/255, blue: 255/255) // Cyan #00D4FF
+    static let accentSecondary = Color(.sRGB, red: 255/255, green: 105/255, blue: 51/255) // Orange #FF6933
+    static let textPrimary = Color(.sRGB, red: 232/255, green: 236/255, blue: 240/255)
+    static let textSecondary = Color(.sRGB, red: 136/255, green: 136/255, blue: 153/255)
+    static let success = Color(.sRGB, red: 34/255, green: 197/255, blue: 94/255)
+    static let warning = Color(.sRGB, red: 245/255, green: 158/255, blue: 11/255)
+    static let destructive = Color(.sRGB, red: 239/255, green: 68/255, blue: 68/255)
+    static let border = Color(.sRGB, red: 26/255, green: 26/255, blue: 46/255)
 }
 
 // MARK: - Lock Screen Widget View

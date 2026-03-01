@@ -37,6 +37,5 @@ struct ChatStreamingLiveActivityWidget: Widget {
                     .foregroundStyle(isWaiting ? Color.orange : LiveActivityColors.accent)
             }
         }
-        .widgetURL(URL(string: "ils://sessions/"))
     }
 }

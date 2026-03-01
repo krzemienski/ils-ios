@@ -49,14 +49,14 @@ struct SessionWidgetView: View {
             HStack {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
                     .font(.caption.weight(.semibold))
-                    .foregroundColor(Color(hex: WidgetColors.accent))
+                    .foregroundColor(Color(widgetHex: WidgetColors.accent))
                 Text("Recent Sessions")
                     .font(.footnote.weight(.bold).monospaced())
                     .foregroundColor(.white)
                 Spacer()
                 Text("\(entry.sessions.count)")
                     .font(.caption.weight(.medium).monospaced())
-                    .foregroundColor(Color(hex: WidgetColors.textSecondary))
+                    .foregroundColor(Color(widgetHex: WidgetColors.textSecondary))
             }
 
             if entry.sessions.isEmpty {
@@ -66,10 +66,10 @@ struct SessionWidgetView: View {
                     VStack(spacing: 4) {
                         Image(systemName: "tray")
                             .font(.title3)
-                            .foregroundColor(Color(hex: WidgetColors.textTertiary))
+                            .foregroundColor(Color(widgetHex: WidgetColors.textTertiary))
                         Text("No sessions")
                             .font(.caption.monospaced())
-                            .foregroundColor(Color(hex: WidgetColors.textTertiary))
+                            .foregroundColor(Color(widgetHex: WidgetColors.textTertiary))
                     }
                     Spacer()
                 }
@@ -89,7 +89,7 @@ struct SessionWidgetView: View {
         }
         .padding(12)
         .containerBackground(for: .widget) {
-            Color(hex: WidgetColors.background)
+            Color(widgetHex: WidgetColors.background)
         }
     }
 }
@@ -104,7 +104,7 @@ private struct SessionWidgetRow: View {
         HStack(spacing: 8) {
             // Status indicator
             Circle()
-                .fill(session.isActive ? Color(hex: WidgetColors.success) : Color(hex: WidgetColors.textTertiary))
+                .fill(session.isActive ? Color(widgetHex: WidgetColors.success) : Color(widgetHex: WidgetColors.textTertiary))
                 .frame(width: 6, height: 6)
 
             // Session name
@@ -119,12 +119,12 @@ private struct SessionWidgetRow: View {
             // Model badge
             Text(session.model.uppercased())
                 .font(.caption2.weight(.bold).monospaced())
-                .foregroundColor(Color(hex: WidgetColors.accent))
+                .foregroundColor(Color(widgetHex: WidgetColors.accent))
                 .padding(.horizontal, 4)
                 .padding(.vertical, 1)
                 .background(
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(hex: WidgetColors.accent).opacity(0.15))
+                        .fill(Color(widgetHex: WidgetColors.accent).opacity(0.15))
                 )
 
             // Message count
@@ -134,7 +134,7 @@ private struct SessionWidgetRow: View {
                 Text("\(session.messageCount)")
                     .font(.caption2.weight(.medium).monospaced())
             }
-            .foregroundColor(Color(hex: WidgetColors.textSecondary))
+            .foregroundColor(Color(widgetHex: WidgetColors.textSecondary))
         }
         .padding(.vertical, 2)
     }
