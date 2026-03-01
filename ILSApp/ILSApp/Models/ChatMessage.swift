@@ -1,4 +1,5 @@
 import Foundation
+import ILSShared
 
 // MARK: - Chat Message Models
 
@@ -31,6 +32,7 @@ struct ChatMessage: Identifiable, Equatable {
     var isFromHistory: Bool = false
     var tokenCount: Int = 0
     var elapsedSeconds: Double = 0
+    var attachments: [MessageAttachment] = []
 
     /// Append text in-place, making intent explicit for streaming accumulation.
     @inline(__always)
@@ -49,7 +51,8 @@ struct ChatMessage: Identifiable, Equatable {
         timestamp: Date? = nil,
         isFromHistory: Bool = false,
         tokenCount: Int = 0,
-        elapsedSeconds: Double = 0
+        elapsedSeconds: Double = 0,
+        attachments: [MessageAttachment] = []
     ) {
         self.id = id
         self.isUser = isUser
@@ -62,6 +65,7 @@ struct ChatMessage: Identifiable, Equatable {
         self.isFromHistory = isFromHistory
         self.tokenCount = tokenCount
         self.elapsedSeconds = elapsedSeconds
+        self.attachments = attachments
     }
 
     static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
@@ -75,7 +79,8 @@ struct ChatMessage: Identifiable, Equatable {
         lhs.timestamp == rhs.timestamp &&
         lhs.isFromHistory == rhs.isFromHistory &&
         lhs.tokenCount == rhs.tokenCount &&
-        lhs.elapsedSeconds == rhs.elapsedSeconds
+        lhs.elapsedSeconds == rhs.elapsedSeconds &&
+        lhs.attachments == rhs.attachments
     }
 }
 

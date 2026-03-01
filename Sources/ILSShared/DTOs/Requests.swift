@@ -160,7 +160,7 @@ public struct RecentSessionsResponse: Codable, Sendable {
 ///
 /// Attachments are base64-encoded and sent inline with the chat request.
 /// The backend forwards them to Claude using the appropriate content block format.
-public struct MessageAttachment: Codable, Sendable {
+public struct MessageAttachment: Codable, Equatable, Sendable {
     /// Unique identifier for this attachment.
     public let id: UUID
     /// MIME type of the attachment (e.g., "image/jpeg", "image/png", "text/plain").
