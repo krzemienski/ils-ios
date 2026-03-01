@@ -208,6 +208,7 @@
 		7D376024900007C6788CF019 /* PythonGrammar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8832C537298BC59A575FF3 /* PythonGrammar.swift */; };
 		7DB91923C08F5FAE3ED4DFF3 /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE8C02E96C7FB33AC455603 /* SetupViewModel.swift */; };
 		7DD00BA344A1692F5ABD2093 /* PermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */; };
+		15D7AE755A504204B1B46044 /* BatchPermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1712E0D87C974F6ABC92CCC6 /* BatchPermissionRequestModal.swift */; };
 		7E20D349B94982ECBD47D88D /* SettingsAppearanceSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */; };
 		7E6BD3A49163916A20308543 /* EmptyEntityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF90E9C7F217ECD6D3B94F64 /* EmptyEntityState.swift */; };
 		804C8D2F76A6E1EBDE2BADFC /* ThemeMeshGradientSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DE91C54AFE11600E242220A /* ThemeMeshGradientSection.swift */; };
@@ -408,6 +409,7 @@
 		EAD907D86498A92874D45BE4 /* CreateTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E489C56C978287BD1DD024E7 /* CreateTeamView.swift */; };
 		EBC4AEF3138579540CBF2BF8 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFB567C31A55DDB5B2954EB /* ILSShared */; };
 		EE1AE6148F4B027B97CFCFD3 /* PermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */; };
+		166238AE4945464680DF1E04 /* BatchPermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1712E0D87C974F6ABC92CCC6 /* BatchPermissionRequestModal.swift */; };
 		EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E32DD92F87322D4834E67C /* SessionExporter.swift */; };
 		EEE4E13C8E9643105B9D33B3 /* ThemePreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */; };
 		EEEDCB8AFE31EB3109B5ED66 /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82F89BCFDD21A13377F020D /* NewSessionView.swift */; };
@@ -519,6 +521,7 @@
 		5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacDashboardView.swift; sourceTree = "<group>"; };
 		50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
 		5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestModal.swift; sourceTree = "<group>"; };
+		1712E0D87C974F6ABC92CCC6 /* BatchPermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchPermissionRequestModal.swift; sourceTree = "<group>"; };
 		51D5049476821865BC65876F /* CarbonTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbonTheme.swift; sourceTree = "<group>"; };
 		5264936CB2EEF18D3167704B /* LogViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewerView.swift; sourceTree = "<group>"; };
 		530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingIndicatorBubble.swift; sourceTree = "<group>"; };
@@ -1313,6 +1316,7 @@
 				8EED2EA5CED6B30EE2D3364D /* ErrorMessageView.swift */,
 				170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */,
 				1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */,
+				1712E0D87C974F6ABC92CCC6 /* BatchPermissionRequestModal.swift */,
 				5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */,
 				2A8D7644950A87917982EDDC /* StreamingIndicatorView.swift */,
 				92DA7EA27E512C2573284699 /* SystemMessageView.swift */,
@@ -1622,6 +1626,7 @@
 				3A428F89FADC77D6AD890B8F /* OnboardingView.swift in Sources */,
 				5C601E692F813E7A7DE0B8B3 /* PaperTheme.swift in Sources */,
 				691D978E9A1AAD1D04B3A5FC /* PerformanceMonitor.swift in Sources */,
+				166238AE4945464680DF1E04 /* BatchPermissionRequestModal.swift in Sources */,
 				EE1AE6148F4B027B97CFCFD3 /* PermissionRequestModal.swift in Sources */,
 				81EA0BAEEB2CEF1F8F48A784 /* PlatformCompat.swift in Sources */,
 				FC5AD2FB2B34DC4F6245DB85 /* PluginConfigView.swift in Sources */,
@@ -1825,6 +1830,7 @@
 				D34412D635D61666C3E92EDE /* OnboardingView.swift in Sources */,
 				D772A51606D786C53190FC8F /* PaperTheme.swift in Sources */,
 				3745234529CDF48C45490BBF /* PerformanceMonitor.swift in Sources */,
+				15D7AE755A504204B1B46044 /* BatchPermissionRequestModal.swift in Sources */,
 				7DD00BA344A1692F5ABD2093 /* PermissionRequestModal.swift in Sources */,
 				38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */,
 				8D1A3E67499C2C7112280CD6 /* PluginConfigView.swift in Sources */,

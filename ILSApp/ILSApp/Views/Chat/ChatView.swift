@@ -168,11 +168,11 @@ struct ChatView: View {
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
         }
-        .sheet(item: $viewModel.pendingPermissionRequest) { request in
-            PermissionRequestModal(request: request) { decision in
-                viewModel.respondToPermission(requestId: request.requestId, decision: decision)
+        .sheet(isPresented: $viewModel.showBatchPermissionModal) {
+            BatchPermissionRequestModal(requests: viewModel.pendingPermissionRequests) { requestIds, decision in
+                viewModel.respondToBatchPermissions(requestIds: requestIds, decision: decision)
             }
-            .presentationDetents([.medium])
+            .presentationDetents(viewModel.pendingPermissionRequests.count > 3 ? [.large] : [.medium, .large])
             .presentationBackground(theme.bgPrimary)
         }
         .navigationDestination(item: $actions.navigateToForked) { session in
