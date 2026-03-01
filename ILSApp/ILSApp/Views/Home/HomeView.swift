@@ -4,45 +4,39 @@ import TipKit
 
 /// The primary home dashboard displayed when the app launches or no session is active.
 ///
-/// Renders six stacked sections — Welcome, Refreshing Banner, Connection Banner, Quick Actions,
-/// Recent Sessions, and Overview Stats — inside a vertically scrolling container. Quick-action
-/// cards are laid out with a two-column ``LazyVGrid``. While the sessions list is loading, the
-/// Recent Sessions section shows skeleton rows animated with a shimmer effect. A ``TipKit``
-/// tip guides new users toward creating their first session. Pull-to-refresh triggers a
-/// simultaneous reload of ``DashboardViewModel`` and the shared ``SessionsViewModel``,
-/// which is owned by the parent `SidebarRootView` so that sidebar and home stay in sync.
-/// Sparkline data for each entity type is sourced from ``DashboardViewModel`` and passed to
-/// individual ``StatCard`` views in the Overview section.
+/// Hosts a configurable ``DashboardGridView`` which renders the user's chosen
+/// ``DashboardLayout`` as a grid of widget tiles. A toolbar slider button opens
+/// ``DashboardLayoutPickerView`` to switch or customise layouts. The ``DashboardLayoutStore``
+/// is owned here as `@State` and injected into the layout-picker sheet via the environment.
+/// Pull-to-refresh triggers a reload of the shared ``SessionsViewModel`` and the
+/// refreshing banner is shown while the operation is in flight.
 ///
 /// ## Topics
 /// ### Sections
 /// - ``welcomeSection`` - Greeting header showing the connected server URL
 /// - ``refreshingBanner`` - Transient animated banner shown during pull-to-refresh
 /// - ``connectionBanner`` - Warning banner with a Setup CTA when the server is unreachable
-/// - ``quickActionsGrid`` - Two-column ``LazyVGrid`` of tappable shortcut cards
-/// - ``recentSessionsSection`` - Up to five most-recent sessions with skeleton loading fallback
-/// - ``statsSection`` - Overview stat cards with sparklines and secondary health indicators
 ///
 /// ### Actions
-/// - ``onSessionSelected`` - Callback invoked when the user taps a recent session row
+/// - ``onSessionSelected`` - Callback invoked when the user taps a session row in a widget
 /// - ``onNavigate`` - Callback to push a named ``ActiveScreen`` onto the navigation stack
 /// - ``onNavigateToBrowser`` - Callback to deep-link to a specific ``BrowserSegment``
 ///
-/// ### Loading
-/// - ``skeletonSessionRow`` - Placeholder row rendered with shimmer while sessions load
-/// - ``isRefreshing`` - Drives the refreshing banner visibility and shimmer on stat cards
+/// ### Widget Operations
+/// - ``removeWidget(_:)`` - Removes a widget from the active layout and persists the change
+/// - ``reorderWidget(fromID:toID:)`` - Moves a dragged widget before the drop-target widget
 struct HomeView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// View model that loads dashboard statistics, sparkline data, and entity counts.
-    @State private var dashboardVM = DashboardViewModel()
+    /// Persists and manages all dashboard layouts, including the active layout selection.
+    @State private var layoutStore = DashboardLayoutStore()
+    /// Whether the dashboard grid is in edit mode (shows remove / reorder controls).
+    @State private var isEditMode = false
     /// Whether a pull-to-refresh reload is currently in flight.
     @State private var isRefreshing = false
-    /// Controls presentation of the New Session sheet.
-    @State private var showNewSessionSheet = false
-    /// Text entered in the sessions search bar.
-    @State private var sessionSearchText: String = ""
+    /// Controls presentation of the ``DashboardLayoutPickerView`` sheet.
+    @State private var showLayoutPicker = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -51,9 +45,9 @@ struct HomeView: View {
 
     /// Shared sessions view model owned by SidebarRootView.
     var sessionsVM: SessionsViewModel
-    /// Called when the user selects a recent session row; passes the chosen ``ChatSession``.
+    /// Called when the user selects a session row inside a widget.
     var onSessionSelected: ((ChatSession) -> Void)?
-    /// Called to navigate to a top-level ``ActiveScreen`` from a quick-action card.
+    /// Called to navigate to a top-level ``ActiveScreen`` from a widget action.
     var onNavigate: ((ActiveScreen) -> Void)?
     /// Called to navigate directly to a specific ``BrowserSegment`` (Skills, MCP, Plugins).
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
@@ -71,9 +65,23 @@ struct HomeView: View {
                 TipView(commandPaletteTip)
                     .tipBackground(theme.bgSecondary)
 
-                quickActionsGrid
-                recentSessionsSection
-                statsSection
+                if let layout = layoutStore.activeLayout {
+                    DashboardGridView(
+                        layout: layout,
+                        isEditMode: $isEditMode,
+                        sessionsVM: sessionsVM,
+                        apiClient: appState.apiClient,
+                        onRemoveWidget: { widget in
+                            removeWidget(widget)
+                        },
+                        onReorderWidget: { fromID, toID in
+                            reorderWidget(fromID: fromID, toID: toID)
+                        },
+                        onSessionSelected: onSessionSelected,
+                        onNavigate: onNavigate,
+                        onNavigateToBrowser: onNavigateToBrowser
+                    )
+                }
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingMD)
@@ -81,36 +89,35 @@ struct HomeView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Home")
-        .sheet(isPresented: $showNewSessionSheet) {
-            NewSessionView { session in
-                showNewSessionSheet = false
-                onSessionSelected?(session)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showLayoutPicker = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel("Dashboard Layout")
+                .accessibilityHint("Opens the layout picker to customise your dashboard")
             }
-            .environment(appState)
+        }
+        .sheet(isPresented: $showLayoutPicker) {
+            NavigationStack {
+                DashboardLayoutPickerView()
+            }
+            .environment(layoutStore)
             .environment(\.theme, theme)
         }
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
-        .task {
-            dashboardVM.configure(client: appState.apiClient)
-            await dashboardVM.loadAll()
-            // Sessions are loaded by SidebarRootView (shared VM)
-        }
         .refreshable {
             HapticManager.impact(.medium)
             isRefreshing = true
-            await dashboardVM.loadAll()
             await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
             isRefreshing = false
         }
-        .searchable(text: $sessionSearchText, prompt: "Search sessions")
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
-        }
-        .onChange(of: appState.serverURL) { _, _ in
-            dashboardVM.configure(client: appState.apiClient)
-            Task { await dashboardVM.loadAll() }
         }
     }
 
@@ -208,367 +215,51 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Recent Sessions
+    // MARK: - Widget Operations
 
-    @ViewBuilder
-    private var recentSessionsSection: some View {
-        let isSearching = !sessionSearchText.isEmpty
-        let displaySessions: [ChatSession] = {
-            if isSearching {
-                return sessionsVM.sessions.filter {
-                    $0.displayName.localizedCaseInsensitiveContains(sessionSearchText)
-                }
-            } else {
-                return Array(sessionsVM.sessions.prefix(5))
-            }
-        }()
-
-        if !displaySessions.isEmpty {
-            VStack(alignment: .leading, spacing: theme.spacingSM) {
-                HStack {
-                    Text(isSearching ? "Results" : "Recent Sessions")
-                        .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-
-                    Spacer()
-
-                    if isSearching {
-                        Text("\(displaySessions.count)")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
-                    } else {
-                        Button {
-                            onNavigate?(.browser)
-                        } label: {
-                            HStack(spacing: theme.spacingXS) {
-                                Text("View All")
-                                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                                Text("(\(sessionsVM.totalCount))")
-                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: theme.fontCaption - 2, weight: .semibold))
-                            }
-                            .foregroundStyle(theme.accent)
-                        }
-                    }
-                }
-
-                ForEach(displaySessions, id: \.id) { session in
-                    Button {
-                        onSessionSelected?(session)
-                    } label: {
-                        recentSessionRow(session)
-                    }
-                    .buttonStyle(.plain)
-                    .shimmerIfActive(isRefreshing)
-                }
-            }
-        } else if isSearching {
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 24, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                Text("No sessions matching \"\(sessionSearchText)\"")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingMD)
-        } else if !appState.isConnected {
-            // Empty state handled by connection banner
-            EmptyView()
-        } else if sessionsVM.isLoading {
-            ForEach(0..<3, id: \.self) { _ in
-                skeletonSessionRow
-            }
-        }
+    /// Removes a widget from the active layout and persists the updated layout.
+    ///
+    /// After removal, row indices are renumbered starting from zero so
+    /// ``DashboardGridView`` renders a contiguous sequence of rows.
+    ///
+    /// - Parameter widget: The widget tile to remove.
+    private func removeWidget(_ widget: DashboardWidget) {
+        guard var layout = layoutStore.activeLayout else { return }
+        layout.widgets.removeAll { $0.id == widget.id }
+        renumberRows(&layout.widgets)
+        layoutStore.save(layout)
+        layoutStore.setActiveLayout(layout)
     }
 
-    @ViewBuilder
-    private func recentSessionRow(_ session: ChatSession) -> some View {
-        HStack(spacing: theme.spacingSM) {
-            Circle()
-                .fill(session.status == .active ? theme.success : theme.textTertiary.opacity(0.3))
-                .frame(width: 8, height: 8)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(session.displayName)
-                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .lineLimit(1)
-
-                HStack(spacing: theme.spacingXS) {
-                    Text(session.model.capitalized)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.entitySession)
-
-                    Text("·")
-                        .foregroundStyle(theme.textTertiary)
-
-                    Text("\(session.messageCount) msgs")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-        }
-        .padding(theme.spacingSM)
-        .frame(minHeight: 44)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityLabel("\(session.displayName), \(session.model), \(session.messageCount) messages")
-        .accessibilityHint("Opens this chat session")
-        .accessibilityAddTraits(.isButton)
+    /// Moves the dragged widget (`fromID`) to the position occupied by the
+    /// drop-target widget (`toID`) and persists the updated layout.
+    ///
+    /// The dragged widget is removed from its original position and inserted
+    /// immediately before (or after) the drop target, matching the visual
+    /// expectation set by ``DashboardGridView``'s drag-and-drop handler.
+    /// Row indices are renumbered after the move.
+    ///
+    /// - Parameters:
+    ///   - fromID: Stable identity of the widget being dragged.
+    ///   - toID: Stable identity of the widget acting as the drop target.
+    private func reorderWidget(fromID: UUID, toID: UUID) {
+        guard var layout = layoutStore.activeLayout,
+              let fromIndex = layout.widgets.firstIndex(where: { $0.id == fromID }),
+              let toIndex = layout.widgets.firstIndex(where: { $0.id == toID }) else { return }
+        let widget = layout.widgets.remove(at: fromIndex)
+        let insertIndex = fromIndex < toIndex ? toIndex : toIndex
+        layout.widgets.insert(widget, at: insertIndex)
+        renumberRows(&layout.widgets)
+        layoutStore.save(layout)
+        layoutStore.setActiveLayout(layout)
     }
 
-    @ViewBuilder
-    private var skeletonSessionRow: some View {
-        HStack(spacing: theme.spacingSM) {
-            Circle()
-                .fill(theme.bgTertiary)
-                .frame(width: 8, height: 8)
-
-            VStack(alignment: .leading, spacing: theme.spacingXS) {
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(theme.bgTertiary)
-                    .frame(width: 140, height: 14)
-                HStack(spacing: theme.spacingXS) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(theme.bgTertiary)
-                        .frame(width: 50, height: 10)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(theme.bgTertiary)
-                        .frame(width: 40, height: 10)
-                }
-            }
-
-            Spacer()
-        }
-        .padding(theme.spacingSM)
-        .frame(minHeight: 44)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .shimmer()
-    }
-
-    // MARK: - Quick Actions
-
-    @ViewBuilder
-    private var quickActionsGrid: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            Text("Quick Actions")
-                .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: theme.spacingSM),
-                GridItem(.flexible(), spacing: theme.spacingSM)
-            ], spacing: theme.spacingSM) {
-                quickActionCard(
-                    icon: "plus.bubble.fill",
-                    title: "New Session",
-                    color: theme.entitySession
-                ) {
-                    showNewSessionSheet = true
-                }
-
-                quickActionCard(
-                    icon: "sparkles",
-                    title: "Discover Skills",
-                    subtitle: statsSubtitle(dashboardVM.stats?.skills.total),
-                    color: theme.entitySkill
-                ) {
-                    onNavigateToBrowser?(.skills)
-                }
-
-                quickActionCard(
-                    icon: "server.rack",
-                    title: "Configure MCP",
-                    subtitle: statsSubtitle(dashboardVM.stats?.mcpServers.total),
-                    color: theme.entityMCP
-                ) {
-                    onNavigateToBrowser?(.mcp)
-                }
-
-                quickActionCard(
-                    icon: "puzzlepiece.extension.fill",
-                    title: "Browse Plugins",
-                    subtitle: statsSubtitle(dashboardVM.stats?.plugins.total),
-                    color: theme.entityPlugin
-                ) {
-                    onNavigateToBrowser?(.plugins)
-                }
-
-                quickActionCard(
-                    icon: "gearshape.fill",
-                    title: "Edit Settings",
-                    color: theme.textSecondary
-                ) {
-                    onNavigate?(.settings)
-                }
-
-                quickActionCard(
-                    icon: "gauge.with.dots.needle.33percent",
-                    title: "System Monitor",
-                    color: theme.entityMCP
-                ) {
-                    onNavigate?(.system)
-                }
-            }
-            .shimmerIfActive(isRefreshing)
-        }
-    }
-
-    @ViewBuilder
-    private func quickActionCard(
-        icon: String,
-        title: String,
-        subtitle: String? = nil,
-        color: Color,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: icon)
-                    .font(.system(size: 24, design: theme.fontDesign))
-                    .foregroundStyle(color)
-
-                Text(title)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingMD)
-            .modifier(GlassCard())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
-        .accessibilityHint("Double tap to open \(title)")
-    }
-
-    private func statsSubtitle(_ count: Int?) -> String? {
-        guard let count else { return nil }
-        return "\(count)"
-    }
-
-    // MARK: - Stats Section
-
-    @ViewBuilder
-    private var statsSection: some View {
-        if let stats = dashboardVM.stats {
-            VStack(alignment: .leading, spacing: theme.spacingSM) {
-                Text("Overview")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: theme.spacingSM),
-                    GridItem(.flexible(), spacing: theme.spacingSM)
-                ], spacing: theme.spacingSM) {
-                    StatCard(
-                        title: "Sessions",
-                        count: stats.sessions.total,
-                        entityType: .sessions,
-                        sparklineData: dashboardVM.sessionSparkline
-                    )
-
-                    StatCard(
-                        title: "Projects",
-                        count: stats.projects.total,
-                        entityType: .projects,
-                        sparklineData: dashboardVM.projectSparkline
-                    )
-
-                    StatCard(
-                        title: "Skills",
-                        count: stats.skills.total,
-                        entityType: .skills,
-                        sparklineData: dashboardVM.skillSparkline
-                    )
-
-                    StatCard(
-                        title: "MCP Servers",
-                        count: stats.mcpServers.total,
-                        entityType: .mcp,
-                        sparklineData: dashboardVM.mcpSparkline
-                    )
-                }
-                .shimmerIfActive(isRefreshing)
-
-                HStack {
-                    Spacer()
-                    CacheStatusView(lastUpdated: dashboardVM.lastUpdated)
-                }
-
-                // Secondary stats row: plugins + active counts
-                HStack(spacing: theme.spacingSM) {
-                    secondaryStat(
-                        icon: "puzzlepiece.extension.fill",
-                        label: "Plugins",
-                        value: "\(stats.plugins.enabled)/\(stats.plugins.total) enabled",
-                        color: theme.entityPlugin
-                    )
-
-                    secondaryStat(
-                        icon: "heart.fill",
-                        label: "MCP Health",
-                        value: "\(stats.mcpServers.healthy)/\(stats.mcpServers.total) healthy",
-                        color: stats.mcpServers.healthy == stats.mcpServers.total ? theme.success : theme.warning
-                    )
-                }
-                .shimmerIfActive(isRefreshing)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func secondaryStat(icon: String, label: String, value: String, color: Color) -> some View {
-        HStack(spacing: theme.spacingXS) {
-            Image(systemName: icon)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(color)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                Text(value)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, theme.spacingSM)
-        .padding(.vertical, theme.spacingXS)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label), \(value)")
-    }
-}
-
-// MARK: - Conditional Shimmer Helper
-
-private extension View {
-    @ViewBuilder
-    func shimmerIfActive(_ active: Bool) -> some View {
-        if active {
-            shimmer()
-        } else {
-            self
+    /// Rewrites each widget's `position.row` to its array index, keeping
+    /// `position.col` at zero. Called after every structural mutation.
+    private func renumberRows(_ widgets: inout [DashboardWidget]) {
+        for idx in widgets.indices {
+            widgets[idx].position.row = idx
+            widgets[idx].position.col = 0
         }
     }
 }
