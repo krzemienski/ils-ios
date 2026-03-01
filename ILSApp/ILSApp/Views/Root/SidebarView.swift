@@ -68,6 +68,9 @@ struct SidebarView: View {
         }
     }
 
+    /// Shared bookmark manager for toggling session bookmarks.
+    private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -132,6 +135,26 @@ struct SidebarView: View {
             Button("Cancel", role: .cancel) { sessionToDelete = nil }
         } message: {
             Text("This will permanently delete this session and all its messages.")
+        }
+        .onChange(of: appState.navigationIntent) { _, intent in
+            guard let intent else { return }
+            activeScreen = intent
+            appState.navigationIntent = nil
+        }
+        .onChange(of: appState.browserSegmentIntent) { _, segment in
+            guard segment != nil else { return }
+            // Consumed by SidebarRootView
+        }
+        .onAppear {
+            if case .chat(let session) = activeScreen {
+                appState.updateLastSessionId(session.id)
+            }
+        }
+        .refreshable {
+            #if os(iOS)
+            HapticManager.impact(.light)
+            #endif
+            await sessionsViewModel.loadProjectGroups()
         }
     }
 
@@ -381,6 +404,15 @@ struct SidebarView: View {
                     }
                     .contextMenu {
                         Button {
+                            Task { await bookmarksManager.toggleBookmark(session: session) }
+                        } label: {
+                            let isBookmarked = bookmarksManager.isBookmarked(sessionId: session.id)
+                            Label(
+                                isBookmarked ? "Remove Bookmark" : "Bookmark",
+                                systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
+                            )
+                        }
+                        Button {
                             renameText = session.name ?? ""
                             sessionToRename = session
                         } label: {
@@ -408,6 +440,16 @@ struct SidebarView: View {
                         }
                     }
                     .swipeActions(edge: .leading) {
+                        Button {
+                            Task { await bookmarksManager.toggleBookmark(session: session) }
+                        } label: {
+                            let isBookmarked = bookmarksManager.isBookmarked(sessionId: session.id)
+                            Label(
+                                isBookmarked ? "Unbookmark" : "Bookmark",
+                                systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
+                            )
+                        }
+                        .tint(.orange)
                         Button {
                             renameText = session.name ?? ""
                             sessionToRename = session
