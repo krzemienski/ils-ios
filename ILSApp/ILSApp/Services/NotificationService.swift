@@ -60,6 +60,9 @@ class NotificationService: NSObject {
         // Only post if authorized
         guard isAuthorized else { return }
 
+        // Suppress during quiet hours
+        guard !isInQuietHours() else { return }
+
         let content = UNMutableNotificationContent()
         content.title = sessionName
         content.body = messagePreview
@@ -102,6 +105,12 @@ class NotificationService: NSObject {
         // Only post if authorized
         guard isAuthorized else { return }
 
+        // Respect user preference
+        guard UserDefaults.standard.bool(forKey: "notif_sessionCompleteAlerts") else { return }
+
+        // Suppress during quiet hours
+        guard !isInQuietHours() else { return }
+
         let content = UNMutableNotificationContent()
         content.title = sessionName
         content.body = "Response complete"
@@ -143,6 +152,12 @@ class NotificationService: NSObject {
         // Only post if authorized
         guard isAuthorized else { return }
 
+        // Respect user preference
+        guard UserDefaults.standard.bool(forKey: "notif_sessionErrorAlerts") else { return }
+
+        // Suppress during quiet hours
+        guard !isInQuietHours() else { return }
+
         let content = UNMutableNotificationContent()
         content.title = sessionName
         content.body = errorMessage
@@ -167,6 +182,24 @@ class NotificationService: NSObject {
             AppLogger.shared.error("Failed to post error notification: \(error)", category: "notifications")
         }
     }
+
+    // MARK: - Quiet Hours
+
+    /// Returns true if the current time falls within the user-configured quiet hours window.
+    private func isInQuietHours() -> Bool {
+        guard UserDefaults.standard.bool(forKey: "notif_quietHoursEnabled") else { return false }
+        let startHour = UserDefaults.standard.integer(forKey: "notif_quietStartHour")
+        let endHour = UserDefaults.standard.integer(forKey: "notif_quietEndHour")
+        let currentHour = Calendar.current.component(.hour, from: Date())
+        // Handle wrap-around midnight (e.g. 22:00 – 07:00)
+        if startHour <= endHour {
+            return currentHour >= startHour && currentHour < endHour
+        } else {
+            return currentHour >= startHour || currentHour < endHour
+        }
+    }
+
+    // MARK: - Notification Removal
 
     /// Remove all delivered notifications for a session
     /// - Parameter sessionId: The session ID

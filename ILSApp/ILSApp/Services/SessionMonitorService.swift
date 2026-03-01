@@ -25,6 +25,11 @@ class SessionMonitorService {
     /// Weak reference to the API client used for polling.
     private weak var apiClient: APIClient?
 
+    // MARK: - UserDefaults Keys
+
+    private static let idsKey = "sessionMonitor_ids"
+    private static let namesKey = "sessionMonitor_names"
+
     private init() {}
 
     // MARK: - Session Registration
@@ -37,6 +42,7 @@ class SessionMonitorService {
         monitoredSessionIDs.insert(session.id)
         sessionNames[session.id] = session.displayName
         self.apiClient = apiClient
+        persistToDisk()
         AppLogger.shared.info(
             "SessionMonitor: now watching \(monitoredSessionIDs.count) session(s)",
             category: "notifications"
@@ -48,6 +54,7 @@ class SessionMonitorService {
     func removeSession(_ sessionId: UUID) {
         monitoredSessionIDs.remove(sessionId)
         sessionNames.removeValue(forKey: sessionId)
+        persistToDisk()
         AppLogger.shared.info(
             "SessionMonitor: removed session \(sessionId), \(monitoredSessionIDs.count) remaining",
             category: "notifications"
@@ -83,6 +90,11 @@ class SessionMonitorService {
     /// Handle a BGAppRefreshTask wake-up by polling all monitored sessions.
     /// - Parameter task: The background task provided by the system.
     func handleBackgroundTask(_ task: BGAppRefreshTask) {
+        // If the app was killed and relaunched by BGTaskScheduler, restore persisted sessions.
+        if monitoredSessionIDs.isEmpty {
+            restoreFromDisk()
+        }
+
         // Snapshot the monitored set at task start.
         let sessionIDs = monitoredSessionIDs
         guard let client = apiClient, !sessionIDs.isEmpty else {
@@ -109,6 +121,39 @@ class SessionMonitorService {
 
             task.setTaskCompleted(success: true)
         }
+    }
+
+    // MARK: - UserDefaults Persistence
+
+    /// Write monitored session IDs and names to UserDefaults so they survive app termination.
+    private func persistToDisk() {
+        let idStrings = monitoredSessionIDs.map { $0.uuidString }
+        UserDefaults.standard.set(idStrings, forKey: Self.idsKey)
+
+        // Encode names as [String: String] for UserDefaults compatibility.
+        let namesDict = Dictionary(uniqueKeysWithValues: sessionNames.map { ($0.key.uuidString, $0.value) })
+        UserDefaults.standard.set(namesDict, forKey: Self.namesKey)
+    }
+
+    /// Restore monitored sessions from UserDefaults after the app was terminated.
+    private func restoreFromDisk() {
+        guard let idStrings = UserDefaults.standard.stringArray(forKey: Self.idsKey) else { return }
+        let restoredIDs = Set(idStrings.compactMap { UUID(uuidString: $0) })
+        guard !restoredIDs.isEmpty else { return }
+
+        monitoredSessionIDs = restoredIDs
+
+        if let namesDict = UserDefaults.standard.dictionary(forKey: Self.namesKey) as? [String: String] {
+            sessionNames = Dictionary(uniqueKeysWithValues: namesDict.compactMap { key, value in
+                guard let uuid = UUID(uuidString: key) else { return nil }
+                return (uuid, value)
+            })
+        }
+
+        AppLogger.shared.info(
+            "SessionMonitor: restored \(monitoredSessionIDs.count) session(s) from disk",
+            category: "notifications"
+        )
     }
 
     // MARK: - Private Polling
