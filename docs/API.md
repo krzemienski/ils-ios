@@ -2446,6 +2446,8 @@ Host profiles represent remote machines in the ILS fleet for distributed Claude 
 
 **Backward-Compatible Aliases:** All `/api/v1/host-profiles/*` routes are also accessible via `/api/v1/fleet/*` (e.g., `GET /api/v1/fleet`, `POST /api/v1/fleet/register`). The `/fleet` prefix is maintained for backward compatibility and routes to the same handlers.
 
+> **Authentication**: When `ILS_ADMIN_KEY` is configured in the server environment, all Host Profiles endpoints require the `X-Admin-Token` header matching that key. Example: `-H "X-Admin-Token: $ILS_ADMIN_KEY"`. In development (no `ILS_ADMIN_KEY` set), requests are allowed without authentication.
+
 ### List Host Profiles
 
 **Endpoint:** `GET /api/v1/host-profiles`
@@ -2484,7 +2486,8 @@ Host profiles represent remote machines in the ILS fleet for distributed Claude 
 **Example:**
 
 ```bash
-curl http://localhost:9999/api/v1/host-profiles
+curl http://localhost:9999/api/v1/host-profiles \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2510,10 +2513,10 @@ curl http://localhost:9999/api/v1/host-profiles
 **Required Fields:**
 - `name` (string, max 255 chars) - Human-readable display name
 - `host` (string, max 255 chars) - Hostname or IP address
-
-**Optional Fields:**
 - `port` (integer, default: `22`) - SSH port on the remote machine
 - `backendPort` (integer, default: `9999`) - Port the ILS backend listens on remotely
+
+**Optional Fields:**
 - `username` (string) - SSH username for authentication
 - `authMethod` (string) - Authentication method, e.g. `"password"` or `"key"`
 - `credential` (string) - Credential value (password or private key path)
@@ -2543,6 +2546,7 @@ curl http://localhost:9999/api/v1/host-profiles
 ```bash
 curl -X POST http://localhost:9999/api/v1/host-profiles/register \
   -H "Content-Type: application/json" \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY" \
   -d '{
     "name": "My Mac Mini",
     "host": "192.168.1.100",
@@ -2586,7 +2590,8 @@ curl -X POST http://localhost:9999/api/v1/host-profiles/register \
 **Example:**
 
 ```bash
-curl -X POST http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000/activate
+curl -X POST http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000/activate \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2612,7 +2617,8 @@ curl -X POST http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-
 **Example:**
 
 ```bash
-curl -X DELETE http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000
+curl -X DELETE http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000 \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2657,7 +2663,8 @@ curl -X DELETE http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a71
 **Example:**
 
 ```bash
-curl http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000/health
+curl http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000/health \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2665,6 +2672,8 @@ curl http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-44665544
 ## Data Erasure
 
 The Data Erasure API provides GDPR-compliant deletion of all user data stored by ILS, including sessions, messages, and associated metadata.
+
+> **Authentication**: When `ILS_ADMIN_KEY` is configured in the server environment, all Data Erasure endpoints require the `X-Admin-Token` header matching that key. Example: `-H "X-Admin-Token: $ILS_ADMIN_KEY"`. In development (no `ILS_ADMIN_KEY` set), requests are allowed without authentication.
 
 ### Delete All Data
 
@@ -2680,7 +2689,10 @@ The Data Erasure API provides GDPR-compliant deletion of all user data stored by
   "data": {
     "sessionsDeleted": 42,
     "messagesDeleted": 1337,
-    "message": "All data has been permanently deleted"
+    "projectsDeleted": 5,
+    "themesDeleted": 2,
+    "fleetHostsDeleted": 3,
+    "cacheEntriesDeleted": 18
   }
 }
 ```
@@ -2688,12 +2700,16 @@ The Data Erasure API provides GDPR-compliant deletion of all user data stored by
 **Fields:**
 - `sessionsDeleted` - Number of sessions that were deleted
 - `messagesDeleted` - Number of messages that were deleted
-- `message` - Human-readable confirmation message
+- `projectsDeleted` - Number of projects that were deleted
+- `themesDeleted` - Number of themes that were deleted
+- `fleetHostsDeleted` - Number of fleet/host profile entries that were deleted
+- `cacheEntriesDeleted` - Number of cache entries that were deleted
 
 **Example:**
 
 ```bash
-curl -X DELETE http://localhost:9999/api/v1/data/all
+curl -X DELETE http://localhost:9999/api/v1/data/all \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 **Example Response:**
@@ -2703,7 +2719,10 @@ curl -X DELETE http://localhost:9999/api/v1/data/all
   "data": {
     "sessionsDeleted": 42,
     "messagesDeleted": 1337,
-    "message": "All data has been permanently deleted"
+    "projectsDeleted": 5,
+    "themesDeleted": 2,
+    "fleetHostsDeleted": 3,
+    "cacheEntriesDeleted": 18
   }
 }
 ```
