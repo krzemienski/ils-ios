@@ -260,7 +260,7 @@ struct HomeView: View {
               let fromIndex = layout.widgets.firstIndex(where: { $0.id == fromID }),
               let toIndex = layout.widgets.firstIndex(where: { $0.id == toID }) else { return }
         let widget = layout.widgets.remove(at: fromIndex)
-        let insertIndex = fromIndex < toIndex ? toIndex : toIndex
+        let insertIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
         layout.widgets.insert(widget, at: insertIndex)
         renumberRows(&layout.widgets)
         layoutStore.save(layout)

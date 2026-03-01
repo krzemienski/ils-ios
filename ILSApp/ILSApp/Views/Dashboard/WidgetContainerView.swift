@@ -83,6 +83,17 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
         }
         .task {
             await viewModel.loadContent()
+            // Read the user-configured refresh interval (default 30 s)
+            let stored = UserDefaults.standard.integer(
+                forKey: AppConstants.dashboardWidgetRefreshIntervalKey
+            )
+            let intervalSeconds: UInt64 = stored > 0 ? UInt64(stored) : 30
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: intervalSeconds * 1_000_000_000)
+                if !Task.isCancelled {
+                    await viewModel.loadContent()
+                }
+            }
         }
     }
 

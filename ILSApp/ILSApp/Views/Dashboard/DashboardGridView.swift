@@ -76,6 +76,8 @@ struct DashboardGridView: View {
 
     /// Tracks the widget being dragged so we can dim its tile.
     @State private var draggingWidgetID: UUID?
+    /// Controls presentation of the Add Widget sheet.
+    @State private var showAddWidget = false
 
     // MARK: - Row Model
 
@@ -149,6 +151,18 @@ struct DashboardGridView: View {
         .animation(.spring(), value: layout.widgets.map(\.id))
         .toolbar {
             #if os(iOS)
+            ToolbarItem(placement: .navigationBarLeading) {
+                if isEditMode {
+                    Button {
+                        showAddWidget = true
+                    } label: {
+                        Label("Add Widget", systemImage: "plus")
+                            .labelStyle(.iconOnly)
+                    }
+                    .accessibilityLabel("Add Widget")
+                    .accessibilityHint("Opens the widget picker to add a new tile to the dashboard")
+                }
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(isEditMode ? "Done" : "Edit") {
                     withAnimation(.spring()) {
@@ -158,6 +172,17 @@ struct DashboardGridView: View {
             }
             #else
             ToolbarItem {
+                if isEditMode {
+                    Button {
+                        showAddWidget = true
+                    } label: {
+                        Label("Add Widget", systemImage: "plus")
+                            .labelStyle(.iconOnly)
+                    }
+                    .accessibilityLabel("Add Widget")
+                }
+            }
+            ToolbarItem {
                 Button(isEditMode ? "Done" : "Edit") {
                     withAnimation(.spring()) {
                         isEditMode.toggle()
@@ -165,6 +190,10 @@ struct DashboardGridView: View {
                 }
             }
             #endif
+        }
+        .sheet(isPresented: $showAddWidget) {
+            AddWidgetSheet(layout: layout, layoutStore: layoutStore)
+                .environment(\.theme, theme)
         }
     }
 
