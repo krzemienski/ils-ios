@@ -146,6 +146,8 @@
 		5152C5E755767492187CF54A /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CA914CC9CC730BF84E8A34 /* ToolCallAccordion.swift */; };
 		519EAFAB2935A2070E08C7BB /* checkpoint-2026-02-13T02-32-52-924Z.json in Resources */ = {isa = PBXBuildFile; fileRef = 862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */; };
 		51A88357FAE07DB0E459965D /* TunnelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */; };
+		52AA10BCD3F4E596A17B08CF /* TunnelSetupWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F302E8C94D5B7208EF1A3C /* TunnelSetupWizardView.swift */; };
+		53BB21CDE4A5F607B28C19D0 /* TunnelSetupWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F302E8C94D5B7208EF1A3C /* TunnelSetupWizardView.swift */; };
 		531BB01D92A383DA6DF5AA78 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */; };
 		541CF79CF153E500D4C7A1C7 /* ConfigEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */; };
 		55A05EF9235C2548B1C8ED3A /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE41119A5355AEB72E4B4406 /* ChatMessage.swift */; };
@@ -460,6 +462,7 @@
 		126022DAC2872BEEF6363538 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
 		138C7CC5E048F4B6BDBB35AF /* SidebarRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
 		16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
+		A1F302E8C94D5B7208EF1A3C /* TunnelSetupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSetupWizardView.swift; sourceTree = "<group>"; };
 		1695ADC93CE18946E4C2517E /* HooksManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksManagementView.swift; sourceTree = "<group>"; };
 		170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
 		1715C85690BFE53786364C7B /* MacSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSettingsView.swift; sourceTree = "<group>"; };
@@ -861,6 +864,7 @@
 				5A2839D9B4F57064D597B4D3 /* SettingsView.swift */,
 				276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */,
 				16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */,
+			A1F302E8C94D5B7208EF1A3C /* TunnelSetupWizardView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1686,6 +1690,7 @@
 				F3AD02A829BC5F9F4422B9B3 /* ToastModifier.swift in Sources */,
 				BF733927A6B9F3B4BEB875B6 /* ToolCallAccordion.swift in Sources */,
 				D71AFEBF42AAA69EDD1F38A8 /* TunnelSettingsView.swift in Sources */,
+				53BB21CDE4A5F607B28C19D0 /* TunnelSetupWizardView.swift in Sources */,
 				968D2C52B9A44BE2B92BD1FE /* TunnelSettingsViewModel.swift in Sources */,
 				A78516F2705D5D8ACE7C8218 /* TypingIndicatorBubble.swift in Sources */,
 				895B75AB05181525D8F74B26 /* UserMessageCard.swift in Sources */,
@@ -1887,6 +1892,7 @@
 				8693100F646512D6234ED00E /* ToastModifier.swift in Sources */,
 				5152C5E755767492187CF54A /* ToolCallAccordion.swift in Sources */,
 				51A88357FAE07DB0E459965D /* TunnelSettingsView.swift in Sources */,
+				52AA10BCD3F4E596A17B08CF /* TunnelSetupWizardView.swift in Sources */,
 				34F69F8A8DC02040BD4C6113 /* TunnelSettingsViewModel.swift in Sources */,
 				1DF691F3BAFDB545D82AD747 /* TypingIndicatorBubble.swift in Sources */,
 				2C9CF6BB63C937DA6442373A /* UserMessageCard.swift in Sources */,
