@@ -94,7 +94,7 @@ struct SessionCheckpointsView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: { checkpoint in
-            Text("This will create a new session forked from "\(checkpoint.name)" (\(checkpoint.messageCount) messages). Your current session will not be modified.")
+            Text("This will create a new session forked from \"\(checkpoint.name)\" (\(checkpoint.messageCount) messages). Your current session will not be modified.")
         }
         .task {
             viewModel.configure(client: appState.apiClient)
