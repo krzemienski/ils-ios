@@ -30,6 +30,7 @@ class AppState {
     let pollingManager: PollingManager
     let networkMonitor: NetworkMonitor
     let connectionQualityService: ConnectionQualityService
+    let iCloudSyncManager: ICloudSyncManager
 
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
@@ -45,12 +46,22 @@ class AppState {
     }
     var connectionQuality: ConnectionQuality { connectionQualityService.quality }
 
+    /// The current iCloud synchronization status.
+    var iCloudSyncStatus: ICloudSyncStatus { iCloudSyncManager.syncStatus }
+
+    /// The date of the most recent iCloud sync, or `nil` if no sync has occurred yet.
+    var iCloudLastSyncDate: Date? { iCloudSyncManager.lastSyncDate }
+
+    /// Whether iCloud sync is enabled on this device.
+    var isSyncEnabled: Bool { iCloudSyncManager.isSyncEnabled }
+
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
         self.networkMonitor = NetworkMonitor.shared
         self.connectionQualityService = ConnectionQualityService.shared
+        self.iCloudSyncManager = ICloudSyncManager.shared
         self.activeHostName = UserDefaults.standard.string(forKey: "activeHostName")
 
         connectionQualityService.serverURL = cm.serverURL
