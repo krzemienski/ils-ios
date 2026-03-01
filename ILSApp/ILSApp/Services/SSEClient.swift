@@ -322,6 +322,8 @@ class SSEClient {
         switch event {
         case "done":
             AppLogger.shared.info("Received done event — stream complete", category: "sse")
+            isStreaming = false
+            connectionState = .connected
             return
         case "messageId":
             parseMessageIdEvent(data: data)
