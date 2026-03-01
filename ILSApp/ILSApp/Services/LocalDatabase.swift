@@ -613,9 +613,9 @@ actor LocalDatabase {
         return try dbPool.read { db in
             // Decision + auto-approve breakdown
             let decisionRows = try Row.fetchAll(db, sql: """
-                SELECT decision, is_auto_approved, COUNT(*) as cnt
+                SELECT decision, isAutoApproved, COUNT(*) as cnt
                 FROM permission_history
-                GROUP BY decision, is_auto_approved
+                GROUP BY decision, isAutoApproved
                 """)
 
             var totalApproved = 0
@@ -624,7 +624,7 @@ actor LocalDatabase {
 
             for row in decisionRows {
                 let decision: String = row["decision"]
-                let isAutoApproved: Bool = row["is_auto_approved"]
+                let isAutoApproved: Bool = row["isAutoApproved"]
                 let count: Int = row["cnt"]
                 if decision == "allow" {
                     totalApproved += count
@@ -641,16 +641,16 @@ actor LocalDatabase {
 
             // Top 5 tools by usage frequency
             let toolRows = try Row.fetchAll(db, sql: """
-                SELECT tool_name, COUNT(*) as cnt
+                SELECT toolName, COUNT(*) as cnt
                 FROM permission_history
-                GROUP BY tool_name
+                GROUP BY toolName
                 ORDER BY cnt DESC
                 LIMIT 5
                 """)
 
             var topTools: [String: Int] = [:]
             for row in toolRows {
-                let toolName: String = row["tool_name"]
+                let toolName: String = row["toolName"]
                 let count: Int = row["cnt"]
                 topTools[toolName] = count
             }
