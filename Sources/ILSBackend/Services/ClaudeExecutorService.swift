@@ -258,10 +258,16 @@ actor ClaudeExecutorService {
             process.standardOutput = outputPipe
             process.standardError = errorPipe
 
-            // Send prompt via stdin, keep open for permission forwarding
+            // Send prompt via stdin, keep open for permission forwarding.
+            // When image attachments are present, write a JSON content array; otherwise plain text.
             let stdinPipe = Pipe()
             process.standardInput = stdinPipe
-            if let data = (prompt + "\n").data(using: .utf8) {
+            if let images = options.images, !images.isEmpty {
+                let jsonInput = Self.buildJSONInput(prompt: prompt, images: images)
+                if let data = (jsonInput + "\n").data(using: .utf8) {
+                    stdinPipe.fileHandleForWriting.write(data)
+                }
+            } else if let data = (prompt + "\n").data(using: .utf8) {
                 stdinPipe.fileHandleForWriting.write(data)
             }
 
@@ -523,7 +529,11 @@ actor ClaudeExecutorService {
             includePartialMessages: options.includePartialMessages == true ? true : nil
         )
 
-        let config = SDKConfig(prompt: prompt, options: sdkOptions)
+        let sdkImages: [SDKImageAttachment]? = options.images.map { imgs in
+            imgs.map { SDKImageAttachment(mediaType: $0.mediaType, data: $0.data) }
+        }
+
+        let config = SDKConfig(prompt: prompt, options: sdkOptions, images: sdkImages)
 
         do {
             let jsonData = try JSONEncoder().encode(config)
@@ -691,8 +701,11 @@ actor ClaudeExecutorService {
             args.append(shellEscape(customAgents))
         }
 
-        // Input format
-        if let inputFormat = options.inputFormat, !inputFormat.isEmpty {
+        // Input format — forced to json when image attachments are present
+        if let images = options.images, !images.isEmpty {
+            args.append("--input-format")
+            args.append("json")
+        } else if let inputFormat = options.inputFormat, !inputFormat.isEmpty {
             args.append("--input-format")
             args.append(inputFormat)
         }
@@ -757,6 +770,33 @@ actor ClaudeExecutorService {
         return args.joined(separator: " ")
     }
 
+    /// Build a JSON content-block array for `--input-format json` stdin when images are present.
+    ///
+    /// Format: `[{"type":"text","text":"..."}, {"type":"image","source":{"type":"base64","media_type":"...","data":"..."}}]`
+    ///
+    /// - Parameters:
+    ///   - prompt: User prompt text (becomes the first text block).
+    ///   - images: Image attachments to append after the text block.
+    /// - Returns: JSON string, or the raw prompt on encoding failure.
+    private static func buildJSONInput(prompt: String, images: [ExecutionImageAttachment]) -> String {
+        var blocks: [[String: Any]] = [["type": "text", "text": prompt]]
+        for image in images {
+            blocks.append([
+                "type": "image",
+                "source": [
+                    "type": "base64",
+                    "media_type": image.mediaType,
+                    "data": image.data
+                ] as [String: Any]
+            ])
+        }
+        guard let data = try? JSONSerialization.data(withJSONObject: blocks),
+              let json = String(data: data, encoding: .utf8) else {
+            return prompt
+        }
+        return json
+    }
+
     /// Shell-escape a string by wrapping in single quotes and escaping internal quotes.
     /// - Parameter value: String to escape
     /// - Returns: Shell-safe quoted string
@@ -799,10 +839,23 @@ actor ClaudeExecutorService {
         let decision: String
     }
 
+    /// Base64-encoded image attachment forwarded to the Agent SDK.
+    private struct SDKImageAttachment: Codable {
+        let mediaType: String
+        let data: String
+    }
+
     /// Codable struct for Agent SDK wrapper configuration.
     private struct SDKConfig: Codable {
         let prompt: String
         let options: SDKOptions
+        var images: [SDKImageAttachment]?
+
+        init(prompt: String, options: SDKOptions, images: [SDKImageAttachment]? = nil) {
+            self.prompt = prompt
+            self.options = options
+            self.images = images
+        }
     }
 
     /// Codable struct for SDK execution options passed to sdk-wrapper.mjs.
