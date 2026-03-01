@@ -256,6 +256,8 @@
 		99E148F9DFA37DFE3B2FA1E8 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */; };
 		9A2ABF790EE467BD4168A9C8 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */; };
 		9A917B9E5079DECF9C116276 /* CreateSessionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */; };
+		910E2A5C28C845FC89FB4FF1 /* ListSessionsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1823C43FCEC74FFFA2205DE3 /* ListSessionsIntent.swift */; };
+		D1E6A54A8CC0441C84CCFBF6 /* ListProjectsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CEE7CDA149349FCBBC7DDEA /* ListProjectsIntent.swift */; };
 		9AFCE4893AEA34EB0E666E51 /* PollingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE82C913049A620A077F141 /* PollingManager.swift */; };
 		9B0FCBD55404398D4B8D7987 /* hud-state.json in Resources */ = {isa = PBXBuildFile; fileRef = 6157A63376D8A574079B8194 /* hud-state.json */; };
 		9B1083585B5B1FC31E0342EA /* Scenario05_ProjectManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C85DAB670BA54FB286CD4DE /* Scenario05_ProjectManagement.swift */; };
@@ -419,6 +421,8 @@
 		F3AD02A829BC5F9F4422B9B3 /* ToastModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A737BC14D9734232F0E080B8 /* ToastModifier.swift */; };
 		F3AE767DFC8E6026F28265A5 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
 		F573AE8DF3C88CF4EEA2BF83 /* CreateSessionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */; };
+		9E6BB1C57331404DB610B52A /* ListSessionsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1823C43FCEC74FFFA2205DE3 /* ListSessionsIntent.swift */; };
+		A8C32567A47E4E47B90A8165 /* ListProjectsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CEE7CDA149349FCBBC7DDEA /* ListProjectsIntent.swift */; };
 		F667CFD814A0024F0A664221 /* MarkdownParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */; };
 		F67CF6C7C6DFE2DE29538176 /* WidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0CAE23A8231676A08CDD189 /* WidgetBundle.swift */; };
 		F6BA33956604B8222959BC8E /* AgentTeamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037032E8281B43B605677CDC /* AgentTeamDetailView.swift */; };
@@ -583,6 +587,8 @@
 		8EED2EA5CED6B30EE2D3364D /* ErrorMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMessageView.swift; sourceTree = "<group>"; };
 		8FA08AF75B109E531A23DCAD /* EmberTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmberTheme.swift; sourceTree = "<group>"; };
 		8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageIntent.swift; sourceTree = "<group>"; };
+		1823C43FCEC74FFFA2205DE3 /* ListSessionsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSessionsIntent.swift; sourceTree = "<group>"; };
+		2CEE7CDA149349FCBBC7DDEA /* ListProjectsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListProjectsIntent.swift; sourceTree = "<group>"; };
 		92DA7EA27E512C2573284699 /* SystemMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMessageView.swift; sourceTree = "<group>"; };
 		948140787A5BDADAC7635EC4 /* CyberpunkTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyberpunkTheme.swift; sourceTree = "<group>"; };
 		9493134EEE01BE351D53A452 /* Scenario09_SkillsManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario09_SkillsManagement.swift; sourceTree = "<group>"; };
@@ -1070,6 +1076,8 @@
 				D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */,
 				3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */,
 				0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */,
+				1823C43FCEC74FFFA2205DE3 /* ListSessionsIntent.swift */,
+				2CEE7CDA149349FCBBC7DDEA /* ListProjectsIntent.swift */,
 				8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */,
 				EAB16073F4EF7ED850213059 /* SessionEntity.swift */,
 				112C91745BB44EBBA29F698D /* ProjectEntity.swift */,
@@ -1553,6 +1561,8 @@
 				AC29BDF0E2C0CAFC95C70486 /* ConnectionMode.swift in Sources */,
 				33C459F4DFD48229AC598DF9 /* ConnectionSteps.swift in Sources */,
 				F573AE8DF3C88CF4EEA2BF83 /* CreateSessionIntent.swift in Sources */,
+				9E6BB1C57331404DB610B52A /* ListSessionsIntent.swift in Sources */,
+				A8C32567A47E4E47B90A8165 /* ListProjectsIntent.swift in Sources */,
 				EAD907D86498A92874D45BE4 /* CreateTeamView.swift in Sources */,
 				806FB07F2FE6F6C7990534E2 /* CrimsonTheme.swift in Sources */,
 				2BCCA24ACFF9D1337F501CEA /* CustomThemeAdapter.swift in Sources */,
@@ -1747,6 +1757,8 @@
 				28CA248D91D2DCEDBC2EEB29 /* ConnectionMode.swift in Sources */,
 				BB7FC3BF5ADA8EFA06BFB61C /* ConnectionSteps.swift in Sources */,
 				9A917B9E5079DECF9C116276 /* CreateSessionIntent.swift in Sources */,
+				910E2A5C28C845FC89FB4FF1 /* ListSessionsIntent.swift in Sources */,
+				D1E6A54A8CC0441C84CCFBF6 /* ListProjectsIntent.swift in Sources */,
 				E8C2E66D830D0BCEA9562BAB /* CreateTeamView.swift in Sources */,
 				24E0506F6A395D5F17BFA598 /* CrimsonTheme.swift in Sources */,
 				D1F086F32783A95DF775F5AF /* CustomThemeAdapter.swift in Sources */,
