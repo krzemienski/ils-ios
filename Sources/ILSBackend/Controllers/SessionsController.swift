@@ -341,6 +341,10 @@ struct SessionsController: RouteCollection {
     /// Creates a new session named "[Original Name] (Fork)" with a copy of every message
     /// from the original session. The new session has its own independent message history.
     ///
+    /// Query parameters:
+    /// - `upToMessageId`: Optional UUID — when provided, only copies messages up to and including
+    ///   the specified message ID for point-in-time forking.
+    ///
     /// - Parameter req: Vapor Request with id parameter
     /// - Returns: APIResponse with forked ChatSession
     @Sendable
@@ -348,6 +352,8 @@ struct SessionsController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid session ID")
         }
+
+        let upToMessageId = req.query[UUID.self, at: "upToMessageId"]
 
         guard let original = try await SessionModel.query(on: req.db)
             .filter(\.$id == id)
@@ -373,13 +379,24 @@ struct SessionsController: RouteCollection {
                 throw Abort(.internalServerError, reason: "Failed to create forked session")
             }
 
-            // Copy all messages from original to forked session
-            let originalMessages = try await MessageModel.query(on: db)
+            // Load all messages sorted by creation order
+            let allMessages = try await MessageModel.query(on: db)
                 .filter(\.$session.$id == id)
                 .sort(\.$createdAt, .ascending)
                 .all()
 
-            for originalMessage in originalMessages {
+            // If upToMessageId is specified, truncate the list at that message
+            let messagesToCopy: [MessageModel]
+            if let upToMessageId = upToMessageId {
+                guard let cutoffIndex = allMessages.firstIndex(where: { $0.id == upToMessageId }) else {
+                    throw Abort(.badRequest, reason: "Message ID not found in session")
+                }
+                messagesToCopy = Array(allMessages[...cutoffIndex])
+            } else {
+                messagesToCopy = allMessages
+            }
+
+            for originalMessage in messagesToCopy {
                 let copiedMessage = MessageModel(
                     sessionId: forkedId,
                     role: MessageRole(rawValue: originalMessage.role) ?? .user,
@@ -391,7 +408,7 @@ struct SessionsController: RouteCollection {
             }
 
             // Update message count on forked session
-            forked.messageCount = originalMessages.count
+            forked.messageCount = messagesToCopy.count
             try await forked.save(on: db)
 
             return forked
