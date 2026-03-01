@@ -1,6 +1,8 @@
 import Foundation
 import Observation
+#if os(iOS)
 import WidgetKit
+#endif
 import ILSShared
 
 // SEC-MED-1: Centralized connection defaults — avoids scattered localhost hardcoding.
@@ -81,7 +83,9 @@ class ConnectionManager {
         if wasFirstConnection {
             shouldShowFirstSessionWizard = true
         }
+        #if os(iOS)
         WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 
     /// Show onboarding sheet if user has never successfully connected

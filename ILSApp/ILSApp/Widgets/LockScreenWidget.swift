@@ -1,4 +1,4 @@
-#if canImport(WidgetKit)
+#if os(iOS)
 import WidgetKit
 import SwiftUI
 

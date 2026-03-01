@@ -13,7 +13,9 @@ struct ILSWidgets: WidgetBundle {
         SessionWidget()
         ServerStatusWidget()
         LargeSessionWidget()
+        #if os(iOS)
         LockScreenWidget()
+        #endif
     }
 }
 #endif
