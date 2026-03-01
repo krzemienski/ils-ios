@@ -41,6 +41,9 @@ func configure(_ app: Application) async throws {
     // Request logging middleware (logs method, path, status, duration)
     app.middleware.use(RequestLoggingMiddleware())
 
+    // HTTP caching middleware (ETag, Cache-Control, 304 Not Modified for GET responses)
+    app.middleware.use(HTTPCachingMiddleware())
+
     // Structured error middleware (replaces Vapor's default ErrorMiddleware)
     app.middleware.use(ILSErrorMiddleware())
 
