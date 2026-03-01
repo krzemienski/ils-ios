@@ -38,6 +38,29 @@ final class ICloudSyncManager {
         static let syncEnabled = "ils_icloud_sync_enabled"
     }
 
+    /// Keys for encoding notification preferences into a single iCloud dictionary.
+    private enum NotifPrefKey {
+        static let mcpOfflineAlerts = "mcpOfflineAlerts"
+        static let mcpOnlineAlerts = "mcpOnlineAlerts"
+        static let sessionCompleteAlerts = "sessionCompleteAlerts"
+        static let quietHoursEnabled = "quietHoursEnabled"
+        static let quietStartHour = "quietStartHour"
+        static let quietEndHour = "quietEndHour"
+    }
+
+    /// Direct (localKey → iCloudKey) pairs for scalar preferences synced via
+    /// NSUbiquitousKeyValueStore. Each push reads from UserDefaults and writes
+    /// to the paired iCloud key; each pull does the reverse.
+    ///
+    /// Additional keys (e.g. themeID) are appended by later phases.
+    static var syncableKeys: [(local: String, iCloud: String)] = [
+        (local: AppConstants.serverURLKey,    iCloud: AppConstants.iCloudServerURLKey),
+        (local: AppConstants.defaultModelKey, iCloud: AppConstants.iCloudDefaultModelKey),
+        (local: "activeHostName",             iCloud: AppConstants.iCloudActiveHostNameKey),
+        (local: "colorScheme",                iCloud: "ils_icloud_color_scheme"),
+        (local: "enableAgentTeams",           iCloud: "ils_icloud_enable_agent_teams"),
+    ]
+
     /// Shared notification user-info key for the array of changed iCloud keys.
     static let changedKeysUserInfoKey = "changedKeys"
 
@@ -171,6 +194,88 @@ final class ICloudSyncManager {
         return success
     }
 
+    // MARK: - Preferences Push / Pull
+
+    /// Push all syncable preferences from local UserDefaults to the iCloud
+    /// key-value store and request an immediate upload.
+    ///
+    /// Call this on app launch and when the app transitions to the active scene
+    /// phase. No-ops silently when sync is disabled.
+    func syncPreferencesToCloud() {
+        guard isSyncEnabled else { return }
+        syncStatus = .syncing
+
+        for pair in Self.syncableKeys {
+            if let value = UserDefaults.standard.object(forKey: pair.local) {
+                store.set(value, forKey: pair.iCloud)
+            }
+        }
+
+        let notifPrefs: [String: Any] = [
+            NotifPrefKey.mcpOfflineAlerts:
+                UserDefaults.standard.object(forKey: "notif_mcpOfflineAlerts") as? Bool ?? true,
+            NotifPrefKey.mcpOnlineAlerts:
+                UserDefaults.standard.object(forKey: "notif_mcpOnlineAlerts") as? Bool ?? false,
+            NotifPrefKey.sessionCompleteAlerts:
+                UserDefaults.standard.object(forKey: "notif_sessionCompleteAlerts") as? Bool ?? true,
+            NotifPrefKey.quietHoursEnabled:
+                UserDefaults.standard.object(forKey: "notif_quietHoursEnabled") as? Bool ?? false,
+            NotifPrefKey.quietStartHour:
+                UserDefaults.standard.object(forKey: "notif_quietStartHour") as? Int ?? 22,
+            NotifPrefKey.quietEndHour:
+                UserDefaults.standard.object(forKey: "notif_quietEndHour") as? Int ?? 7,
+        ]
+        store.set(notifPrefs, forKey: AppConstants.iCloudNotificationPrefsKey)
+
+        let success = store.synchronize()
+        if success {
+            lastSyncDate = Date()
+            syncStatus = .idle
+            AppLogger.shared.info("Preferences pushed to iCloud KV store", category: "icloud")
+        } else {
+            syncStatus = .error
+            AppLogger.shared.warning("Failed to push preferences to iCloud KV store", category: "icloud")
+        }
+    }
+
+    /// Pull preferences from the iCloud key-value store into local UserDefaults.
+    ///
+    /// Called automatically when iCloud reports an external change. Only applies
+    /// values present in the store; does not overwrite local prefs when absent.
+    func applyCloudPreferences() {
+        guard isSyncEnabled else { return }
+
+        for pair in Self.syncableKeys {
+            if let value = store.object(forKey: pair.iCloud) {
+                UserDefaults.standard.set(value, forKey: pair.local)
+            }
+        }
+
+        if let notifPrefs = store.dictionary(forKey: AppConstants.iCloudNotificationPrefsKey) {
+            if let val = notifPrefs[NotifPrefKey.mcpOfflineAlerts] as? Bool {
+                UserDefaults.standard.set(val, forKey: "notif_mcpOfflineAlerts")
+            }
+            if let val = notifPrefs[NotifPrefKey.mcpOnlineAlerts] as? Bool {
+                UserDefaults.standard.set(val, forKey: "notif_mcpOnlineAlerts")
+            }
+            if let val = notifPrefs[NotifPrefKey.sessionCompleteAlerts] as? Bool {
+                UserDefaults.standard.set(val, forKey: "notif_sessionCompleteAlerts")
+            }
+            if let val = notifPrefs[NotifPrefKey.quietHoursEnabled] as? Bool {
+                UserDefaults.standard.set(val, forKey: "notif_quietHoursEnabled")
+            }
+            if let val = notifPrefs[NotifPrefKey.quietStartHour] as? Int {
+                UserDefaults.standard.set(val, forKey: "notif_quietStartHour")
+            }
+            if let val = notifPrefs[NotifPrefKey.quietEndHour] as? Int {
+                UserDefaults.standard.set(val, forKey: "notif_quietEndHour")
+            }
+        }
+
+        lastSyncDate = Date()
+        AppLogger.shared.info("Cloud preferences applied to local UserDefaults", category: "icloud")
+    }
+
     // MARK: - Private
 
     private func performInitialSync() {
@@ -221,6 +326,8 @@ final class ICloudSyncManager {
 
         lastSyncDate = Date()
         syncStatus = .idle
+
+        applyCloudPreferences()
 
         NotificationCenter.default.post(
             name: .iCloudPreferencesDidChange,
