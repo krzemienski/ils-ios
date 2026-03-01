@@ -18,6 +18,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: MCPController(fileSystem: fileSystem))
     try api.register(collection: PluginsController(fileSystem: fileSystem))
     try api.register(collection: StatsController(fileSystem: fileSystem))
+    try api.register(collection: UsageController())
     try api.register(collection: ThemesController())
     try api.register(collection: TeamsController(fileService: TeamsFileService(), executorService: TeamsExecutorService()))
     try api.register(collection: SuggestionsController(fileSystem: fileSystem))

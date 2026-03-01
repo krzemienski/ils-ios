@@ -7,6 +7,7 @@ struct UsageController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let usage = routes.grouped("usage")
         usage.get(use: self.usage)
+        usage.get("export", use: self.export)
     }
 
     /// GET /usage?period=monthly - Aggregate usage metrics for dashboard
@@ -162,5 +163,68 @@ struct UsageController: RouteCollection {
                 rateLimitStatus: rateLimitStatus
             )
         )
+    }
+
+    /// GET /usage/export?period=monthly - Export usage data as CSV (date,messages,cost)
+    @Sendable
+    func export(req: Request) async throws -> Response {
+        let periodParam = try? req.query.get(String.self, at: "period")
+        let period: UsagePeriod = UsagePeriod(rawValue: periodParam ?? "") ?? .monthly
+
+        let now = Date()
+        let calendar = Calendar.current
+
+        let daysBack: Int
+        let periodStart: Date
+        switch period {
+        case .daily:
+            daysBack = 1
+            periodStart = calendar.startOfDay(for: now)
+        case .weekly:
+            daysBack = 7
+            periodStart = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        case .monthly:
+            daysBack = 30
+            periodStart = calendar.date(byAdding: .day, value: -30, to: now) ?? now
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = .current
+
+        // Fetch sessions in the reporting window
+        let sessions = try await SessionModel.query(on: req.db)
+            .filter(\.$createdAt >= periodStart)
+            .all()
+
+        // Pre-fill all days so the export always has complete date coverage
+        var dailyMap: [String: Int] = [:]
+        for dayOffset in 0..<max(daysBack, 1) {
+            if let date = calendar.date(byAdding: .day, value: -dayOffset, to: calendar.startOfDay(for: now)) {
+                dailyMap[dateFormatter.string(from: date)] = 0
+            }
+        }
+
+        for session in sessions {
+            guard let createdAt = session.createdAt else { continue }
+            let dateStr = dateFormatter.string(from: createdAt)
+            dailyMap[dateStr] = (dailyMap[dateStr] ?? 0) + session.messageCount
+        }
+
+        // Sort ascending by date and build CSV rows
+        let rows = dailyMap
+            .map { (date: $0.key, messages: $0.value) }
+            .sorted { $0.date < $1.date }
+
+        var csv = "date,messages,cost\n"
+        for row in rows {
+            // Cost is $0.00 — usage is covered by Claude subscription
+            csv += "\(row.date),\(row.messages),0.00\n"
+        }
+
+        var headers = HTTPHeaders()
+        headers.add(name: .contentType, value: "text/csv")
+        headers.add(name: .contentDisposition, value: "attachment; filename=\"usage-report.csv\"")
+        return Response(status: .ok, headers: headers, body: .init(string: csv))
     }
 }
