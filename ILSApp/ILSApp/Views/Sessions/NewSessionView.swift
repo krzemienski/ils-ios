@@ -491,7 +491,7 @@ struct NewSessionView: View {
 
     @ViewBuilder
     private var configurationSection: some View {
-        DisclosureGroup("Configuration", isExpanded: $showConfig) {
+        DisclosureGroup(isExpanded: $showConfig) {
             VStack(spacing: theme.spacingMD) {
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     sectionLabel("Session Name")
@@ -512,9 +512,18 @@ struct NewSessionView: View {
                 limitsSection
             }
             .padding(.top, theme.spacingSM)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Configuration")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                if !showConfig {
+                    Text(configurationSummary)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
         }
-        .font(.system(size: theme.fontBody, design: theme.fontDesign))
-        .foregroundStyle(theme.textSecondary)
         .tint(theme.textTertiary)
         .padding(theme.spacingSM)
         .background(theme.bgSecondary)
@@ -788,6 +797,15 @@ struct NewSessionView: View {
         case "dontAsk": return "Don't Ask"
         default: return mode
         }
+    }
+
+    // MARK: - Configuration Summary
+
+    var configurationSummary: String {
+        let modelPart = selectedModel.capitalized
+        let permissionPart = formattedMode(permissionMode)
+        let budgetPart = maxBudget.isEmpty ? "No limit" : "$\(maxBudget)"
+        return "\(modelPart) \u{00b7} \(permissionPart) \u{00b7} \(budgetPart)"
     }
 
     private var permissionDescription: String {
