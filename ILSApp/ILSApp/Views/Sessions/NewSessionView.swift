@@ -459,7 +459,7 @@ struct NewSessionView: View {
 
     @ViewBuilder
     private var configurationSection: some View {
-        DisclosureGroup("Configuration", isExpanded: $showConfig) {
+        DisclosureGroup(isExpanded: $showConfig) {
             VStack(spacing: theme.spacingMD) {
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     sectionLabel("Session Name")
@@ -480,6 +480,15 @@ struct NewSessionView: View {
                 limitsSection
             }
             .padding(.top, theme.spacingSM)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Configuration")
+                if !showConfig {
+                    Text(configurationSummary)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
         }
         .font(.system(size: theme.fontBody, design: theme.fontDesign))
         .foregroundStyle(theme.textSecondary)
