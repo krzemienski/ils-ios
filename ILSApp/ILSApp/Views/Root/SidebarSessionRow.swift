@@ -61,8 +61,16 @@ struct SidebarSessionRow: View {
                             .lineLimit(1)
                     }
 
-                    // Relative time + message count
+                    // Model badge + relative time + message count
                     HStack(spacing: theme.spacingXS) {
+                        if !session.model.isEmpty {
+                            Text(session.model.capitalized)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.entitySession)
+                            Text("·")
+                                .foregroundStyle(theme.textTertiary)
+                        }
+
                         Text(relativeTime)
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
@@ -92,7 +100,7 @@ struct SidebarSessionRow: View {
             .background(isActive ? theme.accent.opacity(0.1) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
-        .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? ""), \(relativeTime)")
+        .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? "")\(session.model.isEmpty ? "" : ", \(session.model)"), \(relativeTime)")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }
