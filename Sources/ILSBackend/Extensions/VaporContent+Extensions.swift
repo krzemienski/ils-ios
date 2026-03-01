@@ -95,6 +95,9 @@ extension ListResponse: @unchecked Sendable where T: Sendable {}
 // MARK: - Request Types
 extension CreateProjectRequest: Content {}
 extension UpdateProjectRequest: Content {}
+extension CreateCheckpointRequest: Content {}
+extension BulkExportRequest: Content {}
+extension ImportSessionRequest: Content {}
 extension CreateSessionRequest: Content {}
 extension SessionScanResponse: Content {}
 extension RecentSessionsResponse: Content {}
@@ -180,6 +183,7 @@ extension GitHubFileEntry: Content {}
 // MARK: - Model Types
 extension Project: Content {}
 extension ChatSession: Content {}
+extension SessionCheckpoint: Content {}
 extension Message: Content {}
 extension MessageRole: Content {}
 extension ExternalSession: Content {}

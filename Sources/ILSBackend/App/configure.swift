@@ -81,6 +81,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddDatabaseIndexes())
     // v4.0 — Ecosystem polish
     app.migrations.add(AddMeshGradientToThemes())
+    // v5.0 — Checkpoint system
+    app.migrations.add(CreateSessionCheckpoints())
 
     // Run migrations
     try await app.autoMigrate()
