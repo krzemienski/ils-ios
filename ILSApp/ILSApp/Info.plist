@@ -38,6 +38,8 @@
 	<string>Face ID is used to protect your server credentials stored in the Keychain.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>UIApplicationSupportsMultipleScenes</key>
+	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>
