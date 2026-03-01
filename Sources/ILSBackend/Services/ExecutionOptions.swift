@@ -32,6 +32,7 @@ struct ExecutionOptions {
     var agent: String?
     var betas: [String]?
     var debug: Bool?
+    var backend: ExecutionBackend?
     var debugFile: String?
     var disableSlashCommands: Bool?
     var systemPromptFile: String?
@@ -61,5 +62,6 @@ struct ExecutionOptions {
         self.agent = chatOptions?.agent
         self.betas = chatOptions?.betas
         self.debug = chatOptions?.debug
+        self.backend = chatOptions?.backend
     }
 }

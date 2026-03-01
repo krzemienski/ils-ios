@@ -21,7 +21,10 @@ struct MacChatView: View {
     @State private var isExporting = false
     @State private var showDeleteSessionConfirmation = false
     @State private var showAdvancedOptions = false
+    @State private var showSearch = false
+    @State private var searchDebounceTask: Task<Void, Never>?
     @State private var chatOptionsConfig = ChatOptionsConfig()
+    @State private var showContextWindowDetail = false
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -40,16 +43,12 @@ struct MacChatView: View {
         contentWithKeyHandlers
             .alert("Connection Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) {}
-                Button("Retry") {
-                    retryLastMessage()
-                }
+                Button("Retry") { retryLastMessage() }
             } message: {
                 Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
             }
             .alert("Session Forked", isPresented: $showForkAlert) {
-                Button("Open Fork") {
-                    navigateToForked = forkedSession
-                }
+                Button("Open Fork") { navigateToForked = forkedSession }
                 Button("Stay Here", role: .cancel) {}
             } message: {
                 if let forked = forkedSession {
@@ -63,9 +62,7 @@ struct MacChatView: View {
                         messageToDelete = nil
                     }
                 }
-                Button("Cancel", role: .cancel) {
-                    messageToDelete = nil
-                }
+                Button("Cancel", role: .cancel) { messageToDelete = nil }
             } message: {
                 Text("Are you sure you want to delete this message?")
             }
@@ -105,6 +102,14 @@ struct MacChatView: View {
                     }
                 }
             }
+            .onChange(of: viewModel.searchQuery) { _, newValue in
+                searchDebounceTask?.cancel()
+                searchDebounceTask = Task {
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                    guard !Task.isCancelled else { return }
+                    await viewModel.searchMessages(query: newValue)
+                }
+            }
             .onKeyPress("k", phases: .down) { press in
                 guard press.modifiers.contains(.command) else { return .ignored }
                 NotificationCenter.default.post(name: .ilsOpenCommandPalette, object: nil)
@@ -124,6 +129,13 @@ struct MacChatView: View {
                 return .ignored
             }
             .onKeyPress(.escape) {
+                if showSearch {
+                    searchDebounceTask?.cancel()
+                    searchDebounceTask = nil
+                    viewModel.cancelSearch()
+                    showSearch = false
+                    return .handled
+                }
                 if showCommandPalette {
                     showCommandPalette = false
                     return .handled
@@ -186,6 +198,31 @@ struct MacChatView: View {
                 .frame(minWidth: 500, minHeight: 300)
                 .presentationBackground(theme.bgPrimary)
             }
+            .sheet(isPresented: $showContextWindowDetail) {
+                if let usedTokens = viewModel.contextTokensUsed,
+                   let windowSize = viewModel.contextWindowSize {
+                    ContextWindowDetailSheet(
+                        usedTokens: usedTokens,
+                        contextWindowSize: windowSize,
+                        inputTokens: viewModel.contextInputTokens,
+                        outputTokens: viewModel.contextOutputTokens,
+                        cacheReadTokens: viewModel.contextCacheReadTokens,
+                        cacheCreateTokens: viewModel.contextCacheCreateTokens,
+                        onForkSession: {
+                            showContextWindowDetail = false
+                            Task {
+                                if let forked = await viewModel.forkSession() {
+                                    forkedSession = forked
+                                    showForkAlert = true
+                                }
+                            }
+                        },
+                        onDismiss: { showContextWindowDetail = false }
+                    )
+                    .frame(minWidth: 500, minHeight: 500)
+                    .presentationBackground(theme.bgPrimary)
+                }
+            }
             .task {
                 viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
                 viewModel.sessionId = session.id
@@ -217,25 +254,50 @@ struct MacChatView: View {
 
     private var mainContent: some View {
         VStack(spacing: 0) {
-            statusBanner
+            if showSearch {
+                inlineSearchBar
 
-            messageList
+                theme.divider.frame(height: 0.5)
 
-            theme.divider.frame(height: 0.5)
+                searchResultsView
+            } else {
+                statusBanner
 
-            bottomBar
+                contextWindowBar
+
+                messageList
+
+                theme.divider.frame(height: 0.5)
+
+                bottomBar
+            }
         }
     }
 
     @ViewBuilder
     private var statusBanner: some View {
         if let statusText = viewModel.statusText {
-            StreamingStatusBanner(
-                statusText: statusText,
-                connectionState: viewModel.connectionState,
+            AsyncOperationBanner(
+                message: statusText,
+                state: viewModel.connectionState.asAsyncOperationState,
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
             )
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    @ViewBuilder
+    private var contextWindowBar: some View {
+        if let usedTokens = viewModel.contextTokensUsed,
+           let windowSize = viewModel.contextWindowSize,
+           windowSize > 0 {
+            ContextWindowBar(
+                usedTokens: usedTokens,
+                contextWindowSize: windowSize
+            ) {
+                showContextWindowDetail = true
+            }
             .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
@@ -284,9 +346,109 @@ struct MacChatView: View {
         .focused($isInputFocused)
     }
 
+    // MARK: - Search UI
+
+    private var inlineSearchBar: some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(theme.textTertiary)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+
+            TextField("Search messages...", text: $viewModel.searchQuery)
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .autocorrectionDisabled()
+
+            if !viewModel.searchQuery.isEmpty {
+                Button {
+                    viewModel.searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Clear search")
+                .buttonStyle(.plain)
+            }
+
+            Button("Cancel") {
+                searchDebounceTask?.cancel()
+                searchDebounceTask = nil
+                viewModel.cancelSearch()
+                showSearch = false
+            }
+            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+            .foregroundStyle(theme.accent)
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.vertical, theme.spacingSM)
+        .background(theme.bgSecondary)
+    }
+
+    @ViewBuilder
+    private var searchResultsView: some View {
+        if viewModel.isSearchLoading {
+            VStack {
+                Spacer()
+                ProgressView()
+                    .tint(theme.accent)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else if viewModel.searchQuery.isEmpty {
+            VStack {
+                Spacer()
+                Text("Type to search messages")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else if viewModel.searchResults.isEmpty {
+            VStack {
+                Spacer()
+                Text("No results for \"\(viewModel.searchQuery)\"")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, theme.spacingLG)
+                Spacer()
+            }
+            .background(theme.bgPrimary)
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(viewModel.searchResults) { result in
+                        MessageSearchResultRow(result: result)
+                            .padding(.horizontal, theme.spacingMD)
+
+                        theme.divider
+                            .frame(height: 0.5)
+                            .padding(.leading, theme.spacingMD)
+                    }
+                }
+            }
+            .background(theme.bgPrimary)
+        }
+    }
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
+            // Search button
+            Button {
+                viewModel.isSearchActive = true
+                showSearch = true
+            } label: {
+                Label("Search", systemImage: "magnifyingglass")
+            }
+            .help("Search messages")
+            .keyboardShortcut("f", modifiers: [.command])
+            .accessibilityLabel("Search messages")
+            .accessibilityIdentifier("search-messages-button")
+
             // Export button with macOS save panel
             Button {
                 Task { await exportSession() }

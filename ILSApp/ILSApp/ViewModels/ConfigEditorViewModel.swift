@@ -4,18 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class ConfigEditorViewModel {
+class ConfigEditorViewModel: BaseViewModel {
     var configJson = ""
-    var isLoading = false
-    var error: Error?
-
-    private var client: APIClient?
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     func loadConfig(scope: ConfigScope) async {
         guard let client else { return }

@@ -80,6 +80,7 @@ struct QuickConnectView: View {
         HStack(spacing: 0) {
             ForEach(ConnectionMode.allCases) { mode in
                 Button {
+                    HapticManager.selection()
                     viewModel.selectedMode = mode
                 } label: {
                     HStack(spacing: 4) {
@@ -291,7 +292,7 @@ struct QuickConnectView: View {
     // MARK: - Connect Button
 
     private var connectButton: some View {
-        Button {
+        AccentButton("Connect", isLoading: viewModel.isConnecting) {
             Task {
                 let success = await viewModel.connect(appState: appState)
                 if success {
@@ -299,24 +300,10 @@ struct QuickConnectView: View {
                     dismiss()
                 }
             }
-        } label: {
-            if viewModel.isConnecting {
-                ProgressView()
-                    .controlSize(.small)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-            } else {
-                Text("Connect")
-                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-            }
         }
-        .buttonStyle(.borderedProminent)
-        .tint(theme.accent)
-        .disabled(!viewModel.isConnectEnabled || viewModel.isConnecting)
+        .frame(maxWidth: .infinity)
+        .disabled(!viewModel.isConnectEnabled)
         .accessibilityIdentifier("connect-button")
-        .accessibilityLabel("Connect to server")
     }
 
     // MARK: - Recent Section

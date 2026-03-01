@@ -12,8 +12,9 @@ public struct ClaudeConfig: Codable, Hashable, Sendable {
     public var hooks: HooksConfig?
     /// Plugin enablement status (plugin name → enabled)
     public var enabledPlugins: [String: Bool]?
-    /// Additional marketplace URLs for plugin discovery
-    public var extraKnownMarketplaces: [String: String]?
+    /// Additional marketplace URLs for plugin discovery.
+    /// Values can be either a plain URL string or a nested object with source info.
+    public var extraKnownMarketplaces: [String: MarketplaceValue]?
     /// Whether to include co-authored-by attribution in commits
     public var includeCoAuthoredBy: Bool?
     /// Status line configuration for terminal display
@@ -35,7 +36,7 @@ public struct ClaudeConfig: Codable, Hashable, Sendable {
         env: [String: String]? = nil,
         hooks: HooksConfig? = nil,
         enabledPlugins: [String: Bool]? = nil,
-        extraKnownMarketplaces: [String: String]? = nil,
+        extraKnownMarketplaces: [String: MarketplaceValue]? = nil,
         includeCoAuthoredBy: Bool? = nil,
         statusLine: StatusLineConfig? = nil,
         alwaysThinkingEnabled: Bool? = nil,
@@ -55,6 +56,91 @@ public struct ClaudeConfig: Codable, Hashable, Sendable {
         self.autoUpdatesChannel = autoUpdatesChannel
         self.theme = theme
         self.apiKeyStatus = apiKeyStatus
+    }
+}
+
+/// A marketplace value that can be either a simple URL string or a nested source object.
+/// Claude Code configs may store marketplace entries in either format.
+public enum MarketplaceValue: Codable, Hashable, Sendable {
+    /// Simple string value (typically a URL or repo path)
+    case string(String)
+    /// Structured source object (e.g., {"source": {"source": "git", "url": "..."}})
+    case structured([String: AnyCodableJSON])
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .string(str)
+        } else if let obj = try? container.decode([String: AnyCodableJSON].self) {
+            self = .structured(obj)
+        } else {
+            self = .string("")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let str):
+            try container.encode(str)
+        case .structured(let obj):
+            try container.encode(obj)
+        }
+    }
+
+    /// Extract a display-friendly string value regardless of format.
+    public var displayValue: String {
+        switch self {
+        case .string(let str):
+            return str
+        case .structured:
+            return "(configured)"
+        }
+    }
+}
+
+/// A simple type-erased JSON value for flexible decoding of unknown structures.
+public enum AnyCodableJSON: Codable, Hashable, Sendable {
+    case string(String)
+    case int(Int)
+    case double(Double)
+    case bool(Bool)
+    case object([String: AnyCodableJSON])
+    case array([AnyCodableJSON])
+    case null
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let str = try? container.decode(String.self) {
+            self = .string(str)
+        } else if let i = try? container.decode(Int.self) {
+            self = .int(i)
+        } else if let d = try? container.decode(Double.self) {
+            self = .double(d)
+        } else if let b = try? container.decode(Bool.self) {
+            self = .bool(b)
+        } else if let obj = try? container.decode([String: AnyCodableJSON].self) {
+            self = .object(obj)
+        } else if let arr = try? container.decode([AnyCodableJSON].self) {
+            self = .array(arr)
+        } else if container.decodeNil() {
+            self = .null
+        } else {
+            self = .null
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let s): try container.encode(s)
+        case .int(let i): try container.encode(i)
+        case .double(let d): try container.encode(d)
+        case .bool(let b): try container.encode(b)
+        case .object(let o): try container.encode(o)
+        case .array(let a): try container.encode(a)
+        case .null: try container.encodeNil()
+        }
     }
 }
 

@@ -42,7 +42,10 @@ struct SettingsAboutSection: View {
                     Spacer()
                     Toggle("", isOn: .init(
                         get: { AppLogger.shared.analyticsOptedIn },
-                        set: { AppLogger.shared.analyticsOptedIn = $0 }
+                        set: {
+                            AppLogger.shared.analyticsOptedIn = $0
+                            HapticManager.selection()
+                        }
                     ))
                     .labelsHidden()
                     .tint(theme.accent)

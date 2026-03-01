@@ -1,0 +1,78 @@
+{
+  "configurations" : [
+    {
+      "id" : "MAC-DEF0-0001-0002-0003-0004-000000000001",
+      "name" : "Default Configuration",
+      "options" : {
+        "language" : "en",
+        "parallelizable" : true,
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "uiTestingScreenshotsLifetime" : "deleteOnSuccess",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    },
+    {
+      "id" : "MAC-SMK0-0001-0002-0003-0004-000000000001",
+      "name" : "Quick Smoke Tests",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "sequential",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      },
+      "testTargets" : [
+        {
+          "target" : {
+            "containerPath" : "container:ILSApp.xcodeproj",
+            "identifier" : "ILSMacAppUITests",
+            "name" : "ILSMacAppUITests"
+          },
+          "selectedTests" : [
+            "MacSmokeTests/testSmoke1_AppLaunches",
+            "MacSmokeTests/testSmoke2_MainWindowExists",
+            "MacSmokeTests/testSmoke3_NavigationExists"
+          ]
+        }
+      ]
+    },
+    {
+      "id" : "MAC-REG0-0001-0002-0003-0004-000000000001",
+      "name" : "Full Regression",
+      "options" : {
+        "language" : "en",
+        "maximumTestRepetitions" : 3,
+        "parallelizable" : true,
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "random",
+        "testRepetitionMode" : "retryOnFailure",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:ILSApp.xcodeproj",
+      "identifier" : "ILSMacApp",
+      "name" : "ILSMacApp"
+    },
+    "testTimeoutsEnabled" : true,
+    "defaultTestExecutionTimeAllowance" : 600,
+    "maximumTestExecutionTimeAllowance" : 1200
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:ILSApp.xcodeproj",
+        "identifier" : "ILSMacAppUITests",
+        "name" : "ILSMacAppUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

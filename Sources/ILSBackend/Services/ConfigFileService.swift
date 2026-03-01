@@ -243,7 +243,7 @@ struct ConfigFileService {
 
         // Resolve extraKnownMarketplaces
         do {
-            let values: [(ConfigScope, [String: String])] = scopes.compactMap { scope, cfg in
+            let values: [(ConfigScope, [String: MarketplaceValue])] = scopes.compactMap { scope, cfg in
                 cfg.extraKnownMarketplaces.map { (scope, $0) }
             }
             if let winner = values.last {

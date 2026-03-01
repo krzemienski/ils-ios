@@ -4,18 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class ThemesViewModel {
+class ThemesViewModel: BaseViewModel {
     var themes: [CustomTheme] = []
-    var isLoading = false
-    var error: Error?
-
-    private var client: APIClient?
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Empty state text for UI display
     var emptyStateText: String {

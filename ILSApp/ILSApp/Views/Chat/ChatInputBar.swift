@@ -46,6 +46,9 @@ struct ChatInputBar: View {
     let onCommandPalette: () -> Void
     /// Called to open the advanced chat options sheet.
     let onAdvancedOptions: () -> Void
+    /// Number of outgoing messages currently queued while offline.
+    /// When > 0, a `QueuedMessageBadge` is shown above the input row.
+    var pendingCount: Int = 0
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -64,6 +67,16 @@ struct ChatInputBar: View {
         VStack(spacing: 0) {
             // Top border
             theme.divider.frame(height: 0.5)
+
+            // Offline queue badge — shown when messages are waiting for connectivity.
+            if pendingCount > 0 {
+                HStack {
+                    QueuedMessageBadge(pendingCount: pendingCount)
+                    Spacer()
+                }
+                .padding(.horizontal, theme.spacingMD)
+                .padding(.top, theme.spacingXS)
+            }
 
             HStack(spacing: theme.spacingSM) {
                 commandPaletteButton

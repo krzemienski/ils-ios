@@ -88,16 +88,19 @@ struct MCPFileService {
             enabledServers = json["enabledMcpjsonServers"] as? [String]
         }
 
-        // Mark servers as healthy if they're in the enabled list
+        // Mark servers enabled/disabled and healthy based on enabledMcpjsonServers list
         if let enabled = enabledServers {
             servers = servers.map { server in
                 var updated = server
-                if enabled.contains(server.name) {
+                let isInEnabledList = enabled.contains(server.name)
+                updated.isEnabled = isInEnabledList
+                if isInEnabledList {
                     updated.status = .healthy
                 }
                 return updated
             }
         }
+        // If enabledServers is nil (file doesn't exist or key absent), isEnabled remains true (default) — correct.
 
         return servers
     }
@@ -231,5 +234,65 @@ struct MCPFileService {
 
         let newData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
         try newData.write(to: URL(fileURLWithPath: path))
+    }
+
+    // MARK: - Enable / Disable
+
+    /// Enable an MCP server by adding it to the enabled servers list in `~/.claude/settings.local.json`.
+    ///
+    /// Claude reads `enabledMcpjsonServers` from settings.local.json to determine which servers
+    /// are active. Adding a server name here marks it as enabled without modifying the server
+    /// definition in `~/.mcp.json`.
+    ///
+    /// - Parameter name: Server name to enable
+    func enableMCPServer(name: String) throws {
+        let settingsPath = "\(claudeDirectory)/settings.local.json"
+
+        // Read existing settings — Dynamic JSON: Claude settings have evolving schema
+        var json: [String: Any] = [:]
+        if fileManager.fileExists(atPath: settingsPath),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
+           let existing = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            json = existing
+        }
+
+        var enabledServers = json["enabledMcpjsonServers"] as? [String] ?? []
+
+        // Add server if not already in the enabled list
+        if !enabledServers.contains(name) {
+            enabledServers.append(name)
+        }
+
+        json["enabledMcpjsonServers"] = enabledServers
+
+        // Ensure the ~/.claude directory exists
+        try fileManager.createDirectory(atPath: claudeDirectory, withIntermediateDirectories: true)
+
+        let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: URL(fileURLWithPath: settingsPath))
+    }
+
+    /// Disable an MCP server by removing it from the enabled servers list in `~/.claude/settings.local.json`.
+    ///
+    /// Removes the server name from `enabledMcpjsonServers` in settings.local.json.
+    /// The server definition in `~/.mcp.json` is preserved; only the enabled state changes.
+    ///
+    /// - Parameter name: Server name to disable
+    func disableMCPServer(name: String) throws {
+        let settingsPath = "\(claudeDirectory)/settings.local.json"
+
+        // If settings file doesn't exist there's nothing to disable
+        guard fileManager.fileExists(atPath: settingsPath),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: settingsPath)),
+              var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return
+        }
+
+        var enabledServers = json["enabledMcpjsonServers"] as? [String] ?? []
+        enabledServers.removeAll { $0 == name }
+        json["enabledMcpjsonServers"] = enabledServers
+
+        let newData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+        try newData.write(to: URL(fileURLWithPath: settingsPath))
     }
 }
