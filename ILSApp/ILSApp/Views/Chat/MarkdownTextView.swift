@@ -9,7 +9,14 @@ struct MarkdownTextView: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
-    /// Cached MarkdownUI theme — only rebuilt when the app theme changes.
+    /// Global cache: theme ID → built MarkdownUI.Theme, shared across all instances.
+    /// Building the 90-line Theme struct is expensive; caching eliminates redundant
+    /// rebuilds when the same theme is applied to many chat-message views.
+    /// nonisolated(unsafe) is required because MarkdownUI.Theme is non-Sendable and
+    /// we access it from the MainActor without wanting actor hops.
+    nonisolated(unsafe) private static var themeCache: [String: MarkdownUI.Theme] = [:]
+
+    /// Per-instance mirrors of the shared cache entry — drive SwiftUI re-render.
     @State private var cachedTheme: MarkdownUI.Theme = .basic
     @State private var cachedThemeId: String = ""
 
@@ -21,14 +28,21 @@ struct MarkdownTextView: View {
             .onChange(of: theme.id, initial: true) {
                 guard theme.id != cachedThemeId else { return }
                 cachedThemeId = theme.id
-                cachedTheme = buildChatTheme(from: theme)
+                if let cached = Self.themeCache[theme.id] {
+                    cachedTheme = cached
+                } else {
+                    let built = Self.buildChatTheme(from: theme)
+                    Self.themeCache[theme.id] = built
+                    cachedTheme = built
+                }
             }
     }
 
     /// Build a MarkdownUI theme dynamically from current AppTheme tokens.
     /// MarkdownUI Theme is a struct built via result builders, so we construct
-    /// it using the current theme's colors. Only called when theme.id changes.
-    private func buildChatTheme(from t: ThemeSnapshot) -> MarkdownUI.Theme {
+    /// it using the current theme's colors. Only called when theme.id changes
+    /// and the result is not already in the global cache.
+    private static func buildChatTheme(from t: ThemeSnapshot) -> MarkdownUI.Theme {
         Theme()
             .text {
                 ForegroundColor(t.textPrimary)
