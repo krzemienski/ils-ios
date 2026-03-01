@@ -39,13 +39,6 @@ actor ClaudeExecutorService {
     /// Structured logger for ClaudeExecutor operations
     private static let logger = Logger(label: "ils.claude-executor")
 
-    /// JSON decoder configured for CLI snake_case output
-    private static let cliDecoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.keyDecodingStrategy = .convertFromSnakeCase
-        return d
-    }()
-
     /// Active processes keyed by session ID for cancellation support
     private var activeProcesses: [String: Process] = [:]
 
@@ -212,7 +205,7 @@ actor ClaudeExecutorService {
             DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: totalTimeoutWork)
 
             self.readQueue.async {
-                Self.readStdout(
+                ClaudeStreamReader.readStdout(
                     pipe: outputPipe,
                     errorPipe: errorPipe,
                     process: process,
@@ -306,7 +299,7 @@ actor ClaudeExecutorService {
             DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: totalTimeoutWork)
 
             self.readQueue.async {
-                Self.readStdout(
+                ClaudeStreamReader.readStdout(
                     pipe: outputPipe,
                     errorPipe: errorPipe,
                     process: process,
@@ -319,97 +312,6 @@ actor ClaudeExecutorService {
                     cleanupStdin: stdinHandle
                 )
             }
-        }
-    }
-
-    // MARK: - Shared Stdout Reader
-
-    /// Shared stdout reading logic for both SDK and CLI execution paths.
-    private nonisolated static func readStdout(
-        pipe: Pipe,
-        errorPipe: Pipe,
-        process: Process,
-        sessionId: String,
-        didTimeout: inout Bool,
-        timeoutWork: DispatchWorkItem,
-        totalTimeoutWork: DispatchWorkItem,
-        continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
-        executor: ClaudeExecutorService,
-        cleanupStdin: FileHandle?
-    ) {
-        // Ensure pipe fileHandles are closed when we exit, preventing descriptor leaks
-        defer {
-            pipe.fileHandleForReading.closeFile()
-            errorPipe.fileHandleForReading.closeFile()
-        }
-
-        let handle = pipe.fileHandleForReading
-        var buffer = Data()
-
-        while true {
-            let chunk = handle.availableData
-            if chunk.isEmpty { break }
-
-            timeoutWork.cancel()
-            buffer.append(chunk)
-
-            guard let bufferString = String(data: buffer, encoding: .utf8) else {
-                continue
-            }
-
-            let lines = bufferString.components(separatedBy: "\n")
-            if lines.count > 1 {
-                for i in 0..<(lines.count - 1) {
-                    let line = lines[i].trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !line.isEmpty {
-                        processJsonLine(line, continuation: continuation)
-                    }
-                }
-                let lastLine = lines[lines.count - 1]
-                buffer = lastLine.data(using: .utf8) ?? Data()
-            }
-        }
-
-        if let remaining = String(data: buffer, encoding: .utf8)?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           !remaining.isEmpty {
-            processJsonLine(remaining, continuation: continuation)
-        }
-
-        process.waitUntilExit()
-        timeoutWork.cancel()
-        totalTimeoutWork.cancel()
-
-        let exitCode = process.terminationStatus
-        if exitCode != 0 {
-            if didTimeout {
-                logger.debug("Process killed by timeout (exit \(exitCode))")
-                continuation.yield(.error(StreamError(
-                    code: "TIMEOUT",
-                    message: "Claude timed out — the AI service may be busy. Please try again."
-                )))
-            } else {
-                let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                let errText = String(data: errData, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                logger.debug("Process exited \(exitCode): \(errText.prefix(500))")
-                if !errText.isEmpty {
-                    continuation.yield(.error(StreamError(
-                        code: "PROCESS_ERROR",
-                        message: "Process exited with code \(exitCode): \(errText.prefix(200))"
-                    )))
-                }
-            }
-        } else {
-            logger.debug("Process exited successfully")
-        }
-
-        continuation.finish()
-
-        cleanupStdin?.closeFile()
-        Task {
-            await executor.removeProcess(sessionId)
-            await executor.removeStdinHandle(sessionId)
         }
     }
 
@@ -482,7 +384,7 @@ actor ClaudeExecutorService {
         activeProcesses[sessionId] = process
     }
 
-    private func removeProcess(_ sessionId: String) {
+    func removeProcess(_ sessionId: String) {
         activeProcesses.removeValue(forKey: sessionId)
     }
 
@@ -492,33 +394,8 @@ actor ClaudeExecutorService {
         activeStdinHandles[sessionId] = handle
     }
 
-    private func removeStdinHandle(_ sessionId: String) {
+    func removeStdinHandle(_ sessionId: String) {
         activeStdinHandles.removeValue(forKey: sessionId)
-    }
-
-    // MARK: - JSON Line Processing
-
-    /// Process a single JSON line from Claude CLI's stream-json output.
-    ///
-    /// Decodes each NDJSON line as a CLIMessage using Codable, then converts
-    /// to StreamMessage via CLIMessageConverter.
-    private static func processJsonLine(
-        _ line: String,
-        continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation
-    ) {
-        guard let data = line.data(using: .utf8) else {
-            logger.debug("Failed to decode line as UTF-8")
-            return
-        }
-        do {
-            let cliMessage = try cliDecoder.decode(CLIMessage.self, from: data)
-            if let streamMessage = CLIMessageConverter.convert(cliMessage) {
-                continuation.yield(streamMessage)
-                logger.debug("Yielded \(cliMessage) message")
-            }
-        } catch {
-            logger.debug("Failed to decode CLI message: \(error.localizedDescription) — line: \(line.prefix(200))")
-        }
     }
 
     // MARK: - Codable Payloads
