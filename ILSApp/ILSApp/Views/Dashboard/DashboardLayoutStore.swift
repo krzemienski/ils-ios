@@ -34,6 +34,49 @@ import Foundation
 @MainActor
 final class DashboardLayoutStore {
 
+    // MARK: - Default Layouts
+
+    /// Pre-built Developer layout: active sessions, recent sessions, quick actions, favorites.
+    static let defaultDeveloperLayout = DashboardLayout(
+        name: DashboardPersona.developer.displayName,
+        persona: .developer,
+        widgets: [
+            DashboardWidget(type: .activeSessions, size: .medium, position: WidgetPosition(row: 0, col: 0)),
+            DashboardWidget(type: .recentSessions, size: .medium, position: WidgetPosition(row: 1, col: 0)),
+            DashboardWidget(type: .quickActions,   size: .small,  position: WidgetPosition(row: 2, col: 0)),
+            DashboardWidget(type: .favorites,      size: .medium, position: WidgetPosition(row: 3, col: 0)),
+        ]
+    )
+
+    /// Pre-built DevOps layout: system metrics, usage stats, project status, active sessions.
+    static let defaultDevOpsLayout = DashboardLayout(
+        name: DashboardPersona.devops.displayName,
+        persona: .devops,
+        widgets: [
+            DashboardWidget(type: .systemMetrics,  size: .large,  position: WidgetPosition(row: 0, col: 0)),
+            DashboardWidget(type: .usageStats,     size: .medium, position: WidgetPosition(row: 2, col: 0)),
+            DashboardWidget(type: .projectStatus,  size: .small,  position: WidgetPosition(row: 3, col: 0)),
+            DashboardWidget(type: .activeSessions, size: .medium, position: WidgetPosition(row: 4, col: 0)),
+        ]
+    )
+
+    /// Pre-built Team Lead layout: team activity, usage stats, recent sessions, project status.
+    static let defaultTeamLeadLayout = DashboardLayout(
+        name: DashboardPersona.teamLead.displayName,
+        persona: .teamLead,
+        widgets: [
+            DashboardWidget(type: .teamActivity,   size: .large,  position: WidgetPosition(row: 0, col: 0)),
+            DashboardWidget(type: .usageStats,     size: .medium, position: WidgetPosition(row: 2, col: 0)),
+            DashboardWidget(type: .recentSessions, size: .medium, position: WidgetPosition(row: 3, col: 0)),
+            DashboardWidget(type: .projectStatus,  size: .small,  position: WidgetPosition(row: 4, col: 0)),
+        ]
+    )
+
+    /// Ordered array of the three persona default layouts used for seeding and reset.
+    private static var defaultLayouts: [DashboardLayout] {
+        [defaultDeveloperLayout, defaultDevOpsLayout, defaultTeamLeadLayout]
+    }
+
     // MARK: - Published State
 
     /// All persisted layouts, ordered by creation date (oldest first).
@@ -110,11 +153,7 @@ final class DashboardLayoutStore {
     /// Replace all layouts with the three default persona layouts and activate
     /// the Developer layout.
     func resetToDefault() {
-        layouts = [
-            DashboardLayout(name: DashboardPersona.developer.displayName, persona: .developer),
-            DashboardLayout(name: DashboardPersona.devops.displayName,    persona: .devops),
-            DashboardLayout(name: DashboardPersona.teamLead.displayName,  persona: .teamLead),
-        ]
+        layouts = Self.defaultLayouts
         activeLayout = layouts.first
         persist()
         persistActiveID()
@@ -141,11 +180,7 @@ final class DashboardLayoutStore {
             }
         }
         // No persisted data — seed with defaults
-        return [
-            DashboardLayout(name: DashboardPersona.developer.displayName, persona: .developer),
-            DashboardLayout(name: DashboardPersona.devops.displayName,    persona: .devops),
-            DashboardLayout(name: DashboardPersona.teamLead.displayName,  persona: .teamLead),
-        ]
+        return Self.defaultLayouts
     }
 
     private func resolveActiveLayout() -> DashboardLayout? {
