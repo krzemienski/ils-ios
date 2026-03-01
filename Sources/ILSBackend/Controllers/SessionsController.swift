@@ -13,6 +13,8 @@ import ILSShared
 /// - `PUT /sessions/:id`: Rename a session
 /// - `DELETE /sessions/:id`: Delete a session
 /// - `POST /sessions/bulk-delete`: Bulk-delete sessions by ID array
+/// - `POST /sessions/bulk-export`: Bulk-export multiple sessions as JSON
+/// - `POST /sessions/import`: Import a previously exported session
 /// - `POST /sessions/:id/fork`: Fork a session (duplicates session + all messages)
 /// - `GET /sessions/:id/messages`: Get session messages with pagination
 /// - `GET /sessions/:id/messages/search?q=`: Search within a session's messages
@@ -37,6 +39,8 @@ struct SessionsController: RouteCollection {
         sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
         sessions.post("bulk-delete", use: bulkDelete)
+        sessions.post("bulk-export", use: bulkExport)
+        sessions.post("import", use: importSession)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "messages", use: messages)
         sessions.get(":id", "messages", "search", use: searchSession)
@@ -489,6 +493,126 @@ struct SessionsController: RouteCollection {
             success: true,
             data: ListResponse(items: result.messages, total: result.total)
         )
+    }
+
+    // MARK: - Import / Bulk Export
+
+    /// Import a previously exported session.
+    ///
+    /// Accepts an `ImportSessionRequest` containing a `ChatExport` JSON payload. Creates a new
+    /// session named "[Original Name] (Imported)" and re-inserts all messages from the export,
+    /// preserving roles and content. Returns the newly created `ChatSession`.
+    ///
+    /// - Parameter req: Vapor Request with ImportSessionRequest body
+    /// - Returns: APIResponse with created ChatSession
+    @Sendable
+    func importSession(req: Request) async throws -> APIResponse<ChatSession> {
+        let input = try req.content.decode(ImportSessionRequest.self)
+        let export = input.export
+
+        let originalName = export.session.name ?? "Untitled"
+        let importedName = "\(originalName) (Imported)"
+
+        let imported = try await req.db.transaction { db in
+            let session = SessionModel(
+                name: importedName,
+                projectId: input.projectId,
+                model: export.session.model,
+                permissionMode: .default,
+                messageCount: 0,
+                totalCostUSD: export.session.totalCostUSD
+            )
+            try await session.save(on: db)
+
+            guard let sessionId = session.id else {
+                throw Abort(.internalServerError, reason: "Failed to create imported session")
+            }
+
+            for exportMsg in export.messages {
+                let message = MessageModel(
+                    sessionId: sessionId,
+                    role: exportMsg.role,
+                    content: exportMsg.content
+                )
+                try await message.save(on: db)
+            }
+
+            session.messageCount = export.messages.count
+            try await session.save(on: db)
+
+            return session
+        }
+
+        var projectName: String?
+        if let projectId = input.projectId,
+           let project = try await ProjectModel.find(projectId, on: req.db) {
+            projectName = project.name
+        }
+
+        return APIResponse(
+            success: true,
+            data: imported.toShared(projectName: projectName)
+        )
+    }
+
+    /// Bulk-export multiple sessions as a JSON array of ChatExport objects.
+    ///
+    /// Accepts a `BulkExportRequest` with an array of session UUIDs. For each session found in the
+    /// database, builds a `ChatExport` containing the session metadata and all messages in
+    /// chronological order. Sessions not found in the database are silently skipped.
+    ///
+    /// - Parameter req: Vapor Request with BulkExportRequest body
+    /// - Returns: APIResponse with array of ChatExport objects
+    @Sendable
+    func bulkExport(req: Request) async throws -> APIResponse<[ChatExport]> {
+        let input = try req.content.decode(BulkExportRequest.self)
+
+        guard !input.sessionIds.isEmpty else {
+            throw Abort(.badRequest, reason: "sessionIds array must not be empty")
+        }
+
+        guard input.sessionIds.count <= 50 else {
+            throw Abort(.badRequest, reason: "Cannot export more than 50 sessions at once")
+        }
+
+        var exports: [ChatExport] = []
+
+        for sessionId in input.sessionIds {
+            guard let session = try await SessionModel.query(on: req.db)
+                .filter(\.$id == sessionId)
+                .with(\.$project)
+                .first() else {
+                continue
+            }
+
+            let messageModels = try await MessageModel.query(on: req.db)
+                .filter(\.$session.$id == sessionId)
+                .sort(\.$createdAt, .ascending)
+                .all()
+
+            let exportSession = ChatExportSession(
+                id: session.id ?? UUID(),
+                name: session.name,
+                model: session.model,
+                createdAt: session.createdAt ?? Date(),
+                lastActiveAt: session.lastActiveAt ?? Date(),
+                messageCount: session.messageCount,
+                totalCostUSD: session.totalCostUSD,
+                projectName: session.project?.name
+            )
+
+            let exportMessages = messageModels.map { msg in
+                ChatExportMessage(
+                    role: MessageRole(rawValue: msg.role) ?? .user,
+                    content: msg.content,
+                    createdAt: msg.createdAt ?? Date()
+                )
+            }
+
+            exports.append(ChatExport(session: exportSession, messages: exportMessages))
+        }
+
+        return APIResponse(success: true, data: exports)
     }
 
     // MARK: - Message Search
