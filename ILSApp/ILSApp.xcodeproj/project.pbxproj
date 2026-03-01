@@ -131,6 +131,10 @@
 		47C604CF499F29E3DB4DADC9 /* ServerStatusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59590E5FFF289E598D2F6A1C /* ServerStatusWidget.swift */; };
 		48D85DFFA54660C66A98E3B0 /* ILSShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */; };
 		4977EAE0D04AD047CD602C5B /* HookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */; };
+		80A0C11AE6FC498F81F12B67 /* HookPreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E01B46B7DCD4CA5A71CA930 /* HookPreviewPanel.swift */; };
+		85AE8064CB5047A0843A8FFB /* HookTemplateLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 417CDC94D91D4CF081790DBC /* HookTemplateLibraryView.swift */; };
+		95A4B5A200E445528CF034F7 /* HookTestSimulatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86BFC635320444AB8314F701 /* HookTestSimulatorView.swift */; };
+		703F2818CB884E7A989A94FB /* HookExecutionLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A671CFB8DED0402CAAC6B996 /* HookExecutionLogView.swift */; };
 		498CE5EB4DC0AA62C4381F57 /* ThemesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7753C25377A815B2158332 /* ThemesListView.swift */; };
 		49CB9B24826033E385DFFD68 /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		4A0C8AC0630B3881FAF58087 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D04010DA9C7A983032E9DA /* SidebarView.swift */; };
@@ -223,6 +227,10 @@
 		81F0A76D241BB039EFB2A0AB /* LogViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5264936CB2EEF18D3167704B /* LogViewerView.swift */; };
 		82399427A26AA227FED23069 /* ErrorMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EED2EA5CED6B30EE2D3364D /* ErrorMessageView.swift */; };
 		830FDD95D24330BEE460A61E /* HookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */; };
+		93DF850CDD434D98A441DA42 /* HookPreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E01B46B7DCD4CA5A71CA930 /* HookPreviewPanel.swift */; };
+		687EAA50D3F240C08C4AF6AF /* HookTemplateLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 417CDC94D91D4CF081790DBC /* HookTemplateLibraryView.swift */; };
+		F492BFC662E4451E8269507C /* HookTestSimulatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86BFC635320444AB8314F701 /* HookTestSimulatorView.swift */; };
+		D8ED2CC2880C49FE8FC22FB9 /* HookExecutionLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A671CFB8DED0402CAAC6B996 /* HookExecutionLogView.swift */; };
 		833B6ED5D3F26E3FD0AC77E8 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 0E2A89CD7ADBD0F51D7B030E /* Citadel */; };
 		834A2D8B4FE2267C537917D3 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */; };
 		8388292832A6A2D84263617A /* EntityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0024C81115458B0BBD8350 /* EntityBadge.swift */; };
@@ -669,6 +677,10 @@
 		F0D51735664D1356C3DC093E /* HostProfilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostProfilesView.swift; sourceTree = "<group>"; };
 		F0F7180FB7CF6802768BD600 /* TeamMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMessagesView.swift; sourceTree = "<group>"; };
 		F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookEditorSheet.swift; sourceTree = "<group>"; };
+		3E01B46B7DCD4CA5A71CA930 /* HookPreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookPreviewPanel.swift; sourceTree = "<group>"; };
+		417CDC94D91D4CF081790DBC /* HookTemplateLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookTemplateLibraryView.swift; sourceTree = "<group>"; };
+		86BFC635320444AB8314F701 /* HookTestSimulatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookTestSimulatorView.swift; sourceTree = "<group>"; };
+		A671CFB8DED0402CAAC6B996 /* HookExecutionLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookExecutionLogView.swift; sourceTree = "<group>"; };
 		F48795057C7081556FF5B265 /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
 		F77899531B324530342B03A8 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewCard.swift; sourceTree = "<group>"; };
@@ -792,6 +804,10 @@
 			children = (
 				F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */,
 				1695ADC93CE18946E4C2517E /* HooksManagementView.swift */,
+				3E01B46B7DCD4CA5A71CA930 /* HookPreviewPanel.swift */,
+				417CDC94D91D4CF081790DBC /* HookTemplateLibraryView.swift */,
+				86BFC635320444AB8314F701 /* HookTestSimulatorView.swift */,
+				A671CFB8DED0402CAAC6B996 /* HookExecutionLogView.swift */,
 			);
 			path = Hooks;
 			sourceTree = "<group>";
@@ -1577,6 +1593,10 @@
 				95865DF75FE8F66BBF3DDCB9 /* HapticManager.swift in Sources */,
 				670190C2C456CD11D49B71AD /* HomeView.swift in Sources */,
 				4977EAE0D04AD047CD602C5B /* HookEditorSheet.swift in Sources */,
+				80A0C11AE6FC498F81F12B67 /* HookPreviewPanel.swift in Sources */,
+				85AE8064CB5047A0843A8FFB /* HookTemplateLibraryView.swift in Sources */,
+				95A4B5A200E445528CF034F7 /* HookTestSimulatorView.swift in Sources */,
+				703F2818CB884E7A989A94FB /* HookExecutionLogView.swift in Sources */,
 				DAF4A04FCE7DA11423A0F8E5 /* HooksManagementView.swift in Sources */,
 				0B3B614F335CB389D28016D7 /* HooksViewModel.swift in Sources */,
 				00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */,
@@ -1770,6 +1790,10 @@
 				E40DD2C368904D059EF66C6F /* HapticManager.swift in Sources */,
 				5D82EF938390DCD237527FF0 /* HomeView.swift in Sources */,
 				830FDD95D24330BEE460A61E /* HookEditorSheet.swift in Sources */,
+				93DF850CDD434D98A441DA42 /* HookPreviewPanel.swift in Sources */,
+				687EAA50D3F240C08C4AF6AF /* HookTemplateLibraryView.swift in Sources */,
+				F492BFC662E4451E8269507C /* HookTestSimulatorView.swift in Sources */,
+				D8ED2CC2880C49FE8FC22FB9 /* HookExecutionLogView.swift in Sources */,
 				D16F32907FC22CE7467DF3CD /* HooksManagementView.swift in Sources */,
 				6EF837BB7C56F1D92F17DBF5 /* HooksViewModel.swift in Sources */,
 				49CB9B24826033E385DFFD68 /* HostProfileDetailView.swift in Sources */,

@@ -3,6 +3,7 @@ import ILSShared
 
 /// Modal form sheet for creating or editing a Claude Code hook.
 /// Shows event type picker, matcher field, handler type selector, and handler-specific fields.
+/// Includes a live JSON preview panel and access to the built-in template library.
 struct HookEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -35,23 +36,46 @@ struct HookEditorSheet: View {
     @State private var isSaving = false
     @State private var errorMessage: String?
 
+    // MARK: - Preview & Template State
+
+    @State private var showPreview = false
+    @State private var showTemplateLibrary = false
+
     var isEditing: Bool { existingHook != nil }
 
     var body: some View {
         NavigationStack {
-            Form {
-                eventTypeSection
-                matcherSection
-                handlerTypeSection
-                handlerFieldsSection
-                optionalFieldsSection
+            VStack(spacing: 0) {
+                Form {
+                    eventTypeSection
+                    matcherSection
+                    handlerTypeSection
+                    handlerFieldsSection
+                    optionalFieldsSection
 
-                if let errorMessage {
-                    Section {
-                        Text(errorMessage)
-                            .foregroundStyle(theme.error)
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    if let errorMessage {
+                        Section {
+                            Text(errorMessage)
+                                .foregroundStyle(theme.error)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        }
                     }
+                }
+
+                if showPreview {
+                    HookPreviewPanel(
+                        eventType: selectedEventType,
+                        matcher: matcher,
+                        handlerType: handlerType,
+                        command: command,
+                        url: url,
+                        promptText: promptText,
+                        isAsync: isAsync,
+                        timeout: timeoutText
+                    )
+                    .frame(height: 220)
+                    .padding(Edge.Set.horizontal)
+                    .padding(Edge.Set.bottom)
                 }
             }
             .navigationTitle(isEditing ? "Edit Hook" : "New Hook")
@@ -62,6 +86,31 @@ struct HookEditorSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+
+                // Templates button — only shown when creating a new hook
+                if !isEditing {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            showTemplateLibrary = true
+                        } label: {
+                            Image(systemName: "square.stack")
+                        }
+                        .accessibilityLabel("Hook Templates")
+                    }
+                }
+
+                // Preview toggle button
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showPreview.toggle()
+                        }
+                    } label: {
+                        Image(systemName: showPreview ? "eye.slash" : "eye")
+                    }
+                    .accessibilityLabel(showPreview ? "Hide Preview" : "Show JSON Preview")
+                }
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task { await save() }
@@ -71,6 +120,11 @@ struct HookEditorSheet: View {
                 }
             }
             .onAppear { populateFromExisting() }
+            .sheet(isPresented: $showTemplateLibrary) {
+                HookTemplateLibraryView { template in
+                    applyTemplate(template)
+                }
+            }
         }
     }
 
@@ -241,6 +295,25 @@ struct HookEditorSheet: View {
             if let t = hookDef.timeout {
                 timeoutText = "\(t)"
             }
+        }
+    }
+
+    // MARK: - Apply Template
+
+    private func applyTemplate(_ template: HookTemplate) {
+        selectedEventType = template.eventType
+        matcher = template.matcher ?? ""
+
+        let hookDef = template.hookDefinition
+        handlerType = hookDef.type ?? "command"
+        command = hookDef.command ?? ""
+        isAsync = hookDef.isAsync ?? false
+        url = hookDef.url ?? ""
+        promptText = hookDef.prompt ?? ""
+        if let t = hookDef.timeout {
+            timeoutText = "\(t)"
+        } else {
+            timeoutText = ""
         }
     }
 
