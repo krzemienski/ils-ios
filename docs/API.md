@@ -21,6 +21,8 @@
 - [Themes](#themes)
 - [Teams](#teams)
 - [Tunnel](#tunnel)
+- [Host Profiles](#host-profiles)
+- [Data Erasure](#data-erasure)
 - [WebSocket Protocol](#websocket-protocol)
 - [Error Handling](#error-handling)
 
@@ -41,6 +43,8 @@ The ILS (Intelligent Learning System) Backend provides a RESTful API for managin
 - Theme customization
 - Agent teams coordination
 - Cloudflare tunnel management
+- Host Profiles management (register, activate, health-check remote hosts)
+- Data Erasure (complete wipe of all local ILS data)
 
 ---
 
