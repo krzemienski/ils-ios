@@ -220,7 +220,16 @@ struct ChatView: View {
                 Task {
                     await viewModel.refreshMessages()
                 }
+                #if os(iOS)
+                SessionMonitorService.shared.removeSession(session.id)
+                #endif
             }
+            #if os(iOS)
+            if newPhase == .background && viewModel.isStreaming {
+                SessionMonitorService.shared.addSession(session, apiClient: appState.apiClient)
+                SessionMonitorService.shared.scheduleBackgroundTask()
+            }
+            #endif
         }
         .onChange(of: appState.serverURL) { _, _ in
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
@@ -228,6 +237,31 @@ struct ChatView: View {
         .onChange(of: appState.isConnected) { _, connected in
             viewModel.isConnected = connected
         }
+        #if os(iOS)
+        .onChange(of: viewModel.isStreaming) { wasStreaming, isNowStreaming in
+            guard wasStreaming && !isNowStreaming else { return }
+            // Stream just ended — remove from background monitor and post notification
+            SessionMonitorService.shared.removeSession(session.id)
+            let sessionId = session.id
+            let sessionName = session.displayName
+            if let error = viewModel.error {
+                Task {
+                    await NotificationService.shared.postSessionErrorNotification(
+                        sessionId: sessionId,
+                        sessionName: sessionName,
+                        errorMessage: error.localizedDescription
+                    )
+                }
+            } else {
+                Task {
+                    await NotificationService.shared.postStreamingCompleteNotification(
+                        sessionId: sessionId,
+                        sessionName: sessionName
+                    )
+                }
+            }
+        }
+        #endif
         .onChange(of: inputText) { _, newValue in
             // Persist draft to UserDefaults with 500ms debounce (DATA-05)
             draftPersistTask?.cancel()
