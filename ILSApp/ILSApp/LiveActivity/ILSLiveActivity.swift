@@ -473,6 +473,44 @@ extension ChatViewModel {
         }
     }
 
+    /// Update Live Activity with a specific status, preserving current preview and token data.
+    ///
+    /// Used for state transitions such as waiting for user input (permission requests).
+    ///
+    /// - Parameter status: The new status to display in the Live Activity.
+    @available(iOS 16.2, *)
+    func updateLiveActivityStatus(_ status: SessionActivityStatus) {
+        let elapsed: Int
+        if let start = streamStartTime {
+            elapsed = Int(Date().timeIntervalSince(start))
+        } else {
+            elapsed = 0
+        }
+
+        let preview: String
+        if let lastMsg = messages.last, !lastMsg.isUser {
+            preview = String(lastMsg.text.prefix(120))
+        } else {
+            preview = ""
+        }
+
+        let updatedState = ChatStreamingAttributes.ContentState(
+            status: status,
+            messagePreview: preview,
+            tokenCount: streamTokenCount,
+            cost: currentStreamingMessage?.cost ?? 0.0,
+            elapsedSeconds: elapsed
+        )
+
+        Task {
+            for activity in Activity<ChatStreamingAttributes>.activities {
+                await activity.update(
+                    ActivityContent(state: updatedState, staleDate: nil)
+                )
+            }
+        }
+    }
+
     /// End all running chat streaming Live Activities.
     ///
     /// Sets `status` to `.completed` and dismisses the activity after a brief delay

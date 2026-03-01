@@ -301,6 +301,34 @@ class ChatViewModel {
                 }
             }
         })
+
+        // Observe pendingPermissionRequest to update Live Activity status.
+        // When a permission request arrives: switch to .waitingForInput.
+        // When the user responds (nil): revert to .streaming.
+        observationTasks.append(Task { @MainActor [weak self] in
+            var lastHadPermission = false
+
+            while let self, !Task.isCancelled {
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    withObservationTracking {
+                        _ = self.pendingPermissionRequest
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+                guard !Task.isCancelled else { break }
+
+                let hasPermission = self.pendingPermissionRequest != nil
+                guard hasPermission != lastHadPermission else { continue }
+                lastHadPermission = hasPermission
+
+                #if os(iOS)
+                if #available(iOS 16.2, *), self.isStreaming {
+                    self.updateLiveActivityStatus(hasPermission ? .waitingForInput : .streaming)
+                }
+                #endif
+            }
+        })
     }
 
     /// Start the batch timer to flush pending messages at regular intervals
