@@ -437,6 +437,7 @@
 		FEC942D907AE69C81070B726 /* QuickConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */; };
 		FEDEF6F3A9E27C1A42C5851E /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		FF95D99CD33000D9ECE60F48 /* NotificationPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */; };
+		99BD426CABCE88CC8858F8BA /* PermissionHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3655125A521E21F14F0B06F /* PermissionHistoryViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -688,6 +689,7 @@
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
 		35D040DC56884D10942C6C29 /* PermissionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistory.swift; sourceTree = "<group>"; };
 		AA100000BB200000CC300000 /* AutoApproveRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRule.swift; sourceTree = "<group>"; };
+		B3655125A521E21F14F0B06F /* PermissionHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1170,6 +1172,7 @@
 		CF667032F0641715AC1D846F /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				B3655125A521E21F14F0B06F /* PermissionHistoryViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
@@ -1502,6 +1505,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99BD426CABCE88CC8858F8BA /* PermissionHistoryViewModel.swift in Sources */,
 				E16CB60E1402E12859871508 /* CISmokeTests.swift in Sources */,
 				B59E162E2F5E673E11D21726 /* ErrorHandlingTests.swift in Sources */,
 				9A2ABF790EE467BD4168A9C8 /* FeatureGateTests.swift in Sources */,
