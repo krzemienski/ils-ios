@@ -137,6 +137,7 @@ struct AddWidgetSheet: View {
         var updated = layout
         updated.widgets.append(widget)
         layoutStore.save(updated)
+        layoutStore.setActiveLayout(updated)
         dismiss()
     }
 }

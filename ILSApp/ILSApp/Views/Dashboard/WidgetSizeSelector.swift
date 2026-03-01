@@ -59,6 +59,7 @@ struct WidgetSizeSelectorModifier: ViewModifier {
         guard let index = updated.widgets.firstIndex(where: { $0.id == widget.id }) else { return }
         updated.widgets[index].size = size
         layoutStore.save(updated)
+        layoutStore.setActiveLayout(updated)
     }
 
     /// Returns an SF Symbol name representing the given size.
