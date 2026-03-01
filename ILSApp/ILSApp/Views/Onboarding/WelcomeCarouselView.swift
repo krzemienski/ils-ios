@@ -33,7 +33,9 @@ struct WelcomeCarouselView: View {
                             .tag(index)
                     }
                 }
+                #if os(iOS)
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                #endif
 
                 // Bottom controls
                 bottomControls

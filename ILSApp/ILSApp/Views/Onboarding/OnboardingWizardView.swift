@@ -60,7 +60,9 @@ struct OnboardingWizardView: View {
                         value: viewModel.currentStep
                     )
             }
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar { skipToolbarItem }
         }
         // Feature tour sheet — on dismiss, chain to first session wizard.
@@ -118,15 +120,25 @@ struct OnboardingWizardView: View {
     @ToolbarContentBuilder
     private var skipToolbarItem: some ToolbarContent {
         if viewModel.currentStep == .welcome || viewModel.currentStep == .connect {
+            #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Skip") {
-                    skip()
-                }
-                .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                .foregroundStyle(theme.textSecondary)
-                .accessibilityLabel("Skip onboarding setup")
+                skipButton
             }
+            #else
+            ToolbarItem(placement: .automatic) {
+                skipButton
+            }
+            #endif
         }
+    }
+
+    private var skipButton: some View {
+        Button("Skip") {
+            skip()
+        }
+        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+        .foregroundStyle(theme.textSecondary)
+        .accessibilityLabel("Skip onboarding setup")
     }
 
     // MARK: - Navigation Actions

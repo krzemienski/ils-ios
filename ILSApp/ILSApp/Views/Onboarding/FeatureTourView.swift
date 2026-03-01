@@ -46,7 +46,9 @@ struct FeatureTourView: View {
                             .tag(index)
                     }
                 }
+                #if os(iOS)
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                #endif
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: currentPage)
 
                 tourBottomControls
