@@ -105,7 +105,7 @@ ILSBackend/
 │   ├── entrypoint.swift     # @main entry
 │   ├── configure.swift      # Middleware, DB, routes setup
 │   └── routes.swift         # Route registration
-├── Controllers/             # 12 REST controllers
+├── Controllers/             # 15 REST controllers
 │   ├── ChatController       # SSE streaming + WebSocket chat
 │   ├── SessionsController   # CRUD + scan + fork + transcript
 │   ├── ProjectsController   # List + detail + project sessions
@@ -117,8 +117,11 @@ ILSBackend/
 │   ├── SystemController     # Metrics + processes + files + live WS
 │   ├── ThemesController     # Custom theme CRUD
 │   ├── TeamsController      # Team + member + task + message CRUD
-│   └── TunnelController     # Start/stop/status Cloudflare tunnel
-├── Services/                # 16 business logic services
+│   ├── TunnelController     # Start/stop/status Cloudflare tunnel
+│   ├── DataErasureController # GDPR right-to-erasure (delete all user data)
+│   ├── HealthController     # Health checks (detailed/ready/live probes)
+│   └── HostProfileController # Host profile CRUD + activate + health (/fleet aliases)
+├── Services/                # 18 business logic services
 │   ├── ClaudeExecutorService   # Spawns Claude CLI subprocess
 │   ├── StreamingService        # SSE event formatting
 │   ├── WebSocketService        # WS connection management
@@ -134,13 +137,15 @@ ILSBackend/
 │   ├── TeamsExecutorService    # Team agent orchestration
 │   ├── TeamsFileService        # Team config file management
 │   ├── CLIMessageConverter     # Parse CLI output to StreamMessage
-│   └── ExecutionOptions        # Chat execution configuration
+│   ├── ExecutionOptions        # Chat execution configuration
+│   ├── PaginationParams        # Pagination helpers for list endpoints
+│   └── PathSanitizer           # Path traversal prevention utility
 ├── Models/                  # Fluent ORM models
 │   ├── SessionModel         # DB sessions table
 │   ├── MessageModel         # DB messages table
 │   ├── ProjectModel         # DB projects table
 │   ├── ThemeModel           # DB custom themes table
-│   └── FleetHostModel       # DB fleet hosts table
+│   └── HostProfileModel     # DB host profiles table (schema: fleet_hosts)
 ├── Migrations/              # Database schema
 ├── Middleware/
 │   └── ILSErrorMiddleware   # Consistent error responses
@@ -861,6 +866,124 @@ When Claude needs to execute a tool in `delegate` permission mode, it pauses exe
 | Process-gone handling | If `activeStdinHandles[sessionId]` has no entry (process already exited), `sendPermissionResponse` returns `false` and `ChatController` throws `HTTP 410 Gone` |
 | Concurrent sessions | Each session has its own stdin handle keyed by session ID — multiple simultaneous sessions each route independently |
 
+### WebSocket Live Metrics Flow
+
+The system monitoring screen uses a persistent WebSocket connection to stream real-time CPU, memory, disk, and network metrics from the backend to the iOS client. Unlike the SSE chat stream, this channel is server-push only — the client never sends messages after the initial upgrade.
+
+```
+┌─────────────────────────────── iOS CLIENT ───────────────────────────────────┐
+│                                                                               │
+│  1. SystemView appears                                                        │
+│     SwiftUI onAppear calls viewModel.connectLiveMetrics()                     │
+│          │                                                                    │
+│          ▼                                                                    │
+│  2. SystemMetricsViewModel.connectLiveMetrics()           [MainActor]         │
+│     Creates URLSessionWebSocketTask to                                        │
+│     ws://localhost:9999/api/v1/system/metrics/live                            │
+│     Optional: appends ?interval=N (seconds) to request faster updates        │
+│     Calls task.resume() — triggers HTTP Upgrade handshake                    │
+│          │                                                                    │
+│          ▼                                                                    │
+│  3. receiveLoop() — recursive async receive                                   │
+│     Awaits task.receive() for each incoming text frame                        │
+│     JSONDecoder decodes frame → SystemMetricsResponse                         │
+│     Updates @Published metrics properties on MainActor                        │
+│     Triggers SwiftUI gauge/chart re-renders                                   │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ WebSocket Upgrade (HTTP → WS)
+┌───────────────────────────────────┼──────────────────────── VAPOR BACKEND ───┐
+│                                   ▼                                           │
+│  4. SystemController.liveMetrics(req:ws:)                                     │
+│     Registered as: system.webSocket("metrics", "live", onUpgrade: ...)        │
+│     Reads optional ?interval=N query param (String → Double)                 │
+│     Clamps to valid range: max(2, min(N, 60)) seconds. Default: 5s            │
+│          │                                                                    │
+│          ▼                                                                    │
+│  5. WebSocketCancellation actor created                                       │
+│     Owns a single Bool flag (cancelled = false)                               │
+│     Actor isolation guarantees safe reads/writes across concurrent contexts   │
+│          │                                                                    │
+│          ▼                                                                    │
+│  6. Task { streamTask } spawned                                               │
+│     Loop: while !Task.isCancelled && !cancellation.isCancelled()              │
+│          │                                                                    │
+│          ▼                                                                    │
+│  7. SystemMetricsService.getMetrics()       (each iteration)                  │
+│     Reads CPU (host_statistics64), memory (task_vm_info),                    │
+│     disk (statvfs), network (getifaddrs) via Darwin syscalls                  │
+│          │                                                                    │
+│          ▼                                                                    │
+│  8. Assemble SystemMetricsResponse                                            │
+│     { cpu: Double, memory: {used,total,percentage},                           │
+│       disk: {used,total,percentage},                                          │
+│       network: {bytesIn,bytesOut}, loadAverage: [Double] }                    │
+│          │                                                                    │
+│          ▼                                                                    │
+│  9. JSONEncoder.encode(response) → UTF-8 text frame                           │
+│     ws.send(text)  — single WebSocket text frame per interval                 │
+│          │                                                                    │
+│          ▼                                                                    │
+│  10. Task.sleep(nanoseconds: pushInterval × 1_000_000_000)                    │
+│      Waits configured interval before next metrics sample                     │
+│      Loop repeats from step 7                                                 │
+│                                                                               │
+│  ┌─ Shutdown path ──────────────────────────────────────────────────────┐    │
+│  │  ws.onClose.whenComplete { _ in                                       │    │
+│  │      Task { await cancellation.cancel() }  ← sets cancelled = true   │    │
+│  │      streamTask.cancel()                   ← sets Task.isCancelled    │    │
+│  │  }                                                                    │    │
+│  │  Next loop iteration observes both flags and breaks cleanly           │    │
+│  └──────────────────────────────────────────────────────────────────────┘    │
+│                                                                               │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │ WebSocket text frames (JSON)
+┌───────────────────────────────────┼──────────────────────── iOS CLIENT ───────┐
+│                                   ▼                                            │
+│  11. receiveLoop() gets SystemMetricsResponse frame                            │
+│      Decodes JSON → updates ViewModel @Published properties:                   │
+│        cpuUsage, memoryUsed, memoryTotal, diskUsed, diskTotal,                 │
+│        networkBytesIn, networkBytesOut, loadAverage                            │
+│          │                                                                     │
+│          ▼                                                                     │
+│  12. SwiftUI re-renders gauges and charts                                      │
+│      CircularGaugeView shows CPU %                                             │
+│      MemoryBarView shows used / total memory                                   │
+│      NetworkSparklineView shows bytes in/out over time                         │
+│          │                                                                     │
+│          ▼                                                                     │
+│  13. SystemView disappears (e.g. user navigates away)                          │
+│      viewModel.disconnectLiveMetrics()                                         │
+│      task.cancel(with: .normalClosure, reason: nil)                            │
+│      Backend ws.onClose fires → WebSocketCancellation.cancel() + streamTask   │
+│      Stream loop exits; connection fully torn down                             │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Wire format — each server push is a single WebSocket text frame containing JSON:**
+
+```json
+{
+  "cpu": 12.4,
+  "memory": { "used": 8589934592, "total": 17179869184, "percentage": 50.0 },
+  "disk":   { "used": 214748364800, "total": 499963174912, "percentage": 43.0 },
+  "network": { "bytesIn": 1024000, "bytesOut": 512000 },
+  "loadAverage": [1.2, 0.9, 0.8]
+}
+```
+
+**Key implementation details:**
+
+| Aspect | Detail |
+|--------|--------|
+| Endpoint | `WS /api/v1/system/metrics/live` — registered in `SystemController.boot(routes:)` via `routes.webSocket("metrics", "live", onUpgrade:)` |
+| Push interval | Default 5 s; client may request faster via `?interval=N`; clamped to 2–60 s |
+| `WebSocketCancellation` actor | Swift `actor` wrapper around a single `Bool` flag; actor isolation provides safe concurrent access without locks when the NIO event loop and Task concurrency both touch the flag |
+| Shutdown race-free design | Two cancellation signals used together: `cancellation.cancel()` (actor flag) checked at loop start, and `streamTask.cancel()` which sets `Task.isCancelled`; checking both ensures the loop exits even if one signal arrives mid-sleep |
+| No client→server messages | Unlike the chat WebSocket (`WebSocketService`), this endpoint never reads incoming frames — `ws.onText` is not registered. All traffic is server→client only |
+| `SystemMetricsService` | Reads OS-level stats via Darwin APIs. Shared instance on `SystemController`; all access is `await metricsService.getMetrics()` (async actor-safe) |
+
 ### SSE Wire Protocol
 
 All streaming responses from `StreamingService` use the standard SSE (Server-Sent Events) wire format over HTTP/1.1 chunked transfer encoding.
@@ -1192,3 +1315,43 @@ After dedup:
 - Session pagination (50 per page) with server-side deduplication
 - External session scan results cached (bypass with `?refresh=true`)
 - Skeleton loading with `ShimmerModifier` for perceived performance
+
+## Common Pitfalls Explained
+
+This section explains the architectural root cause behind each recurring pitfall documented in CLAUDE.md.
+
+### 1. Wrong Backend Binary
+
+**Symptom:** API returns raw/unexpected data despite code changes.
+
+**Root cause:** Two compiled ILSBackend binaries can exist on the same machine — the original prototype at `~/ils/ILSBackend/` and the current codebase at `~/Desktop/ils-ios/`. Swift Package Manager stores each binary in a separate `.build/` directory scoped to the package root, so changes to one package never affect the other binary. Both binaries bind to their configured port and respond to requests; if the old binary happens to be running on port 9999 the current code is never exercised. Always verify the running binary path with `lsof -i :9999 -P -n` before debugging API behaviour.
+
+### 2. Deep Link UUIDs Must Be Lowercase
+
+**Symptom:** Deep links of the form `ils://session/<UUID>` silently fail to navigate.
+
+**Root cause:** The iOS deep link handler uses Swift's `UUID(uuidString:)` initialiser to parse the path component, and this initialiser is case-insensitive — but the Vapor backend routes use string comparison after extracting the path parameter. UUID RFC 4122 specifies lowercase hexadecimal digits for the canonical string representation. When the URL contains uppercase hex characters (e.g. copied from Xcode's debugger), the string does not match the lowercase UUID stored in the SQLite primary key, so the `find(id:)` query returns `nil`. The fix is to always lowercase UUIDs before embedding them in `ils://` URLs.
+
+### 3. `import Crypto` vs `import CryptoKit`
+
+**Symptom:** SHA256 hashing produces the wrong digest or fails to compile in the Vapor target.
+
+**Root cause:** Vapor's dependency tree includes the open-source `swift-crypto` package, which registers the module name `Crypto`. When you write `import Crypto` inside `Sources/ILSBackend/`, the compiler resolves it to `swift-crypto`'s `Crypto` module — not Apple's `CryptoKit` framework. The two modules expose a `SHA256` type with a nearly identical surface area but different internal implementations and, critically, different wire-compatible digest outputs. `ILSBackend` generates deterministic project UUIDs from SHA256 hashes of filesystem paths; using the wrong SHA256 implementation produces different UUIDs across compilation contexts. Always `import CryptoKit` in backend source files to guarantee the Apple-native implementation is used.
+
+### 4. DerivedData Path
+
+**Symptom:** Attempting to run or inspect the built app binary at `ILSApp/build/` fails; the directory does not exist.
+
+**Root cause:** Xcode does not write build products into the source tree. By default it writes them to `~/Library/Developer/Xcode/DerivedData/<scheme>-<hash>/Build/Products/<config>-<platform>/`. The hash suffix is derived from the project's absolute path, so it changes if the project is moved. There is no `ILSApp/build/` directory created by `xcodebuild` unless explicitly configured with `-derivedDataPath`. When automating simulator launches or inspecting `.app` bundles, use the glob pattern `~/Library/Developer/Xcode/DerivedData/ILSApp-*/Build/Products/` to locate the correct path.
+
+### 5. ClaudeCodeSDK RunLoop Incompatibility in Vapor
+
+**Symptom:** Using `ClaudeCodeSDK` inside the Vapor server causes the process to hang or never receive SDK callbacks.
+
+**Root cause:** `ClaudeCodeSDK` schedules its work on the Foundation `RunLoop`. A standard Vapor server runs entirely on SwiftNIO's `NIOEventLoopGroup` — a pool of `EventLoop` threads that each spin their own select/epoll/kqueue loop. NIO event loops **do not** pump the Foundation `RunLoop`; they have no call to `RunLoop.current.run()` or `CFRunLoopRunInMode`. As a result, `RunLoop`-scheduled callbacks from the SDK are enqueued but never executed, and the process appears to hang waiting for a response that will never arrive. The solution is to bypass `ClaudeCodeSDK` entirely and spawn `node scripts/sdk-wrapper.mjs` (or `claude -p`) as a child `Process`, reading stdout on a `DispatchQueue` — both of which integrate with NIO's threading model without requiring a RunLoop pump.
+
+### 6. `process.waitUntilExit()` Required Before `terminationStatus`
+
+**Symptom:** Accessing `process.terminationStatus` throws `NSInvalidArgumentException` or returns a meaningless value.
+
+**Root cause:** Darwin's `Process` (née `NSTask`) exposes `terminationStatus` as a property whose contract — per the Foundation documentation — states it must only be read **after** the process has exited. Reading `terminationStatus` while the process is still running violates this contract and raises `NSInvalidArgumentException` on Darwin. The `waitUntilExit()` call blocks the calling thread until the subprocess's wait-4 syscall returns, guaranteeing that the exit status is populated and valid. In `ClaudeExecutorService` and any other code that spawns child processes, always call `process.waitUntilExit()` on a background `DispatchQueue` before inspecting `terminationStatus` or `terminationReason`.

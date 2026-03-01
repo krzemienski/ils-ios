@@ -84,6 +84,30 @@
       ]
     },
     {
+      "id" : "ACC-AUDIT-0001-0002-0003-0004-000000000001",
+      "name" : "Accessibility Audit",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "sequential",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      },
+      "testTargets" : [
+        {
+          "target" : {
+            "containerPath" : "container:ILSApp.xcodeproj",
+            "identifier" : "ILSAppUITests",
+            "name" : "ILSAppUITests"
+          },
+          "selectedTests" : [
+            "AccessibilityAuditTests"
+          ]
+        }
+      ]
+    },
+    {
       "id" : "4L6M8N0O-1P2Q-3R4S-5T6U-7V8W9X0Y1Z2A",
       "name" : "Localization Testing - German",
       "options" : {
@@ -121,6 +145,7 @@
     }
   ],
   "defaultOptions" : {
+    "codeCoverageEnabled" : true,
     "targetForVariableExpansion" : {
       "containerPath" : "container:ILSApp.xcodeproj",
       "identifier" : "ILSApp",

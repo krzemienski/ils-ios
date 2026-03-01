@@ -18,73 +18,22 @@ enum DiscoverType: String, CaseIterable {
 
 // MARK: - Browser View
 
-/// Tabbed browsing view presenting MCP servers, Skills, and Plugins in a single scrollable interface.
-///
-/// `BrowserView` renders a three-segment control at the top (MCP / Skills / Plugins) and a
-/// shared search bar whose text is forwarded to each tab's view-model. Switching segments
-/// swaps the content area between ``mcpContent``, ``skillsContent``, and ``pluginsContent``
-/// without reloading already-fetched data.
-///
-/// On first appearance all three tabs are loaded concurrently via ``loadAll()``, which fans
-/// out to `MCPViewModel.loadServers()`, `SkillsViewModel.loadSkills()`, and
-/// `PluginsViewModel.loadPlugins()` using Swift structured concurrency. The view re-loads
-/// whenever `AppState.isConnected` transitions to `true` (e.g. after a reconnect).
-/// Pull-to-refresh on the scroll view calls ``refreshCurrentSegment()`` to reload only the
-/// visible tab.
-///
-/// Each content section handles three display states:
-/// - **Loading** — skeleton placeholder rows shown while the view-model's `isLoading` flag is set and the item list is empty.
-/// - **Empty** — a centred icon/title/subtitle via ``emptyState(icon:title:subtitle:)`` when loading completes with no items.
-/// - **Populated** — `NavigationLink` rows using the shared ``browserRow(name:subtitle:status:statusColor:entityColor:badge:)`` helper.
-///
-/// The MCP tab adds a second scope filter (all / user / project / local) that re-fetches
-/// servers through `MCPViewModel.loadServers(scope:)` when changed.
-///
-/// The Skills tab appends a GitHub search section (``githubBrowseSection``) below the local
-/// list, enabling one-tap install of remote skills via `SkillsViewModel.installFromGitHub(result:)`.
-///
-/// The Plugins tab shows horizontal category-filter chips derived from
-/// `PluginsViewModel.pluginCategories` and renders richer ``pluginRow(_:)`` cards with
-/// version / source / stars badges.
-///
-/// ## Topics
-/// ### Configuration
-/// - ``initialSegment`` - The tab displayed when the view first appears
-///
-/// ### State
-/// - ``mcpVM`` - Observable view-model managing MCP server data and search
-/// - ``skillsVM`` - Observable view-model managing skills data, search, and GitHub browsing
-/// - ``pluginsVM`` - Observable view-model managing plugins data, search, and category filtering
-/// - ``segment`` - The currently active ``BrowserSegment`` tab
-/// - ``searchText`` - Live search query forwarded to all three view-models
-/// - ``mcpScope`` - Active MCP scope filter: `"all"`, `"user"`, `"project"`, or `"local"`
-/// - ``isSearchFocused`` - Focus state that drives the search bar focus ring
-///
-/// ### Async Loading
-/// - ``loadAll()`` - Concurrently loads all three tabs on first appearance
-/// - ``refreshCurrentSegment()`` - Refreshes only the currently visible tab (pull-to-refresh)
 struct BrowserView: View {
-    /// The tab that is selected when the view first appears; defaults to `.mcp`.
+    /// Optional initial segment to show when the view first appears.
     var initialSegment: BrowserSegment = .mcp
 
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Observable view-model that owns MCP server list, filtered results, and loading state.
     @State private var mcpVM = MCPViewModel()
-    /// Observable view-model that owns skills list, filtered results, GitHub search, and loading state.
     @State private var skillsVM = SkillsViewModel()
-    /// Observable view-model that owns plugins list, category filtering, and loading state.
     @State private var pluginsVM = PluginsViewModel()
 
-    /// The currently visible tab; animated transitions unless `reduceMotion` is enabled.
     @State private var segment: BrowserSegment = .mcp
-    /// Shared search query applied to all three tabs simultaneously via each view-model's `searchText`.
     @State private var searchText = ""
-    /// Active scope filter for the MCP tab (`"all"`, `"user"`, `"project"`, or `"local"`).
     @State private var mcpScope: String = "all"
-    /// Tracks keyboard focus on the search bar to render the themed focus ring.
+    @State private var showAddMCP = false
     @FocusState private var isSearchFocused: Bool
     /// Sub-segment within the Discover tab: search skills or plugins
     @State private var discoverType: DiscoverType = .skills
@@ -106,7 +55,6 @@ struct BrowserView: View {
 
             // Content
             ScrollView {
-                // UIPERF-05: Verified — LazyVStack used for efficient browser content rendering.
                 LazyVStack(spacing: theme.spacingSM) {
                     // Cache freshness indicator per segment (DATA-04)
                     HStack {
@@ -138,7 +86,9 @@ struct BrowserView: View {
                 .padding(.bottom, theme.spacingLG)
             }
             .refreshable {
-                HapticManager.impact(.medium)
+                #if os(iOS)
+                HapticManager.impact(.light)
+                #endif
                 await refreshCurrentSegment()
             }
         }
@@ -176,6 +126,38 @@ struct BrowserView: View {
             skillsVM.configure(client: appState.apiClient)
             pluginsVM.configure(client: appState.apiClient)
             Task { await loadAll() }
+        }
+        .toolbar {
+            if segment == .mcp {
+                #if os(iOS)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        HapticManager.selection()
+                        showAddMCP = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("Add MCP Server")
+                }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        HapticManager.selection()
+                        showAddMCP = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("Add MCP Server")
+                }
+                #endif
+            }
+        }
+        .sheet(isPresented: $showAddMCP) {
+            NavigationStack {
+                MCPAddEditView(viewModel: mcpVM) { _ in
+                    Task { await mcpVM.loadServers() }
+                }
+            }
         }
     }
 
@@ -317,22 +299,86 @@ struct BrowserView: View {
                 )
             } else {
                 ForEach(items) { server in
-                    NavigationLink {
-                        MCPServerDetailView(server: server)
-                    } label: {
-                        browserRow(
-                            name: server.name,
-                            subtitle: "\(server.command) \(server.args.joined(separator: " "))",
-                            status: server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown"),
-                            statusColor: server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning),
-                            entityColor: theme.entityMCP,
-                            badge: server.scope.rawValue.capitalized
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    mcpServerRow(server)
                 }
             }
         }
+    }
+
+    // MARK: - MCP Server Row
+
+    private func mcpServerRow(_ server: MCPServer) -> some View {
+        let statusColor: Color = server.status == .healthy ? theme.success : (server.status == .unhealthy ? theme.error : theme.warning)
+        let statusText: String = server.status == .healthy ? "Healthy" : (server.status == .unhealthy ? "Unhealthy" : "Unknown")
+
+        return HStack(spacing: 0) {
+            NavigationLink {
+                MCPServerDetailView(server: server, viewModel: mcpVM)
+            } label: {
+                HStack(spacing: theme.spacingMD) {
+                    Circle()
+                        .fill(server.isEnabled ? theme.entityMCP : theme.entityMCP.opacity(0.4))
+                        .frame(width: 10, height: 10)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(server.name)
+                                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                                .foregroundStyle(server.isEnabled ? theme.textPrimary : theme.textSecondary)
+                                .lineLimit(1)
+
+                            Spacer()
+
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(statusColor)
+                                    .frame(width: 6, height: 6)
+                                Text(statusText)
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(statusColor)
+                            }
+                        }
+
+                        Text("\(server.command) \(server.args.joined(separator: " "))")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(1)
+
+                        Text(server.scope.rawValue.capitalized)
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(theme.bgTertiary)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+            }
+            .buttonStyle(.plain)
+
+            // Quick enable/disable toggle
+            Button {
+                HapticManager.impact(.light)
+                Task { await mcpVM.toggleEnabled(server) }
+            } label: {
+                Image(systemName: server.isEnabled ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(server.isEnabled ? theme.success : theme.textTertiary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, theme.spacingMD)
+            .accessibilityLabel(server.isEnabled ? "Disable \(server.name)" : "Enable \(server.name)")
+        }
+        .modifier(GlassCard())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(server.name), \(server.isEnabled ? "Enabled" : "Disabled"), \(statusText)")
     }
 
     // MARK: - Skills Content
@@ -413,6 +459,7 @@ struct BrowserView: View {
                     HStack(spacing: theme.spacingSM) {
                         ForEach(pluginsVM.pluginCategories, id: \.self) { category in
                             Button {
+                                HapticManager.selection()
                                 pluginsVM.selectedCategory = category
                             } label: {
                                 Text(category)

@@ -73,3 +73,54 @@ jobs:
           else
             echo "::error::iOS build failed"
           fi
+
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: macos-15
+    timeout-minutes: 20
+    needs: ios-build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
+
+      - name: Start backend
+        run: |
+          swift build
+          PORT=9999 swift run ILSBackend &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+              echo "Backend ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run quick smoke tests
+        run: |
+          cd ILSApp
+          ./scripts/run-ui-tests.sh --quick --device 'iPhone 16 Pro' || true
+
+      - name: Upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results
+          path: ILSApp/test-results/
+          retention-days: 7

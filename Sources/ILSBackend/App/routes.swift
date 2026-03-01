@@ -21,6 +21,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: ThemesController())
     try api.register(collection: TeamsController(fileService: TeamsFileService(), executorService: TeamsExecutorService()))
     try api.register(collection: TemplatesController())
+    try api.register(collection: SuggestionsController(fileSystem: fileSystem))
 
     // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
     let admin = api.grouped(AdminMiddleware())

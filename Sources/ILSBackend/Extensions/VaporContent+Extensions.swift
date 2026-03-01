@@ -43,12 +43,6 @@ extension APIResponse: AsyncRequestDecodable where T: Content {
 }
 
 extension APIResponse: Content where T: Content {}
-// CONC-15: @unchecked Sendable extensions are required for Vapor Content protocol
-// conformance. Vapor's Content protocol inherits from Sendable, but generic wrapper
-// types (APIResponse<T>, ListResponse<T>, PaginatedResponse<T>) cannot automatically
-// satisfy Sendable when T is constrained to Sendable. The @unchecked annotation is
-// the standard Vapor pattern. These types are value types (structs) defined in ILSShared
-// with all-Sendable stored properties, so the assertion is correct. Reviewed 2026-02-24.
 extension APIResponse: @unchecked Sendable where T: Sendable {}
 
 // ListResponse conformances
@@ -197,6 +191,10 @@ extension MCPHealthResponse: Content {}
 extension MCPLogEntry: Content {}
 extension MCPLogsResponse: Content {}
 extension MCPRestartResponse: Content {}
+extension MCPValidationResult: Content {}
+extension MCPPreset: Content {}
+extension MCPPresetCategory: Content {}
+extension MCPPresetListResponse: Content {}
 extension ClaudeConfig: Content {}
 extension PermissionsConfig: Content {}
 extension HooksConfig: Content {}
@@ -216,6 +214,11 @@ extension TypographyTokens: Content {}
 extension SpacingTokens: Content {}
 extension CornerRadiusTokens: Content {}
 extension ShadowTokens: Content {}
+
+// MARK: - Suggestion Types
+extension SessionSuggestion: Content {}
+extension SkillSuggestion: Content {}
+extension SuggestionFeedbackRequest: Content {}
 
 // MARK: - Stream Types
 extension StreamMessage: Content {}

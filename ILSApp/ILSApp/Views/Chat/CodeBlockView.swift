@@ -154,7 +154,7 @@ struct CodeBlockView: View {
             Divider()
 
             // Code content with line numbers
-            ScrollView(.horizontal, showsIndicators: true) {
+            ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 0) {
                     // Line numbers
                     VStack(alignment: .trailing, spacing: 0) {
