@@ -52,7 +52,7 @@ struct SessionWidgetView: View {
                     .foregroundColor(Color(hex: WidgetColors.accent))
                 Text("Recent Sessions")
                     .font(.footnote.weight(.bold).monospaced())
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 Spacer()
                 Text("\(entry.sessions.count)")
                     .font(.caption.weight(.medium).monospaced())
@@ -110,7 +110,7 @@ private struct SessionWidgetRow: View {
             // Session name
             Text(session.name)
                 .font(.caption.weight(.medium))
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
                 .lineLimit(1)
                 .truncationMode(.tail)
 

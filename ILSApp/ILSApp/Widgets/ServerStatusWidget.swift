@@ -50,7 +50,7 @@ struct ServerStatusWidgetView: View {
                     .foregroundColor(Color(hex: WidgetColors.accent))
                 Text("ILS")
                     .font(.subheadline.weight(.bold).monospaced())
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
 
             Spacer()
@@ -79,7 +79,7 @@ struct ServerStatusWidgetView: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("\(entry.sessionCount)")
                         .font(.callout.weight(.bold).monospaced())
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     Text("Sessions")
                         .font(.caption2.weight(.medium))
                         .foregroundColor(Color(hex: WidgetColors.textTertiary))
