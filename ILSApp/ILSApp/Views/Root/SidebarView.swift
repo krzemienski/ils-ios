@@ -30,6 +30,7 @@ import ILSShared
 struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(MultiSessionViewModel.self) private var multiSessionVM
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     /// Shared sessions view model owned by SidebarRootView.
@@ -53,6 +54,8 @@ struct SidebarView: View {
     /// The session pending deletion confirmation, if any.
     @State private var sessionToDelete: ChatSession?
     @State private var showNewSessionSheet = false
+    /// Whether the "too many pinned sessions" limit alert is visible.
+    @State private var showPinLimitAlert = false
 
     /// Comma-separated project names whose DisclosureGroups are expanded, persisted across scenes.
     @SceneStorage("sidebarExpandedProjects") private var expandedProjectsStorage: String = ""
@@ -135,6 +138,11 @@ struct SidebarView: View {
             Button("Cancel", role: .cancel) { sessionToDelete = nil }
         } message: {
             Text("This will permanently delete this session and all its messages.")
+        }
+        .alert("Split View Full", isPresented: $showPinLimitAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You can pin at most 4 sessions to Split View. Unpin a session before adding another.")
         }
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
@@ -482,6 +490,23 @@ struct SidebarView: View {
                                 systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
                             )
                         }
+
+                        let isPinned = multiSessionVM.isPinned(session)
+                        Button {
+                            if isPinned {
+                                multiSessionVM.unpinSession(session)
+                            } else if multiSessionVM.pinnedSessionIds.count >= 4 {
+                                showPinLimitAlert = true
+                            } else {
+                                multiSessionVM.pinSession(session)
+                            }
+                        } label: {
+                            Label(
+                                isPinned ? "Unpin from Split View" : "Pin to Split View",
+                                systemImage: isPinned ? "pin.slash" : "pin"
+                            )
+                        }
+
                         Button {
                             renameText = session.name ?? ""
                             sessionToRename = session

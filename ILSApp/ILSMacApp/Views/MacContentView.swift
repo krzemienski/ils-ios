@@ -85,6 +85,8 @@ struct MacContentView: View {
     @State private var renameText: String = ""
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @FocusState private var isSearchFocused: Bool
+    /// Whether the "too many pinned sessions" limit alert is visible.
+    @State private var showPinLimitAlert = false
 
     var body: some View {
         @Bindable var appState = appState
@@ -217,6 +219,11 @@ struct MacContentView: View {
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .alert("Split View Full", isPresented: $showPinLimitAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You can pin at most 4 sessions to Split View. Unpin a session before adding another.")
         }
     }
 
@@ -508,6 +515,22 @@ struct MacContentView: View {
                             }
                         } label: {
                             Label("Fork Session", systemImage: "arrow.branch")
+                        }
+
+                        let isPinned = multiSessionVM.isPinned(session)
+                        Button {
+                            if isPinned {
+                                multiSessionVM.unpinSession(session)
+                            } else if multiSessionVM.pinnedSessionIds.count >= 4 {
+                                showPinLimitAlert = true
+                            } else {
+                                multiSessionVM.pinSession(session)
+                            }
+                        } label: {
+                            Label(
+                                isPinned ? "Unpin from Split View" : "Pin to Split View",
+                                systemImage: isPinned ? "pin.slash" : "pin"
+                            )
                         }
 
                         Divider()
