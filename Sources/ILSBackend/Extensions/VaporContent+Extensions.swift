@@ -211,6 +211,10 @@ extension SpacingTokens: Content {}
 extension CornerRadiusTokens: Content {}
 extension ShadowTokens: Content {}
 
+// MARK: - Fork Tree Types
+extension SessionForkNode: Content {}
+extension SessionForkTreeResponse: Content {}
+
 // MARK: - Suggestion Types
 extension SessionSuggestion: Content {}
 extension SkillSuggestion: Content {}

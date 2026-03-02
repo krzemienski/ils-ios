@@ -14,6 +14,7 @@ import ILSShared
 /// - `DELETE /sessions/:id`: Delete a session
 /// - `POST /sessions/bulk-delete`: Bulk-delete sessions by ID array
 /// - `POST /sessions/:id/fork`: Fork a session (duplicates session + all messages)
+/// - `GET /sessions/:id/fork-tree`: Get the complete fork lineage for a session family
 /// - `GET /sessions/:id/messages`: Get session messages with pagination
 /// - `GET /sessions/:id/messages/search?q=`: Search within a session's messages
 /// - `GET /sessions/:id/export?format=`: Export session as JSON, Markdown, or plain text
@@ -38,6 +39,7 @@ struct SessionsController: RouteCollection {
         sessions.delete(":id", use: delete)
         sessions.post("bulk-delete", use: bulkDelete)
         sessions.post(":id", "fork", use: fork)
+        sessions.get(":id", "fork-tree", use: forkTree)
         sessions.get(":id", "messages", use: messages)
         sessions.get(":id", "messages", "search", use: searchSession)
         sessions.get(":id", "export", use: exportSession)
@@ -400,6 +402,68 @@ struct SessionsController: RouteCollection {
         return APIResponse(
             success: true,
             data: forked.toShared(projectName: original.project?.name)
+        )
+    }
+
+    /// Get the complete fork tree for a session family.
+    ///
+    /// Walks up the `forkedFrom` chain to find the root session, then performs a
+    /// breadth-first traversal downward to collect all sessions in the same lineage.
+    ///
+    /// - Parameter req: Vapor Request with id parameter
+    /// - Returns: APIResponse with SessionForkTreeResponse containing all family sessions and the root ID
+    @Sendable
+    func forkTree(req: Request) async throws -> APIResponse<SessionForkTreeResponse> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        guard let _ = try await SessionModel.find(id, on: req.db) else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        // Load all DB sessions — fork families are small, so loading all is acceptable
+        let allSessions = try await SessionModel.query(on: req.db)
+            .with(\.$project)
+            .all()
+
+        let sessionMap: [UUID: SessionModel] = Dictionary(uniqueKeysWithValues: allSessions.compactMap { s in
+            guard let sid = s.id else { return nil }
+            return (sid, s)
+        })
+
+        // Walk up from the requested session to find the root (no forkedFrom ancestor)
+        var rootId = id
+        var visited: Set<UUID> = [id]
+        while let current = sessionMap[rootId], let parentId = current.forkedFrom {
+            guard !visited.contains(parentId) else { break } // Cycle guard
+            visited.insert(parentId)
+            rootId = parentId
+        }
+
+        // BFS from root to collect all sessions in the fork family
+        var familyIds: Set<UUID> = []
+        var queue: [UUID] = [rootId]
+        while !queue.isEmpty {
+            let current = queue.removeFirst()
+            guard !familyIds.contains(current) else { continue }
+            familyIds.insert(current)
+            for session in allSessions {
+                guard let sid = session.id, let parent = session.forkedFrom,
+                      parent == current, !familyIds.contains(sid) else { continue }
+                queue.append(sid)
+            }
+        }
+
+        // Return sessions sorted by creation date (preserves fork order)
+        let familySessions = allSessions
+            .filter { $0.id.map { familyIds.contains($0) } ?? false }
+            .sorted { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) }
+            .map { $0.toShared(projectName: $0.project?.name) }
+
+        return APIResponse(
+            success: true,
+            data: SessionForkTreeResponse(sessions: familySessions, rootId: rootId)
         )
     }
 
