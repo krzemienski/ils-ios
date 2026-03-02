@@ -81,6 +81,15 @@ class ChatViewModel {
     /// Cache creation tokens for the latest result.
     var contextCacheCreateTokens: Int = 0
 
+    // MARK: - Compaction Alert Properties
+
+    /// The highest context usage threshold (85/90/95%) that has been crossed, triggering the alert.
+    var compactionAlertThreshold: Double? = nil
+    /// Whether to show the compaction alert banner.
+    var showCompactionAlert: Bool = false
+    /// Thresholds already alerted this session — prevents re-alerting at the same level.
+    private var alertedThresholds: Set<Int> = []
+
     /// Context window usage as a percentage (0–100), or nil if data not yet available.
     var contextUsagePercent: Double? {
         guard let used = contextTokensUsed, let total = contextWindowSize, total > 0 else { return nil }
@@ -840,6 +849,30 @@ class ChatViewModel {
         isSearchLoading = false
     }
 
+    // MARK: - Compaction Threshold Monitoring
+
+    /// Check context usage percent against 85%/90%/95% thresholds and trigger alerts for any
+    /// newly-crossed levels. Each threshold alerts at most once per session. The banner is shown
+    /// at the highest newly-crossed threshold.
+    private func checkCompactionThresholds() {
+        guard let percent = contextUsagePercent else { return }
+
+        let thresholds = [85, 90, 95]
+        var highestNewThreshold: Int? = nil
+
+        for threshold in thresholds {
+            if percent >= Double(threshold), !alertedThresholds.contains(threshold) {
+                alertedThresholds.insert(threshold)
+                highestNewThreshold = threshold
+            }
+        }
+
+        if let threshold = highestNewThreshold {
+            compactionAlertThreshold = Double(threshold)
+            showCompactionAlert = true
+        }
+    }
+
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
         // Find or create current assistant message.
         // Guard against re-popping injected system event messages (isSystem: true).
@@ -865,6 +898,10 @@ class ChatViewModel {
                         currentMessage.text.reserveCapacity(8192)
                     }
                     messages.append(ChatMessage.systemEvent("Session started", eventType: .sessionStarted))
+                    // Reset compaction alert state for the new session.
+                    alertedThresholds.removeAll()
+                    showCompactionAlert = false
+                    compactionAlertThreshold = nil
                 }
 
             case .assistant(let assistantMsg):
@@ -894,6 +931,9 @@ class ChatViewModel {
                 if let windowSize = resultMsg.modelUsage?.values.first?.contextWindow {
                     contextWindowSize = windowSize
                 }
+
+                // Check if usage has crossed a compaction alert threshold.
+                checkCompactionThresholds()
 
             case .permission(let permissionReq):
                 pendingPermissionRequest = permissionReq
