@@ -402,3 +402,32 @@ public struct SkillSuggestion: Codable, Sendable, Identifiable {
         self.reason = reason
     }
 }
+
+/// A session that was abandoned and is worth resuming.
+public struct AbandonedSessionSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The abandoned session.
+    public let session: ChatSession
+    /// Time elapsed since the last activity in this session, in seconds.
+    public let inactivityDuration: TimeInterval
+    /// Human-readable reason why this session is flagged as abandoned.
+    public let reason: String
+    /// Estimated completion percentage of the work in this session (0–100).
+    public let completionEstimate: Int
+
+    public init(
+        id: UUID = UUID(),
+        session: ChatSession,
+        inactivityDuration: TimeInterval,
+        reason: String,
+        completionEstimate: Int
+    ) {
+        precondition((0...100).contains(completionEstimate), "completionEstimate must be 0–100")
+        self.id = id
+        self.session = session
+        self.inactivityDuration = inactivityDuration
+        self.reason = reason
+        self.completionEstimate = completionEstimate
+    }
+}
