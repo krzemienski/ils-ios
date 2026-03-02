@@ -325,6 +325,164 @@ struct SessionFileService {
         let end = min(start + limit, total)
         return TranscriptResult(messages: Array(messages[start..<end]), total: total)
     }
+
+    // MARK: - File Change Extraction
+
+    /// Extract all files created, modified, or deleted during a session by parsing its JSONL transcript.
+    ///
+    /// Scans for `tool_use` blocks with names Write, Edit, MultiEdit, and NotebookEdit.
+    /// Deduplicates by path and infers change type: first Write → created; Edit/MultiEdit only → modified;
+    /// file no longer on disk → deleted.
+    ///
+    /// - Parameters:
+    ///   - encodedProjectPath: URL-encoded project directory name
+    ///   - sessionId: Session UUID string
+    /// - Returns: SessionFilesResponse with all touched files and project path
+    func extractFileChanges(encodedProjectPath: String, sessionId: String) throws -> SessionFilesResponse {
+        try PathSanitizer.validateComponent(encodedProjectPath)
+        try PathSanitizer.validateComponent(sessionId)
+
+        let transcriptPath = "\(claudeProjectsPath)/\(encodedProjectPath)/\(sessionId).jsonl"
+        _ = try PathSanitizer.validateWithinBase(transcriptPath, baseDirectory: claudeProjectsPath)
+
+        guard fileManager.fileExists(atPath: transcriptPath) else {
+            throw Vapor.Abort(.notFound, reason: "Transcript not found")
+        }
+
+        let projectPath = readProjectPath(encodedProjectPath: encodedProjectPath, sessionId: sessionId)
+
+        let content = try String(contentsOfFile: transcriptPath, encoding: .utf8)
+        let lines = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
+
+        let decoder = JSONDecoder()
+
+        // Ordered list of first-seen paths; lookup maps path → (seenWrite, toolNames)
+        var orderedPaths: [String] = []
+        var seenWrite: Set<String> = []
+        var toolNamesByPath: [String: [String]] = [:]
+
+        let fileToolNames: Set<String> = ["Write", "Edit", "MultiEdit", "NotebookEdit"]
+
+        for line in lines {
+            guard let lineData = line.data(using: .utf8) else { continue }
+
+            let entry: TranscriptEntry
+            do {
+                entry = try decoder.decode(TranscriptEntry.self, from: lineData)
+            } catch {
+                continue
+            }
+
+            guard entry.type == "assistant",
+                  let messageObj = entry.message,
+                  let msgContent = messageObj.content,
+                  case .blocks(let blocks) = msgContent else {
+                continue
+            }
+
+            for block in blocks {
+                guard block.type == "tool_use",
+                      let toolName = block.name,
+                      fileToolNames.contains(toolName),
+                      let input = block.input else {
+                    continue
+                }
+
+                let filePath = input.file_path ?? input.notebook_path
+                guard let filePath, !filePath.isEmpty else { continue }
+
+                if toolNamesByPath[filePath] == nil {
+                    orderedPaths.append(filePath)
+                    toolNamesByPath[filePath] = [toolName]
+                } else if !toolNamesByPath[filePath]!.contains(toolName) {
+                    toolNamesByPath[filePath]!.append(toolName)
+                }
+
+                if toolName == "Write" {
+                    seenWrite.insert(filePath)
+                }
+            }
+        }
+
+        var files: [SessionFileChange] = []
+        for path in orderedPaths {
+            guard let toolNames = toolNamesByPath[path] else { continue }
+
+            let exists = fileManager.fileExists(atPath: path)
+            let changeType: FileChangeType
+            if !exists {
+                changeType = .deleted
+            } else if seenWrite.contains(path) {
+                changeType = .created
+            } else {
+                changeType = .modified
+            }
+
+            files.append(SessionFileChange(
+                id: path,
+                path: path,
+                changeType: changeType,
+                language: inferLanguage(from: path),
+                toolNames: toolNames,
+                fileExists: exists
+            ))
+        }
+
+        return SessionFilesResponse(files: files, projectPath: projectPath, sessionId: sessionId)
+    }
+
+    /// Look up the project path for a specific session from its sessions-index.json.
+    private func readProjectPath(encodedProjectPath: String, sessionId: String) -> String? {
+        let indexPath = "\(claudeProjectsPath)/\(encodedProjectPath)/sessions-index.json"
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: indexPath)),
+              let index = try? JSONDecoder().decode(SessionsIndex.self, from: data),
+              let entry = index.entries.first(where: { $0.sessionId == sessionId }) else {
+            return nil
+        }
+        return entry.projectPath
+    }
+
+    /// Infer a programming language name from a file path extension.
+    private func inferLanguage(from path: String) -> String? {
+        let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
+        let map: [String: String] = [
+            "swift": "swift",
+            "py": "python", "pyw": "python", "ipynb": "python",
+            "js": "javascript", "mjs": "javascript", "cjs": "javascript",
+            "ts": "typescript", "mts": "typescript",
+            "jsx": "jsx", "tsx": "tsx",
+            "rs": "rust",
+            "go": "go",
+            "java": "java",
+            "kt": "kotlin", "kts": "kotlin",
+            "cs": "csharp",
+            "cpp": "cpp", "cxx": "cpp", "cc": "cpp",
+            "c": "c",
+            "h": "c", "hpp": "cpp",
+            "m": "objectivec", "mm": "objectivec",
+            "rb": "ruby",
+            "php": "php",
+            "html": "html", "htm": "html",
+            "css": "css",
+            "scss": "scss", "sass": "scss",
+            "json": "json", "jsonc": "json",
+            "yaml": "yaml", "yml": "yaml",
+            "xml": "xml",
+            "sh": "bash", "bash": "bash", "zsh": "bash",
+            "md": "markdown", "mdx": "markdown",
+            "sql": "sql",
+            "tf": "terraform", "tfvars": "terraform",
+            "vue": "vue",
+            "svelte": "svelte",
+            "r": "r",
+            "dart": "dart",
+            "lua": "lua",
+            "ex": "elixir", "exs": "elixir",
+            "toml": "toml",
+            "dockerfile": "dockerfile",
+        ]
+        return map[ext]
+    }
 }
 
 // MARK: - Transcript JSONL Codable Types
@@ -366,6 +524,13 @@ private struct TranscriptContentBlock: Decodable {
     let text: String?
     let id: String?
     let name: String?
+    let input: ToolInput?
+}
+
+/// Input parameters for file-touching tool_use blocks.
+private struct ToolInput: Decodable {
+    let file_path: String?
+    let notebook_path: String?
 }
 
 /// Codable tool call for JSON serialization in transcript parsing.

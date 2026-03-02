@@ -389,6 +389,12 @@
 		C0AC294D7A88CB4D0A765EB6 /* ConfigEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45286C1C9773FE7BBB9D215 /* ConfigEditorView.swift */; };
 		C18516CBE323057F964BE25B /* GrammarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086471F6384F852489CD04E2 /* GrammarConfig.swift */; };
 		C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C934E92FC1D3804790EA3977 /* SessionInfoView.swift */; };
+		F3A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift */; };
+		F4A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift */; };
+		F5A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift */; };
+		F6A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift */; };
+		F7A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift */; };
+		F8A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift */; };
 		C2DFE4871ACAB73B9963E4C5 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */; };
 		C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF28218E9C1558FAA5057AA6 /* ElectricGridTheme.swift */; };
 		C39791242B5B5EE3EEBD84FD /* SystemMetricsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */; };
@@ -753,6 +759,9 @@
 		C7833DDD0453FC543AF33950 /* Scenario03_StreamingAndCancellation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario03_StreamingAndCancellation.swift; sourceTree = "<group>"; };
 		C82F89BCFDD21A13377F020D /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		C934E92FC1D3804790EA3977 /* SessionInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
+		F0A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFileBrowserViewModel.swift; sourceTree = "<group>"; };
+		F1A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFileBrowserView.swift; sourceTree = "<group>"; };
+		F2A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFilePreviewView.swift; sourceTree = "<group>"; };
 		C97B54AA46C4307B025310A2 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		CA64C24264E1BEDA2EC9E517 /* Scenario11_ExtendedChatConversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario11_ExtendedChatConversation.swift; sourceTree = "<group>"; };
 		CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsViewModel.swift; sourceTree = "<group>"; };
@@ -1064,6 +1073,8 @@
 			children = (
 				C82F89BCFDD21A13377F020D /* NewSessionView.swift */,
 				C934E92FC1D3804790EA3977 /* SessionInfoView.swift */,
+				F1A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift */,
+				F2A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -1362,6 +1373,7 @@
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
 				6467EED7EF5D1DC029D1DD90 /* FileBrowserViewModel.swift */,
+				F0A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift */,
 				8911A1661FBAAAB37B3E9A26 /* HooksViewModel.swift */,
 				E458E0F73BE10EE4A59B8143 /* HostProfileDetailViewModel.swift */,
 				ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */,
@@ -1833,6 +1845,9 @@
 				C91D0C6AEB24E92082E31794 /* FeatureGateView.swift in Sources */,
 				3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */,
 				BD794553406B0E1E893D5D10 /* FileBrowserViewModel.swift in Sources */,
+				F3A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift in Sources */,
+				F4A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift in Sources */,
+				F5A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift in Sources */,
 				436203F1ECBB5A3566E37C71 /* GetSessionInfoIntent.swift in Sources */,
 				1AD445E68A4CE66079ED20C3 /* GhostProtocolTheme.swift in Sources */,
 				97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */,
@@ -2066,6 +2081,9 @@
 				6BFA87146F9663D99F2E85A9 /* FeatureGateView.swift in Sources */,
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AA317934D4936BCE1D3FAFE6 /* FileBrowserViewModel.swift in Sources */,
+				F6A1B2C3D4E5F60718293A4B /* SessionFileBrowserViewModel.swift in Sources */,
+				F7A1B2C3D4E5F60718293A4B /* SessionFileBrowserView.swift in Sources */,
+				F8A1B2C3D4E5F60718293A4B /* SessionFilePreviewView.swift in Sources */,
 				AF776B6CC6CDA97E71F1466C /* GetSessionInfoIntent.swift in Sources */,
 				021CE9A40CA38D09371544DD /* GhostProtocolTheme.swift in Sources */,
 				614ADE90776981AC136C0148 /* GitHubPreviewView.swift in Sources */,
