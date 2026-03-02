@@ -27,6 +27,7 @@ struct SessionInfoView: View {
     @State private var viewModel = SessionInfoViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
+    @State private var showModelUpdatedToast = false
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
@@ -57,7 +58,39 @@ struct SessionInfoView: View {
                 List {
                     Section("Session Details") {
                         LabeledContent("Name", value: displaySession.name ?? "Unnamed")
-                        LabeledContent("Model", value: displaySession.model.capitalized)
+
+                        // Editable model picker
+                        let currentModel = displaySession.model
+                        Picker("Model", selection: Binding(
+                            get: { currentModel },
+                            set: { newModel in
+                                guard newModel != currentModel else { return }
+                                Task {
+                                    let success = await viewModel.updateModel(
+                                        sessionId: displaySession.id,
+                                        model: newModel
+                                    )
+                                    if success {
+                                        HapticManager.notification(.success)
+                                        showModelUpdatedToast = true
+                                    } else {
+                                        HapticManager.notification(.error)
+                                    }
+                                }
+                            }
+                        )) {
+                            ForEach(ClaudeModel.allKnown, id: \.rawValue) { model in
+                                Text(model.displayName).tag(model.rawValue)
+                            }
+                        }
+                        .tint(.accentColor)
+                        .disabled(viewModel.isUpdatingModel)
+                        .overlay(alignment: .trailing) {
+                            if viewModel.isUpdatingModel {
+                                ProgressView().scaleEffect(0.7).padding(.trailing, 28)
+                            }
+                        }
+
                         LabeledContent("Status", value: displaySession.status.rawValue.capitalized)
                         LabeledContent("Messages", value: "\(displaySession.messageCount)")
                     }
@@ -153,6 +186,7 @@ struct SessionInfoView: View {
             ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
         }
         .toast(isPresented: $showCopiedToast, message: "Session ID copied")
+        .toast(isPresented: $showModelUpdatedToast, message: "Model updated")
         .task {
             viewModel.configure(client: appState.apiClient)
             await viewModel.loadSession(id: session.id)

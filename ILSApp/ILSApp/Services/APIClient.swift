@@ -333,6 +333,25 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
+    func patch<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = try encoder.encode(body)
+        applyAuth(to: &request)
+
+        let (data, response) = try await performWithRetry(request: request)
+        try validateResponse(response, data: data)
+
+        invalidateCacheForMutation(path: path)
+
+        return try decoder.decode(T.self, from: data)
+    }
+
     func delete<T: Decodable>(_ path: String) async throws -> T {
         guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
             throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
