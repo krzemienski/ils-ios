@@ -161,6 +161,9 @@ final class NLSessionQueryParser: Sendable {
     private func extractStatus(from text: String, tokens: inout [String]) -> SessionStatus? {
         let patterns: [(pattern: String, status: SessionStatus, words: [String])] = [
             ("\\bwith\\s+errors?\\b",     .error,     ["with", "error", "errors"]),
+            ("\\bhad\\s+errors?\\b",      .error,     ["had", "error", "errors"]),
+            ("\\bhas\\s+errors?\\b",      .error,     ["has", "error", "errors"]),
+            ("\\bhave\\s+errors?\\b",     .error,     ["have", "error", "errors"]),
             ("\\berror\\s+sessions?\\b",  .error,     ["error", "session", "sessions"]),
             ("\\berrored\\b",             .error,     ["errored"]),
             ("\\bfailed\\b",              .error,     ["failed"]),
@@ -246,6 +249,7 @@ final class NLSessionQueryParser: Sendable {
     private static let stopWords: Set<String> = [
         "a", "an", "the", "and", "or", "not", "for", "in", "on", "at", "to", "from",
         "with", "of", "is", "are", "was", "were", "be", "been", "being",
+        "that", "which", "who", "those", "these",
         "session", "sessions", "about", "show", "find", "search", "get",
         "me", "my", "i", "all", "any", "using", "use",
     ]
