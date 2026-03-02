@@ -43,6 +43,8 @@ struct SidebarView: View {
     var onSessionSelected: (ChatSession) -> Void
     /// Number of unread activity events to display as a badge on the Activity Feed nav item.
     var activityFeedUnreadCount: Int = 0
+    /// Number of pending permission requests to display as a badge on the Permissions nav item.
+    var permissionsPendingCount: Int = 0
 
     @FocusState private var isSearchFocused: Bool
     /// The session currently being renamed, if any.
@@ -296,6 +298,12 @@ struct SidebarView: View {
                     label: "Activity Feed",
                     screen: .activityFeed,
                     badge: activityFeedUnreadCount
+                )
+                sidebarNavItem(
+                    icon: "checkmark.shield.fill",
+                    label: "Permissions",
+                    screen: .permissions,
+                    badge: permissionsPendingCount
                 )
                 if enableAgentTeams {
                     sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
@@ -686,7 +694,8 @@ struct SidebarView: View {
         switch (activeScreen, screen) {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
-             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed):
+             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
+             (.permissions, .permissions):
             return true
         case (.chat, .chat):
             return true

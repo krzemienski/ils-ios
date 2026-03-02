@@ -19,6 +19,7 @@ enum ActiveScreen: Hashable {
     case themes
     case hooks
     case activityFeed
+    case permissions
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -36,6 +37,7 @@ enum ActiveScreen: Hashable {
         case .themes: return "themes"
         case .hooks: return "hooks"
         case .activityFeed: return "activityFeed"
+        case .permissions: return "permissions"
         }
     }
 
@@ -51,6 +53,7 @@ enum ActiveScreen: Hashable {
         case "themes": return .themes
         case "hooks": return .hooks
         case "activityFeed": return .activityFeed
+        case "permissions": return .permissions
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -241,7 +244,8 @@ struct SidebarRootView: View {
                 onSessionSelected: { session in
                     navigateToChat(session)
                 },
-                activityFeedUnreadCount: activityFeedVM.unreadCount
+                activityFeedUnreadCount: activityFeedVM.unreadCount,
+                permissionsPendingCount: appState.permissionService.pendingPermissions.count
             )
             .background(theme.bgSidebar)
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
@@ -304,6 +308,8 @@ struct SidebarRootView: View {
                     hooksScreen
                 case .activityFeed:
                     activityFeedScreen
+                case .permissions:
+                    permissionsScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -372,7 +378,8 @@ struct SidebarRootView: View {
                 onSessionSelected: { session in
                     navigateToChat(session)
                 },
-                activityFeedUnreadCount: activityFeedVM.unreadCount
+                activityFeedUnreadCount: activityFeedVM.unreadCount,
+                permissionsPendingCount: appState.permissionService.pendingPermissions.count
             )
             .frame(width: sidebarWidth)
 
@@ -442,6 +449,11 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var hooksScreen: some View {
         HooksManagementView()
+    }
+
+    @ViewBuilder
+    private var permissionsScreen: some View {
+        PermissionInboxView()
     }
 
     @ViewBuilder
