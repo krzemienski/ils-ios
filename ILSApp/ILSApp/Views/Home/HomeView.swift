@@ -34,6 +34,7 @@ import TipKit
 struct HomeView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(MultiSessionViewModel.self) private var multiSessionVM
 
     /// View model that loads dashboard statistics, sparkline data, and entity counts.
     @State private var dashboardVM = DashboardViewModel()
@@ -422,6 +423,17 @@ struct HomeView: View {
                     color: theme.entityMCP
                 ) {
                     onNavigate?(.system)
+                }
+
+                if sessionsVM.totalCount >= 2 {
+                    QuickActionCard(
+                        icon: "rectangle.split.2x2.fill",
+                        title: "Monitor Sessions",
+                        subtitle: "\(sessionsVM.totalCount) sessions",
+                        color: theme.accent
+                    ) {
+                        onNavigate?(.splitView)
+                    }
                 }
             }
             .shimmerIfActive(isRefreshing)

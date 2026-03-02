@@ -562,6 +562,25 @@ struct ChatView: View {
             .accessibilityIdentifier("search-messages-button")
         }
 
+        // Pin/Unpin button — iPad and Mac only (regular horizontal size class).
+        if horizontalSizeClass == .regular {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                let isPinned = multiSessionVM.isPinned(session)
+                Button {
+                    if isPinned {
+                        multiSessionVM.unpinSession(session)
+                    } else {
+                        multiSessionVM.pinSession(session)
+                    }
+                    HapticManager.selection()
+                } label: {
+                    Image(systemName: isPinned ? "pin.fill" : "pin")
+                        .foregroundStyle(isPinned ? theme.accent : theme.textSecondary)
+                }
+                .accessibilityLabel(isPinned ? "Unpin from Split View" : "Pin to Split View")
+                .accessibilityIdentifier("pin-session-button")
+            }
+        }
 
         ToolbarItem(placement: .primaryAction) {
             Menu {
