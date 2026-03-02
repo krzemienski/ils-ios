@@ -102,6 +102,14 @@ struct SessionInfoView: View {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 12) {
                     Button {
+                        dismiss()
+                        appState.navigationIntent = .sessionForkTree(displaySession)
+                    } label: {
+                        Image(systemName: "arrow.triangle.branch")
+                    }
+                    .accessibilityLabel("View Fork Tree")
+
+                    Button {
                         Task { await bookmarksManager.toggleBookmark(session: displaySession) }
                     } label: {
                         Image(
