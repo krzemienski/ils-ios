@@ -68,6 +68,8 @@ struct SettingsView: View {
 
                 iCloudSyncSection
 
+                quickReplySection
+
                 SettingsAboutSection(
                     viewModel: viewModel,
                     serverURL: serverURL
@@ -313,6 +315,40 @@ struct SettingsView: View {
         Circle()
             .fill(color)
             .frame(width: 8, height: 8)
+    }
+
+    // MARK: - Quick Reply Section
+
+    private var quickReplySection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("QUICK REPLY")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+                .padding(.horizontal, theme.spacingXS)
+
+            let customCount = QuickReplyTemplateManager.shared.customTemplates.count
+
+            NavigationLink(destination: QuickReplyTemplatesSettingsView()) {
+                HStack {
+                    Label("Quick Reply Templates", systemImage: "text.bubble")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    if customCount > 0 {
+                        Text("\(customCount) custom")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+            }
+            .modifier(GlassCard())
+        }
     }
 
     // MARK: - Server URL Management
