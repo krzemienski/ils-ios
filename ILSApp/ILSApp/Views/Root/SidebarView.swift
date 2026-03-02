@@ -352,39 +352,56 @@ struct SidebarView: View {
             .padding(.top, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 
-            // Search bar
-            HStack(spacing: theme.spacingSM) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                TextField("Search sessions...", text: $sessionsViewModel.searchText)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .accessibilityLabel("Search sessions")
-                    .focused($isSearchFocused)
-                    .onChange(of: sessionsViewModel.searchText) { _, _ in
-                        sessionsViewModel.scheduleSearchDebounce()
-                    }
-                if !sessionsViewModel.searchText.isEmpty {
-                    Button {
-                        sessionsViewModel.clearSearch()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
+            // Search bar with NL indicator
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                    TextField("Search or ask in plain English...", text: $sessionsViewModel.searchText)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .accessibilityLabel("Search sessions")
+                        .focused($isSearchFocused)
+                        .onChange(of: sessionsViewModel.searchText) { _, _ in
+                            sessionsViewModel.scheduleSearchDebounce()
+                        }
+                    if sessionsViewModel.parsedQuery != nil {
+                        Image(systemName: "sparkles")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
-                            .frame(minWidth: 44, minHeight: 44)
-                            .contentShape(Rectangle())
+                            .foregroundStyle(theme.accent)
+                            .accessibilityLabel("Smart search active")
                     }
-                    .accessibilityLabel("Clear search")
+                    if !sessionsViewModel.searchText.isEmpty {
+                        Button {
+                            sessionsViewModel.clearSearch()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("Clear search")
+                    }
+                }
+                .padding(.horizontal, theme.spacingSM)
+                .padding(.vertical, theme.spacingXS + 2)
+                .background(theme.bgSecondary)
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+                .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
+
+                if sessionsViewModel.parsedQuery != nil {
+                    QueryExplanationView(
+                        parsedQuery: $sessionsViewModel.parsedQuery,
+                        clearAll: { sessionsViewModel.clearSearch() }
+                    )
+                    .padding(.top, theme.spacingXS)
                 }
             }
-            .padding(.horizontal, theme.spacingSM)
-            .padding(.vertical, theme.spacingXS + 2)
-            .background(theme.bgSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            .focusRing(isFocused: isSearchFocused, cornerRadius: theme.cornerRadiusSmall)
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
+            .animation(.easeInOut(duration: 0.2), value: sessionsViewModel.parsedQuery != nil)
 
             // Cache freshness indicator
             HStack {
@@ -468,6 +485,10 @@ struct SidebarView: View {
                         isActive: isSessionActive(session),
                         searchText: sessionsViewModel.searchText
                     ) {
+                        QueryLearningService.shared.recordSessionSelected(
+                            forQuery: sessionsViewModel.searchText,
+                            session: session
+                        )
                         onSessionSelected(session)
                         isSidebarOpen = false
                     }
