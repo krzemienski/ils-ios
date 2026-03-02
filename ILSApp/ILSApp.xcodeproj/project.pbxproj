@@ -235,6 +235,7 @@
 		755A46A5480B96B3E3346CDB /* SnowTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F38C9481FF1206F75E66FC2 /* SnowTheme.swift */; };
 		76651B70B53608CBBAD32F5B /* c017e206-ef61-48e1-a961-d2f1a19f55ed.json in Resources */ = {isa = PBXBuildFile; fileRef = A078748E32E0DE2D16C443CD /* c017e206-ef61-48e1-a961-d2f1a19f55ed.json */; };
 		7666DDC50F812E38DC02D4F7 /* LaunchScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */; };
+		B4A3F2E1D0C9B8A7F6E5D4C3 /* ModelStatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B0C1D2E3F4A5B6C7D8 /* ModelStatsViewModel.swift */; };
 		771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D0E074EDB98AF5C6081747A /* SessionInfoViewModel.swift */; };
 		785167CB10426EA706CF5506 /* AppIconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DEA312D98D14A52FD03359 /* AppIconGenerator.swift */; };
 		7881297466215E48E11C6D37 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52FFD26C242D9641EFF5D8D /* CodeBlockView.swift */; };
@@ -378,6 +379,7 @@
 		BA4690875BCC009661B3AFAF /* MarkdownParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */; };
 		BA49ABF453422C572715383B /* ThemesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */; };
 		BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A5E088C4FDB1B4F32EED35 /* AppTips.swift */; };
+		D5E6F7A8B9C0D1E2F3A4B5C6 /* ModelStatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F8A9B0C1D2E3F4A5B6C7D8 /* ModelStatsViewModel.swift */; };
 		BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D0E074EDB98AF5C6081747A /* SessionInfoViewModel.swift */; };
 		BB7FC3BF5ADA8EFA06BFB61C /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E8702D461A0CF80E44F404 /* ConnectionSteps.swift */; };
 		BB8F5CDE74990B193B24E4EC /* AdvancedOptionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5F82ABB45EB40D8130FBC5 /* AdvancedOptionsSheet.swift */; };
@@ -421,6 +423,7 @@
 		D18F6B5DB10E4016BC0C8632 /* ConfigEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */; };
 		D1F086F32783A95DF775F5AF /* CustomThemeAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677E11407A3F745C1D85E232 /* CustomThemeAdapter.swift */; };
 		D246CAA1C1D72CFEF773AD08 /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* ModelStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* ModelStatsView.swift */; };
 		D274CFF4D4B6D6521ABE75F0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2839D9B4F57064D597B4D3 /* SettingsView.swift */; };
 		D27CDEB3FFF8814B55E98B49 /* ObsidianTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20728850B297F9D25F6F821B /* ObsidianTheme.swift */; };
 		D34412D635D61666C3E92EDE /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ECE4D8717C9C64D19FE78B2 /* OnboardingView.swift */; };
@@ -454,6 +457,7 @@
 		E2546FA4477DDC7F5D5B161A /* SnowTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F38C9481FF1206F75E66FC2 /* SnowTheme.swift */; };
 		E3232091BD3461B7459F07F9 /* ProcessListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */; };
 		E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77899531B324530342B03A8 /* DashboardViewModel.swift */; };
+		F2E1D0C9B8A7F6E5D4C3B2A1 /* ModelStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* ModelStatsView.swift */; };
 		E3636731594B2808A893643F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2839D9B4F57064D597B4D3 /* SettingsView.swift */; };
 		E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */; };
 		E40DD2C368904D059EF66C6F /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64417034D7BE8F3619B3BC06 /* HapticManager.swift */; };
@@ -630,6 +634,7 @@
 		56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
 		586B7AA21B4A73C7E651752C /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		59590E5FFF289E598D2F6A1C /* ServerStatusWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStatusWidget.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* ModelStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelStatsView.swift; sourceTree = "<group>"; };
 		5A2839D9B4F57064D597B4D3 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		5A407AD5B2B5CE78C2E654FD /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		5B063E0171777AF37C867320 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
@@ -704,6 +709,7 @@
 		9931211AAA50959FAEC7FE5C /* ProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
 		9A2ADA5B1B55F397D6388991 /* FileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserView.swift; sourceTree = "<group>"; };
 		9C85DAB670BA54FB286CD4DE /* Scenario05_ProjectManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario05_ProjectManagement.swift; sourceTree = "<group>"; };
+		E7F8A9B0C1D2E3F4A5B6C7D8 /* ModelStatsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelStatsViewModel.swift; sourceTree = "<group>"; };
 		9D0E074EDB98AF5C6081747A /* SessionInfoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInfoViewModel.swift; sourceTree = "<group>"; };
 		9DA80A16219E8B10F3AF048F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A0258956E713A6D6A3940159 /* ThemePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewView.swift; sourceTree = "<group>"; };
@@ -1012,6 +1018,7 @@
 				24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */,
 				1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */,
 				35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* ModelStatsView.swift */,
 				5A2839D9B4F57064D597B4D3 /* SettingsView.swift */,
 				276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */,
 				16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */,
@@ -1365,6 +1372,7 @@
 				8E4E9B9B4ADFE072002F72ED /* ProjectsViewModel.swift */,
 				C2D3E4F5A6B7C8D9E0F1A2B3 /* OnboardingViewModel.swift */,
 				35367103C9FE83F6E8A44C34 /* QuickConnectViewModel.swift */,
+				E7F8A9B0C1D2E3F4A5B6C7D8 /* ModelStatsViewModel.swift */,
 				9D0E074EDB98AF5C6081747A /* SessionInfoViewModel.swift */,
 				D42504430548D6626CEB65C9 /* SessionsViewModel.swift */,
 				B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */,
@@ -1910,6 +1918,7 @@
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
 				B4E2A9F1C3D7805E6A2F4B8C /* ModelComparisonView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
+				D5E6F7A8B9C0D1E2F3A4B5C6 /* ModelStatsViewModel.swift in Sources */,
 				817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */,
 				5C1BE37B321699D1338D5A18 /* SessionWidget.swift in Sources */,
 				E6F992C4BA5DAA01E1C28291 /* SessionsViewModel.swift in Sources */,
@@ -1917,6 +1926,7 @@
 				AFB2F0196A4B23CDC4E2AA58 /* SettingsAppearanceSection.swift in Sources */,
 				C6D516D0B12632DD577997BE /* SettingsConfigSection.swift in Sources */,
 				2861DF0F0B3AE3315C8A640D /* SettingsConnectionSection.swift in Sources */,
+				F2E1D0C9B8A7F6E5D4C3B2A1 /* ModelStatsView.swift in Sources */,
 				D274CFF4D4B6D6521ABE75F0 /* SettingsView.swift in Sources */,
 				9138C1BC26EAD042F2AB2F32 /* SettingsViewModel.swift in Sources */,
 				AB0127F0C4093D3564679661 /* SetupViewModel.swift in Sources */,
@@ -2148,6 +2158,7 @@
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
 				A1F3C7B2D9E04856F2A8C1D3 /* ModelComparisonView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
+				B4A3F2E1D0C9B8A7F6E5D4C3 /* ModelStatsViewModel.swift in Sources */,
 				66CB3A8E1A407714CC9E3B12 /* SessionTemplate.swift in Sources */,
 				26B89816D115402D4EC07DCF /* SessionWidget.swift in Sources */,
 				AB361433854827B55D401375 /* SessionWindowView.swift in Sources */,
@@ -2156,6 +2167,7 @@
 				7E20D349B94982ECBD47D88D /* SettingsAppearanceSection.swift in Sources */,
 				D442E177F99016622A2B12BD /* SettingsConfigSection.swift in Sources */,
 				0B795C2658DA7688801A82A6 /* SettingsConnectionSection.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* ModelStatsView.swift in Sources */,
 				E3636731594B2808A893643F /* SettingsView.swift in Sources */,
 				32AA980EC98A8A99A588BCF3 /* SettingsViewModel.swift in Sources */,
 				7DB91923C08F5FAE3ED4DFF3 /* SetupViewModel.swift in Sources */,
