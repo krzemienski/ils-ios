@@ -352,4 +352,68 @@ struct SuggestionService {
             )
         }
     }
+
+    // MARK: - Smart Continuation
+
+    /// Generate a smart continuation summary for a session based on its recent messages.
+    ///
+    /// Algorithm:
+    /// 1. Extract the last 5 user messages.
+    /// 2. Tokenize their combined content, counting token frequencies.
+    /// 3. Select the top 5 tokens as key topics.
+    /// 4. Compose a summary and a ready-to-use resume prompt.
+    ///
+    /// - Parameters:
+    ///   - session: The session to summarize.
+    ///   - messages: All messages in the session (any order; method finds the most recent).
+    /// - Returns: A `ContinuationSummary` ready to present to the user as a resume prompt.
+    func buildContinuationSummary(session: ChatSession, messages: [Message]) -> ContinuationSummary {
+        // Extract the last 5 user messages in chronological order
+        let userMessages = messages
+            .filter { $0.role == .user }
+            .sorted { $0.createdAt < $1.createdAt }
+            .suffix(5)
+
+        // Count token frequencies across all extracted user messages
+        var tokenFrequencies: [String: Int] = [:]
+        for message in userMessages {
+            let tokens = tokenize(message.content)
+            for token in tokens {
+                tokenFrequencies[token, default: 0] += 1
+            }
+        }
+
+        // Top 5 tokens by frequency as key topics
+        let keyTopics = tokenFrequencies
+            .sorted { $0.value > $1.value || ($0.value == $1.value && $0.key < $1.key) }
+            .prefix(5)
+            .map { $0.key }
+
+        // Build a human-readable summary
+        let sessionName = session.name ?? "this session"
+        let summary: String
+        if keyTopics.isEmpty {
+            summary = "You were working in \"\(sessionName)\" with \(messages.count) messages."
+        } else {
+            let topicsPhrase = keyTopics.joined(separator: ", ")
+            summary = "You were working in \"\(sessionName)\" on topics: \(topicsPhrase)."
+        }
+
+        // Generate a suggested resume prompt
+        let suggestedPrompt: String
+        if keyTopics.isEmpty {
+            suggestedPrompt = "Let's continue where we left off in \"\(sessionName)\"."
+        } else {
+            let firstTopic = keyTopics[0]
+            suggestedPrompt = "Let's continue where we left off. Last time we were discussing \(firstTopic) — please summarize the current state and suggest next steps."
+        }
+
+        return ContinuationSummary(
+            sessionId: session.id,
+            summary: summary,
+            suggestedPrompt: suggestedPrompt,
+            keyTopics: keyTopics,
+            messageCount: userMessages.count
+        )
+    }
 }
