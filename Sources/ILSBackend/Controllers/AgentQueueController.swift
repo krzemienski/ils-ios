@@ -137,6 +137,7 @@ struct AgentQueueController: RouteCollection {
             projectId: projectId,
             priority: priority,
             position: maxPosition + 1,
+            executionMode: input.executionMode ?? .sequential,
             dependsOn: dependsOnStr
         )
 

@@ -173,19 +173,23 @@ public struct CreateQueueItemRequest: Codable, Sendable {
     public let priority: Int?
     /// IDs of queue items that must complete before this one starts.
     public let dependsOn: [String]?
+    /// Execution mode for this item (nil defaults to .sequential on the backend).
+    public let executionMode: QueueExecutionMode?
 
     public init(
         title: String,
         description: String? = nil,
         projectId: String? = nil,
         priority: Int? = nil,
-        dependsOn: [String]? = nil
+        dependsOn: [String]? = nil,
+        executionMode: QueueExecutionMode? = nil
     ) {
         self.title = title
         self.description = description
         self.projectId = projectId
         self.priority = priority
         self.dependsOn = dependsOn
+        self.executionMode = executionMode
     }
 }
 

@@ -313,11 +313,11 @@ struct AddQueueTaskView: View {
                 .tint(priorityColor)
 
             HStack {
-                Text("Low")
+                Text("High")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                 Spacer()
-                Text("High")
+                Text("Low")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
@@ -329,10 +329,10 @@ struct AddQueueTaskView: View {
 
     private var priorityColor: Color {
         switch Int(priority) {
-        case 1...3: return theme.success
-        case 4...6: return .yellow
-        case 7...9: return .orange
-        default: return theme.error
+        case 1...3: return theme.error       // low number = high urgency = runs first
+        case 4...6: return .orange
+        case 7...9: return .yellow
+        default:    return theme.success     // high number = low urgency = runs last
         }
     }
 
@@ -493,7 +493,8 @@ struct AddQueueTaskView: View {
             title: title.trimmingCharacters(in: .whitespaces),
             description: prompt.trimmingCharacters(in: .whitespaces),
             projectId: selectedProject.map { $0.id.uuidString },
-            priority: Int(priority)
+            priority: Int(priority),
+            executionMode: executionMode
         )
         isSubmitting = false
         if viewModel.error == nil {

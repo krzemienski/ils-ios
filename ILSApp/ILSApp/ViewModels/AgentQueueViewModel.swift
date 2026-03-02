@@ -51,6 +51,7 @@ class AgentQueueViewModel {
         description: String?,
         projectId: String?,
         priority: Int?,
+        executionMode: QueueExecutionMode? = nil,
         dependsOn: [String]? = nil
     ) async {
         isLoading = true
@@ -61,7 +62,8 @@ class AgentQueueViewModel {
                 description: description,
                 projectId: projectId,
                 priority: priority,
-                dependsOn: dependsOn
+                dependsOn: dependsOn,
+                executionMode: executionMode
             )
             let response: APIResponse<AgentQueueItem> = try await apiClient.post("/queue", body: request)
             if response.success {
