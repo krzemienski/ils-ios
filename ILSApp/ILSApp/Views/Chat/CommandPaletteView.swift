@@ -52,6 +52,8 @@ struct CommandPaletteView: View {
 
     /// Called with the formatted command string when the user selects an entry.
     let onSelect: (String) -> Void
+    /// When true, the full documentation sheet is presented.
+    @State private var showDocumentation = false
 
     var body: some View {
         List {
@@ -84,6 +86,16 @@ struct CommandPaletteView: View {
                         } label: {
                             Label(model.capitalized, systemImage: "cpu")
                         }
+                    }
+                }
+
+                // Documentation quick-access
+                Section("Documentation") {
+                    Button {
+                        showDocumentation = true
+                    } label: {
+                        Label("View Full Documentation", systemImage: "book")
+                            .foregroundStyle(theme.accent)
                     }
                 }
             }
@@ -120,6 +132,11 @@ struct CommandPaletteView: View {
             debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showDocumentation) {
+            NavigationStack {
+                DocumentationView()
+            }
+        }
     }
 
     /// The complete set of 16 supported slash commands, shown unfiltered when search is empty.

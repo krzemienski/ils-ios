@@ -141,9 +141,10 @@ struct ChatMessageList: View {
                 .id("load-more")
             }
 
-            // H-SP1: Use Array.enumerated() for O(1) prev-message lookup
+            // H-SP1: Use zip(indices, messages) for O(1) prev-message lookup
             // instead of O(n) firstIndex(where:) which caused O(n²) per render.
-            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
+            // SPERF-MED-6: zip avoids the intermediate Array allocation of enumerated().
+            ForEach(Array(zip(messages.indices, messages)), id: \.1.id) { index, message in
                 let prevMessage: ChatMessage? = index > 0 ? messages[index - 1] : nil
                 // System messages are never grouped with adjacent messages.
                 let isSameSender = !message.isSystem

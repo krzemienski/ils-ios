@@ -178,11 +178,20 @@ class ChatViewModel {
         messages.count > messageWindowSize
     }
 
+    // MARK: - Fork Result (ARCH-CRIT-3)
+    /// Set by `performFork()` so ChatView can navigate to the forked session via `.onChange`.
+    var forkResult: ChatSession?
+
     // MARK: - Batching Properties
     private var pendingStreamMessages: [StreamMessage] = []
     @ObservationIgnored private var batchTask: Task<Void, Never>?
-    private let batchInterval: TimeInterval = 0.075
+    // ENRG-HIGH-01: Increased from 75ms to 150ms to reduce CPU wakeups during streaming.
+    private let batchInterval: TimeInterval = 0.150
     private var lastProcessedMessageIndex = 0
+    /// Consecutive flush cycles with no pending messages.
+    private var idleCycles = 0
+    /// After this many idle cycles, slow the timer to 500ms to save energy.
+    private let idleThreshold = 3
 
     init() {}
 
@@ -328,16 +337,31 @@ class ChatViewModel {
         })
     }
 
-    /// Start the batch timer to flush pending messages at regular intervals
+    /// Start the batch timer to flush pending messages at regular intervals.
+    /// ENRG-HIGH-01: Adaptively slows to 500ms after `idleThreshold` consecutive
+    /// empty flushes, reducing CPU wakeups when no data is arriving.
     private func startBatchTimer() {
         guard batchTask == nil else { return }
+        idleCycles = 0
 
         batchTask = Task { [weak self] in
-            let intervalNanos = UInt64((self?.batchInterval ?? 0.075) * 1_000_000_000)
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: intervalNanos)
+                let interval: UInt64
+                if let self, self.idleCycles >= self.idleThreshold {
+                    interval = 500_000_000 // 500ms when idle
+                } else {
+                    interval = UInt64((self?.batchInterval ?? 0.150) * 1_000_000_000)
+                }
+                try? await Task.sleep(nanoseconds: interval)
                 guard !Task.isCancelled else { break }
-                self?.flushPendingMessages()
+                if let self {
+                    if self.pendingStreamMessages.isEmpty {
+                        self.idleCycles += 1
+                    } else {
+                        self.idleCycles = 0
+                        self.flushPendingMessages()
+                    }
+                }
             }
         }
     }
@@ -831,6 +855,11 @@ class ChatViewModel {
             AppLogger.shared.error("Failed to fork session: \(error)", category: "chat")
             return nil
         }
+    }
+
+    /// ARCH-CRIT-3: Fork and set `forkResult` so ChatView can navigate via `.onChange`.
+    func performFork() async {
+        forkResult = await forkSession()
     }
 
     // MARK: - Search

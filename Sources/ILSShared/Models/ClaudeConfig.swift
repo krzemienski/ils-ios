@@ -237,6 +237,11 @@ public struct HooksConfig: Codable, Hashable, Sendable {
     public var sessionStart: [HookGroup]? { events["SessionStart"] }
     /// Hooks triggered when subagent starts.
     public var subagentStart: [HookGroup]? { events["SubagentStart"] }
+
+    /// Total number of individual hooks across all event types.
+    public var totalHookCount: Int {
+        events.values.reduce(0) { $0 + $1.count }
+    }
 }
 
 /// Group of hooks with optional matcher pattern.

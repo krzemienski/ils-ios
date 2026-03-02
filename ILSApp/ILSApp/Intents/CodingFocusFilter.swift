@@ -48,7 +48,7 @@ struct CodingFocusFilter: SetFocusFilterIntent {
 
     /// Creates a new ILS session for the focus period.
     private func createFocusSession(named sessionName: String) async throws {
-        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
         guard let url = URL(string: "\(baseURL)/api/v1/sessions") else { return }
 
         struct SessionBody: Encodable {

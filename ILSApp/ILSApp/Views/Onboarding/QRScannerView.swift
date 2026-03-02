@@ -119,6 +119,11 @@ struct QRScannerView: View {
             .onAppear {
                 startScanLineAnimation(frameSize: frameSize)
             }
+            .onDisappear {
+                withAnimation(.linear(duration: 0.0)) {
+                    isAnimatingScanLine = false
+                }
+            }
         }
     }
 
@@ -378,10 +383,10 @@ private struct QRCameraPreviewView: UIViewRepresentable {
 final class QRScannerCoordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
     let session = AVCaptureSession()
     var previewLayer: AVCaptureVideoPreviewLayer?
-    private let onScanned: (String) -> Void
+    private let onScanned: @Sendable (String) -> Void
     private var isRunning = false
 
-    init(onScanned: @escaping (String) -> Void) {
+    init(onScanned: @escaping @Sendable (String) -> Void) {
         self.onScanned = onScanned
         super.init()
         configureSession()

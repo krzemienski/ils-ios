@@ -3,7 +3,7 @@
 > A native iOS & macOS client for [Claude Code](https://claude.ai/claude-code) with a Swift backend
 
 [![Build](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml/badge.svg)](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml)
-[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
 [![iOS](https://img.shields.io/badge/iOS-17.0+-blue.svg)](https://developer.apple.com/ios/)
 [![macOS](https://img.shields.io/badge/macOS-14.0+-blue.svg)](https://developer.apple.com/macos/)
 [![Vapor](https://img.shields.io/badge/Vapor-4.0-purple.svg)](https://vapor.codes)
@@ -79,7 +79,7 @@ ils-ios/
 
 - **macOS** 15.0+ (Sequoia or later)
 - **Xcode** 16.0+ with iOS 18 SDK
-- **Swift** 6.0+
+- **Swift** 5.10+
 - **Claude Code CLI** installed and configured (optional, for full functionality)
 
 ## Quick Start

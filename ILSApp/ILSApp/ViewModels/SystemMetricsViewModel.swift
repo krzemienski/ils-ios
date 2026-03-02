@@ -140,6 +140,13 @@ final class SystemMetricsViewModel {
         stopProcessAutoRefresh()
     }
 
+    /// Full cleanup: stop auto-refresh, disconnect metrics client, and invalidate URLSession.
+    /// Call from view's onDisappear to release network resources (NET-MED-4).
+    func cleanup() {
+        disconnect()
+        session.invalidateAndCancel()
+    }
+
     /// Updates the base URL for both WebSocket and REST endpoints.
     /// Disconnects existing connections, replaces the MetricsWebSocketClient, and clears stale process data.
     func updateBaseURL(_ url: String) {

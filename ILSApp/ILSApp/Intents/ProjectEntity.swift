@@ -44,7 +44,7 @@ struct ProjectEntityQuery: EntityQuery {
     // MARK: - Private
 
     private func fetchProjects() async throws -> [ProjectEntity] {
-        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
         guard let url = URL(string: "\(baseURL)/api/v1/projects?limit=50") else {
             return []
         }

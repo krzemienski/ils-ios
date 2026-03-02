@@ -61,6 +61,16 @@ struct ThemePickerView: View {
         GridItem(.flexible(), spacing: 12)
     ]
 
+    @State private var customThemeSnapshots: [ThemeSnapshot] = []
+    @State private var availableThemeIDs: Set<String> = []
+
+    private func refreshThemeCaches() {
+        availableThemeIDs = Set(themeManager.availableThemes.map(\.id))
+        customThemeSnapshots = themeManager.availableThemes
+            .filter { $0.id.hasPrefix("custom-") }
+            .map { ThemeSnapshot($0) }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: theme.spacingMD) {
@@ -78,12 +88,12 @@ struct ThemePickerView: View {
                 }
 
                 // Custom themes (registered via CustomThemeAdapter)
-                if !customThemes.isEmpty {
+                if !customThemeSnapshots.isEmpty {
                     sectionLabel("Custom")
 
                     LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(customThemes, id: \.id) { customTheme in
-                            customThemeCard(customTheme)
+                        ForEach(customThemeSnapshots, id: \.id) { snapshot in
+                            customThemeCardFromSnapshot(snapshot)
                         }
                     }
                 }
@@ -96,17 +106,8 @@ struct ThemePickerView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
-    }
-
-    // MARK: - Custom Themes (filtered outside body)
-
-    private var customThemes: [any AppTheme] {
-        themeManager.availableThemes.filter { $0.id.hasPrefix("custom-") }
-    }
-
-    /// Pre-computed set of available theme IDs for O(1) lookup in themeCard()
-    private var availableThemeIDs: Set<String> {
-        Set(themeManager.availableThemes.map(\.id))
+        .task { refreshThemeCaches() }
+        .onChange(of: themeManager.availableThemes.count) { _, _ in refreshThemeCaches() }
     }
 
     // MARK: - Section Label
@@ -118,19 +119,19 @@ struct ThemePickerView: View {
             .tracking(1)
     }
 
-    // MARK: - Custom Theme Card
+    // MARK: - Custom Theme Card (from ThemeSnapshot)
 
     @ViewBuilder
-    private func customThemeCard(_ appTheme: any AppTheme) -> some View {
-        let isActive = themeManager.currentTheme.id == appTheme.id
-        let snapshot = ThemeSnapshot(appTheme)
+    private func customThemeCardFromSnapshot(_ snapshot: ThemeSnapshot) -> some View {
+        let isActive = themeManager.currentTheme.id == snapshot.id
+        let isLight = snapshot.isLight
 
         Button {
             if reduceMotion {
-                themeManager.setTheme(appTheme.id)
+                themeManager.setTheme(snapshot.id)
             } else {
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    themeManager.setTheme(appTheme.id)
+                    themeManager.setTheme(snapshot.id)
                 }
             }
         } label: {
@@ -197,13 +198,13 @@ struct ThemePickerView: View {
 
                 VStack(spacing: 6) {
                     HStack(spacing: 4) {
-                        swatchCircle(snapshot.bgPrimary, border: appTheme.isLight)
+                        swatchCircle(snapshot.bgPrimary, border: isLight)
                         swatchCircle(snapshot.accent, border: false)
-                        swatchCircle(snapshot.textPrimary, border: appTheme.isLight)
-                        swatchCircle(snapshot.bgSecondary, border: appTheme.isLight)
+                        swatchCircle(snapshot.textPrimary, border: isLight)
+                        swatchCircle(snapshot.bgSecondary, border: isLight)
                     }
 
-                    Text(appTheme.name)
+                    Text(snapshot.name)
                         .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .regular, design: theme.fontDesign))
                         .foregroundStyle(isActive ? theme.accent : theme.textPrimary)
                         .lineLimit(1)
@@ -217,7 +218,7 @@ struct ThemePickerView: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(appTheme.name) theme\(isActive ? ", active" : "")")
+        .accessibilityLabel("\(snapshot.name) theme\(isActive ? ", active" : "")")
     }
 
     // MARK: - Theme Card

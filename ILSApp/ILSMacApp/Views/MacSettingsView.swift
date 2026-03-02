@@ -299,10 +299,10 @@ struct MacSettingsView: View {
                         ],
                         spacing: theme.spacingMD
                     ) {
-                        statItem("Sessions", value: "\(stats.sessions)")
-                        statItem("Projects", value: "\(stats.projects)")
-                        statItem("Skills", value: "\(stats.skills)")
-                        statItem("MCP Servers", value: "\(stats.mcpServers)")
+                        statItem("Sessions", value: "\(stats.sessions.total)")
+                        statItem("Projects", value: "\(stats.projects.total)")
+                        statItem("Skills", value: "\(stats.skills.total)")
+                        statItem("MCP Servers", value: "\(stats.mcpServers.total)")
                     }
                 }
                 .padding(theme.spacingMD)

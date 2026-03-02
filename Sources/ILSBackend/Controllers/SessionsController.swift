@@ -2,6 +2,11 @@ import Vapor
 import Fluent
 import ILSShared
 
+// MARK: - Vapor Content Conformances
+
+extension SessionFilesResponse: Content {}
+extension SessionFileChange: Content {}
+
 /// Controller for session management operations.
 ///
 /// Routes:
@@ -18,6 +23,7 @@ import ILSShared
 /// - `GET /sessions/:id/messages/search?q=`: Search within a session's messages
 /// - `GET /sessions/:id/export?format=`: Export session as JSON, Markdown, or plain text
 /// - `GET /sessions/transcript/:encodedProjectPath/:sessionId`: Read external session transcript
+/// - `GET /sessions/transcript/:encodedProjectPath/:sessionId/files`: List files changed in session
 struct SessionsController: RouteCollection {
     let fileSystem: FileSystemService
 
@@ -44,6 +50,7 @@ struct SessionsController: RouteCollection {
 
         let transcriptGroup = sessions.grouped("transcript")
         transcriptGroup.get(":encodedProjectPath", ":sessionId", use: transcript)
+        transcriptGroup.get(":encodedProjectPath", ":sessionId", "files", use: transcriptFiles)
     }
 
     /// List all sessions (DB + external) with unified pagination, dedup, search, and sort.
@@ -472,6 +479,27 @@ struct SessionsController: RouteCollection {
             success: true,
             data: ListResponse(items: result.messages, total: result.total)
         )
+    }
+
+    /// List all files created, modified, or deleted in an external session's transcript.
+    /// - Parameter req: Vapor Request with encodedProjectPath and sessionId parameters
+    /// - Returns: APIResponse with SessionFilesResponse listing all touched files
+    @Sendable
+    func transcriptFiles(req: Request) async throws -> APIResponse<SessionFilesResponse> {
+        guard let encodedProjectPath = req.parameters.get("encodedProjectPath"),
+              let sessionId = req.parameters.get("sessionId") else {
+            throw Abort(.badRequest, reason: "Missing project path or session ID")
+        }
+
+        try PathSanitizer.validateComponent(encodedProjectPath)
+        try PathSanitizer.validateComponent(sessionId)
+
+        let result = try fileSystem.extractFileChanges(
+            encodedProjectPath: encodedProjectPath,
+            sessionId: sessionId
+        )
+
+        return APIResponse(success: true, data: result)
     }
 
     // MARK: - Message Search

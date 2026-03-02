@@ -316,7 +316,7 @@ struct SettingsConfigSection: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 if let config = viewModel.config?.content {
                     if let hooks = config.hooks {
-                        let hookCount = countHooks(hooks)
+                        let hookCount = hooks.totalHookCount
                         NavigationLink {
                             HooksManagementView()
                         } label: {
@@ -516,10 +516,6 @@ struct SettingsConfigSection: View {
 
     // MARK: - Helpers
 
-    func countHooks(_ hooks: HooksConfig) -> Int {
-        hooks.events.values.reduce(0) { $0 + $1.count }
-    }
-
     /// Reads pre-computed hook event breakdown from ViewModel
     /// instead of building filtered arrays inline in the view body.
     @ViewBuilder
@@ -545,6 +541,15 @@ struct SettingsConfigSection: View {
             Spacer()
             SettingsInfoButton(text: tooltip)
         }
+    }
+}
+
+// MARK: - HooksConfig Extension
+
+extension HooksConfig {
+    /// Total number of hook entries across all event types.
+    var totalHookCount: Int {
+        events.values.reduce(0) { $0 + $1.count }
     }
 }
 
