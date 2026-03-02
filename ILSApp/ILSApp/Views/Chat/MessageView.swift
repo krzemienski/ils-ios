@@ -362,7 +362,7 @@ struct MessageContentView: View {
                                 #endif
                                 showCopyConfirmation = true
                             }) {
-                                Label("Copy Text", systemImage: "doc.on.doc")
+                                Label("Copy", systemImage: "doc.on.doc")
                                     .accessibilityHint("Copies this text segment to clipboard")
                             }
                         }
