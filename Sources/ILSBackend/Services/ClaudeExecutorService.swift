@@ -54,7 +54,9 @@ actor ClaudeExecutorService {
 
     /// GCD queue for blocking stdout reads (avoids RunLoop dependency).
     /// `let` property — nonisolated by default on actors, safe to access from nonisolated methods.
-    private let readQueue = DispatchQueue(label: "ils.claude-stdout-reader", qos: .userInitiated)
+    /// MUST be concurrent: each execute() call dispatches a blocking readStdout loop.
+    /// A serial queue would cause starvation — one stuck process blocks all subsequent reads.
+    private let readQueue = DispatchQueue(label: "ils.claude-stdout-reader", qos: .userInitiated, attributes: .concurrent)
 
     /// Thread-safe boolean for sharing timeout state across GCD queues.
     /// Replaces bare `var didTimeout = false` which was a data race between
@@ -72,8 +74,14 @@ actor ClaudeExecutorService {
     /// Resolve which execution backend to use for a given request.
     /// Explicit `.sdk` or `.cli` in options overrides auto-detection.
     /// Auto-detection: SDK if `CLAUDECODE` env var present, CLI otherwise.
-    private static func resolveBackend(options: ExecutionOptions) -> ExecutionBackend {
+    /// - Throws: `Abort(.serviceUnavailable)` if CLI mode is explicitly requested inside a CC session.
+    private static func resolveBackend(options: ExecutionOptions) throws -> ExecutionBackend {
         if let explicit = options.backend, explicit != .auto {
+            // Guard: explicit CLI mode inside a Claude Code session will hang indefinitely
+            // because Claude CLI's nesting detection blocks subprocess execution.
+            if explicit == .cli && ProcessInfo.processInfo.environment["CLAUDECODE"] != nil {
+                throw Abort(.serviceUnavailable, reason: "CLI mode is unavailable inside a Claude Code session. The Claude CLI nesting detection blocks subprocess execution. Use backend: \"sdk\" or \"auto\" instead.")
+            }
             return explicit
         }
         // Inside a Claude Code session → SDK (avoids CLI nesting hang)
@@ -145,7 +153,15 @@ actor ClaudeExecutorService {
         workingDirectory: String?,
         options: ExecutionOptions
     ) -> AsyncThrowingStream<StreamMessage, Error> {
-        let backend = Self.resolveBackend(options: options)
+        let backend: ExecutionBackend
+        do {
+            backend = try Self.resolveBackend(options: options)
+        } catch {
+            // Return a stream that immediately throws (e.g. 503 for CLI inside CC session)
+            return AsyncThrowingStream { continuation in
+                continuation.finish(throwing: error)
+            }
+        }
         Self.logger.debug("Using backend: \(backend.rawValue)")
         switch backend {
         case .sdk, .auto:
