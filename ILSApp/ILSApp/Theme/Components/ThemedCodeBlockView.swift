@@ -36,6 +36,8 @@ struct ThemedCodeBlockView: View {
     @State private var contentWidth: CGFloat = 0
     @State private var viewWidth: CGFloat = 0
     @State private var scrollOffset: CGFloat = 0
+    @State private var zoomFontSize: CGFloat = 13
+    @GestureState private var magnifyBy: CGFloat = 0
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -139,6 +141,21 @@ struct ThemedCodeBlockView: View {
                 }
             }
         }
+        .simultaneousGesture(
+            MagnificationGesture()
+                .updating($magnifyBy) { value, state, _ in
+                    state = (value - 1.0) * zoomFontSize
+                }
+                .onEnded { value in
+                    zoomFontSize = min(max(zoomFontSize * value, 10), 28)
+                }
+        )
+        .simultaneousGesture(
+            TapGesture(count: 2)
+                .onEnded {
+                    zoomFontSize = 13
+                }
+        )
     }
 
     // MARK: - Scroll Gradient Overlay
@@ -164,15 +181,19 @@ struct ThemedCodeBlockView: View {
 
     // MARK: - Code Text
 
+    private var effectiveFontSize: CGFloat {
+        min(max(zoomFontSize + magnifyBy, 10), 28)
+    }
+
     private var codeText: some View {
         Group {
             if let highlighted = highlightedCode {
                 Text(highlighted)
-                    .font(.system(size: 13, design: theme.fontDesign))
+                    .font(.system(size: effectiveFontSize, design: theme.fontDesign))
                     .textSelection(.enabled)
             } else {
                 Text(code)
-                    .font(.system(size: 13, design: theme.fontDesign))
+                    .font(.system(size: effectiveFontSize, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
                     .textSelection(.enabled)
             }
