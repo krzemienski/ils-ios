@@ -105,6 +105,8 @@ struct MacContentView: View {
             }
             .navigationSplitViewColumnWidth(min: 600, ideal: 800)
         }
+        .environment(multiSessionVM)
+        .environment(sessionsViewModel)
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
             activityFeedVM.configure(client: appState.apiClient)
