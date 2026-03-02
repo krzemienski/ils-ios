@@ -336,6 +336,55 @@ public struct BulkDeleteSessionsRequest: Codable, Sendable {
     }
 }
 
+// MARK: - Session Fork Tree
+
+/// A single node in the session fork tree, representing one session with its children.
+///
+/// Used by ``SessionForkTreeResponse`` to describe the full lineage of a session family.
+public struct SessionForkNode: Codable, Sendable {
+    /// Unique identifier of this session node.
+    public let id: UUID
+    /// Full session data for display in the tree.
+    public let session: ChatSession
+    /// IDs of sessions that were directly forked from this session.
+    public let children: [UUID]
+    /// Depth of this node from the root (root = 0).
+    public let depth: Int
+
+    /// Creates a fork tree node.
+    /// - Parameters:
+    ///   - id: Unique identifier of this session node.
+    ///   - session: Full session data for display in the tree.
+    ///   - children: IDs of sessions that were directly forked from this session.
+    ///   - depth: Depth of this node from the root (root = 0).
+    public init(id: UUID, session: ChatSession, children: [UUID], depth: Int) {
+        self.id = id
+        self.session = session
+        self.children = children
+        self.depth = depth
+    }
+}
+
+/// Response containing the complete fork lineage for a session family.
+///
+/// Returned by `GET /sessions/:id/fork-tree`. Includes all sessions reachable
+/// from the root of the fork tree (ancestor or descendant of the requested session).
+public struct SessionForkTreeResponse: Codable, Sendable {
+    /// All sessions belonging to this fork family, in breadth-first order.
+    public let sessions: [ChatSession]
+    /// ID of the root session (the session with no `forkedFrom` ancestor).
+    public let rootId: UUID
+
+    /// Creates a fork tree response.
+    /// - Parameters:
+    ///   - sessions: All sessions belonging to this fork family.
+    ///   - rootId: ID of the root session (no `forkedFrom` ancestor).
+    public init(sessions: [ChatSession], rootId: UUID) {
+        self.sessions = sessions
+        self.rootId = rootId
+    }
+}
+
 // MARK: - Message Search
 
 /// A message search result with session context.
