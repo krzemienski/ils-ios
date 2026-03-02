@@ -9,9 +9,12 @@ import ILSShared
 /// - `POST /sessions`: Create a new session
 /// - `GET /sessions/scan`: Scan for external Claude Code sessions
 /// - `GET /sessions/search?q=`: Search across all session messages
+/// - `GET /sessions/model-stats`: Aggregate model usage statistics across all sessions
+/// - `POST /sessions/suggest-model`: Smart model routing suggestion
 /// - `GET /sessions/:id`: Get a specific session
 /// - `PUT /sessions/:id`: Rename a session
 /// - `DELETE /sessions/:id`: Delete a session
+/// - `PATCH /sessions/:id/model`: Update the model of an existing session
 /// - `POST /sessions/bulk-delete`: Bulk-delete sessions by ID array
 /// - `POST /sessions/:id/fork`: Fork a session (duplicates session + all messages)
 /// - `GET /sessions/:id/messages`: Get session messages with pagination
@@ -33,9 +36,12 @@ struct SessionsController: RouteCollection {
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get("search", use: searchAll)
+        sessions.get("model-stats", use: modelStats)
+        sessions.post("suggest-model", use: suggestModel)
         sessions.get(":id", use: get)
         sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
+        sessions.patch(":id", "model", use: updateModel)
         sessions.post("bulk-delete", use: bulkDelete)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "messages", use: messages)
@@ -594,6 +600,119 @@ struct SessionsController: RouteCollection {
         return APIResponse(
             success: true,
             data: ListResponse(items: results, total: total)
+        )
+    }
+
+    // MARK: - Model Stats
+
+    /// Return aggregated model usage statistics across all DB sessions.
+    ///
+    /// Groups `SessionModel` records by their `model` field, computes session
+    /// counts and cumulative costs, and returns a `ModelStatsResponse`.
+    ///
+    /// - Parameter req: Vapor Request (no query params required)
+    /// - Returns: APIResponse with ModelStatsResponse
+    @Sendable
+    func modelStats(req: Request) async throws -> APIResponse<ModelStatsResponse> {
+        let sessions = try await SessionModel.query(on: req.db).all()
+
+        let total = sessions.count
+
+        // Group by model string, accumulating session counts and costs
+        var counts: [String: Int] = [:]
+        var costs: [String: Double] = [:]
+        for session in sessions {
+            let model = session.model
+            counts[model, default: 0] += 1
+            if let cost = session.totalCostUSD {
+                costs[model, default: 0.0] += cost
+            }
+        }
+
+        // Build per-model stats, sorted by session count descending
+        let stats = counts.map { model, count in
+            ModelUsageStat(
+                model: model,
+                sessionCount: count,
+                totalCostUSD: costs[model],
+                percentage: total > 0 ? Double(count) / Double(total) : 0.0
+            )
+        }.sorted { $0.sessionCount > $1.sessionCount }
+
+        let dominantModel = stats.first?.model
+
+        return APIResponse(
+            success: true,
+            data: ModelStatsResponse(
+                stats: stats,
+                totalSessions: total,
+                dominantModel: dominantModel
+            )
+        )
+    }
+
+    // MARK: - Model Routing
+
+    /// Suggest the optimal Claude model for a given prompt and budget.
+    ///
+    /// Decodes a `ModelRoutingRequest`, applies `ModelRoutingService` heuristics,
+    /// and returns a `ModelRoutingResponse` with the recommended model and reasoning.
+    ///
+    /// - Parameter req: Vapor Request with ModelRoutingRequest body
+    /// - Returns: APIResponse with ModelRoutingResponse
+    @Sendable
+    func suggestModel(req: Request) async throws -> APIResponse<ModelRoutingResponse> {
+        let input = try req.content.decode(ModelRoutingRequest.self)
+
+        try PathSanitizer.validateStringLength(input.prompt, maxLength: 10_000, fieldName: "prompt")
+
+        let routing = ModelRoutingService()
+        let response = routing.suggestModel(
+            prompt: input.prompt,
+            maxBudgetUSD: input.maxBudgetUSD,
+            preferSpeed: input.preferSpeed
+        )
+
+        return APIResponse(success: true, data: response)
+    }
+
+    // MARK: - Update Session Model
+
+    /// Update the Claude model of an existing session.
+    ///
+    /// Validates that the provided model string is a known Claude model identifier
+    /// (haiku, sonnet, opus, or a `claude-` prefixed string), then persists the change.
+    ///
+    /// - Parameter req: Vapor Request with id parameter and UpdateSessionModelRequest body
+    /// - Returns: APIResponse with updated ChatSession
+    @Sendable
+    func updateModel(req: Request) async throws -> APIResponse<ChatSession> {
+        guard let id = req.parameters.get("id", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        let input = try req.content.decode(UpdateSessionModelRequest.self)
+
+        // Validate model string — must be a known short name or claude- prefixed identifier
+        try PathSanitizer.validateStringLength(input.model, maxLength: 128, fieldName: "model")
+        let validShortNames = Set(["haiku", "sonnet", "opus"])
+        guard validShortNames.contains(input.model.lowercased()) || input.model.lowercased().hasPrefix("claude-") else {
+            throw Abort(.badRequest, reason: "Invalid model '\(input.model)'. Must be 'haiku', 'sonnet', 'opus', or a 'claude-' prefixed identifier.")
+        }
+
+        guard let session = try await SessionModel.query(on: req.db)
+            .filter(\.$id == id)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        session.model = input.model
+        try await session.save(on: req.db)
+
+        return APIResponse(
+            success: true,
+            data: session.toShared(projectName: session.project?.name)
         )
     }
 

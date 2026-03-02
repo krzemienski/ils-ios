@@ -216,6 +216,13 @@ extension SessionSuggestion: Content {}
 extension SkillSuggestion: Content {}
 extension SuggestionFeedbackRequest: Content {}
 
+// MARK: - Model Routing & Stats Types
+extension ModelRoutingRequest: Content {}
+extension ModelRoutingResponse: Content {}
+extension ModelUsageStat: Content {}
+extension ModelStatsResponse: Content {}
+extension UpdateSessionModelRequest: Content {}
+
 // MARK: - Activity Feed Types
 extension ActivityEvent: Content {}
 extension ActivityEventType: Content {}

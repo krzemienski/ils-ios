@@ -326,6 +326,16 @@ public struct RenameSessionRequest: Codable, Sendable {
     }
 }
 
+/// Request to update the Claude model of an existing session.
+public struct UpdateSessionModelRequest: Codable, Sendable {
+    /// New model identifier (e.g., `"haiku"`, `"sonnet"`, `"opus"`, or a `claude-` prefixed string).
+    public let model: String
+
+    public init(model: String) {
+        self.model = model
+    }
+}
+
 /// Request to bulk-delete sessions by ID.
 public struct BulkDeleteSessionsRequest: Codable, Sendable {
     /// Array of session UUIDs to delete.
