@@ -410,6 +410,7 @@
 		CBD5157E794754AFE5F7C9EF /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */; };
 		CBEE11D4F11C220DCBD5A6E9 /* WidgetDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */; };
 		CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E65F9892954F605C2737A7D /* TeamsViewModel.swift */; };
+		5C7D4E2A1B9F3068CD45FA76 /* AgentQueueViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8F2A1C9D4E7056AB12EF34 /* AgentQueueViewModel.swift */; };
 		CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */; };
 		CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */; };
 		D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
@@ -469,6 +470,7 @@
 		E9F1870916A648BFA1C77E16 /* ThemeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05E3DDA4E3B80E90339047E5 /* ThemeEditorView.swift */; };
 		EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF28218E9C1558FAA5057AA6 /* ElectricGridTheme.swift */; };
 		EA50F3DD9DF1DD3671207F86 /* TeamsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E65F9892954F605C2737A7D /* TeamsViewModel.swift */; };
+		A2E9C5B73F1D84520EF6BD98 /* AgentQueueViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8F2A1C9D4E7056AB12EF34 /* AgentQueueViewModel.swift */; };
 		EAD907D86498A92874D45BE4 /* CreateTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E489C56C978287BD1DD024E7 /* CreateTeamView.swift */; };
 		EBC4AEF3138579540CBF2BF8 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFB567C31A55DDB5B2954EB /* ILSShared */; };
 		EE1AE6148F4B027B97CFCFD3 /* PermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */; };
@@ -655,6 +657,7 @@
 		6B5A3A7DE6A8C29B6859190C /* NewSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionViewModel.swift; sourceTree = "<group>"; };
 		6CB6410FDBABFD56EC9C9B28 /* Scenario08_SettingsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario08_SettingsConfiguration.swift; sourceTree = "<group>"; };
 		6E65F9892954F605C2737A7D /* TeamsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamsViewModel.swift; sourceTree = "<group>"; };
+		3B8F2A1C9D4E7056AB12EF34 /* AgentQueueViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentQueueViewModel.swift; sourceTree = "<group>"; };
 		6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateView.swift; sourceTree = "<group>"; };
 		6F254EBBAABE0F2400CF42A6 /* CrimsonTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrimsonTheme.swift; sourceTree = "<group>"; };
 		6F38C9481FF1206F75E66FC2 /* SnowTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowTheme.swift; sourceTree = "<group>"; };
@@ -1370,6 +1373,7 @@
 				BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */,
 				CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */,
 				6E65F9892954F605C2737A7D /* TeamsViewModel.swift */,
+				3B8F2A1C9D4E7056AB12EF34 /* AgentQueueViewModel.swift */,
 				C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */,
 				83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */,
 			);
@@ -1943,6 +1947,7 @@
 				742E4A30A3011E8A41756395 /* TeamMessagesView.swift in Sources */,
 				DBA18F9D1D0027EB921CAF22 /* TeamTaskListView.swift in Sources */,
 				EA50F3DD9DF1DD3671207F86 /* TeamsViewModel.swift in Sources */,
+				A2E9C5B73F1D84520EF6BD98 /* AgentQueueViewModel.swift in Sources */,
 				1CBB9F38CB8BEEA61EFEAB1D /* ThemeColorTokensSection.swift in Sources */,
 				966812B5294CDA773D94B897 /* ThemeCornerRadiusSection.swift in Sources */,
 				40F5BFCA27CF950AED4747DD /* ThemeEditorView.swift in Sources */,
@@ -2185,6 +2190,7 @@
 				0454FDC092D6ECF573218246 /* TeamMessagesView.swift in Sources */,
 				065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */,
 				CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */,
+				5C7D4E2A1B9F3068CD45FA76 /* AgentQueueViewModel.swift in Sources */,
 				66583D69D1D8DDC05D825FB8 /* ThemeColorTokensSection.swift in Sources */,
 				741655D824027E96EF77609F /* ThemeCornerRadiusSection.swift in Sources */,
 				E9F1870916A648BFA1C77E16 /* ThemeEditorView.swift in Sources */,
