@@ -35,6 +35,8 @@ struct SuggestionsController: RouteCollection {
     /// Query parameters:
     /// - `context`: Free-text context for keyword scoring (optional, default empty)
     /// - `projectName`: Boost sessions from the same project (optional)
+    /// - `gitBranch`: Current git branch name; sessions whose content matches branch
+    ///   tokens receive an additional relevance boost (optional)
     /// - `limit`: Max results to return (1–50, default 5)
     ///
     /// - Parameter req: Vapor Request
@@ -43,6 +45,7 @@ struct SuggestionsController: RouteCollection {
     func sessions(req: Request) async throws -> APIResponse<ListResponse<SessionSuggestion>> {
         let context = req.query[String.self, at: "context"] ?? ""
         let projectName = req.query[String.self, at: "projectName"]
+        let gitBranch = req.query[String.self, at: "gitBranch"]
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 5, 1), 50)
 
         // 1. Load DB sessions
@@ -71,6 +74,7 @@ struct SuggestionsController: RouteCollection {
             from: allSessions,
             context: context,
             projectName: projectName,
+            gitBranch: gitBranch,
             limit: limit,
             clickCounts: clickCounts
         )

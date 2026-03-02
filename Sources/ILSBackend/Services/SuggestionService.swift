@@ -106,12 +106,15 @@ struct SuggestionService {
 
     /// Score and rank sessions by relevance to the given context.
     ///
-    /// Scoring formula: `0.6 * keyword_overlap + 0.2 * recency_boost + 0.2 * click_boost`
+    /// Scoring formula:
+    /// `0.5 * keyword_overlap + 0.15 * recency_boost + 0.15 * click_boost + 0.1 * git_branch_boost + 0.1 * time_of_day_boost`
     ///
     /// - Parameters:
     ///   - sessions: All available sessions to score.
     ///   - context: Free-text context (current session name, prompt, etc.).
     ///   - projectName: Optional project name to boost same-project sessions.
+    ///   - gitBranch: Optional current git branch name; sessions whose content matches
+    ///     branch tokens receive a 0.1 weight boost.
     ///   - limit: Maximum number of suggestions to return.
     ///   - clickCounts: User interaction history keyed by session UUID string.
     /// - Returns: Ranked array of `SessionSuggestion` with score > 0.05.
@@ -119,11 +122,13 @@ struct SuggestionService {
         from sessions: [ChatSession],
         context: String,
         projectName: String?,
+        gitBranch: String? = nil,
         limit: Int,
         clickCounts: [String: Int]
     ) -> [SessionSuggestion] {
         let contextTokens = tokenize(context)
         let projectTokens = projectName.map { tokenize($0) } ?? Set<String>()
+        let gitBranchTokens = gitBranch.map { tokenize($0) } ?? Set<String>()
         let now = Date()
 
         // Max click count for normalisation (avoid division by zero)
@@ -154,7 +159,22 @@ struct SuggestionService {
             let clicks = clickCounts[session.id.uuidString.lowercased()] ?? 0
             let clickBoost = Double(clicks) / Double(maxClicks)
 
-            let finalScore = 0.6 * keywordScore + 0.2 * recencyBoost + 0.2 * clickBoost
+            // Git branch boost — 1.0 if any branch token appears in session tokens, else 0.0
+            let gitBranchBoost: Double
+            if !gitBranchTokens.isEmpty && !sessionTokens.isEmpty {
+                gitBranchBoost = gitBranchTokens.intersection(sessionTokens).isEmpty ? 0.0 : 1.0
+            } else {
+                gitBranchBoost = 0.0
+            }
+
+            // Time-of-day boost — sessions last active at a similar hour get a boost
+            let timeOfDayBoost = computeTimeOfDayBoost(sessionLastActive: session.lastActiveAt, now: now)
+
+            let finalScore = 0.5 * keywordScore
+                + 0.15 * recencyBoost
+                + 0.15 * clickBoost
+                + 0.1 * gitBranchBoost
+                + 0.1 * timeOfDayBoost
 
             scored.append((session: session, score: finalScore))
         }
@@ -166,14 +186,14 @@ struct SuggestionService {
             .prefix(limit)
 
         return filtered.map { item in
+            let sessionText = [item.session.name, item.session.firstPrompt, item.session.projectName]
+                .compactMap { $0 }
+                .joined(separator: " ")
             let reason = buildSessionReason(
                 session: item.session,
                 contextTokens: contextTokens,
-                sessionTokens: tokenize(
-                    [item.session.name, item.session.firstPrompt, item.session.projectName]
-                        .compactMap { $0 }
-                        .joined(separator: " ")
-                ),
+                sessionTokens: tokenize(sessionText),
+                gitBranchTokens: gitBranchTokens,
                 score: item.score
             )
             return SessionSuggestion(
@@ -184,13 +204,37 @@ struct SuggestionService {
         }
     }
 
+    /// Compute a boost for sessions that were last active at a similar time of day.
+    ///
+    /// Uses circular hour distance with exponential decay over a 4-hour window.
+    /// Peaks at 1.0 when the session's last-active hour matches the current hour exactly,
+    /// and decays to ~0.37 at a 4-hour difference.
+    ///
+    /// - Parameters:
+    ///   - sessionLastActive: When the session was last active.
+    ///   - now: Current timestamp.
+    /// - Returns: Boost value in [0.0, 1.0].
+    private func computeTimeOfDayBoost(sessionLastActive: Date, now: Date) -> Double {
+        let calendar = Calendar.current
+        let currentHour = calendar.component(.hour, from: now)
+        let sessionHour = calendar.component(.hour, from: sessionLastActive)
+        let rawDiff = abs(currentHour - sessionHour)
+        let circularDiff = min(rawDiff, 24 - rawDiff)
+        return exp(-Double(circularDiff) / 4.0)
+    }
+
     /// Build a human-readable reason for a session suggestion.
     private func buildSessionReason(
         session: ChatSession,
         contextTokens: Set<String>,
         sessionTokens: Set<String>,
+        gitBranchTokens: Set<String>,
         score: Double
     ) -> String {
+        // Git branch match is the most specific signal — check first
+        if !gitBranchTokens.isEmpty && !gitBranchTokens.intersection(sessionTokens).isEmpty {
+            return "Active on current branch"
+        }
         let shared = contextTokens.intersection(sessionTokens)
         if !shared.isEmpty {
             let keywords = shared.sorted().prefix(3).joined(separator: ", ")
