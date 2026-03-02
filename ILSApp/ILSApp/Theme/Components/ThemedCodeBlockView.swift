@@ -39,6 +39,7 @@ struct ThemedCodeBlockView: View {
     @State private var zoomFontSize: CGFloat = 13
     @GestureState private var magnifyBy: CGFloat = 0
     @AppStorage("codeblock.lineNumbers") private var showLineNumbers: Bool = false
+    @State private var showFullScreen = false
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -58,6 +59,15 @@ struct ThemedCodeBlockView: View {
         .task(id: theme.isLight) {
             await performHighlight(isLight: theme.isLight)
         }
+        #if os(iOS)
+        .fullScreenCover(isPresented: $showFullScreen) {
+            CodeBlockFullScreenView(
+                language: detectedLanguage ?? language,
+                code: code,
+                highlightedCode: highlightedCode
+            )
+        }
+        #endif
     }
 
     // MARK: - Header
@@ -80,6 +90,19 @@ struct ThemedCodeBlockView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(showLineNumbers ? "Hide line numbers" : "Show line numbers")
             .accessibilityIdentifier("code-block-line-numbers-toggle")
+
+            #if os(iOS)
+            Button(action: { showFullScreen = true }) {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 13, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Expand code block to full screen")
+            .accessibilityIdentifier("code-block-expand-button")
+            #endif
 
             Button(action: copyCode) {
                 HStack(spacing: 4) {
@@ -290,3 +313,138 @@ struct ThemedCodeBlockView: View {
         }
     }
 }
+
+// MARK: - Full Screen View
+
+#if os(iOS)
+/// Full-screen presentation of a code block with horizontal scrolling,
+/// zoom gesture support, and copy/dismiss toolbar buttons.
+struct CodeBlockFullScreenView: View {
+    let language: String?
+    let code: String
+    let highlightedCode: AttributedString?
+
+    @State private var showCopied = false
+    @State private var zoomFontSize: CGFloat = 13
+    @GestureState private var magnifyBy: CGFloat = 0
+    @AppStorage("codeblock.lineNumbers") private var showLineNumbers: Bool = false
+    @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView([.vertical, .horizontal], showsIndicators: true) {
+                codeText
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(theme.bgTertiary)
+            .navigationTitle(language ?? "code")
+            .inlineNavigationBarTitle()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .medium, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                    .accessibilityLabel("Dismiss full screen code viewer")
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(action: copyCode) {
+                        HStack(spacing: 4) {
+                            Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            Text(showCopied ? "Copied" : "Copy")
+                                .font(.system(size: 13, weight: .medium, design: theme.fontDesign))
+                        }
+                        .foregroundStyle(showCopied ? theme.success : theme.accent)
+                    }
+                    .accessibilityLabel(showCopied ? "Code copied to clipboard" : "Copy code to clipboard")
+                }
+            }
+        }
+        .simultaneousGesture(
+            MagnificationGesture()
+                .updating($magnifyBy) { value, state, _ in
+                    state = (value - 1.0) * zoomFontSize
+                }
+                .onEnded { value in
+                    zoomFontSize = min(max(zoomFontSize * value, 10), 28)
+                }
+        )
+        .simultaneousGesture(
+            TapGesture(count: 2)
+                .onEnded {
+                    zoomFontSize = 13
+                }
+        )
+    }
+
+    // MARK: - Code Text
+
+    private var effectiveFontSize: CGFloat {
+        min(max(zoomFontSize + magnifyBy, 10), 28)
+    }
+
+    private var codeLines: [String] {
+        code.components(separatedBy: "\n")
+    }
+
+    private var lineNumbersColumn: some View {
+        VStack(alignment: .trailing, spacing: 0) {
+            ForEach(Array(codeLines.enumerated()), id: \.offset) { index, _ in
+                Text("\(index + 1)")
+                    .font(.system(size: effectiveFontSize, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .padding(.vertical, 2)
+                    .frame(minWidth: 30, alignment: .trailing)
+            }
+        }
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingSM)
+        .accessibilityHidden(true)
+    }
+
+    private var codeText: some View {
+        HStack(alignment: .top, spacing: 0) {
+            if showLineNumbers {
+                lineNumbersColumn
+                Rectangle()
+                    .fill(theme.textTertiary.opacity(0.3))
+                    .frame(width: 1)
+                    .accessibilityHidden(true)
+            }
+
+            Group {
+                if let highlighted = highlightedCode {
+                    Text(highlighted)
+                        .font(.system(size: effectiveFontSize, design: theme.fontDesign))
+                        .textSelection(.enabled)
+                } else {
+                    Text(code)
+                        .font(.system(size: effectiveFontSize, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .textSelection(.enabled)
+                }
+            }
+            .padding(theme.spacingSM)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier("code-block-fullscreen-content")
+            .accessibilityLabel("Code: \(code)")
+        }
+    }
+
+    // MARK: - Actions
+
+    private func copyCode() {
+        UIPasteboard.general.string = code
+        HapticManager.notification(.success)
+        showCopied = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            showCopied = false
+        }
+    }
+}
+#endif
