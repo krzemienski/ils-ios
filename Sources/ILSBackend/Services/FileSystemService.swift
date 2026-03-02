@@ -452,4 +452,13 @@ struct FileSystemService {
     func readTranscriptMessages(encodedProjectPath: String, sessionId: String, limit: Int = 100, offset: Int = 0) throws -> SessionFileService.TranscriptResult {
         try sessions.readTranscriptMessages(encodedProjectPath: encodedProjectPath, sessionId: sessionId, limit: limit, offset: offset)
     }
+
+    /// Extract all files created, modified, or deleted during a session by parsing its JSONL transcript.
+    /// - Parameters:
+    ///   - encodedProjectPath: URL-encoded project directory name
+    ///   - sessionId: Session UUID string
+    /// - Returns: SessionFilesResponse with all touched files and project path
+    func extractFileChanges(encodedProjectPath: String, sessionId: String) throws -> SessionFilesResponse {
+        try sessions.extractFileChanges(encodedProjectPath: encodedProjectPath, sessionId: sessionId)
+    }
 }
