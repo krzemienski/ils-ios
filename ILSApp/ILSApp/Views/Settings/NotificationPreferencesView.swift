@@ -19,6 +19,7 @@ import SwiftUI
 /// - ``mcpOfflineAlerts`` - Alert when an MCP server goes offline
 /// - ``mcpOnlineAlerts`` - Alert when an MCP server comes back online
 /// - ``sessionCompleteAlerts`` - Alert when a Claude session finishes
+/// - ``permissionRequestAlerts`` - Alert when a Claude Code permission request arrives
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
@@ -28,6 +29,7 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
+    @AppStorage("notif_permissionRequestAlerts") private var permissionRequestAlerts = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
@@ -68,6 +70,17 @@ struct NotificationPreferencesView: View {
 
                     VStack {
                         toggleRow("Session Complete", isOn: $sessionCompleteAlerts, accessibilityLabel: "Alert when session completes")
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
+
+                // Permission Alerts
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Permission Alerts")
+
+                    VStack {
+                        toggleRow("Permission Requests", isOn: $permissionRequestAlerts, accessibilityLabel: "Alert when a permission request arrives")
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())

@@ -66,6 +66,8 @@ struct SettingsView: View {
 
                 dataPrivacySection
 
+                permissionsSection
+
                 iCloudSyncSection
 
                 SettingsAboutSection(
@@ -270,6 +272,32 @@ struct SettingsView: View {
     }
 
     // performDataDeletion() moved to SettingsViewModel
+
+    // MARK: - Permissions Section
+
+    private var permissionsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("PERMISSIONS")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            NavigationLink(destination: AutoApproveRulesView()) {
+                HStack {
+                    Label("Auto-Approve Rules", systemImage: "checkmark.shield")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+            }
+            .modifier(GlassCard())
+        }
+    }
 
     // MARK: - iCloud Sync Section
 
