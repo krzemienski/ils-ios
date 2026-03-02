@@ -23,6 +23,8 @@
 		C5E3D0F8A4B27693F158C402 /* SessionStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */; };
 		9583843DBD1B4913BC4931E4 /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */; };
 		ECD781898D054521BCAA0294 /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */; };
+		D3B6E094F7A51C28E463B719 /* PersistentSessionStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D4A891C5E3B70D6A29F548 /* PersistentSessionStatusBar.swift */; };
+		8C1E5F7A3D94B62F0E7A4B85 /* PersistentSessionStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D4A891C5E3B70D6A29F548 /* PersistentSessionStatusBar.swift */; };
 		5C78C0044BDB48A28B717373 /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
 		E29E6054D2BB409186079797 /* ActivityFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */; };
 		5C164E67B91E407BBA283D9F /* ActivityFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */; };
@@ -769,6 +771,7 @@
 		D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaneView.swift; sourceTree = "<group>"; };
 		B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStatusBadge.swift; sourceTree = "<group>"; };
 		787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitViewLayoutPicker.swift; sourceTree = "<group>"; };
+		F2D4A891C5E3B70D6A29F548 /* PersistentSessionStatusBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentSessionStatusBar.swift; sourceTree = "<group>"; };
 		D59D339E49103B78DA87082F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodingFocusFilter.swift; sourceTree = "<group>"; };
 		D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateSessionIntent.swift; sourceTree = "<group>"; };
@@ -1073,6 +1076,7 @@
 				D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */,
 				B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */,
 				787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */,
+				F2D4A891C5E3B70D6A29F548 /* PersistentSessionStatusBar.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -1825,6 +1829,7 @@
 				5195CD5441CC4618B9A20FD2 /* SessionPaneView.swift in Sources */,
 				A3C7F8D2E9B14650A1F3C829 /* SessionStatusBadge.swift in Sources */,
 				9583843DBD1B4913BC4931E4 /* SplitViewLayoutPicker.swift in Sources */,
+				D3B6E094F7A51C28E463B719 /* PersistentSessionStatusBar.swift in Sources */,
 				B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
@@ -2059,6 +2064,7 @@
 				BB8D2DDFE8A54A569C9F721E /* SessionPaneView.swift in Sources */,
 				C5E3D0F8A4B27693F158C402 /* SessionStatusBadge.swift in Sources */,
 				ECD781898D054521BCAA0294 /* SplitViewLayoutPicker.swift in Sources */,
+				8C1E5F7A3D94B62F0E7A4B85 /* PersistentSessionStatusBar.swift in Sources */,
 				E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */,
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
 				C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */,

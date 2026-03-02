@@ -365,6 +365,8 @@ struct SidebarRootView: View {
                 }
             }
         }
+        .environment(multiSessionVM)
+        .environment(sessionsVM)
         .tint(theme.accent)
     }
 
