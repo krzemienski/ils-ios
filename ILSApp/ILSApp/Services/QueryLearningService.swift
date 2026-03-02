@@ -118,7 +118,7 @@ final class QueryLearningService {
         let trimmed = frequentProjectNames
             .sorted { $0.value > $1.value }
             .prefix(Limits.maxProjectNameEntries)
-        frequentProjectNames = Dictionary(uniqueKeysWithValues: trimmed)
+        frequentProjectNames = Dictionary(uniqueKeysWithValues: trimmed.map { ($0.key, $0.value) })
     }
 
     // MARK: - Persistence
