@@ -282,12 +282,7 @@ struct ThinkingView: View {
         )
         .onDisappear {
             // H-E1: Cancel repeatForever animation to stop GPU work after navigation.
-            withAnimation(.linear(duration: 0.0)) {
-                pulseScale = 1.0
-            }
-        }
-        .onDisappear {
-            // H-E1: Cancel repeatForever animation to stop GPU work after navigation.
+            // ENRG-LOW-04: Removed duplicate onDisappear block.
             withAnimation(.linear(duration: 0.0)) {
                 pulseScale = 1.0
             }

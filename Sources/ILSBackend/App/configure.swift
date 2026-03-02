@@ -67,6 +67,14 @@ func configure(_ app: Application) async throws {
     let sqliteConfig = SQLiteConfiguration(storage: .file(path: dbPath), enableForeignKeys: true)
     app.databases.use(.sqlite(sqliteConfig), as: .sqlite)
 
+    // ENRG-LOW-02: Enable WAL mode for reduced disk I/O and better concurrent reads.
+    // WAL (Write-Ahead Logging) avoids blocking readers during writes and batches
+    // disk syncs, significantly reducing energy impact on mobile backends.
+    if let sql = app.db as? SQLDatabase {
+        _ = try await sql.raw("PRAGMA journal_mode=WAL").all()
+        _ = try await sql.raw("PRAGMA synchronous = NORMAL").all()
+    }
+
     // DB-MED-2: Migration versioning strategy.
     // Fluent runs migrations in registration order. Each migration is idempotent
     // (CREATE TABLE IF NOT EXISTS). Reverts are no-ops (Phase 22 decision).

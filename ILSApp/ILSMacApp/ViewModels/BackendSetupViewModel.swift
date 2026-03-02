@@ -123,6 +123,13 @@ final class BackendSetupViewModel {
         backendStatus == .notInstalled
     }
 
+    /// Dedicated URLSession for health/update checks with a 5-second timeout.
+    private static let healthSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 5
+        return URLSession(configuration: config)
+    }()
+
     // MARK: - Monitoring
 
     /// Start backend health monitoring if the backend is installed. Call from app/view startup.
@@ -211,9 +218,8 @@ final class BackendSetupViewModel {
         }
 
         do {
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 5
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let request = URLRequest(url: url)
+            let (data, _) = try await Self.healthSession.data(for: request)
 
             // Try to decode a version field from the health response.
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

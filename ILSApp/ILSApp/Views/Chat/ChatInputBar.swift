@@ -4,9 +4,10 @@ import ILSShared
 /// Multi-control input bar for composing and sending messages to Claude.
 ///
 /// Renders a horizontal row containing a command-palette trigger, an advanced-options button,
-/// an expandable text field, and either a send button or a cancel button depending on
-/// ``isStreaming``. The send button uses a Task-based debounce to briefly animate a
-/// "pressed" spring scale effect before resetting, bypassed when reduce-motion is enabled.
+/// a documentation help button, an expandable text field, and either a send button or a
+/// cancel button depending on ``isStreaming``. The send button uses a Task-based debounce
+/// to briefly animate a "pressed" spring scale effect before resetting, bypassed when
+/// reduce-motion is enabled.
 ///
 /// ## Topics
 /// ### Bindings
@@ -26,6 +27,7 @@ import ILSShared
 /// ### Button Views
 /// - ``commandPaletteButton`` - Slash-command launcher (⌘ icon)
 /// - ``optionsButton`` - Advanced options toggle; adapts icon when custom options are active
+/// - ``helpButton`` - Documentation quick-access; opens DocumentationView filtered for commands
 /// - ``textField`` - Vertically expandable text input (1–5 lines)
 /// - ``cancelButton`` - Stop button shown during streaming
 /// - ``sendButton`` - Spring-animated send button with haptic feedback
@@ -53,6 +55,8 @@ struct ChatInputBar: View {
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
     @State private var resetTask: Task<Void, Never>?
+    /// When true, the documentation sheet is presented pre-filtered for slash commands.
+    @State private var showDocumentation = false
     @FocusState private var isInputFocused: Bool
 
     /// Dynamic horizontal padding for the text field, scales with text size preference.
@@ -81,6 +85,7 @@ struct ChatInputBar: View {
             HStack(spacing: theme.spacingSM) {
                 commandPaletteButton
                 optionsButton
+                helpButton
                 textField
                 if isStreaming {
                     cancelButton
@@ -94,6 +99,11 @@ struct ChatInputBar: View {
         .background(theme.bgSecondary)
         .accessibilityIdentifier("chat-input-bar")
         .onDisappear { resetTask?.cancel() }
+        .sheet(isPresented: $showDocumentation) {
+            NavigationStack {
+                DocumentationView(contextHint: "commands")
+            }
+        }
     }
 
     private var commandPaletteButton: some View {
@@ -120,6 +130,23 @@ struct ChatInputBar: View {
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
+    }
+
+    /// Documentation quick-access button that opens ``DocumentationView`` pre-filtered for commands.
+    private var helpButton: some View {
+        Button {
+            showDocumentation = true
+        } label: {
+            Image(systemName: "book.circle")
+                .font(.system(size: 20))
+                .foregroundStyle(isDisabled ? theme.textTertiary : theme.textSecondary)
+        }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
+        .disabled(isDisabled)
+        .accessibilityLabel("Documentation")
+        .accessibilityHint("Opens Claude Code documentation for slash commands")
+        .accessibilityIdentifier("documentation-button")
     }
 
     private var textField: some View {

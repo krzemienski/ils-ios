@@ -298,6 +298,7 @@ struct SidebarView: View {
                     screen: .activityFeed,
                     badge: activityFeedUnreadCount
                 )
+                sidebarNavItem(icon: "book.fill", label: "Documentation", screen: .documentation)
                 if enableAgentTeams {
                     sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
                 }
@@ -691,7 +692,8 @@ struct SidebarView: View {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
-             (.agentQueue, .agentQueue):
+             (.agentQueue, .agentQueue),
+             (.documentation, .documentation):
             return true
         case (.chat, .chat):
             return true

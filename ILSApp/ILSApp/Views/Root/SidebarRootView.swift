@@ -20,6 +20,7 @@ enum ActiveScreen: Hashable {
     case hooks
     case activityFeed
     case agentQueue
+    case documentation
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -38,6 +39,7 @@ enum ActiveScreen: Hashable {
         case .hooks: return "hooks"
         case .activityFeed: return "activityFeed"
         case .agentQueue: return "agentQueue"
+        case .documentation: return "documentation"
         }
     }
 
@@ -54,6 +56,7 @@ enum ActiveScreen: Hashable {
         case "hooks": return .hooks
         case "activityFeed": return .activityFeed
         case "agentQueue": return .agentQueue
+        case "documentation": return .documentation
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -129,6 +132,8 @@ struct SidebarRootView: View {
     @State private var activityFeedVM = ActivityFeedViewModel()
     /// Agent queue view model, instantiated once with the API client and reused by ``AgentQueueView``.
     @State private var agentQueueVM: AgentQueueViewModel?
+    /// NavigationStack path for programmatic push-navigation within the active screen.
+    @State private var navigationPath = NavigationPath()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -283,7 +288,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Group {
                 switch activeScreen {
                 case .home:
@@ -313,6 +318,8 @@ struct SidebarRootView: View {
                     activityFeedScreen
                 case .agentQueue:
                     agentQueueScreen
+                case .documentation:
+                    documentationScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -451,6 +458,11 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var hooksScreen: some View {
         HooksManagementView()
+    }
+
+    @ViewBuilder
+    private var documentationScreen: some View {
+        DocumentationView()
     }
 
     @ViewBuilder

@@ -246,7 +246,11 @@ struct SSHSetupView: View {
                         .padding(theme.spacingSM)
                     }
                     .defaultScrollAnchor(.bottom)
+                    #if os(iOS)
+                    .frame(height: min(300, UIScreen.main.bounds.height * 0.35))
+                    #else
                     .frame(height: 300)
+                    #endif
                     .background(Color.black.opacity(0.85))
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     .onChange(of: viewModel.logLines.count) {

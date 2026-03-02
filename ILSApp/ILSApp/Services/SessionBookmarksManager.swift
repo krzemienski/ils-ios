@@ -20,6 +20,7 @@ final class SessionBookmarksManager {
     // MARK: - Observable State
 
     private(set) var bookmarks: [SessionBookmark] = []
+    private(set) var bookmarkedSessionIds: Set<UUID> = []
     private(set) var isSyncing = false
 
     // MARK: - Constants
@@ -64,13 +65,14 @@ final class SessionBookmarksManager {
 
     private init() {
         bookmarks = loadFromLocal()
+        bookmarkedSessionIds = Set(bookmarks.map(\.sessionId))
     }
 
     // MARK: - Public API
 
-    /// Returns `true` if the given session is bookmarked.
+    /// Returns `true` if the given session is bookmarked. O(1) lookup via cached Set.
     func isBookmarked(sessionId: UUID) -> Bool {
-        bookmarks.contains { $0.sessionId == sessionId }
+        bookmarkedSessionIds.contains(sessionId)
     }
 
     /// Adds a bookmark for the given session.
@@ -84,6 +86,7 @@ final class SessionBookmarksManager {
             sessionName: session.name
         )
         bookmarks.append(bookmark)
+        bookmarkedSessionIds.insert(bookmark.sessionId)
         saveToLocal()
         await saveToCloud(bookmark)
 
@@ -100,6 +103,7 @@ final class SessionBookmarksManager {
         guard let bookmark = bookmarks.first(where: { $0.sessionId == sessionId }) else { return }
 
         bookmarks.removeAll { $0.sessionId == sessionId }
+        bookmarkedSessionIds.remove(sessionId)
         saveToLocal()
         await deleteFromCloud(bookmarkId: bookmark.id)
 
@@ -303,6 +307,7 @@ final class SessionBookmarksManager {
 
         let merged = mergedBySessionId.values.sorted { $0.createdAt > $1.createdAt }
         bookmarks = merged
+        bookmarkedSessionIds = Set(merged.map(\.sessionId))
         saveToLocal()
     }
 

@@ -5,7 +5,7 @@ struct TeamMetricsView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var viewModel: TeamsViewModel
     let teamName: String
-    @State private var refreshTimer: Timer?
+    @State private var pollingTask: Task<Void, Never>?
 
     init(teamName: String, apiClient: APIClient) {
         self.teamName = teamName
@@ -340,16 +340,19 @@ struct TeamMetricsView: View {
     }
 
     private func startPolling() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-            Task {
+        pollingTask?.cancel()
+        pollingTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { break }
                 await loadData()
             }
         }
     }
 
     private func stopPolling() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
+        pollingTask?.cancel()
+        pollingTask = nil
     }
 
     // MARK: - Helpers

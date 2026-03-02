@@ -113,13 +113,14 @@ class SessionsViewModel: BaseViewModel {
     }
 
 
-    /// Sessions filtered by the local search text using precomputed lowercase cache
+    /// Sessions filtered by the local search text using precomputed lowercase cache.
+    /// SPERF-MED-8: Uses compactMap instead of filter+map to avoid double allocation.
     var filteredSessions: [ChatSession] {
         guard !debouncedSearchText.isEmpty else { return sessions }
         let query = debouncedSearchText.lowercased()
-        return searchCache
-            .filter { $0.searchText.contains(query) }
-            .map(\.session)
+        return searchCache.compactMap {
+            $0.searchText.contains(query) ? $0.session : nil
+        }
     }
 
     /// Build a single search-cache entry for a session.
@@ -172,10 +173,16 @@ class SessionsViewModel: BaseViewModel {
         let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? startOfToday
         let startOfWeek = calendar.date(byAdding: .day, value: -7, to: startOfToday) ?? startOfToday
 
+        // SPERF-HIGH-4: Reserve capacity to reduce reallocations during bucketing.
+        let reserveCount = max(16, filtered.count / 4)
         var today: [ChatSession] = []
+        today.reserveCapacity(reserveCount)
         var yesterday: [ChatSession] = []
+        yesterday.reserveCapacity(reserveCount)
         var thisWeek: [ChatSession] = []
+        thisWeek.reserveCapacity(reserveCount)
         var earlier: [ChatSession] = []
+        earlier.reserveCapacity(reserveCount)
 
         for session in filtered {
             let lastActive = session.lastActiveAt

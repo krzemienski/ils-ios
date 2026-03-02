@@ -21,17 +21,14 @@ struct MCPLogsView: View {
     @State private var logs: [MCPLogEntry] = []
     @State private var isLoading = false
     @State private var selectedLevel: LogLevelFilter = .all
+    @State private var filteredLogs: [MCPLogEntry] = []
 
-    private var filteredLogs: [MCPLogEntry] {
+    private func computeFilteredLogs() -> [MCPLogEntry] {
         switch selectedLevel {
-        case .all:
-            return logs
-        case .error:
-            return logs.filter { $0.level.lowercased() == "error" }
-        case .warn:
-            return logs.filter { ["warn", "warning"].contains($0.level.lowercased()) }
-        case .info:
-            return logs.filter { $0.level.lowercased() == "info" }
+        case .all: return logs
+        case .error: return logs.filter { $0.level.lowercased() == "error" }
+        case .warn: return logs.filter { ["warn", "warning"].contains($0.level.lowercased()) }
+        case .info: return logs.filter { $0.level.lowercased() == "info" }
         }
     }
 
@@ -59,6 +56,7 @@ struct MCPLogsView: View {
         .task {
             await loadLogs()
         }
+        .onChange(of: selectedLevel) { _, _ in filteredLogs = computeFilteredLogs() }
     }
 
     // MARK: - Subviews
@@ -144,6 +142,7 @@ struct MCPLogsView: View {
     private func loadLogs() async {
         isLoading = true
         logs = await viewModel.fetchLogs(for: server)
+        filteredLogs = computeFilteredLogs()
         isLoading = false
     }
 

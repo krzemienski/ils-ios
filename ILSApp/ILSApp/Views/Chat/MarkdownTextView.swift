@@ -1,5 +1,6 @@
 import SwiftUI
 import MarkdownUI
+import os
 
 /// Renders markdown text with proper formatting for chat messages.
 /// Uses MarkdownUI for full GitHub Flavored Markdown support.
@@ -12,9 +13,8 @@ struct MarkdownTextView: View {
     /// Global cache: theme ID → built MarkdownUI.Theme, shared across all instances.
     /// Building the 90-line Theme struct is expensive; caching eliminates redundant
     /// rebuilds when the same theme is applied to many chat-message views.
-    /// nonisolated(unsafe) is required because MarkdownUI.Theme is non-Sendable and
-    /// we access it from the MainActor without wanting actor hops.
-    nonisolated(unsafe) private static var themeCache: [String: MarkdownUI.Theme] = [:]
+    /// Thread-safe via OSAllocatedUnfairLock (replaces nonisolated(unsafe) dictionary).
+    private static let themeCacheLock = OSAllocatedUnfairLock(initialState: [String: MarkdownUI.Theme]())
 
     /// Per-instance mirrors of the shared cache entry — drive SwiftUI re-render.
     @State private var cachedTheme: MarkdownUI.Theme = .basic
@@ -26,13 +26,19 @@ struct MarkdownTextView: View {
             .markdownCodeSyntaxHighlighter(ILSCodeHighlighter())
             .textSelection(.enabled)
             .onChange(of: theme.id, initial: true) {
-                guard theme.id != cachedThemeId else { return }
-                cachedThemeId = theme.id
-                if let cached = Self.themeCache[theme.id] {
+                let currentId = theme.id
+                guard currentId != cachedThemeId else { return }
+                cachedThemeId = currentId
+                let cached: MarkdownUI.Theme? = Self.themeCacheLock.withLock { cache in
+                    cache[currentId]
+                }
+                if let cached {
                     cachedTheme = cached
                 } else {
                     let built = Self.buildChatTheme(from: theme)
-                    Self.themeCache[theme.id] = built
+                    Self.themeCacheLock.withLock { cache in
+                        cache[currentId] = built
+                    }
                     cachedTheme = built
                 }
             }

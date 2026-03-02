@@ -400,7 +400,8 @@ struct WorkflowBuilderView: View {
 
     private func showSaveMessage(_ message: String) {
         saveMessage = message
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(2500))
             saveMessage = nil
         }
     }

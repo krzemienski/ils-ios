@@ -27,7 +27,7 @@ struct SendMessageIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
+        let baseURL = UserDefaults.standard.string(forKey: AppConstants.serverURLKey) ?? AppConstants.defaultServerURL
         guard let url = URL(string: "\(baseURL)/api/v1/chat/stream") else {
             return .result(value: "Error: Invalid server URL")
         }

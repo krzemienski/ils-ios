@@ -74,7 +74,11 @@ class ActivityFeedViewModel {
     // MARK: - Private State
 
     private var client: APIClient?
-    private var pollingTask: Task<Void, Never>?
+    nonisolated(unsafe) private var pollingTask: Task<Void, Never>?
+
+    deinit {
+        pollingTask?.cancel()
+    }
 
     // MARK: - UserDefaults Keys
 
@@ -149,9 +153,13 @@ class ActivityFeedViewModel {
         let startOfToday = calendar.startOfDay(for: now)
         let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? startOfToday
 
+        let reserveCount = max(8, filtered.count / 3)
         var todayBucket:     [ActivityEvent] = []
         var yesterdayBucket: [ActivityEvent] = []
         var earlierBucket:   [ActivityEvent] = []
+        todayBucket.reserveCapacity(reserveCount)
+        yesterdayBucket.reserveCapacity(reserveCount)
+        earlierBucket.reserveCapacity(reserveCount)
 
         for event in filtered {
             if event.timestamp >= startOfToday {
@@ -232,7 +240,7 @@ class ActivityFeedViewModel {
             await self?.loadEvents()
             // Repeat at 10-second intervals
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                try? await Task.sleep(nanoseconds: 20_000_000_000)
                 guard !Task.isCancelled else { break }
                 await self?.loadEvents()
             }

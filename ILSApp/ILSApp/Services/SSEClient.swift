@@ -206,13 +206,17 @@ class SSEClient {
             // Checked once at watchdog creation -- not re-evaluated mid-stream per research.
             let watchdogTimeout: TimeInterval = LowPowerModeMonitor.shared.isLowPowerModeEnabled ? 90 : 45
 
-            // Watchdog: detect stale connections (no data/heartbeat in timeout period)
+            // Watchdog: detect stale connections (no data/heartbeat in timeout period).
+            // NET-MED-2: Cancels the parent streamTask instead of throwing inside a
+            // detached task (thrown errors were silently dropped, leaving stale streams).
+            let parentTask = self.streamTask
             let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
                     if lastActivity.secondsSinceLastActivity() > watchdogTimeout {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in \(Int(watchdogTimeout))s", category: "sse")
-                        throw URLError(.timedOut)
+                        parentTask?.cancel()
+                        return
                     }
                 }
             }

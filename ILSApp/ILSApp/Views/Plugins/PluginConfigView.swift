@@ -200,7 +200,7 @@ struct PluginConfigView: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 sectionTitle("Commands (\(commands.count))")
 
-                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                LazyVStack(alignment: .leading, spacing: theme.spacingSM) {
                     ForEach(commands, id: \.self) { command in
                         HStack(spacing: theme.spacingSM) {
                             Image(systemName: "terminal")
@@ -228,7 +228,7 @@ struct PluginConfigView: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 sectionTitle("Agents (\(agents.count))")
 
-                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                LazyVStack(alignment: .leading, spacing: theme.spacingSM) {
                     ForEach(agents, id: \.self) { agent in
                         HStack(spacing: theme.spacingSM) {
                             Image(systemName: "person.crop.circle")
@@ -337,7 +337,7 @@ struct PluginConfigView: View {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 sectionTitle("Dependencies (\(deps.count))")
 
-                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                LazyVStack(alignment: .leading, spacing: theme.spacingSM) {
                     ForEach(deps, id: \.self) { dep in
                         HStack(spacing: theme.spacingSM) {
                             Image(systemName: "shippingbox")
