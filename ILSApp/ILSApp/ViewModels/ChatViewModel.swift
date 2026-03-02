@@ -90,6 +90,14 @@ class ChatViewModel {
     /// Thresholds already alerted this session — prevents re-alerting at the same level.
     private var alertedThresholds: Set<Int> = []
 
+    /// Whether to show the post-compaction recovery banner.
+    /// Set to `true` when a > 20% drop in contextTokensUsed is detected between turns,
+    /// indicating Claude Code performed an automatic context compaction.
+    var showPostCompactionRecovery: Bool = false
+    /// Text of the most recently saved context snapshot, surfaced as a recovery suggestion
+    /// after a compaction event is detected.
+    var lastSnapshotText: String? = nil
+
     /// Context window usage as a percentage (0–100), or nil if data not yet available.
     var contextUsagePercent: Double? {
         guard let used = contextTokensUsed, let total = contextWindowSize, total > 0 else { return nil }
@@ -884,6 +892,36 @@ class ChatViewModel {
         }
     }
 
+    /// Detect a significant drop in context token usage between turns, which indicates
+    /// Claude Code performed an automatic context compaction. A drop > 20% relative to
+    /// the previous value triggers post-compaction recovery mode.
+    ///
+    /// When compaction is detected, ``showPostCompactionRecovery`` is set to `true` and
+    /// the most recent snapshot for the session is loaded into ``lastSnapshotText`` so
+    /// the UI can surface it as a recovery suggestion.
+    private func checkPostCompactionDrop(previous: Int, new: Int) {
+        guard previous > 0 else { return }
+        let dropFraction = Double(previous - new) / Double(previous)
+        guard dropFraction > 0.20 else { return }
+
+        showPostCompactionRecovery = true
+        AppLogger.shared.info("Post-compaction drop detected: \(previous) → \(new) tokens (\(String(format: "%.0f", dropFraction * 100))% drop)", category: "sessionMemory")
+
+        // Load the most recent snapshot to surface as a recovery suggestion
+        guard let sessionId else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let snapshots = try await SessionMemoryService.shared.fetchSnapshots(forSession: sessionId)
+                if let latest = snapshots.first {
+                    self.lastSnapshotText = latest.snapshotText
+                }
+            } catch {
+                AppLogger.shared.error("Failed to load snapshot for post-compaction recovery: \(error)", category: "sessionMemory")
+            }
+        }
+    }
+
     // MARK: - Snapshot Generation
 
     /// Generate and persist a context snapshot summarising the current conversation state.
@@ -909,6 +947,8 @@ class ChatViewModel {
                 windowSize: windowSize,
                 snapshotText: snapshotText
             )
+            // Cache locally so post-compaction recovery can surface it without an extra DB read
+            lastSnapshotText = snapshotText
             AppLogger.shared.info("Context snapshot saved for session \(sessionId)", category: "sessionMemory")
             return true
         } catch {
@@ -1001,6 +1041,8 @@ class ChatViewModel {
                     alertedThresholds.removeAll()
                     showCompactionAlert = false
                     compactionAlertThreshold = nil
+                    showPostCompactionRecovery = false
+                    lastSnapshotText = nil
                 }
 
             case .assistant(let assistantMsg):
@@ -1016,11 +1058,19 @@ class ChatViewModel {
                     let cacheRead = usage.cacheReadInputTokens ?? 0
                     let cacheCreate = usage.cacheCreationInputTokens ?? 0
 
+                    let newTokensUsed = inputTokens + outputTokens
+                    let previousTokens = contextTokensUsed
+
                     contextInputTokens = inputTokens
                     contextOutputTokens = outputTokens
                     contextCacheReadTokens = cacheRead
                     contextCacheCreateTokens = cacheCreate
-                    contextTokensUsed = inputTokens + outputTokens
+                    contextTokensUsed = newTokensUsed
+
+                    // Detect post-compaction token drop (> 20% reduction between turns)
+                    if let prev = previousTokens {
+                        checkPostCompactionDrop(previous: prev, new: newTokensUsed)
+                    }
 
                     // Real per-message output token count
                     currentMessage.tokenCount = outputTokens
