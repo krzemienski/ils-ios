@@ -38,6 +38,7 @@ struct ThemedCodeBlockView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var zoomFontSize: CGFloat = 13
     @GestureState private var magnifyBy: CGFloat = 0
+    @AppStorage("codeblock.lineNumbers") private var showLineNumbers: Bool = false
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -68,6 +69,17 @@ struct ThemedCodeBlockView: View {
                 .foregroundStyle(theme.textTertiary)
 
             Spacer()
+
+            Button(action: { showLineNumbers.toggle() }) {
+                Image(systemName: "list.number")
+                    .font(.system(size: 13, design: theme.fontDesign))
+                    .foregroundStyle(showLineNumbers ? theme.accent : theme.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(showLineNumbers ? "Hide line numbers" : "Show line numbers")
+            .accessibilityIdentifier("code-block-line-numbers-toggle")
 
             Button(action: copyCode) {
                 HStack(spacing: 4) {
@@ -185,27 +197,58 @@ struct ThemedCodeBlockView: View {
         min(max(zoomFontSize + magnifyBy, 10), 28)
     }
 
-    private var codeText: some View {
-        Group {
-            if let highlighted = highlightedCode {
-                Text(highlighted)
+    private var codeLines: [String] {
+        code.components(separatedBy: "\n")
+    }
+
+    private var lineNumbersColumn: some View {
+        VStack(alignment: .trailing, spacing: 0) {
+            ForEach(Array(codeLines.enumerated()), id: \.offset) { index, _ in
+                Text("\(index + 1)")
                     .font(.system(size: effectiveFontSize, design: theme.fontDesign))
-                    .textSelection(.enabled)
-            } else {
-                Text(code)
-                    .font(.system(size: effectiveFontSize, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .textSelection(.enabled)
+                    .foregroundStyle(theme.textTertiary)
+                    .padding(.vertical, 2)
+                    .frame(minWidth: 30, alignment: .trailing)
             }
         }
-        .padding(theme.spacingSM)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingSM)
+        .accessibilityHidden(true)
+    }
+
+    private var codeText: some View {
+        HStack(alignment: .top, spacing: 0) {
+            if showLineNumbers {
+                lineNumbersColumn
+                Rectangle()
+                    .fill(theme.textTertiary.opacity(0.3))
+                    .frame(width: 1)
+                    .accessibilityHidden(true)
+            }
+
+            Group {
+                if let highlighted = highlightedCode {
+                    Text(highlighted)
+                        .font(.system(size: effectiveFontSize, design: theme.fontDesign))
+                        .textSelection(.enabled)
+                } else {
+                    Text(code)
+                        .font(.system(size: effectiveFontSize, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                        .textSelection(.enabled)
+                }
+            }
+            .padding(theme.spacingSM)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier("code-block-content")
+            .accessibilityLabel("Code: \(code)")
+        }
     }
 
     // MARK: - Helpers
 
     private var lineCount: Int {
-        max(code.components(separatedBy: "\n").count, 1)
+        max(codeLines.count, 1)
     }
 
     // MARK: - Highlighting
