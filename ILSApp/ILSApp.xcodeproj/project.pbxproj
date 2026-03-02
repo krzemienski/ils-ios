@@ -100,6 +100,8 @@
 		CD34EF560178920ACD34EF02 /* QuickReplyTemplateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD02 /* QuickReplyTemplateManager.swift */; };
 		CD34EF560178920ACD34EF03 /* QuickReplyToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD03 /* QuickReplyToolbar.swift */; };
 		CD34EF560178920ACD34EF04 /* QuickReplyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD04 /* QuickReplyTemplatesSheet.swift */; };
+		BC23DE45F0678901BC23DE05 /* QuickReplyTemplatesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD05 /* QuickReplyTemplatesSettingsView.swift */; };
+		CD34EF560178920ACD34EF05 /* QuickReplyTemplatesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD05 /* QuickReplyTemplatesSettingsView.swift */; };
 		241E79C7CE232C53DC197469 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52FFD26C242D9641EFF5D8D /* CodeBlockView.swift */; };
 		246D2629E29830ECDF5A57D5 /* ThemePreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */; };
 		24D62F464A17880544BFF3F0 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9931211AAA50959FAEC7FE5C /* ProgressRing.swift */; };
@@ -817,6 +819,7 @@
 		AB12CD34EF5678901234CD02 /* QuickReplyTemplateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplateManager.swift; sourceTree = "<group>"; };
 		AB12CD34EF5678901234CD03 /* QuickReplyToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyToolbar.swift; sourceTree = "<group>"; };
 		AB12CD34EF5678901234CD04 /* QuickReplyTemplatesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplatesSheet.swift; sourceTree = "<group>"; };
+		AB12CD34EF5678901234CD05 /* QuickReplyTemplatesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplatesSettingsView.swift; sourceTree = "<group>"; };
 		B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
 		E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSnapshotTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1024,6 +1027,7 @@
 				5A2839D9B4F57064D597B4D3 /* SettingsView.swift */,
 				276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */,
 				16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */,
+				AB12CD34EF5678901234CD05 /* QuickReplyTemplatesSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1922,6 +1926,7 @@
 				BC23DE45F0678901BC23DE02 /* QuickReplyTemplateManager.swift in Sources */,
 				BC23DE45F0678901BC23DE03 /* QuickReplyToolbar.swift in Sources */,
 				BC23DE45F0678901BC23DE04 /* QuickReplyTemplatesSheet.swift in Sources */,
+				BC23DE45F0678901BC23DE05 /* QuickReplyTemplatesSettingsView.swift in Sources */,
 				0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */,
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
@@ -2163,6 +2168,7 @@
 				CD34EF560178920ACD34EF02 /* QuickReplyTemplateManager.swift in Sources */,
 				CD34EF560178920ACD34EF03 /* QuickReplyToolbar.swift in Sources */,
 				CD34EF560178920ACD34EF04 /* QuickReplyTemplatesSheet.swift in Sources */,
+				CD34EF560178920ACD34EF05 /* QuickReplyTemplatesSettingsView.swift in Sources */,
 				EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */,
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
