@@ -123,6 +123,24 @@ class ChatViewModel {
     /// Model name for the session, used by Live Activity.
     var sessionModel: String?
 
+    // MARK: - Auto-Checkpoint
+
+    /// Injected CheckpointViewModel for triggering auto-checkpoints.
+    /// Set by the hosting view when the session is an ILS-managed session.
+    /// `@ObservationIgnored` — this is a helper injected at setup time, not observed by the UI.
+    @ObservationIgnored var checkpointViewModel: CheckpointViewModel?
+
+    /// Count of non-user, non-system messages at the time of the last auto-checkpoint.
+    /// Initialised from history on load so existing messages don't immediately trigger a checkpoint.
+    private var lastCheckpointMessageCount: Int = 0
+
+    /// Auto-checkpoint interval read from user settings (UserDefaults key: `checkpointInterval`).
+    /// Defaults to 5 if not set or zero.
+    private var checkpointInterval: Int {
+        let stored = UserDefaults.standard.integer(forKey: "checkpointInterval")
+        return stored > 0 ? stored : 5
+    }
+
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
     @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
@@ -249,6 +267,14 @@ class ChatViewModel {
                         #endif
                         self.streamStartTime = nil
                         lastMessageCount = finalCount
+
+                        // Auto-checkpoint: create a checkpoint after every N assistant messages.
+                        let count = self.assistantMessageCount
+                        let interval = self.checkpointInterval
+                        if interval > 0 && (count - self.lastCheckpointMessageCount) >= interval {
+                            self.lastCheckpointMessageCount = count
+                            self.createAutoCheckpoint()
+                        }
                     }
                     lastStreaming = streaming
                 }
@@ -472,6 +498,10 @@ class ChatViewModel {
                 }
             }
         }
+
+        // Anchor the checkpoint baseline to the current history so that
+        // the auto-checkpoint interval counts only NEW messages from this point.
+        lastCheckpointMessageCount = assistantMessageCount
 
         isLoadingHistory = false
     }
@@ -838,6 +868,22 @@ class ChatViewModel {
         searchQuery = ""
         searchResults = []
         isSearchLoading = false
+    }
+
+    // MARK: - Auto-Checkpoint Helpers
+
+    /// Trigger an automatic checkpoint if `checkpointViewModel` is injected and the session has one.
+    private func createAutoCheckpoint() {
+        guard let sessionId, let checkpointViewModel else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            await checkpointViewModel.createCheckpoint(sessionId: sessionId, label: nil, isAuto: true)
+        }
+    }
+
+    /// Count of assistant messages (non-user, non-system) currently in `messages`.
+    private var assistantMessageCount: Int {
+        messages.filter { !$0.isUser && !$0.isSystem }.count
     }
 
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
