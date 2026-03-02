@@ -95,11 +95,11 @@ public struct HealthScoreFactor: Codable, Sendable {
 
 /// Qualitative health level derived from the numeric health score.
 public enum HealthScoreLevel: String, Codable, Sendable, CaseIterable {
-    /// Score ≥ 80 — session is operating well.
+    /// Score ≥ 70 — session is operating well.
     case healthy
-    /// Score 50–79 — session shows signs of degradation.
+    /// Score 40–69 — session shows signs of degradation.
     case degrading
-    /// Score < 50 — session has significant quality issues.
+    /// Score < 40 — session has significant quality issues.
     case problematic
 }
 

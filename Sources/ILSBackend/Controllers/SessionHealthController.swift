@@ -8,6 +8,7 @@ import ILSShared
 /// - `GET /sessions/health/summary`: Aggregate health scores for all sessions, sorted worst-first
 /// - `GET /sessions/:id/health`: Health score for a specific session
 /// - `GET /projects/health`: Per-project health summaries
+/// - `GET /sessions/health/export`: Download full health report as a JSON file
 struct SessionHealthController: RouteCollection {
     let fileSystem: FileSystemService
     private let healthService = SessionHealthService()
@@ -19,6 +20,7 @@ struct SessionHealthController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let health = routes.grouped("sessions", "health")
         health.get("summary", use: summary)
+        health.get("export", use: exportReport)
 
         routes.get("sessions", ":id", "health", use: sessionHealth)
         routes.get("projects", "health", use: projectsHealth)
@@ -82,6 +84,39 @@ struct SessionHealthController: RouteCollection {
 
         summaries.sort { $0.averageScore < $1.averageScore }
         return APIResponse(success: true, data: summaries)
+    }
+
+    /// GET /sessions/health/export — Download the full health report as a JSON file.
+    ///
+    /// Returns all session health scores (sorted worst-first) as a downloadable
+    /// JSON attachment. Clients receive a `Content-Disposition: attachment` header
+    /// so browsers/API clients treat the response as a file download.
+    ///
+    /// The response format mirrors `/sessions/health/summary` wrapped in
+    /// an `APIResponse` envelope, making it easy to import into analysis tools.
+    @Sendable
+    func exportReport(req: Request) async throws -> Response {
+        let sessions = try await loadAllSessions(req: req)
+        let scores = await computeScores(sessions: sessions)
+        let sorted = scores.sorted { $0.score < $1.score }
+        let payload = APIResponse(success: true, data: sorted)
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        let jsonData = try encoder.encode(payload)
+
+        // Format filename with today's date for easy identification.
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: Date())
+        let filename = "health-report-\(dateString).json"
+
+        var headers = HTTPHeaders()
+        headers.add(name: .contentType, value: "application/json")
+        headers.add(name: .contentDisposition, value: "attachment; filename=\"\(filename)\"")
+
+        return Response(status: .ok, headers: headers, body: .init(data: jsonData))
     }
 
     // MARK: - Private Helpers
