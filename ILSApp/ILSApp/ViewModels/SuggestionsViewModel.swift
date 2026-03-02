@@ -144,6 +144,25 @@ class SuggestionsViewModel {
         isLoadingAbandoned = false
     }
 
+    // MARK: - Load Continuation Summary
+
+    /// Fetch a smart continuation summary for the given session.
+    ///
+    /// The summary captures what was accomplished, suggests a resume prompt,
+    /// and extracts key topics so the user can pick up exactly where they left off.
+    /// - Parameter sessionId: The UUID of the session to summarize.
+    /// - Returns: A `ContinuationSummary` if found, or `nil` if unavailable.
+    func loadContinuationSummary(sessionId: UUID) async -> ContinuationSummary? {
+        guard let client else { return nil }
+        do {
+            let response: APIResponse<ContinuationSummary> = try await client.get("/suggestions/continuation/\(sessionId.uuidString.lowercased())")
+            return response.data
+        } catch {
+            AppLogger.shared.error("Failed to load continuation summary: \(error.localizedDescription)", category: "suggestions")
+            return nil
+        }
+    }
+
     // MARK: - Feedback
 
     /// Record user interaction with a suggestion for future ranking improvement.
