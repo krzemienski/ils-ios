@@ -31,6 +31,9 @@ class AppState {
     let networkMonitor: NetworkMonitor
     let connectionQualityService: ConnectionQualityService
     let iCloudSyncManager: ICloudSyncManager
+    /// Manages pending permission requests from Claude Code tool-use calls.
+    /// Full polling lifecycle (start/stop) is wired in ILSAppApp (phase-5).
+    let permissionService = PermissionService()
 
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,

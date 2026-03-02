@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		79A53A3D0D944AA29EAFECB6 /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D406516EADD4094911C5F77 /* PermissionService.swift */; };
+		A92D39F0988F4E838D5C537F /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D406516EADD4094911C5F77 /* PermissionService.swift */; };
+		EA756D55C1F64551864FE4A9 /* PermissionInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD47FF600284645AB2466EC /* PermissionInboxView.swift */; };
+		9004146BAAC141029F19DD1A /* PermissionInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD47FF600284645AB2466EC /* PermissionInboxView.swift */; };
+		928B949164F34E53BD73DFCE /* BatchPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */; };
+		C524019CA48B41ED9A5CFE63 /* BatchPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */; };
 		CC11DD22EE33FF44AA55BB04 /* MacSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */; };
 		CC11DD22EE33FF44AA55BB05 /* MacNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
@@ -547,6 +553,9 @@
 		0D259013682B0E76D248995F /* PerformanceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMonitor.swift; sourceTree = "<group>"; };
 		0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSShortcuts.swift; sourceTree = "<group>"; };
 		0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSessionRow.swift; sourceTree = "<group>"; };
+		1D406516EADD4094911C5F77 /* PermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionService.swift; sourceTree = "<group>"; };
+		6DD47FF600284645AB2466EC /* PermissionInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionInboxView.swift; sourceTree = "<group>"; };
+		CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchPermissionView.swift; sourceTree = "<group>"; };
 		DE4F28D4F464451098C4900B /* ActivityEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEventRow.swift; sourceTree = "<group>"; };
 		382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedView.swift; sourceTree = "<group>"; };
 		D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedFilterSheet.swift; sourceTree = "<group>"; };
@@ -1261,6 +1270,7 @@
 				6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */,
 				1A1FCC9DA753480F940D5954 /* ActivityFeed */,
 				CD4F39D34F7245733BAEB99C /* Browser */,
+				09BB7C918C094417A612F2ED /* Permissions */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
 				3FCDD95699E33E1A571D74BB /* Components */,
 				4C557C8746D41751E699EBCA /* Home */,
@@ -1300,6 +1310,7 @@
 				E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */,
 				FC9A832BDE714E5C82A79B01 /* ICloudSyncManager.swift */,
 				0D259013682B0E76D248995F /* PerformanceMonitor.swift */,
+				1D406516EADD4094911C5F77 /* PermissionService.swift */,
 				2EE82C913049A620A077F141 /* PollingManager.swift */,
 				C762E18BD102C1442B83A33F /* SessionExportService.swift */,
 				BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */,
@@ -1414,6 +1425,15 @@
 				D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */,
 			);
 			path = ActivityFeed;
+			sourceTree = "<group>";
+		};
+		09BB7C918C094417A612F2ED /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				6DD47FF600284645AB2466EC /* PermissionInboxView.swift */,
+				CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */,
+			);
+			path = Permissions;
 			sourceTree = "<group>";
 		};
 		EC0EA26CB702D429DB898547 /* Root */ = {
@@ -1870,6 +1890,9 @@
 				5C601E692F813E7A7DE0B8B3 /* PaperTheme.swift in Sources */,
 				691D978E9A1AAD1D04B3A5FC /* PerformanceMonitor.swift in Sources */,
 				EE1AE6148F4B027B97CFCFD3 /* PermissionRequestModal.swift in Sources */,
+				79A53A3D0D944AA29EAFECB6 /* PermissionService.swift in Sources */,
+				EA756D55C1F64551864FE4A9 /* PermissionInboxView.swift in Sources */,
+				928B949164F34E53BD73DFCE /* BatchPermissionView.swift in Sources */,
 				E6A3F4A9B7C51DB6A841C35E /* RelatedSessionsPanel.swift in Sources */,
 				81EA0BAEEB2CEF1F8F48A784 /* PlatformCompat.swift in Sources */,
 				FC5AD2FB2B34DC4F6245DB85 /* PluginConfigView.swift in Sources */,
@@ -2107,6 +2130,9 @@
 				D772A51606D786C53190FC8F /* PaperTheme.swift in Sources */,
 				3745234529CDF48C45490BBF /* PerformanceMonitor.swift in Sources */,
 				7DD00BA344A1692F5ABD2093 /* PermissionRequestModal.swift in Sources */,
+				A92D39F0988F4E838D5C537F /* PermissionService.swift in Sources */,
+				9004146BAAC141029F19DD1A /* PermissionInboxView.swift in Sources */,
+				C524019CA48B41ED9A5CFE63 /* BatchPermissionView.swift in Sources */,
 				D5F2E398A6B40CA5F730B24D /* RelatedSessionsPanel.swift in Sources */,
 				38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */,
 				8D1A3E67499C2C7112280CD6 /* PluginConfigView.swift in Sources */,
