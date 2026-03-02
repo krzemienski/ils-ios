@@ -78,6 +78,7 @@ struct ILSAppApp: App {
                             SkippedTourTip.tourWasSkipped = tourSkipped && !tourDone
 
                             await CacheService.shared.initialize()
+                            try? await SessionMemoryService.shared.initialize()
                         }
                         #if os(iOS)
                         // MEM-01 + H-M1: Proactive cache eviction under memory pressure.

@@ -893,8 +893,22 @@ class ChatViewModel {
         }
 
         if let threshold = highestNewThreshold {
-            compactionAlertThreshold = Double(threshold)
-            showCompactionAlert = true
+            // Respect per-threshold notification preference. Default to true when
+            // the key has never been set so existing users continue to see alerts.
+            let notifKey: String
+            switch threshold {
+            case 85: notifKey = "notif_contextWarning"
+            case 90: notifKey = "notif_contextAlert"
+            case 95: notifKey = "notif_contextCritical"
+            default:  notifKey = ""
+            }
+            let showBanner = notifKey.isEmpty
+                || UserDefaults.standard.object(forKey: notifKey) == nil
+                || UserDefaults.standard.bool(forKey: notifKey)
+            if showBanner {
+                compactionAlertThreshold = Double(threshold)
+                showCompactionAlert = true
+            }
         }
 
         if shouldAutoSnapshot && UserDefaults.standard.bool(forKey: "autoSnapshotEnabled") {
