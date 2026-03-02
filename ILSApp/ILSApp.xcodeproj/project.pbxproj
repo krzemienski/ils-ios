@@ -33,6 +33,7 @@
 		3FFE008E477C46438911BDAB /* ContextWindowBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5213C1370E243938ABE2D75 /* ContextWindowBar.swift */; };
 		431C994F72984EDE8025EB0A /* ContextWindowDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A5CA3473B54C90A1EBEFEB /* ContextWindowDetailSheet.swift */; };
 		D510731C28A1485C8C6B8B4B /* ContextCompactionAlertBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EA1CE143B44E568599EF3A /* ContextCompactionAlertBanner.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* SessionMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A3B4C5D6E7F8A9B0C1D2E3 /* SessionMemoryView.swift */; };
 		0454FDC092D6ECF573218246 /* TeamMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0F7180FB7CF6802768BD600 /* TeamMessagesView.swift */; };
 		0458D7F5AA514464B36CF190 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03E11049F41DFFB7A80801AB /* SystemMonitorView.swift */; };
 		04BF08BADE4A7D9A0BBEF578 /* StreamingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8D7644950A87917982EDDC /* StreamingIndicatorView.swift */; };
@@ -41,6 +42,7 @@
 		A4071DBD589D40E886F09302 /* ContextWindowBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5213C1370E243938ABE2D75 /* ContextWindowBar.swift */; };
 		81D5329ADF03466E870C66F1 /* ContextWindowDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A5CA3473B54C90A1EBEFEB /* ContextWindowDetailSheet.swift */; };
 		0729B39AD92D44D59FC7096C /* ContextCompactionAlertBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EA1CE143B44E568599EF3A /* ContextCompactionAlertBanner.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* SessionMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A3B4C5D6E7F8A9B0C1D2E3 /* SessionMemoryView.swift */; };
 		055302D91508C8565DAA4919 /* SidebarRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138C7CC5E048F4B6BDBB35AF /* SidebarRootView.swift */; };
 		05C15FC8A817FEACE7997E8F /* ThemedCodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 038A6A2D0A0F4B850AFB0B85 /* ThemedCodeBlockView.swift */; };
 		062146CB422A72CF6170ED7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B7AA21B4A73C7E651752C /* StatCard.swift */; };
@@ -581,6 +583,7 @@
 		E5213C1370E243938ABE2D75 /* ContextWindowBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextWindowBar.swift; sourceTree = "<group>"; };
 		A2A5CA3473B54C90A1EBEFEB /* ContextWindowDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextWindowDetailSheet.swift; sourceTree = "<group>"; };
 		E1EA1CE143B44E568599EF3A /* ContextCompactionAlertBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextCompactionAlertBanner.swift; sourceTree = "<group>"; };
+		F2A3B4C5D6E7F8A9B0C1D2E3 /* SessionMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionMemoryView.swift; sourceTree = "<group>"; };
 		2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataProvider.swift; sourceTree = "<group>"; };
 		2D2ABD33FCEA2A3BF7E58F8E /* WindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowManager.swift; sourceTree = "<group>"; };
 		2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManifest.swift; sourceTree = "<group>"; };
@@ -1527,6 +1530,7 @@
 				E5213C1370E243938ABE2D75 /* ContextWindowBar.swift */,
 				A2A5CA3473B54C90A1EBEFEB /* ContextWindowDetailSheet.swift */,
 				E1EA1CE143B44E568599EF3A /* ContextCompactionAlertBanner.swift */,
+				F2A3B4C5D6E7F8A9B0C1D2E3 /* SessionMemoryView.swift */,
 				92DA7EA27E512C2573284699 /* SystemMessageView.swift */,
 				530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */,
 				01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */,
@@ -1943,6 +1947,7 @@
 				3FFE008E477C46438911BDAB /* ContextWindowBar.swift in Sources */,
 				431C994F72984EDE8025EB0A /* ContextWindowDetailSheet.swift in Sources */,
 				D510731C28A1485C8C6B8B4B /* ContextCompactionAlertBanner.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* SessionMemoryView.swift in Sources */,
 				B541885984979FE64644527D /* SubscriptionManager.swift in Sources */,
 				19DD1967EF47D93B4E0892F5 /* SyncCoordinator.swift in Sources */,
 				023A3B6DE4DF37F470EB65AC /* SyntaxHighlighter.swift in Sources */,
@@ -2187,6 +2192,7 @@
 				A4071DBD589D40E886F09302 /* ContextWindowBar.swift in Sources */,
 				81D5329ADF03466E870C66F1 /* ContextWindowDetailSheet.swift in Sources */,
 				0729B39AD92D44D59FC7096C /* ContextCompactionAlertBanner.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* SessionMemoryView.swift in Sources */,
 				0EA99231F1C3CC9117E511B1 /* SubscriptionManager.swift in Sources */,
 				C2DFE4871ACAB73B9963E4C5 /* SyncCoordinator.swift in Sources */,
 				DE0C58B0013ACBFAAE12737F /* SyntaxHighlighter.swift in Sources */,

@@ -50,6 +50,7 @@ struct ChatView: View {
         var isRenaming = false
         var showSearch = false
         var showContextWindowDetail = false
+        var showSessionMemory = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -173,6 +174,9 @@ struct ChatView: View {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
+        }
+        .sheet(isPresented: $sheets.showSessionMemory) {
+            SessionMemoryView(sessionId: session.id)
         }
         .sheet(isPresented: $sheets.showContextWindowDetail) {
             if let usedTokens = viewModel.contextTokensUsed,
@@ -321,8 +325,18 @@ struct ChatView: View {
                     }
                 },
                 onSaveSnapshot: {
-                    // Phase-2: will connect to SessionMemoryService.saveSnapshot
                     viewModel.showCompactionAlert = false
+                    if let usedTokens = viewModel.contextTokensUsed,
+                       let windowSize = viewModel.contextWindowSize {
+                        Task {
+                            try? await SessionMemoryService.shared.saveSnapshot(
+                                sessionId: session.id,
+                                usedTokens: usedTokens,
+                                windowSize: windowSize,
+                                snapshotText: "Context snapshot captured before compaction."
+                            )
+                        }
+                    }
                 },
                 onDismiss: {
                     viewModel.showCompactionAlert = false
@@ -566,6 +580,13 @@ struct ChatView: View {
                     Label("Fork Session", systemImage: "arrow.branch")
                 }
                 .accessibilityIdentifier("fork-session-button")
+
+                Button {
+                    sheets.showSessionMemory = true
+                } label: {
+                    Label("Session Memory", systemImage: "note.text")
+                }
+                .accessibilityIdentifier("session-memory-button")
 
                 Button {
                     Task { await exportSession() }
