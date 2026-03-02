@@ -238,3 +238,7 @@ extension UsageInfo: Content {}
 extension PermissionRequest: Content {}
 extension StreamError: Content {}
 extension AnyCodable: Content {}
+
+// MARK: - Search History Types
+extension SearchHistoryEntry: Content {}
+extension MessageSearchFilters: Content {}

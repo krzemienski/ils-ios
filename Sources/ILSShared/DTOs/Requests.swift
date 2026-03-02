@@ -414,6 +414,25 @@ public struct MessageSearchFilters: Codable, Sendable {
     }
 }
 
+/// A recent search query entry from search history.
+public struct SearchHistoryEntry: Codable, Identifiable, Sendable {
+    /// Unique identifier for this history entry.
+    public let id: UUID
+    /// The search query string that was executed.
+    public let query: String
+    /// Number of results returned when the query was run.
+    public let resultCount: Int
+    /// Timestamp when this search was performed.
+    public let createdAt: Date
+
+    public init(id: UUID, query: String, resultCount: Int, createdAt: Date) {
+        self.id = id
+        self.query = query
+        self.resultCount = resultCount
+        self.createdAt = createdAt
+    }
+}
+
 // MARK: - Chat Export
 
 /// Export format for chat sessions.
