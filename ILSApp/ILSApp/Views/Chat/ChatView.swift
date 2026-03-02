@@ -84,6 +84,7 @@ struct ChatView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
+    @AppStorage("notif_contextCompactionAlerts") private var notifContextCompactionAlerts: Bool = true
 
     // MARK: - Body
 
@@ -269,6 +270,8 @@ struct ChatView: View {
             } else {
                 statusBanner
 
+                compactionAlertBanner
+
                 contextWindowBar
 
                 relatedSessionsPanel
@@ -291,6 +294,39 @@ struct ChatView: View {
                 state: viewModel.connectionState.asAsyncOperationState,
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
+            )
+            .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    /// In-app alert banner shown when context window usage crosses the 85%, 90%, or 95%
+    /// compaction threshold and the "Context Compaction Alerts" notification preference is enabled.
+    @ViewBuilder
+    private var compactionAlertBanner: some View {
+        if notifContextCompactionAlerts,
+           viewModel.showCompactionAlert,
+           let usedTokens = viewModel.contextTokensUsed,
+           let windowSize = viewModel.contextWindowSize,
+           windowSize > 0 {
+            ContextCompactionAlertBanner(
+                usedTokens: usedTokens,
+                contextWindowSize: windowSize,
+                onForkSession: {
+                    viewModel.showCompactionAlert = false
+                    Task {
+                        if let forked = await viewModel.forkSession() {
+                            actions.forkedSession = forked
+                            sheets.showForkAlert = true
+                        }
+                    }
+                },
+                onSaveSnapshot: {
+                    // Phase-2: will connect to SessionMemoryService.saveSnapshot
+                    viewModel.showCompactionAlert = false
+                },
+                onDismiss: {
+                    viewModel.showCompactionAlert = false
+                }
             )
             .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
         }
