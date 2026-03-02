@@ -10,6 +10,7 @@ let suggestionInteractionStore = SuggestionInteractionStore()
 /// Routes:
 /// - `GET /suggestions/sessions`: Get ranked session suggestions based on context
 /// - `GET /suggestions/skills`: Get ranked skill suggestions based on project/context
+/// - `GET /suggestions/abandoned`: Get sessions inactive for 24+ hours worth resuming
 /// - `POST /suggestions/feedback`: Record user interaction with a suggestion
 struct SuggestionsController: RouteCollection {
     let fileSystem: FileSystemService
@@ -23,6 +24,7 @@ struct SuggestionsController: RouteCollection {
 
         suggestions.get("sessions", use: sessions)
         suggestions.get("skills", use: skills)
+        suggestions.get("abandoned", use: abandoned)
         suggestions.post("feedback", use: feedback)
     }
 
@@ -104,7 +106,53 @@ struct SuggestionsController: RouteCollection {
         return APIResponse(success: true, data: ListResponse(items: suggestions))
     }
 
+    /// Return sessions that have been abandoned (inactive for 24+ hours) and are worth resuming.
+    ///
+    /// Query parameters:
+    /// - `limit`: Max results to return (1–20, default 5)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with ListResponse of AbandonedSessionSuggestion
+    @Sendable
+    func abandoned(req: Request) async throws -> APIResponse<ListResponse<AbandonedSessionSuggestion>> {
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 5, 1), 20)
+
+        // 1. Load DB sessions
+        let dbSessions = try await SessionModel.query(on: req.db)
+            .with(\.$project)
+            .sort(\.$lastActiveAt, .descending)
+            .all()
+        let dbConverted: [ChatSession] = dbSessions.map { $0.toShared(projectName: $0.project?.name) }
+
+        // 2. Load external sessions (deduplicated)
+        let externalSessions = try await fileSystem.listExternalSessionsAsChatSessions(bypassCache: false)
+        let dbClaudeIds = Set(dbSessions.compactMap(\.claudeSessionId))
+        let uniqueExternal = externalSessions.filter { ext in
+            guard let claudeId = ext.claudeSessionId else { return true }
+            return !dbClaudeIds.contains(claudeId)
+        }
+
+        // 3. Merge all sessions
+        var allSessions = dbConverted
+        allSessions.append(contentsOf: uniqueExternal)
+
+        // 4. Get dismissed IDs and score
+        let dismissedIds = await suggestionInteractionStore.getDismissedIds()
+        let service = SuggestionService()
+        let suggestions = service.suggestAbandoned(
+            from: allSessions,
+            limit: limit,
+            dismissedIds: dismissedIds
+        )
+
+        return APIResponse(success: true, data: ListResponse(items: suggestions))
+    }
+
     /// Record user interaction with a suggestion for future relevance boosting.
+    ///
+    /// Supported actions:
+    /// - `click`: Boosts the suggestion's relevance score in future rankings.
+    /// - `dismiss`: Excludes the suggestion from future abandoned session results.
     ///
     /// - Parameter req: Vapor Request with SuggestionFeedbackRequest body
     /// - Returns: APIResponse with AcknowledgedResponse
@@ -112,9 +160,13 @@ struct SuggestionsController: RouteCollection {
     func feedback(req: Request) async throws -> APIResponse<AcknowledgedResponse> {
         let input = try req.content.decode(SuggestionFeedbackRequest.self)
 
-        // Record click interactions (other actions are received but not currently tracked)
-        if input.action == "click" {
+        switch input.action {
+        case "click":
             await suggestionInteractionStore.recordClick(targetId: input.targetId)
+        case "dismiss":
+            await suggestionInteractionStore.recordDismissal(targetId: input.targetId)
+        default:
+            break
         }
 
         return APIResponse(success: true, data: AcknowledgedResponse())

@@ -214,6 +214,7 @@ extension ShadowTokens: Content {}
 // MARK: - Suggestion Types
 extension SessionSuggestion: Content {}
 extension SkillSuggestion: Content {}
+extension AbandonedSessionSuggestion: Content {}
 extension SuggestionFeedbackRequest: Content {}
 
 // MARK: - Activity Feed Types

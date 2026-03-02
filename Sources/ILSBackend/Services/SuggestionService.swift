@@ -36,6 +36,12 @@ actor SuggestionInteractionStore {
     func isDismissed(targetId: String) -> Bool {
         dismissedIds.contains(targetId.lowercased())
     }
+
+    /// Retrieve the current set of dismissed suggestion target IDs.
+    /// - Returns: Set of lowercased target ID strings.
+    func getDismissedIds() -> Set<String> {
+        dismissedIds
+    }
 }
 
 // MARK: - Suggestion Service
