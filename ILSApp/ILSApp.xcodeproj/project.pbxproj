@@ -101,6 +101,7 @@
 		278786B467D104A12CD0BF09 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DEE8624B9BCC400474F4F46 /* AppConstants.swift */; };
 		2861DF0F0B3AE3315C8A640D /* SettingsConnectionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */; };
 		2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C934E92FC1D3804790EA3977 /* SessionInfoView.swift */; };
+		CC3D4E5F6A7B8C9D0E1F2A01 /* SessionForkTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D4E5F6A7B8C9D0E1F2A00 /* SessionForkTreeView.swift */; };
 		28CA248D91D2DCEDBC2EEB29 /* ConnectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */; };
 		29DCAB0F0B90EE30DB9E8091 /* SlateTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349CE1692E27AC105B8B5DBD /* SlateTheme.swift */; };
 		20566D9697D74A6C9E2CA9A5 /* CodingFocusFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */; };
@@ -391,6 +392,7 @@
 		C0AC294D7A88CB4D0A765EB6 /* ConfigEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45286C1C9773FE7BBB9D215 /* ConfigEditorView.swift */; };
 		C18516CBE323057F964BE25B /* GrammarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086471F6384F852489CD04E2 /* GrammarConfig.swift */; };
 		C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C934E92FC1D3804790EA3977 /* SessionInfoView.swift */; };
+		CC3D4E5F6A7B8C9D0E1F2A02 /* SessionForkTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D4E5F6A7B8C9D0E1F2A00 /* SessionForkTreeView.swift */; };
 		C2DFE4871ACAB73B9963E4C5 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */; };
 		C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF28218E9C1558FAA5057AA6 /* ElectricGridTheme.swift */; };
 		C39791242B5B5EE3EEBD84FD /* SystemMetricsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */; };
@@ -749,6 +751,7 @@
 		C7833DDD0453FC543AF33950 /* Scenario03_StreamingAndCancellation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario03_StreamingAndCancellation.swift; sourceTree = "<group>"; };
 		C82F89BCFDD21A13377F020D /* NewSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewSessionView.swift; sourceTree = "<group>"; };
 		C934E92FC1D3804790EA3977 /* SessionInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInfoView.swift; sourceTree = "<group>"; };
+		CC3D4E5F6A7B8C9D0E1F2A00 /* SessionForkTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionForkTreeView.swift; sourceTree = "<group>"; };
 		C97B54AA46C4307B025310A2 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		CA64C24264E1BEDA2EC9E517 /* Scenario11_ExtendedChatConversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario11_ExtendedChatConversation.swift; sourceTree = "<group>"; };
 		CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsViewModel.swift; sourceTree = "<group>"; };
@@ -1057,6 +1060,7 @@
 			children = (
 				C82F89BCFDD21A13377F020D /* NewSessionView.swift */,
 				C934E92FC1D3804790EA3977 /* SessionInfoView.swift */,
+				CC3D4E5F6A7B8C9D0E1F2A00 /* SessionForkTreeView.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -1908,6 +1912,7 @@
 				AA22BB33CC44DD55EE66FF07 /* SkillFavoritesManager.swift in Sources */,
 				0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */,
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
+				CC3D4E5F6A7B8C9D0E1F2A02 /* SessionForkTreeView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
 				AA1B2C3D4E5F6A7B8C9D0E21 /* SessionForkTreeViewModel.swift in Sources */,
 				817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */,
@@ -2146,6 +2151,7 @@
 				DD44EE55FF66AA11BB22CC03 /* SkillFavoritesManager.swift in Sources */,
 				EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */,
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
+				CC3D4E5F6A7B8C9D0E1F2A01 /* SessionForkTreeView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
 				AA1B2C3D4E5F6A7B8C9D0E20 /* SessionForkTreeViewModel.swift in Sources */,
 				66CB3A8E1A407714CC9E3B12 /* SessionTemplate.swift in Sources */,
