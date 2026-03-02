@@ -20,6 +20,7 @@ import TipKit
 /// - ``refreshingBanner`` - Transient animated banner shown during pull-to-refresh
 /// - ``connectionBanner`` - Warning banner with a Setup CTA when the server is unreachable
 /// - ``quickActionsGrid`` - Two-column ``LazyVGrid`` of tappable shortcut cards
+/// - ``suggestionsWidget`` - Collapsible widget surfacing abandoned sessions worth resuming
 /// - ``recentSessionsSection`` - Up to five most-recent sessions with skeleton loading fallback
 /// - ``statsSection`` - Overview stat cards with sparklines and secondary health indicators
 ///
@@ -72,6 +73,7 @@ struct HomeView: View {
                     .tipBackground(theme.bgSecondary)
 
                 quickActionsGrid
+                suggestionsWidget
                 recentSessionsSection
                 statsSection
             }
@@ -207,6 +209,15 @@ struct HomeView: View {
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
                     .stroke(theme.warning.opacity(0.3), lineWidth: 0.5)
             )
+        }
+    }
+
+    // MARK: - Suggestions Widget
+
+    @ViewBuilder
+    private var suggestionsWidget: some View {
+        SessionSuggestionsWidget(apiClient: appState.apiClient) { session in
+            onSessionSelected?(session)
         }
     }
 
