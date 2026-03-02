@@ -36,6 +36,10 @@ class QuickConnectViewModel {
     var backendInfo: BackendInfo?
     var showConnectedState = false
 
+    // MARK: - Auto Detection & Troubleshooting
+    var isAutoDetecting = false
+    var isShowingTroubleshooting = false
+
     // MARK: - History
     var connectionHistory: [String] = []
 
@@ -150,7 +154,9 @@ class QuickConnectViewModel {
 
         guard let urlObj = URL(string: url), urlObj.host != nil else {
             connectionSteps[0].status = .failure("Invalid URL")
+            connectionResult = .failure("Invalid URL")
             isConnecting = false
+            showSteps = false
             return false
         }
         connectionSteps[0].status = .success
@@ -165,7 +171,9 @@ class QuickConnectViewModel {
             connectionSteps[1].status = .success
         } catch {
             connectionSteps[1].status = .failure("Cannot reach server")
+            connectionResult = .failure("Cannot reach server")
             isConnecting = false
+            showSteps = false
             HapticManager.notification(.error)
             return false
         }
@@ -197,9 +205,39 @@ class QuickConnectViewModel {
 
         } catch {
             connectionSteps[2].status = .failure("Health check failed")
+            connectionResult = .failure("Health check failed")
             isConnecting = false
+            showSteps = false
             HapticManager.notification(.error)
             return false
+        }
+    }
+
+    // MARK: - Auto Detection
+
+    /// Attempt to auto-detect a local ILS backend at http://localhost:9999/health.
+    ///
+    /// Uses a 2-second timeout. On success, sets `localURL` to the detected address
+    /// and triggers the full connect flow. Silently does nothing on failure.
+    func autoDetectLocal(appState: AppState) async {
+        isAutoDetecting = true
+        defer { isAutoDetecting = false }
+
+        let detectionURLString = "http://localhost:9999/health"
+        guard let url = URL(string: detectionURLString) else { return }
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 2.0
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                localURL = "http://localhost:9999"
+                selectedMode = .local
+                _ = await connect(appState: appState)
+            }
+        } catch {
+            // Auto-detection failed silently — user can connect manually
         }
     }
 }

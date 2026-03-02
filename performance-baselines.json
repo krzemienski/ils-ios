@@ -1,0 +1,175 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-03-01T00:00:00Z",
+  "device": "iPhone 16 Pro Max (iOS 18.6, Simulator)",
+  "regression_threshold_pct": 10,
+  "notes": "Initial conservative baselines. Run scripts/update-performance-baseline.sh --confirm after first full CI run to replace with real measurements.",
+  "metrics": {
+    "cold_launch_seconds": {
+      "description": "App cold launch time measured by XCTApplicationLaunchMetric (no prior process)",
+      "baseline_value": 3.0,
+      "unit": "seconds",
+      "warning_threshold": 3.3,
+      "fail_threshold": 3.6,
+      "test_class": "LaunchPerformanceTests",
+      "test_method": "testColdLaunchPerformance"
+    },
+    "warm_launch_seconds": {
+      "description": "App warm launch time measured by XCTApplicationLaunchMetric (process already in memory)",
+      "baseline_value": 1.5,
+      "unit": "seconds",
+      "warning_threshold": 1.65,
+      "fail_threshold": 1.8,
+      "test_class": "LaunchPerformanceTests",
+      "test_method": "testWarmLaunchPerformance"
+    },
+    "session_scroll_cpu_pct": {
+      "description": "CPU usage percentage during session list scroll measured by XCTCPUMetric",
+      "baseline_value": 40.0,
+      "unit": "percent",
+      "warning_threshold": 44.0,
+      "fail_threshold": 50.0,
+      "test_class": "ScrollPerformanceTests",
+      "test_method": "testSessionListScrollPerformance"
+    },
+    "session_scroll_hitch_ms_per_s": {
+      "description": "Scroll hitch time ratio during session list scroll (lower is better, Apple recommends <5ms/s)",
+      "baseline_value": 25.0,
+      "unit": "milliseconds_per_second",
+      "warning_threshold": 27.5,
+      "fail_threshold": 30.0,
+      "test_class": "ScrollPerformanceTests",
+      "test_method": "testSessionListScrollPerformance"
+    },
+    "chat_scroll_cpu_pct": {
+      "description": "CPU usage percentage during chat message list scroll measured by XCTCPUMetric",
+      "baseline_value": 40.0,
+      "unit": "percent",
+      "warning_threshold": 44.0,
+      "fail_threshold": 50.0,
+      "test_class": "ChatRenderPerformanceTests",
+      "test_method": "testChatMessageListRenderPerformance"
+    },
+    "chat_initial_render_cpu_pct": {
+      "description": "CPU usage percentage during initial chat view render measured by XCTCPUMetric",
+      "baseline_value": 35.0,
+      "unit": "percent",
+      "warning_threshold": 38.5,
+      "fail_threshold": 45.0,
+      "test_class": "ChatRenderPerformanceTests",
+      "test_method": "testChatViewInitialRenderPerformance"
+    },
+    "search_query_cpu_pct": {
+      "description": "CPU usage percentage during search query execution measured by XCTCPUMetric",
+      "baseline_value": 35.0,
+      "unit": "percent",
+      "warning_threshold": 38.5,
+      "fail_threshold": 45.0,
+      "test_class": "SearchPerformanceTests",
+      "test_method": "testSearchQueryResponseTime"
+    },
+    "search_query_clock_s": {
+      "description": "Wall-clock time for a search query response measured by XCTClockMetric",
+      "baseline_value": 0.5,
+      "unit": "seconds",
+      "warning_threshold": 0.55,
+      "fail_threshold": 0.65,
+      "test_class": "SearchPerformanceTests",
+      "test_method": "testSearchQueryResponseTime"
+    },
+    "incremental_search_cpu_pct": {
+      "description": "CPU usage percentage during incremental/typeahead search measured by XCTCPUMetric",
+      "baseline_value": 30.0,
+      "unit": "percent",
+      "warning_threshold": 33.0,
+      "fail_threshold": 40.0,
+      "test_class": "SearchPerformanceTests",
+      "test_method": "testIncrementalSearchResponseTime"
+    },
+    "memory_session_browse_mb": {
+      "description": "Memory footprint during session list browsing and scrolling measured by XCTMemoryMetric",
+      "baseline_value": 50.0,
+      "unit": "megabytes",
+      "warning_threshold": 55.0,
+      "fail_threshold": 60.0,
+      "test_class": "MemoryPerformanceTests",
+      "test_method": "testSessionListScrollMemoryFootprint"
+    },
+    "memory_session_leak_mb": {
+      "description": "Memory growth across repeated session browsing cycles (detect retain cycles) measured by XCTMemoryMetric",
+      "baseline_value": 5.0,
+      "unit": "megabytes",
+      "warning_threshold": 5.5,
+      "fail_threshold": 7.0,
+      "test_class": "MemoryLeakTests",
+      "test_method": "testSessionBrowsingRetainCycles"
+    },
+    "memory_chat_navigation_leak_mb": {
+      "description": "Memory growth across repeated chat navigation cycles (detect retain cycles) measured by XCTMemoryMetric",
+      "baseline_value": 5.0,
+      "unit": "megabytes",
+      "warning_threshold": 5.5,
+      "fail_threshold": 7.0,
+      "test_class": "MemoryLeakTests",
+      "test_method": "testChatNavigationRetainCycles"
+    },
+    "large_list_100_cpu_pct": {
+      "description": "CPU usage percentage scrolling a list of 100 session items (PERF_ITEM_COUNT=100)",
+      "baseline_value": 40.0,
+      "unit": "percent",
+      "warning_threshold": 44.0,
+      "fail_threshold": 50.0,
+      "test_class": "LargeListRenderTests",
+      "test_method": "testLargeListScrollPerformance",
+      "env": {"PERF_ITEM_COUNT": "100"}
+    },
+    "large_list_100_hitch_ms_per_s": {
+      "description": "Hitch time ratio scrolling a list of 100 session items (PERF_ITEM_COUNT=100)",
+      "baseline_value": 20.0,
+      "unit": "milliseconds_per_second",
+      "warning_threshold": 22.0,
+      "fail_threshold": 25.0,
+      "test_class": "LargeListRenderTests",
+      "test_method": "testLargeListScrollPerformance",
+      "env": {"PERF_ITEM_COUNT": "100"}
+    },
+    "large_list_1k_cpu_pct": {
+      "description": "CPU usage percentage scrolling a list of 1000 session items (PERF_ITEM_COUNT=1000)",
+      "baseline_value": 45.0,
+      "unit": "percent",
+      "warning_threshold": 49.5,
+      "fail_threshold": 55.0,
+      "test_class": "LargeListRenderTests",
+      "test_method": "testLargeListScrollPerformance",
+      "env": {"PERF_ITEM_COUNT": "1000"}
+    },
+    "large_list_10k_cpu_pct": {
+      "description": "CPU usage percentage scrolling a list of 10000 session items (PERF_ITEM_COUNT=10000)",
+      "baseline_value": 50.0,
+      "unit": "percent",
+      "warning_threshold": 55.0,
+      "fail_threshold": 65.0,
+      "test_class": "LargeListRenderTests",
+      "test_method": "testLargeListScrollPerformance",
+      "env": {"PERF_ITEM_COUNT": "10000"}
+    },
+    "memory_session_idle_mb": {
+      "description": "Peak memory during session list idle state — hard limit enforced by XCTAssert in MemoryThresholdTests (limit: 50 MB)",
+      "baseline_value": 40.0,
+      "unit": "megabytes",
+      "warning_threshold": 45.0,
+      "fail_threshold": 50.0,
+      "test_class": "MemoryThresholdTests",
+      "test_method": "testSessionListIdleMemoryThreshold"
+    },
+    "memory_chat_active_mb": {
+      "description": "Peak memory during active chat session — hard limit enforced by XCTAssert in MemoryThresholdTests (limit: 75 MB)",
+      "baseline_value": 60.0,
+      "unit": "megabytes",
+      "warning_threshold": 67.5,
+      "fail_threshold": 75.0,
+      "test_class": "MemoryThresholdTests",
+      "test_method": "testChatViewMemoryThreshold"
+    }
+  }
+}

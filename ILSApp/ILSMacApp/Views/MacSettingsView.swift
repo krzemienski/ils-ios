@@ -41,6 +41,8 @@ struct MacSettingsView: View {
     @AppStorage("enableDebugMode") var enableDebugMode: Bool = false
     @AppStorage("showSessionSuggestions") var showSessionSuggestions: Bool = true
 
+    private let syncManager = ICloudSyncManager.shared
+
     let availableModels = [
         "claude-sonnet-4-20250514",
         "claude-opus-4-20250514",
@@ -374,6 +376,62 @@ struct MacSettingsView: View {
             .padding(theme.spacingMD)
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            // MARK: iCloud Sync
+
+            VStack(alignment: .leading, spacing: theme.spacingMD) {
+                settingRow(label: "iCloud Sync") {
+                    Toggle("", isOn: Binding(
+                        get: { syncManager.isSyncEnabled },
+                        set: { syncManager.setSyncEnabled($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                }
+
+                Text("Sync preferences and settings across all your Apple devices")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+
+                HStack(spacing: theme.spacingSM) {
+                    InheritanceBadge(isInherited: false)
+                    Spacer()
+                    SettingsInfoButton(text: "When enabled, preferences such as server URL, default model, color scheme, and notification settings are synced via iCloud to all your Apple devices signed in to the same iCloud account. Disabling sync on this device will not affect other devices.")
+                }
+
+                Divider()
+
+                settingRow(label: "Sync Status") {
+                    HStack(spacing: theme.spacingSM) {
+                        Circle()
+                            .fill(iCloudStatusColor)
+                            .frame(width: 8, height: 8)
+                        Text(iCloudStatusLabel)
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(iCloudStatusColor)
+                    }
+                }
+
+                settingRow(label: "Last Synced") {
+                    Text(iCloudLastSyncText)
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+
+                if syncManager.isSyncEnabled {
+                    Divider()
+
+                    settingRow(label: "Sync Now") {
+                        Button("Sync Now") {
+                            syncManager.syncPreferencesToCloud()
+                        }
+                        .disabled(syncManager.syncStatus == .syncing)
+                    }
+                }
+            }
+            .padding(theme.spacingMD)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
     }
 
@@ -507,6 +565,33 @@ struct MacSettingsView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
+    }
+
+    // MARK: - iCloud Sync Helpers
+
+    private var iCloudStatusLabel: String {
+        switch syncManager.syncStatus {
+        case .idle:     return syncManager.isSyncEnabled ? "Up to Date" : "Disabled"
+        case .syncing:  return "Syncing…"
+        case .error:    return "Error"
+        case .disabled: return "Disabled"
+        }
+    }
+
+    private var iCloudStatusColor: Color {
+        switch syncManager.syncStatus {
+        case .idle:     return syncManager.isSyncEnabled ? theme.success : theme.textTertiary
+        case .syncing:  return theme.accent
+        case .error:    return theme.error
+        case .disabled: return theme.textTertiary
+        }
+    }
+
+    private var iCloudLastSyncText: String {
+        guard let date = syncManager.lastSyncDate else { return "Never" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 
     // MARK: - Actions

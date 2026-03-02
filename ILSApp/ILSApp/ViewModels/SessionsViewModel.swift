@@ -291,6 +291,22 @@ class SessionsViewModel: BaseViewModel {
     // MARK: - Legacy full-list loading (used by iOS tab views)
 
     func loadSessions(refresh: Bool = false) async {
+#if DEBUG
+        // Performance test mock injection: when the app is launched with --uitesting
+        // and PERF_ITEM_COUNT is set, bypass the API and populate with synthetic data.
+        // This allows LargeListRenderTests to measure pure render performance without
+        // network variance or backend dependency.
+        if ProcessInfo.processInfo.arguments.contains("--uitesting"),
+           let raw = ProcessInfo.processInfo.environment["PERF_ITEM_COUNT"],
+           let count = Int(raw), count > 0 {
+            sessions = AppState.makeMockSessions(count: count)
+            totalCount = count
+            hasMore = false
+            isLoading = false
+            rebuildSearchCache()
+            return
+        }
+#endif
         guard let client else { return }
         isLoading = true
         error = nil

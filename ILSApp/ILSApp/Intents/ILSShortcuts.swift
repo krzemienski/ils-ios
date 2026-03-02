@@ -30,10 +30,31 @@ struct ILSShortcuts: AppShortcutsProvider {
             intent: GetSessionInfoIntent(),
             phrases: [
                 "Get session info from \(.applicationName)",
-                "Show \(.applicationName) session details"
+                "Show \(.applicationName) session details",
+                "Check session status in \(.applicationName)"
             ],
             shortTitle: "Session Info",
             systemImageName: "info.circle"
+        )
+        AppShortcut(
+            intent: ListSessionsIntent(),
+            phrases: [
+                "List my \(.applicationName) sessions",
+                "Show \(.applicationName) sessions",
+                "What sessions are open in \(.applicationName)"
+            ],
+            shortTitle: "List Sessions",
+            systemImageName: "list.bullet"
+        )
+        AppShortcut(
+            intent: ListProjectsIntent(),
+            phrases: [
+                "List my \(.applicationName) projects",
+                "Show \(.applicationName) projects",
+                "What projects are in \(.applicationName)"
+            ],
+            shortTitle: "List Projects",
+            systemImageName: "folder"
         )
     }
 }

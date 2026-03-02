@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import SwiftUI
 
 /// Returns detailed information about a Claude Code session.
 @available(iOS 16.0, *)
@@ -14,10 +15,14 @@ struct GetSessionInfoIntent: AppIntent {
         Summary("Get info for \(\.$session)")
     }
 
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ShowsSnippetView {
         let baseURL = UserDefaults.standard.string(forKey: "serverURL") ?? "http://localhost:9999"
         guard let url = URL(string: "\(baseURL)/api/v1/sessions/\(session.id)") else {
-            return .result(value: "Error: Invalid server URL")
+            let snippetInfo = SnippetSessionInfo(from: session)
+            return .result(
+                value: "Error: Invalid server URL",
+                view: SessionSnippetView(mode: .detail(snippetInfo))
+            )
         }
 
         var request = URLRequest(url: url)
@@ -35,7 +40,11 @@ struct GetSessionInfoIntent: AppIntent {
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
                 // Fall back to cached entity data
-                return .result(value: formatEntityInfo())
+                let snippetInfo = SnippetSessionInfo(from: session)
+                return .result(
+                    value: formatEntityInfo(),
+                    view: SessionSnippetView(mode: .detail(snippetInfo))
+                )
             }
 
             let decoder = JSONDecoder()
@@ -45,14 +54,34 @@ struct GetSessionInfoIntent: AppIntent {
             // Falls back to entity data if detailed response can't be decoded.
             if let json = try? decoder.decode(SessionDetailResponse.self, from: data),
                let detail = json.data {
-                return .result(value: formatDetailedInfo(detail))
+                let isActive = detail.status.lowercased() == "active"
+                let snippetInfo = SnippetSessionInfo(
+                    id: detail.id,
+                    name: detail.name ?? session.name,
+                    model: detail.model,
+                    messageCount: detail.messageCount,
+                    isActive: isActive,
+                    projectName: detail.projectName
+                )
+                return .result(
+                    value: formatDetailedInfo(detail),
+                    view: SessionSnippetView(mode: .detail(snippetInfo))
+                )
             }
 
             // Fall back to entity data
-            return .result(value: formatEntityInfo())
+            let snippetInfo = SnippetSessionInfo(from: session)
+            return .result(
+                value: formatEntityInfo(),
+                view: SessionSnippetView(mode: .detail(snippetInfo))
+            )
         } catch {
             // Network error — return what we have from the entity
-            return .result(value: formatEntityInfo())
+            let snippetInfo = SnippetSessionInfo(from: session)
+            return .result(
+                value: formatEntityInfo(),
+                view: SessionSnippetView(mode: .detail(snippetInfo))
+            )
         }
     }
 

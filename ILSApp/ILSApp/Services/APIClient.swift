@@ -7,6 +7,8 @@ import Foundation
 /// and request batching for rapid navigation. All paths are automatically prefixed with `/api/v1`.
 ///
 /// Supports optional Bearer-token authentication via Keychain-persisted API key.
+/// Supports HTTP conditional requests: stores ETags and sends If-None-Match headers
+/// so the server can return 304 Not Modified when content is unchanged, saving bandwidth.
 actor APIClient {
     let baseURL: String
     private let session: URLSession
@@ -18,6 +20,22 @@ actor APIClient {
     /// In-flight GET tasks keyed by path. Actor isolation makes this thread-safe.
     /// Concurrent GET requests to the same path share a single network call.
     private var inFlightGETs: [String: Task<Any, Error>] = [:]
+
+    /// ETag backing store for conditional HTTP requests.
+    ///
+    /// Stores the last successful response body (Data) and its ETag per path.
+    /// Unlike NSCache, this dictionary is never evicted by memory pressure, ensuring
+    /// that a 304 Not Modified response always has backing data to decode from.
+    /// Entries are cleared on mutations (POST/PUT/DELETE) via invalidateCacheForMutation.
+    /// Total byte footprint is bounded by `conditionalCacheByteLimit`.
+    private var conditionalCache: [String: (data: Data, etag: String)] = [:]
+
+    /// Running total of bytes stored across all `conditionalCache` entries.
+    private var conditionalCacheByteCount: Int = 0
+
+    /// Maximum bytes stored in `conditionalCache` before a full eviction (10 MB).
+    /// Mirrors the `totalCostLimit` applied to the NSCache above.
+    private let conditionalCacheByteLimit = 10 * 1024 * 1024
 
     /// Optional API key for authenticated requests.
     /// When set, all /api/v1 requests include `Authorization: Bearer <key>`.
@@ -203,7 +221,39 @@ actor APIClient {
             request.addValue("application/json", forHTTPHeaderField: "Accept")
             self.applyAuth(to: &request)
 
+            // Attach stored ETag for conditional request (If-None-Match).
+            // If server content is unchanged it will respond 304 Not Modified,
+            // saving bandwidth by skipping the full response body.
+            let cachedEntry = self.conditionalCache[path]
+            if let etag = cachedEntry?.etag {
+                request.addValue(etag, forHTTPHeaderField: "If-None-Match")
+            }
+
             let (data, response) = try await self.performWithRetry(request: request)
+
+            // Single downcast — reused for both 304 check and ETag header extraction below.
+            let httpResponse = response as? HTTPURLResponse
+
+            // Handle 304 Not Modified — server confirmed content is unchanged.
+            // Decode from the backed-up response body in conditionalCache and
+            // refresh the NSCache entry so the TTL resets without re-downloading.
+            if httpResponse?.statusCode == 304 {
+                guard let entry = cachedEntry else {
+                    // 304 with no backing data (stale ETag sent by mistake).
+                    // Clear the bad ETag so next request goes unconditional.
+                    self.conditionalCache.removeValue(forKey: path)
+                    throw APIError.httpError(statusCode: 304)
+                }
+                let decoded: T = try decoder.decode(T.self, from: entry.data)
+                let cost = self.estimatedCost(for: decoded)
+                self.cache.setObject(
+                    CacheEntryObject(value: decoded, timestamp: Date()),
+                    forKey: cacheKey,
+                    cost: cost
+                )
+                return decoded as Any
+            }
+
             try self.validateResponse(response, data: data)
 
             let decoded: T = try decoder.decode(T.self, from: data)
@@ -214,6 +264,21 @@ actor APIClient {
                 forKey: cacheKey,
                 cost: cost
             )
+
+            // Store ETag and raw body for future conditional requests.
+            // Evict all entries when total byte footprint would exceed the 10 MB limit.
+            if let etag = httpResponse?.value(forHTTPHeaderField: "ETag") {
+                let incomingSize = data.count
+                let existingSize = self.conditionalCache[path]?.data.count ?? 0
+                let delta = incomingSize - existingSize
+                if self.conditionalCacheByteCount + delta > self.conditionalCacheByteLimit {
+                    self.conditionalCache.removeAll()
+                    self.conditionalCacheByteCount = 0
+                }
+                self.conditionalCache[path] = (data: data, etag: etag)
+                self.conditionalCacheByteCount += delta
+            }
+
             return decoded as Any
         }
         inFlightGETs[path] = task
@@ -334,7 +399,8 @@ actor APIClient {
     }
 
     /// Invalidate cache entries affected by a mutation (POST/PUT/DELETE).
-    /// Removes the exact resource path and its parent list endpoint.
+    /// Removes the exact resource path and its parent list endpoint from both
+    /// the NSCache (TTL cache) and conditionalCache (ETag backing store).
     /// Also cancels any in-flight GETs for affected paths to prevent stale cache repopulation.
     private func invalidateCacheForMutation(path: String) {
         // Cancel in-flight GET for exact path to prevent stale data from repopulating cache
@@ -343,6 +409,8 @@ actor APIClient {
 
         // Remove exact path (e.g. /sessions/abc-123)
         cache.removeObject(forKey: path as NSString)
+        removeConditionalEntry(forKey: path)
+
         // Remove list endpoint (e.g. /sessions) and cancel its in-flight GET
         let components = path.split(separator: "/")
         if components.count >= 1 {
@@ -350,14 +418,25 @@ actor APIClient {
             inFlightGETs[listPath]?.cancel()
             inFlightGETs.removeValue(forKey: listPath)
             cache.removeObject(forKey: listPath as NSString)
+            removeConditionalEntry(forKey: listPath)
         }
     }
 
     func invalidateCache(for path: String? = nil) {
         if let path = path {
             cache.removeObject(forKey: path as NSString)
+            removeConditionalEntry(forKey: path)
         } else {
             cache.removeAllObjects()
+            conditionalCache.removeAll()
+            conditionalCacheByteCount = 0
+        }
+    }
+
+    /// Remove a single `conditionalCache` entry and update the byte counter.
+    private func removeConditionalEntry(forKey key: String) {
+        if let entry = conditionalCache.removeValue(forKey: key) {
+            conditionalCacheByteCount -= entry.data.count
         }
     }
 

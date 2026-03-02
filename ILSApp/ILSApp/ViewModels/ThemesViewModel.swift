@@ -24,6 +24,15 @@ class ThemesViewModel: BaseViewModel {
             let response: APIResponse<ListResponse<CustomTheme>> = try await client.get("/themes")
             if let data = response.data {
                 themes = data.items
+
+                if ICloudSyncManager.shared.isSyncEnabled {
+                    await ICloudSyncManager.shared.syncCustomThemes(themes: themes, apiClient: client)
+                    // Reload to surface any themes synced from other devices
+                    let refreshed: APIResponse<ListResponse<CustomTheme>> = try await client.get("/themes")
+                    if let refreshedData = refreshed.data {
+                        themes = refreshedData.items
+                    }
+                }
             }
         } catch {
             self.error = error
