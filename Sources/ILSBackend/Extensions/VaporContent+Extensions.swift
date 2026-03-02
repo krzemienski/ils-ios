@@ -223,6 +223,19 @@ extension ActivityEventSeverity: Content {}
 extension ActivityFeedFilter: Content {}
 extension ActivityFeedResponse: Content {}
 
+// MARK: - Permission Types
+extension PermissionRecord: Content {}
+extension PermissionStatus: Content {}
+extension PermissionRiskLevel: Content {}
+extension PermissionListResponse: Content {}
+extension PermissionDetailResponse: Content {}
+extension AutoApproveRule: Content {}
+extension AutoApproveRulesResponse: Content {}
+extension ApprovePermissionRequest: Content {}
+extension DenyPermissionRequest: Content {}
+extension BatchPermissionRequest: Content {}
+extension PermissionBatchAction: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}
