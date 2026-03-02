@@ -69,6 +69,7 @@
 		1704369786635A49766D5DC1 /* checkpoint-2026-02-13T02-32-52-924Z.json in Resources */ = {isa = PBXBuildFile; fileRef = 862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */; };
 		18357DC6909A92960DCF90E6 /* ILSMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB16994516471A2241BCCC2 /* ILSMacApp.swift */; };
 		19DD1967EF47D93B4E0892F5 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */; };
+		D2CE6238F0A74810BB0DF6F5 /* TerminalWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D74F7BC2DA04977B9FBA830 /* TerminalWebSocketClient.swift */; };
 		1A3BD36BCCDBF50CF8EA735E /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4479E8480E675A6F0F2D0CD /* NetworkMonitor.swift */; };
 		E5B7291CF843A06D9E253B48 /* ICloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9A832BDE714E5C82A79B01 /* ICloudSyncManager.swift */; };
 		AA11BB22CC33DD44EE55FF06 /* SessionBookmarksManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */; };
@@ -132,6 +133,7 @@
 		33C459F4DFD48229AC598DF9 /* ConnectionSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E8702D461A0CF80E44F404 /* ConnectionSteps.swift */; };
 		3456C04282352EE13ABAB0B4 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */; };
 		34F69F8A8DC02040BD4C6113 /* TunnelSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */; };
+		4C4C8A9EAF9F44BE980AF90E /* TerminalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */; };
 		36A459918D16CC918CF4BEAA /* SessionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB16073F4EF7ED850213059 /* SessionEntity.swift */; };
 		ADD6B319E5F241F8A085CC3B /* ProjectEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112C91745BB44EBBA29F698D /* ProjectEntity.swift */; };
 		3745234529CDF48C45490BBF /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D259013682B0E76D248995F /* PerformanceMonitor.swift */; };
@@ -270,6 +272,7 @@
 		AA01234500000003AABBCCDD /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01234500000002AABBCCDD /* AppState.swift */; };
 		8534EEB9C7E7003C2ED71103 /* Scenario01_CompleteSessionLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E664C3195016F6ABF8B3D121 /* Scenario01_CompleteSessionLifecycle.swift */; };
 		8693100F646512D6234ED00E /* ToastModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A737BC14D9734232F0E080B8 /* ToastModifier.swift */; };
+		E321992718DC498B99EE6946 /* ANSIParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209E635F4E374A36BDDBB094 /* ANSIParser.swift */; };
 		88AD5DA924D58B1F29D63CC4 /* SSHViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */; };
 		895B75AB05181525D8F74B26 /* UserMessageCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */; };
 		89E4A2CEA791B8E3E2D9473B /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C748DE91CEA4C3A823DD3A8 /* KeychainService.swift */; };
@@ -287,6 +290,7 @@
 		958F187AF69FE638B1F46F6A /* PluginsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E6BDEE64502CDE85030C8E /* PluginsViewModel.swift */; };
 		966812B5294CDA773D94B897 /* ThemeCornerRadiusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AEAC8111CFAB3AEB8A35D89 /* ThemeCornerRadiusSection.swift */; };
 		968D2C52B9A44BE2B92BD1FE /* TunnelSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */; };
+		EA780F47A33543709301AE2A /* TerminalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */; };
 		96A01212B905EA97DB11D3D2 /* hud-state.json in Resources */ = {isa = PBXBuildFile; fileRef = 6157A63376D8A574079B8194 /* hud-state.json */; };
 		979673D0041CADA6053FE6E6 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086281B052347B8C9884124C /* MetricsWebSocketClient.swift */; };
 		97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
@@ -391,6 +395,7 @@
 		C18516CBE323057F964BE25B /* GrammarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086471F6384F852489CD04E2 /* GrammarConfig.swift */; };
 		C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C934E92FC1D3804790EA3977 /* SessionInfoView.swift */; };
 		C2DFE4871ACAB73B9963E4C5 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */; };
+		04554407A8A94BB881082801 /* TerminalWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D74F7BC2DA04977B9FBA830 /* TerminalWebSocketClient.swift */; };
 		C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF28218E9C1558FAA5057AA6 /* ElectricGridTheme.swift */; };
 		C39791242B5B5EE3EEBD84FD /* SystemMetricsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */; };
 		C45D62C8ACFEA7C4E3750E14 /* MCPViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 974AE71DCAD6F3D4705F56B8 /* MCPViewModel.swift */; };
@@ -484,6 +489,7 @@
 		F3010037ABCA48302B4CE17F /* SSHSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B54988B86A494CD21D10B91 /* SSHSetupView.swift */; };
 		F3598B180D2303048A011310 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9931211AAA50959FAEC7FE5C /* ProgressRing.swift */; };
 		F3AD02A829BC5F9F4422B9B3 /* ToastModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A737BC14D9734232F0E080B8 /* ToastModifier.swift */; };
+		DE6FD9A9A9A4456CAD346066 /* ANSIParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209E635F4E374A36BDDBB094 /* ANSIParser.swift */; };
 		F3AE767DFC8E6026F28265A5 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
 		F573AE8DF3C88CF4EEA2BF83 /* CreateSessionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */; };
 		9E6BB1C57331404DB610B52A /* ListSessionsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1823C43FCEC74FFFA2205DE3 /* ListSessionsIntent.swift */; };
@@ -625,6 +631,7 @@
 		548657A1773765E26B590326 /* SkillsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsViewModel.swift; sourceTree = "<group>"; };
 		482F6FF14021418993693869 /* SuggestionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsViewModel.swift; sourceTree = "<group>"; };
 		54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoordinator.swift; sourceTree = "<group>"; };
+		6D74F7BC2DA04977B9FBA830 /* TerminalWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWebSocketClient.swift; sourceTree = "<group>"; };
 		56E64ED9CB56B90670D6E4BA /* ProcessListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListView.swift; sourceTree = "<group>"; };
 		586B7AA21B4A73C7E651752C /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		59590E5FFF289E598D2F6A1C /* ServerStatusWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStatusWidget.swift; sourceTree = "<group>"; };
@@ -670,6 +677,7 @@
 		821CFEE940D55731D5E8D672 /* ThinkingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThinkingSection.swift; sourceTree = "<group>"; };
 		82F084CEBEC0AF408C0259F5 /* NeonNoirTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeonNoirTheme.swift; sourceTree = "<group>"; };
 		83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsViewModel.swift; sourceTree = "<group>"; };
+		BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalViewModel.swift; sourceTree = "<group>"; };
 		85A5E088C4FDB1B4F32EED35 /* AppTips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTips.swift; sourceTree = "<group>"; };
 		862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "checkpoint-2026-02-13T02-32-52-924Z.json"; sourceTree = "<group>"; };
 		869B654B4F7CD919CFF60F91 /* MacChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacChatView.swift; sourceTree = "<group>"; };
@@ -708,6 +716,7 @@
 		A078748E32E0DE2D16C443CD /* c017e206-ef61-48e1-a961-d2f1a19f55ed.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "c017e206-ef61-48e1-a961-d2f1a19f55ed.json"; sourceTree = "<group>"; };
 		A1AD4ECE9770812FE2B0982B /* PremiumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumView.swift; sourceTree = "<group>"; };
 		A737BC14D9734232F0E080B8 /* ToastModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastModifier.swift; sourceTree = "<group>"; };
+		209E635F4E374A36BDDBB094 /* ANSIParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ANSIParser.swift; sourceTree = "<group>"; };
 		A739B55CE00235EB978045C4 /* GrammarRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarRegistry.swift; sourceTree = "<group>"; };
 		AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionMode.swift; sourceTree = "<group>"; };
 		ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostProfilesViewModel.swift; sourceTree = "<group>"; };
@@ -1136,6 +1145,7 @@
 				7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */,
 				DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */,
 				B3E32DD92F87322D4834E67C /* SessionExporter.swift */,
+				209E635F4E374A36BDDBB094 /* ANSIParser.swift */,
 				BC3E667C92D5B2A3F254C5A5 /* SyntaxHighlighter.swift */,
 				A737BC14D9734232F0E080B8 /* ToastModifier.swift */,
 				E8927C31DCD8AD854B3AA48C /* Grammars */,
@@ -1307,6 +1317,7 @@
 				06A8A5DC276AB8E77D502627 /* SSEClient.swift */,
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
 				54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */,
+				6D74F7BC2DA04977B9FBA830 /* TerminalWebSocketClient.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1370,6 +1381,7 @@
 				BADD6822FA1CDF47E09673F2 /* SSHViewModel.swift */,
 				CACAD838549D0D25406F14D6 /* SystemMetricsViewModel.swift */,
 				6E65F9892954F605C2737A7D /* TeamsViewModel.swift */,
+				BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */,
 				C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */,
 				83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */,
 			);
@@ -1935,6 +1947,7 @@
 				431C994F72984EDE8025EB0A /* ContextWindowDetailSheet.swift in Sources */,
 				B541885984979FE64644527D /* SubscriptionManager.swift in Sources */,
 				19DD1967EF47D93B4E0892F5 /* SyncCoordinator.swift in Sources */,
+				D2CE6238F0A74810BB0DF6F5 /* TerminalWebSocketClient.swift in Sources */,
 				023A3B6DE4DF37F470EB65AC /* SyntaxHighlighter.swift in Sources */,
 				9B4601761790C25404F93A24 /* SyntaxRuleTypes.swift in Sources */,
 				1E936C90E19AF5504CB5D690 /* SystemMessageView.swift in Sources */,
@@ -1961,9 +1974,11 @@
 				59D54CF6CB8A3DF9A89CE17A /* ThemeTypographySection.swift in Sources */,
 				E9C298835D464BEE4D300C51 /* ThemedCodeBlockView.swift in Sources */,
 				498CE5EB4DC0AA62C4381F57 /* ThemesListView.swift in Sources */,
+				4C4C8A9EAF9F44BE980AF90E /* TerminalViewModel.swift in Sources */,
 				B3A8F33667FFE4E829EEAC7E /* ThemesViewModel.swift in Sources */,
 				29F6B1E4087FDA2A462BE3D4 /* ThinkingSection.swift in Sources */,
 				F3AD02A829BC5F9F4422B9B3 /* ToastModifier.swift in Sources */,
+				E321992718DC498B99EE6946 /* ANSIParser.swift in Sources */,
 				BF733927A6B9F3B4BEB875B6 /* ToolCallAccordion.swift in Sources */,
 				D71AFEBF42AAA69EDD1F38A8 /* TunnelSettingsView.swift in Sources */,
 				968D2C52B9A44BE2B92BD1FE /* TunnelSettingsViewModel.swift in Sources */,
@@ -2177,6 +2192,7 @@
 				81D5329ADF03466E870C66F1 /* ContextWindowDetailSheet.swift in Sources */,
 				0EA99231F1C3CC9117E511B1 /* SubscriptionManager.swift in Sources */,
 				C2DFE4871ACAB73B9963E4C5 /* SyncCoordinator.swift in Sources */,
+				04554407A8A94BB881082801 /* TerminalWebSocketClient.swift in Sources */,
 				DE0C58B0013ACBFAAE12737F /* SyntaxHighlighter.swift in Sources */,
 				E5FA302EAE4DE6C2970BD221 /* SyntaxRuleTypes.swift in Sources */,
 				4C4BC1FF39CC229F1037E360 /* SystemMessageView.swift in Sources */,
@@ -2203,9 +2219,11 @@
 				D07764A7C157666618C165DD /* ThemeTypographySection.swift in Sources */,
 				05C15FC8A817FEACE7997E8F /* ThemedCodeBlockView.swift in Sources */,
 				B375F2050B72FBAC42E67ED6 /* ThemesListView.swift in Sources */,
+				EA780F47A33543709301AE2A /* TerminalViewModel.swift in Sources */,
 				BA49ABF453422C572715383B /* ThemesViewModel.swift in Sources */,
 				FC8E8149BA516A5E6CE398EC /* ThinkingSection.swift in Sources */,
 				8693100F646512D6234ED00E /* ToastModifier.swift in Sources */,
+				DE6FD9A9A9A4456CAD346066 /* ANSIParser.swift in Sources */,
 				5152C5E755767492187CF54A /* ToolCallAccordion.swift in Sources */,
 				51A88357FAE07DB0E459965D /* TunnelSettingsView.swift in Sources */,
 				34F69F8A8DC02040BD4C6113 /* TunnelSettingsViewModel.swift in Sources */,
