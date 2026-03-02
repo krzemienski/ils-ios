@@ -97,7 +97,7 @@ class PlaybackViewModel {
     private var client: APIClient?
 
     /// Background task driving the playback tick loop.
-    private var playbackTask: Task<Void, Never>?
+    nonisolated(unsafe) private var playbackTask: Task<Void, Never>?
 
     /// Interval (seconds) between successive timer ticks.
     private let tickInterval: TimeInterval = 0.1
