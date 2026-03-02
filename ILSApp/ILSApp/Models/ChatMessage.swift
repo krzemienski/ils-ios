@@ -22,7 +22,6 @@ import Foundation
 struct ChatMessage: Identifiable, Equatable {
     let id: UUID
     let isUser: Bool
-    var isSystem: Bool = false
     var text: String
     var toolCalls: [ToolCallDisplay] = []
     var toolResults: [ToolResultDisplay] = []
@@ -56,12 +55,10 @@ struct ChatMessage: Identifiable, Equatable {
         isFromHistory: Bool = false,
         tokenCount: Int = 0,
         elapsedSeconds: Double = 0,
-        isSystem: Bool = false,
         systemEventType: SystemEventType? = nil
     ) {
         self.id = id
         self.isUser = isUser
-        self.isSystem = isSystem
         self.text = text
         self.toolCalls = toolCalls
         self.toolResults = toolResults
@@ -83,8 +80,8 @@ struct ChatMessage: Identifiable, Equatable {
     static func systemEvent(_ text: String, eventType: SystemEventType? = nil) -> ChatMessage {
         ChatMessage(
             isUser: false,
-            text: text,
             isSystem: true,
+            text: text,
             systemEventType: eventType
         )
     }
@@ -92,7 +89,6 @@ struct ChatMessage: Identifiable, Equatable {
     static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
         lhs.id == rhs.id &&
         lhs.isUser == rhs.isUser &&
-        lhs.isSystem == rhs.isSystem &&
         lhs.text == rhs.text &&
         lhs.toolCalls == rhs.toolCalls &&
         lhs.toolResults == rhs.toolResults &&
