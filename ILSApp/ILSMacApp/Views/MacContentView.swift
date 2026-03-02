@@ -426,6 +426,11 @@ struct MacContentView: View {
                     activeScreen = .chat(ChatSession(id: uuid, name: "Session"))
                 }
             }
+        case .sessionForkTree(let session):
+            SessionForkTreeView(initialSession: session, onNavigate: { s in
+                activeScreen = .chat(s)
+            })
+            .environment(appState)
         }
     }
 
@@ -683,6 +688,7 @@ struct MacContentView: View {
         case .hooks: selectedSection = .hooks
         case .chat: selectedSection = .home
         case .activityFeed: selectedSection = .home
+        case .sessionForkTree: selectedSection = .home
         }
         activeScreen = intent
         appState.navigationIntent = nil
