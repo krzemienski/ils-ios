@@ -84,32 +84,50 @@ struct MacSessionsListView: View {
     // MARK: - Search Bar
 
     private var searchBarView: some View {
-        HStack(spacing: theme.spacingSM) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
-            TextField("Search sessions...", text: $searchText)
-                .textFieldStyle(.plain)
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textPrimary)
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                    debouncedSearchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
+        VStack(alignment: .leading, spacing: theme.spacingXS) {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                TextField("Search sessions...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                if viewModel.parsedQuery != nil {
+                    Image(systemName: "sparkles")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                        .foregroundStyle(theme.accent)
+                        .accessibilityLabel("Smart search active")
                 }
-                .buttonStyle(.plain)
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                        debouncedSearchText = ""
+                        viewModel.clearNLQuery()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.vertical, theme.spacingXS + 2)
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            if let parsedQuery = viewModel.parsedQuery {
+                Text(parsedQuery.explanation)
+                    .font(.caption)
+                    .foregroundStyle(theme.textTertiary)
+                    .padding(.horizontal, theme.spacingXS)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(.horizontal, theme.spacingSM)
-        .padding(.vertical, theme.spacingXS + 2)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .padding(.horizontal, theme.spacingMD)
         .padding(.bottom, theme.spacingSM)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.parsedQuery != nil)
     }
 
     // MARK: - List
@@ -132,7 +150,13 @@ struct MacSessionsListView: View {
         }
         .task(id: searchText) {
             try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
             debouncedSearchText = searchText
+            if searchText.isEmpty {
+                viewModel.clearNLQuery()
+            } else {
+                await viewModel.parseNLQuery(searchText)
+            }
         }
         .onChange(of: selectedSessionId) { _, newId in
             // Handle keyboard selection (Return key)
@@ -307,9 +331,16 @@ struct MacSessionsListView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.system(size: 24, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
-            Text(debouncedSearchText.isEmpty ? "No sessions yet" : "No matching sessions")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
+            if let parsedQuery = viewModel.parsedQuery, !debouncedSearchText.isEmpty {
+                Text("No results · \(parsedQuery.explanation)")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text(debouncedSearchText.isEmpty ? "No sessions yet" : "No matching sessions")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, theme.spacingLG)
