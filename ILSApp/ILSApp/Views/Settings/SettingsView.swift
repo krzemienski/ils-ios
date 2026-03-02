@@ -45,6 +45,10 @@ struct SettingsView: View {
 
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
 
+    @AppStorage("autoCheckpointsEnabled") private var autoCheckpointsEnabled: Bool = true
+    @AppStorage("checkpointInterval") private var checkpointInterval: Int = 5
+    @AppStorage("checkpointMaxCount") private var checkpointMaxCount: Int = 20
+
     private let availableColorSchemes = ["system", "light", "dark"]
 
     var body: some View {
@@ -63,6 +67,8 @@ struct SettingsView: View {
                 statisticsSection
 
                 contextWindowSection
+
+                checkpointSection
 
                 dataPrivacySection
 
@@ -207,6 +213,79 @@ struct SettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
 
             Text("Displays a bar in chat showing how much of Claude's context window is being used.")
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
+    }
+
+    private var checkpointSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("SESSION CHECKPOINTS")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                Toggle(isOn: $autoCheckpointsEnabled) {
+                    HStack(spacing: theme.spacingMD) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.accent)
+                            .frame(width: 28, height: 28)
+                            .background(theme.accent.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        Text("Enable Auto-Checkpoints")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+                .padding(theme.spacingMD)
+                .tint(theme.accent)
+                .onChange(of: autoCheckpointsEnabled) {
+                    HapticManager.selection()
+                }
+
+                Divider().background(theme.borderSubtle)
+
+                Stepper(value: $checkpointInterval, in: 1...20) {
+                    HStack(spacing: 4) {
+                        Text("Auto-save every")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(
+                                autoCheckpointsEnabled ? theme.textPrimary : theme.textTertiary
+                            )
+                        Text("\(checkpointInterval) msg\(checkpointInterval == 1 ? "" : "s")")
+                            .font(.system(size: theme.fontBody, weight: .semibold))
+                            .foregroundStyle(
+                                autoCheckpointsEnabled ? theme.accent : theme.textTertiary
+                            )
+                    }
+                }
+                .padding(theme.spacingMD)
+                .disabled(!autoCheckpointsEnabled)
+
+                Divider().background(theme.borderSubtle)
+
+                Stepper(value: $checkpointMaxCount, in: 5...50) {
+                    HStack(spacing: 4) {
+                        Text("Keep last")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("\(checkpointMaxCount)")
+                            .font(.system(size: theme.fontBody, weight: .semibold))
+                            .foregroundStyle(theme.accent)
+                        Text("checkpoint\(checkpointMaxCount == 1 ? "" : "s")")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+                .padding(theme.spacingMD)
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+
+            Text("Checkpoints save your session state automatically. Restore to any checkpoint to undo a bad direction.")
                 .font(.system(size: theme.fontCaption))
                 .foregroundStyle(theme.textTertiary)
                 .padding(.horizontal, theme.spacingXS)
