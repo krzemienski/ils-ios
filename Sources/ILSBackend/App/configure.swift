@@ -84,6 +84,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddDatabaseIndexes())
     // v4.0 — Ecosystem polish
     app.migrations.add(AddMeshGradientToThemes())
+    // v5.0 — Full-text search
+    app.migrations.add(AddMessagesFTS5())
 
     // Run migrations
     try await app.autoMigrate()
