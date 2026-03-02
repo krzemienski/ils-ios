@@ -248,7 +248,19 @@ struct StreamingService {
                     claudeSessionId = resultMsg.sessionId
                     totalCostUSD = resultMsg.totalCostUSD
 
-                case .user, .streamEvent, .permission, .error:
+                case .permission(let permRequest):
+                    Task {
+                        await PermissionStore.shared.addPending(
+                            requestId: permRequest.requestId,
+                            sessionId: sessionId.uuidString,
+                            toolName: permRequest.toolName,
+                            toolInput: permRequest.toolInput,
+                            sessionName: nil,
+                            projectName: nil
+                        )
+                    }
+
+                case .user, .streamEvent, .error:
                     break
                 }
             }
