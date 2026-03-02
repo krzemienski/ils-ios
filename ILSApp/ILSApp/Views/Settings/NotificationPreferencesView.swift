@@ -24,6 +24,7 @@ import SwiftUI
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
 struct NotificationPreferencesView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(AppState.self) private var appState
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
@@ -112,6 +113,19 @@ struct NotificationPreferencesView: View {
                     Text("Notifications require permission. You will be prompted when enabling alerts for the first time.")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
+
+                    if appState.isSyncEnabled {
+                        HStack(spacing: theme.spacingXS) {
+                            Image(systemName: "icloud")
+                                .font(.system(size: theme.fontCaption))
+                                .foregroundStyle(theme.accent)
+                            Text("Synced via iCloud")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.accent)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Notification preferences synced via iCloud")
+                    }
                 }
             }
             .padding(.horizontal, theme.spacingMD)
@@ -157,5 +171,6 @@ struct NotificationPreferencesView: View {
     NavigationStack {
         NotificationPreferencesView()
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
+            .environment(AppState())
     }
 }

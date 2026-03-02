@@ -1,0 +1,141 @@
+name: Nightly UI Tests
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-ui-tests
+  cancel-in-progress: true
+
+jobs:
+  full-regression:
+    name: Full Regression Suite
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
+
+      - name: Start backend
+        run: |
+          swift build
+          PORT=9999 swift run ILSBackend &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+              echo "Backend ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run full regression tests
+        run: |
+          xcodebuild test \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -testPlan 'Full Regression' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults-Regression.xcresult || true
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          cd ILSApp
+          ./scripts/generate-coverage-report.sh \
+            --result ../TestResults-Regression.xcresult \
+            --output ../coverage-report \
+            --format json \
+            --files || true
+
+      - name: Upload xcresult bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-regression-results-${{ github.run_number }}
+          path: TestResults-Regression.xcresult
+          retention-days: 14
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-regression-coverage-${{ github.run_number }}
+          path: coverage-report/
+          retention-days: 30
+
+  accessibility-audit:
+    name: Accessibility Audit
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ -d "/Applications/Xcode_16.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          else
+            XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$XCODE_PATH" ]; then
+              sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            else
+              sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+            fi
+          fi
+          echo "Selected Xcode: $(xcode-select -p)"
+          xcodebuild -version
+
+      - name: Start backend
+        run: |
+          swift build
+          PORT=9999 swift run ILSBackend &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9999/health > /dev/null 2>&1; then
+              echo "Backend ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run accessibility audit tests
+        run: |
+          xcodebuild test \
+            -project ILSApp/ILSApp.xcodeproj \
+            -scheme ILSApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -testPlan 'Accessibility Audit' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults-Accessibility.xcresult || true
+
+      - name: Upload accessibility results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-audit-results-${{ github.run_number }}
+          path: TestResults-Accessibility.xcresult
+          retention-days: 14

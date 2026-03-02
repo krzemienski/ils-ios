@@ -32,6 +32,8 @@ class AppState {
     let connectionManager: ConnectionManager
     let pollingManager: PollingManager
     let networkMonitor: NetworkMonitor
+    let connectionQualityService: ConnectionQualityService
+    let iCloudSyncManager: ICloudSyncManager
 
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
@@ -45,26 +47,84 @@ class AppState {
         get { connectionManager.showOnboarding }
         set { connectionManager.showOnboarding = newValue }
     }
+    var connectionQuality: ConnectionQuality { connectionQualityService.quality }
+
+    /// The current iCloud synchronization status.
+    var iCloudSyncStatus: ICloudSyncStatus { iCloudSyncManager.syncStatus }
+
+    /// The date of the most recent iCloud sync, or `nil` if no sync has occurred yet.
+    var iCloudLastSyncDate: Date? { iCloudSyncManager.lastSyncDate }
+
+    /// Whether iCloud sync is enabled on this device.
+    var isSyncEnabled: Bool { iCloudSyncManager.isSyncEnabled }
 
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
         self.pollingManager = PollingManager(connectionManager: cm)
         self.networkMonitor = NetworkMonitor.shared
+        self.connectionQualityService = ConnectionQualityService.shared
+        self.iCloudSyncManager = ICloudSyncManager.shared
         self.activeHostName = UserDefaults.standard.string(forKey: "activeHostName")
 
+        connectionQualityService.serverURL = cm.serverURL
         pollingManager.checkConnection()
+        // Start quality polling at launch so returning users see the indicator immediately.
+        // startPolling() is idempotent (guards against duplicate starts) and measure()
+        // handles the offline case gracefully, so this is safe to call unconditionally.
+        connectionQualityService.startPolling()
     }
+
+    // MARK: - Performance Test Mock Data
+
+#if DEBUG
+    /// Generates a predictable array of mock `ChatSession` objects for performance testing.
+    ///
+    /// Used by `LargeListRenderTests` when `PERF_ITEM_COUNT` is set in the launch environment.
+    /// Each session is given a deterministic name, timestamp, and message count so that
+    /// multiple test iterations produce identical cell layouts (avoiding measurement noise
+    /// caused by varying label widths or accessory states).
+    ///
+    /// - Parameter count: The number of mock sessions to generate.
+    /// - Returns: An array of `ChatSession` values suitable for populating a session list.
+    static func makeMockSessions(count: Int) -> [ChatSession] {
+        let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let projects: [String] = ["ILS iOS", "Backend Service", "Claude Integration", "Performance Suite"]
+        var result: [ChatSession] = []
+        result.reserveCapacity(count)
+        for index in 0..<count {
+            let status: SessionStatus = index % 5 == 0 ? .active : .completed
+            let session = ChatSession(
+                id: UUID(),
+                name: "Perf Session \(index + 1)",
+                projectName: projects[index % projects.count],
+                model: "sonnet",
+                status: status,
+                messageCount: (index % 20) + 1,
+                totalCostUSD: Double(index % 10) * 0.05,
+                source: .ils,
+                createdAt: baseDate.addingTimeInterval(Double(-index) * 120),
+                lastActiveAt: baseDate.addingTimeInterval(Double(-index) * 60),
+                firstPrompt: "Performance test \(index + 1): verifying render speed with predictable data"
+            )
+            result.append(session)
+        }
+        return result
+    }
+#endif
 
     func updateServerURL(_ url: String) {
         connectionManager.updateServerURL(url)
+        connectionQualityService.serverURL = url
         pollingManager.checkConnection()
     }
 
     func connectToServer(url: String) async throws {
         try await connectionManager.connectToServer(url: url)
+        connectionQualityService.serverURL = url
         pollingManager.stopRetryPolling()
         pollingManager.startHealthPolling()
+        connectionQualityService.startPolling()
     }
 
     func checkConnection() {
@@ -151,6 +211,8 @@ class AppState {
             navigationIntent = .hooks
         case "teams":
             navigationIntent = .teams
+        case "activity":
+            navigationIntent = .activityFeed
         default:
             break
         }

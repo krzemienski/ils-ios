@@ -4,22 +4,12 @@ import ILSShared
 
 @MainActor
 @Observable
-class ProjectsViewModel {
+class ProjectsViewModel: BaseViewModel {
     var projects: [Project] = []
-    var isLoading = false
-    var error: Error?
     var hasMore = true
     var searchText: String = ""
     private var currentOffset = 0
     private let pageSize = 50
-
-    private var client: APIClient?
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Projects filtered by the current search text (case-insensitive on name and path).
     var filteredProjects: [Project] {

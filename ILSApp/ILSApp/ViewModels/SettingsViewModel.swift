@@ -4,7 +4,7 @@ import ILSShared
 
 @MainActor
 @Observable
-class SettingsViewModel {
+class SettingsViewModel: BaseViewModel {
     static let defaultModelID = "claude-sonnet-4-20250514"
 
     var stats: StatsResponse?
@@ -13,21 +13,11 @@ class SettingsViewModel {
     /// Used by the UI for inheritance badge logic. Not used for writes (saveWithPatch uses `config`).
     var effectiveConfig: EffectiveConfig?
     var claudeVersion: String?
-    var isLoading = false
     var isLoadingConfig = false
     var isSaving = false
     var isTestingConnection = false
-    var error: Error?
-
     /// Per-key override lookup for O(1) access. Built from effectiveConfig.overrides.
     private var overrideLookup: [String: ConfigOverride] = [:]
-    private var client: APIClient?
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     func loadAll() async {
         async let statsTask: () = loadStats()

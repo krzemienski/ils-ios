@@ -78,7 +78,68 @@
           "selectedTests" : [
             "LaunchPerformanceTests",
             "MemoryPerformanceTests",
-            "ScrollPerformanceTests"
+            "ScrollPerformanceTests",
+            "ChatRenderPerformanceTests",
+            "SearchPerformanceTests",
+            "MemoryLeakTests",
+            "LargeListRenderTests",
+            "MemoryThresholdTests"
+          ]
+        }
+      ]
+    },
+    {
+      "id" : "PERF-REGR-0001-0002-0003-0004-000000000002",
+      "name" : "Performance Regression",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "testExecutionOrdering" : "sequential",
+        "uiTestingScreenshotsLifetime" : "deleteOnSuccess",
+        "videoRecordingMode" : "recordOnFailure",
+        "maximumTestRepetitions" : 5,
+        "testRepetitionMode" : "retryOnFailure"
+      },
+      "testTargets" : [
+        {
+          "target" : {
+            "containerPath" : "container:ILSApp.xcodeproj",
+            "identifier" : "ILSAppUITests",
+            "name" : "ILSAppUITests"
+          },
+          "selectedTests" : [
+            "LaunchPerformanceTests",
+            "MemoryPerformanceTests",
+            "ScrollPerformanceTests",
+            "ChatRenderPerformanceTests",
+            "SearchPerformanceTests",
+            "MemoryLeakTests",
+            "LargeListRenderTests",
+            "MemoryThresholdTests"
+          ]
+        }
+      ]
+    },
+    {
+      "id" : "ACC-AUDIT-0001-0002-0003-0004-000000000001",
+      "name" : "Accessibility Audit",
+      "options" : {
+        "language" : "en",
+        "region" : "US",
+        "screenCaptureFormat" : "screenshots",
+        "testExecutionOrdering" : "sequential",
+        "uiTestingScreenshotsLifetime" : "keepAlways",
+        "videoRecordingMode" : "recordOnFailure"
+      },
+      "testTargets" : [
+        {
+          "target" : {
+            "containerPath" : "container:ILSApp.xcodeproj",
+            "identifier" : "ILSAppUITests",
+            "name" : "ILSAppUITests"
+          },
+          "selectedTests" : [
+            "AccessibilityAuditTests"
           ]
         }
       ]
@@ -121,6 +182,7 @@
     }
   ],
   "defaultOptions" : {
+    "codeCoverageEnabled" : true,
     "targetForVariableExpansion" : {
       "containerPath" : "container:ILSApp.xcodeproj",
       "identifier" : "ILSApp",

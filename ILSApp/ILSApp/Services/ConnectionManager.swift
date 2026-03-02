@@ -25,6 +25,17 @@ class ConnectionManager {
 
     private(set) var isInitialized = false
 
+    // MARK: - Onboarding State
+
+    /// True only on the first successful connection (hasConnectedBefore transitions false → true).
+    var shouldShowFirstSessionWizard: Bool = false
+
+    /// The date onboarding was completed, persisted to UserDefaults.
+    var onboardingCompletedDate: Date? {
+        get { UserDefaults.standard.object(forKey: "onboardingCompletionDate") as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: "onboardingCompletionDate") }
+    }
+
     init() {
         // Try to load full URL first (supports https:// Cloudflare URLs)
         let url: String
@@ -57,10 +68,17 @@ class ConnectionManager {
         let tempClient = APIClient(baseURL: cleanURL)
         _ = try await tempClient.healthCheck()
 
+        let wasFirstConnection = !UserDefaults.standard.bool(forKey: "hasConnectedBefore")
+
         updateServerURL(cleanURL)
         isConnected = true
         UserDefaults.standard.set(true, forKey: "hasConnectedBefore")
-        showOnboarding = false
+        // NOTE: showOnboarding is managed by the wizard via onComplete() in ServerSetupSheet
+
+        // Trigger first-session wizard exactly once: when hasConnectedBefore flips false → true.
+        if wasFirstConnection {
+            shouldShowFirstSessionWizard = true
+        }
     }
 
     /// Show onboarding sheet if user has never successfully connected
@@ -68,6 +86,26 @@ class ConnectionManager {
         let hasConnectedBefore = UserDefaults.standard.bool(forKey: "hasConnectedBefore")
         if !hasConnectedBefore && !showOnboarding {
             showOnboarding = true
+        }
+    }
+
+    /// Mark onboarding as complete and record the completion date.
+    func markOnboardingComplete() {
+        onboardingCompletedDate = Date()
+        shouldShowFirstSessionWizard = false
+        showOnboarding = false
+    }
+
+    /// Attempt to auto-detect a local backend at the default address.
+    /// Returns the detected URL on success, nil if unreachable.
+    func autoDetectLocalBackend() async -> String? {
+        let localURL = ConnectionDefaults.defaultURL
+        let tempClient = APIClient(baseURL: localURL)
+        do {
+            _ = try await tempClient.healthCheck()
+            return localURL
+        } catch {
+            return nil
         }
     }
 }

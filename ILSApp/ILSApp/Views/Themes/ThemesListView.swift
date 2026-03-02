@@ -72,7 +72,9 @@ struct ThemesListView: View {
         .navigationTitle("Custom Themes")
         .inlineNavigationBarTitle()
         .refreshable {
-            HapticManager.impact(.medium)
+            #if os(iOS)
+            HapticManager.impact(.light)
+            #endif
             await viewModel.loadThemes()
         }
         .toolbar {

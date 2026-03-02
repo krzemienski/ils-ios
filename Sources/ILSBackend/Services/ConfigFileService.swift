@@ -63,7 +63,19 @@ struct ConfigFileService {
 
         if fileManager.fileExists(atPath: path) {
             let data = try Data(contentsOf: URL(fileURLWithPath: path))
-            config = try JSONDecoder().decode(ClaudeConfig.self, from: data)
+            do {
+                config = try JSONDecoder().decode(ClaudeConfig.self, from: data)
+            } catch {
+                // Return partial config with validation error instead of failing the entire request.
+                // This allows the iOS app to display what it can while surfacing the parse issue.
+                return ConfigInfo(
+                    scope: scope,
+                    path: path,
+                    content: config,
+                    isValid: false,
+                    errors: [error.localizedDescription]
+                )
+            }
         }
 
         return ConfigInfo(
@@ -243,7 +255,7 @@ struct ConfigFileService {
 
         // Resolve extraKnownMarketplaces
         do {
-            let values: [(ConfigScope, [String: String])] = scopes.compactMap { scope, cfg in
+            let values: [(ConfigScope, [String: MarketplaceValue])] = scopes.compactMap { scope, cfg in
                 cfg.extraKnownMarketplaces.map { (scope, $0) }
             }
             if let winner = values.last {

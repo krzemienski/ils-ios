@@ -41,7 +41,12 @@ struct HostProfilesView: View {
     var body: some View {
         Group {
             if let viewModel {
-                ScrollView {
+                VStack(spacing: 0) {
+                    if let state = viewModel.operationState, let message = viewModel.operationMessage {
+                        AsyncOperationBanner(message: message, state: state)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                    ScrollView {
                     LazyVStack(spacing: theme.spacingMD) {
                         ForEach(viewModel.hosts) { host in
                             NavigationLink {
@@ -52,12 +57,12 @@ struct HostProfilesView: View {
                             .buttonStyle(.plain)
                         }
 
-                        if let error = viewModel.loadError {
+                        if let error = viewModel.error {
                             VStack(spacing: theme.spacingSM) {
                                 Image(systemName: "exclamationmark.triangle")
                                     .font(.title2)
                                     .foregroundStyle(theme.error)
-                                Text(error)
+                                Text(error.localizedDescription)
                                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(theme.textSecondary)
                                     .multilineTextAlignment(.center)
@@ -70,7 +75,7 @@ struct HostProfilesView: View {
                             .padding(theme.spacingLG)
                         }
 
-                        if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.loadError == nil {
+                        if viewModel.hosts.isEmpty && !viewModel.isLoading && viewModel.error == nil {
                             EmptyEntityState(
                                 entityType: .system,
                                 title: "No Host Profiles",
@@ -87,6 +92,7 @@ struct HostProfilesView: View {
                     .padding(.horizontal, theme.spacingMD)
                     .padding(.top, theme.spacingSM)
                 }
+                } // end VStack
             } else {
                 ProgressView()
                     .tint(theme.accent)

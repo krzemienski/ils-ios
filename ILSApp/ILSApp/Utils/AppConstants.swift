@@ -42,4 +42,27 @@ enum AppConstants {
     static var defaultModel: String {
         UserDefaults.standard.string(forKey: defaultModelKey) ?? "sonnet"
     }
+
+    // MARK: - iCloud Sync Keys
+
+    /// iCloud KV store key for the synced server URL.
+    static let iCloudServerURLKey = "ils_icloud_server_url"
+
+    /// iCloud KV store key for the synced default model preference.
+    static let iCloudDefaultModelKey = "ils_icloud_default_model"
+
+    /// iCloud KV store key for the synced active theme identifier.
+    static let iCloudActiveThemeKey = "ils_icloud_active_theme"
+
+    /// iCloud KV store key for the synced skill favorites list.
+    static let iCloudSkillFavoritesKey = "ils_icloud_skill_favorites"
+
+    /// iCloud KV store key for the synced session bookmarks.
+    static let iCloudSessionBookmarksKey = "ils_icloud_session_bookmarks"
+
+    /// iCloud KV store key for the synced notification preferences.
+    static let iCloudNotificationPrefsKey = "ils_icloud_notification_prefs"
+
+    /// iCloud KV store key for the synced active host profile name.
+    static let iCloudActiveHostNameKey = "ils_icloud_active_host_name"
 }

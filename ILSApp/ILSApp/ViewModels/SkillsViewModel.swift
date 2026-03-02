@@ -4,10 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class SkillsViewModel {
+class SkillsViewModel: BaseViewModel {
     var skills: [Skill] = []
-    var isLoading = false
-    var error: Error?
     var searchText = ""
     var gitHubResults: [GitHubSearchResult] = []
     var isSearchingGitHub = false
@@ -41,20 +39,13 @@ class SkillsViewModel {
         }
     }
 
-    private var client: APIClient?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     /// Precomputed lowercase search strings keyed by skill index, rebuilt when skills change
     private var searchCache: [(skill: Skill, searchText: String)] = []
 
-    init() {}
-
     deinit {
         searchTask?.cancel()
         countdownTask?.cancel()
-    }
-
-    func configure(client: APIClient) {
-        self.client = client
     }
 
     /// Filtered skills based on search text using precomputed lowercase cache
