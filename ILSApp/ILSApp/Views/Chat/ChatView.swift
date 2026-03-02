@@ -287,13 +287,15 @@ struct ChatView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
-            PersistentSessionStatusBar(
-                pinnedSessions: pinned,
-                onSessionSelected: { selected in
-                    onSessionSwitch?(selected)
-                }
-            )
+            if horizontalSizeClass == .compact {
+                let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
+                PersistentSessionStatusBar(
+                    pinnedSessions: pinned,
+                    onSessionSelected: { selected in
+                        onSessionSwitch?(selected)
+                    }
+                )
+            }
         }
     }
 
