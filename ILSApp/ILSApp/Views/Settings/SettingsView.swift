@@ -44,6 +44,8 @@ struct SettingsView: View {
     @AppStorage("showSessionSuggestions") private var showSessionSuggestions: Bool = true
 
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
+    @AppStorage("autoForkBeforeCompaction") private var autoForkBeforeCompaction: Bool = false
+    @AppStorage("autoSnapshotEnabled") private var autoSnapshotEnabled: Bool = false
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -63,6 +65,8 @@ struct SettingsView: View {
                 statisticsSection
 
                 contextWindowSection
+
+                contextPreservationSection
 
                 dataPrivacySection
 
@@ -208,6 +212,73 @@ struct SettingsView: View {
 
             Text("Displays a bar in chat showing how much of Claude's context window is being used.")
                 .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textTertiary)
+                .padding(.horizontal, theme.spacingXS)
+        }
+    }
+
+    private var contextPreservationSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("CONTEXT PRESERVATION")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Auto-Fork at 95%")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $autoForkBeforeCompaction)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Automatically fork session before context compaction at 95%")
+                .onChange(of: autoForkBeforeCompaction) {
+                    HapticManager.selection()
+                }
+                .padding(theme.spacingMD)
+
+                Divider().background(theme.bgTertiary)
+
+                HStack {
+                    Text("Auto-Snapshot at 85%")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $autoSnapshotEnabled)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Automatically save context snapshot when usage reaches 85%")
+                .onChange(of: autoSnapshotEnabled) {
+                    HapticManager.selection()
+                }
+                .padding(theme.spacingMD)
+
+                Divider().background(theme.bgTertiary)
+
+                NavigationLink(destination: NotificationPreferencesView()) {
+                    HStack {
+                        Text("Alert Settings")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .accessibilityLabel("Context alert threshold settings")
+            }
+            .modifier(GlassCard())
+
+            Text("Auto-fork creates a new session branch before context is compacted. Auto-snapshot saves a summary of recent messages. Alert thresholds are configured in Alert Settings.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .padding(.horizontal, theme.spacingXS)
         }
