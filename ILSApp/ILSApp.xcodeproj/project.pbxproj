@@ -411,6 +411,8 @@
 		CBEE11D4F11C220DCBD5A6E9 /* WidgetDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */; };
 		CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E65F9892954F605C2737A7D /* TeamsViewModel.swift */; };
 		5C7D4E2A1B9F3068CD45FA76 /* AgentQueueViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8F2A1C9D4E7056AB12EF34 /* AgentQueueViewModel.swift */; };
+		BB2C3D4E5F678901234ACD01 /* QueueTaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F6789012345AB /* QueueTaskRow.swift */; };
+		CC3D4E5F678901234ABCDE12 /* QueueTaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F6789012345AB /* QueueTaskRow.swift */; };
 		CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */; };
 		CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */; };
 		D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
@@ -658,6 +660,7 @@
 		6CB6410FDBABFD56EC9C9B28 /* Scenario08_SettingsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario08_SettingsConfiguration.swift; sourceTree = "<group>"; };
 		6E65F9892954F605C2737A7D /* TeamsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamsViewModel.swift; sourceTree = "<group>"; };
 		3B8F2A1C9D4E7056AB12EF34 /* AgentQueueViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentQueueViewModel.swift; sourceTree = "<group>"; };
+		AA1B2C3D4E5F6789012345AB /* QueueTaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueTaskRow.swift; sourceTree = "<group>"; };
 		6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateView.swift; sourceTree = "<group>"; };
 		6F254EBBAABE0F2400CF42A6 /* CrimsonTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrimsonTheme.swift; sourceTree = "<group>"; };
 		6F38C9481FF1206F75E66FC2 /* SnowTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnowTheme.swift; sourceTree = "<group>"; };
@@ -1257,11 +1260,20 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		DD4E5F678901234ABCDEF123 /* AgentQueue */ = {
+			isa = PBXGroup;
+			children = (
+				AA1B2C3D4E5F6789012345AB /* QueueTaskRow.swift */,
+			);
+			path = AgentQueue;
+			sourceTree = "<group>";
+		};
 		B385414DDDDE6CDD82D4141C /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				E2DEA312D98D14A52FD03359 /* AppIconGenerator.swift */,
 				6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */,
+				DD4E5F678901234ABCDEF123 /* AgentQueue */,
 				1A1FCC9DA753480F940D5954 /* ActivityFeed */,
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
@@ -1948,6 +1960,7 @@
 				DBA18F9D1D0027EB921CAF22 /* TeamTaskListView.swift in Sources */,
 				EA50F3DD9DF1DD3671207F86 /* TeamsViewModel.swift in Sources */,
 				A2E9C5B73F1D84520EF6BD98 /* AgentQueueViewModel.swift in Sources */,
+				BB2C3D4E5F678901234ACD01 /* QueueTaskRow.swift in Sources */,
 				1CBB9F38CB8BEEA61EFEAB1D /* ThemeColorTokensSection.swift in Sources */,
 				966812B5294CDA773D94B897 /* ThemeCornerRadiusSection.swift in Sources */,
 				40F5BFCA27CF950AED4747DD /* ThemeEditorView.swift in Sources */,
@@ -2191,6 +2204,7 @@
 				065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */,
 				CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */,
 				5C7D4E2A1B9F3068CD45FA76 /* AgentQueueViewModel.swift in Sources */,
+				CC3D4E5F678901234ABCDE12 /* QueueTaskRow.swift in Sources */,
 				66583D69D1D8DDC05D825FB8 /* ThemeColorTokensSection.swift in Sources */,
 				741655D824027E96EF77609F /* ThemeCornerRadiusSection.swift in Sources */,
 				E9F1870916A648BFA1C77E16 /* ThemeEditorView.swift in Sources */,
