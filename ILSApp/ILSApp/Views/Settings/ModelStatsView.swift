@@ -89,7 +89,11 @@ struct ModelStatsView: View {
                 Text("By Model")
             }
         }
+        #if os(iOS)
         .listStyle(.insetGrouped)
+        #else
+        .listStyle(.inset)
+        #endif
         .scrollContentBackground(.hidden)
         .background(theme.bgPrimary)
     }
