@@ -27,6 +27,7 @@ struct SessionInfoView: View {
     @State private var viewModel = SessionInfoViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
+    @State private var showRecordings = false
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
@@ -80,6 +81,15 @@ struct SessionInfoView: View {
                         LabeledContent("Source", value: displaySession.source.rawValue)
                         if let projectName = displaySession.projectName {
                             LabeledContent("Project", value: projectName)
+                        }
+                    }
+
+                    Section {
+                        Button {
+                            showRecordings = true
+                        } label: {
+                            Label("Recordings", systemImage: "record.circle")
+                                .foregroundStyle(theme.textPrimary)
                         }
                     }
 
@@ -151,6 +161,12 @@ struct SessionInfoView: View {
         }
         .sheet(isPresented: $showExportSheet) {
             ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
+        }
+        .sheet(isPresented: $showRecordings) {
+            NavigationStack {
+                SessionRecordingsView(session: displaySession)
+                    .environment(appState)
+            }
         }
         .toast(isPresented: $showCopiedToast, message: "Session ID copied")
         .task {
