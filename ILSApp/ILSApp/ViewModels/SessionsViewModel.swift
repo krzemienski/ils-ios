@@ -59,7 +59,7 @@ class SessionsViewModel: BaseViewModel {
     private var projectPages: [String: Int] = [:]
 
     /// Task that listens for network restoration to trigger an auto-refresh.
-    private var networkObserverTask: Task<Void, Never>?
+    @ObservationIgnored nonisolated(unsafe) private var networkObserverTask: Task<Void, Never>?
 
 
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change

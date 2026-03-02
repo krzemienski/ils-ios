@@ -226,9 +226,6 @@ struct ChatView: View {
         .onChange(of: appState.serverURL) { _, _ in
             viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
         }
-        .onChange(of: appState.isConnected) { _, connected in
-            viewModel.isConnected = connected
-        }
         .onChange(of: inputText) { _, newValue in
             // Persist draft to UserDefaults with 500ms debounce (DATA-05)
             draftPersistTask?.cancel()
@@ -272,7 +269,7 @@ struct ChatView: View {
 
                 OfflineIndicator(isOffline: viewModel.isOffline)
                     .animation(
-                        reduceMotion ? .none : .easeInOut(duration: 0.3),
+                        reduceMotion ? nil : .easeInOut(duration: 0.3),
                         value: viewModel.isOffline
                     )
 
@@ -480,7 +477,7 @@ struct ChatView: View {
             .focused($isInputFocused)
         }
         .animation(
-            reduceMotion ? .none : .easeInOut(duration: 0.25),
+            reduceMotion ? nil : .easeInOut(duration: 0.25),
             value: viewModel.isOffline && viewModel.queuedMessageCount > 0
         )
     }
