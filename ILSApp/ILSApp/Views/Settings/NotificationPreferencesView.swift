@@ -19,6 +19,8 @@ import SwiftUI
 /// - ``mcpOfflineAlerts`` - Alert when an MCP server goes offline
 /// - ``mcpOnlineAlerts`` - Alert when an MCP server comes back online
 /// - ``sessionCompleteAlerts`` - Alert when a Claude session finishes
+/// - ``queueTaskComplete`` - Alert when a queued task completes
+/// - ``queueTaskFailed`` - Alert when a queued task fails
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
@@ -28,6 +30,8 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
+    @AppStorage("notif_queueTaskComplete") private var queueTaskComplete = true
+    @AppStorage("notif_queueTaskFailed") private var queueTaskFailed = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
@@ -68,6 +72,19 @@ struct NotificationPreferencesView: View {
 
                     VStack {
                         toggleRow("Session Complete", isOn: $sessionCompleteAlerts, accessibilityLabel: "Alert when session completes")
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
+
+                // Queue Alerts
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Queue Alerts")
+
+                    VStack(spacing: 0) {
+                        toggleRow("Task Completed", isOn: $queueTaskComplete, accessibilityLabel: "Alert when a queued task completes")
+                        Divider().background(theme.bgTertiary)
+                        toggleRow("Task Failed", isOn: $queueTaskFailed, accessibilityLabel: "Alert when a queued task fails")
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
