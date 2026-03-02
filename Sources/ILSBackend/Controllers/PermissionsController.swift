@@ -133,6 +133,10 @@ struct PermissionsController: RouteCollection {
             "Permission \(input.decision) for requestId=\(requestId) session=\(record.sessionId)"
         )
 
+        // Persist to DB for durable audit trail
+        let model = PermissionModel.from(record)
+        try? await model.save(on: req.db)
+
         return APIResponse(success: true, data: AcknowledgedResponse())
     }
 

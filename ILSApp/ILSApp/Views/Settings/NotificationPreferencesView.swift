@@ -29,7 +29,7 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
-    @AppStorage("notif_permissionRequestAlerts") private var permissionRequestAlerts = true
+    @AppStorage("notif_permissionAlerts") private var permissionRequestAlerts = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
