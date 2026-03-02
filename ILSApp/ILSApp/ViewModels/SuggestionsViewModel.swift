@@ -211,7 +211,7 @@ class SuggestionsViewModel {
         case "skill":
             skillSuggestions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
         case "abandoned":
-            abandonedSessions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
+            abandonedSessions.removeAll { $0.session.id.uuidString.lowercased() == id.lowercased() }
         default:
             break
         }
