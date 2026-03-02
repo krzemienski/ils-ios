@@ -11,6 +11,7 @@ let suggestionInteractionStore = SuggestionInteractionStore()
 /// - `GET /suggestions/sessions`: Get ranked session suggestions based on context
 /// - `GET /suggestions/skills`: Get ranked skill suggestions based on project/context
 /// - `GET /suggestions/abandoned`: Get sessions inactive for 24+ hours worth resuming
+/// - `GET /suggestions/continuation/:sessionId`: Get smart continuation summary for a session
 /// - `POST /suggestions/feedback`: Record user interaction with a suggestion
 struct SuggestionsController: RouteCollection {
     let fileSystem: FileSystemService
@@ -25,6 +26,7 @@ struct SuggestionsController: RouteCollection {
         suggestions.get("sessions", use: sessions)
         suggestions.get("skills", use: skills)
         suggestions.get("abandoned", use: abandoned)
+        suggestions.get("continuation", ":sessionId", use: continuation)
         suggestions.post("feedback", use: feedback)
     }
 
@@ -146,6 +148,42 @@ struct SuggestionsController: RouteCollection {
         )
 
         return APIResponse(success: true, data: ListResponse(items: suggestions))
+    }
+
+    /// Return a smart continuation summary for a specific session.
+    ///
+    /// Path parameters:
+    /// - `sessionId`: UUID of the session to summarize
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with ContinuationSummary, or 404 if session not found
+    @Sendable
+    func continuation(req: Request) async throws -> APIResponse<ContinuationSummary> {
+        guard let sessionId = req.parameters.get("sessionId", as: UUID.self) else {
+            throw Abort(.badRequest, reason: "Invalid session ID")
+        }
+
+        // Load session from DB
+        guard let sessionModel = try await SessionModel.query(on: req.db)
+            .filter(\.$id == sessionId)
+            .with(\.$project)
+            .first() else {
+            throw Abort(.notFound, reason: "Session not found")
+        }
+
+        // Load all messages for this session
+        let messageModels = try await MessageModel.query(on: req.db)
+            .filter(\.$session.$id == sessionId)
+            .sort(\.$createdAt, .ascending)
+            .all()
+
+        let session = sessionModel.toShared(projectName: sessionModel.project?.name)
+        let messages = messageModels.map { $0.toShared() }
+
+        let service = SuggestionService()
+        let summary = service.buildContinuationSummary(session: session, messages: messages)
+
+        return APIResponse(success: true, data: summary)
     }
 
     /// Record user interaction with a suggestion for future relevance boosting.
