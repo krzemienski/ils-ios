@@ -26,6 +26,8 @@ struct PostCompactionRecoverySheet: View {
     let tokensAfterCompaction: Int
     /// Optional pre-compaction context snapshot captured before truncation.
     let snapshot: ContextSnapshot?
+    /// Optional closure invoked when the user taps "Paste as Message". Receives the snapshot text.
+    let onPasteAsMessage: ((String) -> Void)?
     /// Closure invoked to dismiss this sheet.
     let onDismiss: () -> Void
 
@@ -261,10 +263,31 @@ struct PostCompactionRecoverySheet: View {
 
     // MARK: - Action Row
 
-    /// Primary actions: copy snapshot to clipboard and dismiss.
+    /// Primary actions: paste as message, copy snapshot to clipboard, and dismiss.
     private var actionRow: some View {
         VStack(spacing: theme.spacingSM) {
             if let snap = snapshot {
+                if let paste = onPasteAsMessage {
+                    Button {
+                        paste(snap.snapshotText)
+                    } label: {
+                        HStack(spacing: theme.spacingSM) {
+                            Image(systemName: "text.badge.plus")
+                                .font(.system(size: 15, weight: .semibold))
+
+                            Text("Paste as Message")
+                                .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(theme.spacingMD)
+                        .background(theme.accent)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Paste context snapshot as a message in the chat input")
+                }
+
                 Button {
                     copySnapshotToClipboard(snap.snapshotText)
                 } label: {
@@ -278,8 +301,8 @@ struct PostCompactionRecoverySheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(theme.spacingMD)
-                    .background(copiedToClipboard ? theme.success : theme.accent)
-                    .foregroundStyle(.white)
+                    .background(copiedToClipboard ? theme.success : theme.bgSecondary)
+                    .foregroundStyle(copiedToClipboard ? .white : theme.textPrimary)
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     .animation(.easeInOut(duration: 0.2), value: copiedToClipboard)
                 }
@@ -356,6 +379,7 @@ struct PostCompactionRecoverySheet: View {
             """,
             triggeredAt: Date().addingTimeInterval(-120)
         ),
+        onPasteAsMessage: { _ in },
         onDismiss: {}
     )
 }
@@ -365,6 +389,7 @@ struct PostCompactionRecoverySheet: View {
         tokensBeforeCompaction: 188_000,
         tokensAfterCompaction: 11_200,
         snapshot: nil,
+        onPasteAsMessage: nil,
         onDismiss: {}
     )
 }

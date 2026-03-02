@@ -97,6 +97,10 @@ class ChatViewModel {
     /// Text of the most recently saved context snapshot, surfaced as a recovery suggestion
     /// after a compaction event is detected.
     var lastSnapshotText: String? = nil
+    /// Token count recorded immediately before the most recent compaction event was detected.
+    var compactionTokensBefore: Int? = nil
+    /// Most recent context snapshot loaded after a compaction event is detected.
+    var compactionSnapshot: ContextSnapshot? = nil
 
     /// Context window usage as a percentage (0–100), or nil if data not yet available.
     var contextUsagePercent: Double? {
@@ -905,6 +909,7 @@ class ChatViewModel {
         guard dropFraction > 0.20 else { return }
 
         showPostCompactionRecovery = true
+        compactionTokensBefore = previous
         AppLogger.shared.info("Post-compaction drop detected: \(previous) → \(new) tokens (\(String(format: "%.0f", dropFraction * 100))% drop)", category: "sessionMemory")
 
         // Load the most recent snapshot to surface as a recovery suggestion
@@ -915,6 +920,7 @@ class ChatViewModel {
                 let snapshots = try await SessionMemoryService.shared.fetchSnapshots(forSession: sessionId)
                 if let latest = snapshots.first {
                     self.lastSnapshotText = latest.snapshotText
+                    self.compactionSnapshot = latest
                 }
             } catch {
                 AppLogger.shared.error("Failed to load snapshot for post-compaction recovery: \(error)", category: "sessionMemory")
@@ -1043,6 +1049,8 @@ class ChatViewModel {
                     compactionAlertThreshold = nil
                     showPostCompactionRecovery = false
                     lastSnapshotText = nil
+                    compactionTokensBefore = nil
+                    compactionSnapshot = nil
                 }
 
             case .assistant(let assistantMsg):

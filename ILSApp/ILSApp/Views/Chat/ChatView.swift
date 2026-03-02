@@ -51,6 +51,8 @@ struct ChatView: View {
         var showSearch = false
         var showContextWindowDetail = false
         var showSessionMemory = false
+        /// Shown after a > 20% context token drop is detected, indicating Claude Code compacted the session.
+        var showPostCompactionRecovery = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -182,6 +184,7 @@ struct ChatView: View {
             if let usedTokens = viewModel.contextTokensUsed,
                let windowSize = viewModel.contextWindowSize {
                 ContextWindowDetailSheet(
+                    sessionId: session.id,
                     usedTokens: usedTokens,
                     contextWindowSize: windowSize,
                     inputTokens: viewModel.contextInputTokens,
@@ -201,6 +204,9 @@ struct ChatView: View {
                 )
             }
         }
+        .sheet(isPresented: $sheets.showPostCompactionRecovery, onDismiss: dismissPostCompactionSheet) {
+            postCompactionRecoverySheet
+        }
         .sheet(item: $viewModel.pendingPermissionRequest) { request in
             PermissionRequestModal(request: request) { decision in
                 viewModel.respondToPermission(requestId: request.requestId, decision: decision)
@@ -213,6 +219,11 @@ struct ChatView: View {
         }
         .navigationDestination(item: $actions.navigateToRelated) { session in
             ChatView(session: session)
+        }
+        .onChange(of: viewModel.showPostCompactionRecovery) { _, newValue in
+            if newValue {
+                sheets.showPostCompactionRecovery = true
+            }
         }
         .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
             if newValue != nil {
@@ -646,6 +657,34 @@ struct ChatView: View {
     }
 
     // MARK: - Actions
+
+    // MARK: - Post-Compaction Recovery
+
+    /// Sheet content for the post-compaction recovery experience.
+    private var postCompactionRecoverySheet: some View {
+        PostCompactionRecoverySheet(
+            tokensBeforeCompaction: viewModel.compactionTokensBefore ?? 0,
+            tokensAfterCompaction: viewModel.contextTokensUsed ?? 0,
+            snapshot: viewModel.compactionSnapshot,
+            onPasteAsMessage: pasteSnapshotAsMessage,
+            onDismiss: dismissPostCompactionSheet
+        )
+    }
+
+    /// Pastes the snapshot text into the chat input with a recovery context prefix.
+    private func pasteSnapshotAsMessage(_ snapshotText: String) {
+        let prefix = "The following is a context snapshot captured before this session was compacted. Please use it to restore our working context:\n\n"
+        inputText = prefix + snapshotText
+        sheets.showPostCompactionRecovery = false
+        viewModel.showPostCompactionRecovery = false
+        isInputFocused = true
+    }
+
+    /// Dismisses the post-compaction recovery sheet and resets the view model flag.
+    private func dismissPostCompactionSheet() {
+        sheets.showPostCompactionRecovery = false
+        viewModel.showPostCompactionRecovery = false
+    }
 
     /// Resend the most recent user message after a connection error.
     private func retryLastMessage() {

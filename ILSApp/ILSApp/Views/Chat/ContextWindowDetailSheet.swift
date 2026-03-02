@@ -19,6 +19,7 @@ import SwiftUI
 ///
 /// ## Topics
 /// ### Input Properties
+/// - ``sessionId`` - Optional session UUID used to load compaction history
 /// - ``usedTokens`` - Total tokens consumed in the context window
 /// - ``contextWindowSize`` - Maximum context window capacity
 /// - ``inputTokens`` - Total input tokens this turn
@@ -28,6 +29,8 @@ import SwiftUI
 /// - ``onForkSession`` - Optional action to fork the current session
 /// - ``onDismiss`` - Action to dismiss this sheet
 struct ContextWindowDetailSheet: View {
+    /// Optional session ID used to load the compaction history for this session.
+    var sessionId: UUID? = nil
     /// Total tokens consumed (input + output) in the context window.
     let usedTokens: Int
     /// Maximum capacity of the model's context window.
@@ -46,6 +49,8 @@ struct ContextWindowDetailSheet: View {
     let onDismiss: () -> Void
 
     @Environment(\.theme) private var theme: ThemeSnapshot
+    /// Context snapshots loaded from SessionMemoryService for the compaction history section.
+    @State private var snapshotHistory: [ContextSnapshot] = []
 
     // MARK: - Computed Properties
 
@@ -95,6 +100,7 @@ struct ContextWindowDetailSheet: View {
                     warningBanner
                     breakdownSection
                     forkButtonSection
+                    compactionHistorySection
                     footerSection
                 }
                 .padding(theme.spacingMD)
@@ -115,6 +121,14 @@ struct ContextWindowDetailSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .task(id: sessionId) {
+            guard let sid = sessionId else { return }
+            do {
+                snapshotHistory = try await SessionMemoryService.shared.fetchSnapshots(forSession: sid)
+            } catch {
+                // Snapshot history is optional; silently ignore failures
+            }
+        }
     }
 
     // MARK: - Progress Circle
@@ -308,6 +322,70 @@ struct ContextWindowDetailSheet: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Fork session to continue with a fresh context window")
         }
+    }
+
+    // MARK: - Compaction History
+
+    /// List of past context snapshots taken before compaction events for this session.
+    @ViewBuilder
+    private var compactionHistorySection: some View {
+        if !snapshotHistory.isEmpty {
+            VStack(spacing: theme.spacingXS) {
+                Text("Compaction History")
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(spacing: 0) {
+                    ForEach(Array(snapshotHistory.enumerated()), id: \.element.id) { index, snapshot in
+                        snapshotHistoryRow(snapshot: snapshot)
+                        if index < snapshotHistory.count - 1 {
+                            Divider()
+                                .background(theme.divider)
+                        }
+                    }
+                }
+                .glassCard(padding: 0)
+            }
+        }
+    }
+
+    /// A single row in the compaction history list showing timestamp and token count.
+    private func snapshotHistoryRow(snapshot: ContextSnapshot) -> some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "scissors")
+                .font(.system(size: 13))
+                .foregroundStyle(theme.warning)
+                .frame(width: 20, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(snapshot.triggeredAt, style: .date)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                Text(snapshot.triggeredAt, style: .time)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(formatTokens(snapshot.usedTokens))
+                    .font(
+                        .system(size: theme.fontBody, weight: .medium, design: theme.fontDesign)
+                        .monospacedDigit()
+                    )
+                    .foregroundStyle(theme.textPrimary)
+                if snapshot.contextWindowSize > 0 {
+                    Text("\(Int(Double(snapshot.usedTokens) / Double(snapshot.contextWindowSize) * 100))%")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
+        }
+        .padding(theme.spacingMD)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Snapshot from \(snapshot.triggeredAt.formatted()): \(formatTokens(snapshot.usedTokens)) tokens")
     }
 
     // MARK: - Footer
