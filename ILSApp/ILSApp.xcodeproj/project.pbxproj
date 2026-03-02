@@ -135,6 +135,7 @@
 		34F69F8A8DC02040BD4C6113 /* TunnelSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */; };
 		4C4C8A9EAF9F44BE980AF90E /* TerminalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */; };
 		2B3C4D5E6F7A2B3C4D5E6F7A /* TerminalOutputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F1A2B3C4D5E6F /* TerminalOutputView.swift */; };
+		5E6F7A8B9CAD5E6F7A8B9CAD /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5E6F7A8B9C4D5E6F7A8B9C /* TerminalView.swift */; };
 		36A459918D16CC918CF4BEAA /* SessionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAB16073F4EF7ED850213059 /* SessionEntity.swift */; };
 		ADD6B319E5F241F8A085CC3B /* ProjectEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112C91745BB44EBBA29F698D /* ProjectEntity.swift */; };
 		3745234529CDF48C45490BBF /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D259013682B0E76D248995F /* PerformanceMonitor.swift */; };
@@ -293,6 +294,7 @@
 		968D2C52B9A44BE2B92BD1FE /* TunnelSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */; };
 		EA780F47A33543709301AE2A /* TerminalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */; };
 		3C4D5E6F7A8B3C4D5E6F7A8B /* TerminalOutputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F1A2B3C4D5E6F /* TerminalOutputView.swift */; };
+		6F7A8B9CADBF6F7A8B9CADBF /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5E6F7A8B9C4D5E6F7A8B9C /* TerminalView.swift */; };
 		96A01212B905EA97DB11D3D2 /* hud-state.json in Resources */ = {isa = PBXBuildFile; fileRef = 6157A63376D8A574079B8194 /* hud-state.json */; };
 		979673D0041CADA6053FE6E6 /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086281B052347B8C9884124C /* MetricsWebSocketClient.swift */; };
 		97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
@@ -681,6 +683,7 @@
 		83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsViewModel.swift; sourceTree = "<group>"; };
 		BF23ADBF8A4543BFB98A8898 /* TerminalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalViewModel.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F1A2B3C4D5E6F /* TerminalOutputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalOutputView.swift; sourceTree = "<group>"; };
+		4D5E6F7A8B9C4D5E6F7A8B9C /* TerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalView.swift; sourceTree = "<group>"; };
 		85A5E088C4FDB1B4F32EED35 /* AppTips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTips.swift; sourceTree = "<group>"; };
 		862BFC1B7D8584D927B3792F /* checkpoint-2026-02-13T02-32-52-924Z.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "checkpoint-2026-02-13T02-32-52-924Z.json"; sourceTree = "<group>"; };
 		869B654B4F7CD919CFF60F91 /* MacChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacChatView.swift; sourceTree = "<group>"; };
@@ -905,6 +908,7 @@
 			isa = PBXGroup;
 			children = (
 				1A2B3C4D5E6F1A2B3C4D5E6F /* TerminalOutputView.swift */,
+				4D5E6F7A8B9C4D5E6F7A8B9C /* TerminalView.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -1966,6 +1970,7 @@
 				C39791242B5B5EE3EEBD84FD /* SystemMetricsViewModel.swift in Sources */,
 				9CC6A104098E4A05AB99BE01 /* SystemMonitorView.swift in Sources */,
 				2B3C4D5E6F7A2B3C4D5E6F7A /* TerminalOutputView.swift in Sources */,
+				5E6F7A8B9CAD5E6F7A8B9CAD /* TerminalView.swift in Sources */,
 				742E4A30A3011E8A41756395 /* TeamMessagesView.swift in Sources */,
 				DBA18F9D1D0027EB921CAF22 /* TeamTaskListView.swift in Sources */,
 				EA50F3DD9DF1DD3671207F86 /* TeamsViewModel.swift in Sources */,
@@ -2212,6 +2217,7 @@
 				31559366CEE80DE866B74260 /* SystemMetricsViewModel.swift in Sources */,
 				0458D7F5AA514464B36CF190 /* SystemMonitorView.swift in Sources */,
 				3C4D5E6F7A8B3C4D5E6F7A8B /* TerminalOutputView.swift in Sources */,
+				6F7A8B9CADBF6F7A8B9CADBF /* TerminalView.swift in Sources */,
 				0454FDC092D6ECF573218246 /* TeamMessagesView.swift in Sources */,
 				065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */,
 				CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */,

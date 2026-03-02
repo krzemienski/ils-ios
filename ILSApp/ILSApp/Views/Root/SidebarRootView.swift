@@ -19,6 +19,7 @@ enum ActiveScreen: Hashable {
     case themes
     case hooks
     case activityFeed
+    case terminal
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -36,6 +37,7 @@ enum ActiveScreen: Hashable {
         case .themes: return "themes"
         case .hooks: return "hooks"
         case .activityFeed: return "activityFeed"
+        case .terminal: return "terminal"
         }
     }
 
@@ -51,6 +53,7 @@ enum ActiveScreen: Hashable {
         case "themes": return .themes
         case "hooks": return .hooks
         case "activityFeed": return .activityFeed
+        case "terminal": return .terminal
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -304,6 +307,8 @@ struct SidebarRootView: View {
                     hooksScreen
                 case .activityFeed:
                     activityFeedScreen
+                case .terminal:
+                    terminalScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -452,6 +457,11 @@ struct SidebarRootView: View {
                 navigateToChat(session)
             }
         }
+    }
+
+    @ViewBuilder
+    private var terminalScreen: some View {
+        TerminalView()
     }
 
     // MARK: - Chat Navigation
