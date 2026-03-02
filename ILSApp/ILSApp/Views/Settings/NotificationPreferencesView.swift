@@ -19,6 +19,9 @@ import SwiftUI
 /// - ``mcpOfflineAlerts`` - Alert when an MCP server goes offline
 /// - ``mcpOnlineAlerts`` - Alert when an MCP server comes back online
 /// - ``sessionCompleteAlerts`` - Alert when a Claude session finishes
+/// - ``contextWarningAlert`` - Alert when context usage reaches 85%
+/// - ``contextAlert`` - Alert when context usage reaches 90%
+/// - ``contextCriticalAlert`` - Alert when context usage reaches 95%
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
@@ -28,6 +31,9 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
+    @AppStorage("notif_contextWarning") private var contextWarningAlert = true
+    @AppStorage("notif_contextAlert") private var contextAlert = true
+    @AppStorage("notif_contextCritical") private var contextCriticalAlert = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
@@ -68,6 +74,21 @@ struct NotificationPreferencesView: View {
 
                     VStack {
                         toggleRow("Session Complete", isOn: $sessionCompleteAlerts, accessibilityLabel: "Alert when session completes")
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
+
+                // Context Alerts
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Context Alerts")
+
+                    VStack(spacing: 0) {
+                        toggleRow("Context Warning (85%)", isOn: $contextWarningAlert, accessibilityLabel: "Alert when context usage reaches 85 percent")
+                        Divider().background(theme.bgTertiary)
+                        toggleRow("Context Alert (90%)", isOn: $contextAlert, accessibilityLabel: "Alert when context usage reaches 90 percent")
+                        Divider().background(theme.bgTertiary)
+                        toggleRow("Context Critical (95%)", isOn: $contextCriticalAlert, accessibilityLabel: "Alert when context usage reaches 95 percent")
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
