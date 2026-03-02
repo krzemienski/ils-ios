@@ -32,7 +32,6 @@ struct SessionInfoView: View {
     @State private var checkpointViewModel = CheckpointViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
-    @State private var showCheckpointBrowser = false
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 

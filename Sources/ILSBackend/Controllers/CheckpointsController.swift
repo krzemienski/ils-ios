@@ -87,14 +87,15 @@ struct CheckpointsController: RouteCollection {
 
         // Enforce auto-checkpoint retention limit.
         if input.isAuto {
+            let retentionLimit = input.maxRetained ?? Self.autoCheckpointRetentionLimit
             let autoCheckpoints = try await CheckpointModel.query(on: req.db)
                 .filter(\.$session.$id == sessionId)
                 .filter(\.$isAuto == true)
                 .sort(\.$createdAt, .descending)
                 .all()
 
-            if autoCheckpoints.count > Self.autoCheckpointRetentionLimit {
-                let toDelete = Array(autoCheckpoints.dropFirst(Self.autoCheckpointRetentionLimit))
+            if autoCheckpoints.count > retentionLimit {
+                let toDelete = Array(autoCheckpoints.dropFirst(retentionLimit))
                 for old in toDelete {
                     try await old.delete(on: req.db)
                 }

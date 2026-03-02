@@ -73,14 +73,21 @@ public struct CreateCheckpointRequest: Codable, Sendable {
     public let label: String?
     /// Whether this checkpoint is being created automatically by the system.
     public let isAuto: Bool
+    /// Maximum number of auto-checkpoints to retain after this one is created.
+    ///
+    /// When provided, the backend uses this value instead of its default retention limit.
+    /// Only meaningful for auto-checkpoints (`isAuto == true`).
+    public let maxRetained: Int?
 
     /// Creates a checkpoint creation request.
     /// - Parameters:
     ///   - label: Optional display label.
     ///   - isAuto: `true` if the system is creating this automatically.
-    public init(label: String? = nil, isAuto: Bool) {
+    ///   - maxRetained: Optional retention limit override for auto-checkpoint pruning.
+    public init(label: String? = nil, isAuto: Bool, maxRetained: Int? = nil) {
         self.label = label
         self.isAuto = isAuto
+        self.maxRetained = maxRetained
     }
 }
 

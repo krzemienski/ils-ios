@@ -34,6 +34,8 @@ struct ChatView: View {
     @Environment(AppState.self) var appState
     /// View model managing chat messages, streaming state, and session connectivity.
     @State private var viewModel = ChatViewModel()
+    /// View model for checkpoint operations — injected into `viewModel` for ILS-managed sessions.
+    @State private var checkpointViewModel = CheckpointViewModel()
 
     // MARK: - Grouped State
 
@@ -584,6 +586,15 @@ struct ChatView: View {
         viewModel.sessionId = session.id
         viewModel.encodedProjectPath = session.encodedProjectPath
         viewModel.claudeSessionId = session.claudeSessionId
+
+        // Inject checkpoint support for ILS-managed sessions only
+        if session.source == .ils {
+            checkpointViewModel.configure(client: appState.apiClient)
+            viewModel.checkpointViewModel = checkpointViewModel
+            checkpointViewModel.onRestoreCompleted = { [weak viewModel] in
+                Task { await viewModel?.refreshMessages() }
+            }
+        }
 
         await viewModel.loadMessageHistory()
     }

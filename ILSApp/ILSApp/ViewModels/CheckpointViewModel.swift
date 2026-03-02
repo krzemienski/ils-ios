@@ -39,6 +39,12 @@ class CheckpointViewModel: BaseViewModel {
     /// The checkpoint staged for restore, pending user confirmation.
     var pendingRestoreCheckpoint: Checkpoint?
 
+    /// Optional callback invoked on the main actor after a checkpoint restore completes successfully.
+    ///
+    /// Consumers (e.g. `ChatView`) assign this closure to react to restores — for example,
+    /// by reloading the message list so stale messages are replaced.
+    var onRestoreCompleted: (() -> Void)?
+
     // MARK: - Init
 
     override init() {
@@ -84,7 +90,12 @@ class CheckpointViewModel: BaseViewModel {
         guard let client else { return nil }
 
         do {
-            let request = CreateCheckpointRequest(label: label, isAuto: isAuto)
+            let maxCount = UserDefaults.standard.integer(forKey: "checkpointMaxCount")
+            let request = CreateCheckpointRequest(
+                label: label,
+                isAuto: isAuto,
+                maxRetained: isAuto && maxCount > 0 ? maxCount : nil
+            )
             let response: APIResponse<Checkpoint> = try await client.post(
                 "/sessions/\(sessionId.uuidString.lowercased())/checkpoints",
                 body: request
@@ -128,6 +139,7 @@ class CheckpointViewModel: BaseViewModel {
             isRestoring = false
             showRestoreConfirmation = false
             pendingRestoreCheckpoint = nil
+            onRestoreCompleted?()
             return response.data
         } catch {
             restoreError = error

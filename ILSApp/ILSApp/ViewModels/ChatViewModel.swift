@@ -875,6 +875,8 @@ class ChatViewModel {
     /// Trigger an automatic checkpoint if `checkpointViewModel` is injected and the session has one.
     private func createAutoCheckpoint() {
         guard let sessionId, let checkpointViewModel else { return }
+        let enabled = UserDefaults.standard.object(forKey: "autoCheckpointsEnabled") as? Bool ?? true
+        guard enabled else { return }
         Task { @MainActor [weak self] in
             guard let self else { return }
             await checkpointViewModel.createCheckpoint(sessionId: sessionId, label: nil, isAuto: true)
