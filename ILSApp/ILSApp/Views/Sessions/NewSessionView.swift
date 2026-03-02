@@ -37,6 +37,7 @@ struct NewSessionView: View {
     @State private var maxTurns = ""
     @State private var sessionName = ""
     @State private var showConfig = false
+    @State private var showModelComparison = false
 
     // Fork mode state
     // recentSessions and isLoadingSessions moved to NewSessionViewModel
@@ -169,6 +170,9 @@ struct NewSessionView: View {
                         || $0.model.lowercased().contains(query)
                 }
             }
+        }
+        .sheet(isPresented: $showModelComparison) {
+            ModelComparisonView()
         }
         .onChange(of: selectedProject) { _, newProject in
             // Auto-populate model from project's defaultModel
@@ -665,9 +669,20 @@ struct NewSessionView: View {
     @ViewBuilder
     private var modelSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
-            // Label row with Auto-Select button
+            // Label row with Compare ⓘ and Auto-Select buttons
             HStack {
                 sectionLabel("Model")
+
+                Button {
+                    showModelComparison = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Compare Models")
+
                 Spacer()
                 Button {
                     Task {
