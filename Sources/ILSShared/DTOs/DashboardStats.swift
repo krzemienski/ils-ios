@@ -17,6 +17,8 @@ public struct DashboardStats: Codable, Sendable {
     public let mcpServers: MCPStat
     /// Plugin statistics.
     public let plugins: PluginStat
+    /// Aggregate session health summary, if available.
+    public let healthSummary: HealthSummary?
 
     /// Creates a new dashboard statistics snapshot.
     /// - Parameters:
@@ -25,18 +27,21 @@ public struct DashboardStats: Codable, Sendable {
     ///   - skills: Skill count statistics.
     ///   - mcpServers: MCP server health statistics.
     ///   - plugins: Plugin installation statistics.
+    ///   - healthSummary: Aggregate session health summary.
     public init(
         projects: CountStat,
         sessions: SessionStat,
         skills: CountStat,
         mcpServers: MCPStat,
-        plugins: PluginStat
+        plugins: PluginStat,
+        healthSummary: HealthSummary? = nil
     ) {
         self.projects = projects
         self.sessions = sessions
         self.skills = skills
         self.mcpServers = mcpServers
         self.plugins = plugins
+        self.healthSummary = healthSummary
     }
 }
 
@@ -117,5 +122,48 @@ public struct PluginStat: Codable, Sendable {
         precondition(enabled <= total, "PluginStat enabled must not exceed total")
         self.total = total
         self.enabled = enabled
+    }
+}
+
+/// Aggregate session health summary across all sessions.
+///
+/// Provides a roll-up of health score distribution used to surface overall
+/// session quality on the home dashboard.
+public struct HealthSummary: Codable, Sendable {
+    /// Average health score across all scored sessions (0–100).
+    public let averageScore: Double
+    /// Number of sessions with a healthy score (≥ 70).
+    public let healthyCount: Int
+    /// Number of sessions with a degrading score (40–69).
+    public let degradingCount: Int
+    /// Number of sessions with a problematic score (< 40).
+    public let problematicCount: Int
+    /// Total number of sessions included in this summary.
+    public let totalScored: Int
+
+    /// Creates a new aggregate health summary.
+    /// - Parameters:
+    ///   - averageScore: Average health score across all scored sessions. Must be in 0–100.
+    ///   - healthyCount: Number of healthy sessions. Must be non-negative.
+    ///   - degradingCount: Number of degrading sessions. Must be non-negative.
+    ///   - problematicCount: Number of problematic sessions. Must be non-negative.
+    ///   - totalScored: Total sessions included in the summary. Must be non-negative.
+    public init(
+        averageScore: Double,
+        healthyCount: Int,
+        degradingCount: Int,
+        problematicCount: Int,
+        totalScored: Int
+    ) {
+        precondition(averageScore >= 0 && averageScore <= 100, "HealthSummary averageScore must be in 0...100")
+        precondition(healthyCount >= 0, "HealthSummary healthyCount must be non-negative")
+        precondition(degradingCount >= 0, "HealthSummary degradingCount must be non-negative")
+        precondition(problematicCount >= 0, "HealthSummary problematicCount must be non-negative")
+        precondition(totalScored >= 0, "HealthSummary totalScored must be non-negative")
+        self.averageScore = averageScore
+        self.healthyCount = healthyCount
+        self.degradingCount = degradingCount
+        self.problematicCount = problematicCount
+        self.totalScored = totalScored
     }
 }
