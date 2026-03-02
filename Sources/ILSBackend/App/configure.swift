@@ -84,6 +84,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddDatabaseIndexes())
     // v4.0 — Ecosystem polish
     app.migrations.add(AddMeshGradientToThemes())
+    // v5.0 — Agent queue & batch task management
+    app.migrations.add(CreateAgentQueueItems())
 
     // Run migrations
     try await app.autoMigrate()
