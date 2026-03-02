@@ -15,6 +15,8 @@
 		C524019CA48B41ED9A5CFE63 /* BatchPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */; };
 		F1A2B3C4D5E6F70812345601 /* PermissionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F80123456789AB /* PermissionHistoryView.swift */; };
 		F1A2B3C4D5E6F70812345602 /* PermissionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F80123456789AB /* PermissionHistoryView.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* AutoApproveRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C0D1E2F3A4B5 /* AutoApproveRulesView.swift */; };
+		D6E7F8A9B0C1D2E3F4A5B6C7 /* AutoApproveRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C0D1E2F3A4B5 /* AutoApproveRulesView.swift */; };
 		CC11DD22EE33FF44AA55BB04 /* MacSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB01 /* MacSmokeTests.swift */; };
 		CC11DD22EE33FF44AA55BB05 /* MacNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA55BB02 /* MacNavigationTests.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
@@ -559,6 +561,7 @@
 		6DD47FF600284645AB2466EC /* PermissionInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionInboxView.swift; sourceTree = "<group>"; };
 		CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchPermissionView.swift; sourceTree = "<group>"; };
 		A3B4C5D6E7F80123456789AB /* PermissionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryView.swift; sourceTree = "<group>"; };
+		C4D5E6F7A8B9C0D1E2F3A4B5 /* AutoApproveRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRulesView.swift; sourceTree = "<group>"; };
 		DE4F28D4F464451098C4900B /* ActivityEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEventRow.swift; sourceTree = "<group>"; };
 		382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedView.swift; sourceTree = "<group>"; };
 		D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedFilterSheet.swift; sourceTree = "<group>"; };
@@ -1436,6 +1439,7 @@
 				6DD47FF600284645AB2466EC /* PermissionInboxView.swift */,
 				CFFD8CCF958349B0948C7E86 /* BatchPermissionView.swift */,
 				A3B4C5D6E7F80123456789AB /* PermissionHistoryView.swift */,
+				C4D5E6F7A8B9C0D1E2F3A4B5 /* AutoApproveRulesView.swift */,
 			);
 			path = Permissions;
 			sourceTree = "<group>";
@@ -1898,6 +1902,7 @@
 				EA756D55C1F64551864FE4A9 /* PermissionInboxView.swift in Sources */,
 				928B949164F34E53BD73DFCE /* BatchPermissionView.swift in Sources */,
 				F1A2B3C4D5E6F70812345601 /* PermissionHistoryView.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* AutoApproveRulesView.swift in Sources */,
 				E6A3F4A9B7C51DB6A841C35E /* RelatedSessionsPanel.swift in Sources */,
 				81EA0BAEEB2CEF1F8F48A784 /* PlatformCompat.swift in Sources */,
 				FC5AD2FB2B34DC4F6245DB85 /* PluginConfigView.swift in Sources */,
@@ -2139,6 +2144,7 @@
 				9004146BAAC141029F19DD1A /* PermissionInboxView.swift in Sources */,
 				C524019CA48B41ED9A5CFE63 /* BatchPermissionView.swift in Sources */,
 				F1A2B3C4D5E6F70812345602 /* PermissionHistoryView.swift in Sources */,
+				D6E7F8A9B0C1D2E3F4A5B6C7 /* AutoApproveRulesView.swift in Sources */,
 				D5F2E398A6B40CA5F730B24D /* RelatedSessionsPanel.swift in Sources */,
 				38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */,
 				8D1A3E67499C2C7112280CD6 /* PluginConfigView.swift in Sources */,
