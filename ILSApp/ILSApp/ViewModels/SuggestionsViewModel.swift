@@ -22,10 +22,14 @@ class SuggestionsViewModel {
     var sessionSuggestions: [SessionSuggestion] = []
     /// Suggested skills relevant to the current project or context.
     var skillSuggestions: [SkillSuggestion] = []
+    /// Abandoned sessions suggested for resumption.
+    var abandonedSessions: [AbandonedSessionSuggestion] = []
     /// Whether session suggestions are currently loading.
     var isLoadingSessions = false
     /// Whether skill suggestions are currently loading.
     var isLoadingSkills = false
+    /// Whether abandoned sessions are currently loading.
+    var isLoadingAbandoned = false
     /// Current error, if any.
     var error: Error?
 
@@ -109,6 +113,37 @@ class SuggestionsViewModel {
         isLoadingSkills = false
     }
 
+    // MARK: - Load Abandoned Sessions
+
+    /// Fetch abandoned session suggestions from the backend.
+    ///
+    /// Returns sessions that have had no activity for 24+ hours and have
+    /// meaningful work that may be worth resuming.
+    /// - Parameter limit: Maximum number of suggestions to return (default 5).
+    func loadAbandonedSessions(limit: Int = 5) async {
+        guard let client else { return }
+        isLoadingAbandoned = true
+        error = nil
+
+        var components = URLComponents()
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
+
+        do {
+            let response: APIResponse<ListResponse<AbandonedSessionSuggestion>> = try await client.get("/suggestions/abandoned\(query)")
+            if let data = response.data {
+                abandonedSessions = data.items
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to load abandoned sessions: \(error.localizedDescription)", category: "suggestions")
+        }
+
+        isLoadingAbandoned = false
+    }
+
     // MARK: - Feedback
 
     /// Record user interaction with a suggestion for future ranking improvement.
@@ -141,6 +176,6 @@ class SuggestionsViewModel {
 
     /// Whether any loading is in progress.
     var isLoading: Bool {
-        isLoadingSessions || isLoadingSkills
+        isLoadingSessions || isLoadingSkills || isLoadingAbandoned
     }
 }
