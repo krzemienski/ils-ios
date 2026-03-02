@@ -24,7 +24,11 @@ struct SplitViewLayoutPicker: View {
                 layoutSection
                 sessionsSection
             }
+            #if os(iOS)
             .listStyle(.insetGrouped)
+            #else
+            .listStyle(.inset)
+            #endif
             .scrollContentBackground(.hidden)
             .background(theme.bgPrimary)
             .tint(theme.accent)

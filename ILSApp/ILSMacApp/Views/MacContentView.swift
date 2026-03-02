@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 
 enum SidebarSection: String, CaseIterable, Identifiable {
     case home = "Home"
+    case splitView = "Split View"
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
@@ -21,6 +22,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .home: return "house.fill"
+        case .splitView: return "rectangle.split.2x1.fill"
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
@@ -34,6 +36,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     var screen: ActiveScreen {
         switch self {
         case .home: return .home
+        case .splitView: return .splitView
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
@@ -55,6 +58,8 @@ struct MacContentView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
     @State private var activityFeedVM = ActivityFeedViewModel()
+    /// Multi-session split view model, owned by this view and shared with the split view detail.
+    @State private var multiSessionVM = MultiSessionViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -426,6 +431,8 @@ struct MacContentView: View {
                     activeScreen = .chat(ChatSession(id: uuid, name: "Session"))
                 }
             }
+        case .splitView:
+            MultiSessionSplitView(multiSessionVM: multiSessionVM, sessionsVM: sessionsViewModel)
         }
     }
 
@@ -683,6 +690,7 @@ struct MacContentView: View {
         case .hooks: selectedSection = .hooks
         case .chat: selectedSection = .home
         case .activityFeed: selectedSection = .home
+        case .splitView: selectedSection = .splitView
         }
         activeScreen = intent
         appState.navigationIntent = nil
