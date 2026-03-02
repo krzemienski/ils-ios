@@ -27,6 +27,7 @@ struct SessionInfoView: View {
     @State private var viewModel = SessionInfoViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
+    @State private var showFileBrowser = false
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
@@ -80,6 +81,16 @@ struct SessionInfoView: View {
                         LabeledContent("Source", value: displaySession.source.rawValue)
                         if let projectName = displaySession.projectName {
                             LabeledContent("Project", value: projectName)
+                        }
+                    }
+
+                    if displaySession.claudeSessionId != nil {
+                        Section("Files") {
+                            Button {
+                                showFileBrowser = true
+                            } label: {
+                                Label("Changed Files", systemImage: "doc.text.magnifyingglass")
+                            }
                         }
                     }
 
@@ -151,6 +162,12 @@ struct SessionInfoView: View {
         }
         .sheet(isPresented: $showExportSheet) {
             ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
+        }
+        .sheet(isPresented: $showFileBrowser) {
+            NavigationStack {
+                SessionFileBrowserView(session: displaySession)
+            }
+            .presentationBackground(theme.bgPrimary)
         }
         .toast(isPresented: $showCopiedToast, message: "Session ID copied")
         .task {
