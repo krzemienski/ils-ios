@@ -349,16 +349,8 @@ struct ChatView: View {
                 },
                 onSaveSnapshot: {
                     viewModel.showCompactionAlert = false
-                    if let usedTokens = viewModel.contextTokensUsed,
-                       let windowSize = viewModel.contextWindowSize {
-                        Task {
-                            try? await SessionMemoryService.shared.saveSnapshot(
-                                sessionId: session.id,
-                                usedTokens: usedTokens,
-                                windowSize: windowSize,
-                                snapshotText: "Context snapshot captured before compaction."
-                            )
-                        }
+                    Task {
+                        await viewModel.generateContextSnapshot()
                     }
                 },
                 onDismiss: {
