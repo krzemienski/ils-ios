@@ -107,6 +107,10 @@ struct HomeView: View {
             isRefreshing = false
         }
         .searchable(text: $sessionSearchText, prompt: "Search sessions")
+        .onChange(of: sessionSearchText) { _, newValue in
+            sessionsVM.searchText = newValue
+            sessionsVM.scheduleSearchDebounce()
+        }
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
         }
@@ -215,10 +219,18 @@ struct HomeView: View {
     @ViewBuilder
     private var recentSessionsSection: some View {
         let isSearching = !sessionSearchText.isEmpty
+        let parsedQuery = sessionsVM.parsedQuery
+        let isNLParsed = parsedQuery != nil
+            && !(parsedQuery!.isFullTextOnly)
+            && parsedQuery!.confidence >= 0.4
         let displaySessions: [ChatSession] = {
             if isSearching {
-                return sessionsVM.sessions.filter {
-                    $0.displayName.localizedCaseInsensitiveContains(sessionSearchText)
+                if isNLParsed {
+                    return sessionsVM.filteredSessions
+                } else {
+                    return sessionsVM.sessions.filter {
+                        $0.displayName.localizedCaseInsensitiveContains(sessionSearchText)
+                    }
                 }
             } else {
                 return Array(sessionsVM.sessions.prefix(5))
@@ -253,6 +265,13 @@ struct HomeView: View {
                             .foregroundStyle(theme.accent)
                         }
                     }
+                }
+
+                if isNLParsed, let pq = parsedQuery, !pq.explanation.isEmpty {
+                    Text(pq.explanation)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .accessibilityLabel("Filter: \(pq.explanation)")
                 }
 
                 ForEach(displaySessions, id: \.id) { session in
