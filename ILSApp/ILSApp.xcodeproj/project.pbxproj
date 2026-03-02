@@ -19,6 +19,8 @@
 		79AAA823FA1148C7AB1D3BA8 /* MultiSessionSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */; };
 		5195CD5441CC4618B9A20FD2 /* SessionPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */; };
 		BB8D2DDFE8A54A569C9F721E /* SessionPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */; };
+		A3C7F8D2E9B14650A1F3C829 /* SessionStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */; };
+		C5E3D0F8A4B27693F158C402 /* SessionStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */; };
 		9583843DBD1B4913BC4931E4 /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */; };
 		ECD781898D054521BCAA0294 /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */; };
 		5C78C0044BDB48A28B717373 /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
@@ -765,6 +767,7 @@
 		3E7D92C6D62342B3AA7C556B /* MultiSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiSessionViewModel.swift; sourceTree = "<group>"; };
 		4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiSessionSplitView.swift; sourceTree = "<group>"; };
 		D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaneView.swift; sourceTree = "<group>"; };
+		B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStatusBadge.swift; sourceTree = "<group>"; };
 		787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitViewLayoutPicker.swift; sourceTree = "<group>"; };
 		D59D339E49103B78DA87082F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodingFocusFilter.swift; sourceTree = "<group>"; };
@@ -1068,6 +1071,7 @@
 				C934E92FC1D3804790EA3977 /* SessionInfoView.swift */,
 				4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */,
 				D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */,
+				B4D2C9E7F3A16582E047B391 /* SessionStatusBadge.swift */,
 				787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */,
 			);
 			path = Sessions;
@@ -1819,6 +1823,7 @@
 				2FD33B0233AB44CFA9CE916D /* MultiSessionViewModel.swift in Sources */,
 				1C2B04B498D74DF8A84F3D30 /* MultiSessionSplitView.swift in Sources */,
 				5195CD5441CC4618B9A20FD2 /* SessionPaneView.swift in Sources */,
+				A3C7F8D2E9B14650A1F3C829 /* SessionStatusBadge.swift in Sources */,
 				9583843DBD1B4913BC4931E4 /* SplitViewLayoutPicker.swift in Sources */,
 				B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
@@ -2052,6 +2057,7 @@
 				E49F9BD104104212A78B4DFC /* MultiSessionViewModel.swift in Sources */,
 				79AAA823FA1148C7AB1D3BA8 /* MultiSessionSplitView.swift in Sources */,
 				BB8D2DDFE8A54A569C9F721E /* SessionPaneView.swift in Sources */,
+				C5E3D0F8A4B27693F158C402 /* SessionStatusBadge.swift in Sources */,
 				ECD781898D054521BCAA0294 /* SplitViewLayoutPicker.swift in Sources */,
 				E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */,
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
