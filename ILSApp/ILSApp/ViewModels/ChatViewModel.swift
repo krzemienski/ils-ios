@@ -101,6 +101,8 @@ class ChatViewModel {
     var compactionTokensBefore: Int? = nil
     /// Most recent context snapshot loaded after a compaction event is detected.
     var compactionSnapshot: ContextSnapshot? = nil
+    /// Set when an auto-fork completes at 95% threshold; consumed by ChatView to show the fork alert.
+    var forkedSessionForNav: ChatSession? = nil
 
     /// Context window usage as a percentage (0–100), or nil if data not yet available.
     var contextUsagePercent: Double? {
@@ -903,9 +905,10 @@ class ChatViewModel {
             Task { [weak self] in
                 guard let self else { return }
                 let forked = await forkSession()
-                if forked != nil {
+                if let forked {
                     messages.append(ChatMessage.systemEvent("Auto-forked session before context limit", eventType: .sessionForked))
                     alertedThresholds.removeAll()
+                    forkedSessionForNav = forked
                 }
             }
         }
@@ -1066,6 +1069,7 @@ class ChatViewModel {
                     lastSnapshotText = nil
                     compactionTokensBefore = nil
                     compactionSnapshot = nil
+                    forkedSessionForNav = nil
                 }
 
             case .assistant(let assistantMsg):

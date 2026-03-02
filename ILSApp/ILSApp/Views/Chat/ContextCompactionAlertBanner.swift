@@ -32,6 +32,8 @@ struct ContextCompactionAlertBanner: View {
     let onSaveSnapshot: () -> Void
     /// Called when the user dismisses the banner.
     let onDismiss: () -> Void
+    /// Optional: Called when the user taps "Auto-Fork Settings" to open context preservation settings.
+    var onAutoForkSettings: (() -> Void)? = nil
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
@@ -145,32 +147,50 @@ struct ContextCompactionAlertBanner: View {
 
     // MARK: - Action Button Row
 
-    /// Bottom row: Fork Session and Save Snapshot action buttons.
+    /// Bottom row: Fork Session and Save Snapshot action buttons, with optional settings link.
     private var actionButtonRow: some View {
-        HStack(spacing: theme.spacingSM) {
-            Button(action: onForkSession) {
-                Label("Fork Session", systemImage: "arrow.branch")
-                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingSM)
-                    .background(severityColor)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Fork session to continue with a fresh context window")
+        VStack(spacing: theme.spacingXS) {
+            HStack(spacing: theme.spacingSM) {
+                Button(action: onForkSession) {
+                    Label("Fork Session", systemImage: "arrow.branch")
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                        .background(severityColor)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Fork session to continue with a fresh context window")
 
-            Button(action: onSaveSnapshot) {
-                Label("Save Snapshot", systemImage: "camera")
-                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, theme.spacingSM)
-                    .background(severityColor.opacity(0.15))
-                    .foregroundStyle(severityColor)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                Button(action: onSaveSnapshot) {
+                    Label("Save Snapshot", systemImage: "camera")
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacingSM)
+                        .background(severityColor.opacity(0.15))
+                        .foregroundStyle(severityColor)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Save a snapshot of the current context before compaction")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Save a snapshot of the current context before compaction")
+
+            if let onAutoForkSettings {
+                Button(action: onAutoForkSettings) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: theme.fontCaption, weight: .medium))
+                        Text("Auto-Fork Settings")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    }
+                    .foregroundStyle(theme.textTertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Open auto-fork settings")
+            }
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.bottom, theme.spacingMD)

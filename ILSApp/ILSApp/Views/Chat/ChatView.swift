@@ -92,6 +92,18 @@ struct ChatView: View {
     // MARK: - Body
 
     var body: some View {
+        chatViewBase
+            .onChange(of: viewModel.forkedSessionForNav) { _, forked in
+                guard let forked else { return }
+                actions.forkedSession = forked
+                sheets.showForkAlert = true
+                viewModel.forkedSessionForNav = nil
+            }
+    }
+
+    /// Base view with all sheets, alerts, and change observers.
+    /// Extracted into a separate computed property to avoid Swift type-check timeout on body.
+    private var chatViewBase: some View {
         mainContent
             .background(theme.bgPrimary)
             .navigationTitle(session.displayName)
@@ -351,6 +363,9 @@ struct ChatView: View {
                 },
                 onDismiss: {
                     viewModel.showCompactionAlert = false
+                },
+                onAutoForkSettings: {
+                    appState.navigationIntent = .settings
                 }
             )
             .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
@@ -528,7 +543,7 @@ struct ChatView: View {
         .focused($isInputFocused)
     }
 
-    /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
+        /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         #if os(iOS)
