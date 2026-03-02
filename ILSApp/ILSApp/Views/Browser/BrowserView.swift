@@ -905,19 +905,41 @@ struct BrowserView: View {
                     .padding(.vertical, theme.spacingXL)
                 } else {
                     ForEach(entries) { entry in
-                        mcpMarketplaceEntryRow(entry)
+                        NavigationLink {
+                            MCPInstallWizardView(entry: entry, mcpVM: mcpVM)
+                        } label: {
+                            mcpMarketplaceEntryRow(entry)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
         } else if !mcpVM.gitHubResults.isEmpty {
             VStack(spacing: theme.spacingSM) {
                 ForEach(mcpVM.gitHubResults, id: \.repository) { result in
-                    discoverResultRow(
-                        result: result,
-                        entityColor: theme.entityMCP,
-                        isInstalled: mcpVM.isInstalled(result: result),
-                        isInstalling: mcpVM.installingMCPServers.contains(result.repository)
-                    )
+                    NavigationLink {
+                        MCPInstallWizardView(
+                            entry: MCPMarketplaceEntry(
+                                name: result.name,
+                                repository: result.repository,
+                                command: "npx",
+                                args: [],
+                                requiredEnvVars: [],
+                                category: "GitHub",
+                                stars: result.stars,
+                                description: result.description
+                            ),
+                            mcpVM: mcpVM
+                        )
+                    } label: {
+                        discoverResultRow(
+                            result: result,
+                            entityColor: theme.entityMCP,
+                            isInstalled: mcpVM.isInstalled(result: result),
+                            isInstalling: mcpVM.installingMCPServers.contains(result.repository)
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         } else if searchText.count >= 3 && !mcpVM.isSearchingGitHub {
