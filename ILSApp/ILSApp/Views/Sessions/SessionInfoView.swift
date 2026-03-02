@@ -25,6 +25,7 @@ struct SessionInfoView: View {
     @Environment(AppState.self) var appState
 
     @State private var viewModel = SessionInfoViewModel()
+    @State private var healthViewModel = SessionHealthViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
 
@@ -67,6 +68,29 @@ struct SessionInfoView: View {
                             LabeledContent("Total Cost", value: String(format: "$%.4f", cost))
                         } else {
                             LabeledContent("Total Cost", value: "N/A")
+                        }
+                    }
+
+                    Section("Health Score") {
+                        if healthViewModel.isLoadingHealth {
+                            HStack {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Spacer()
+                            }
+                        } else {
+                            HStack {
+                                SessionHealthBadge(
+                                    healthScore: healthViewModel.healthScore,
+                                    showLabel: true
+                                )
+                                Spacer()
+                                NavigationLink {
+                                    SessionHealthDetailView(session: displaySession)
+                                } label: {
+                                    Text("Details")
+                                }
+                            }
                         }
                     }
 
@@ -155,7 +179,10 @@ struct SessionInfoView: View {
         .toast(isPresented: $showCopiedToast, message: "Session ID copied")
         .task {
             viewModel.configure(client: appState.apiClient)
-            await viewModel.loadSession(id: session.id)
+            healthViewModel.configure(client: appState.apiClient)
+            async let sessionLoad: Void = viewModel.loadSession(id: session.id)
+            async let healthLoad: Void = healthViewModel.loadHealth(sessionId: session.id)
+            _ = await (sessionLoad, healthLoad)
         }
     }
 }
