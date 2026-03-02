@@ -4,6 +4,7 @@ import ILSShared
 
 struct StatsController: RouteCollection {
     let fileSystem: FileSystemService
+    private let healthService = SessionHealthService()
 
     init(fileSystem: FileSystemService) {
         self.fileSystem = fileSystem
@@ -110,6 +111,9 @@ struct StatsController: RouteCollection {
             }
         }
 
+        // Compute aggregate health summary from DB sessions (already loaded above)
+        let healthSummary = await computeHealthSummary(dbModels: dbModels)
+
         return APIResponse(
             success: true,
             data: StatsResponse(
@@ -117,7 +121,8 @@ struct StatsController: RouteCollection {
                 sessions: SessionStat(total: totalSessions, active: 0),
                 skills: CountStat(total: skills.count, active: activeSkills),
                 mcpServers: MCPStat(total: mcpServers.count, healthy: healthyServers),
-                plugins: PluginStat(total: totalPlugins, enabled: enabledCount)
+                plugins: PluginStat(total: totalPlugins, enabled: enabledCount),
+                healthSummary: healthSummary
             )
         )
     }
@@ -168,5 +173,44 @@ struct StatsController: RouteCollection {
     func serverStatus(req: Request) async throws -> APIResponse<ServerStatus> {
         // Local server is always connected
         return APIResponse(success: true, data: ServerStatus(connected: true))
+    }
+
+    // MARK: - Private Helpers
+
+    /// Compute aggregate health summary from the already-loaded DB session models.
+    ///
+    /// Uses only DB sessions (not the 22 K+ external sessions) to keep the stats
+    /// endpoint fast. External sessions are counted but not scored here.
+    private func computeHealthSummary(dbModels: [SessionModel]) async -> HealthSummary? {
+        guard !dbModels.isEmpty else { return nil }
+
+        let sessions = dbModels.map { $0.toShared() }
+        var totalScore: Double = 0
+        var healthyCount = 0
+        var degradingCount = 0
+        var problematicCount = 0
+
+        for session in sessions {
+            let score = await healthService.computeHealthScore(session: session)
+            totalScore += score.score
+            switch score.level {
+            case .healthy:
+                healthyCount += 1
+            case .degrading:
+                degradingCount += 1
+            case .problematic:
+                problematicCount += 1
+            }
+        }
+
+        let count = sessions.count
+        let average = (totalScore / Double(count) * 10).rounded() / 10
+        return HealthSummary(
+            averageScore: average,
+            healthyCount: healthyCount,
+            degradingCount: degradingCount,
+            problematicCount: problematicCount,
+            totalScored: count
+        )
     }
 }
