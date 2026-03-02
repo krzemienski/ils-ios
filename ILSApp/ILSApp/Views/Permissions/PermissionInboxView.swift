@@ -43,7 +43,7 @@ struct PermissionInboxView: View {
             if selectedSegment == 0 {
                 inboxContent
             } else {
-                permissionHistoryPlaceholder
+                PermissionHistoryView()
             }
         }
         .background(theme.bgPrimary)
