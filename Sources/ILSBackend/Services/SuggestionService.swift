@@ -9,6 +9,9 @@ actor SuggestionInteractionStore {
     /// Click counts keyed by suggestion target ID (session ID or skill name).
     var clickCounts: [String: Int] = [:]
 
+    /// Set of dismissed suggestion target IDs (session IDs or skill names).
+    private var dismissedIds: Set<String> = []
+
     /// Record a click interaction for a given target.
     /// - Parameter targetId: The session ID or skill identifier that was clicked.
     func recordClick(targetId: String) {
@@ -19,6 +22,19 @@ actor SuggestionInteractionStore {
     /// - Returns: Dictionary of targetId -> click count
     func getCounts() -> [String: Int] {
         clickCounts
+    }
+
+    /// Record a dismissal for a given suggestion target.
+    /// - Parameter targetId: The session ID or skill identifier that was dismissed.
+    func recordDismissal(targetId: String) {
+        dismissedIds.insert(targetId.lowercased())
+    }
+
+    /// Check whether a suggestion target has been dismissed by the user.
+    /// - Parameter targetId: The session ID or skill identifier to query.
+    /// - Returns: `true` if the target has been dismissed, `false` otherwise.
+    func isDismissed(targetId: String) -> Bool {
+        dismissedIds.contains(targetId.lowercased())
     }
 }
 
