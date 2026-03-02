@@ -40,6 +40,56 @@ public enum ClaudeModel: Codable, Hashable, Sendable, CustomStringConvertible {
         }
     }
 
+    /// Cost per million input tokens in USD.
+    public var costPerMInputTokens: Double {
+        switch self {
+        case .haiku: return 0.80
+        case .sonnet: return 3.00
+        case .opus: return 15.00
+        case .unknown: return 3.00
+        }
+    }
+
+    /// Cost per million output tokens in USD.
+    public var costPerMOutputTokens: Double {
+        switch self {
+        case .haiku: return 4.00
+        case .sonnet: return 15.00
+        case .opus: return 75.00
+        case .unknown: return 15.00
+        }
+    }
+
+    /// Speed rating from 1 (slowest) to 3 (fastest).
+    public var speedRating: Int {
+        switch self {
+        case .haiku: return 3
+        case .sonnet: return 2
+        case .opus: return 1
+        case .unknown: return 2
+        }
+    }
+
+    /// Capability rating from 1 (least capable) to 3 (most capable).
+    public var capabilityRating: Int {
+        switch self {
+        case .haiku: return 1
+        case .sonnet: return 2
+        case .opus: return 3
+        case .unknown: return 2
+        }
+    }
+
+    /// Short human-readable description of the model's strengths.
+    public var modelDescription: String {
+        switch self {
+        case .haiku: return "Fast and cost-efficient. Best for simple tasks and high-volume use."
+        case .sonnet: return "Balanced performance and cost. Best for most everyday tasks."
+        case .opus: return "Most capable model. Best for complex reasoning and nuanced tasks."
+        case .unknown(let value): return value
+        }
+    }
+
     /// All known model families (excludes `.unknown`).
     public static let allKnown: [ClaudeModel] = [.sonnet, .opus, .haiku]
 
