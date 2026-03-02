@@ -321,7 +321,7 @@ struct GlobalSearchView: View {
                 Text("No results")
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
-                Text("No messages match "\(viewModel.searchQuery)"")
+                Text("No messages match \"\(viewModel.searchQuery)\"")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .multilineTextAlignment(.center)

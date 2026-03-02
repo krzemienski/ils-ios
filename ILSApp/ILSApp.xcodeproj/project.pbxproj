@@ -119,6 +119,9 @@
 		2CCFD53061E151D34D7E15AA /* MetricsWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086281B052347B8C9884124C /* MetricsWebSocketClient.swift */; };
 		2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B121B5870E59B111E9F54CFC /* AssistantCard.swift */; };
 		DC38FED474DD498BA99AB623 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */; };
+		F72A8420D7C8344EED656EE7 /* GlobalSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56CE7AAC52C87A043AE31BBF /* GlobalSearchViewModel.swift */; };
+		BEDCB7282581DFF74C5B1F34 /* GlobalSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65E8FC388D58613D7EC18283 /* GlobalSearchView.swift */; };
+		81BFFCCD465095A1385FD567 /* GlobalSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5A1AE9A612394103C29C3B /* GlobalSearchResultRow.swift */; };
 		2DE2E7CD15D3686175AEEA34 /* Scenario04_ErrorHandlingAndRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B8FAB1246E8DB2AF699A5B5 /* Scenario04_ErrorHandlingAndRecovery.swift */; };
 		2F0EAF3FFE0122F9369FDE92 /* MacDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5086194DE6CA7336A7E52F62 /* MacDashboardView.swift */; };
 		2F35F33131F061E873FBC02F /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06A8A5DC276AB8E77D502627 /* SSEClient.swift */; };
@@ -139,6 +142,9 @@
 		37AB7475EC00B946B497B905 /* PremiumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AD4ECE9770812FE2B0982B /* PremiumView.swift */; };
 		387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B121B5870E59B111E9F54CFC /* AssistantCard.swift */; };
 		9C8249AE19C441E6BB868B79 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */; };
+		25D941B17ED4810EF62D7158 /* GlobalSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56CE7AAC52C87A043AE31BBF /* GlobalSearchViewModel.swift */; };
+		9537978D51E31B2181B97B87 /* GlobalSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65E8FC388D58613D7EC18283 /* GlobalSearchView.swift */; };
+		36547733F5FCE465EC6480B4 /* GlobalSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5A1AE9A612394103C29C3B /* GlobalSearchResultRow.swift */; };
 		38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */; };
 		39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */; };
 		39E04FA35C5D68812FE9F06F /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */; };
@@ -564,6 +570,9 @@
 		1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeColorTokensSection.swift; sourceTree = "<group>"; };
 		1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		A859FD44B066408FA3AF8517 /* MessageSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageSearchResultRow.swift; sourceTree = "<group>"; };
+		56CE7AAC52C87A043AE31BBF /* GlobalSearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchViewModel.swift; sourceTree = "<group>"; };
+		65E8FC388D58613D7EC18283 /* GlobalSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchView.swift; sourceTree = "<group>"; };
+		AD5A1AE9A612394103C29C3B /* GlobalSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchResultRow.swift; sourceTree = "<group>"; };
 		1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
 		20728850B297F9D25F6F821B /* ObsidianTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianTheme.swift; sourceTree = "<group>"; };
@@ -1278,8 +1287,18 @@
 				964C9FCA1325915B55D0A42C /* Teams */,
 				EC4E8B1351AF67B0ECBCCFA5 /* Themes */,
 				B054CBE53D1498EAF28925EC /* Tips */,
+				1CE9227DEC0A20A3AA3E9A9F /* Search */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		1CE9227DEC0A20A3AA3E9A9F /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				65E8FC388D58613D7EC18283 /* GlobalSearchView.swift */,
+				AD5A1AE9A612394103C29C3B /* GlobalSearchResultRow.swift */,
+			);
+			path = Search;
 			sourceTree = "<group>";
 		};
 		BA480E94C563D561E67BEEF5 /* Services */ = {
@@ -1372,6 +1391,7 @@
 				6E65F9892954F605C2737A7D /* TeamsViewModel.swift */,
 				C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */,
 				83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */,
+				56CE7AAC52C87A043AE31BBF /* GlobalSearchViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -1772,6 +1792,9 @@
 				1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
 				DC38FED474DD498BA99AB623 /* MessageSearchResultRow.swift in Sources */,
+				F72A8420D7C8344EED656EE7 /* GlobalSearchViewModel.swift in Sources */,
+				BEDCB7282581DFF74C5B1F34 /* GlobalSearchView.swift in Sources */,
+				81BFFCCD465095A1385FD567 /* GlobalSearchResultRow.swift in Sources */,
 				9C30563A1ED1E15628E54487 /* BrowserView.swift in Sources */,
 				84A0C3EB7D957139BF54D41B /* CacheService.swift in Sources */,
 				6FF2FE7DC2E16FC1CCC1DADB /* CacheStatusView.swift in Sources */,
@@ -2000,6 +2023,9 @@
 				BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,
 				9C8249AE19C441E6BB868B79 /* MessageSearchResultRow.swift in Sources */,
+				25D941B17ED4810EF62D7158 /* GlobalSearchViewModel.swift in Sources */,
+				9537978D51E31B2181B97B87 /* GlobalSearchView.swift in Sources */,
+				36547733F5FCE465EC6480B4 /* GlobalSearchResultRow.swift in Sources */,
 				5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */,
 				834A2D8B4FE2267C537917D3 /* CacheService.swift in Sources */,
 				A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */,
