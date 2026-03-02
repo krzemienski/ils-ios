@@ -40,6 +40,8 @@ struct ThemedCodeBlockView: View {
     @GestureState private var magnifyBy: CGFloat = 0
     @AppStorage("codeblock.lineNumbers") private var showLineNumbers: Bool = false
     @State private var showFullScreen = false
+    @State private var showShareSheet = false
+    @State private var shareItems: [Any] = []
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -66,6 +68,9 @@ struct ThemedCodeBlockView: View {
                 code: code,
                 highlightedCode: highlightedCode
             )
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: shareItems)
         }
         #endif
     }
@@ -102,6 +107,17 @@ struct ThemedCodeBlockView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Expand code block to full screen")
             .accessibilityIdentifier("code-block-expand-button")
+
+            Button(action: { Task { await shareCode() } }) {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 13, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Share code as image")
+            .accessibilityIdentifier("code-block-share-button")
             #endif
 
             Button(action: copyCode) {
@@ -312,7 +328,72 @@ struct ThemedCodeBlockView: View {
             showCopied = false
         }
     }
+
+    #if os(iOS)
+    private func shareCode() async {
+        let snapshot = CodeBlockShareSnapshotView(
+            language: detectedLanguage ?? language,
+            code: code,
+            highlightedCode: highlightedCode,
+            theme: theme
+        )
+        let renderer = ImageRenderer(content: snapshot)
+        renderer.scale = UIScreen.main.scale
+        renderer.proposedSize = ProposedViewSize(width: 360, height: nil)
+        guard let uiImage = renderer.uiImage else { return }
+        shareItems = [uiImage]
+        showShareSheet = true
+    }
+    #endif
 }
+
+// MARK: - Share Snapshot View
+
+#if os(iOS)
+/// Static snapshot of a code block used as the source for sharing as an image.
+/// Renders the same code block layout without interactive controls.
+private struct CodeBlockShareSnapshotView: View {
+    let language: String?
+    let code: String
+    let highlightedCode: AttributedString?
+    let theme: ThemeSnapshot
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(language ?? "code")
+                    .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
+            }
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.vertical, 6)
+            .background(theme.bgTertiary)
+
+            Group {
+                if let highlighted = highlightedCode {
+                    Text(highlighted)
+                        .font(.system(size: 13, design: theme.fontDesign))
+                } else {
+                    Text(code)
+                        .font(.system(size: 13, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                }
+            }
+            .padding(theme.spacingSM)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(theme.bgTertiary)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .overlay(
+            RoundedRectangle(cornerRadius: theme.cornerRadiusSmall)
+                .strokeBorder(theme.borderSubtle, lineWidth: 0.5)
+        )
+        .padding()
+        .background(theme.bgPrimary)
+    }
+}
+#endif
 
 // MARK: - Full Screen View
 
