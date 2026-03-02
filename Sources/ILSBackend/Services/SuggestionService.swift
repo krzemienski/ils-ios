@@ -276,4 +276,74 @@ struct SuggestionService {
         }
         return "Relevant skill for your project"
     }
+
+    // MARK: - Abandoned Session Suggestions
+
+    /// Identify sessions that were abandoned and are worth resuming.
+    ///
+    /// A session qualifies when:
+    /// - It has not been active for more than 24 hours
+    /// - It has at least 3 messages (meaningful prior engagement)
+    /// - Its status is not `.active`
+    /// - Its ID has not been dismissed by the user
+    ///
+    /// Results are ordered by inactivity duration descending (most neglected first).
+    ///
+    /// - Parameters:
+    ///   - sessions: All available sessions to evaluate.
+    ///   - limit: Maximum number of suggestions to return.
+    ///   - dismissedIds: Set of lowercased session ID strings to exclude from results.
+    /// - Returns: Array of `AbandonedSessionSuggestion` capped at `limit`.
+    func suggestAbandoned(
+        from sessions: [ChatSession],
+        limit: Int,
+        dismissedIds: Set<String>
+    ) -> [AbandonedSessionSuggestion] {
+        let now = Date()
+        let abandonedThreshold: TimeInterval = 24 * 3_600  // 24 hours in seconds
+
+        var candidates: [(session: ChatSession, inactivity: TimeInterval)] = []
+        candidates.reserveCapacity(sessions.count)
+
+        for session in sessions {
+            // Must not be currently active
+            guard session.status != .active else { continue }
+
+            // Must have meaningful prior engagement
+            guard session.messageCount >= 3 else { continue }
+
+            // Must have been inactive for at least 24 hours
+            let inactivity = now.timeIntervalSince(session.lastActiveAt)
+            guard inactivity > abandonedThreshold else { continue }
+
+            // Must not have been dismissed by the user
+            guard !dismissedIds.contains(session.id.uuidString.lowercased()) else { continue }
+
+            candidates.append((session: session, inactivity: inactivity))
+        }
+
+        // Sort by inactivity descending (most abandoned first), then cap to limit
+        let sorted = candidates.sorted { $0.inactivity > $1.inactivity }.prefix(limit)
+
+        return sorted.map { item in
+            let hoursAgo = Int(item.inactivity / 3_600)
+            let reason: String
+            if hoursAgo < 48 {
+                reason = "Inactive for \(hoursAgo) hours — pick up where you left off"
+            } else {
+                let daysAgo = hoursAgo / 24
+                reason = "Inactive for \(daysAgo) days — worth resuming"
+            }
+
+            // Estimate how far along the session was; caps at 95% (never "complete")
+            let completionEstimate = min(Int(Double(item.session.messageCount) / 20.0 * 100), 95)
+
+            return AbandonedSessionSuggestion(
+                session: item.session,
+                inactivityDuration: item.inactivity,
+                reason: reason,
+                completionEstimate: completionEstimate
+            )
+        }
+    }
 }
