@@ -854,16 +854,23 @@ class ChatViewModel {
     /// Check context usage percent against 85%/90%/95% thresholds and trigger alerts for any
     /// newly-crossed levels. Each threshold alerts at most once per session. The banner is shown
     /// at the highest newly-crossed threshold.
+    ///
+    /// When 85% is newly crossed and `autoSnapshotEnabled` is set in UserDefaults, an
+    /// automatic context snapshot is saved via ``generateContextSnapshot()``.
     private func checkCompactionThresholds() {
         guard let percent = contextUsagePercent else { return }
 
         let thresholds = [85, 90, 95]
         var highestNewThreshold: Int? = nil
+        var shouldAutoSnapshot = false
 
         for threshold in thresholds {
             if percent >= Double(threshold), !alertedThresholds.contains(threshold) {
                 alertedThresholds.insert(threshold)
                 highestNewThreshold = threshold
+                if threshold == 85 {
+                    shouldAutoSnapshot = true
+                }
             }
         }
 
@@ -871,6 +878,98 @@ class ChatViewModel {
             compactionAlertThreshold = Double(threshold)
             showCompactionAlert = true
         }
+
+        if shouldAutoSnapshot && UserDefaults.standard.bool(forKey: "autoSnapshotEnabled") {
+            Task { [weak self] in await self?.generateContextSnapshot() }
+        }
+    }
+
+    // MARK: - Snapshot Generation
+
+    /// Generate and persist a context snapshot summarising the current conversation state.
+    ///
+    /// Creates a plain-text summary of up to 15 recent messages, prioritising user turns
+    /// and key tool results. The snapshot is stored via ``SessionMemoryService`` so it
+    /// survives context compaction events and can be reviewed post-compaction.
+    ///
+    /// - Returns: `true` if the snapshot was saved successfully, `false` otherwise.
+    @discardableResult
+    func generateContextSnapshot() async -> Bool {
+        guard let sessionId,
+              let usedTokens = contextTokensUsed,
+              let windowSize = contextWindowSize else { return false }
+
+        let snapshotText = buildSnapshotText()
+        guard !snapshotText.isEmpty else { return false }
+
+        do {
+            try await SessionMemoryService.shared.saveSnapshot(
+                sessionId: sessionId,
+                usedTokens: usedTokens,
+                windowSize: windowSize,
+                snapshotText: snapshotText
+            )
+            AppLogger.shared.info("Context snapshot saved for session \(sessionId)", category: "sessionMemory")
+            return true
+        } catch {
+            AppLogger.shared.error("Failed to save context snapshot: \(error)", category: "sessionMemory")
+            return false
+        }
+    }
+
+    /// Build a plain-text summary of recent conversation context.
+    ///
+    /// Takes the most recent 15 messages (skipping system events), prioritising user turns.
+    /// Long assistant messages are truncated to 500 characters. Tool call names and a brief
+    /// preview of tool results are included to capture key activity.
+    private func buildSnapshotText() -> String {
+        let snapshotWindowSize = 15
+        let recentMessages = messages.suffix(snapshotWindowSize)
+        guard !recentMessages.isEmpty else { return "" }
+
+        var lines: [String] = []
+        lines.append("Context Snapshot — \(Date().formatted())")
+        if let used = contextTokensUsed, let total = contextWindowSize {
+            let pct = String(format: "%.0f", contextUsagePercent ?? 0)
+            lines.append("Usage: \(used)/\(total) tokens (\(pct)%)")
+        }
+        lines.append("")
+
+        for message in recentMessages {
+            // Skip injected system event messages (e.g. "Session started")
+            if message.isSystem { continue }
+
+            let role = message.isUser ? "User" : "Assistant"
+            var text = message.text
+
+            // Truncate long assistant messages to keep the snapshot concise
+            if !message.isUser && text.count > 500 {
+                text = String(text.prefix(500)) + "…"
+            }
+
+            if !text.isEmpty {
+                lines.append("[\(role)] \(text)")
+            }
+
+            // Summarise tool calls by name
+            if !message.toolCalls.isEmpty {
+                let toolNames = message.toolCalls.map { $0.name }.joined(separator: ", ")
+                lines.append("  Tools: \(toolNames)")
+            }
+
+            // Include brief tool result previews; highlight errors
+            for result in message.toolResults {
+                if result.isError {
+                    let preview = String(result.content.prefix(200))
+                    lines.append("  Tool result (error): \(preview)")
+                } else if !result.content.isEmpty {
+                    let preview = String(result.content.prefix(150))
+                    lines.append("  Tool result: \(preview)")
+                }
+            }
+        }
+
+        return lines.joined(separator: "\n")
     }
 
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
