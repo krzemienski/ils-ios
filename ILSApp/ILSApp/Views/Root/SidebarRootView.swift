@@ -19,6 +19,7 @@ enum ActiveScreen: Hashable {
     case themes
     case hooks
     case activityFeed
+    case splitView
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -36,6 +37,7 @@ enum ActiveScreen: Hashable {
         case .themes: return "themes"
         case .hooks: return "hooks"
         case .activityFeed: return "activityFeed"
+        case .splitView: return "splitView"
         }
     }
 
@@ -51,6 +53,7 @@ enum ActiveScreen: Hashable {
         case "themes": return .themes
         case "hooks": return .hooks
         case "activityFeed": return .activityFeed
+        case "splitView": return .splitView
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -124,6 +127,8 @@ struct SidebarRootView: View {
     private let networkMonitor = NetworkMonitor.shared
     /// Activity feed view model, instantiated once and reused by ``ActivityFeedView``.
     @State private var activityFeedVM = ActivityFeedViewModel()
+    /// Multi-session split view model, owned by this root view and shared with split view screens.
+    @State private var multiSessionVM = MultiSessionViewModel()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -304,6 +309,8 @@ struct SidebarRootView: View {
                     hooksScreen
                 case .activityFeed:
                     activityFeedScreen
+                case .splitView:
+                    splitViewScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -452,6 +459,11 @@ struct SidebarRootView: View {
                 navigateToChat(session)
             }
         }
+    }
+
+    @ViewBuilder
+    private var splitViewScreen: some View {
+        MultiSessionSplitView(multiSessionVM: multiSessionVM, sessionsVM: sessionsVM)
     }
 
     // MARK: - Chat Navigation

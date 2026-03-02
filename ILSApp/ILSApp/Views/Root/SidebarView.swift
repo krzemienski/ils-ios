@@ -297,6 +297,7 @@ struct SidebarView: View {
                     screen: .activityFeed,
                     badge: activityFeedUnreadCount
                 )
+                sidebarNavItem(icon: "split.cells.horizontal", label: "Split View", screen: .splitView)
                 if enableAgentTeams {
                     sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
                 }
@@ -686,7 +687,8 @@ struct SidebarView: View {
         switch (activeScreen, screen) {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
-             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed):
+             (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
+             (.splitView, .splitView):
             return true
         case (.chat, .chat):
             return true

@@ -13,6 +13,14 @@
 		031C9457D5594277A7BC8DDD /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
 		B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */; };
 		C2D3E4F5061789ABCDEF0123 /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */; };
+		2FD33B0233AB44CFA9CE916D /* MultiSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7D92C6D62342B3AA7C556B /* MultiSessionViewModel.swift */; };
+		E49F9BD104104212A78B4DFC /* MultiSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7D92C6D62342B3AA7C556B /* MultiSessionViewModel.swift */; };
+		1C2B04B498D74DF8A84F3D30 /* MultiSessionSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */; };
+		79AAA823FA1148C7AB1D3BA8 /* MultiSessionSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */; };
+		5195CD5441CC4618B9A20FD2 /* SessionPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */; };
+		BB8D2DDFE8A54A569C9F721E /* SessionPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */; };
+		9583843DBD1B4913BC4931E4 /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */; };
+		ECD781898D054521BCAA0294 /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */; };
 		5C78C0044BDB48A28B717373 /* ActivityEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4F28D4F464451098C4900B /* ActivityEventRow.swift */; };
 		E29E6054D2BB409186079797 /* ActivityFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */; };
 		5C164E67B91E407BBA283D9F /* ActivityFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382BA3D9034D40C7AE3E1BA0 /* ActivityFeedView.swift */; };
@@ -754,6 +762,10 @@
 		D20194415A10CB918E81BE13 /* ThemeTypographySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTypographySection.swift; sourceTree = "<group>"; };
 		D42504430548D6626CEB65C9 /* SessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsViewModel.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedViewModel.swift; sourceTree = "<group>"; };
+		3E7D92C6D62342B3AA7C556B /* MultiSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiSessionViewModel.swift; sourceTree = "<group>"; };
+		4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiSessionSplitView.swift; sourceTree = "<group>"; };
+		D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaneView.swift; sourceTree = "<group>"; };
+		787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitViewLayoutPicker.swift; sourceTree = "<group>"; };
 		D59D339E49103B78DA87082F /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		30941598F01F41A9B4CF43BA /* CodingFocusFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodingFocusFilter.swift; sourceTree = "<group>"; };
 		D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateSessionIntent.swift; sourceTree = "<group>"; };
@@ -1054,6 +1066,9 @@
 			children = (
 				C82F89BCFDD21A13377F020D /* NewSessionView.swift */,
 				C934E92FC1D3804790EA3977 /* SessionInfoView.swift */,
+				4B7F705F7A274D20A72F0F03 /* MultiSessionSplitView.swift */,
+				D8AF9DB2A61D4CF896C52C26 /* SessionPaneView.swift */,
+				787B7832729B4823AA3D8697 /* SplitViewLayoutPicker.swift */,
 			);
 			path = Sessions;
 			sourceTree = "<group>";
@@ -1347,6 +1362,7 @@
 			children = (
 				A043BAE1603803A839C0CB52 /* BaseViewModel.swift */,
 				A1B2C3D4E5F601234567890A /* ActivityFeedViewModel.swift */,
+				3E7D92C6D62342B3AA7C556B /* MultiSessionViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
@@ -1800,6 +1816,10 @@
 				C5F70DDFF7BE69DE68BA4B3D /* CyberpunkEffects.swift in Sources */,
 				08B2A5AC7ED9F7BF7E8851A2 /* CyberpunkTheme.swift in Sources */,
 				B1C2D3E4F5067890ABCDEF01 /* ActivityFeedViewModel.swift in Sources */,
+				2FD33B0233AB44CFA9CE916D /* MultiSessionViewModel.swift in Sources */,
+				1C2B04B498D74DF8A84F3D30 /* MultiSessionSplitView.swift in Sources */,
+				5195CD5441CC4618B9A20FD2 /* SessionPaneView.swift in Sources */,
+				9583843DBD1B4913BC4931E4 /* SplitViewLayoutPicker.swift in Sources */,
 				B5F4FCBFFB3C8F1C17A22F36 /* DashboardViewModel.swift in Sources */,
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				EA4F02657C197438CB2F09F8 /* ElectricGridTheme.swift in Sources */,
@@ -2029,6 +2049,10 @@
 				E543569B607012FC1FC178DB /* CyberpunkEffects.swift in Sources */,
 				D5ED11A460131301452F9A86 /* CyberpunkTheme.swift in Sources */,
 				C2D3E4F5061789ABCDEF0123 /* ActivityFeedViewModel.swift in Sources */,
+				E49F9BD104104212A78B4DFC /* MultiSessionViewModel.swift in Sources */,
+				79AAA823FA1148C7AB1D3BA8 /* MultiSessionSplitView.swift in Sources */,
+				BB8D2DDFE8A54A569C9F721E /* SessionPaneView.swift in Sources */,
+				ECD781898D054521BCAA0294 /* SplitViewLayoutPicker.swift in Sources */,
 				E32E4C61F4F876B64A923344 /* DashboardViewModel.swift in Sources */,
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
 				C30D3744CF61781A45C23B3E /* ElectricGridTheme.swift in Sources */,
