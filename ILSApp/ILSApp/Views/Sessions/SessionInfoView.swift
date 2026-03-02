@@ -28,6 +28,8 @@ struct SessionInfoView: View {
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
 
+    private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
+
     private var displaySession: ChatSession {
         viewModel.loadedSession ?? session
     }
@@ -99,6 +101,21 @@ struct SessionInfoView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack(spacing: 12) {
+                    Button {
+                        Task { await bookmarksManager.toggleBookmark(session: displaySession) }
+                    } label: {
+                        Image(
+                            systemName: bookmarksManager.isBookmarked(sessionId: displaySession.id)
+                                ? "bookmark.fill"
+                                : "bookmark"
+                        )
+                    }
+                    .accessibilityLabel(
+                        bookmarksManager.isBookmarked(sessionId: displaySession.id)
+                            ? "Remove bookmark"
+                            : "Add bookmark"
+                    )
+
                     Button {
                         Task {
                             await viewModel.exportSession(session: displaySession)

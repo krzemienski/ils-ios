@@ -4,18 +4,8 @@ import ILSShared
 
 @MainActor
 @Observable
-class ThemesViewModel {
+class ThemesViewModel: BaseViewModel {
     var themes: [CustomTheme] = []
-    var isLoading = false
-    var error: Error?
-
-    private var client: APIClient?
-
-    init() {}
-
-    func configure(client: APIClient) {
-        self.client = client
-    }
 
     /// Empty state text for UI display
     var emptyStateText: String {
@@ -34,6 +24,15 @@ class ThemesViewModel {
             let response: APIResponse<ListResponse<CustomTheme>> = try await client.get("/themes")
             if let data = response.data {
                 themes = data.items
+
+                if ICloudSyncManager.shared.isSyncEnabled {
+                    await ICloudSyncManager.shared.syncCustomThemes(themes: themes, apiClient: client)
+                    // Reload to surface any themes synced from other devices
+                    let refreshed: APIResponse<ListResponse<CustomTheme>> = try await client.get("/themes")
+                    if let refreshedData = refreshed.data {
+                        themes = refreshedData.items
+                    }
+                }
             }
         } catch {
             self.error = error

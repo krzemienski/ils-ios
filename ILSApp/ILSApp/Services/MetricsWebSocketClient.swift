@@ -29,10 +29,12 @@ final class MetricsWebSocketClient {
     // NET-MED-1: Cap reconnection attempts to prevent infinite retry loops.
     private let maxReconnectAttempts = 10
 
-    private var reconnectTask: Task<Void, Never>?
-    private var pollingTask: Task<Void, Never>?
-    private var receiveTask: Task<Void, Never>?
-    private var heartbeatTask: Task<Void, Never>?
+    // @ObservationIgnored: Tasks are internal lifecycle state, not view-observable.
+    // Required so deinit (nonisolated) can access them for safety-net cancellation.
+    @ObservationIgnored private var reconnectTask: Task<Void, Never>?
+    @ObservationIgnored private var pollingTask: Task<Void, Never>?
+    @ObservationIgnored private var receiveTask: Task<Void, Never>?
+    @ObservationIgnored private var heartbeatTask: Task<Void, Never>?
     private var useFallbackPolling: Bool = false
     private var lastWSResetTime: Date?
     private let wsResetInterval: TimeInterval = 600
@@ -45,8 +47,18 @@ final class MetricsWebSocketClient {
         decoder.dateDecodingStrategy = .iso8601
     }
 
+    /// Safety-net deinit: cancels all async tasks if cleanup() was not called from the view.
+    /// Primary cleanup path remains cleanup() → disconnect() called from onDisappear.
+    /// Task.cancel() is thread-safe and valid from nonisolated deinit context.
+    /// (Same pattern used by SystemMetricsViewModel, TeamsViewModel, PollingManager.)
+    deinit {
+        reconnectTask?.cancel()
+        receiveTask?.cancel()
+        pollingTask?.cancel()
+        heartbeatTask?.cancel()
+    }
+
     /// Call from view's onDisappear to ensure all tasks and connections are torn down.
-    /// Replaces deinit-based cleanup which cannot safely access @MainActor state.
     func cleanup() {
         disconnect()
     }

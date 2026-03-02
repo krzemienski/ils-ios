@@ -44,6 +44,49 @@ class ChatViewModel {
     /// Internal access for Live Activity extension.
     var streamStartTime: Date?
 
+    // MARK: - Offline Message Queue
+
+    /// Whether the backend server is currently reachable.
+    /// Set externally by the hosting view to reflect `appState.isConnected`.
+    var isConnected: Bool = true
+
+    /// True when there are messages queued for this session awaiting delivery.
+    var hasPendingQueuedMessages: Bool {
+        guard sessionId != nil else { return false }
+        return MessageQueueService.shared.pendingCount > 0
+    }
+
+    // MARK: - Search State
+    /// Whether in-session message search is active.
+    var isSearchActive = false
+    /// Current search query text.
+    var searchQuery: String = ""
+    /// Search results from the backend.
+    var searchResults: [MessageSearchResult] = []
+    /// Whether a search request is in flight.
+    var isSearchLoading = false
+
+    // MARK: - Context Window Properties
+
+    /// Total context window size in tokens for the current model (nil until first result).
+    var contextWindowSize: Int? = nil
+    /// Total tokens used in the current context (input + output, nil until first result).
+    var contextTokensUsed: Int? = nil
+    /// Input tokens for the latest result (includes cache reads).
+    var contextInputTokens: Int = 0
+    /// Output tokens for the latest result.
+    var contextOutputTokens: Int = 0
+    /// Cache read tokens for the latest result.
+    var contextCacheReadTokens: Int = 0
+    /// Cache creation tokens for the latest result.
+    var contextCacheCreateTokens: Int = 0
+
+    /// Context window usage as a percentage (0–100), or nil if data not yet available.
+    var contextUsagePercent: Double? {
+        guard let used = contextTokensUsed, let total = contextWindowSize, total > 0 else { return nil }
+        return Double(used) / Double(total) * 100.0
+    }
+
     /// Computed property for current assistant message being streamed
     var currentStreamingMessage: ChatMessage? {
         guard isStreaming, let lastMessage = messages.last, !lastMessage.isUser else {
@@ -144,6 +187,14 @@ class ChatViewModel {
         for task in observationTasks { task.cancel() }
         observationTasks.removeAll()
 
+        // Observe network restoration to drain the offline message queue
+        observationTasks.append(Task { @MainActor [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
+                guard !Task.isCancelled else { break }
+                self?.drainQueue()
+            }
+        })
+
         // Single observation task that tracks all SSEClient properties
         // Uses withObservationTracking (Swift Observation) instead of Combine publishers
         observationTasks.append(Task { @MainActor [weak self] in
@@ -185,7 +236,11 @@ class ChatViewModel {
                     } else {
                         self.flushPendingMessages()
                         self.stopBatchTimer()
-                        self.lastProcessedMessageIndex = 0
+                        // Preserve current message count to prevent re-processing
+                        // all messages on the next observation cycle (was resetting
+                        // to 0, causing full replay and text duplication).
+                        let finalCount = sseClient.messages.count
+                        self.lastProcessedMessageIndex = finalCount
                         // End Live Activity
                         #if os(iOS)
                         if #available(iOS 16.2, *) {
@@ -193,7 +248,7 @@ class ChatViewModel {
                         }
                         #endif
                         self.streamStartTime = nil
-                        lastMessageCount = 0
+                        lastMessageCount = finalCount
                     }
                     lastStreaming = streaming
                 }
@@ -544,7 +599,67 @@ class ChatViewModel {
         messages.append(ChatMessage(isUser: true, text: text))
     }
 
+    /// Send a message, or enqueue it for later delivery if the server is unreachable.
     func sendMessage(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
+        guard isConnected else {
+            if let sessionId {
+                let queued = QueuedMessage(sessionId: sessionId, content: prompt)
+                MessageQueueService.shared.enqueue(queued)
+                AppLogger.shared.info("Message queued while offline: \(prompt.prefix(50))", category: "chat")
+            }
+            return
+        }
+        performSend(prompt: prompt, projectId: projectId, options: options)
+    }
+
+    /// Deliver all messages queued for the current session now that connectivity is restored.
+    /// Messages are sent one at a time: each send waits for the prior stream to finish
+    /// before starting the next, preventing `sseClient.startStream()` from cancelling
+    /// in-flight streams (which would silently lose all but the last queued message).
+    func drainQueue() {
+        guard isConnected, let sessionId else { return }
+
+        let all = MessageQueueService.shared.dequeueAll()
+        guard !all.isEmpty else { return }
+
+        // Separate messages for this session from other sessions
+        let mine = all.filter { $0.sessionId == sessionId }
+        let others = all.filter { $0.sessionId != sessionId }
+
+        // Re-enqueue messages belonging to other sessions
+        for msg in others {
+            MessageQueueService.shared.enqueue(msg)
+        }
+
+        guard !mine.isEmpty else { return }
+        AppLogger.shared.info("Draining \(mine.count) queued message(s) for session \(sessionId)", category: "chat")
+
+        // Send sequentially: wait for each stream to complete before starting the next.
+        Task { @MainActor [weak self] in
+            for queued in mine {
+                guard let self, self.isConnected else { break }
+
+                // Wait for any in-flight stream to finish before sending the next message.
+                // Uses withObservationTracking to avoid spinning — fires exactly once
+                // per isStreaming change, then re-registers until streaming is false.
+                while self.isStreaming {
+                    await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                        withObservationTracking {
+                            _ = self.isStreaming
+                        } onChange: {
+                            continuation.resume()
+                        }
+                    }
+                }
+
+                guard self.isConnected else { break }
+                self.performSend(prompt: queued.content, projectId: nil, options: nil)
+            }
+        }
+    }
+
+    /// Core send implementation — builds and starts the SSE stream request.
+    private func performSend(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
         guard let sseClient else { return }
 
         // For external sessions, inject claudeSessionId as resume option
@@ -568,7 +683,8 @@ class ChatViewModel {
                 inputFormat: options?.inputFormat,
                 agent: options?.agent,
                 betas: options?.betas,
-                debug: options?.debug
+                debug: options?.debug,
+                backend: options?.backend
             )
         }
 
@@ -676,6 +792,9 @@ class ChatViewModel {
 
         do {
             let response: APIResponse<ChatSession> = try await apiClient.post("/sessions/\(sessionId.uuidString)/fork", body: EmptyBody())
+            if response.data != nil {
+                messages.append(ChatMessage.systemEvent("Session forked", eventType: .sessionForked))
+            }
             return response.data
         } catch {
             self.error = error
@@ -684,10 +803,48 @@ class ChatViewModel {
         }
     }
 
+    // MARK: - Search
+
+    /// Search messages in the current session matching the given query.
+    ///
+    /// Calls `GET /sessions/:id/messages/search?q=` and populates ``searchResults``.
+    /// Does nothing if no session ID is set or the query is empty.
+    func searchMessages(query: String) async {
+        guard let apiClient, let sessionId else { return }
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
+            searchResults = []
+            return
+        }
+
+        isSearchLoading = true
+
+        do {
+            let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed
+            let path = "/sessions/\(sessionId.uuidString)/messages/search?q=\(encoded)"
+            let response: APIResponse<ListResponse<MessageSearchResult>> = try await apiClient.get(path)
+            searchResults = response.data?.items ?? []
+        } catch {
+            AppLogger.shared.error("Failed to search messages: \(error.localizedDescription)", category: "chat")
+            searchResults = []
+        }
+
+        isSearchLoading = false
+    }
+
+    /// Cancel the current search and reset all search state.
+    func cancelSearch() {
+        isSearchActive = false
+        searchQuery = ""
+        searchResults = []
+        isSearchLoading = false
+    }
+
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
-        // Find or create current assistant message
+        // Find or create current assistant message.
+        // Guard against re-popping injected system event messages (isSystem: true).
         var currentMessage: ChatMessage
-        if let lastMessage = messages.last, !lastMessage.isUser, !lastMessage.isFromHistory {
+        if let lastMessage = messages.last, !lastMessage.isUser, !lastMessage.isFromHistory, !lastMessage.isSystem {
             currentMessage = lastMessage
             messages.removeLast()
         } else {
@@ -700,12 +857,43 @@ class ChatViewModel {
             switch streamMessage {
             case .system(let sysMsg):
                 AppLogger.shared.info("Session initialized: \(sysMsg.data.sessionId)", category: "chat")
+                if sysMsg.subtype == "init" {
+                    // Flush any in-progress assistant content before the system event.
+                    if !currentMessage.text.isEmpty || !currentMessage.toolCalls.isEmpty {
+                        messages.append(currentMessage)
+                        currentMessage = ChatMessage(isUser: false, text: "")
+                        currentMessage.text.reserveCapacity(8192)
+                    }
+                    messages.append(ChatMessage.systemEvent("Session started", eventType: .sessionStarted))
+                }
 
             case .assistant(let assistantMsg):
                 handleAssistantMessage(assistantMsg, message: &currentMessage)
 
             case .result(let resultMsg):
                 currentMessage.cost = resultMsg.totalCostUSD
+
+                // Extract context window data from result message
+                if let usage = resultMsg.usage {
+                    let inputTokens = usage.inputTokens
+                    let outputTokens = usage.outputTokens
+                    let cacheRead = usage.cacheReadInputTokens ?? 0
+                    let cacheCreate = usage.cacheCreationInputTokens ?? 0
+
+                    contextInputTokens = inputTokens
+                    contextOutputTokens = outputTokens
+                    contextCacheReadTokens = cacheRead
+                    contextCacheCreateTokens = cacheCreate
+                    contextTokensUsed = inputTokens + outputTokens
+
+                    // Real per-message output token count
+                    currentMessage.tokenCount = outputTokens
+                }
+
+                // Extract context window size from per-model usage
+                if let windowSize = resultMsg.modelUsage?.values.first?.contextWindow {
+                    contextWindowSize = windowSize
+                }
 
             case .permission(let permissionReq):
                 pendingPermissionRequest = permissionReq
@@ -728,17 +916,23 @@ class ChatViewModel {
         // Approximate token count from text length (rough: ~4 chars per token)
         streamTokenCount = max(streamTokenCount, currentMessage.text.count / 4)
 
-        messages.append(currentMessage)
+        // Only append the assistant message if it carries content. A system-only
+        // batch (e.g. just a session-init event) leaves currentMessage empty.
+        if !currentMessage.text.isEmpty || !currentMessage.toolCalls.isEmpty {
+            messages.append(currentMessage)
+        }
     }
 
     // MARK: - Stream Message Handlers
 
     /// Handle assistant message: accumulate text, tool calls, tool results, and thinking blocks.
+    /// The assistant event contains the authoritative final content for each block.
+    /// Use assignment (not append) for text to avoid duplication with prior streaming deltas.
     private func handleAssistantMessage(_ assistantMsg: AssistantMessage, message: inout ChatMessage) {
         for block in assistantMsg.content {
             switch block {
             case .text(let textBlock):
-                message.text += textBlock.text
+                message.text = textBlock.text
 
             case .toolUse(let toolUseBlock):
                 message.toolCalls.append(ToolCallDisplay(

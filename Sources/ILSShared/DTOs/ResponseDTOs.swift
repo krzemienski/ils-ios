@@ -324,3 +324,81 @@ public struct DataErasureResponse: Codable, Sendable, Hashable {
         self.cacheEntriesDeleted = cacheEntriesDeleted
     }
 }
+
+// MARK: - MCP Validation & Presets
+
+/// Result of validating an MCP server configuration before applying it.
+public struct MCPValidationResult: Codable, Sendable {
+    /// Whether the configuration is valid and safe to apply.
+    public let isValid: Bool
+    /// Validation error messages that must be resolved.
+    public let errors: [String]
+    /// Non-blocking warnings about the configuration.
+    public let warnings: [String]
+
+    public init(isValid: Bool, errors: [String] = [], warnings: [String] = []) {
+        self.isValid = isValid
+        self.errors = errors
+        self.warnings = warnings
+    }
+}
+
+/// Response containing the list of preset MCP server configurations.
+public struct MCPPresetListResponse: Codable, Sendable {
+    /// Available preset configurations grouped for display.
+    public let presets: [MCPPreset]
+
+    public init(presets: [MCPPreset]) {
+        self.presets = presets
+    }
+}
+
+// MARK: - Suggestion Responses
+
+/// A suggested past session relevant to the current context.
+public struct SessionSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested session.
+    public let session: ChatSession
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        session: ChatSession,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.session = session
+        self.score = score
+        self.reason = reason
+    }
+}
+
+/// A suggested skill relevant to the current project or context.
+public struct SkillSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested skill.
+    public let skill: Skill
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        skill: Skill,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.skill = skill
+        self.score = score
+        self.reason = reason
+    }
+}

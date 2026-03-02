@@ -29,21 +29,19 @@ import ILSShared
 /// - ``renameSession(_:newName:)`` - Rename a session
 @Observable
 @MainActor
-class SessionsViewModel {
+class SessionsViewModel: BaseViewModel {
     /// Array of all loaded chat sessions.
     var sessions: [ChatSession] = []
     /// Total number of sessions available.
     var totalCount: Int = 0
-    /// Whether sessions are currently loading.
-    var isLoading = false
-    /// Current error, if any.
-    var error: Error?
     /// Whether more sessions are available for pagination.
     var hasMore = true
     /// Server-side search query.
     var searchQuery: String?
     /// Client-side search text for filtering.
     var searchText: String = ""
+    /// Debounced version of searchText used for actual filtering.
+    var debouncedSearchText: String = ""
     /// Timestamp of most recent successful data load from API.
     var lastUpdated: Date?
 
@@ -59,8 +57,6 @@ class SessionsViewModel {
     private var currentPage = 1
     private let pageSize = 50
     private var projectPages: [String: Int] = [:]
-
-    private var client: APIClient?
 
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
     private var searchCache: [(session: ChatSession, searchText: String)] = []
@@ -78,21 +74,49 @@ class SessionsViewModel {
     private var cachedGroupedByTime: [(key: String, value: [ChatSession])] = []
     /// The search text used to build the cached time-grouped sessions
     private var cachedGroupedByTimeSearchText: String = ""
-    /// The session count used to invalidate time-grouped cache
-    private var cachedGroupedByTimeSessionCount: Int = -1
+    /// The mutation version at which groupedSessionsByTime cache was last built
+    private var cachedGroupedByTimeVersion: Int = -1
 
-    init() {}
+    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
 
-    /// Configure the view model with an API client.
-    /// - Parameter client: The API client to use for requests
-    func configure(client: APIClient) {
-        self.client = client
+    deinit {
+        searchTask?.cancel()
     }
+
+    /// Schedule a debounced update of debouncedSearchText.
+    /// Call this from `.onChange(of: searchText)` in the view instead of filtering on every keystroke.
+    func scheduleSearchDebounce() {
+        searchTask?.cancel()
+        let text = searchText
+        guard !text.isEmpty else {
+            debouncedSearchText = ""
+            return
+        }
+        searchTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard let self, !Task.isCancelled else { return }
+            debouncedSearchText = text
+        }
+    }
+
+    /// Clear search text and debounced text immediately.
+    func clearSearch() {
+        searchTask?.cancel()
+        searchText = ""
+        debouncedSearchText = ""
+    }
+
+    /// Number of sessions matching the current debounced search text.
+    var filteredCount: Int {
+        guard !debouncedSearchText.isEmpty else { return sessions.count }
+        return filteredSessions.count
+    }
+
 
     /// Sessions filtered by the local search text using precomputed lowercase cache
     var filteredSessions: [ChatSession] {
-        guard !searchText.isEmpty else { return sessions }
-        let query = searchText.lowercased()
+        guard !debouncedSearchText.isEmpty else { return sessions }
+        let query = debouncedSearchText.lowercased()
         return searchCache
             .filter { $0.searchText.contains(query) }
             .map(\.session)
@@ -109,16 +133,14 @@ class SessionsViewModel {
     /// Rebuild the lowercase search cache when sessions array changes
     private func rebuildSearchCache() {
         searchCache = sessions.map { makeSearchEntry(for: $0) }
-        // Increment version to invalidate grouped cache
+        // Increment version to invalidate both grouped caches
         sessionsMutationVersion += 1
-        // Invalidate time-grouped cache
-        cachedGroupedByTimeSessionCount = -1
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
     /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessions: [(key: String, value: [ChatSession])] {
-        if cachedGroupedSearchText == searchText && cachedGroupedVersion == sessionsMutationVersion {
+        if cachedGroupedSearchText == debouncedSearchText && cachedGroupedVersion == sessionsMutationVersion {
             return cachedGroupedSessions
         }
         let filtered = filteredSessions
@@ -131,7 +153,7 @@ class SessionsViewModel {
             return latest1 > latest2
         }
         cachedGroupedSessions = sorted
-        cachedGroupedSearchText = searchText
+        cachedGroupedSearchText = debouncedSearchText
         cachedGroupedVersion = sessionsMutationVersion
         return sorted
     }
@@ -140,7 +162,7 @@ class SessionsViewModel {
     /// Sessions within each bucket are sorted by most recently active.
     /// Result is cached and only rebuilt when sessions or searchText change.
     var groupedSessionsByTime: [(key: String, value: [ChatSession])] {
-        if cachedGroupedByTimeSearchText == searchText && cachedGroupedByTimeSessionCount == sessions.count {
+        if cachedGroupedByTimeSearchText == debouncedSearchText && cachedGroupedByTimeVersion == sessionsMutationVersion {
             return cachedGroupedByTime
         }
         let filtered = filteredSessions
@@ -175,15 +197,15 @@ class SessionsViewModel {
         if !earlier.isEmpty { result.append((key: "Earlier", value: earlier)) }
 
         cachedGroupedByTime = result
-        cachedGroupedByTimeSearchText = searchText
-        cachedGroupedByTimeSessionCount = sessions.count
+        cachedGroupedByTimeSearchText = debouncedSearchText
+        cachedGroupedByTimeVersion = sessionsMutationVersion
         return result
     }
 
-    /// Filtered project groups based on search text
+    /// Filtered project groups based on debounced search text
     var filteredProjectGroups: [ProjectGroupInfo] {
-        guard !searchText.isEmpty else { return projectGroups }
-        let query = searchText.lowercased()
+        guard !debouncedSearchText.isEmpty else { return projectGroups }
+        let query = debouncedSearchText.lowercased()
         return projectGroups.filter { group in
             group.name.lowercased().contains(query)
         }
@@ -199,6 +221,9 @@ class SessionsViewModel {
     var emptyStateText: String {
         if isLoading {
             return "Loading sessions..."
+        }
+        if !debouncedSearchText.isEmpty && filteredSessions.isEmpty {
+            return "No sessions found"
         }
         return sessions.isEmpty ? "No sessions" : ""
     }
@@ -266,6 +291,22 @@ class SessionsViewModel {
     // MARK: - Legacy full-list loading (used by iOS tab views)
 
     func loadSessions(refresh: Bool = false) async {
+#if DEBUG
+        // Performance test mock injection: when the app is launched with --uitesting
+        // and PERF_ITEM_COUNT is set, bypass the API and populate with synthetic data.
+        // This allows LargeListRenderTests to measure pure render performance without
+        // network variance or backend dependency.
+        if ProcessInfo.processInfo.arguments.contains("--uitesting"),
+           let raw = ProcessInfo.processInfo.environment["PERF_ITEM_COUNT"],
+           let count = Int(raw), count > 0 {
+            sessions = AppState.makeMockSessions(count: count)
+            totalCount = count
+            hasMore = false
+            isLoading = false
+            rebuildSearchCache()
+            return
+        }
+#endif
         guard let client else { return }
         isLoading = true
         error = nil
@@ -360,8 +401,17 @@ class SessionsViewModel {
     func renameSession(_ session: ChatSession, to newName: String) async {
         guard let client else { return }
         do {
-            let _: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
-            await loadSessions(refresh: true)
+            let response: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
+            if let updated = response.data {
+                // Incremental in-place update — avoids O(n) full reload
+                if let idx = sessions.firstIndex(where: { $0.id == updated.id }) {
+                    sessions[idx] = updated
+                }
+                if let idx = searchCache.firstIndex(where: { $0.session.id == updated.id }) {
+                    searchCache[idx] = makeSearchEntry(for: updated)
+                }
+                sessionsMutationVersion += 1
+            }
         } catch {
             self.error = error
             AppLogger.shared.error("Failed to rename session: \(error.localizedDescription)", category: "sessions")
