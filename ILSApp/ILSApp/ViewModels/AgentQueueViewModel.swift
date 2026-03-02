@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UserNotifications
 import ILSShared
 
 @MainActor
@@ -14,6 +15,7 @@ class AgentQueueViewModel {
     private let apiClient: APIClient
     @ObservationIgnored private var pollingTask: Task<Void, Never>?
     @ObservationIgnored private var currentPollInterval: TimeInterval = 15
+    @ObservationIgnored private var knownItemStatuses: [String: AgentQueueStatus] = [:]
     private static let activePollInterval: TimeInterval = 15
     private static let idlePollInterval: TimeInterval = 60
 
@@ -200,14 +202,31 @@ class AgentQueueViewModel {
                 try? await Task.sleep(nanoseconds: UInt64((self?.currentPollInterval ?? 15) * 1_000_000_000))
                 guard !Task.isCancelled else { break }
 
-                await self?.loadQueue()
+                guard let self else { break }
+                let previousStatuses = self.knownItemStatuses
+                await self.loadQueue()
+
+                // Detect status transitions to completed or failed
+                for item in self.items {
+                    let previous = previousStatuses[item.id]
+                    guard previous != nil, previous != item.status else { continue }
+                    if item.status == .completed || item.status == .failed {
+                        await self.postQueueTaskNotification(
+                            taskId: item.id,
+                            taskTitle: item.title,
+                            status: item.status
+                        )
+                    }
+                }
+                // Record current statuses for next poll comparison
+                self.knownItemStatuses = Dictionary(uniqueKeysWithValues: self.items.map { ($0.id, $0.status) })
 
                 // Adaptive interval: active when items are running or queued, idle otherwise
-                let hasActiveItems = self?.items.contains(where: { $0.status == .running || $0.status == .queued }) ?? false
+                let hasActiveItems = self.items.contains(where: { $0.status == .running || $0.status == .queued })
                 if hasActiveItems {
-                    self?.currentPollInterval = Self.activePollInterval
+                    self.currentPollInterval = Self.activePollInterval
                 } else {
-                    self?.currentPollInterval = Self.idlePollInterval
+                    self.currentPollInterval = Self.idlePollInterval
                 }
             }
         }
@@ -217,6 +236,63 @@ class AgentQueueViewModel {
         pollingTask?.cancel()
         pollingTask = nil
         currentPollInterval = Self.activePollInterval
+        knownItemStatuses = [:]
+    }
+
+    // MARK: - Notifications
+
+    /// Post a local notification when a queued task transitions to `.completed` or `.failed`.
+    ///
+    /// Respects the `notif_queueTaskComplete` / `notif_queueTaskFailed` AppStorage flags
+    /// and the quiet-hours window (`notif_quietHoursEnabled`, `notif_quietStartHour`,
+    /// `notif_quietEndHour`).
+    func postQueueTaskNotification(
+        taskId: String,
+        taskTitle: String,
+        status: AgentQueueStatus
+    ) async {
+        // Check per-status notification preference
+        let prefKey = status == .completed ? "notif_queueTaskComplete" : "notif_queueTaskFailed"
+        guard UserDefaults.standard.object(forKey: prefKey) as? Bool ?? true else { return }
+
+        // Check quiet hours
+        let quietEnabled = UserDefaults.standard.object(forKey: "notif_quietHoursEnabled") as? Bool ?? false
+        if quietEnabled {
+            let quietStart = UserDefaults.standard.object(forKey: "notif_quietStartHour") as? Int ?? 22
+            let quietEnd = UserDefaults.standard.object(forKey: "notif_quietEndHour") as? Int ?? 7
+            let currentHour = Calendar.current.component(.hour, from: Date())
+            let inQuietWindow: Bool
+            if quietStart < quietEnd {
+                // Window within a single day (e.g., 01:00–06:00)
+                inQuietWindow = currentHour >= quietStart && currentHour < quietEnd
+            } else {
+                // Window spans midnight (e.g., 22:00–07:00)
+                inQuietWindow = currentHour >= quietStart || currentHour < quietEnd
+            }
+            guard !inQuietWindow else { return }
+        }
+
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+        guard settings.authorizationStatus == .authorized else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = status == .completed ? "Task Completed" : "Task Failed"
+        content.body = taskTitle
+        content.sound = .default
+        content.userInfo = [
+            "taskId": taskId,
+            "type": "queue_task_\(status.rawValue)"
+        ]
+
+        let identifier = "queue-task-\(taskId)-\(status.rawValue)"
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+
+        do {
+            try await center.add(request)
+        } catch {
+            AppLogger.shared.error("Failed to post queue task notification: \(error)", category: "notifications")
+        }
     }
 
     // MARK: - Computed Properties
