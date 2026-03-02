@@ -45,6 +45,8 @@ struct SettingsView: View {
 
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
 
+    @AppStorage("enableAgentQueue") private var enableAgentQueue: Bool = false
+
     private let availableColorSchemes = ["system", "light", "dark"]
 
     var body: some View {
@@ -61,6 +63,8 @@ struct SettingsView: View {
                 configSection
 
                 statisticsSection
+
+                agentQueueSection
 
                 contextWindowSection
 
@@ -177,6 +181,38 @@ struct SettingsView: View {
             availableColorSchemes: availableColorSchemes,
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
+    }
+
+    private var agentQueueSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Agent Queue")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Enable Agent Queue")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $enableAgentQueue)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Enable agent queue")
+                .onChange(of: enableAgentQueue) {
+                    HapticManager.selection()
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Queue and manage multiple background agent tasks for batch processing.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
     }
 
     private var contextWindowSection: some View {
