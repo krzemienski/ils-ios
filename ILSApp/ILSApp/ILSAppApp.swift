@@ -2,6 +2,7 @@ import SwiftUI
 import Observation
 import ILSShared
 import TipKit
+import UserNotifications
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -10,6 +11,7 @@ import UIKit
 struct ILSAppApp: App {
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
+    @State private var permissionNotifDelegate = PermissionNotificationDelegate()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
@@ -95,6 +97,24 @@ struct ILSAppApp: App {
                             }
                         }
                         PerformanceMonitor.shared.start()
+
+                        // Register permission notification category and request authorization.
+                        // Delegate is set before requestAuthorization so action taps received
+                        // during launch are handled correctly.
+                        UNUserNotificationCenter.current().delegate = permissionNotifDelegate
+                        PermissionService.registerNotificationCategory()
+                        try? await UNUserNotificationCenter.current().requestAuthorization(
+                            options: [.alert, .sound, .badge]
+                        )
+                        permissionNotifDelegate.onAction = { requestId, decision in
+                            Task {
+                                try? await appState.permissionService.submitDecision(
+                                    requestId: requestId,
+                                    decision: decision,
+                                    apiClient: appState.apiClient
+                                )
+                            }
+                        }
                         #endif
                     }
 
@@ -111,6 +131,48 @@ struct ILSAppApp: App {
             if newPhase == .active {
                 ICloudSyncManager.shared.syncPreferencesToCloud()
             }
+        }
+    }
+}
+
+// MARK: - Permission Notification Delegate
+
+/// Routes UNUserNotificationCenter action callbacks (Allow / Deny) to ``PermissionService``.
+///
+/// Registered as the `UNUserNotificationCenter` delegate at launch by ``ILSAppApp``.
+/// The ``onAction`` closure is set after the delegate is registered so it has a live
+/// reference to `AppState` without retaining the SwiftUI view hierarchy.
+final class PermissionNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+
+    /// Called by `ILSAppApp` to forward notification actions to the live `PermissionService`.
+    var onAction: ((String, String) -> Void)?
+
+    /// Shows permission notifications as banners when the app is foregrounded.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
+
+    /// Handles Allow / Deny taps on permission notification action buttons.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        defer { completionHandler() }
+        let userInfo = response.notification.request.content.userInfo
+        guard let requestId = userInfo["requestId"] as? String else { return }
+
+        switch response.actionIdentifier {
+        case "ALLOW_PERMISSION":
+            onAction?(requestId, "allow")
+        case "DENY_PERMISSION":
+            onAction?(requestId, "deny")
+        default:
+            break
         }
     }
 }

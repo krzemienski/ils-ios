@@ -134,10 +134,18 @@ class AppState {
     func handleScenePhase(_ phase: ScenePhase) {
         let appPhase: PollingManager.AppPhase
         switch phase {
-        case .active: appPhase = .active
-        case .inactive: appPhase = .inactive
-        case .background: appPhase = .background
-        @unknown default: appPhase = .inactive
+        case .active:
+            appPhase = .active
+            if isConnected {
+                permissionService.startPolling(apiClient: apiClient)
+            }
+        case .inactive:
+            appPhase = .inactive
+        case .background:
+            appPhase = .background
+            permissionService.stopPolling()
+        @unknown default:
+            appPhase = .inactive
         }
         pollingManager.handleScenePhase(appPhase)
     }
