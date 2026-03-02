@@ -431,3 +431,42 @@ public struct AbandonedSessionSuggestion: Codable, Sendable, Identifiable {
         self.completionEstimate = completionEstimate
     }
 }
+
+/// A smart continuation summary for a session, used as a resume prompt.
+///
+/// Generated when a user resumes a session, providing context about
+/// where the conversation left off so the next message can pick up naturally.
+public struct ContinuationSummary: Codable, Sendable, Identifiable {
+    /// Unique identifier for this summary.
+    public let id: UUID
+    /// The session this summary describes.
+    public let sessionId: UUID
+    /// Human-readable narrative of what was accomplished in the session.
+    public let summary: String
+    /// A ready-to-use prompt suggested for resuming the session.
+    public let suggestedPrompt: String
+    /// Key topics or tasks extracted from the session history.
+    public let keyTopics: [String]
+    /// Number of messages that were analyzed to produce this summary.
+    public let messageCount: Int
+    /// When this summary was generated.
+    public let generatedAt: Date
+
+    public init(
+        id: UUID = UUID(),
+        sessionId: UUID,
+        summary: String,
+        suggestedPrompt: String,
+        keyTopics: [String] = [],
+        messageCount: Int,
+        generatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.sessionId = sessionId
+        self.summary = summary
+        self.suggestedPrompt = suggestedPrompt
+        self.keyTopics = keyTopics
+        self.messageCount = messageCount
+        self.generatedAt = generatedAt
+    }
+}
