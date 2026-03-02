@@ -875,6 +875,7 @@ class ChatViewModel {
         let thresholds = [85, 90, 95]
         var highestNewThreshold: Int? = nil
         var shouldAutoSnapshot = false
+        var shouldAutoFork = false
 
         for threshold in thresholds {
             if percent >= Double(threshold), !alertedThresholds.contains(threshold) {
@@ -882,6 +883,9 @@ class ChatViewModel {
                 highestNewThreshold = threshold
                 if threshold == 85 {
                     shouldAutoSnapshot = true
+                }
+                if threshold == 95 {
+                    shouldAutoFork = true
                 }
             }
         }
@@ -893,6 +897,17 @@ class ChatViewModel {
 
         if shouldAutoSnapshot && UserDefaults.standard.bool(forKey: "autoSnapshotEnabled") {
             Task { [weak self] in await self?.generateContextSnapshot() }
+        }
+
+        if shouldAutoFork && UserDefaults.standard.bool(forKey: "autoForkBeforeCompaction") {
+            Task { [weak self] in
+                guard let self else { return }
+                let forked = await forkSession()
+                if forked != nil {
+                    messages.append(ChatMessage.systemEvent("Auto-forked session before context limit", eventType: .sessionForked))
+                    alertedThresholds.removeAll()
+                }
+            }
         }
     }
 
