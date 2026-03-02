@@ -132,7 +132,7 @@ struct QuickReplyTemplatesSheet: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             if let t = templateToDelete {
-                Text("Delete "\(t.name)"? This cannot be undone.")
+                Text("Delete \"\(t.name)\"? This cannot be undone.")
             }
         }
         .task(id: searchText) {
@@ -159,7 +159,7 @@ struct QuickReplyTemplatesSheet: View {
             Image(systemName: "tray")
                 .font(.system(size: 40))
                 .foregroundStyle(theme.textTertiary)
-            Text(searchText.isEmpty ? "No templates in this category" : "No templates match "\(searchText)"")
+            Text(searchText.isEmpty ? "No templates in this category" : "No templates match \"\(searchText)\"")
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .multilineTextAlignment(.center)

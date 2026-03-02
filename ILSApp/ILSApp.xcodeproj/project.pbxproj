@@ -92,6 +92,14 @@
 		D4C6180BE732F95A8D142C37 /* ICloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9A832BDE714E5C82A79B01 /* ICloudSyncManager.swift */; };
 		CC33DD44EE55FF66AA11BB02 /* SessionBookmarksManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */; };
 		DD44EE55FF66AA11BB22CC03 /* SkillFavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF66AA11BB22CC33DD44EE55 /* SkillFavoritesManager.swift */; };
+		BC23DE45F0678901BC23DE01 /* QuickReplyTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD01 /* QuickReplyTemplate.swift */; };
+		BC23DE45F0678901BC23DE02 /* QuickReplyTemplateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD02 /* QuickReplyTemplateManager.swift */; };
+		BC23DE45F0678901BC23DE03 /* QuickReplyToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD03 /* QuickReplyToolbar.swift */; };
+		BC23DE45F0678901BC23DE04 /* QuickReplyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD04 /* QuickReplyTemplatesSheet.swift */; };
+		CD34EF560178920ACD34EF01 /* QuickReplyTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD01 /* QuickReplyTemplate.swift */; };
+		CD34EF560178920ACD34EF02 /* QuickReplyTemplateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD02 /* QuickReplyTemplateManager.swift */; };
+		CD34EF560178920ACD34EF03 /* QuickReplyToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD03 /* QuickReplyToolbar.swift */; };
+		CD34EF560178920ACD34EF04 /* QuickReplyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF5678901234CD04 /* QuickReplyTemplatesSheet.swift */; };
 		241E79C7CE232C53DC197469 /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52FFD26C242D9641EFF5D8D /* CodeBlockView.swift */; };
 		246D2629E29830ECDF5A57D5 /* ThemePreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82C016AD9BD2F828A17BCC2 /* ThemePreviewCard.swift */; };
 		24D62F464A17880544BFF3F0 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9931211AAA50959FAEC7FE5C /* ProgressRing.swift */; };
@@ -805,6 +813,10 @@
 		FA7753C25377A815B2158332 /* ThemesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemesListView.swift; sourceTree = "<group>"; };
 		FDFF2CCF490D8520D34E9F2D /* ils-ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "ils-ios"; path = ..; sourceTree = SOURCE_ROOT; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		AB12CD34EF5678901234CD01 /* QuickReplyTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplate.swift; sourceTree = "<group>"; };
+		AB12CD34EF5678901234CD02 /* QuickReplyTemplateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplateManager.swift; sourceTree = "<group>"; };
+		AB12CD34EF5678901234CD03 /* QuickReplyToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyToolbar.swift; sourceTree = "<group>"; };
+		AB12CD34EF5678901234CD04 /* QuickReplyTemplatesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplatesSheet.swift; sourceTree = "<group>"; };
 		B0B1B2B3B4B5B6B7B8B9C0C1 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
 		E0E1E2E3E4E5E6E7E8E9F0F1 /* ScreenSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenSnapshotTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1304,6 +1316,7 @@
 				C762E18BD102C1442B83A33F /* SessionExportService.swift */,
 				BB22CC33DD44EE55FF66AA11 /* SessionBookmarksManager.swift */,
 				FF66AA11BB22CC33DD44EE55 /* SkillFavoritesManager.swift */,
+				AB12CD34EF5678901234CD02 /* QuickReplyTemplateManager.swift */,
 				06A8A5DC276AB8E77D502627 /* SSEClient.swift */,
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
 				54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */,
@@ -1523,6 +1536,8 @@
 				530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */,
 				01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */,
 				C4E1D287F5A30B94E62F1A3C /* RelatedSessionsPanel.swift */,
+				AB12CD34EF5678901234CD03 /* QuickReplyToolbar.swift */,
+				AB12CD34EF5678901234CD04 /* QuickReplyTemplatesSheet.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -1532,6 +1547,7 @@
 			children = (
 				DE41119A5355AEB72E4B4406 /* ChatMessage.swift */,
 				FF79B379753DF9239B9A59CE /* SessionTemplate.swift */,
+				AB12CD34EF5678901234CD01 /* QuickReplyTemplate.swift */,
 				2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */,
 			);
 			path = Models;
@@ -1902,6 +1918,10 @@
 				20FB190430C47A5FD65C6EA7 /* SessionExportService.swift in Sources */,
 				AA11BB22CC33DD44EE55FF06 /* SessionBookmarksManager.swift in Sources */,
 				AA22BB33CC44DD55EE66FF07 /* SkillFavoritesManager.swift in Sources */,
+				BC23DE45F0678901BC23DE01 /* QuickReplyTemplate.swift in Sources */,
+				BC23DE45F0678901BC23DE02 /* QuickReplyTemplateManager.swift in Sources */,
+				BC23DE45F0678901BC23DE03 /* QuickReplyToolbar.swift in Sources */,
+				BC23DE45F0678901BC23DE04 /* QuickReplyTemplatesSheet.swift in Sources */,
 				0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */,
 				C1E7D99BE1526EFA1112A5AB /* SessionInfoView.swift in Sources */,
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
@@ -2139,6 +2159,10 @@
 				F6E04D2995D19353AE7B687C /* SessionExportService.swift in Sources */,
 				CC33DD44EE55FF66AA11BB02 /* SessionBookmarksManager.swift in Sources */,
 				DD44EE55FF66AA11BB22CC03 /* SkillFavoritesManager.swift in Sources */,
+				CD34EF560178920ACD34EF01 /* QuickReplyTemplate.swift in Sources */,
+				CD34EF560178920ACD34EF02 /* QuickReplyTemplateManager.swift in Sources */,
+				CD34EF560178920ACD34EF03 /* QuickReplyToolbar.swift in Sources */,
+				CD34EF560178920ACD34EF04 /* QuickReplyTemplatesSheet.swift in Sources */,
 				EEB4A88E96EA54A871DC7E7C /* SessionExporter.swift in Sources */,
 				2879814DA9243843D83815E0 /* SessionInfoView.swift in Sources */,
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
