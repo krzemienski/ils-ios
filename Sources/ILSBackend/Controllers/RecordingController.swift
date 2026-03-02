@@ -8,7 +8,7 @@ import ILSShared
 /// - `POST /sessions/:id/recordings`: Start a new recording for a session
 /// - `GET /sessions/:id/recordings`: List all recordings for a session
 /// - `GET /recordings/:recordingId`: Get a single recording by ID
-/// - `PATCH /recordings/:recordingId/stop`: Stop an active recording
+/// - `POST /recordings/:recordingId/stop`: Stop an active recording
 /// - `DELETE /recordings/:recordingId`: Delete a recording
 /// - `GET /recordings/:recordingId/events`: Fetch playback events derived from session messages
 /// - `GET /recordings/:recordingId/export?format=json&redact=false`: Export recording
@@ -23,7 +23,7 @@ struct RecordingController: RouteCollection {
         // Recording-scoped routes
         let recordings = routes.grouped("recordings")
         recordings.get(":recordingId", use: get)
-        recordings.patch(":recordingId", "stop", use: stop)
+        recordings.post(":recordingId", "stop", use: stop)
         recordings.delete(":recordingId", use: deleteRecording)
         recordings.get(":recordingId", "events", use: playbackEvents)
         recordings.get(":recordingId", "export", use: exportRecording)
@@ -137,7 +137,7 @@ struct RecordingController: RouteCollection {
 
     // MARK: - Stop Recording
 
-    /// PATCH /recordings/:recordingId/stop
+    /// POST /recordings/:recordingId/stop
     ///
     /// Stops an active recording by setting status=stopped and stoppedAt=now.
     @Sendable
@@ -168,10 +168,10 @@ struct RecordingController: RouteCollection {
     ///
     /// Permanently deletes a recording.
     @Sendable
-    func deleteRecording(req: Request) async throws -> HTTPStatus {
+    func deleteRecording(req: Request) async throws -> APIResponse<DeletedResponse> {
         let recording = try await fetchRecording(req: req)
         try await recording.delete(on: req.db)
-        return .noContent
+        return APIResponse(success: true, data: DeletedResponse())
     }
 
     // MARK: - Playback Events
