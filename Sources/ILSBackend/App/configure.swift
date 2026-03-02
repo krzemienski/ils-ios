@@ -86,6 +86,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddMeshGradientToThemes())
     // v5.0 — Full-text search
     app.migrations.add(AddMessagesFTS5())
+    // v5.1 — Search history
+    app.migrations.add(CreateSearchHistory())
 
     // Run migrations
     try await app.autoMigrate()
