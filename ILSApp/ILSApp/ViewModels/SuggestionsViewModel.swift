@@ -191,6 +191,32 @@ class SuggestionsViewModel {
         }
     }
 
+    // MARK: - Dismiss
+
+    /// Dismiss a suggestion by recording feedback and removing it from local arrays.
+    ///
+    /// Calls the feedback API with a "dismiss" action so the backend can deprioritise
+    /// the suggestion in future rankings, then removes it immediately from the
+    /// appropriate in-memory array for instant UI updates.
+    ///
+    /// - Parameters:
+    ///   - id: The string identifier of the suggestion to dismiss.
+    ///   - type: The suggestion type — `"session"`, `"skill"`, or `"abandoned"`.
+    func dismissSuggestion(id: String, type: String) async {
+        await recordFeedback(action: "dismiss", suggestionType: type, targetId: id)
+
+        switch type {
+        case "session":
+            sessionSuggestions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
+        case "skill":
+            skillSuggestions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
+        case "abandoned":
+            abandonedSessions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
+        default:
+            break
+        }
+    }
+
     // MARK: - Convenience
 
     /// Whether any loading is in progress.
