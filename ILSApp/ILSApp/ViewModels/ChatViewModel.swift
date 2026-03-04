@@ -13,7 +13,9 @@ import ILSShared
 /// - ``isStreaming`` - Whether Claude is currently responding
 /// - ``isLoadingHistory`` - Whether message history is being loaded
 /// - ``connectionState`` - Current SSE connection state
-/// - ``pendingPermissionRequest`` - Permission request awaiting user decision
+/// - ``pendingPermissionRequest`` - First queued permission request (backward-compat)
+/// - ``pendingPermissionRequests`` - All queued permission requests awaiting decision
+/// - ``showBatchPermissionModal`` - Whether the batch permission modal is presented
 ///
 /// ### Message Operations
 /// - ``sendMessage(_:projectId:claudeSessionId:)`` - Send a message to Claude
@@ -38,8 +40,23 @@ class ChatViewModel {
     var streamTokenCount: Int = 0
     /// Elapsed time in seconds for the current stream.
     var streamElapsedSeconds: Double = 0
-    /// Pending permission request from Claude.
-    var pendingPermissionRequest: PermissionRequest?
+    /// All queued permission requests waiting for a user decision.
+    var pendingPermissionRequests: [PermissionRequest] = []
+    /// Whether the batch permission modal should be shown.
+    var showBatchPermissionModal: Bool = false
+    /// Project ID used for scoping auto-approve rule lookups.
+    var projectId: UUID?
+    /// Pending permission request from Claude (first in queue, for backward compatibility).
+    var pendingPermissionRequest: PermissionRequest? {
+        get { pendingPermissionRequests.first }
+        set {
+            if let v = newValue {
+                pendingPermissionRequests = [v]
+            } else {
+                pendingPermissionRequests = []
+            }
+        }
+    }
     /// Start time of the current stream, used for elapsed time calculations.
     /// Internal access for Live Activity extension.
     var streamStartTime: Date?
@@ -858,21 +875,86 @@ class ChatViewModel {
     /// Sends the decision to the backend which forwards it to the Claude CLI process via stdin.
     /// Route: POST /chat/permission/{sessionId}/{requestId}
     func respondToPermission(requestId: String, decision: String) {
+        let matchingRequest = pendingPermissionRequests.first(where: { $0.requestId == requestId })
+        let toolName = matchingRequest?.toolName ?? ""
+        let toolInputSummary = matchingRequest.map { Self.formatToolInput($0.toolInput) } ?? ""
+
+        pendingPermissionRequests.removeAll { $0.requestId == requestId }
+        if pendingPermissionRequests.isEmpty {
+            showBatchPermissionModal = false
+        }
+
+        respondToPermissionAndRecord(
+            requestId: requestId,
+            decision: decision,
+            isAutoApproved: false,
+            toolName: toolName,
+            toolInputSummary: toolInputSummary
+        )
+    }
+
+    /// Respond to multiple pending permission requests at once.
+    ///
+    /// Records each decision to history and removes the requests from the queue.
+    func respondToBatchPermissions(requestIds: [String], decision: String) {
+        for requestId in requestIds {
+            let matchingRequest = pendingPermissionRequests.first(where: { $0.requestId == requestId })
+            let toolName = matchingRequest?.toolName ?? ""
+            let toolInputSummary = matchingRequest.map { Self.formatToolInput($0.toolInput) } ?? ""
+            respondToPermissionAndRecord(
+                requestId: requestId,
+                decision: decision,
+                isAutoApproved: false,
+                toolName: toolName,
+                toolInputSummary: toolInputSummary
+            )
+        }
+        pendingPermissionRequests.removeAll { requestIds.contains($0.requestId) }
+        if pendingPermissionRequests.isEmpty {
+            showBatchPermissionModal = false
+        }
+    }
+
+    /// Core permission response logic: sends decision to backend and records to history.
+    private func respondToPermissionAndRecord(
+        requestId: String,
+        decision: String,
+        isAutoApproved: Bool = false,
+        toolName: String = "",
+        toolInputSummary: String = ""
+    ) {
         guard let apiClient, let sessionId else { return }
-        pendingPermissionRequest = nil
+        let sessionIdString = sessionId.uuidString
+        let entry = PermissionHistoryEntry(
+            sessionId: sessionIdString,
+            toolName: toolName,
+            toolInputSummary: String(toolInputSummary.prefix(200)),
+            decision: decision,
+            isAutoApproved: isAutoApproved
+        )
 
         Task { [weak self] in
             _ = self  // prevent unused capture warning
             do {
                 let body = PermissionDecision(decision: decision)
                 let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
-                    "/chat/permission/\(sessionId.uuidString)/\(requestId)",
+                    "/chat/permission/\(sessionIdString)/\(requestId)",
                     body: body
                 )
             } catch {
                 AppLogger.shared.warning("Permission response failed (non-fatal): \(error)", category: "chat")
             }
+            try? await PermissionHistoryService.shared.record(entry)
         }
+    }
+
+    /// Format an AnyCodable tool input into a searchable plain-text string.
+    private static func formatToolInput(_ toolInput: AnyCodable) -> String {
+        if let data = try? JSONEncoder().encode(toolInput),
+           let str = String(data: data, encoding: .utf8) {
+            return str
+        }
+        return ""
     }
 
     /// Rename the current session.
@@ -1242,7 +1324,29 @@ class ChatViewModel {
                 checkCompactionThresholds()
 
             case .permission(let permissionReq):
-                pendingPermissionRequest = permissionReq
+                let toolInputString = Self.formatToolInput(permissionReq.toolInput)
+                let reqProjectId = self.projectId
+                // Check auto-approve rules asynchronously (AutoApproveService is an actor)
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    let shouldAuto = await AutoApproveService.shared.shouldAutoApprove(
+                        toolName: permissionReq.toolName,
+                        toolInput: toolInputString,
+                        projectId: reqProjectId
+                    )
+                    if shouldAuto {
+                        self.respondToPermissionAndRecord(
+                            requestId: permissionReq.requestId,
+                            decision: "allow",
+                            isAutoApproved: true,
+                            toolName: permissionReq.toolName,
+                            toolInputSummary: toolInputString
+                        )
+                    } else {
+                        self.pendingPermissionRequests.append(permissionReq)
+                        self.showBatchPermissionModal = true
+                    }
+                }
 
             case .user(let userMsg):
                 handleUserMessage(userMsg, message: &currentMessage)

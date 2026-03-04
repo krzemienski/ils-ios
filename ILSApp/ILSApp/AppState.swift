@@ -256,6 +256,8 @@ class AppState {
             navigationIntent = .activityFeed
         case "unified-sessions", "all-sessions":
             navigationIntent = .unifiedSessions
+        case "permissions":
+            navigationIntent = .permissions
         default:
             break
         }

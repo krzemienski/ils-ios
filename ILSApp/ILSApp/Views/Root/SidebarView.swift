@@ -391,6 +391,7 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "server.rack", label: "Backends", screen: .backends)
                 sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
                 sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
+                sidebarNavItem(icon: "checkmark.shield.fill", label: "Permissions", screen: .permissions)
                 sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
             }
             sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
@@ -814,7 +815,8 @@ struct SidebarView: View {
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
              (.documentation, .documentation), (.terminal, .terminal),
              (.backends, .backends), (.unifiedSessions, .unifiedSessions),
-             (.splitView, .splitView), (.analytics, .analytics):
+             (.splitView, .splitView), (.analytics, .analytics),
+             (.permissions, .permissions):
             return true
         case (.chat, .chat):
             return true

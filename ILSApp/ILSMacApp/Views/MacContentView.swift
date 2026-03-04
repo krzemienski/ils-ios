@@ -483,6 +483,8 @@ struct MacContentView: View {
             MultiSessionSplitView(multiSessionVM: multiSessionVM, sessionsVM: sessionsViewModel)
         case .analytics:
             AnalyticsView()
+        case .permissions:
+            PermissionHistoryView()
         }
     }
 
@@ -854,6 +856,7 @@ struct MacContentView: View {
         case .activityFeed: selectedSection = .home
         case .sessionForkTree: selectedSection = .home
         case .splitView: selectedSection = .splitView
+        case .permissions: selectedSection = .settings
         }
         activeScreen = intent
         appState.navigationIntent = nil
