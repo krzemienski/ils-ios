@@ -87,6 +87,8 @@ targets:
           - CFBundleURLName: com.ils.app
             CFBundleURLSchemes:
               - ils
+        NSMicrophoneUsageDescription: "Microphone access is used for voice dictation in chat messages."
+        NSSpeechRecognitionUsageDescription: "Speech recognition is used to convert your voice into text for chat messages."
         NSFaceIDUsageDescription: "Face ID is used to protect your server credentials stored in the Keychain."
         NSSupportsLiveActivities: true
         UILaunchScreen: {}

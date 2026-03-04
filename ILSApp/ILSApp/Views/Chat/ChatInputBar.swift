@@ -51,6 +51,10 @@ struct ChatInputBar: View {
     /// Number of outgoing messages currently queued while offline.
     /// When > 0, a `QueuedMessageBadge` is shown above the input row.
     var pendingCount: Int = 0
+    /// Called when the user taps the microphone button to start or stop voice input (iOS only).
+    var onVoiceInput: (() -> Void)? = nil
+    /// When true, the microphone button shows a recording indicator (iOS only).
+    var isRecording: Bool = false
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -87,6 +91,11 @@ struct ChatInputBar: View {
                 optionsButton
                 helpButton
                 textField
+                #if os(iOS)
+                if let onVoiceInput {
+                    microphoneButton(action: onVoiceInput)
+                }
+                #endif
                 if isStreaming {
                     cancelButton
                 } else {
@@ -211,4 +220,21 @@ struct ChatInputBar: View {
         .accessibilityLabel("Send message")
         .accessibilityHint("Sends the current message to Claude")
     }
+
+    #if os(iOS)
+    private func microphoneButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: isRecording ? "mic.fill" : "mic")
+                .font(.system(size: 20))
+                .foregroundStyle(isRecording ? theme.error : (isDisabled ? theme.textTertiary : theme.textSecondary))
+                .symbolEffect(.pulse, isActive: isRecording)
+        }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
+        .disabled(isDisabled)
+        .accessibilityIdentifier("voice-input-button")
+        .accessibilityLabel(isRecording ? "Stop recording" : "Start voice input")
+        .accessibilityHint(isRecording ? "Stops voice dictation" : "Starts voice dictation to compose a message")
+    }
+    #endif
 }
