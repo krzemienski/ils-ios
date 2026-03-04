@@ -573,6 +573,12 @@ struct HomeView: View {
                     )
                 }
                 .shimmerIfActive(isRefreshing)
+
+                // Session Health card — shown when at least one session has been scored
+                if let health = stats.healthSummary, health.totalScored > 0 {
+                    sessionHealthCard(health)
+                        .shimmerIfActive(isRefreshing)
+                }
             }
         }
     }
@@ -601,6 +607,80 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value)")
+    }
+
+    // MARK: - Session Health Card
+
+    /// A full-width card showing aggregate session health metrics from ``HealthSummary``.
+    ///
+    /// Displays the average score with a colour-coded value (green ≥ 70, orange ≥ 40, red below)
+    /// and a breakdown row of healthy / degrading / critical session counts.
+    @ViewBuilder
+    private func sessionHealthCard(_ health: HealthSummary) -> some View {
+        let avgScore = health.averageScore
+        let scoreColor: Color = {
+            if avgScore >= 70 { return theme.success }
+            if avgScore >= 40 { return theme.warning }
+            return theme.error
+        }()
+
+        VStack(alignment: .leading, spacing: theme.spacingXS) {
+            HStack(alignment: .firstTextBaseline) {
+                HStack(spacing: theme.spacingXS) {
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(scoreColor)
+                        .accessibilityHidden(true)
+
+                    Text("Session Health")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+
+                Spacer()
+
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("\(Int(avgScore))")
+                        .font(.system(size: theme.fontBody, weight: .bold, design: theme.fontDesign))
+                        .foregroundStyle(scoreColor)
+                        .monospacedDigit()
+                    Text("avg")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
+
+            HStack(spacing: theme.spacingSM) {
+                healthLevelPill(count: health.healthyCount, label: "Healthy", color: theme.success)
+                healthLevelPill(count: health.degradingCount, label: "Degrading", color: theme.warning)
+                healthLevelPill(count: health.problematicCount, label: "Critical", color: theme.error)
+            }
+        }
+        .padding(.horizontal, theme.spacingSM)
+        .padding(.vertical, theme.spacingXS + 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "Session Health, average score \(Int(avgScore)), " +
+            "\(health.healthyCount) healthy, \(health.degradingCount) degrading, " +
+            "\(health.problematicCount) critical, out of \(health.totalScored) scored sessions"
+        )
+    }
+
+    /// A small pill showing a coloured dot alongside a count and level label.
+    @ViewBuilder
+    private func healthLevelPill(count: Int, label: String, color: Color) -> some View {
+        HStack(spacing: 3) {
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+                .accessibilityHidden(true)
+            Text("\(count) \(label)")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+        }
     }
 }
 

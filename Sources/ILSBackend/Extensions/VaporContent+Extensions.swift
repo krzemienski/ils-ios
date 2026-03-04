@@ -165,6 +165,12 @@ extension CountStat: Content {}
 extension SessionStat: Content {}
 extension MCPStat: Content {}
 extension PluginStat: Content {}
+extension HealthSummary: Content {}
+extension SessionHealthScore: Content {}
+extension HealthScoreFactor: Content {}
+extension HealthScoreLevel: Content {}
+extension ProjectHealthSummary: Content {}
+extension ProjectHealthSummary.HealthScoreTrendPoint: Content {}
 extension DeletedResponse: Content {}
 extension DataErasureResponse: Content {}
 extension AcknowledgedResponse: Content {}

@@ -98,6 +98,9 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateTemplates())
     // v5.2 — Live Activity push token support
     app.migrations.add(AddLiveActivityTokenToSessions())
+    // v5.3 — Session health scoring (on-demand computation; no caching table)
+    // DB-NOTE: A session_health_scores caching table was originally planned
+    // but deferred — scores are computed on-demand instead.
 
     // Run migrations
     try await app.autoMigrate()
