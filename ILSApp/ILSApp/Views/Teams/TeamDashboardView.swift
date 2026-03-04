@@ -113,7 +113,7 @@ struct TeamDashboardView: View {
         } else if viewModel.isLoading {
             loadingView
         } else if let error = viewModel.error {
-            errorView(error)
+            errorView(error.localizedDescription)
         }
     }
 

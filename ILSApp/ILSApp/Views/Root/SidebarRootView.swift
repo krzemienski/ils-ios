@@ -319,7 +319,7 @@ struct SidebarRootView: View {
                 case .documentation:
                     documentationScreen
                 case .terminal:
-                    EmbeddedTerminalView()
+                    TerminalView()
                 }
             }
             .id(activeScreen.storageKey)

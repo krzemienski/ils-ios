@@ -9,6 +9,8 @@ class TeamsViewModel {
     var selectedTeam: AgentTeam?
     var tasks: [TeamTask] = []
     var messages: [TeamMessage] = []
+    var metrics: TeamMetricsResponse?
+    var templates: [TeamTemplate] = []
     var isLoading = false
     var error: Error?
     var operationState: AsyncOperationState?
@@ -276,6 +278,28 @@ class TeamsViewModel {
         pollingTask?.cancel()
         pollingTask = nil
         currentPollInterval = Self.minPollInterval
+    }
+
+    // MARK: - Metrics
+
+    func loadMetrics(teamName: String) async {
+        do {
+            let response: APIResponse<TeamMetricsResponse> = try await apiClient.get("/teams/\(teamName)/metrics")
+            metrics = response.data
+        } catch {
+            self.error = error
+        }
+    }
+
+    // MARK: - Templates
+
+    func loadTemplates() async {
+        do {
+            let response: APIResponse<[TeamTemplate]> = try await apiClient.get("/teams/templates")
+            templates = response.data ?? []
+        } catch {
+            self.error = error
+        }
     }
 
     /// Compute a hash of the current team state for change detection

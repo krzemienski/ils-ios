@@ -333,7 +333,7 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
-    func patch<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+    func patch<T: Decodable & Sendable, B: Encodable & Sendable>(_ path: String, body: B) async throws -> T {
         guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
             throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
         }
@@ -352,7 +352,6 @@ actor APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
-    func delete<T: Decodable>(_ path: String) async throws -> T {
     func delete<T: Decodable & Sendable>(_ path: String) async throws -> T {
         guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
             throw APIError.invalidURL("\(baseURL)/api/v1\(path)")

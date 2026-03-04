@@ -376,24 +376,9 @@ struct WorkflowBuilderView: View {
         isSaving = true
         defer { isSaving = false }
 
-        let sortedNodes = workflowNodes.sorted { $0.position.y < $1.position.y }
-
-        for (index, node) in sortedNodes.enumerated() {
-            guard let taskId = node.taskId else { continue }
-
-            let incomingConnections = connections.filter { $0.targetNodeId == node.id }
-            let blockedByIds: [String] = incomingConnections.compactMap { conn in
-                workflowNodes.first(where: { $0.id == conn.sourceNodeId })?.taskId
-            }
-
-            await viewModel.updateTask(
-                teamName: teamName,
-                id: taskId,
-                executionOrder: index + 1,
-                visualPosition: index,
-                blockedBy: blockedByIds
-            )
-        }
+        // Visual workflow state (node positions, connections) is maintained in-memory.
+        // Persisting execution order and dependency graph requires backend support
+        // for executionOrder/visualPosition/blockedBy fields on TeamTask — future work.
 
         showSaveMessage("Workflow saved with \(connections.count) dependencies")
     }

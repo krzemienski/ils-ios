@@ -170,6 +170,8 @@ struct AddMCPServerView: View {
             return "Scoped to the current project directory."
         case .local:
             return "Local to the current working directory only."
+        case .managed:
+            return "Enterprise/system-wide managed configuration."
         }
     }
 

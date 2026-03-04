@@ -96,6 +96,12 @@ struct ChatView: View {
     // MARK: - Body
 
     var body: some View {
+        chatContentWithSheets
+    }
+
+    // Split the body to help the Swift type-checker with the large modifier chain.
+
+    private var chatContentBase: some View {
         mainContent
             .background(theme.bgPrimary)
             .navigationTitle(session.displayName)
@@ -103,232 +109,236 @@ struct ChatView: View {
             .inlineNavigationBarTitle()
             #endif
             .toolbar { toolbarContent }
-        .sheet(isPresented: $sheets.showCommandPalette) {
-            CommandPaletteView { command in
-                inputText = command
-                sheets.showCommandPalette = false
-                isInputFocused = true
-            }
-            .presentationBackground(theme.bgPrimary)
-        }
-        .sheet(isPresented: $sheets.showSessionInfo) {
-            SessionInfoView(session: session)
-                .environment(appState)
+            .sheet(isPresented: $sheets.showCommandPalette) {
+                CommandPaletteView { command in
+                    inputText = command
+                    sheets.showCommandPalette = false
+                    isInputFocused = true
+                }
                 .presentationBackground(theme.bgPrimary)
-        }
-        .task {
-            await setupChatView()
-        }
-        .alert("Connection Error", isPresented: $sheets.showErrorAlert) {
-            Button("OK", role: .cancel) {}
-            Button("Retry") {
-                retryLastMessage()
             }
-        } message: {
-            Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
-        }
-        .alert("Session Forked", isPresented: $sheets.showForkAlert) {
-            Button("Open Fork") {
-                actions.navigateToForked = actions.forkedSession
+            .sheet(isPresented: $sheets.showSessionInfo) {
+                SessionInfoView(session: session)
+                    .environment(appState)
+                    .presentationBackground(theme.bgPrimary)
             }
-            Button("Stay Here", role: .cancel) {}
-        } message: {
-            if let forked = actions.forkedSession {
-                Text("Created new session: \(forked.name ?? "Unnamed")")
+            .task {
+                await setupChatView()
             }
-        }
-        .alert("Delete Message", isPresented: $sheets.showDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
-                if let msg = actions.messageToDelete {
-                    viewModel.deleteMessage(msg)
+    }
+
+    private var chatContentWithAlerts: some View {
+        chatContentBase
+            .alert("Connection Error", isPresented: $sheets.showErrorAlert) {
+                Button("OK", role: .cancel) {}
+                Button("Retry") {
+                    retryLastMessage()
+                }
+            } message: {
+                Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
+            }
+            .alert("Session Forked", isPresented: $sheets.showForkAlert) {
+                Button("Open Fork") {
+                    actions.navigateToForked = actions.forkedSession
+                }
+                Button("Stay Here", role: .cancel) {}
+            } message: {
+                if let forked = actions.forkedSession {
+                    Text("Created new session: \(forked.name ?? "Unnamed")")
+                }
+            }
+            .alert("Delete Message", isPresented: $sheets.showDeleteConfirmation) {
+                Button("Delete", role: .destructive) {
+                    if let msg = actions.messageToDelete {
+                        viewModel.deleteMessage(msg)
+                        actions.messageToDelete = nil
+                    }
+                }
+                Button("Cancel", role: .cancel) {
                     actions.messageToDelete = nil
                 }
+            } message: {
+                Text("Are you sure you want to delete this message?")
             }
-            Button("Cancel", role: .cancel) {
-                actions.messageToDelete = nil
+            .alert("Rename Session", isPresented: $sheets.isRenaming) {
+                TextField("Session name", text: $actions.renameText)
+                Button("Rename") {
+                    Task {
+                        await viewModel.renameSession(name: actions.renameText)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Enter a new name for this session")
             }
-        } message: {
-            Text("Are you sure you want to delete this message?")
-        }
-        .alert("Rename Session", isPresented: $sheets.isRenaming) {
-            TextField("Session name", text: $actions.renameText)
-            Button("Rename") {
-                Task {
-                    await viewModel.renameSession(name: actions.renameText)
+            .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
+                Button("Delete", role: .destructive) {
+                    Task {
+                        if await viewModel.deleteSession() {
+                            dismiss()
+                        }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will permanently delete this session and all its messages.")
+            }
+    }
+
+    private var chatContentWithSheets: some View {
+        chatContentWithAlerts
+            .sheet(isPresented: $sheets.showExportSheet) {
+                ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
+            }
+            .sheet(isPresented: $sheets.showAdvancedOptions) {
+                AdvancedOptionsSheet(config: $chatOptionsConfig)
+                    .presentationDetents([.large])
+                    .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $sheets.showQuickReplyTemplates) {
+                NavigationStack {
+                    QuickReplyTemplatesSheet { template in
+                        applyTemplate(template)
+                    }
+                }
+                .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $sheets.showContextWindowDetail) {
+                if let usedTokens = viewModel.contextTokensUsed,
+                   let windowSize = viewModel.contextWindowSize {
+                    ContextWindowDetailSheet(
+                        usedTokens: usedTokens,
+                        contextWindowSize: windowSize,
+                        inputTokens: viewModel.contextInputTokens,
+                        outputTokens: viewModel.contextOutputTokens,
+                        cacheReadTokens: viewModel.contextCacheReadTokens,
+                        cacheCreateTokens: viewModel.contextCacheCreateTokens,
+                        onForkSession: {
+                            sheets.showContextWindowDetail = false
+                            Task { await viewModel.performFork() }
+                        },
+                        onDismiss: { sheets.showContextWindowDetail = false }
+                    )
                 }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Enter a new name for this session")
-        }
-        .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
-            Button("Delete", role: .destructive) {
-                Task {
-                    if await viewModel.deleteSession() {
-                        dismiss()
+            .sheet(item: $viewModel.pendingPermissionRequest) { request in
+                PermissionRequestModal(request: request) { decision in
+                    viewModel.respondToPermission(requestId: request.requestId, decision: decision)
+                }
+                .presentationDetents([.medium])
+                .presentationBackground(theme.bgPrimary)
+            }
+            .navigationDestination(item: $actions.navigateToForked) { session in
+                ChatView(session: session)
+            }
+            .navigationDestination(item: $actions.navigateToRelated) { session in
+                ChatView(session: session)
+            }
+            .navigationDestination(item: $actions.navigateToForkTree) { sess in
+                SessionForkTreeView(initialSession: sess) { navigated in
+                    actions.navigateToRelated = navigated
+                }
+                .environment(appState)
+            }
+            .onChange(of: viewModel.forkResult) { _, forked in
+                if let forked {
+                    actions.forkedSession = forked
+                    sheets.showForkAlert = true
+                    viewModel.forkResult = nil
+                }
+            }
+            .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
+                if newValue != nil {
+                    actions.errorId = UUID()
+                    sheets.showErrorAlert = true
+                }
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    Task {
+                        await viewModel.refreshMessages()
+                    }
+                    #if os(iOS)
+                    SessionMonitorService.shared.removeSession(session.id)
+                    #endif
+                }
+                #if os(iOS)
+                if newPhase == .background && viewModel.isStreaming {
+                    SessionMonitorService.shared.addSession(session, apiClient: appState.apiClient)
+                    SessionMonitorService.shared.scheduleBackgroundTask()
+                }
+                #endif
+            }
+            .onChange(of: appState.serverURL) { _, _ in
+                viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
+            }
+            .onChange(of: appState.isConnected) { _, connected in
+                viewModel.isConnected = connected
+            }
+            #if os(iOS)
+            .onChange(of: viewModel.isStreaming) { wasStreaming, isNowStreaming in
+                guard wasStreaming && !isNowStreaming else { return }
+                SessionMonitorService.shared.removeSession(session.id)
+                let sessionId = session.id
+                let sessionName = session.displayName
+                if let error = viewModel.error {
+                    Task {
+                        await NotificationService.shared.postSessionErrorNotification(
+                            sessionId: sessionId,
+                            sessionName: sessionName,
+                            errorMessage: error.localizedDescription
+                        )
+                    }
+                } else {
+                    Task {
+                        await NotificationService.shared.postStreamingCompleteNotification(
+                            sessionId: sessionId,
+                            sessionName: sessionName
+                        )
                     }
                 }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will permanently delete this session and all its messages.")
-        }
-        .sheet(isPresented: $sheets.showExportSheet) {
-            ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
-        }
-        .sheet(isPresented: $sheets.showAdvancedOptions) {
-            AdvancedOptionsSheet(config: $chatOptionsConfig)
-                .presentationDetents([.large])
-                .presentationBackground(theme.bgPrimary)
-        }
-        .sheet(isPresented: $sheets.showQuickReplyTemplates) {
-            NavigationStack {
-                QuickReplyTemplatesSheet { template in
-                    applyTemplate(template)
-                }
-            }
-            .presentationBackground(theme.bgPrimary)
-        }
-        .sheet(isPresented: $sheets.showContextWindowDetail) {
-            if let usedTokens = viewModel.contextTokensUsed,
-               let windowSize = viewModel.contextWindowSize {
-                ContextWindowDetailSheet(
-                    usedTokens: usedTokens,
-                    contextWindowSize: windowSize,
-                    inputTokens: viewModel.contextInputTokens,
-                    outputTokens: viewModel.contextOutputTokens,
-                    cacheReadTokens: viewModel.contextCacheReadTokens,
-                    cacheCreateTokens: viewModel.contextCacheCreateTokens,
-                    onForkSession: {
-                        sheets.showContextWindowDetail = false
-                        Task { await viewModel.performFork() }
-                    },
-                    onDismiss: { sheets.showContextWindowDetail = false }
-                )
-            }
-        }
-        .sheet(item: $viewModel.pendingPermissionRequest) { request in
-            PermissionRequestModal(request: request) { decision in
-                viewModel.respondToPermission(requestId: request.requestId, decision: decision)
-            }
-            .presentationDetents([.medium])
-            .presentationBackground(theme.bgPrimary)
-        }
-        .navigationDestination(item: $actions.navigateToForked) { session in
-            ChatView(session: session)
-        }
-        .navigationDestination(item: $actions.navigateToRelated) { session in
-            ChatView(session: session)
-        }
-        .navigationDestination(item: $actions.navigateToForkTree) { sess in
-            SessionForkTreeView(initialSession: sess) { navigated in
-                actions.navigateToRelated = navigated
-            }
-            .environment(appState)
-        }
-        .onChange(of: viewModel.forkResult) { _, forked in
-            if let forked {
-                actions.forkedSession = forked
-                sheets.showForkAlert = true
-                viewModel.forkResult = nil
-            }
-        }
-        .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
-            if newValue != nil {
-                actions.errorId = UUID()
-                sheets.showErrorAlert = true
-            }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                Task {
-                    await viewModel.refreshMessages()
-                }
-                #if os(iOS)
-                SessionMonitorService.shared.removeSession(session.id)
-                #endif
-            }
-            #if os(iOS)
-            if newPhase == .background && viewModel.isStreaming {
-                SessionMonitorService.shared.addSession(session, apiClient: appState.apiClient)
-                SessionMonitorService.shared.scheduleBackgroundTask()
-            }
             #endif
-        }
-        .onChange(of: appState.serverURL) { _, _ in
-            viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
-        }
-        .onChange(of: appState.isConnected) { _, connected in
-            viewModel.isConnected = connected
-        }
-        #if os(iOS)
-        .onChange(of: viewModel.isStreaming) { wasStreaming, isNowStreaming in
-            guard wasStreaming && !isNowStreaming else { return }
-            // Stream just ended — remove from background monitor and post notification
-            SessionMonitorService.shared.removeSession(session.id)
-            let sessionId = session.id
-            let sessionName = session.displayName
-            if let error = viewModel.error {
-                Task {
-                    await NotificationService.shared.postSessionErrorNotification(
-                        sessionId: sessionId,
-                        sessionName: sessionName,
-                        errorMessage: error.localizedDescription
-                    )
-                }
-            } else {
-                Task {
-                    await NotificationService.shared.postStreamingCompleteNotification(
-                        sessionId: sessionId,
-                        sessionName: sessionName
-                    )
+            .onChange(of: inputText) { _, newValue in
+                draftPersistTask?.cancel()
+                draftPersistTask = Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    guard !Task.isCancelled else { return }
+                    let key = "chatDraft_\(session.id.uuidString)"
+                    if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        UserDefaults.standard.removeObject(forKey: key)
+                    } else {
+                        UserDefaults.standard.set(newValue, forKey: key)
+                    }
                 }
             }
-        }
-        #endif
-        .onChange(of: inputText) { _, newValue in
-            // Persist draft to UserDefaults with 500ms debounce (DATA-05)
-            draftPersistTask?.cancel()
-            draftPersistTask = Task {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                guard !Task.isCancelled else { return }
-                let key = "chatDraft_\(session.id.uuidString)"
-                if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    UserDefaults.standard.removeObject(forKey: key)
-                } else {
-                    UserDefaults.standard.set(newValue, forKey: key)
+            .onDisappear {
+                draftPersistTask?.cancel()
+            }
+            .onChange(of: viewModel.searchQuery) { _, newValue in
+                searchDebounceTask?.cancel()
+                searchDebounceTask = Task {
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                    guard !Task.isCancelled else { return }
+                    await viewModel.searchMessages(query: newValue)
                 }
             }
-        }
-        .onDisappear {
-            draftPersistTask?.cancel()
-        }
-        .onChange(of: viewModel.searchQuery) { _, newValue in
-            searchDebounceTask?.cancel()
-            searchDebounceTask = Task {
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                guard !Task.isCancelled else { return }
-                await viewModel.searchMessages(query: newValue)
-            }
-        }
-        // MARK: - External Keyboard Shortcuts (iPad)
-        // Hidden buttons that respond to hardware keyboard input without affecting the UI.
-        .overlay {
-            ZStack {
-                Button("Open Command Palette") {
-                    sheets.showCommandPalette = true
-                }
-                .keyboardShortcut("k", modifiers: .command)
+            .overlay {
+                ZStack {
+                    Button("Open Command Palette") {
+                        sheets.showCommandPalette = true
+                    }
+                    .keyboardShortcut("k", modifiers: .command)
 
-                Button("Cancel Streaming") {
-                    viewModel.cancel()
+                    Button("Cancel Streaming") {
+                        viewModel.cancel()
+                    }
+                    .keyboardShortcut(.escape, modifiers: [])
                 }
-                .keyboardShortcut(.escape, modifiers: [])
+                .frame(width: 0, height: 0)
+                .opacity(0)
+                .allowsHitTesting(false)
             }
-            .frame(width: 0, height: 0)
-            .opacity(0)
-            .allowsHitTesting(false)
-        }
     }
 
     // MARK: - View Components
