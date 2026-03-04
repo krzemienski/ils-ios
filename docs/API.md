@@ -2,7 +2,7 @@
 
 **Version:** 1.2
 **Base URL:** `http://localhost:9999`
-**Last Updated:** 2026-03-01
+**Last Updated:** 2026-02-28
 
 ## Table of Contents
 
@@ -43,8 +43,8 @@ The ILS (Intelligent Learning System) Backend provides a RESTful API for managin
 - Theme customization
 - Agent teams coordination
 - Cloudflare tunnel management
-- Host Profiles management (register, activate, health-check remote hosts)
-- Data Erasure (complete wipe of all local ILS data)
+- Host profile management
+- GDPR data erasure
 
 ---
 
@@ -2442,20 +2442,16 @@ curl http://localhost:9999/api/v1/tunnel/status
 
 ## Host Profiles
 
-Host Profiles manage remote machines that ILS can connect to for distributed Claude Code execution. Each host profile stores connection details (hostname, SSH port, backend port, auth method) and tracks health status.
+Host profiles represent remote machines in the ILS fleet for distributed Claude Code execution. The active host profile determines which machine ILS connects to. The underlying database table is `fleet_hosts` to preserve existing data.
 
-**Canonical routes:** `/api/v1/host-profiles/*`
-**Backward-compatible aliases:** `/api/v1/fleet/*` (same handlers, same responses — maintained for legacy clients)
+**Backward-Compatible Aliases:** All `/api/v1/host-profiles/*` routes are also accessible via `/api/v1/fleet/*` (e.g., `GET /api/v1/fleet`, `POST /api/v1/fleet/register`). The `/fleet` prefix is maintained for backward compatibility and routes to the same handlers.
 
-**Authorization:** These routes are admin-protected. When the `ILS_ADMIN_KEY` environment variable is set on the server, all requests must include the `X-Admin-Token` header. Omitting it (or providing an incorrect value) returns `403 Forbidden`. In development mode (no `ILS_ADMIN_KEY` set), the header is not required.
-
-**Headers:**
-- `X-Admin-Token: <your-admin-key>` — Required when `ILS_ADMIN_KEY` is configured on the server
+> **Authentication**: When `ILS_ADMIN_KEY` is configured in the server environment, all Host Profiles endpoints require the `X-Admin-Token` header matching that key. Example: `-H "X-Admin-Token: $ILS_ADMIN_KEY"`. In development (no `ILS_ADMIN_KEY` set), requests are allowed without authentication.
 
 ### List Host Profiles
 
 **Endpoint:** `GET /api/v1/host-profiles`
-**Description:** List all registered host profiles, sorted by active status (active first) then name. Also returns the ID of the currently active host.
+**Description:** List all registered host profiles, sorted by active status then name. Returns the active host ID separately for quick lookup.
 
 **Response Schema:**
 ```json
@@ -2469,49 +2465,29 @@ Host Profiles manage remote machines that ILS can connect to for distributed Cla
         "host": "192.168.1.100",
         "port": 22,
         "backendPort": 9999,
-        "username": "alice",
-        "authMethod": "sshKey",
+        "username": "nick",
+        "authMethod": "key",
         "isActive": true,
         "healthStatus": "healthy",
-        "lastHealthCheck": "2026-02-15T12:00:00Z",
+        "lastHealthCheck": "2026-02-28T12:00:00Z",
         "platform": "macOS"
       }
     ],
     "activeHostId": "uuid"
-  },
-  "error": null
+  }
 }
 ```
 
 **Fields:**
-- `hosts` — Array of all registered `HostProfile` objects (active host appears first)
-- `activeHostId` — UUID of the currently active host, or `null` if none is active
-
-**HostProfile Object:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | UUID | Unique identifier |
-| `name` | string | Human-readable display name |
-| `host` | string | Hostname or IP address |
-| `port` | integer | SSH port (default: 22) |
-| `backendPort` | integer | ILS backend port on remote (default: 9999) |
-| `username` | string? | SSH username (optional) |
-| `authMethod` | string? | Auth method: `"password"` or `"sshKey"` (optional) |
-| `isActive` | boolean | Whether this is the currently active host |
-| `healthStatus` | string | `"healthy"`, `"degraded"`, `"unreachable"`, or `"unknown"` |
-| `lastHealthCheck` | ISO8601? | Timestamp of the last health check (optional) |
-| `platform` | string? | OS platform e.g. `"macOS"`, `"Linux"` (optional) |
+- `hosts` - Array of all registered host profiles
+- `activeHostId` - UUID of the currently active host, or `null` if none is active
+- `healthStatus` - One of `"healthy"`, `"degraded"`, `"unreachable"`, `"unknown"`
 
 **Example:**
 
 ```bash
 curl http://localhost:9999/api/v1/host-profiles \
-  -H "X-Admin-Token: your-admin-key"
-
-# Backward-compatible alias
-curl http://localhost:9999/api/v1/fleet \
-  -H "X-Admin-Token: your-admin-key"
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2519,7 +2495,7 @@ curl http://localhost:9999/api/v1/fleet \
 ### Register Host Profile
 
 **Endpoint:** `POST /api/v1/host-profiles/register`
-**Description:** Register a new remote host with ILS. The new host is created with `isActive: false` and `healthStatus: "unknown"`. Use the activate endpoint to make it the active host.
+**Description:** Register a new remote host profile. The new host is created with `isActive: false` and `healthStatus: "unknown"`.
 
 **Request Body:**
 ```json
@@ -2528,25 +2504,24 @@ curl http://localhost:9999/api/v1/fleet \
   "host": "192.168.1.100",
   "port": 22,
   "backendPort": 9999,
-  "username": "alice",
-  "authMethod": "sshKey",
-  "credential": null
+  "username": "nick",
+  "authMethod": "key",
+  "credential": "/path/to/private/key"
 }
 ```
 
-**Request Fields:**
+**Required Fields:**
+- `name` (string, max 255 chars) - Human-readable display name
+- `host` (string, max 255 chars) - Hostname or IP address
+- `port` (integer, default: `22`) - SSH port on the remote machine
+- `backendPort` (integer, default: `9999`) - Port the ILS backend listens on remotely
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | ✅ | Display name (max 255 chars) |
-| `host` | string | ✅ | Hostname or IP address (max 255 chars) |
-| `port` | integer | ✅ | SSH port (typically 22) |
-| `backendPort` | integer | ✅ | ILS backend port on remote (typically 9999) |
-| `username` | string | ❌ | SSH username |
-| `authMethod` | string | ❌ | `"password"` or `"sshKey"` |
-| `credential` | string | ❌ | Password or private key path |
+**Optional Fields:**
+- `username` (string) - SSH username for authentication
+- `authMethod` (string) - Authentication method, e.g. `"password"` or `"key"`
+- `credential` (string) - Credential value (password or private key path)
 
-**Response Schema:**
+**Response:**
 ```json
 {
   "success": true,
@@ -2556,14 +2531,13 @@ curl http://localhost:9999/api/v1/fleet \
     "host": "192.168.1.100",
     "port": 22,
     "backendPort": 9999,
-    "username": "alice",
-    "authMethod": "sshKey",
+    "username": "nick",
+    "authMethod": "key",
     "isActive": false,
     "healthStatus": "unknown",
     "lastHealthCheck": null,
     "platform": null
-  },
-  "error": null
+  }
 }
 ```
 
@@ -2572,19 +2546,15 @@ curl http://localhost:9999/api/v1/fleet \
 ```bash
 curl -X POST http://localhost:9999/api/v1/host-profiles/register \
   -H "Content-Type: application/json" \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY" \
   -d '{
     "name": "My Mac Mini",
     "host": "192.168.1.100",
     "port": 22,
     "backendPort": 9999,
-    "username": "alice",
-    "authMethod": "sshKey"
+    "username": "nick",
+    "authMethod": "key"
   }'
-
-# Backward-compatible alias
-curl -X POST http://localhost:9999/api/v1/fleet/register \
-  -H "Content-Type: application/json" \
-  -d '{"name": "My Mac Mini", "host": "192.168.1.100", "port": 22, "backendPort": 9999}'
 ```
 
 ---
@@ -2592,43 +2562,36 @@ curl -X POST http://localhost:9999/api/v1/fleet/register \
 ### Activate Host Profile
 
 **Endpoint:** `POST /api/v1/host-profiles/:id/activate`
-**Description:** Set a host profile as the active host. All other hosts are atomically set to inactive in the same database transaction so only one host is active at a time.
+**Description:** Set a host profile as the active host. All other profiles are atomically deactivated in the same database transaction to ensure only one host is active at a time.
 
 **Parameters:**
-- `id` (path, UUID) — Host profile ID
+- `id` (path, UUID) - Host profile ID
 
-**Response Schema:**
+**Response:**
 ```json
 {
   "success": true,
   "data": {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "id": "uuid",
     "name": "My Mac Mini",
     "host": "192.168.1.100",
     "port": 22,
     "backendPort": 9999,
-    "username": "alice",
-    "authMethod": "sshKey",
+    "username": "nick",
+    "authMethod": "key",
     "isActive": true,
     "healthStatus": "unknown",
     "lastHealthCheck": null,
     "platform": null
-  },
-  "error": null
+  }
 }
 ```
-
-**Error Responses:**
-- `400 Bad Request` — `id` is not a valid UUID
-- `404 Not Found` — No host profile with that ID exists
 
 **Example:**
 
 ```bash
-curl -X POST http://localhost:9999/api/v1/host-profiles/3fa85f64-5717-4562-b3fc-2c963f66afa6/activate
-
-# Backward-compatible alias
-curl -X POST http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6/activate
+curl -X POST http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000/activate \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2639,30 +2602,23 @@ curl -X POST http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66
 **Description:** Permanently delete a host profile by ID.
 
 **Parameters:**
-- `id` (path, UUID) — Host profile ID
+- `id` (path, UUID) - Host profile ID
 
-**Response Schema:**
+**Response:**
 ```json
 {
   "success": true,
   "data": {
     "deleted": true
-  },
-  "error": null
+  }
 }
 ```
-
-**Error Responses:**
-- `400 Bad Request` — `id` is not a valid UUID
-- `404 Not Found` — No host profile with that ID exists
 
 **Example:**
 
 ```bash
-curl -X DELETE http://localhost:9999/api/v1/host-profiles/3fa85f64-5717-4562-b3fc-2c963f66afa6
-
-# Backward-compatible alias
-curl -X DELETE http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6
+curl -X DELETE http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000 \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
@@ -2670,66 +2626,59 @@ curl -X DELETE http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f
 ### Get Host Profile Health
 
 **Endpoint:** `GET /api/v1/host-profiles/:id/health`
-**Description:** Perform a live HTTP health check against the remote host's ILS backend (`http(s)://{host}:{backendPort}/health`). Uses a 5-second timeout. Updates and persists the host's `healthStatus` and `lastHealthCheck` timestamp. HTTPS is used automatically when `backendPort` is 443.
+**Description:** Check the health of a specific host profile by performing a live HTTP GET to `http(s)://{host}:{backendPort}/health`. Times out after 5 seconds. The health status and timestamp are persisted to the database after each check.
 
 **Parameters:**
-- `id` (path, UUID) — Host profile ID
+- `id` (path, UUID) - Host profile ID
+
+**Health Status Values:**
+| Status | Description |
+|--------|-------------|
+| `healthy` | Remote backend responded with HTTP 2xx |
+| `degraded` | Remote backend responded with a non-2xx status |
+| `unreachable` | Connection refused, timed out, or DNS failure |
+| `unknown` | Health has not been checked yet |
 
 **Response Schema:**
 ```json
 {
   "success": true,
   "data": {
-    "hostId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "hostId": "uuid",
     "status": "healthy",
     "backendVersion": "1.1.0",
     "claudeAvailable": true,
-    "lastChecked": "2026-02-15T12:34:56Z"
-  },
-  "error": null
+    "lastChecked": "2026-02-28T12:00:00Z"
+  }
 }
 ```
 
-**Response Fields:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `hostId` | UUID | ID of the checked host profile |
-| `status` | string | `"healthy"` (2xx response), `"degraded"` (non-2xx), `"unreachable"` (timeout/DNS/refused), or `"unknown"` |
-| `backendVersion` | string | Version from the remote `/health` JSON response, or `"unknown"` |
-| `claudeAvailable` | boolean | `true` if remote backend returned HTTP 2xx |
-| `lastChecked` | ISO8601 | Timestamp when the check was performed |
-
-**Error Responses:**
-- `400 Bad Request` — `id` is not a valid UUID
-- `404 Not Found` — No host profile with that ID exists
-
-**Note:** A `200 OK` response from this endpoint means the health *check completed* — the remote host's reachability is indicated by the `status` field in the response body, not the HTTP status code.
+**Fields:**
+- `hostId` - UUID of the host profile that was checked
+- `status` - Current health status (`healthy`, `degraded`, `unreachable`, `unknown`)
+- `backendVersion` - Version string returned by the remote `/health` endpoint, or `"unknown"`
+- `claudeAvailable` - `true` if the remote backend responded with HTTP 2xx
+- `lastChecked` - ISO 8601 timestamp of when this check was performed
 
 **Example:**
 
 ```bash
-curl http://localhost:9999/api/v1/host-profiles/3fa85f64-5717-4562-b3fc-2c963f66afa6/health
-
-# Backward-compatible alias
-curl http://localhost:9999/api/v1/fleet/3fa85f64-5717-4562-b3fc-2c963f66afa6/health
+curl http://localhost:9999/api/v1/host-profiles/550e8400-e29b-41d4-a716-446655440000/health \
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
 ---
 
 ## Data Erasure
 
-The Data Erasure API provides a single destructive endpoint to completely wipe all local ILS data. This is intended for GDPR compliance ("right to be forgotten"), factory-reset workflows, and development/testing teardown. **This action is irreversible.**
+The Data Erasure API provides GDPR-compliant deletion of all user data stored by ILS, including sessions, messages, and associated metadata.
 
-**Authorization:** These routes are admin-protected. When the `ILS_ADMIN_KEY` environment variable is set on the server, all requests must include the `X-Admin-Token` header. Omitting it (or providing an incorrect value) returns `403 Forbidden`. In development mode (no `ILS_ADMIN_KEY` set), the header is not required.
+> **Authentication**: When `ILS_ADMIN_KEY` is configured in the server environment, all Data Erasure endpoints require the `X-Admin-Token` header matching that key. Example: `-H "X-Admin-Token: $ILS_ADMIN_KEY"`. In development (no `ILS_ADMIN_KEY` set), requests are allowed without authentication.
 
-**Headers:**
-- `X-Admin-Token: <your-admin-key>` — Required when `ILS_ADMIN_KEY` is configured on the server
-
-### Erase All Data
+### Delete All Data
 
 **Endpoint:** `DELETE /api/v1/data/all`
-**Description:** Permanently deletes all ILS-managed local data including sessions, projects, configuration, skills, plugins, MCP server registrations, themes, host profiles, and any cached or persisted state. This operation is irreversible and intended for GDPR right-to-erasure compliance or full factory reset.
+**Description:** Permanently deletes all sessions, messages, and user data stored by ILS. This operation is irreversible and is intended for GDPR compliance (right to erasure).
 
 **Request Body:** None required.
 
@@ -2738,58 +2687,47 @@ The Data Erasure API provides a single destructive endpoint to completely wipe a
 {
   "success": true,
   "data": {
-    "messagesDeleted": 142,
-    "sessionsDeleted": 38,
-    "projectsDeleted": 12,
-    "themesDeleted": 3,
-    "fleetHostsDeleted": 2,
-    "cacheEntriesDeleted": 57
-  },
-  "error": null
+    "sessionsDeleted": 42,
+    "messagesDeleted": 1337,
+    "projectsDeleted": 5,
+    "themesDeleted": 2,
+    "fleetHostsDeleted": 3,
+    "cacheEntriesDeleted": 18
+  }
 }
 ```
 
-**Response Fields:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `messagesDeleted` | integer | Number of chat messages deleted |
-| `sessionsDeleted` | integer | Number of chat sessions deleted |
-| `projectsDeleted` | integer | Number of projects deleted |
-| `themesDeleted` | integer | Number of custom themes deleted |
-| `fleetHostsDeleted` | integer | Number of host profiles deleted |
-| `cacheEntriesDeleted` | integer | Number of cached results deleted |
-
-**Error Responses:**
-- `500 Internal Server Error` — Erasure failed partway through; data may be in an inconsistent state
-
-**⚠️ WARNING:** This endpoint permanently deletes all data. There is no undo. Use with caution.
-
-**GDPR Note:** This endpoint fulfils the "right to erasure" (Article 17 GDPR) requirement by removing all personally identifiable information stored by ILS on the local device.
+**Fields:**
+- `sessionsDeleted` - Number of sessions that were deleted
+- `messagesDeleted` - Number of messages that were deleted
+- `projectsDeleted` - Number of projects that were deleted
+- `themesDeleted` - Number of themes that were deleted
+- `fleetHostsDeleted` - Number of fleet/host profile entries that were deleted
+- `cacheEntriesDeleted` - Number of cache entries that were deleted
 
 **Example:**
 
 ```bash
-# Erase all ILS data (IRREVERSIBLE)
 curl -X DELETE http://localhost:9999/api/v1/data/all \
-  -H "X-Admin-Token: your-admin-key"
+  -H "X-Admin-Token: $ILS_ADMIN_KEY"
 ```
 
-**Response:**
+**Example Response:**
 ```json
 {
   "success": true,
   "data": {
-    "messagesDeleted": 142,
-    "sessionsDeleted": 38,
-    "projectsDeleted": 12,
-    "themesDeleted": 3,
-    "fleetHostsDeleted": 2,
-    "cacheEntriesDeleted": 57
-  },
-  "error": null
+    "sessionsDeleted": 42,
+    "messagesDeleted": 1337,
+    "projectsDeleted": 5,
+    "themesDeleted": 2,
+    "fleetHostsDeleted": 3,
+    "cacheEntriesDeleted": 18
+  }
 }
 ```
+
+**⚠️ Warning:** This operation is **permanent and irreversible**. All sessions and messages stored in the ILS database will be deleted. External Claude Code session files in `~/.claude/projects/` are not affected.
 
 ---
 
@@ -3046,11 +2984,9 @@ The API does not currently implement CORS headers. For web clients, you may need
 
 ## Changelog
 
-**v1.2.0 (2026-03-01)**
-- Added Host Profiles endpoints (list, register, activate, delete, health-check)
-- Added Data Erasure endpoint (DELETE /api/v1/data/all) with per-table deletion count response
-- Documented HostProfile model with all fields (id, name, host, port, backendPort, username, authMethod, isActive, healthStatus, lastHealthCheck, platform)
-- Documented DataErasureController response format
+**v1.2.0 (2026-02-28)**
+- Added Host Profiles section (list, register, activate, delete, health-check endpoints)
+- Added Data Erasure section (`DELETE /api/v1/data/all` for GDPR right-to-erasure compliance)
 
 **v1.1.0 (2026-02-15)**
 - Added Teams endpoints (list, create, delete, spawn, shutdown, tasks, messages)
