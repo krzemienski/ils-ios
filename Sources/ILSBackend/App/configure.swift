@@ -109,6 +109,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateSearchHistory())
     // v5.7 — Enhanced checkpoint system (export/backup)
     app.migrations.add(CreateSessionCheckpoints())
+    // v5.8 — Agent queue & batch task management
+    app.migrations.add(CreateAgentQueueItems())
 
     // Run migrations
     try await app.autoMigrate()

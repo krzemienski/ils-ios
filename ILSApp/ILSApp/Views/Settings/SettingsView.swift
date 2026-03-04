@@ -63,6 +63,8 @@ struct SettingsView: View {
     @State private var showIntegrityAlert: Bool = false
     @State private var integrityAlertMessage: String = ""
 
+    @AppStorage("enableAgentQueue") private var enableAgentQueue: Bool = false
+
     private let availableColorSchemes = ["system", "light", "dark"]
     private let checkpointIntervalOptions = [5, 10, 20, 50]
 
@@ -84,6 +86,8 @@ struct SettingsView: View {
                 configSection
 
                 statisticsSection
+
+                agentQueueSection
 
                 contextWindowSection
 
@@ -246,6 +250,38 @@ struct SettingsView: View {
             }
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        }
+    }
+
+    private var agentQueueSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Agent Queue")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Enable Agent Queue")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $enableAgentQueue)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Enable agent queue")
+                .onChange(of: enableAgentQueue) {
+                    HapticManager.selection()
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Queue and manage multiple background agent tasks for batch processing.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
         }
     }
 

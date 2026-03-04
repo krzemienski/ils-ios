@@ -24,6 +24,8 @@ import ILSShared
 /// - ``contextWarningAlert`` - Alert when context usage reaches 85%
 /// - ``contextAlert`` - Alert when context usage reaches 90%
 /// - ``contextCriticalAlert`` - Alert when context usage reaches 95%
+/// - ``queueTaskComplete`` - Alert when a queued task completes
+/// - ``queueTaskFailed`` - Alert when a queued task fails
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
@@ -37,6 +39,8 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_contextWarning") private var contextWarningAlert = true
     @AppStorage("notif_contextAlert") private var contextAlert = true
     @AppStorage("notif_contextCritical") private var contextCriticalAlert = true
+    @AppStorage("notif_queueTaskComplete") private var queueTaskComplete = true
+    @AppStorage("notif_queueTaskFailed") private var queueTaskFailed = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
@@ -102,6 +106,19 @@ struct NotificationPreferencesView: View {
                             }
                         }
                         .accessibilityLabel("Configure system resource alert thresholds")
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
+
+                // Queue Alerts
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Queue Alerts")
+
+                    VStack(spacing: 0) {
+                        toggleRow("Task Completed", isOn: $queueTaskComplete, accessibilityLabel: "Alert when a queued task completes")
+                        Divider().background(theme.bgTertiary)
+                        toggleRow("Task Failed", isOn: $queueTaskFailed, accessibilityLabel: "Alert when a queued task fails")
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())

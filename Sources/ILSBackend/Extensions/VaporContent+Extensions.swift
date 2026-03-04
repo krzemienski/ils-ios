@@ -310,3 +310,14 @@ extension AnalyticsExportData: Content {}
 // MARK: - Search History Types
 extension SearchHistoryEntry: Content {}
 extension MessageSearchFilters: Content {}
+
+// MARK: - Agent Queue Types
+extension AgentQueueItem: Content {}
+extension AgentQueueStatus: Content {}
+extension AgentQueue: Content {}
+extension QueueExecutionMode: Content {}
+extension CreateQueueItemRequest: Content {}
+extension UpdateQueueItemRequest: Content {}
+extension ReorderQueueRequest: Content {}
+extension QueueControlAction: Content {}
+extension QueueControlAction.Action: Content {}

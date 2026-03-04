@@ -20,6 +20,7 @@ enum ActiveScreen: Hashable {
     case themes
     case hooks
     case activityFeed
+    case agentQueue
     case documentation
     case terminal
     case backends
@@ -47,6 +48,7 @@ enum ActiveScreen: Hashable {
         case .themes: return "themes"
         case .hooks: return "hooks"
         case .activityFeed: return "activityFeed"
+        case .agentQueue: return "agentQueue"
         case .documentation: return "documentation"
         case .terminal: return "terminal"
         case .backends: return "backends"
@@ -71,6 +73,7 @@ enum ActiveScreen: Hashable {
         case "themes": return .themes
         case "hooks": return .hooks
         case "activityFeed": return .activityFeed
+        case "agentQueue": return .agentQueue
         case "documentation": return .documentation
         case "terminal": return .terminal
         case "backends": return .backends
@@ -159,6 +162,8 @@ struct SidebarRootView: View {
     private let networkMonitor = NetworkMonitor.shared
     /// Activity feed view model, instantiated once and reused by ``ActivityFeedView``.
     @State private var activityFeedVM = ActivityFeedViewModel()
+    /// Agent queue view model, instantiated once with the API client and reused by ``AgentQueueView``.
+    @State private var agentQueueVM: AgentQueueViewModel?
     /// NavigationStack path for programmatic push-navigation within the active screen.
     @State private var navigationPath = NavigationPath()
     /// Multi-session split view model, owned by this root view and shared with split view screens.
@@ -230,6 +235,7 @@ struct SidebarRootView: View {
         .task {
             sessionsVM.configure(client: appState.apiClient)
             activityFeedVM.configure(client: appState.apiClient)
+            agentQueueVM = AgentQueueViewModel(apiClient: appState.apiClient)
             await sessionsVM.loadSessions(refresh: true)
             // Load custom themes from backend and register with ThemeManager
             // This allows custom themes to appear in ThemePickerView alongside built-ins
@@ -250,6 +256,7 @@ struct SidebarRootView: View {
         .onChange(of: appState.serverURL) { _, _ in
             sessionsVM.configure(client: appState.apiClient)
             activityFeedVM.configure(client: appState.apiClient)
+            agentQueueVM = AgentQueueViewModel(apiClient: appState.apiClient)
             Task {
                 await sessionsVM.loadSessions(refresh: true)
                 await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
@@ -366,6 +373,8 @@ struct SidebarRootView: View {
                     hooksScreen
                 case .activityFeed:
                     activityFeedScreen
+                case .agentQueue:
+                    agentQueueScreen
                 case .documentation:
                     documentationScreen
                 case .terminal:
@@ -538,6 +547,18 @@ struct SidebarRootView: View {
                let session = sessionsVM.session(byID: uuid) {
                 navigateToChat(session)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var agentQueueScreen: some View {
+        if let vm = agentQueueVM {
+            AgentQueueView(viewModel: vm)
+        } else {
+            Color.clear
+                .onAppear {
+                    agentQueueVM = AgentQueueViewModel(apiClient: appState.apiClient)
+                }
         }
     }
 

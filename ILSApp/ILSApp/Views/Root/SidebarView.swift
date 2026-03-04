@@ -32,6 +32,7 @@ struct SidebarView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(MultiSessionViewModel.self) private var multiSessionVM
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
+    @AppStorage("enableAgentQueue") private var enableAgentQueue = false
 
     /// Shared sessions view model owned by SidebarRootView.
     @Bindable var sessionsViewModel: SessionsViewModel
@@ -380,6 +381,9 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "magnifyingglass", label: "Search", screen: .search)
                 if enableAgentTeams {
                     sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
+                }
+                if enableAgentQueue {
+                    sidebarNavItem(icon: "list.bullet.rectangle.portrait", label: "Agent Queue", screen: .agentQueue)
                 }
             }
 
@@ -815,6 +819,7 @@ struct SidebarView: View {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
+             (.agentQueue, .agentQueue),
              (.documentation, .documentation), (.terminal, .terminal),
              (.backends, .backends), (.unifiedSessions, .unifiedSessions),
              (.splitView, .splitView), (.analytics, .analytics),
