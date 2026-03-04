@@ -485,6 +485,8 @@ struct MacContentView: View {
             AnalyticsView()
         case .permissions:
             PermissionHistoryView()
+        case .usage:
+            UsageDashboardView()
         }
     }
 
@@ -852,6 +854,7 @@ struct MacContentView: View {
         case .hooks: selectedSection = .hooks
         case .unifiedSessions: selectedSection = .allSessions
         case .analytics: selectedSection = .analytics
+        case .usage: selectedSection = .home
         case .chat: selectedSection = .home
         case .activityFeed: selectedSection = .home
         case .sessionForkTree: selectedSection = .home

@@ -60,7 +60,8 @@ struct SessionBackupController: RouteCollection {
 
         let input = try req.content.decode(CreateCheckpointRequest.self)
 
-        guard !input.name.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let name = (input.label ?? "Checkpoint").trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else {
             throw Abort(.badRequest, reason: "Checkpoint name must not be empty")
         }
 
@@ -70,9 +71,9 @@ struct SessionBackupController: RouteCollection {
 
         let checkpoint = SessionCheckpointModel(
             sessionId: sessionId,
-            name: input.name.trimmingCharacters(in: .whitespaces),
+            name: name,
             messageCount: session.messageCount,
-            isAutomatic: input.isAutomatic ?? false
+            isAutomatic: input.isAuto
         )
 
         try await checkpoint.save(on: req.db)

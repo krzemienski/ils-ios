@@ -28,6 +28,7 @@ enum ActiveScreen: Hashable {
     case analytics
     case permissions
     case search
+    case usage
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -54,6 +55,7 @@ enum ActiveScreen: Hashable {
         case .analytics: return "analytics"
         case .permissions: return "permissions"
         case .search: return "search"
+        case .usage: return "usage"
         }
     }
 
@@ -77,6 +79,7 @@ enum ActiveScreen: Hashable {
         case "analytics": return .analytics
         case "permissions": return .permissions
         case "search": return .search
+        case "usage": return .usage
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -379,6 +382,8 @@ struct SidebarRootView: View {
                     permissionsScreen
                 case .search:
                     searchScreen
+                case .usage:
+                    usageScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -565,6 +570,10 @@ struct SidebarRootView: View {
         GlobalSearchView(apiClient: appState.apiClient) { sessionId in
             navigateToSessionById(sessionId)
         }
+    }
+
+    private var usageScreen: some View {
+        UsageDashboardView()
     }
 
     // MARK: - Chat Navigation

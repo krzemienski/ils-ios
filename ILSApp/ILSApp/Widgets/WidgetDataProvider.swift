@@ -90,6 +90,10 @@ struct ServerStatusEntry: TimelineEntry {
     let sessionCount: Int
     let backendVersion: String
     let isPlaceholder: Bool
+    /// Rate limit messages used in the current window (nil if unavailable).
+    let rateLimitUsed: Int?
+    /// Rate limit messages allowed in the current window (nil if unavailable).
+    let rateLimitLimit: Int?
 
     static var placeholder: ServerStatusEntry {
         ServerStatusEntry(
@@ -97,7 +101,9 @@ struct ServerStatusEntry: TimelineEntry {
             isConnected: true,
             sessionCount: 41,
             backendVersion: "1.0.0",
-            isPlaceholder: true
+            isPlaceholder: true,
+            rateLimitUsed: 12,
+            rateLimitLimit: 45
         )
     }
 
@@ -107,6 +113,47 @@ struct ServerStatusEntry: TimelineEntry {
             isConnected: false,
             sessionCount: 0,
             backendVersion: "--",
+            isPlaceholder: false,
+            rateLimitUsed: nil,
+            rateLimitLimit: nil
+        )
+    }
+}
+
+/// Timeline entry for the RateLimitWidget.
+struct RateLimitWidgetEntry: TimelineEntry {
+    let date: Date
+    let messagesUsed: Int
+    let messagesLimit: Int
+    /// ISO 8601 string for when the rate-limit window resets.
+    let windowResetsAt: String?
+    let isPlaceholder: Bool
+
+    /// Fraction of the rate limit consumed (0.0–1.0).
+    var consumptionFraction: Double {
+        guard messagesLimit > 0 else { return 0.0 }
+        return min(1.0, Double(messagesUsed) / Double(messagesLimit))
+    }
+
+    /// Messages remaining before hitting the rate limit.
+    var messagesRemaining: Int { max(0, messagesLimit - messagesUsed) }
+
+    static var placeholder: RateLimitWidgetEntry {
+        RateLimitWidgetEntry(
+            date: Date(),
+            messagesUsed: 12,
+            messagesLimit: 45,
+            windowResetsAt: nil,
+            isPlaceholder: true
+        )
+    }
+
+    static var empty: RateLimitWidgetEntry {
+        RateLimitWidgetEntry(
+            date: Date(),
+            messagesUsed: 0,
+            messagesLimit: 45,
+            windowResetsAt: nil,
             isPlaceholder: false
         )
     }
@@ -138,6 +185,9 @@ struct WidgetDataProvider: @unchecked Sendable {
         static let cachedServerStatus = "widget_cached_server_connected"
         static let cachedSessionCount = "widget_cached_session_count"
         static let cachedBackendVersion = "widget_cached_backend_version"
+        static let cachedRateLimitUsed = "widget_cached_rate_limit_used"
+        static let cachedRateLimitLimit = "widget_cached_rate_limit_limit"
+        static let cachedRateLimitResetsAt = "widget_cached_rate_limit_resets_at"
     }
 
     /// The base URL for the ILS backend, read from shared UserDefaults.
@@ -256,16 +306,41 @@ struct WidgetDataProvider: @unchecked Sendable {
         decoder.dateDecodingStrategy = .iso8601
         let health = try decoder.decode(WidgetHealthResponse.self, from: data)
 
-        // Also fetch session count
-        let sessionCount = await fetchSessionCount()
+        // Fetch session count and rate limit concurrently
+        async let sessionCountTask = fetchSessionCount()
+        async let rateLimitTask = fetchRateLimitInfo()
+        let (sessionCount, rateLimitInfo) = await (sessionCountTask, rateLimitTask)
 
         return ServerStatusEntry(
             date: Date(),
             isConnected: health.status == "ok" || health.status == "healthy",
             sessionCount: sessionCount,
             backendVersion: health.version ?? "1.0.0",
-            isPlaceholder: false
+            isPlaceholder: false,
+            rateLimitUsed: rateLimitInfo?.messagesUsed,
+            rateLimitLimit: rateLimitInfo?.messagesLimit
         )
+    }
+
+    /// Fetches minimal rate limit info to augment the server status entry.
+    private func fetchRateLimitInfo() async -> (messagesUsed: Int, messagesLimit: Int)? {
+        let urlString = "\(serverURL)/api/v1/usage?period=day"
+        guard let url = URL(string: urlString) else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 5
+
+        do {
+            let (data, _) = try await Self.urlSession.data(for: request)
+            let decoder = JSONDecoder()
+            let apiResponse = try decoder.decode(WidgetAPIResponse<WidgetUsageMetrics>.self, from: data)
+            guard let metrics = apiResponse.data else { return nil }
+            return (metrics.rateLimitStatus.messagesUsed, metrics.rateLimitStatus.messagesLimit)
+        } catch {
+            return nil
+        }
     }
 
     private func fetchSessionCount() async -> Int {
@@ -292,14 +367,97 @@ struct WidgetDataProvider: @unchecked Sendable {
         defaults?.set(entry.isConnected, forKey: Keys.cachedServerStatus)
         defaults?.set(entry.sessionCount, forKey: Keys.cachedSessionCount)
         defaults?.set(entry.backendVersion, forKey: Keys.cachedBackendVersion)
+        if let used = entry.rateLimitUsed {
+            defaults?.set(used, forKey: Keys.cachedRateLimitUsed)
+        }
+        if let limit = entry.rateLimitLimit {
+            defaults?.set(limit, forKey: Keys.cachedRateLimitLimit)
+        }
     }
 
     private func loadCachedServerStatus() -> ServerStatusEntry {
-        ServerStatusEntry(
+        let cachedUsed = defaults?.integer(forKey: Keys.cachedRateLimitUsed)
+        let cachedLimit = defaults?.integer(forKey: Keys.cachedRateLimitLimit)
+        // Only surface rate limit if we have both values cached and limit is positive
+        let rateLimitUsed = (cachedUsed != nil && (cachedLimit ?? 0) > 0) ? cachedUsed : nil
+        let rateLimitLimit = (cachedLimit ?? 0) > 0 ? cachedLimit : nil
+
+        return ServerStatusEntry(
             date: Date(),
             isConnected: false,
             sessionCount: defaults?.integer(forKey: Keys.cachedSessionCount) ?? 0,
             backendVersion: defaults?.string(forKey: Keys.cachedBackendVersion) ?? "--",
+            isPlaceholder: false,
+            rateLimitUsed: rateLimitUsed,
+            rateLimitLimit: rateLimitLimit
+        )
+    }
+
+    // MARK: - Rate Limit Data
+
+    /// Fetches current rate limit status from the backend.
+    /// Falls back to cached data if the network request fails.
+    func fetchRateLimit() async -> RateLimitWidgetEntry {
+        do {
+            let entry = try await fetchRateLimitFromAPI()
+            cacheRateLimit(entry)
+            return entry
+        } catch {
+            return loadCachedRateLimit()
+        }
+    }
+
+    private func fetchRateLimitFromAPI() async throws -> RateLimitWidgetEntry {
+        let urlString = "\(serverURL)/api/v1/usage?period=day"
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 10
+
+        let (data, response) = try await Self.urlSession.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+
+        let decoder = JSONDecoder()
+        let apiResponse = try decoder.decode(WidgetAPIResponse<WidgetUsageMetrics>.self, from: data)
+
+        guard let metrics = apiResponse.data else {
+            throw URLError(.cannotParseResponse)
+        }
+
+        return RateLimitWidgetEntry(
+            date: Date(),
+            messagesUsed: metrics.rateLimitStatus.messagesUsed,
+            messagesLimit: metrics.rateLimitStatus.messagesLimit,
+            windowResetsAt: metrics.rateLimitStatus.windowResetsAt,
+            isPlaceholder: false
+        )
+    }
+
+    private func cacheRateLimit(_ entry: RateLimitWidgetEntry) {
+        defaults?.set(entry.messagesUsed, forKey: Keys.cachedRateLimitUsed)
+        defaults?.set(entry.messagesLimit, forKey: Keys.cachedRateLimitLimit)
+        if let resetsAt = entry.windowResetsAt {
+            defaults?.set(resetsAt, forKey: Keys.cachedRateLimitResetsAt)
+        }
+    }
+
+    private func loadCachedRateLimit() -> RateLimitWidgetEntry {
+        let used = defaults?.integer(forKey: Keys.cachedRateLimitUsed) ?? 0
+        let limit = defaults?.integer(forKey: Keys.cachedRateLimitLimit) ?? 45
+        let resetsAt = defaults?.string(forKey: Keys.cachedRateLimitResetsAt)
+        return RateLimitWidgetEntry(
+            date: Date(),
+            messagesUsed: used,
+            messagesLimit: max(1, limit),
+            windowResetsAt: resetsAt,
             isPlaceholder: false
         )
     }
@@ -333,5 +491,17 @@ private struct WidgetSessionDTO: Decodable {
 private struct WidgetHealthResponse: Decodable {
     let status: String
     let version: String?
+}
+
+/// Minimal usage metrics response for widget rate limit display.
+private struct WidgetUsageMetrics: Decodable {
+    let rateLimitStatus: WidgetRateLimitStatus
+}
+
+/// Minimal rate limit status matching `RateLimitStatus` in ILSShared.
+private struct WidgetRateLimitStatus: Decodable {
+    let messagesUsed: Int
+    let messagesLimit: Int
+    let windowResetsAt: String?
 }
 #endif

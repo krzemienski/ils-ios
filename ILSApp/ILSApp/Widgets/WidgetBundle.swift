@@ -16,6 +16,7 @@ struct ILSWidgets: WidgetBundle {
         #if os(iOS)
         LockScreenWidget()
         #endif
+        RateLimitWidget()
     }
 }
 #endif

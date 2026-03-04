@@ -388,6 +388,7 @@ struct SidebarView: View {
             // Configuration screens group
             sidebarSectionHeader(title: "CONFIGURE")
             VStack(spacing: theme.spacingXS) {
+                sidebarNavItem(icon: "chart.bar.fill", label: "Usage", screen: .usage)
                 sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
                 sidebarNavItem(icon: "server.rack", label: "Backends", screen: .backends)
                 sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
@@ -817,7 +818,7 @@ struct SidebarView: View {
              (.documentation, .documentation), (.terminal, .terminal),
              (.backends, .backends), (.unifiedSessions, .unifiedSessions),
              (.splitView, .splitView), (.analytics, .analytics),
-             (.permissions, .permissions), (.search, .search):
+             (.permissions, .permissions), (.search, .search), (.usage, .usage):
             return true
         case (.chat, .chat):
             return true

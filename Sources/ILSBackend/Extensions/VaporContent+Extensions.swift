@@ -270,6 +270,14 @@ extension StopRecordingRequest: Content {}
 extension ExportRecordingRequest: Content {}
 extension ExportRecordingResponse: Content {}
 
+// MARK: - Usage Types
+extension UsageMetrics: Content {}
+extension DailyUsage: Content {}
+extension ProjectUsage: Content {}
+extension RateLimitStatus: Content {}
+extension UsagePeriod: Content {}
+extension UsageExportFormat: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}
@@ -288,7 +296,6 @@ extension AnyCodable: Content {}
 
 // MARK: - Checkpoint Types
 extension Checkpoint: Content {}
-extension CreateCheckpointRequest: Content {}
 extension RestoreCheckpointResponse: Content {}
 
 // MARK: - Analytics DTOs

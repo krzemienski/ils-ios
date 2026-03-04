@@ -64,7 +64,7 @@ actor APIClient {
         if path.hasPrefix("/skills") || path.hasPrefix("/mcp") || path.hasPrefix("/plugins") || path.hasPrefix("/themes") {
             return 300 // 5 minutes for static reference data
         }
-        if path.hasPrefix("/stats") || path.hasPrefix("/sessions") {
+        if path.hasPrefix("/stats") || path.hasPrefix("/sessions") || path.hasPrefix("/usage") {
             return 15 // 15 seconds for frequently-changing data
         }
         if path.hasPrefix("/config") {

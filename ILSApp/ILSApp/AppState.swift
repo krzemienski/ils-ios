@@ -258,6 +258,8 @@ class AppState {
             navigationIntent = .unifiedSessions
         case "permissions":
             navigationIntent = .permissions
+        case "usage":
+            navigationIntent = .usage
         default:
             break
         }
