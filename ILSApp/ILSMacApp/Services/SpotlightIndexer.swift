@@ -1,4 +1,8 @@
-import CoreSpotlight
+// CONC-34: @preconcurrency suppresses Sendable warnings for CSSearchableItem which
+// pre-dates Swift 6 and lacks Sendable conformance. The capture of [CSSearchableItem]
+// in the indexSearchableItems completion closure is safe: CoreSpotlight copies the items
+// internally before calling back on an arbitrary queue.
+@preconcurrency import CoreSpotlight
 import Foundation
 import ILSShared
 import UniformTypeIdentifiers

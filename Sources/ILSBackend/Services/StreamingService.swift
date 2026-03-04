@@ -2,6 +2,7 @@ import Vapor
 import Fluent
 import ILSShared
 import NIOCore
+import os
 
 /// Thread-safe monotonically increasing event counter
 actor EventCounter {
@@ -78,13 +79,13 @@ struct StreamingService {
     ///   - writer: Response body writer
     ///   - request: Vapor Request for logging and Last-Event-ID header
     ///   - onMessage: Optional closure called for each message (for persistence)
-    private static func writeSSEStream<Writer: AsyncBodyStreamWriter>(
+    private static func writeSSEStream<Writer: AsyncBodyStreamWriter & Sendable>(
         from stream: AsyncThrowingStream<StreamMessage, Error>,
         writer: Writer,
         request: Request,
         onMessage: ((StreamMessage) -> Void)? = nil
     ) async throws {
-        var isConnected = true
+        let isConnected = OSAllocatedUnfairLock(initialState: true)
 
         // Parse Last-Event-ID for replay
         if let lastEventIdStr = request.headers.first(name: "Last-Event-ID"),
@@ -96,13 +97,13 @@ struct StreamingService {
         }
 
         let heartbeatTask = Task {
-            while !Task.isCancelled && isConnected {
+            while !Task.isCancelled && isConnected.withLock({ $0 }) {
                 try await Task.sleep(nanoseconds: heartbeatInterval)
-                guard !Task.isCancelled && isConnected else { break }
+                guard !Task.isCancelled && isConnected.withLock({ $0 }) else { break }
                 do {
                     try await writer.write(.buffer(.init(string: createPingEvent())))
                 } catch {
-                    isConnected = false
+                    isConnected.withLock { $0 = false }
                     break
                 }
             }
@@ -112,7 +113,7 @@ struct StreamingService {
 
         do {
             for try await message in stream {
-                guard isConnected else { break }
+                guard isConnected.withLock({ $0 }) else { break }
 
                 onMessage?(message)
 
@@ -123,13 +124,13 @@ struct StreamingService {
                 do {
                     try await writer.write(.buffer(.init(string: eventData)))
                 } catch {
-                    isConnected = false
+                    isConnected.withLock { $0 = false }
                     request.logger.debug("SSE client disconnected during write")
                     break
                 }
             }
 
-            if isConnected {
+            if isConnected.withLock({ $0 }) {
                 let doneEvent = "event: done\ndata: {}\n\n"
                 try? await writer.write(.buffer(.init(string: doneEvent)))
             }
@@ -139,7 +140,7 @@ struct StreamingService {
             try? await writer.write(.end)
         } catch {
             request.logger.error("SSE stream error: \(error.localizedDescription)")
-            if isConnected {
+            if isConnected.withLock({ $0 }) {
                 let errorEvent = try? formatSSEEvent(.error(StreamError(
                     code: "STREAM_ERROR",
                     message: error.localizedDescription

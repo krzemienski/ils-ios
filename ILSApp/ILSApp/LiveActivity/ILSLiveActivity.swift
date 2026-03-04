@@ -179,8 +179,12 @@ private struct StreamingDotsView: View {
             .foregroundStyle(LiveActivityColors.success)
             .frame(width: 20, alignment: .leading)
             .onAppear {
+                // CONC-31: MainActor.assumeIsolated is safe because scheduledTimer is called
+                // from onAppear (main thread), so the callback fires on the main run loop.
+                // Using @MainActor directly on the closure causes a type mismatch warning
+                // because Timer expects '@Sendable (Timer) -> Void', not '@MainActor @Sendable'.
                 timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-                    dotCount += 1
+                    MainActor.assumeIsolated { dotCount += 1 }
                 }
                 timer?.tolerance = 0.3  // Enable timer coalescing for energy efficiency
             }

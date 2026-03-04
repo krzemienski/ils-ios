@@ -88,7 +88,10 @@ final class SetupViewModel {
                     guard !trimmed.isEmpty else { continue }
 
                     // Append every line to the log for the live console view
-                    Task { @MainActor in
+                    // CONC-32: Explicit [weak self] capture list avoids 'sending self' warning
+                    // (SE-0430 region isolation). Without it the compiler sees self flowing
+                    // from the outer @Sendable closure into a new Task across a sending boundary.
+                    Task { @MainActor [weak self] in
                         self?.logLines.append(trimmed)
                         // Cap at 500 lines to prevent unbounded memory growth
                         if let count = self?.logLines.count, count > 500 {
@@ -101,7 +104,7 @@ final class SetupViewModel {
                     } else if trimmed.hasPrefix("ILS_TUNNEL_URL:") {
                         let url = String(trimmed.dropFirst("ILS_TUNNEL_URL:".count))
                         urlHolder.set(url)
-                        Task { @MainActor in
+                        Task { @MainActor [weak self] in
                             self?.tunnelURL = url
                         }
                     } else if trimmed.hasPrefix("ILS_BACKEND_URL:") {
@@ -109,7 +112,7 @@ final class SetupViewModel {
                         // fallback logic: tunnelURL ?? "http://host:port"
                     } else if trimmed.hasPrefix("ILS_ERROR:") {
                         let msg = String(trimmed.dropFirst("ILS_ERROR:".count))
-                        Task { @MainActor in
+                        Task { @MainActor [weak self] in
                             self?.error = msg
                         }
                     }
@@ -166,6 +169,11 @@ final class SetupViewModel {
         }
     }
 }
+
+// CONC-23: @unchecked Sendable — all mutable state is @MainActor-protected.
+// Needed so weak-self captures in @Sendable streaming closures can safely
+// create Task { @MainActor in } without Sendable violations.
+extension SetupViewModel: @unchecked Sendable {}
 
 // MARK: - Thread-safe tunnel URL holder
 

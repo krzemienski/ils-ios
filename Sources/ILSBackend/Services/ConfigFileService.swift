@@ -8,7 +8,7 @@ import ILSShared
 /// - `user`: `~/.claude/settings.json`
 /// - `project`: `.claude/settings.json`
 /// - `local`: `.claude/settings.local.json`
-struct ConfigFileService {
+struct ConfigFileService: @unchecked Sendable {
     private let fileManager = FileManager.default
 
     /// Home directory path

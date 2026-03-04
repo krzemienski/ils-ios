@@ -244,10 +244,10 @@ final class MetricsWebSocketClient {
 
     private func startPolling() {
         pollingTask?.cancel()
-        // BATT-01: Double fallback polling interval in Low Power Mode (30s -> 60s).
+        // BATT-01: Double fallback polling interval in Low Power Mode (15s -> 30s).
         let pollInterval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
-            ? 60_000_000_000  // 60s in LPM
-            : 30_000_000_000  // 30s normal
+            ? 30_000_000_000  // 30s in LPM
+            : 15_000_000_000  // 15s normal
         pollingTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {

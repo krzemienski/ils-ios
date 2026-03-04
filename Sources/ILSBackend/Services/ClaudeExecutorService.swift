@@ -2,6 +2,7 @@ import Foundation
 import Vapor
 import ILSShared
 import Logging
+import os
 
 /// Actor managing Claude subprocess execution with streaming JSON output.
 ///
@@ -58,18 +59,7 @@ actor ClaudeExecutorService {
     /// A serial queue would cause starvation — one stuck process blocks all subsequent reads.
     private let readQueue = DispatchQueue(label: "ils.claude-stdout-reader", qos: .userInitiated, attributes: .concurrent)
 
-    /// Thread-safe boolean for sharing timeout state across GCD queues.
-    /// Replaces bare `var didTimeout = false` which was a data race between
-    /// DispatchWorkItem closures (global queue) and readStdout (readQueue).
-    private final class AtomicBool: @unchecked Sendable {
-        private var _value: Bool
-        private let lock = NSLock()
-        init(_ value: Bool) { _value = value }
-        var value: Bool {
-            get { lock.lock(); defer { lock.unlock() }; return _value }
-            set { lock.lock(); defer { lock.unlock() }; _value = newValue }
-        }
-    }
+
 
     /// Resolve which execution backend to use for a given request.
     /// Explicit `.sdk` or `.cli` in options overrides auto-detection.
@@ -244,26 +234,31 @@ actor ClaudeExecutorService {
                 return
             }
 
-            // --- Timeout mechanism (thread-safe via AtomicBool) ---
-            let didTimeout = AtomicBool(false)
+            // --- Timeout mechanism ---
+            // CONC: OSAllocatedUnfairLock eliminates the data race between the timeout Tasks
+            // (writing true) and the readQueue closure (reading the flag). Previously `var Bool`
+            // was mutated from two concurrent GCD contexts without synchronisation.
+            let didTimeout = OSAllocatedUnfairLock<Bool>(initialState: false)
 
-            let timeoutWork = DispatchWorkItem {
-                didTimeout.value = true
+            let timeoutTask = Task {
+                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                guard !Task.isCancelled else { return }
+                didTimeout.withLock { $0 = true }
                 Self.logger.debug("TIMEOUT: No SDK data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 30, execute: timeoutWork)
 
-            let totalTimeoutWork = DispatchWorkItem {
+            let totalTimeoutTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000_000)
+                guard !Task.isCancelled else { return }
                 if process.isRunning {
-                    didTimeout.value = true
+                    didTimeout.withLock { $0 = true }
                     Self.logger.debug("TOTAL TIMEOUT: SDK process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
                 }
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: totalTimeoutWork)
 
             self.readQueue.async {
                 Self.readStdout(
@@ -272,8 +267,8 @@ actor ClaudeExecutorService {
                     process: process,
                     sessionId: sessionId,
                     didTimeout: didTimeout,
-                    timeoutWork: timeoutWork,
-                    totalTimeoutWork: totalTimeoutWork,
+                    timeoutTask: timeoutTask,
+                    totalTimeoutTask: totalTimeoutTask,
                     continuation: continuation,
                     executor: self,
                     cleanupStdin: nil // No stdin to clean up in SDK mode
@@ -355,25 +350,29 @@ actor ClaudeExecutorService {
                 return
             }
 
-            let didTimeout = AtomicBool(false)
+            // CONC: OSAllocatedUnfairLock eliminates the data race between the timeout Tasks
+            // (writing true) and the readQueue closure (reading the flag).
+            let didTimeout = OSAllocatedUnfairLock<Bool>(initialState: false)
 
-            let timeoutWork = DispatchWorkItem {
-                didTimeout.value = true
+            let timeoutTask = Task {
+                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                guard !Task.isCancelled else { return }
+                didTimeout.withLock { $0 = true }
                 Self.logger.debug("TIMEOUT: No CLI data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 30, execute: timeoutWork)
 
-            let totalTimeoutWork = DispatchWorkItem {
+            let totalTimeoutTask = Task {
+                try? await Task.sleep(nanoseconds: 300_000_000_000)
+                guard !Task.isCancelled else { return }
                 if process.isRunning {
-                    didTimeout.value = true
+                    didTimeout.withLock { $0 = true }
                     Self.logger.debug("TOTAL TIMEOUT: CLI process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
                 }
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: totalTimeoutWork)
 
             self.readQueue.async {
                 Self.readStdout(
@@ -382,8 +381,8 @@ actor ClaudeExecutorService {
                     process: process,
                     sessionId: sessionId,
                     didTimeout: didTimeout,
-                    timeoutWork: timeoutWork,
-                    totalTimeoutWork: totalTimeoutWork,
+                    timeoutTask: timeoutTask,
+                    totalTimeoutTask: totalTimeoutTask,
                     continuation: continuation,
                     executor: self,
                     cleanupStdin: stdinHandle
@@ -400,9 +399,9 @@ actor ClaudeExecutorService {
         errorPipe: Pipe,
         process: Process,
         sessionId: String,
-        didTimeout: AtomicBool,
-        timeoutWork: DispatchWorkItem,
-        totalTimeoutWork: DispatchWorkItem,
+        didTimeout: OSAllocatedUnfairLock<Bool>,
+        timeoutTask: Task<Void, Never>,
+        totalTimeoutTask: Task<Void, Never>,
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
         executor: ClaudeExecutorService,
         cleanupStdin: FileHandle?
@@ -420,7 +419,7 @@ actor ClaudeExecutorService {
             let chunk = handle.availableData
             if chunk.isEmpty { break }
 
-            timeoutWork.cancel()
+            timeoutTask.cancel()
             buffer.append(chunk)
 
             guard let bufferString = String(data: buffer, encoding: .utf8) else {
@@ -447,12 +446,12 @@ actor ClaudeExecutorService {
         }
 
         process.waitUntilExit()
-        timeoutWork.cancel()
-        totalTimeoutWork.cancel()
+        timeoutTask.cancel()
+        totalTimeoutTask.cancel()
 
         let exitCode = process.terminationStatus
         if exitCode != 0 {
-            if didTimeout.value {
+            if didTimeout.withLock({ $0 }) {
                 logger.debug("Process killed by timeout (exit \(exitCode))")
                 continuation.yield(.error(StreamError(
                     code: "TIMEOUT",

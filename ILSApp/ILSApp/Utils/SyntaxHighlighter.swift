@@ -1,7 +1,10 @@
 import Foundation
 import os
-import Splash
-import SwiftUI
+// CONC-18: @preconcurrency suppresses Sendable warnings from the pre-Swift-6 Splash library.
+@preconcurrency import Splash
+// CONC-25: @preconcurrency suppresses 'KeyPath cannot capture non-Sendable' warnings generated
+// by AttributedString SwiftUI attribute key paths (.font, .foregroundColor) in strict concurrency mode.
+@preconcurrency import SwiftUI
 
 /// Wrapper around Splash library for syntax highlighting code.
 /// Nonisolated with OSAllocatedUnfairLock-protected cache so highlighting
@@ -50,8 +53,13 @@ enum SyntaxHighlighter {
     /// Return plain monospace text
     private static func plainMonospace(_ code: String) -> AttributedString {
         var attributedString = AttributedString(code)
-        attributedString.font = .system(.body, design: .monospaced)
-        attributedString.foregroundColor = SwiftUI.Color.primary
+        // CONC-25: Use AttributedStringKey.Type subscript instead of @dynamicMemberLookup
+        // (.font / .foregroundColor). The dynamic member lookup creates a KeyPath<
+        // AttributeScopes.SwiftUIAttributes, FooAttribute> which is non-Sendable and triggers
+        // '<unknown>:0' warnings in strict concurrency mode. The type-subscript overload
+        // avoids KeyPath formation entirely.
+        attributedString[AttributeScopes.SwiftUIAttributes.FontAttribute.self] = .system(.body, design: .monospaced)
+        attributedString[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = SwiftUI.Color.primary
         return attributedString
     }
 }
@@ -87,11 +95,13 @@ private struct AttributedStringOutputFormat: OutputFormat {
 
             for component in components {
                 var segment = AttributedString(component.text)
-                segment.font = .system(.body, design: .monospaced)
+                // CONC-25: Type-subscript avoids @dynamicMemberLookup KeyPath formation.
+                segment[AttributeScopes.SwiftUIAttributes.FontAttribute.self] = .system(.body, design: .monospaced)
 
                 // Apply color based on token type
                 if let tokenType = component.token {
-                    segment.foregroundColor = colorForTokenType(tokenType)
+                    // CONC-25: Type-subscript avoids @dynamicMemberLookup KeyPath formation.
+                    segment[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = colorForTokenType(tokenType)
                 }
 
                 result.append(segment)

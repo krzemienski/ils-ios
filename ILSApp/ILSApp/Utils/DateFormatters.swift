@@ -4,7 +4,9 @@ import Foundation
 /// DateFormatter is expensive to create — these are shared static instances.
 enum DateFormatters {
     /// Relative date/time (e.g., "2 hours ago")
-    static let relativeDateTime: RelativeDateTimeFormatter = {
+    // CONC-17: nonisolated(unsafe) — RelativeDateTimeFormatter is not Sendable in the SDK,
+    // but this instance is configured once at startup and never mutated after creation.
+    nonisolated(unsafe) static let relativeDateTime: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter

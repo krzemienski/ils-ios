@@ -57,7 +57,9 @@ actor SyncCoordinator {
     /// this instance is never deallocated. The observer closure creates a new Task that
     /// accesses SyncCoordinator.shared (not capturing self), so no retain cycle exists.
     /// MEM-04: Verified — observer lifecycle is correct for singleton pattern.
-    private nonisolated let notificationObserver: NSObjectProtocol
+    /// CONC-14: nonisolated(unsafe) because NSObjectProtocol doesn't conform to Sendable,
+    /// but this observer is only ever created once in init and read in deinit — no data race.
+    nonisolated(unsafe) private let notificationObserver: NSObjectProtocol
 
     private init() {
         queue = Self.loadQueue()

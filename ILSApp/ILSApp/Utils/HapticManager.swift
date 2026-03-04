@@ -2,14 +2,19 @@
 import UIKit
 
 enum HapticManager {
+    // CONC-26: @MainActor required — UIKit feedback generators must be created and triggered
+    // on the main thread. Swift 6 strict mode infers @MainActor for UIKit types (SE-0434).
+    @MainActor
     static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
     }
 
+    @MainActor
     static func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         UINotificationFeedbackGenerator().notificationOccurred(type)
     }
 
+    @MainActor
     static func selection() {
         UISelectionFeedbackGenerator().selectionChanged()
     }

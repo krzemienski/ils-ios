@@ -11,7 +11,7 @@ import Crypto
 ///
 /// Scans `~/.claude/projects/` for sessions-index.json files and reads JSONL transcript files.
 /// Each project directory is URL-encoded and contains session metadata + transcript files.
-struct SessionFileService {
+struct SessionFileService: @unchecked Sendable {
     private let fileManager = FileManager.default
 
     /// Home directory path
@@ -32,14 +32,14 @@ struct SessionFileService {
     // MARK: - Date Parsing
 
     /// Flexible ISO8601 date formatter that handles fractional seconds
-    private static let flexibleISO8601Formatter: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let flexibleISO8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
     /// Fallback ISO8601 formatter without fractional seconds
-    private static let fallbackISO8601Formatter: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let fallbackISO8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter

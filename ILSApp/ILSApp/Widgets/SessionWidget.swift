@@ -1,6 +1,18 @@
 #if canImport(WidgetKit)
-import WidgetKit
+// CONC-28: @preconcurrency suppresses Sendable warnings for WidgetKit TimelineProvider
+// completion callbacks, which pre-date Swift 6 and lack @Sendable annotations.
+@preconcurrency import WidgetKit
 import SwiftUI
+
+// MARK: - Sendable Completion Wrapper
+
+/// Wraps a WidgetKit completion callback (which lacks @Sendable) as @unchecked Sendable
+/// so it can be safely captured by a Task. WidgetKit guarantees correct thread handling
+/// for these callbacks — the @unchecked annotation is an explicit trust-the-framework call.
+private final class SendableCompletion<T>: @unchecked Sendable {
+    let call: (T) -> Void
+    init(_ completion: @escaping (T) -> Void) { self.call = completion }
+}
 
 // MARK: - Session Widget Timeline Provider
 
@@ -17,22 +29,29 @@ struct SessionTimelineProvider: TimelineProvider {
             completion(.placeholder)
             return
         }
-        Task {
-            let sessions = await dataProvider.fetchRecentSessions()
+        // CONC-28: Wrap non-@Sendable WidgetKit completion in SendableCompletion box so Task
+        // can capture it without a 'passing closure as sending parameter' warning.
+        let provider = dataProvider
+        let box = SendableCompletion(completion)
+        Task { [provider, box] in
+            let sessions = await provider.fetchRecentSessions()
             let entry = SessionWidgetEntry(date: Date(), sessions: sessions, isPlaceholder: false)
-            completion(entry)
+            box.call(entry)
         }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SessionWidgetEntry>) -> Void) {
-        Task {
-            let sessions = await dataProvider.fetchRecentSessions()
+        // CONC-28: Wrap non-@Sendable WidgetKit completion in SendableCompletion box.
+        let provider = dataProvider
+        let box = SendableCompletion(completion)
+        Task { [provider, box] in
+            let sessions = await provider.fetchRecentSessions()
             let entry = SessionWidgetEntry(date: Date(), sessions: sessions, isPlaceholder: false)
 
             // Refresh every 15 minutes
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-            completion(timeline)
+            box.call(timeline)
         }
     }
 }

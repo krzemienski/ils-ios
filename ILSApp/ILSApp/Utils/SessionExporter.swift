@@ -8,6 +8,7 @@ enum SessionExporter {
     }
 
     /// Present platform-appropriate share UI for a session.
+    @MainActor
     static func share(_ session: ChatSession) {
         let text = exportText(for: session)
 

@@ -10,7 +10,7 @@ import ILSShared
 /// - Checks `~/.claude/settings.local.json` for enabled server list
 ///
 /// Supports both stdio and HTTP MCP server types.
-struct MCPFileService {
+struct MCPFileService: @unchecked Sendable {
     private let fileManager = FileManager.default
 
     /// Cache TTL in seconds (default: 30s)

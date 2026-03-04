@@ -24,9 +24,11 @@ class PollingManager {
     private var retryTask: Task<Void, Never>?
     private var healthPollTask: Task<Void, Never>?
     // NET-MED-2: Observer for network restoration to resume polling.
-    private var networkObserver: NSObjectProtocol?
+    // CONC-20: nonisolated(unsafe) so deinit (which is nonisolated) can access the observer
+    // without a Sendable violation. Both observers are created once in init and read in deinit.
+    nonisolated(unsafe) private var networkObserver: NSObjectProtocol?
     // BATT-01: Observer for Low Power Mode changes to restart polling with adapted intervals.
-    private var lpmObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var lpmObserver: NSObjectProtocol?
 
     init(connectionManager: ConnectionManager) {
         self.connectionManager = connectionManager
