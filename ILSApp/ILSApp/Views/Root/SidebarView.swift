@@ -156,6 +156,10 @@ struct SidebarView: View {
             #endif
             await sessionsViewModel.loadProjectGroups()
         }
+        // Cmd+N keyboard shortcut: open new session sheet
+        .onReceive(NotificationCenter.default.publisher(for: .ilsCreateNewSession)) { _ in
+            showNewSessionSheet = true
+        }
     }
 
     // MARK: - Header

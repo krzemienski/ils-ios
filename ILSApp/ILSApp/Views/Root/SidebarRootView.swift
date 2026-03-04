@@ -118,7 +118,9 @@ struct SidebarRootView: View {
     @State private var previousScreen: ActiveScreen? = nil
     @State private var sidebarDragOffset: CGFloat = 0
     /// Controls NavigationSplitView column visibility on iPad, allowing the sidebar column
-    /// to be shown or hidden programmatically.
+    /// to be shown or hidden programmatically. Defaults to `.all` so the sidebar is always
+    /// visible on launch; the system auto-collapses it to `.detailOnly` when the Split View
+    /// window is too narrow (e.g., 1/3 split on iPad mini landscape).
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     /// Initial segment selection forwarded to ``BrowserView`` when navigation is triggered
     /// via `onNavigateToBrowser` from the home screen.
@@ -243,6 +245,14 @@ struct SidebarRootView: View {
     // MARK: - iPad Layout (Persistent Sidebar)
 
     private var iPadLayout: some View {
+        // IPAD-SPLIT-1: NavigationSplitView column widths are chosen to remain functional
+        // across all Split View configurations:
+        //   • 1/3 split (≈398pt on iPad 11" landscape): sidebar min 200 leaves ≈198pt for content.
+        //     On narrower devices (iPad mini landscape 1/3 ≈248pt) the system auto-collapses
+        //     the sidebar to .detailOnly; the restore button below lets the user bring it back.
+        //   • 1/2 split (≈512pt): sidebar fits comfortably at ideal 280pt.
+        //   • 2/3 split / full screen: extra room uses up to max 360pt.
+        // columnVisibility defaults to .all so the sidebar is immediately visible on launch.
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView(
                 sessionsViewModel: sessionsVM,
@@ -254,10 +264,20 @@ struct SidebarRootView: View {
                 activityFeedUnreadCount: activityFeedVM.unreadCount
             )
             .background(theme.bgSidebar)
-            .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
+            .navigationSplitViewColumnWidth(min: 200, ideal: 280, max: 360)
         } detail: {
-            mainContent(showHamburger: false)
+            mainContent(showHamburger: false, ipadSidebarCollapsed: columnVisibility == .detailOnly) {
+                columnVisibility = .all
+            }
         }
+        #if os(iOS)
+        // IPAD-KB-1: Zero-size overlay that provides global Cmd+N / Cmd+, shortcuts for
+        // external keyboard users. Positioned on iPadLayout (regular width only) since
+        // iPhone users don't typically pair physical keyboards.
+        .overlay {
+            iPadKeyboardShortcutOverlay()
+        }
+        #endif
     }
 
     // MARK: - iPhone Layout (Overlay Sidebar)
@@ -287,6 +307,12 @@ struct SidebarRootView: View {
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
         NavigationStack(path: $navigationPath) {
+    private func mainContent(
+        showHamburger: Bool,
+        ipadSidebarCollapsed: Bool = false,
+        onShowIPadSidebar: (() -> Void)? = nil
+    ) -> some View {
+        NavigationStack {
             Group {
                 switch activeScreen {
                 case .home:
@@ -346,6 +372,7 @@ struct SidebarRootView: View {
             #endif
             .toolbar {
                 if showHamburger {
+                    // iPhone: overlay sidebar toggle
                     #if os(iOS)
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
@@ -372,6 +399,24 @@ struct SidebarRootView: View {
                     }
                     #endif
                 }
+                // IPAD-SPLIT-2: iPad Split View — sidebar was auto-collapsed by the system
+                // (e.g., at 1/3 screen width). Show a restore button so the user can expand
+                // it again without needing to know to drag from the edge.
+                // Kept as a separate #if os(iOS) block to avoid an empty else-if branch on macOS
+                // (ToolbarContentBuilder requires an expression in every branch).
+                #if os(iOS)
+                if !showHamburger, ipadSidebarCollapsed, let showSidebar = onShowIPadSidebar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: showSidebar) {
+                            Image(systemName: "sidebar.left")
+                                .font(.system(size: theme.fontTitle3, weight: .medium, design: theme.fontDesign))
+                                .foregroundStyle(theme.textPrimary)
+                        }
+                        .accessibilityLabel("Show sidebar")
+                        .accessibilityHint("Shows navigation sidebar")
+                    }
+                }
+                #endif
             }
         }
         .tint(theme.accent)

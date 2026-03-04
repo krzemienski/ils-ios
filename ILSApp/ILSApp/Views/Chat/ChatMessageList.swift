@@ -68,11 +68,17 @@ struct ChatMessageList: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// On regular (iPad) size class, caps message content at a readable max width.
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 messagesContent
+                    // IPAD-CW: Cap readable content width at 800pt on regular (iPad) size class
+                    // and center it. On compact (iPhone) size class this is a no-op.
+                    .frame(maxWidth: horizontalSizeClass == .regular ? 800 : .infinity)
+                    .frame(maxWidth: .infinity)
             }
             .onChange(of: messages.count) { oldCount, newCount in
                 let isNewMessage = oldCount > 0 && newCount == oldCount + 1

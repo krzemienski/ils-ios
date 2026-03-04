@@ -91,6 +91,7 @@ targets:
         NSSpeechRecognitionUsageDescription: "Speech recognition is used to convert your voice into text for chat messages."
         NSFaceIDUsageDescription: "Face ID is used to protect your server credentials stored in the Keychain."
         NSSupportsLiveActivities: true
+        UIApplicationSupportsMultipleScenes: true
         UILaunchScreen: {}
     entitlements:
       path: ILSApp/ILSApp.entitlements

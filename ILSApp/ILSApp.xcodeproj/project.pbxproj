@@ -222,6 +222,8 @@
 		5624272C38C3CAFBFB1D618C /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DEE8624B9BCC400474F4F46 /* AppConstants.swift */; };
 		566B63F0CEDAD0931B75BC76 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80552C5B47B45FB0F4A2E25 /* APIClient.swift */; };
 		5822ED0453AC8655FB57E86A /* SidebarRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138C7CC5E048F4B6BDBB35AF /* SidebarRootView.swift */; };
+		B52C605C3520A4CA937A0A0B /* iPadKeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D21690A1AF6A638D4359F78 /* iPadKeyboardShortcuts.swift */; };
+		8289A5A683971C940AE10B35 /* iPadKeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D21690A1AF6A638D4359F78 /* iPadKeyboardShortcuts.swift */; };
 		59D54CF6CB8A3DF9A89CE17A /* ThemeTypographySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D20194415A10CB918E81BE13 /* ThemeTypographySection.swift */; };
 		59F68FD66D979C5E137A3D2C /* checkpoint-2026-02-02T00-32-47-055Z.json in Resources */ = {isa = PBXBuildFile; fileRef = DD95A5182EF3AAEC215B8830 /* checkpoint-2026-02-02T00-32-47-055Z.json */; };
 		5AB34314A4A3CD36A92275CA /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80552C5B47B45FB0F4A2E25 /* APIClient.swift */; };
@@ -634,6 +636,7 @@
 		D10C98B835F44D2984C9D7B8 /* ActivityFeedFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedFilterSheet.swift; sourceTree = "<group>"; };
 		126022DAC2872BEEF6363538 /* MetricChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChart.swift; sourceTree = "<group>"; };
 		138C7CC5E048F4B6BDBB35AF /* SidebarRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarRootView.swift; sourceTree = "<group>"; };
+		9D21690A1AF6A638D4359F78 /* iPadKeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPadKeyboardShortcuts.swift; sourceTree = "<group>"; };
 		16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSettingsView.swift; sourceTree = "<group>"; };
 		A1F302E8C94D5B7208EF1A3C /* TunnelSetupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelSetupWizardView.swift; sourceTree = "<group>"; };
 		1695ADC93CE18946E4C2517E /* HooksManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksManagementView.swift; sourceTree = "<group>"; };
@@ -1573,6 +1576,7 @@
 			isa = PBXGroup;
 			children = (
 				138C7CC5E048F4B6BDBB35AF /* SidebarRootView.swift */,
+				9D21690A1AF6A638D4359F78 /* iPadKeyboardShortcuts.swift */,
 				0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */,
 				70D04010DA9C7A983032E9DA /* SidebarView.swift */,
 			);
@@ -2115,6 +2119,7 @@
 				5822ED0453AC8655FB57E86A /* SidebarRootView.swift in Sources */,
 				99E148F9DFA37DFE3B2FA1E8 /* SidebarSessionRow.swift in Sources */,
 				B78070D42E4A59D3915BDE36 /* SidebarView.swift in Sources */,
+				B52C605C3520A4CA937A0A0B /* iPadKeyboardShortcuts.swift in Sources */,
 				E7D3BC1639AAA28B55815CB9 /* SkeletonRow.swift in Sources */,
 				13CE47CFDFAC732CFBB9EDC1 /* SkillDetailView.swift in Sources */,
 				DE34AC0159DFC8DE7ED2A9A6 /* SkillsViewModel.swift in Sources */,
@@ -2391,6 +2396,7 @@
 				055302D91508C8565DAA4919 /* SidebarRootView.swift in Sources */,
 				3456C04282352EE13ABAB0B4 /* SidebarSessionRow.swift in Sources */,
 				4A0C8AC0630B3881FAF58087 /* SidebarView.swift in Sources */,
+				8289A5A683971C940AE10B35 /* iPadKeyboardShortcuts.swift in Sources */,
 				0EBC9B472715CF5DCC8EDDF4 /* SkeletonRow.swift in Sources */,
 				0116261DC4C2DAD124FAB937 /* SkillDetailView.swift in Sources */,
 				81BD7A2F3D77F9EC7CDFEA58 /* SkillsViewModel.swift in Sources */,

@@ -277,6 +277,24 @@ struct ChatView: View {
                 await viewModel.searchMessages(query: newValue)
             }
         }
+        // MARK: - External Keyboard Shortcuts (iPad)
+        // Hidden buttons that respond to hardware keyboard input without affecting the UI.
+        .overlay {
+            ZStack {
+                Button("Open Command Palette") {
+                    sheets.showCommandPalette = true
+                }
+                .keyboardShortcut("k", modifiers: .command)
+
+                Button("Cancel Streaming") {
+                    viewModel.cancel()
+                }
+                .keyboardShortcut(.escape, modifiers: [])
+            }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .allowsHitTesting(false)
+        }
     }
 
     // MARK: - View Components
