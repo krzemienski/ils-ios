@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 
 enum SidebarSection: String, CaseIterable, Identifiable {
     case home = "Home"
+    case splitView = "Split View"
     case system = "System Monitor"
     case browser = "Browse"
     case teams = "Agent Teams"
@@ -23,6 +24,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .home: return "house.fill"
+        case .splitView: return "rectangle.split.2x1.fill"
         case .system: return "gauge.with.dots.needle.33percent"
         case .browser: return "square.grid.2x2.fill"
         case .teams: return "person.3.fill"
@@ -38,6 +40,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
     var screen: ActiveScreen {
         switch self {
         case .home: return .home
+        case .splitView: return .splitView
         case .system: return .system
         case .browser: return .browser
         case .teams: return .teams
@@ -61,6 +64,8 @@ struct MacContentView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @State private var sessionsViewModel = SessionsViewModel()
     @State private var activityFeedVM = ActivityFeedViewModel()
+    /// Multi-session split view model, owned by this view and shared with the split view detail.
+    @State private var multiSessionVM = MultiSessionViewModel()
     @AppStorage("enableAgentTeams") private var enableAgentTeams = false
 
     @State private var selectedSection: SidebarSection? = .home
@@ -86,6 +91,8 @@ struct MacContentView: View {
     @State private var renameText: String = ""
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @FocusState private var isSearchFocused: Bool
+    /// Whether the "too many pinned sessions" limit alert is visible.
+    @State private var showPinLimitAlert = false
 
     @State private var showGlobalCommandPalette = false
     @State private var commandRegistry = CommandRegistry()
@@ -108,6 +115,8 @@ struct MacContentView: View {
             }
             .navigationSplitViewColumnWidth(min: 600, ideal: 800)
         }
+        .environment(multiSessionVM)
+        .environment(sessionsViewModel)
         .task {
             sessionsViewModel.configure(client: appState.apiClient)
             activityFeedVM.configure(client: appState.apiClient)
@@ -237,6 +246,11 @@ struct MacContentView: View {
             }
         } message: {
             Text("Enter a new name for this session")
+        }
+        .alert("Split View Full", isPresented: $showPinLimitAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("You can pin at most 4 sessions to Split View. Unpin a session before adding another.")
         }
     }
 
@@ -462,6 +476,8 @@ struct MacContentView: View {
             UnifiedSessionsView(onSessionSelected: { tagged in
                 activeScreen = .chat(tagged.session)
             })
+        case .splitView:
+            MultiSessionSplitView(multiSessionVM: multiSessionVM, sessionsVM: sessionsViewModel)
         }
     }
 
@@ -537,6 +553,22 @@ struct MacContentView: View {
                             }
                         } label: {
                             Label("Fork Session", systemImage: "arrow.branch")
+                        }
+
+                        let isPinned = multiSessionVM.isPinned(session)
+                        Button {
+                            if isPinned {
+                                multiSessionVM.unpinSession(session)
+                            } else if multiSessionVM.pinnedSessionIds.count >= 4 {
+                                showPinLimitAlert = true
+                            } else {
+                                multiSessionVM.pinSession(session)
+                            }
+                        } label: {
+                            Label(
+                                isPinned ? "Unpin from Split View" : "Pin to Split View",
+                                systemImage: isPinned ? "pin.slash" : "pin"
+                            )
                         }
 
                         Divider()
@@ -815,6 +847,7 @@ struct MacContentView: View {
         case .chat: selectedSection = .home
         case .activityFeed: selectedSection = .home
         case .sessionForkTree: selectedSection = .home
+        case .splitView: selectedSection = .splitView
         }
         activeScreen = intent
         appState.navigationIntent = nil

@@ -24,6 +24,7 @@ enum ActiveScreen: Hashable {
     case terminal
     case backends
     case unifiedSessions
+    case splitView
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -46,6 +47,7 @@ enum ActiveScreen: Hashable {
         case .terminal: return "terminal"
         case .backends: return "backends"
         case .unifiedSessions: return "unifiedSessions"
+        case .splitView: return "splitView"
         }
     }
 
@@ -65,6 +67,7 @@ enum ActiveScreen: Hashable {
         case "terminal": return .terminal
         case "backends": return .backends
         case "unifiedSessions": return .unifiedSessions
+        case "splitView": return .splitView
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -146,6 +149,8 @@ struct SidebarRootView: View {
     @State private var activityFeedVM = ActivityFeedViewModel()
     /// NavigationStack path for programmatic push-navigation within the active screen.
     @State private var navigationPath = NavigationPath()
+    /// Multi-session split view model, owned by this root view and shared with split view screens.
+    @State private var multiSessionVM = MultiSessionViewModel()
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -357,6 +362,8 @@ struct SidebarRootView: View {
                     backendsScreen
                 case .unifiedSessions:
                     unifiedSessionsScreen
+                case .splitView:
+                    splitViewScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -411,6 +418,8 @@ struct SidebarRootView: View {
                 }
             }
         }
+        .environment(multiSessionVM)
+        .environment(sessionsVM)
         .tint(theme.accent)
     }
 
@@ -522,6 +531,11 @@ struct SidebarRootView: View {
         UnifiedSessionsView(onSessionSelected: { tagged in
             navigateToChat(tagged.session)
         })
+    }
+
+    @ViewBuilder
+    private var splitViewScreen: some View {
+        MultiSessionSplitView(multiSessionVM: multiSessionVM, sessionsVM: sessionsVM)
     }
 
     // MARK: - Chat Navigation

@@ -31,7 +31,13 @@ struct ChatView: View {
     /// Optional closure invoked when the user taps the back button. When non-nil a back
     /// button replaces the hamburger menu in the toolbar leading position.
     var onBack: (() -> Void)? = nil
+    /// Optional closure invoked when the user swipes to switch to a different pinned session
+    /// (iPhone compact-width only). The caller should navigate to the provided session.
+    var onSessionSwitch: ((ChatSession) -> Void)? = nil
     @Environment(AppState.self) var appState
+    @Environment(MultiSessionViewModel.self) private var multiSessionVM
+    @Environment(SessionsViewModel.self) private var sessionsVM
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     /// View model managing chat messages, streaming state, and session connectivity.
     @State private var viewModel = ChatViewModel()
     /// View model for checkpoint operations — injected into `viewModel` for ILS-managed sessions.
@@ -398,6 +404,17 @@ struct ChatView: View {
         #if os(iOS)
         .animation(.easeInOut(duration: 0.25), value: speechService.isRecording)
         #endif
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if horizontalSizeClass == .compact {
+                let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
+                PersistentSessionStatusBar(
+                    pinnedSessions: pinned,
+                    onSessionSelected: { selected in
+                        onSessionSwitch?(selected)
+                    }
+                )
+            }
+        }
     }
 
     /// Conditionally shows a streaming or connection status indicator at the top of the view.
@@ -478,6 +495,44 @@ struct ChatView: View {
                 isInputFocused = false
             }
         )
+        .simultaneousGesture(
+            sessionSwipeGesture,
+            isEnabled: horizontalSizeClass == .compact && onSessionSwitch != nil
+        )
+    }
+
+    // MARK: - Session Swipe Navigation
+
+    /// Horizontal drag gesture for cycling through pinned sessions on iPhone.
+    ///
+    /// Activates only when the gesture begins past x=50 to avoid conflicting with
+    /// the sidebar reveal gesture. Swipe left advances to the next pinned session;
+    /// swipe right retreats to the previous one. Fires a light haptic on completion.
+    private var sessionSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 40)
+            .onEnded { value in
+                guard value.startLocation.x > 50 else { return }
+                let translation = value.translation.width
+                guard abs(translation) > 60 else { return }
+
+                let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
+                guard pinned.count >= 2 else { return }
+                guard let currentIndex = pinned.firstIndex(where: { $0.id == session.id }) else { return }
+
+                let target: ChatSession
+                if translation < 0 {
+                    // Swipe left → next session
+                    let nextIndex = (currentIndex + 1) % pinned.count
+                    target = pinned[nextIndex]
+                } else {
+                    // Swipe right → previous session
+                    let prevIndex = (currentIndex - 1 + pinned.count) % pinned.count
+                    target = pinned[prevIndex]
+                }
+
+                HapticManager.impact(.light)
+                onSessionSwitch?(target)
+            }
     }
 
     // MARK: - Search UI
@@ -682,6 +737,25 @@ struct ChatView: View {
             .accessibilityIdentifier("search-messages-button")
         }
 
+        // Pin/Unpin button — iPad and Mac only (regular horizontal size class).
+        if horizontalSizeClass == .regular {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                let isPinned = multiSessionVM.isPinned(session)
+                Button {
+                    if isPinned {
+                        multiSessionVM.unpinSession(session)
+                    } else {
+                        multiSessionVM.pinSession(session)
+                    }
+                    HapticManager.selection()
+                } label: {
+                    Image(systemName: isPinned ? "pin.fill" : "pin")
+                        .foregroundStyle(isPinned ? theme.accent : theme.textSecondary)
+                }
+                .accessibilityLabel(isPinned ? "Unpin from Split View" : "Pin to Split View")
+                .accessibilityIdentifier("pin-session-button")
+            }
+        }
 
         ToolbarItem(placement: .primaryAction) {
             Menu {
@@ -857,4 +931,6 @@ struct ChatView: View {
             lastActiveAt: Date()
         ))
     }
+    .environment(MultiSessionViewModel())
+    .environment(SessionsViewModel())
 }
