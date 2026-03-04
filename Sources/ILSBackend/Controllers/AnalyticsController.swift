@@ -253,8 +253,8 @@ struct AnalyticsController: RouteCollection {
             modelMap[model] = (current.sessionCount + 1, current.messageCount + session.messageCount)
         }
 
-        let modelUsage = modelMap.map { (model, counts) -> ModelUsageStat in
-            ModelUsageStat(
+        let modelUsage = modelMap.map { (model, counts) -> AnalyticsModelUsageStat in
+            AnalyticsModelUsageStat(
                 model: model,
                 sessionCount: counts.sessionCount,
                 messageCount: counts.messageCount,

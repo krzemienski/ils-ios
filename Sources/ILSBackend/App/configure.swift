@@ -107,6 +107,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddMessagesFTS5())
     // v5.6 — Search history
     app.migrations.add(CreateSearchHistory())
+    // v5.7 — Enhanced checkpoint system (export/backup)
+    app.migrations.add(CreateSessionCheckpoints())
 
     // Run migrations
     try await app.autoMigrate()

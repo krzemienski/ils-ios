@@ -1090,12 +1090,6 @@ public struct ModelRoutingRequest: Codable, Sendable {
     /// When `true`, prioritise lower-latency models over higher-quality ones.
     public let preferSpeed: Bool?
 
-    /// Creates a model routing request.
-    /// - Parameters:
-    ///   - prompt: The prompt or task description.
-    ///   - projectId: Optional project context.
-    ///   - maxBudgetUSD: Maximum acceptable cost in USD.
-    ///   - preferSpeed: Whether to prioritise speed over quality.
     public init(
         prompt: String,
         projectId: UUID? = nil,
@@ -1121,12 +1115,6 @@ public struct ModelRoutingResponse: Codable, Sendable {
     /// Ordered list of alternative model identifiers the caller may use instead.
     public let alternativeModels: [String]
 
-    /// Creates a model routing response.
-    /// - Parameters:
-    ///   - suggestedModel: The recommended Claude model identifier.
-    ///   - reasoning: Human-readable explanation of the recommendation.
-    ///   - estimatedCostUSD: Estimated cost in USD for the suggested model.
-    ///   - alternativeModels: Ordered list of alternative model identifiers.
     public init(
         suggestedModel: String,
         reasoning: String,
@@ -1137,6 +1125,60 @@ public struct ModelRoutingResponse: Codable, Sendable {
         self.reasoning = reasoning
         self.estimatedCostUSD = estimatedCostUSD
         self.alternativeModels = alternativeModels
+    }
+}
+
+// MARK: - Checkpoint & Backup Requests
+
+// CreateCheckpointRequest is defined in Checkpoint.swift (uses label/isAuto/maxRetained).
+
+/// Request to fork a session starting from a specific message.
+public struct ForkFromMessageRequest: Codable, Sendable {
+    public let messageId: UUID
+    public let name: String?
+
+    public init(messageId: UUID, name: String? = nil) {
+        self.messageId = messageId
+        self.name = name
+    }
+}
+
+/// Request to bulk-export multiple sessions at once.
+public struct BulkExportRequest: Codable, Sendable {
+    public let sessionIds: [UUID]
+    public let format: ExportFormat
+    public let includeMessages: Bool?
+
+    public init(sessionIds: [UUID], format: ExportFormat, includeMessages: Bool? = nil) {
+        self.sessionIds = sessionIds
+        self.format = format
+        self.includeMessages = includeMessages
+    }
+}
+
+/// Request to import a previously exported session.
+public struct ImportSessionRequest: Codable, Sendable {
+    public let export: ChatExport
+    public let projectId: UUID?
+
+    public init(export: ChatExport, projectId: UUID? = nil) {
+        self.export = export
+        self.projectId = projectId
+    }
+}
+
+/// Result of a session integrity check.
+public struct IntegrityCheckResult: Codable, Sendable {
+    public let sessionId: UUID
+    public let passed: Bool
+    public let issues: [String]
+    public let checkedAt: Date
+
+    public init(sessionId: UUID, passed: Bool, issues: [String] = [], checkedAt: Date = Date()) {
+        self.sessionId = sessionId
+        self.passed = passed
+        self.issues = issues
+        self.checkedAt = checkedAt
     }
 }
 

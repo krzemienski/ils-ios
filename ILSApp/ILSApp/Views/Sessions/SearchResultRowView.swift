@@ -116,6 +116,8 @@ struct SearchResultRowView: View {
             return "USER"
         case .assistant:
             return "ASST"
+        case .system:
+            return "SYS"
         }
     }
 
@@ -125,6 +127,8 @@ struct SearchResultRowView: View {
             return theme.accent
         case .assistant:
             return theme.entityMCP
+        case .system:
+            return theme.entitySystem
         }
     }
 }

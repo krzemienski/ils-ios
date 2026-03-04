@@ -330,6 +330,18 @@ class ChatViewModel {
                             self.lastCheckpointMessageCount = count
                             self.createAutoCheckpoint()
                         }
+
+                        // Also notify the backup service for server-side checkpoint tracking
+                        if let sessionId = self.sessionId, let apiClient = self.apiClient {
+                            let newCount = self.messages.count
+                            Task {
+                                await SessionBackupService.shared.didSendMessage(
+                                    sessionId: sessionId,
+                                    newCount: newCount,
+                                    client: apiClient
+                                )
+                            }
+                        }
                     }
                     lastStreaming = streaming
                 }

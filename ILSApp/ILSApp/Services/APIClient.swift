@@ -442,6 +442,64 @@ actor APIClient {
         )
     }
 
+    // MARK: - Checkpoint & Export Helpers
+
+    private struct CreateCheckpointBody: Encodable {
+        let name: String
+        let isAutomatic: Bool?
+    }
+
+    private struct BulkExportBody: Encodable {
+        let sessionIds: [UUID]
+        let format: String
+        let includeMessages: Bool?
+    }
+
+    private struct EmptyRequestBody: Encodable {}
+
+    /// List all checkpoints for a session, sorted by creation date descending.
+    func listCheckpoints<T: Decodable>(sessionId: UUID) async throws -> T {
+        return try await get("/sessions/\(sessionId.uuidString)/checkpoints", cacheTTL: 0)
+    }
+
+    /// Create a named checkpoint for a session at the current message count.
+    func createCheckpoint<T: Decodable>(sessionId: UUID, name: String, isAutomatic: Bool = false) async throws -> T {
+        let body = CreateCheckpointBody(name: name, isAutomatic: isAutomatic)
+        return try await post("/sessions/\(sessionId.uuidString)/checkpoints", body: body)
+    }
+
+    /// Delete a checkpoint by ID.
+    func deleteCheckpoint<T: Decodable>(id: UUID) async throws -> T {
+        return try await delete("/sessions/checkpoints/\(id.uuidString)")
+    }
+
+    /// Restore (fork) a session from a checkpoint by its ID.
+    func restoreCheckpoint<T: Decodable>(id: UUID) async throws -> T {
+        return try await post("/sessions/checkpoints/\(id.uuidString)/restore", body: EmptyRequestBody())
+    }
+
+    /// Import a previously exported session. Pass an `ImportSessionRequest` as the body.
+    func importSession<T: Decodable, B: Encodable>(export: B) async throws -> T {
+        return try await post("/sessions/import", body: export)
+    }
+
+    /// Bulk-export multiple sessions as a JSON array of `ChatExport` objects.
+    /// - Parameters:
+    ///   - sessionIds: Session UUIDs to include in the export.
+    ///   - format: Export format string ("json", "markdown", or "text"). Defaults to "json".
+    ///   - includeMessages: Whether to include full message content. Defaults to `nil` (server default).
+    func bulkExport<T: Decodable>(sessionIds: [UUID], format: String = "json", includeMessages: Bool? = nil) async throws -> T {
+        let body = BulkExportBody(sessionIds: sessionIds, format: format, includeMessages: includeMessages)
+        return try await post("/sessions/bulk-export", body: body)
+    }
+
+    /// Run an integrity check verifying session `messageCount` against stored messages.
+    /// - Parameter fix: If `true`, the backend repairs inconsistencies in place.
+    func runIntegrityCheck<T: Decodable>(fix: Bool = false) async throws -> T {
+        let path = fix ? "/sessions/integrity-check?fix=true" : "/sessions/integrity-check"
+        return try await get(path, cacheTTL: 0)
+    }
+
     /// Invalidate cache entries affected by a mutation (POST/PUT/DELETE).
     /// Removes the exact resource path and its parent list endpoint from both
     /// the NSCache (TTL cache) and conditionalCache (ETag backing store).

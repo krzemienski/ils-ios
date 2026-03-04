@@ -89,6 +89,9 @@ extension ListResponse: @unchecked Sendable where T: Sendable {}
 // MARK: - Request Types
 extension CreateProjectRequest: Content {}
 extension UpdateProjectRequest: Content {}
+extension CreateCheckpointRequest: Content {}
+extension BulkExportRequest: Content {}
+extension ImportSessionRequest: Content {}
 extension CreateSessionRequest: Content {}
 extension SessionScanResponse: Content {}
 extension RecentSessionsResponse: Content {}
@@ -173,6 +176,7 @@ extension ProjectHealthSummary: Content {}
 extension ProjectHealthSummary.HealthScoreTrendPoint: Content {}
 extension DeletedResponse: Content {}
 extension DataErasureResponse: Content {}
+extension IntegrityCheckResult: Content {}
 extension AcknowledgedResponse: Content {}
 extension CancelledResponse: Content {}
 extension EnabledResponse: Content {}
@@ -187,6 +191,7 @@ extension GitHubFileEntry: Content {}
 extension SessionTemplate: Content {}
 extension Project: Content {}
 extension ChatSession: Content {}
+extension SessionCheckpoint: Content {}
 extension Message: Content {}
 extension MessageRole: Content {}
 extension ExternalSession: Content {}
@@ -241,6 +246,7 @@ extension SuggestionFeedbackRequest: Content {}
 extension ModelRoutingRequest: Content {}
 extension ModelRoutingResponse: Content {}
 extension ModelUsageStat: Content {}
+extension AnalyticsModelUsageStat: Content {}
 extension ModelStatsResponse: Content {}
 extension UpdateSessionModelRequest: Content {}
 

@@ -47,6 +47,10 @@ struct HomeView: View {
     @State private var isRefreshing = false
     /// Controls presentation of the ``DashboardLayoutPickerView`` sheet.
     @State private var showLayoutPicker = false
+    /// Controls presentation of the new-session sheet from the Quick Actions card.
+    @State private var showNewSessionSheet = false
+    /// Text binding for the searchable modifier on recent sessions.
+    @State private var sessionSearchText = ""
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -435,6 +439,47 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .shimmer()
+    }
+
+    /// A compact row displaying a session's name, model badge, message count, and relative timestamp.
+    private func recentSessionRow(_ session: ChatSession) -> some View {
+        HStack(spacing: theme.spacingSM) {
+            Circle()
+                .fill(session.status == .active ? theme.success : theme.textTertiary)
+                .frame(width: 8, height: 8)
+
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
+                Text(session.displayName)
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+
+                HStack(spacing: theme.spacingXS) {
+                    Text(session.model.isEmpty ? "default" : session.model)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+
+                    Text("·")
+                        .foregroundStyle(theme.textTertiary)
+
+                    Text("\(session.messageCount) msgs")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+            }
+
+            Spacer()
+
+            Text(DateFormatters.relativeDateTime.localizedString(for: session.lastActiveAt, relativeTo: Date()))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .padding(theme.spacingSM)
+        .frame(minHeight: 44)
+        .background(theme.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(session.displayName), \(session.messageCount) messages")
     }
 
     // MARK: - Tunnel Status

@@ -54,7 +54,7 @@ public struct ActivityTimelineResponse: Codable, Sendable {
 // MARK: - Model Usage
 
 /// Usage statistics for a single AI model.
-public struct ModelUsageStat: Codable, Sendable, Identifiable {
+public struct AnalyticsModelUsageStat: Codable, Sendable, Identifiable {
     /// Model identifier (used as unique key).
     public var id: String { model }
     /// Model name (e.g., "claude-opus-4-5", "claude-sonnet-4-5").
@@ -104,7 +104,7 @@ public struct SessionMetricsResponse: Codable, Sendable {
     /// Average number of iterations (edits/retries) per session.
     public let avgIterationsPerSession: Double
     /// Usage breakdown by model.
-    public let modelUsage: [ModelUsageStat]
+    public let modelUsage: [AnalyticsModelUsageStat]
 
     public init(
         projectName: String,
@@ -115,7 +115,7 @@ public struct SessionMetricsResponse: Codable, Sendable {
         abandonedSessions: Int,
         completionRate: Double,
         avgIterationsPerSession: Double,
-        modelUsage: [ModelUsageStat]
+        modelUsage: [AnalyticsModelUsageStat]
     ) {
         self.projectName = projectName
         self.totalSessions = totalSessions

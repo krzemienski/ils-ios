@@ -119,7 +119,7 @@ struct SessionMetricsView: View {
     // MARK: - Model Breakdown
 
     /// Sorted list of model rows with usage percentage progress bars.
-    private func modelBreakdown(models: [ModelUsageStat]) -> some View {
+    private func modelBreakdown(models: [AnalyticsModelUsageStat]) -> some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Model Usage")
                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
@@ -134,7 +134,7 @@ struct SessionMetricsView: View {
     }
 
     /// A single model usage row: name label, progress bar, and percentage.
-    private func modelRow(stat: ModelUsageStat) -> some View {
+    private func modelRow(stat: AnalyticsModelUsageStat) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: "cpu.fill")
@@ -279,21 +279,21 @@ private extension Comparable {
 
 #Preview {
     let sampleModels = [
-        ModelUsageStat(
+        AnalyticsModelUsageStat(
             model: "claude-sonnet-4-5",
             sessionCount: 18,
             messageCount: 144,
             tokensUsed: 72000,
             usagePercentage: 60.0
         ),
-        ModelUsageStat(
+        AnalyticsModelUsageStat(
             model: "claude-opus-4-5",
             sessionCount: 9,
             messageCount: 63,
             tokensUsed: 45000,
             usagePercentage: 30.0
         ),
-        ModelUsageStat(
+        AnalyticsModelUsageStat(
             model: "claude-haiku-3-5",
             sessionCount: 3,
             messageCount: 12,

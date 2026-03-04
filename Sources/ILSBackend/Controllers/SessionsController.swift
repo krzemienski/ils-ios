@@ -20,11 +20,14 @@ extension SessionFileChange: Content {}
 /// - `GET /sessions/model-stats`: Aggregate model usage statistics across all sessions
 /// - `POST /sessions/suggest-model`: Smart model routing suggestion
 /// - `GET /sessions/compare?a=id1&b=id2`: Compare two sessions side-by-side
+/// - `GET /sessions/integrity-check`: Verify session messageCount integrity (optional ?fix=true)
 /// - `GET /sessions/:id`: Get a specific session
 /// - `PUT /sessions/:id`: Rename a session
 /// - `DELETE /sessions/:id`: Delete a session
 /// - `PATCH /sessions/:id/model`: Update the model of an existing session
 /// - `POST /sessions/bulk-delete`: Bulk-delete sessions by ID array
+/// - `POST /sessions/bulk-export`: Bulk-export multiple sessions as JSON
+/// - `POST /sessions/import`: Import a previously exported session
 /// - `POST /sessions/:id/fork`: Fork a session (duplicates session + all messages)
 /// - `GET /sessions/:id/fork-tree`: Get the complete fork lineage for a session family
 /// - `GET /sessions/:id/messages`: Get session messages with pagination
@@ -52,11 +55,14 @@ struct SessionsController: RouteCollection {
         sessions.get("model-stats", use: modelStats)
         sessions.post("suggest-model", use: suggestModel)
         sessions.get("compare", use: compare)
+        sessions.get("integrity-check", use: integrityCheck)
         sessions.get(":id", use: get)
         sessions.put(":id", use: self.rename)
         sessions.delete(":id", use: delete)
         sessions.patch(":id", "model", use: updateModel)
         sessions.post("bulk-delete", use: bulkDelete)
+        sessions.post("bulk-export", use: bulkExport)
+        sessions.post("import", use: importSession)
         sessions.post(":id", "fork", use: fork)
         sessions.get(":id", "fork-tree", use: forkTree)
         sessions.get(":id", "messages", use: messages)
@@ -364,6 +370,10 @@ struct SessionsController: RouteCollection {
     /// Creates a new session named "[Original Name] (Fork)" with a copy of every message
     /// from the original session. The new session has its own independent message history.
     ///
+    /// Query parameters:
+    /// - `upToMessageId`: Optional UUID — when provided, only copies messages up to and including
+    ///   the specified message ID for point-in-time forking.
+    ///
     /// - Parameter req: Vapor Request with id parameter
     /// - Returns: APIResponse with forked ChatSession
     @Sendable
@@ -371,6 +381,8 @@ struct SessionsController: RouteCollection {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid session ID")
         }
+
+        let upToMessageId = req.query[UUID.self, at: "upToMessageId"]
 
         guard let original = try await SessionModel.query(on: req.db)
             .filter(\.$id == id)
@@ -396,13 +408,24 @@ struct SessionsController: RouteCollection {
                 throw Abort(.internalServerError, reason: "Failed to create forked session")
             }
 
-            // Copy all messages from original to forked session
-            let originalMessages = try await MessageModel.query(on: db)
+            // Load all messages sorted by creation order
+            let allMessages = try await MessageModel.query(on: db)
                 .filter(\.$session.$id == id)
                 .sort(\.$createdAt, .ascending)
                 .all()
 
-            for originalMessage in originalMessages {
+            // If upToMessageId is specified, truncate the list at that message
+            let messagesToCopy: [MessageModel]
+            if let upToMessageId = upToMessageId {
+                guard let cutoffIndex = allMessages.firstIndex(where: { $0.id == upToMessageId }) else {
+                    throw Abort(.badRequest, reason: "Message ID not found in session")
+                }
+                messagesToCopy = Array(allMessages[...cutoffIndex])
+            } else {
+                messagesToCopy = allMessages
+            }
+
+            for originalMessage in messagesToCopy {
                 let copiedMessage = MessageModel(
                     sessionId: forkedId,
                     role: MessageRole(rawValue: originalMessage.role) ?? .user,
@@ -414,7 +437,7 @@ struct SessionsController: RouteCollection {
             }
 
             // Update message count on forked session
-            forked.messageCount = originalMessages.count
+            forked.messageCount = messagesToCopy.count
             try await forked.save(on: db)
 
             return forked
@@ -578,6 +601,126 @@ struct SessionsController: RouteCollection {
         )
 
         return APIResponse(success: true, data: result)
+    }
+
+    // MARK: - Import / Bulk Export
+
+    /// Import a previously exported session.
+    ///
+    /// Accepts an `ImportSessionRequest` containing a `ChatExport` JSON payload. Creates a new
+    /// session named "[Original Name] (Imported)" and re-inserts all messages from the export,
+    /// preserving roles and content. Returns the newly created `ChatSession`.
+    ///
+    /// - Parameter req: Vapor Request with ImportSessionRequest body
+    /// - Returns: APIResponse with created ChatSession
+    @Sendable
+    func importSession(req: Request) async throws -> APIResponse<ChatSession> {
+        let input = try req.content.decode(ImportSessionRequest.self)
+        let export = input.export
+
+        let originalName = export.session.name ?? "Untitled"
+        let importedName = "\(originalName) (Imported)"
+
+        let imported = try await req.db.transaction { db in
+            let session = SessionModel(
+                name: importedName,
+                projectId: input.projectId,
+                model: export.session.model,
+                permissionMode: .default,
+                messageCount: 0,
+                totalCostUSD: export.session.totalCostUSD
+            )
+            try await session.save(on: db)
+
+            guard let sessionId = session.id else {
+                throw Abort(.internalServerError, reason: "Failed to create imported session")
+            }
+
+            for exportMsg in export.messages {
+                let message = MessageModel(
+                    sessionId: sessionId,
+                    role: exportMsg.role,
+                    content: exportMsg.content
+                )
+                try await message.save(on: db)
+            }
+
+            session.messageCount = export.messages.count
+            try await session.save(on: db)
+
+            return session
+        }
+
+        var projectName: String?
+        if let projectId = input.projectId,
+           let project = try await ProjectModel.find(projectId, on: req.db) {
+            projectName = project.name
+        }
+
+        return APIResponse(
+            success: true,
+            data: imported.toShared(projectName: projectName)
+        )
+    }
+
+    /// Bulk-export multiple sessions as a JSON array of ChatExport objects.
+    ///
+    /// Accepts a `BulkExportRequest` with an array of session UUIDs. For each session found in the
+    /// database, builds a `ChatExport` containing the session metadata and all messages in
+    /// chronological order. Sessions not found in the database are silently skipped.
+    ///
+    /// - Parameter req: Vapor Request with BulkExportRequest body
+    /// - Returns: APIResponse with array of ChatExport objects
+    @Sendable
+    func bulkExport(req: Request) async throws -> APIResponse<[ChatExport]> {
+        let input = try req.content.decode(BulkExportRequest.self)
+
+        guard !input.sessionIds.isEmpty else {
+            throw Abort(.badRequest, reason: "sessionIds array must not be empty")
+        }
+
+        guard input.sessionIds.count <= 50 else {
+            throw Abort(.badRequest, reason: "Cannot export more than 50 sessions at once")
+        }
+
+        var exports: [ChatExport] = []
+
+        for sessionId in input.sessionIds {
+            guard let session = try await SessionModel.query(on: req.db)
+                .filter(\.$id == sessionId)
+                .with(\.$project)
+                .first() else {
+                continue
+            }
+
+            let messageModels = try await MessageModel.query(on: req.db)
+                .filter(\.$session.$id == sessionId)
+                .sort(\.$createdAt, .ascending)
+                .all()
+
+            let exportSession = ChatExportSession(
+                id: session.id ?? UUID(),
+                name: session.name,
+                model: session.model,
+                createdAt: session.createdAt ?? Date(),
+                lastActiveAt: session.lastActiveAt ?? Date(),
+                messageCount: session.messageCount,
+                totalCostUSD: session.totalCostUSD,
+                projectName: session.project?.name
+            )
+
+            let exportMessages = messageModels.map { msg in
+                ChatExportMessage(
+                    role: MessageRole(rawValue: msg.role) ?? .user,
+                    content: msg.content,
+                    createdAt: msg.createdAt ?? Date()
+                )
+            }
+
+            exports.append(ChatExport(session: exportSession, messages: exportMessages))
+        }
+
+        return APIResponse(success: true, data: exports)
     }
 
     // MARK: - Message Search
@@ -1042,6 +1185,53 @@ struct SessionsController: RouteCollection {
             success: true,
             data: session.toShared(projectName: session.project?.name)
         )
+    }
+
+    // MARK: - Integrity Check
+
+    /// Verify the integrity of all DB sessions by comparing stored messageCount against the
+    /// actual number of MessageModel rows.
+    ///
+    /// Query parameters:
+    /// - `fix`: If "true", automatically updates sessions whose stored count diverges from actual.
+    ///
+    /// - Parameter req: Vapor Request with optional `fix` query param
+    /// - Returns: APIResponse with list of IntegrityCheckResult for every session checked
+    @Sendable
+    func integrityCheck(req: Request) async throws -> APIResponse<[IntegrityCheckResult]> {
+        let fix = req.query[String.self, at: "fix"] == "true"
+
+        let sessions = try await SessionModel.query(on: req.db).all()
+        var results: [IntegrityCheckResult] = []
+        results.reserveCapacity(sessions.count)
+
+        for session in sessions {
+            guard let sessionId = session.id else { continue }
+
+            let actualCount = try await MessageModel.query(on: req.db)
+                .filter(\.$session.$id == sessionId)
+                .count()
+
+            var issues: [String] = []
+
+            if session.messageCount != actualCount {
+                issues.append("messageCount mismatch: stored \(session.messageCount), actual \(actualCount)")
+
+                if fix {
+                    session.messageCount = actualCount
+                    try await session.save(on: req.db)
+                }
+            }
+
+            results.append(IntegrityCheckResult(
+                sessionId: sessionId,
+                passed: issues.isEmpty,
+                issues: issues,
+                checkedAt: Date()
+            ))
+        }
+
+        return APIResponse(success: true, data: results)
     }
 
     // MARK: - Chat Export

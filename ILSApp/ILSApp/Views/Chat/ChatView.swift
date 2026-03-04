@@ -73,8 +73,6 @@ struct ChatView: View {
         var navigateToForkTree: ChatSession?
         var messageToDelete: ChatMessage?
         var renameText = ""
-        var exportMarkdown = ""
-        var isExporting = false
     }
 
     /// State controlling sheet and alert presentation.
@@ -106,7 +104,7 @@ struct ChatView: View {
     // MARK: - Body
 
     var body: some View {
-        chatContentWithSheets
+        chatContentFinal
     }
 
     // Split the body to help the Swift type-checker with the large modifier chain.
@@ -198,7 +196,8 @@ struct ChatView: View {
     private var chatContentWithSheets: some View {
         chatContentWithAlerts
             .sheet(isPresented: $sheets.showExportSheet) {
-                ShareSheet(text: actions.exportMarkdown, fileName: "\(session.name ?? "session").md")
+                SessionExportPickerSheet(session: session)
+                    .environment(appState)
             }
             .sheet(isPresented: $sheets.showAdvancedOptions) {
                 AdvancedOptionsSheet(config: $chatOptionsConfig)
@@ -238,6 +237,11 @@ struct ChatView: View {
                 .presentationDetents([.medium])
                 .presentationBackground(theme.bgPrimary)
             }
+    }
+
+    /// Navigation destinations and onChange handlers split from chatContentWithSheets for type-checker.
+    private var chatContentWithNavigation: some View {
+        chatContentWithSheets
             .navigationDestination(item: $actions.navigateToForked) { session in
                 ChatView(session: session)
             }
@@ -309,6 +313,11 @@ struct ChatView: View {
                 }
             }
             #endif
+    }
+
+    /// Additional modifiers split out to help the Swift type-checker with the long modifier chain.
+    private var chatContentFinal: some View {
+        chatContentWithNavigation
             .onChange(of: inputText) { _, newValue in
                 draftPersistTask?.cancel()
                 draftPersistTask = Task {
@@ -320,73 +329,25 @@ struct ChatView: View {
                     } else {
                         UserDefaults.standard.set(newValue, forKey: key)
                     }
-        .sheet(isPresented: $sheets.showAdvancedOptions) {
-            AdvancedOptionsSheet(config: $chatOptionsConfig)
-                .presentationDetents([.large])
-                .presentationBackground(theme.bgPrimary)
-        }
-        .sheet(isPresented: $sheets.showSessionMemory) {
-            SessionMemoryView(sessionId: session.id)
-        }
-        .sheet(isPresented: $sheets.showContextWindowDetail) {
-            if let usedTokens = viewModel.contextTokensUsed,
-               let windowSize = viewModel.contextWindowSize {
-                ContextWindowDetailSheet(
-                    sessionId: session.id,
-                    usedTokens: usedTokens,
-                    contextWindowSize: windowSize,
-                    inputTokens: viewModel.contextInputTokens,
-                    outputTokens: viewModel.contextOutputTokens,
-                    cacheReadTokens: viewModel.contextCacheReadTokens,
-                    cacheCreateTokens: viewModel.contextCacheCreateTokens,
-                    onForkSession: {
-                        sheets.showContextWindowDetail = false
-                        Task {
-                            if let forked = await viewModel.forkSession() {
-                                actions.forkedSession = forked
-                                sheets.showForkAlert = true
-                            }
-                        }
-                    },
-                    onDismiss: { sheets.showContextWindowDetail = false }
-                )
-            }
-        }
-        .sheet(isPresented: $sheets.showPostCompactionRecovery, onDismiss: dismissPostCompactionSheet) {
-            postCompactionRecoverySheet
-        }
-        .sheet(isPresented: $viewModel.showBatchPermissionModal) {
-            BatchPermissionRequestModal(requests: viewModel.pendingPermissionRequests) { requestIds, decision in
-                viewModel.respondToBatchPermissions(requestIds: requestIds, decision: decision)
-            }
-            .presentationDetents(viewModel.pendingPermissionRequests.count > 3 ? [.large] : [.medium, .large])
-            .presentationBackground(theme.bgPrimary)
-        }
-        .navigationDestination(item: $actions.navigateToForked) { session in
-            ChatView(session: session)
-        }
-        .navigationDestination(item: $actions.navigateToRelated) { session in
-            ChatView(session: session)
-        }
-        .onChange(of: viewModel.showPostCompactionRecovery) { _, newValue in
-            if newValue {
-                sheets.showPostCompactionRecovery = true
-            }
-        }
-        .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
-            if newValue != nil {
-                actions.errorId = UUID()
-                sheets.showErrorAlert = true
-            }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                Task {
-                    await viewModel.refreshMessages()
                 }
             }
-            .onDisappear {
-                draftPersistTask?.cancel()
+            .sheet(isPresented: $sheets.showSessionMemory) {
+                SessionMemoryView(sessionId: session.id)
+            }
+            .sheet(isPresented: $sheets.showPostCompactionRecovery, onDismiss: dismissPostCompactionSheet) {
+                postCompactionRecoverySheet
+            }
+            .sheet(isPresented: $viewModel.showBatchPermissionModal) {
+                BatchPermissionRequestModal(requests: viewModel.pendingPermissionRequests) { requestIds, decision in
+                    viewModel.respondToBatchPermissions(requestIds: requestIds, decision: decision)
+                }
+                .presentationDetents(viewModel.pendingPermissionRequests.count > 3 ? [.large] : [.medium, .large])
+                .presentationBackground(theme.bgPrimary)
+            }
+            .onChange(of: viewModel.showPostCompactionRecovery) { _, newValue in
+                if newValue {
+                    sheets.showPostCompactionRecovery = true
+                }
             }
             .onChange(of: viewModel.searchQuery) { _, newValue in
                 searchDebounceTask?.cancel()
@@ -395,6 +356,9 @@ struct ChatView: View {
                     guard !Task.isCancelled else { return }
                     await viewModel.searchMessages(query: newValue)
                 }
+            }
+            .onDisappear {
+                draftPersistTask?.cancel()
             }
             .overlay {
                 ZStack {
@@ -900,7 +864,7 @@ struct ChatView: View {
                 .accessibilityIdentifier("session-memory-button")
 
                 Button {
-                    Task { await exportSession() }
+                    exportSession()
                 } label: {
                     Label("Export", systemImage: "square.and.arrow.up")
                 }
@@ -1033,10 +997,6 @@ struct ChatView: View {
     }
 
     /// Insert a quick reply template's resolved content into the input field.
-    ///
-    /// Resolves template variables using their default values and any project-specific overrides,
-    /// then appends the content to the current input text (preceded by a space if non-empty).
-    /// Focuses the input field so the user can refine or send immediately.
     private func applyTemplate(_ template: QuickReplyTemplate) {
         let resolved = template.resolvedContent(for: session.projectId?.uuidString)
         if inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -1047,14 +1007,8 @@ struct ChatView: View {
         isInputFocused = true
     }
 
-    /// Export the full conversation as a Markdown file for sharing.
-    private func exportSession() async {
-        actions.isExporting = true
-        actions.exportMarkdown = SessionExportService.exportMarkdown(
-            session: session,
-            messages: viewModel.messages
-        )
-        actions.isExporting = false
+    /// Present the export format picker for sharing the session.
+    private func exportSession() {
         sheets.showExportSheet = true
     }
 }

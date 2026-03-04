@@ -8,9 +8,14 @@ import ILSShared
 /// While data is loading a `ProgressView` is shown; on failure an error message with a
 /// retry button is presented.
 ///
-/// The toolbar exposes two actions:
-/// - **Export** — delegates to ``SessionExportService`` to produce Markdown, then presents
-///   a `ShareSheet` for sharing or saving.
+/// A **Checkpoints** section displays the current checkpoint count and provides a
+/// `NavigationLink` into ``SessionCheckpointsView`` for creating, deleting, and restoring
+/// named snapshots.
+///
+/// The toolbar exposes three actions:
+/// - **Export** — opens ``SessionExportPickerSheet`` to choose JSON, Markdown, or PDF.
+/// - **Create Checkpoint** — presents a name-input alert then delegates to
+///   ``SessionCheckpointsViewModel/createCheckpoint(sessionId:name:)``.
 /// - **Copy ID** — writes the session UUID to the platform clipboard using
 ///   `UIPasteboard` on iOS or `NSPasteboard` on macOS, then surfaces a brief confirmation
 ///   via `ToastModifier`.
@@ -22,6 +27,7 @@ import ILSShared
 /// ### State
 /// - ``viewModel`` - Manages session loading and export via `SessionInfoViewModel`
 /// - ``checkpointViewModel`` - Manages checkpoint operations for the session
+/// - ``checkpointsViewModel`` - Manages checkpoint list and creation
 struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
@@ -30,12 +36,16 @@ struct SessionInfoView: View {
 
     @State private var viewModel = SessionInfoViewModel()
     @State private var checkpointViewModel = CheckpointViewModel()
+    @State private var checkpointsViewModel = SessionCheckpointsViewModel()
     @State private var healthViewModel = SessionHealthViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
+    @State private var showExportPickerSheet = false
     @State private var showFileBrowser = false
     @State private var showModelUpdatedToast = false
     @State private var showRecordings = false
+    @State private var showAddCheckpointAlert = false
+    @State private var newCheckpointName = ""
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
@@ -70,6 +80,18 @@ struct SessionInfoView: View {
                             LabeledContent("Model", value: displaySession.model.capitalized)
                             LabeledContent("Status", value: displaySession.status.rawValue.capitalized)
                             LabeledContent("Messages", value: "\(displaySession.messageCount)")
+                        }
+
+                        Section("Checkpoints") {
+                            NavigationLink {
+                                SessionCheckpointsView(session: displaySession)
+                                    .environment(appState)
+                            } label: {
+                                LabeledContent(
+                                    "Checkpoints",
+                                    value: "\(checkpointsViewModel.checkpoints.count)"
+                                )
+                            }
                         }
 
                         Section("Cost & Usage") {
@@ -201,22 +223,20 @@ struct SessionInfoView: View {
                         bookmarksManager.isBookmarked(sessionId: displaySession.id)
                             ? "Remove bookmark"
                             : "Add bookmark"
-                        )
+                    )
 
-                        Button {
-                            Task {
-                                await viewModel.exportSession(session: displaySession)
-                                showExportSheet = true
-                            }
-                        } label: {
-                            if viewModel.isExporting {
-                                ProgressView()
-                                    .controlSize(.small)
-                            } else {
-                                Image(systemName: "square.and.arrow.up")
-                            }
-                        }
-                        .disabled(viewModel.isExporting)
+                    Button {
+                        showExportPickerSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        newCheckpointName = ""
+                        showAddCheckpointAlert = true
+                    } label: {
+                        Image(systemName: "bookmark.badge.plus")
+                    }
 
                         Button {
                             #if os(iOS)
@@ -239,6 +259,10 @@ struct SessionInfoView: View {
             .sheet(isPresented: $showExportSheet) {
                 ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
             }
+            .sheet(isPresented: $showExportPickerSheet) {
+                SessionExportPickerSheet(session: displaySession)
+                    .environment(appState)
+            }
             .sheet(isPresented: $showFileBrowser) {
                 NavigationStack {
                     SessionFileBrowserView(session: displaySession)
@@ -251,14 +275,33 @@ struct SessionInfoView: View {
                         .environment(appState)
                 }
             }
+            .alert("New Checkpoint", isPresented: $showAddCheckpointAlert) {
+                TextField("Checkpoint name", text: $newCheckpointName)
+                Button("Save") {
+                    let name = newCheckpointName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !name.isEmpty else { return }
+                    Task {
+                        await checkpointsViewModel.createCheckpoint(
+                            sessionId: session.id,
+                            name: name
+                        )
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Enter a name for this checkpoint snapshot.")
+            }
             .toast(isPresented: $showCopiedToast, message: "Session ID copied")
             .task {
                 viewModel.configure(client: appState.apiClient)
                 checkpointViewModel.configure(client: appState.apiClient)
+                checkpointsViewModel.configure(client: appState.apiClient)
                 healthViewModel.configure(client: appState.apiClient)
-                async let sessionLoad: Void = viewModel.loadSession(id: session.id)
-                async let healthLoad: Void = healthViewModel.loadHealth(sessionId: session.id)
-                _ = await (sessionLoad, healthLoad)
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { await viewModel.loadSession(id: session.id) }
+                    group.addTask { await healthViewModel.loadHealth(sessionId: session.id) }
+                    group.addTask { await checkpointsViewModel.loadCheckpoints(sessionId: session.id) }
+                }
             }
         }
     }
