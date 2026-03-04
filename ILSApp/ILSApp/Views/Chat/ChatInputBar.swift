@@ -130,6 +130,7 @@ struct ChatInputBar: View {
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
+        .accessibilityHint("Opens advanced chat options")
     }
 
     /// Documentation quick-access button that opens ``DocumentationView`` pre-filtered for commands.
