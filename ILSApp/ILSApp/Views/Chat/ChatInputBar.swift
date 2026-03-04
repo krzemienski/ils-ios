@@ -31,6 +31,11 @@ import ILSShared
 /// - ``textField`` - Vertically expandable text input (1–5 lines)
 /// - ``cancelButton`` - Stop button shown during streaming
 /// - ``sendButton`` - Spring-animated send button with haptic feedback
+///
+/// ### Quick Reply Templates
+/// - ``quickReplyTemplates`` - Templates displayed as chips above the input row (pinned first, then most-used)
+/// - ``onTemplateSelected`` - Called when a template chip is tapped; receives the selected template
+/// - ``onShowAllTemplates`` - Called when the trailing "+" chip is tapped to open the full template sheet
 struct ChatInputBar: View {
     /// Two-way binding to the message text being composed.
     @Binding var text: String
@@ -55,6 +60,14 @@ struct ChatInputBar: View {
     var onVoiceInput: (() -> Void)? = nil
     /// When true, the microphone button shows a recording indicator (iOS only).
     var isRecording: Bool = false
+    /// Ordered list of templates to surface as quick-reply chips (pinned first, then most-used).
+    /// When non-empty and ``onTemplateSelected`` is provided, a ``QuickReplyToolbar`` is shown
+    /// above the input row.
+    var quickReplyTemplates: [QuickReplyTemplate] = []
+    /// Called when the user taps a quick-reply chip. Receives the selected template.
+    var onTemplateSelected: ((QuickReplyTemplate) -> Void)? = nil
+    /// Called when the user taps the trailing "+" chip to open the full template browser sheet.
+    var onShowAllTemplates: (() -> Void)? = nil
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -84,6 +97,15 @@ struct ChatInputBar: View {
                 }
                 .padding(.horizontal, theme.spacingMD)
                 .padding(.top, theme.spacingXS)
+            }
+
+            // Quick reply template chips — shown when templates are available.
+            if !quickReplyTemplates.isEmpty, let selectHandler = onTemplateSelected {
+                QuickReplyToolbar(
+                    templates: quickReplyTemplates,
+                    onSelect: selectHandler,
+                    onShowAll: onShowAllTemplates ?? {}
+                )
             }
 
             HStack(spacing: theme.spacingSM) {

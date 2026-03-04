@@ -65,4 +65,12 @@ enum AppConstants {
 
     /// iCloud KV store key for the synced active host profile name.
     static let iCloudActiveHostNameKey = "ils_icloud_active_host_name"
+
+    // MARK: - Quick Reply Templates Keys
+
+    /// UserDefaults key for persisted custom quick reply templates.
+    static let quickReplyTemplatesKey = "quick_reply_templates"
+
+    /// iCloud KV store key for the synced custom quick reply templates.
+    static let iCloudQuickReplyTemplatesKey = "ils_icloud_quick_reply_templates"
 }

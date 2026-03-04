@@ -50,6 +50,7 @@ struct ChatView: View {
         var isRenaming = false
         var showSearch = false
         var showContextWindowDetail = false
+        var showQuickReplyTemplates = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -177,6 +178,14 @@ struct ChatView: View {
             AdvancedOptionsSheet(config: $chatOptionsConfig)
                 .presentationDetents([.large])
                 .presentationBackground(theme.bgPrimary)
+        }
+        .sheet(isPresented: $sheets.showQuickReplyTemplates) {
+            NavigationStack {
+                QuickReplyTemplatesSheet { template in
+                    applyTemplate(template)
+                }
+            }
+            .presentationBackground(theme.bgPrimary)
         }
         .sheet(isPresented: $sheets.showContextWindowDetail) {
             if let usedTokens = viewModel.contextTokensUsed,
@@ -316,6 +325,8 @@ struct ChatView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             #endif
+
+                quickReplyToolbar
 
                 bottomBar
             }
@@ -492,6 +503,41 @@ struct ChatView: View {
             }
             .background(theme.bgPrimary)
         }
+    }
+
+    /// Compact horizontal chip bar surfacing pinned and most-used quick reply templates.
+    ///
+    /// Pinned templates appear first, followed by the top-5 most-used (duplicates removed).
+    /// A trailing "+" chip opens the full ``QuickReplyTemplatesSheet``.
+    private var quickReplyToolbar: some View {
+        QuickReplyToolbar(
+            templates: quickReplyToolbarTemplates,
+            onSelect: { template in
+                QuickReplyTemplateManager.shared.recordUsage(
+                    id: template.id,
+                    projectId: session.projectId?.uuidString
+                )
+                applyTemplate(template)
+            },
+            onShowAll: { sheets.showQuickReplyTemplates = true }
+        )
+    }
+
+    /// Ordered list of templates shown in the quick reply toolbar.
+    ///
+    /// Pinned (favourite) templates are listed first, followed by the top-5 most-used
+    /// custom templates. Duplicates are removed by ID so a pinned template that is also
+    /// frequently used only appears once.
+    private var quickReplyToolbarTemplates: [QuickReplyTemplate] {
+        let manager = QuickReplyTemplateManager.shared
+        var seen = Set<UUID>()
+        var combined: [QuickReplyTemplate] = []
+        for template in manager.pinnedTemplates() + manager.mostUsedTemplates(limit: 5) {
+            if seen.insert(template.id).inserted {
+                combined.append(template)
+            }
+        }
+        return combined
     }
 
     /// Chat input bar for composing and sending messages to Claude.
@@ -695,6 +741,21 @@ struct ChatView: View {
 
         viewModel.addUserMessage(prompt)
         viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
+    }
+
+    /// Insert a quick reply template's resolved content into the input field.
+    ///
+    /// Resolves template variables using their default values and any project-specific overrides,
+    /// then appends the content to the current input text (preceded by a space if non-empty).
+    /// Focuses the input field so the user can refine or send immediately.
+    private func applyTemplate(_ template: QuickReplyTemplate) {
+        let resolved = template.resolvedContent(for: session.projectId?.uuidString)
+        if inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            inputText = resolved
+        } else {
+            inputText += " " + resolved
+        }
+        isInputFocused = true
     }
 
     /// Export the full conversation as a Markdown file for sharing.
