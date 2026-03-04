@@ -44,6 +44,61 @@ enum SessionExportService {
         return md
     }
 
+    /// Build a Markdown comparison export from two ``ChatSession`` objects and their message arrays.
+    ///
+    /// Produces a document with a header naming both sessions, a metrics table, and numbered
+    /// parallel message turns (one column per session). Missing turns are shown as _(no message)_.
+    ///
+    /// This variant is used by ``SessionComparisonView`` when sharing the comparison report.
+    static func exportComparisonMarkdown(
+        sessionA: ChatSession,
+        messagesA: [Message],
+        sessionB: ChatSession,
+        messagesB: [Message]
+    ) -> String {
+        var md = "# Session Comparison\n\n"
+
+        // Session headers
+        md += "## Sessions\n\n"
+        md += "**Session A:** \(sessionA.name ?? "Unnamed")\n"
+        md += "**Session B:** \(sessionB.name ?? "Unnamed")\n\n"
+
+        // Metrics table
+        md += "## Metrics\n\n"
+        md += "| Metric | Session A | Session B |\n"
+        md += "|--------|-----------|----------|\n"
+        md += "| Messages | \(messagesA.count) | \(messagesB.count) |\n"
+        md += "| Model | \(sessionA.model.capitalized) | \(sessionB.model.capitalized) |\n"
+        md += "| Status | \(sessionA.status.rawValue.capitalized) | \(sessionB.status.rawValue.capitalized) |\n"
+        if let costA = sessionA.totalCostUSD, let costB = sessionB.totalCostUSD {
+            md += "| Cost | $\(String(format: "%.4f", costA)) | $\(String(format: "%.4f", costB)) |\n"
+        }
+        md += "\n---\n\n"
+
+        // Parallel message pairs
+        md += "## Messages\n\n"
+        let maxCount = max(messagesA.count, messagesB.count)
+        for index in 0..<maxCount {
+            md += "### Turn \(index + 1)\n\n"
+            if index < messagesA.count {
+                let msg = messagesA[index]
+                let role = msg.role.rawValue.capitalized
+                md += "**A — \(role):** \(msg.content)\n\n"
+            } else {
+                md += "**A:** _(no message)_\n\n"
+            }
+            if index < messagesB.count {
+                let msg = messagesB[index]
+                let role = msg.role.rawValue.capitalized
+                md += "**B — \(role):** \(msg.content)\n\n"
+            } else {
+                md += "**B:** _(no message)_\n\n"
+            }
+        }
+
+        return md
+    }
+
     // MARK: - Private
 
     private static func header(for session: ChatSession) -> String {

@@ -487,6 +487,8 @@ public struct MessageSearchResult: Codable, Identifiable, Sendable {
     public let role: MessageRole
     /// Message content (may be a snippet around the match).
     public let content: String
+    /// Surrounding context around the search match (60 chars before/after).
+    public let matchContext: String?
     /// When the message was created.
     public let createdAt: Date
 
@@ -497,6 +499,7 @@ public struct MessageSearchResult: Codable, Identifiable, Sendable {
         sessionModel: String?,
         role: MessageRole,
         content: String,
+        matchContext: String? = nil,
         createdAt: Date
     ) {
         self.id = id
@@ -505,7 +508,52 @@ public struct MessageSearchResult: Codable, Identifiable, Sendable {
         self.sessionModel = sessionModel
         self.role = role
         self.content = content
+        self.matchContext = matchContext
         self.createdAt = createdAt
+    }
+}
+
+/// Filters for cross-session message search.
+public struct SearchFilters: Codable, Sendable {
+    /// Start of the date range filter.
+    public let dateFrom: Date?
+    /// End of the date range filter.
+    public let dateTo: Date?
+    /// Filter by project name.
+    public let projectName: String?
+    /// Filter by message role ("user" or "assistant").
+    public let role: String?
+
+    public init(
+        dateFrom: Date? = nil,
+        dateTo: Date? = nil,
+        projectName: String? = nil,
+        role: String? = nil
+    ) {
+        self.dateFrom = dateFrom
+        self.dateTo = dateTo
+        self.projectName = projectName
+        self.role = role
+    }
+}
+
+/// A bookmarked search result for future reference.
+public struct SearchBookmark: Codable, Identifiable, Sendable {
+    /// Bookmark ID.
+    public let id: UUID
+    /// The bookmarked search result.
+    public let result: MessageSearchResult
+    /// When this bookmark was created.
+    public let bookmarkedAt: Date
+
+    public init(
+        id: UUID = UUID(),
+        result: MessageSearchResult,
+        bookmarkedAt: Date = Date()
+    ) {
+        self.id = id
+        self.result = result
+        self.bookmarkedAt = bookmarkedAt
     }
 }
 
