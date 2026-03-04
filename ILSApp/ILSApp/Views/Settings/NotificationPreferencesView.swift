@@ -19,6 +19,7 @@ import SwiftUI
 /// - ``mcpOfflineAlerts`` - Alert when an MCP server goes offline
 /// - ``mcpOnlineAlerts`` - Alert when an MCP server comes back online
 /// - ``sessionCompleteAlerts`` - Alert when a Claude session finishes
+/// - ``sessionErrorAlerts`` - Alert when a Claude session encounters an error
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
@@ -28,6 +29,7 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_mcpOfflineAlerts") private var mcpOfflineAlerts = true
     @AppStorage("notif_mcpOnlineAlerts") private var mcpOnlineAlerts = false
     @AppStorage("notif_sessionCompleteAlerts") private var sessionCompleteAlerts = true
+    @AppStorage("notif_sessionErrorAlerts") private var sessionErrorAlerts = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
@@ -66,8 +68,10 @@ struct NotificationPreferencesView: View {
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     sectionLabel("Session Alerts")
 
-                    VStack {
+                    VStack(spacing: 0) {
                         toggleRow("Session Complete", isOn: $sessionCompleteAlerts, accessibilityLabel: "Alert when session completes")
+                        Divider().background(theme.bgTertiary)
+                        toggleRow("Session Error", isOn: $sessionErrorAlerts, accessibilityLabel: "Alert when session encounters an error")
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
