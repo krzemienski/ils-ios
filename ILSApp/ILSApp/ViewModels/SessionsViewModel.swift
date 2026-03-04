@@ -58,6 +58,8 @@ class SessionsViewModel: BaseViewModel {
     private let pageSize = 50
     private var projectPages: [String: Int] = [:]
 
+    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
+
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
     private var searchCache: [(session: ChatSession, searchText: String)] = []
     /// Cached grouped sessions, rebuilt when filteredSessions changes
@@ -76,8 +78,6 @@ class SessionsViewModel: BaseViewModel {
     private var cachedGroupedByTimeSearchText: String = ""
     /// The mutation version at which groupedSessionsByTime cache was last built
     private var cachedGroupedByTimeVersion: Int = -1
-
-    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
 
     deinit {
         searchTask?.cancel()
@@ -410,7 +410,7 @@ class SessionsViewModel: BaseViewModel {
         do {
             let response: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
             if let updated = response.data {
-                // Incremental in-place update — avoids O(n) full reload
+                // O(1) incremental update — avoids O(n) full rebuild
                 if let idx = sessions.firstIndex(where: { $0.id == updated.id }) {
                     sessions[idx] = updated
                 }
@@ -418,6 +418,9 @@ class SessionsViewModel: BaseViewModel {
                     searchCache[idx] = makeSearchEntry(for: updated)
                 }
                 sessionsMutationVersion += 1
+            } else {
+                // Fall back to full reload if API returns no data
+                await loadSessions(refresh: true)
             }
         } catch {
             self.error = error
