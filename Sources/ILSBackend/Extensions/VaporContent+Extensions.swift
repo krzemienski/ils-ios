@@ -242,3 +242,8 @@ extension UsageInfo: Content {}
 extension PermissionRequest: Content {}
 extension StreamError: Content {}
 extension AnyCodable: Content {}
+
+// MARK: - Checkpoint Types
+extension Checkpoint: Content {}
+extension CreateCheckpointRequest: Content {}
+extension RestoreCheckpointResponse: Content {}

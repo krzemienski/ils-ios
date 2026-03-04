@@ -15,9 +15,13 @@ import ILSShared
 ///   `UIPasteboard` on iOS or `NSPasteboard` on macOS, then surfaces a brief confirmation
 ///   via `ToastModifier`.
 ///
+/// A **Recovery** section is shown for ILS-managed sessions, providing a `NavigationLink`
+/// to ``CheckpointBrowserView`` and a quick "Save Checkpoint Now" action.
+///
 /// ## Topics
 /// ### State
 /// - ``viewModel`` - Manages session loading and export via `SessionInfoViewModel`
+/// - ``checkpointViewModel`` - Manages checkpoint operations for the session
 struct SessionInfoView: View {
     let session: ChatSession
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +29,7 @@ struct SessionInfoView: View {
     @Environment(AppState.self) var appState
 
     @State private var viewModel = SessionInfoViewModel()
+    @State private var checkpointViewModel = CheckpointViewModel()
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
     @State private var showFileBrowser = false
@@ -36,72 +41,101 @@ struct SessionInfoView: View {
     }
 
     var body: some View {
-        Group {
-            if viewModel.isLoading {
-                ProgressView("Loading session details...")
-            } else if let error = viewModel.errorMessage {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.largeTitle)
-                        .foregroundColor(theme.warning)
-                    Text("Failed to load session details")
-                        .font(.headline)
-                    Text(error)
-                        .font(.caption)
-                        .foregroundColor(theme.textSecondary)
-                    Button("Retry") {
-                        Task { await viewModel.loadSession(id: session.id) }
-                    }
-                }
-                .padding()
-            } else {
-                List {
-                    Section("Session Details") {
-                        LabeledContent("Name", value: displaySession.name ?? "Unnamed")
-                        LabeledContent("Model", value: displaySession.model.capitalized)
-                        LabeledContent("Status", value: displaySession.status.rawValue.capitalized)
-                        LabeledContent("Messages", value: "\(displaySession.messageCount)")
-                    }
-
-                    Section("Cost & Usage") {
-                        if let cost = displaySession.totalCostUSD {
-                            LabeledContent("Total Cost", value: String(format: "$%.4f", cost))
-                        } else {
-                            LabeledContent("Total Cost", value: "N/A")
+        NavigationStack {
+            Group {
+                if viewModel.isLoading {
+                    ProgressView("Loading session details...")
+                } else if let error = viewModel.errorMessage {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(theme.warning)
+                        Text("Failed to load session details")
+                            .font(.headline)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(theme.textSecondary)
+                        Button("Retry") {
+                            Task { await viewModel.loadSession(id: session.id) }
                         }
                     }
-
-                    Section("Timestamps") {
-                        LabeledContent("Created", value: displaySession.createdAt.formatted())
-                        LabeledContent("Last Active", value: displaySession.lastActiveAt.formatted())
-                    }
-
-                    Section("Configuration") {
-                        LabeledContent("Permission Mode", value: displaySession.permissionMode.rawValue)
-                        LabeledContent("Source", value: displaySession.source.rawValue)
-                        if let projectName = displaySession.projectName {
-                            LabeledContent("Project", value: projectName)
+                    .padding()
+                } else {
+                    List {
+                        Section("Session Details") {
+                            LabeledContent("Name", value: displaySession.name ?? "Unnamed")
+                            LabeledContent("Model", value: displaySession.model.capitalized)
+                            LabeledContent("Status", value: displaySession.status.rawValue.capitalized)
+                            LabeledContent("Messages", value: "\(displaySession.messageCount)")
                         }
-                    }
 
-                    if displaySession.claudeSessionId != nil {
-                        Section("Files") {
-                            Button {
-                                showFileBrowser = true
-                            } label: {
-                                Label("Changed Files", systemImage: "doc.text.magnifyingglass")
+                        Section("Cost & Usage") {
+                            if let cost = displaySession.totalCostUSD {
+                                LabeledContent("Total Cost", value: String(format: "$%.4f", cost))
+                            } else {
+                                LabeledContent("Total Cost", value: "N/A")
+                            }
+                        }
+
+                        Section("Timestamps") {
+                            LabeledContent("Created", value: displaySession.createdAt.formatted())
+                            LabeledContent("Last Active", value: displaySession.lastActiveAt.formatted())
+                        }
+
+                        Section("Configuration") {
+                            LabeledContent("Permission Mode", value: displaySession.permissionMode.rawValue)
+                            LabeledContent("Source", value: displaySession.source.rawValue)
+                            if let projectName = displaySession.projectName {
+                                LabeledContent("Project", value: projectName)
+                            }
+                        }
+
+                        if displaySession.source == .ils {
+                            Section("Recovery") {
+                                NavigationLink {
+                                    CheckpointBrowserView(
+                                        session: displaySession,
+                                        viewModel: checkpointViewModel
+                                    )
+                                    .environment(appState)
+                                } label: {
+                                    Label("Checkpoints", systemImage: "clock.arrow.circlepath")
+                                }
+
+                                Button {
+                                    Task {
+                                        await checkpointViewModel.createCheckpoint(
+                                            sessionId: session.id,
+                                            label: nil,
+                                            isAuto: false
+                                        )
+                                    }
+                                } label: {
+                                    Label("Save Checkpoint Now", systemImage: "clock.badge.checkmark")
+                                }
+                                .disabled(checkpointViewModel.isLoading)
+                            }
+                        }
+
+                        if displaySession.claudeSessionId != nil {
+                            Section("Files") {
+                                Button {
+                                    showFileBrowser = true
+                                } label: {
+                                    Label("Changed Files", systemImage: "doc.text.magnifyingglass")
+                                }
+                            }
+                        }
+
+                        if let claudeId = displaySession.claudeSessionId {
+                            Section("Internal") {
+                                LabeledContent("Claude Session ID", value: claudeId)
+                                    .font(.caption)
                             }
                         }
                     }
-
-                    if let claudeId = displaySession.claudeSessionId {
-                        Section("Internal") {
-                            LabeledContent("Claude Session ID", value: claudeId)
-                                .font(.caption)
-                        }
-                    }
+                    .scrollContentBackground(.hidden)
                 }
-                .scrollContentBackground(.hidden)
             }
         }
         .background(theme.bgPrimary)
@@ -133,54 +167,56 @@ struct SessionInfoView: View {
                         bookmarksManager.isBookmarked(sessionId: displaySession.id)
                             ? "Remove bookmark"
                             : "Add bookmark"
-                    )
+                        )
 
-                    Button {
-                        Task {
-                            await viewModel.exportSession(session: displaySession)
-                            showExportSheet = true
+                        Button {
+                            Task {
+                                await viewModel.exportSession(session: displaySession)
+                                showExportSheet = true
+                            }
+                        } label: {
+                            if viewModel.isExporting {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "square.and.arrow.up")
+                            }
                         }
-                    } label: {
-                        if viewModel.isExporting {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                    }
-                    .disabled(viewModel.isExporting)
+                        .disabled(viewModel.isExporting)
 
-                    Button {
-                        #if os(iOS)
-                        UIPasteboard.general.string = session.id.uuidString
-                        #else
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(session.id.uuidString, forType: .string)
-                        #endif
-                        // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
-                        showCopiedToast = true
-                    } label: {
-                        Image(systemName: "doc.on.doc")
+                        Button {
+                            #if os(iOS)
+                            UIPasteboard.general.string = session.id.uuidString
+                            #else
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(session.id.uuidString, forType: .string)
+                            #endif
+                            // SA-MED-4: ToastModifier handles auto-dismiss — no manual timer needed.
+                            showCopiedToast = true
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                        }
                     }
                 }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
             }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+            .sheet(isPresented: $showExportSheet) {
+                ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
             }
-        }
-        .sheet(isPresented: $showExportSheet) {
-            ShareSheet(text: viewModel.exportMarkdown, fileName: "\(displaySession.name ?? "session").md")
-        }
-        .sheet(isPresented: $showFileBrowser) {
-            NavigationStack {
-                SessionFileBrowserView(session: displaySession)
+            .sheet(isPresented: $showFileBrowser) {
+                NavigationStack {
+                    SessionFileBrowserView(session: displaySession)
+                }
+                .presentationBackground(theme.bgPrimary)
             }
-            .presentationBackground(theme.bgPrimary)
-        }
-        .toast(isPresented: $showCopiedToast, message: "Session ID copied")
-        .task {
-            viewModel.configure(client: appState.apiClient)
-            await viewModel.loadSession(id: session.id)
+            .toast(isPresented: $showCopiedToast, message: "Session ID copied")
+            .task {
+                viewModel.configure(client: appState.apiClient)
+                checkpointViewModel.configure(client: appState.apiClient)
+                await viewModel.loadSession(id: session.id)
+            }
         }
     }
 }
