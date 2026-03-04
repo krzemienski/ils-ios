@@ -118,7 +118,8 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: frameHeight)
+        .frame(minHeight: frameHeight)
+        .clipped()
         .glassCard(padding: 0)
     }
 
@@ -178,6 +179,5 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
             .padding(theme.spacingSM)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: frameHeight)
-    }
-}
+        .frame(minHeight: frameHeight)
+    }}

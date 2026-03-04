@@ -43,8 +43,13 @@ final class SkillFavoritesManager {
 
     // MARK: - Private State
 
-    private var database: CKDatabase {
-        CKContainer(identifier: CloudKitConfig.containerIdentifier).privateCloudDatabase
+    /// Returns the CloudKit private database, or `nil` when the iCloud container
+    /// is not configured in the app's entitlements (e.g. simulator builds without
+    /// CloudKit capability). All sync methods guard on this returning non-nil so
+    /// the app degrades gracefully to local-only favorites.
+    private var database: CKDatabase? {
+        guard FileManager.default.ubiquityIdentityToken != nil else { return nil }
+        return CKContainer(identifier: CloudKitConfig.containerIdentifier).privateCloudDatabase
     }
 
     private let encoder: JSONEncoder = {
@@ -153,7 +158,7 @@ final class SkillFavoritesManager {
     /// No-ops if a sync is already in progress. Uses `.changedKeys` save policy
     /// so only modified fields are transmitted to reduce bandwidth.
     func syncToCloud() async {
-        guard !isSyncing else { return }
+        guard !isSyncing, let db = database else { return }
         isSyncing = true
         defer { isSyncing = false }
 
@@ -162,7 +167,7 @@ final class SkillFavoritesManager {
         let records = favorites.map { makeRecord(from: $0) }
 
         do {
-            let (saveResults, _) = try await database.modifyRecords(
+            let (saveResults, _) = try await db.modifyRecords(
                 saving: records,
                 deleting: [],
                 savePolicy: .changedKeys,
@@ -192,7 +197,7 @@ final class SkillFavoritesManager {
     /// with a newer `modifiedAt` replace the local copy; local favorites without
     /// a remote counterpart are preserved.
     func syncFromCloud() async {
-        guard !isSyncing else { return }
+        guard !isSyncing, let db = database else { return }
         isSyncing = true
         defer { isSyncing = false }
 
@@ -202,7 +207,7 @@ final class SkillFavoritesManager {
         )
 
         do {
-            let (matchResults, _) = try await database.records(
+            let (matchResults, _) = try await db.records(
                 matching: query,
                 desiredKeys: nil,
                 resultsLimit: CKQueryOperation.maximumResults
@@ -240,9 +245,10 @@ final class SkillFavoritesManager {
     // MARK: - CloudKit Helpers
 
     private func saveToCloud(_ favorite: SkillFavorite) async {
+        guard let db = database else { return }
         let record = makeRecord(from: favorite)
         do {
-            try await database.save(record)
+            try await db.save(record)
             AppLogger.shared.info(
                 "Favorite \(favorite.id) saved to CloudKit",
                 category: "favorites"
@@ -256,9 +262,10 @@ final class SkillFavoritesManager {
     }
 
     private func deleteFromCloud(favoriteId: UUID) async {
+        guard let db = database else { return }
         let recordID = CKRecord.ID(recordName: favoriteId.uuidString)
         do {
-            try await database.deleteRecord(withID: recordID)
+            try await db.deleteRecord(withID: recordID)
             AppLogger.shared.info(
                 "Favorite \(favoriteId) deleted from CloudKit",
                 category: "favorites"
