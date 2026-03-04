@@ -254,6 +254,37 @@ struct CachedServerConnection: Codable, FetchableRecord, PersistableRecord, Iden
     var cachedAt: Date
 }
 
+/// Cached team record for GRDB persistence.
+struct CachedTeam: Codable, FetchableRecord, PersistableRecord, Identifiable {
+    static let databaseTableName = "cached_teams"
+
+    let id: String // team name
+    var name: String
+    var description: String?
+    var membersData: Data // JSON-encoded [TeamMember]
+    var createdAt: Date?
+    var cachedAt: Date
+
+    init(from team: AgentTeam) {
+        self.id = team.name
+        self.name = team.name
+        self.description = team.description
+        self.membersData = (try? JSONEncoder().encode(team.members)) ?? Data()
+        self.createdAt = team.createdAt
+        self.cachedAt = Date()
+    }
+
+    func toAgentTeam() -> AgentTeam {
+        let members = (try? JSONDecoder().decode([TeamMember].self, from: membersData)) ?? []
+        return AgentTeam(
+            name: name,
+            description: description,
+            members: members,
+            createdAt: createdAt
+        )
+    }
+}
+
 // MARK: - LocalDatabase
 
 /// Thread-safe local SQLite database for offline caching.
@@ -405,6 +436,17 @@ actor LocalDatabase {
                 t.column("authMethod", .text).notNull()
                 t.column("label", .text)
                 t.column("lastConnected", .datetime)
+                t.column("cachedAt", .datetime).notNull()
+            }
+        }
+
+        migrator.registerMigration("v3_add_teams_table") { db in
+            try db.create(table: "cached_teams") { t in
+                t.primaryKey("id", .text)
+                t.column("name", .text).notNull()
+                t.column("description", .text)
+                t.column("membersData", .blob).notNull()
+                t.column("createdAt", .datetime)
                 t.column("cachedAt", .datetime).notNull()
             }
         }
@@ -564,6 +606,35 @@ actor LocalDatabase {
         }
     }
 
+    // MARK: - Teams
+
+    func saveTeams(_ teams: [AgentTeam]) throws {
+        guard let dbPool else { return }
+        let records = teams.map { CachedTeam(from: $0) }
+        try dbPool.write { db in
+            for record in records {
+                try record.save(db)
+            }
+        }
+    }
+
+    func fetchTeams() throws -> [AgentTeam] {
+        guard let dbPool else { return [] }
+        return try dbPool.read { db in
+            let records = try CachedTeam
+                .order(Column("name").asc)
+                .fetchAll(db)
+            return records.map { $0.toAgentTeam() }
+        }
+    }
+
+    func deleteAllTeams() throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            _ = try CachedTeam.deleteAll(db)
+        }
+    }
+
     // MARK: - Cleanup
 
     /// Delete all cached entries older than the specified age.
@@ -577,6 +648,7 @@ actor LocalDatabase {
             _ = try CachedSkill.filter(Column("cachedAt") < cutoff).deleteAll(db)
             _ = try CachedMCPServer.filter(Column("cachedAt") < cutoff).deleteAll(db)
             _ = try CachedPlugin.filter(Column("cachedAt") < cutoff).deleteAll(db)
+            _ = try CachedTeam.filter(Column("cachedAt") < cutoff).deleteAll(db)
         }
     }
 
@@ -590,6 +662,7 @@ actor LocalDatabase {
             _ = try CachedSkill.deleteAll(db)
             _ = try CachedMCPServer.deleteAll(db)
             _ = try CachedPlugin.deleteAll(db)
+            _ = try CachedTeam.deleteAll(db)
         }
         AppLogger.shared.info("All cached data cleared", category: "cache")
     }

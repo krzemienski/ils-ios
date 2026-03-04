@@ -35,10 +35,24 @@ class TeamsViewModel {
     func loadTeams() async {
         isLoading = true
         error = nil
+
+        // Cache-first: show cached data immediately when teams list is empty
+        if teams.isEmpty {
+            let cached = await CacheService.shared.getCachedTeams()
+            if !cached.isEmpty {
+                teams = cached
+                AppLogger.shared.info("Loaded \(cached.count) teams from cache", category: "teams")
+            }
+        }
+
         do {
             let response: APIResponse<[AgentTeam]> = try await apiClient.get( "/teams")
             if response.success, let data = response.data {
                 teams = data
+                // CONC-03: Use Task instead of Task.detached — CacheService actor handles isolation.
+                Task {
+                    await CacheService.shared.cacheTeams(data)
+                }
             } else {
                 error = NSError(domain: "TeamsViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: response.error?.message ?? "Failed to load teams"])
             }
