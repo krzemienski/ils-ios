@@ -44,6 +44,9 @@ struct SidebarView: View {
     /// Number of unread activity events to display as a badge on the Activity Feed nav item.
     var activityFeedUnreadCount: Int = 0
 
+    /// BackendManager singleton — observed for health dot updates when 2+ backends registered.
+    private let backendManager = BackendManager.shared
+
     @FocusState private var isSearchFocused: Bool
     /// The session currently being renamed, if any.
     @State private var sessionToRename: ChatSession?
@@ -190,45 +193,75 @@ struct SidebarView: View {
                 .font(.system(size: theme.fontTitle1, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
 
-            HStack(spacing: theme.spacingXS) {
-                Circle()
-                    .fill(appState.isConnected ? theme.success : theme.error)
-                    .frame(width: 8, height: 8)
-                Text(appState.isConnected ? appState.serverURL : "Disconnected")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
-                    .lineLimit(1)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Connection status")
-            .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
-
-            // Active host indicator
-            if let hostName = appState.activeHostName {
+            if backendManager.backends.count >= 2 {
+                // Multi-backend: show a tappable row of colored health dots
+                Button {
+                    HapticManager.selection()
+                    activeScreen = .backends
+                    isSidebarOpen = false
+                } label: {
+                    HStack(spacing: theme.spacingXS) {
+                        ForEach(backendManager.backends) { backend in
+                            Circle()
+                                .fill(healthColor(backend.healthStatus))
+                                .frame(width: 10, height: 10)
+                        }
+                        Text("\(backendManager.backends.count) backends")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(1)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Backend connections")
+                .accessibilityValue("\(backendManager.backends.count) backends configured")
+                .accessibilityHint("Navigate to backend management")
+            } else {
+                // Single or no backend: original connection status indicator
                 HStack(spacing: theme.spacingXS) {
-                    Image(systemName: "desktopcomputer")
+                    Circle()
+                        .fill(appState.isConnected ? theme.success : theme.error)
+                        .frame(width: 8, height: 8)
+                    Text(appState.isConnected ? appState.serverURL : "Disconnected")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                    Text(hostName)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                        .foregroundStyle(theme.textSecondary)
                         .lineLimit(1)
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Active host")
-                .accessibilityValue(hostName)
-            } else if appState.isConnected {
-                HStack(spacing: theme.spacingXS) {
-                    Image(systemName: "desktopcomputer")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                    Text("Local")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+                .accessibilityLabel("Connection status")
+                .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
+
+                // Active host indicator
+                if let hostName = appState.activeHostName {
+                    HStack(spacing: theme.spacingXS) {
+                        Image(systemName: "desktopcomputer")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                        Text(hostName)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                            .lineLimit(1)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Active host")
+                    .accessibilityValue(hostName)
+                } else if appState.isConnected {
+                    HStack(spacing: theme.spacingXS) {
+                        Image(systemName: "desktopcomputer")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                        Text("Local")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Active host")
+                    .accessibilityValue("Local")
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Active host")
-                .accessibilityValue("Local")
             }
 
             // iCloud sync status indicator
@@ -305,6 +338,17 @@ struct SidebarView: View {
         }
     }
 
+    // MARK: - Health Color
+
+    private func healthColor(_ status: BackendConnection.HealthStatus) -> Color {
+        switch status {
+        case .healthy: return theme.success
+        case .degraded: return theme.warning
+        case .unreachable: return theme.error
+        case .unknown: return theme.textTertiary
+        }
+    }
+
     // MARK: - Navigation Items
 
     private var navigationItems: some View {
@@ -316,6 +360,7 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
                 sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
                 sidebarNavItem(icon: "terminal.fill", label: "Terminal", screen: .terminal)
+                sidebarNavItem(icon: "list.bullet.rectangle", label: "All Sessions", screen: .unifiedSessions)
                 sidebarNavItem(
                     icon: "list.bullet.rectangle.fill",
                     label: "Activity Feed",
@@ -334,6 +379,7 @@ struct SidebarView: View {
             sidebarSectionHeader(title: "CONFIGURE")
             VStack(spacing: theme.spacingXS) {
                 sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
+                sidebarNavItem(icon: "server.rack", label: "Backends", screen: .backends)
                 sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
                 sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
                 sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
@@ -739,7 +785,8 @@ struct SidebarView: View {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
-             (.documentation, .documentation), (.terminal, .terminal):
+             (.documentation, .documentation), (.terminal, .terminal),
+             (.backends, .backends), (.unifiedSessions, .unifiedSessions):
             return true
         case (.chat, .chat):
             return true

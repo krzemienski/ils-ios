@@ -34,6 +34,15 @@ class AppState {
     let networkMonitor: NetworkMonitor
     let connectionQualityService: ConnectionQualityService
     let iCloudSyncManager: ICloudSyncManager
+    let backendManager: BackendManager
+
+    /// Observer token for `.backendDidActivate` — used to update `serverURL` on backend switch.
+    @ObservationIgnored private var backendActivateObserver: NSObjectProtocol?
+
+    // MARK: - Computed Helpers
+
+    /// True when two or more backend connections are registered.
+    var hasMultipleBackends: Bool { backendManager.backends.count > 1 }
 
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
@@ -65,6 +74,7 @@ class AppState {
         self.networkMonitor = NetworkMonitor.shared
         self.connectionQualityService = ConnectionQualityService.shared
         self.iCloudSyncManager = ICloudSyncManager.shared
+        self.backendManager = BackendManager.shared
         self.activeHostName = UserDefaults.standard.string(forKey: "activeHostName")
 
         connectionQualityService.serverURL = cm.serverURL
@@ -73,6 +83,29 @@ class AppState {
         // startPolling() is idempotent (guards against duplicate starts) and measure()
         // handles the offline case gracefully, so this is safe to call unconditionally.
         connectionQualityService.startPolling()
+
+        // Load persisted backend connections asynchronously on first launch.
+        Task {
+            await backendManager.loadBackends()
+        }
+
+        // Observe active-backend switches and update serverURL for backward compat.
+        backendActivateObserver = NotificationCenter.default.addObserver(
+            forName: .backendDidActivate,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let url = notification.userInfo?["url"] as? String else { return }
+            Task { @MainActor [weak self] in
+                self?.updateServerURL(url)
+            }
+        }
+    }
+
+    deinit {
+        if let observer = backendActivateObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Performance Test Mock Data
@@ -134,10 +167,16 @@ class AppState {
     func handleScenePhase(_ phase: ScenePhase) {
         let appPhase: PollingManager.AppPhase
         switch phase {
-        case .active: appPhase = .active
-        case .inactive: appPhase = .inactive
-        case .background: appPhase = .background
-        @unknown default: appPhase = .inactive
+        case .active:
+            appPhase = .active
+            backendManager.startHealthPolling()
+        case .inactive:
+            appPhase = .inactive
+        case .background:
+            appPhase = .background
+            backendManager.stopHealthPolling()
+        @unknown default:
+            appPhase = .inactive
         }
         pollingManager.handleScenePhase(appPhase)
     }
@@ -209,10 +248,14 @@ class AppState {
             navigationIntent = .themes
         case "hooks":
             navigationIntent = .hooks
+        case "backends":
+            navigationIntent = .backends
         case "teams":
             navigationIntent = .teams
         case "activity":
             navigationIntent = .activityFeed
+        case "unified-sessions", "all-sessions":
+            navigationIntent = .unifiedSessions
         default:
             break
         }

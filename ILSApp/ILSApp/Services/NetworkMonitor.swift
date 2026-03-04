@@ -87,4 +87,7 @@ final class NetworkMonitor {
 
 extension Notification.Name {
     static let networkDidBecomeAvailable = Notification.Name("networkDidBecomeAvailable")
+    /// Posted by `BackendManager.setActive(id:)` when the active backend changes.
+    /// `userInfo["url"]` contains the new backend's URL string.
+    static let backendDidActivate = Notification.Name("backendDidActivate")
 }

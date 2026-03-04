@@ -1,4 +1,5 @@
 import SwiftUI
+import ILSShared
 
 // MARK: - Spec 013: Push Notifications for MCP Status
 
@@ -33,6 +34,7 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
+    @State private var backendManager = BackendManager.shared
 
     private var quietStart: Binding<Date> {
         Binding(
@@ -99,6 +101,30 @@ struct NotificationPreferencesView: View {
                     .modifier(GlassCard())
                 }
 
+                // Backend Notifications
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Backend Notifications")
+
+                    if backendManager.backends.isEmpty {
+                        Text("No backends configured. Add a backend in Settings → Backends to enable per-backend notifications.")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                            .padding(theme.spacingMD)
+                            .modifier(GlassCard())
+                    } else {
+                        VStack(spacing: 0) {
+                            ForEach(Array(backendManager.backends.enumerated()), id: \.element.id) { index, backend in
+                                if index > 0 {
+                                    Divider().background(theme.bgTertiary)
+                                }
+                                backendNotificationRow(backend)
+                            }
+                        }
+                        .padding(theme.spacingMD)
+                        .modifier(GlassCard())
+                    }
+                }
+
                 // Quiet Hours
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     sectionLabel("Quiet Hours")
@@ -162,6 +188,7 @@ struct NotificationPreferencesView: View {
         #if os(iOS)
         .inlineNavigationBarTitle()
         #endif
+        .task { await backendManager.loadBackends() }
     }
 
     // MARK: - Components
@@ -190,6 +217,31 @@ struct NotificationPreferencesView: View {
         .onChange(of: isOn.wrappedValue) {
             HapticManager.selection()
         }
+    }
+
+    @ViewBuilder
+    private func backendNotificationRow(_ backend: BackendConnection) -> some View {
+        HStack {
+            Circle()
+                .fill(Color(hex: backend.colorHex))
+                .frame(width: 10, height: 10)
+            Text(backend.name)
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Toggle("", isOn: Binding(
+                get: { backend.notificationsEnabled },
+                set: { newValue in
+                    var updated = backend
+                    updated.notificationsEnabled = newValue
+                    HapticManager.selection()
+                    Task { await backendManager.update(updated) }
+                }
+            ))
+            .labelsHidden()
+            .tint(theme.accent)
+        }
+        .accessibilityLabel("Notifications from \(backend.name)")
     }
 }
 
