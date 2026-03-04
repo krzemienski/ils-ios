@@ -59,6 +59,9 @@ struct ChatView: View {
         var showSearch = false
         var showContextWindowDetail = false
         var showQuickReplyTemplates = false
+        var showSessionMemory = false
+        /// Shown after a > 20% context token drop is detected, indicating Claude Code compacted the session.
+        var showPostCompactionRecovery = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -98,6 +101,7 @@ struct ChatView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
+    @AppStorage("notif_contextCompactionAlerts") private var notifContextCompactionAlerts: Bool = true
 
     // MARK: - Body
 
@@ -316,6 +320,69 @@ struct ChatView: View {
                     } else {
                         UserDefaults.standard.set(newValue, forKey: key)
                     }
+        .sheet(isPresented: $sheets.showAdvancedOptions) {
+            AdvancedOptionsSheet(config: $chatOptionsConfig)
+                .presentationDetents([.large])
+                .presentationBackground(theme.bgPrimary)
+        }
+        .sheet(isPresented: $sheets.showSessionMemory) {
+            SessionMemoryView(sessionId: session.id)
+        }
+        .sheet(isPresented: $sheets.showContextWindowDetail) {
+            if let usedTokens = viewModel.contextTokensUsed,
+               let windowSize = viewModel.contextWindowSize {
+                ContextWindowDetailSheet(
+                    sessionId: session.id,
+                    usedTokens: usedTokens,
+                    contextWindowSize: windowSize,
+                    inputTokens: viewModel.contextInputTokens,
+                    outputTokens: viewModel.contextOutputTokens,
+                    cacheReadTokens: viewModel.contextCacheReadTokens,
+                    cacheCreateTokens: viewModel.contextCacheCreateTokens,
+                    onForkSession: {
+                        sheets.showContextWindowDetail = false
+                        Task {
+                            if let forked = await viewModel.forkSession() {
+                                actions.forkedSession = forked
+                                sheets.showForkAlert = true
+                            }
+                        }
+                    },
+                    onDismiss: { sheets.showContextWindowDetail = false }
+                )
+            }
+        }
+        .sheet(isPresented: $sheets.showPostCompactionRecovery, onDismiss: dismissPostCompactionSheet) {
+            postCompactionRecoverySheet
+        }
+        .sheet(item: $viewModel.pendingPermissionRequest) { request in
+            PermissionRequestModal(request: request) { decision in
+                viewModel.respondToPermission(requestId: request.requestId, decision: decision)
+            }
+            .presentationDetents([.medium])
+            .presentationBackground(theme.bgPrimary)
+        }
+        .navigationDestination(item: $actions.navigateToForked) { session in
+            ChatView(session: session)
+        }
+        .navigationDestination(item: $actions.navigateToRelated) { session in
+            ChatView(session: session)
+        }
+        .onChange(of: viewModel.showPostCompactionRecovery) { _, newValue in
+            if newValue {
+                sheets.showPostCompactionRecovery = true
+            }
+        }
+        .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
+            if newValue != nil {
+                actions.errorId = UUID()
+                sheets.showErrorAlert = true
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                Task {
+                    await viewModel.refreshMessages()
                 }
             }
             .onDisappear {
@@ -360,6 +427,8 @@ struct ChatView: View {
                 searchResultsView
             } else {
                 statusBanner
+
+                compactionAlertBanner
 
                 contextWindowBar
 
@@ -426,6 +495,44 @@ struct ChatView: View {
                 state: viewModel.connectionState.asAsyncOperationState,
                 tokenCount: viewModel.streamTokenCount,
                 elapsedSeconds: viewModel.streamElapsedSeconds
+            )
+            .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    /// In-app alert banner shown when context window usage crosses the 85%, 90%, or 95%
+    /// compaction threshold and the "Context Compaction Alerts" notification preference is enabled.
+    @ViewBuilder
+    private var compactionAlertBanner: some View {
+        if notifContextCompactionAlerts,
+           viewModel.showCompactionAlert,
+           let usedTokens = viewModel.contextTokensUsed,
+           let windowSize = viewModel.contextWindowSize,
+           windowSize > 0 {
+            ContextCompactionAlertBanner(
+                usedTokens: usedTokens,
+                contextWindowSize: windowSize,
+                onForkSession: {
+                    viewModel.showCompactionAlert = false
+                    Task {
+                        if let forked = await viewModel.forkSession() {
+                            actions.forkedSession = forked
+                            sheets.showForkAlert = true
+                        }
+                    }
+                },
+                onSaveSnapshot: {
+                    viewModel.showCompactionAlert = false
+                    Task {
+                        await viewModel.generateContextSnapshot()
+                    }
+                },
+                onDismiss: {
+                    viewModel.showCompactionAlert = false
+                },
+                onAutoForkSettings: {
+                    appState.navigationIntent = .settings
+                }
             )
             .transition(AnyTransition.move(edge: .top).combined(with: .opacity))
         }
@@ -695,7 +802,7 @@ struct ChatView: View {
         #endif
     }
 
-    /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
+        /// Toolbar items providing session management actions: rename, fork, export, info, and delete.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         #if os(iOS)
@@ -786,6 +893,13 @@ struct ChatView: View {
                 .accessibilityIdentifier("fork-tree-button")
 
                 Button {
+                    sheets.showSessionMemory = true
+                } label: {
+                    Label("Session Memory", systemImage: "note.text")
+                }
+                .accessibilityIdentifier("session-memory-button")
+
+                Button {
                     Task { await exportSession() }
                 } label: {
                     Label("Export", systemImage: "square.and.arrow.up")
@@ -867,6 +981,34 @@ struct ChatView: View {
         }
     }
     #endif
+
+    // MARK: - Post-Compaction Recovery
+
+    /// Sheet content for the post-compaction recovery experience.
+    private var postCompactionRecoverySheet: some View {
+        PostCompactionRecoverySheet(
+            tokensBeforeCompaction: viewModel.compactionTokensBefore ?? 0,
+            tokensAfterCompaction: viewModel.contextTokensUsed ?? 0,
+            snapshot: viewModel.compactionSnapshot,
+            onPasteAsMessage: pasteSnapshotAsMessage,
+            onDismiss: dismissPostCompactionSheet
+        )
+    }
+
+    /// Pastes the snapshot text into the chat input with a recovery context prefix.
+    private func pasteSnapshotAsMessage(_ snapshotText: String) {
+        let prefix = "The following is a context snapshot captured before this session was compacted. Please use it to restore our working context:\n\n"
+        inputText = prefix + snapshotText
+        sheets.showPostCompactionRecovery = false
+        viewModel.showPostCompactionRecovery = false
+        isInputFocused = true
+    }
+
+    /// Dismisses the post-compaction recovery sheet and resets the view model flag.
+    private func dismissPostCompactionSheet() {
+        sheets.showPostCompactionRecovery = false
+        viewModel.showPostCompactionRecovery = false
+    }
 
     /// Resend the most recent user message after a connection error.
     private func retryLastMessage() {

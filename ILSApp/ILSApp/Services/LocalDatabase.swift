@@ -229,6 +229,32 @@ struct CachedPlugin: Codable, FetchableRecord, PersistableRecord, Identifiable {
     }
 }
 
+/// Cached session memory note for GRDB persistence.
+struct CachedSessionMemoryNote: Codable, FetchableRecord, PersistableRecord, Identifiable {
+    static let databaseTableName = "session_memory_notes"
+
+    let id: String
+    var sessionId: String
+    var title: String
+    var content: String
+    var tags: String // JSON-encoded [String]
+    var createdAt: Date
+    var cachedAt: Date
+}
+
+/// Cached context snapshot for GRDB persistence.
+struct CachedContextSnapshot: Codable, FetchableRecord, PersistableRecord, Identifiable {
+    static let databaseTableName = "context_snapshots"
+
+    let id: String
+    var sessionId: String
+    var usedTokens: Int
+    var contextWindowSize: Int
+    var snapshotText: String
+    var triggeredAt: Date
+    var cachedAt: Date
+}
+
 /// Cached SSH server connection profile for GRDB persistence.
 ///
 /// Intentionally omits sensitive fields (credentials, private keys, passwords).
@@ -449,6 +475,38 @@ actor LocalDatabase {
                 t.column("createdAt", .datetime)
                 t.column("cachedAt", .datetime).notNull()
             }
+        }
+
+        migrator.registerMigration("v3_add_session_memory_tables") { db in
+            try db.create(table: "session_memory_notes") { t in
+                t.primaryKey("id", .text)
+                t.column("sessionId", .text).notNull()
+                t.column("title", .text).notNull()
+                t.column("content", .text).notNull()
+                t.column("tags", .text).notNull()
+                t.column("createdAt", .datetime).notNull()
+                t.column("cachedAt", .datetime).notNull()
+            }
+            try db.create(
+                index: "session_memory_notes_sessionId",
+                on: "session_memory_notes",
+                columns: ["sessionId"]
+            )
+
+            try db.create(table: "context_snapshots") { t in
+                t.primaryKey("id", .text)
+                t.column("sessionId", .text).notNull()
+                t.column("usedTokens", .integer).notNull()
+                t.column("contextWindowSize", .integer).notNull()
+                t.column("snapshotText", .text).notNull()
+                t.column("triggeredAt", .datetime).notNull()
+                t.column("cachedAt", .datetime).notNull()
+            }
+            try db.create(
+                index: "context_snapshots_sessionId",
+                on: "context_snapshots",
+                columns: ["sessionId"]
+            )
         }
 
         try migrator.migrate(dbPool)

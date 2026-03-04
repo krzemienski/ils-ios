@@ -81,6 +81,29 @@ class ChatViewModel {
     /// Cache creation tokens for the latest result.
     var contextCacheCreateTokens: Int = 0
 
+    // MARK: - Compaction Alert Properties
+
+    /// The highest context usage threshold (85/90/95%) that has been crossed, triggering the alert.
+    var compactionAlertThreshold: Double? = nil
+    /// Whether to show the compaction alert banner.
+    var showCompactionAlert: Bool = false
+    /// Thresholds already alerted this session — prevents re-alerting at the same level.
+    private var alertedThresholds: Set<Int> = []
+
+    /// Whether to show the post-compaction recovery banner.
+    /// Set to `true` when a > 20% drop in contextTokensUsed is detected between turns,
+    /// indicating Claude Code performed an automatic context compaction.
+    var showPostCompactionRecovery: Bool = false
+    /// Text of the most recently saved context snapshot, surfaced as a recovery suggestion
+    /// after a compaction event is detected.
+    var lastSnapshotText: String? = nil
+    /// Token count recorded immediately before the most recent compaction event was detected.
+    var compactionTokensBefore: Int? = nil
+    /// Most recent context snapshot loaded after a compaction event is detected.
+    var compactionSnapshot: ContextSnapshot? = nil
+    /// Set when an auto-fork completes at 95% threshold; consumed by ChatView to show the fork alert.
+    var forkedSessionForNav: ChatSession? = nil
+
     /// Context window usage as a percentage (0–100), or nil if data not yet available.
     var contextUsagePercent: Double? {
         guard let used = contextTokensUsed, let total = contextWindowSize, total > 0 else { return nil }
@@ -956,6 +979,193 @@ class ChatViewModel {
         messages.filter { !$0.isUser && !$0.isSystem }.count
     }
 
+    // MARK: - Compaction Threshold Monitoring
+
+    /// Check context usage percent against 85%/90%/95% thresholds and trigger alerts for any
+    /// newly-crossed levels. Each threshold alerts at most once per session. The banner is shown
+    /// at the highest newly-crossed threshold.
+    ///
+    /// When 85% is newly crossed and `autoSnapshotEnabled` is set in UserDefaults, an
+    /// automatic context snapshot is saved via ``generateContextSnapshot()``.
+    private func checkCompactionThresholds() {
+        guard let percent = contextUsagePercent else { return }
+
+        let thresholds = [85, 90, 95]
+        var highestNewThreshold: Int? = nil
+        var shouldAutoSnapshot = false
+        var shouldAutoFork = false
+
+        for threshold in thresholds {
+            if percent >= Double(threshold), !alertedThresholds.contains(threshold) {
+                alertedThresholds.insert(threshold)
+                highestNewThreshold = threshold
+                if threshold == 85 {
+                    shouldAutoSnapshot = true
+                }
+                if threshold == 95 {
+                    shouldAutoFork = true
+                }
+            }
+        }
+
+        if let threshold = highestNewThreshold {
+            // Respect per-threshold notification preference. Default to true when
+            // the key has never been set so existing users continue to see alerts.
+            let notifKey: String
+            switch threshold {
+            case 85: notifKey = "notif_contextWarning"
+            case 90: notifKey = "notif_contextAlert"
+            case 95: notifKey = "notif_contextCritical"
+            default:  notifKey = ""
+            }
+            let showBanner = notifKey.isEmpty
+                || UserDefaults.standard.object(forKey: notifKey) == nil
+                || UserDefaults.standard.bool(forKey: notifKey)
+            if showBanner {
+                compactionAlertThreshold = Double(threshold)
+                showCompactionAlert = true
+            }
+        }
+
+        if shouldAutoSnapshot && UserDefaults.standard.bool(forKey: "autoSnapshotEnabled") {
+            Task { [weak self] in await self?.generateContextSnapshot() }
+        }
+
+        if shouldAutoFork && UserDefaults.standard.bool(forKey: "autoForkBeforeCompaction") {
+            Task { [weak self] in
+                guard let self else { return }
+                let forked = await forkSession()
+                if let forked {
+                    messages.append(ChatMessage.systemEvent("Auto-forked session before context limit", eventType: .sessionForked))
+                    alertedThresholds.removeAll()
+                    forkedSessionForNav = forked
+                }
+            }
+        }
+    }
+
+    /// Detect a significant drop in context token usage between turns, which indicates
+    /// Claude Code performed an automatic context compaction. A drop > 20% relative to
+    /// the previous value triggers post-compaction recovery mode.
+    ///
+    /// When compaction is detected, ``showPostCompactionRecovery`` is set to `true` and
+    /// the most recent snapshot for the session is loaded into ``lastSnapshotText`` so
+    /// the UI can surface it as a recovery suggestion.
+    private func checkPostCompactionDrop(previous: Int, new: Int) {
+        guard previous > 0 else { return }
+        let dropFraction = Double(previous - new) / Double(previous)
+        guard dropFraction > 0.20 else { return }
+
+        showPostCompactionRecovery = true
+        compactionTokensBefore = previous
+        AppLogger.shared.info("Post-compaction drop detected: \(previous) → \(new) tokens (\(String(format: "%.0f", dropFraction * 100))% drop)", category: "sessionMemory")
+
+        // Load the most recent snapshot to surface as a recovery suggestion
+        guard let sessionId else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let snapshots = try await SessionMemoryService.shared.fetchSnapshots(forSession: sessionId)
+                if let latest = snapshots.first {
+                    self.lastSnapshotText = latest.snapshotText
+                    self.compactionSnapshot = latest
+                }
+            } catch {
+                AppLogger.shared.error("Failed to load snapshot for post-compaction recovery: \(error)", category: "sessionMemory")
+            }
+        }
+    }
+
+    // MARK: - Snapshot Generation
+
+    /// Generate and persist a context snapshot summarising the current conversation state.
+    ///
+    /// Creates a plain-text summary of up to 15 recent messages, prioritising user turns
+    /// and key tool results. The snapshot is stored via ``SessionMemoryService`` so it
+    /// survives context compaction events and can be reviewed post-compaction.
+    ///
+    /// - Returns: `true` if the snapshot was saved successfully, `false` otherwise.
+    @discardableResult
+    func generateContextSnapshot() async -> Bool {
+        guard let sessionId,
+              let usedTokens = contextTokensUsed,
+              let windowSize = contextWindowSize else { return false }
+
+        let snapshotText = buildSnapshotText()
+        guard !snapshotText.isEmpty else { return false }
+
+        do {
+            try await SessionMemoryService.shared.saveSnapshot(
+                sessionId: sessionId,
+                usedTokens: usedTokens,
+                windowSize: windowSize,
+                snapshotText: snapshotText
+            )
+            // Cache locally so post-compaction recovery can surface it without an extra DB read
+            lastSnapshotText = snapshotText
+            AppLogger.shared.info("Context snapshot saved for session \(sessionId)", category: "sessionMemory")
+            return true
+        } catch {
+            AppLogger.shared.error("Failed to save context snapshot: \(error)", category: "sessionMemory")
+            return false
+        }
+    }
+
+    /// Build a plain-text summary of recent conversation context.
+    ///
+    /// Takes the most recent 15 messages (skipping system events), prioritising user turns.
+    /// Long assistant messages are truncated to 500 characters. Tool call names and a brief
+    /// preview of tool results are included to capture key activity.
+    private func buildSnapshotText() -> String {
+        let snapshotWindowSize = 15
+        let recentMessages = messages.suffix(snapshotWindowSize)
+        guard !recentMessages.isEmpty else { return "" }
+
+        var lines: [String] = []
+        lines.append("Context Snapshot — \(Date().formatted())")
+        if let used = contextTokensUsed, let total = contextWindowSize {
+            let pct = String(format: "%.0f", contextUsagePercent ?? 0)
+            lines.append("Usage: \(used)/\(total) tokens (\(pct)%)")
+        }
+        lines.append("")
+
+        for message in recentMessages {
+            // Skip injected system event messages (e.g. "Session started")
+            if message.isSystem { continue }
+
+            let role = message.isUser ? "User" : "Assistant"
+            var text = message.text
+
+            // Truncate long assistant messages to keep the snapshot concise
+            if !message.isUser && text.count > 500 {
+                text = String(text.prefix(500)) + "…"
+            }
+
+            if !text.isEmpty {
+                lines.append("[\(role)] \(text)")
+            }
+
+            // Summarise tool calls by name
+            if !message.toolCalls.isEmpty {
+                let toolNames = message.toolCalls.map { $0.name }.joined(separator: ", ")
+                lines.append("  Tools: \(toolNames)")
+            }
+
+            // Include brief tool result previews; highlight errors
+            for result in message.toolResults {
+                if result.isError {
+                    let preview = String(result.content.prefix(200))
+                    lines.append("  Tool result (error): \(preview)")
+                } else if !result.content.isEmpty {
+                    let preview = String(result.content.prefix(150))
+                    lines.append("  Tool result: \(preview)")
+                }
+            }
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
     private func processStreamMessages(_ streamMessages: [StreamMessage]) {
         // Find or create current assistant message.
         // Guard against re-popping injected system event messages (isSystem: true).
@@ -981,6 +1191,15 @@ class ChatViewModel {
                         currentMessage.text.reserveCapacity(8192)
                     }
                     messages.append(ChatMessage.systemEvent("Session started", eventType: .sessionStarted))
+                    // Reset compaction alert state for the new session.
+                    alertedThresholds.removeAll()
+                    showCompactionAlert = false
+                    compactionAlertThreshold = nil
+                    showPostCompactionRecovery = false
+                    lastSnapshotText = nil
+                    compactionTokensBefore = nil
+                    compactionSnapshot = nil
+                    forkedSessionForNav = nil
                 }
 
             case .assistant(let assistantMsg):
@@ -996,11 +1215,19 @@ class ChatViewModel {
                     let cacheRead = usage.cacheReadInputTokens ?? 0
                     let cacheCreate = usage.cacheCreationInputTokens ?? 0
 
+                    let newTokensUsed = inputTokens + outputTokens
+                    let previousTokens = contextTokensUsed
+
                     contextInputTokens = inputTokens
                     contextOutputTokens = outputTokens
                     contextCacheReadTokens = cacheRead
                     contextCacheCreateTokens = cacheCreate
-                    contextTokensUsed = inputTokens + outputTokens
+                    contextTokensUsed = newTokensUsed
+
+                    // Detect post-compaction token drop (> 20% reduction between turns)
+                    if let prev = previousTokens {
+                        checkPostCompactionDrop(previous: prev, new: newTokensUsed)
+                    }
 
                     // Real per-message output token count
                     currentMessage.tokenCount = outputTokens
@@ -1010,6 +1237,9 @@ class ChatViewModel {
                 if let windowSize = resultMsg.modelUsage?.values.first?.contextWindow {
                     contextWindowSize = windowSize
                 }
+
+                // Check if usage has crossed a compaction alert threshold.
+                checkCompactionThresholds()
 
             case .permission(let permissionReq):
                 pendingPermissionRequest = permissionReq
