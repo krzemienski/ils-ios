@@ -126,6 +126,12 @@ struct SidebarRootView: View {
     /// Shared sessions view model owned by this root view and passed to ``SidebarView`` and
     /// ``HomeView``, ensuring sessions are fetched once and reused across both consumers.
     @State private var sessionsVM = SessionsViewModel()
+    /// Controls presentation of the global command palette sheet (Cmd+K on iPad with keyboard).
+    @State private var showGlobalCommandPalette = false
+    /// Registry owning all built-in commands, recent usage tracking, and fuzzy-search results.
+    @State private var commandRegistry = CommandRegistry()
+    /// Store for persisted custom keyboard shortcut bindings displayed in the palette.
+    @State private var shortcutStore = KeyboardShortcutStore()
     /// Current connection event shown in the toast banner. `nil` when no toast is visible.
     @State private var connectionEvent: ConnectionEvent? = nil
     /// Shared network reachability monitor used to detect connection loss and restore events.
@@ -235,6 +241,27 @@ struct SidebarRootView: View {
             ServerSetupSheet()
                 .environment(appState)
                 .environment(\.theme, theme)
+        }
+        // Cmd+K global command palette (iPad with external keyboard)
+        // A hidden zero-opacity button captures the Cmd+K keyboard shortcut on iOS/iPadOS.
+        // The button has no visual presence and does not participate in hit testing.
+        .background {
+            Button("") { showGlobalCommandPalette = true }
+                .keyboardShortcut("k", modifiers: .command)
+                .opacity(0)
+                .allowsHitTesting(false)
+        }
+        .sheet(isPresented: $showGlobalCommandPalette) {
+            NavigationStack {
+                GlobalCommandPaletteView(
+                    registry: commandRegistry,
+                    shortcutStore: shortcutStore
+                ) { command in
+                    handleGlobalCommand(command)
+                }
+                .environment(appState)
+                .environment(\.theme, theme)
+            }
         }
         // DEBUG: Auto-navigate for screenshot capture (revert after)
         // .task { ... } — REVERTED after validation
@@ -487,6 +514,26 @@ struct SidebarRootView: View {
             previousScreen = activeScreen
             activeScreen = .chat(session)
         }
+    }
+
+    // MARK: - Global Command Palette
+
+    /// Executes a command selected from the global command palette and dismisses the palette.
+    private func handleGlobalCommand(_ command: GlobalCommand) {
+        switch command.action {
+        case .navigate(let screen):
+            if case .chat(let session) = screen {
+                navigateToChat(session)
+            } else {
+                previousScreen = nil
+                activeScreen = screen
+            }
+        case .postNotification(let name):
+            NotificationCenter.default.post(name: name, object: nil)
+        case .custom:
+            break
+        }
+        showGlobalCommandPalette = false
     }
 
     // MARK: - Sidebar Logic (iPhone)

@@ -112,7 +112,7 @@ struct MacChatView: View {
             }
             .onKeyPress("k", phases: .down) { press in
                 guard press.modifiers.contains(.command) else { return .ignored }
-                showCommandPalette = true
+                NotificationCenter.default.post(name: .ilsOpenCommandPalette, object: nil)
                 return .handled
             }
             .onKeyPress("e", phases: .down) { press in

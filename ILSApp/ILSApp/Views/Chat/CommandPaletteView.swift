@@ -6,8 +6,8 @@ import ILSShared
 /// Built-in commands are a static list of 16 `CommandItem` entries. Skills are fetched
 /// asynchronously from the `/skills` API endpoint on appearance. The "Switch Model" section
 /// is always static. All three sections are filtered by a single ``searchText`` binding
-/// via `.searchable`. Toolbar and navigation-bar styling differs between iOS and macOS via
-/// `#if os(iOS)` guards.
+/// via `.searchable` using ``FuzzyMatcher`` for fuzzy matching and relevance-ranked results.
+/// Toolbar and navigation-bar styling differs between iOS and macOS via `#if os(iOS)` guards.
 ///
 /// Selecting any entry calls ``onSelect`` with the formatted command string and dismisses the sheet.
 ///
@@ -128,8 +128,32 @@ struct CommandPaletteView: View {
         .task(id: searchText) {
             try? await Task.sleep(for: .milliseconds(200))
             guard !Task.isCancelled else { return }
-            debouncedBuiltInCommands = Self.allBuiltInCommands.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) || $0.description.localizedCaseInsensitiveContains(searchText) }
-            debouncedFilteredSkills = skills.filter { searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText) }
+            if searchText.isEmpty {
+                debouncedBuiltInCommands = Self.allBuiltInCommands
+                debouncedFilteredSkills = skills
+            } else {
+                // Fuzzy-filter built-in commands and rank by best score across name and description
+                debouncedBuiltInCommands = Self.allBuiltInCommands
+                    .compactMap { command -> (CommandItem, Double)? in
+                        let nameScore = FuzzyMatcher.score(query: searchText, in: command.name)
+                        let descScore = FuzzyMatcher.score(query: searchText, in: command.description)
+                        let best = max(nameScore, descScore)
+                        return best > 0.1 ? (command, best) : nil
+                    }
+                    .sorted { $0.1 > $1.1 }
+                    .map(\.0)
+
+                // Fuzzy-filter skills and rank by score
+                debouncedFilteredSkills = skills
+                    .compactMap { skill -> (Skill, Double)? in
+                        let nameScore = FuzzyMatcher.score(query: searchText, in: skill.name)
+                        let descScore = skill.description.map { FuzzyMatcher.score(query: searchText, in: $0) } ?? 0.0
+                        let best = max(nameScore, descScore)
+                        return best > 0.1 ? (skill, best) : nil
+                    }
+                    .sorted { $0.1 > $1.1 }
+                    .map(\.0)
+            }
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showDocumentation) {

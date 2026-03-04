@@ -39,6 +39,8 @@ struct SettingsView: View {
     /// The user's preferred color scheme, kept in sync with the remote config on load.
     @State private var colorSchemePreference: String = "system"
     @State private var showDeleteConfirmation: Bool = false
+    @State private var commandRegistry = CommandRegistry()
+    @State private var shortcutStore = KeyboardShortcutStore()
     // isDeleting and deleteResult moved to SettingsViewModel
     /// Whether to show AI-powered smart session suggestions in new session and chat views.
     @AppStorage("showSessionSuggestions") private var showSessionSuggestions: Bool = true
@@ -62,6 +64,8 @@ struct SettingsView: View {
                 remoteAccessSection
 
                 SettingsAppearanceSection()
+
+                keyboardShortcutsSection
 
                 sessionSuggestionsSection
 
@@ -190,6 +194,35 @@ struct SettingsView: View {
             availableColorSchemes: availableColorSchemes,
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
+    }
+
+    private var keyboardShortcutsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("KEYBOARD SHORTCUTS")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            NavigationLink {
+                KeyboardShortcutsView(commandRegistry: commandRegistry, shortcutStore: shortcutStore)
+                    .environment(appState)
+                    .environment(\.theme, theme)
+            } label: {
+                HStack {
+                    Image(systemName: "keyboard")
+                        .foregroundStyle(theme.accent)
+                    Text("Keyboard Shortcuts")
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: theme.fontCaption))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .padding(theme.spacingMD)
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        }
     }
 
     private var contextWindowSection: some View {

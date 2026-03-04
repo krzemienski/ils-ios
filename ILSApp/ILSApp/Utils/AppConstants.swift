@@ -73,4 +73,17 @@ enum AppConstants {
 
     /// iCloud KV store key for the synced custom quick reply templates.
     static let iCloudQuickReplyTemplatesKey = "ils_icloud_quick_reply_templates"
+
+    // MARK: - Command Palette Keys
+
+    /// UserDefaults key for the command palette recently used command IDs (array of String).
+    static let commandPaletteRecentCommandsKey = "commandPaletteRecentCommands"
+
+    /// UserDefaults key for the command palette per-command usage counts (JSON-encoded [String: Int]).
+    static let commandPaletteUsageCountKey = "commandPaletteUsageCount"
+
+    // MARK: - Keyboard Shortcut Keys
+
+    /// UserDefaults key for custom keyboard shortcut bindings (JSON-encoded [String: KeyboardShortcutConfig]).
+    static let keyboardShortcutBindingsKey = "keyboardShortcutBindings"
 }
