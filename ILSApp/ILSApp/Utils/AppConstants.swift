@@ -86,4 +86,14 @@ enum AppConstants {
 
     /// UserDefaults key for custom keyboard shortcut bindings (JSON-encoded [String: KeyboardShortcutConfig]).
     static let keyboardShortcutBindingsKey = "keyboardShortcutBindings"
+
+    // MARK: - Hooks Builder Keys
+
+    /// UserDefaults key for the set of disabled hook identifiers.
+    /// Stored as a JSON-encoded array of hook ID strings.
+    static let disabledHooksKey = "ils_disabled_hooks"
+
+    /// UserDefaults key for the hook execution log.
+    /// Stored as a JSON-encoded array of HookExecutionRecord values.
+    static let hookExecutionLogKey = "ils_hook_execution_log"
 }

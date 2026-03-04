@@ -26,6 +26,8 @@ struct HookDisplayItem: Identifiable, Hashable {
     let prompt: String?
     let groupIndex: Int
     let hookIndex: Int
+    /// Whether this hook is currently active in the Claude config.
+    let isEnabled: Bool
 
     init(
         eventType: String,
@@ -35,7 +37,8 @@ struct HookDisplayItem: Identifiable, Hashable {
         url: String? = nil,
         prompt: String? = nil,
         groupIndex: Int,
-        hookIndex: Int
+        hookIndex: Int,
+        isEnabled: Bool = true
     ) {
         self.id = UUID()
         self.eventType = eventType
@@ -46,6 +49,7 @@ struct HookDisplayItem: Identifiable, Hashable {
         self.prompt = prompt
         self.groupIndex = groupIndex
         self.hookIndex = hookIndex
+        self.isEnabled = isEnabled
     }
 
     /// Human-readable summary of the hook's action, regardless of handler type.
@@ -71,9 +75,22 @@ class HooksViewModel {
     var error: Error?
     var config: ConfigInfo?
 
+    /// Keys of disabled hooks persisted across app launches.
+    /// Format: "EventType:groupIndex" (e.g., "PreToolUse:0").
+    private(set) var disabledHookKeys: Set<String> = []
+
+    /// Snapshot of disabled hook groups keyed by hook key for restoration on re-enable.
+    private var disabledHooksSnapshot: [String: HookGroup] = [:]
+
+    /// Execution log entries, newest entries appended at the end. Max 500 entries.
+    var executionLog: [HookExecutionEntry] = []
+
     private var client: APIClient?
 
-    init() {}
+    init() {
+        loadDisabledState()
+        loadExecutionLog()
+    }
 
     func configure(client: APIClient) {
         self.client = client
@@ -297,34 +314,280 @@ class HooksViewModel {
         return result
     }
 
+    // MARK: - Import / Export
+
+    /// Exports the current hooks configuration as a pretty-printed JSON string.
+    ///
+    /// The JSON format matches the Claude Code `hooks` config block exactly, e.g.:
+    /// ```json
+    /// {
+    ///   "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "echo hi" }] }]
+    /// }
+    /// ```
+    /// - Returns: Pretty-printed JSON string, or nil if there are no hooks or serialization fails.
+    func exportHooksAsJSON() -> String? {
+        guard let hooksConfig = config?.content.hooks, !hooksConfig.events.isEmpty else {
+            return nil
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(hooksConfig) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    /// Imports hooks from a JSON string, replacing the current hooks configuration.
+    ///
+    /// Expects the same format as `exportHooksAsJSON()` — a top-level object whose keys are
+    /// PascalCase event type names and values are arrays of `HookGroup` objects.
+    /// - Parameter jsonString: JSON string in Claude Code hooks format.
+    /// - Returns: Error message string, or nil on success.
+    func importHooksFromJSON(_ jsonString: String) async -> String? {
+        guard let data = jsonString.data(using: .utf8) else {
+            return "Invalid JSON string encoding"
+        }
+        guard client != nil else { return "Client not configured" }
+
+        let importedEvents: [String: [HookGroup]]
+        do {
+            importedEvents = try JSONDecoder().decode([String: [HookGroup]].self, from: data)
+        } catch {
+            return "Failed to parse JSON: \(error.localizedDescription)"
+        }
+
+        guard !importedEvents.isEmpty else { return "No hooks found in JSON" }
+
+        isSaving = true
+        defer { isSaving = false }
+
+        let settingsVM = SettingsViewModel()
+        settingsVM.configure(client: client!)
+        let result = await settingsVM.saveWithPatch { config in
+            config.hooks = HooksConfig(events: importedEvents)
+        }
+
+        if result == nil {
+            await loadHooks()
+        }
+
+        return result
+    }
+
+    // MARK: - Test Simulator
+
+    /// Simulates a Claude Code event and returns the enabled hooks that would fire.
+    ///
+    /// Matching rules:
+    /// - Only enabled hooks are considered (disabled hooks are excluded).
+    /// - A hook matches when its `eventType` equals the given `eventType`.
+    /// - If the hook has no matcher (nil or empty), it matches all events of that type.
+    /// - If the hook has a matcher, it is treated as a regex pattern and tested against
+    ///   `toolName` first; if `toolName` is nil or doesn't match, it is tested against
+    ///   `extraContext`.
+    ///
+    /// - Parameters:
+    ///   - eventType: PascalCase event type to simulate (e.g., "PreToolUse").
+    ///   - toolName: Optional tool name input (e.g., "Bash", "Edit").
+    ///   - extraContext: Optional free-form context string for matcher testing.
+    /// - Returns: Array of `HookDisplayItem` that would fire for this event.
+    func simulateEvent(eventType: String, toolName: String?, extraContext: String?) -> [HookDisplayItem] {
+        hooks.filter { hook in
+            guard hook.isEnabled, hook.eventType == eventType else { return false }
+
+            // No matcher means the hook fires for every event of this type.
+            guard let matcher = hook.matcher, !matcher.isEmpty else { return true }
+
+            return matchesPattern(matcher, input: toolName) ||
+                   matchesPattern(matcher, input: extraContext)
+        }
+    }
+
+    /// Tests whether `pattern` (a regex string) matches `input`.
+    /// Returns false when `input` is nil or the pattern is invalid.
+    private func matchesPattern(_ pattern: String, input: String?) -> Bool {
+        guard let input, !input.isEmpty else { return false }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return false }
+        let range = NSRange(input.startIndex..., in: input)
+        return regex.firstMatch(in: input, options: [], range: range) != nil
+    }
+
+    // MARK: - Enable / Disable
+
+    /// Returns true when the hook at the given position is currently disabled.
+    func isHookDisabled(eventType: String, groupIndex: Int) -> Bool {
+        disabledHookKeys.contains(hookKey(eventType: eventType, groupIndex: groupIndex))
+    }
+
+    /// Toggle the enabled state of a hook.
+    ///
+    /// - For an **enabled** hook: saves its `HookGroup` to a local snapshot, removes it from
+    ///   the Claude config, and marks it disabled in UserDefaults.
+    /// - For a **disabled** hook: restores its `HookGroup` from the snapshot back into the
+    ///   Claude config and removes the disabled record.
+    /// - Returns: An error string on failure, or `nil` on success.
+    func toggleHookEnabled(eventType: String, groupIndex: Int) async -> String? {
+        let key = hookKey(eventType: eventType, groupIndex: groupIndex)
+        if disabledHookKeys.contains(key) {
+            return await enableHook(key: key, eventType: eventType)
+        } else {
+            return await disableHook(key: key, eventType: eventType, groupIndex: groupIndex)
+        }
+    }
+
+    // MARK: - Private Enable/Disable Helpers
+
+    private func hookKey(eventType: String, groupIndex: Int) -> String {
+        "\(eventType):\(groupIndex)"
+    }
+
+    private func disableHook(key: String, eventType: String, groupIndex: Int) async -> String? {
+        guard let groups = config?.content.hooks?.events[eventType],
+              groupIndex >= 0, groupIndex < groups.count else {
+            return "Hook not found in configuration"
+        }
+        let group = groups[groupIndex]
+
+        // Persist snapshot and disabled key before touching the config
+        disabledHooksSnapshot[key] = group
+        disabledHookKeys.insert(key)
+        persistDisabledState()
+
+        let result = await deleteHook(eventType: eventType, groupIndex: groupIndex)
+        if result != nil {
+            // Rollback local state on failure
+            disabledHooksSnapshot.removeValue(forKey: key)
+            disabledHookKeys.remove(key)
+            persistDisabledState()
+        }
+        return result
+    }
+
+    private func enableHook(key: String, eventType: String) async -> String? {
+        guard let group = disabledHooksSnapshot[key] else {
+            return "Disabled hook not found in snapshot; cannot re-enable"
+        }
+
+        // Append the group back to the end of the event type's list
+        let result = await saveHook(eventType: eventType, group: group, editIndex: nil)
+        if result == nil {
+            disabledHookKeys.remove(key)
+            disabledHooksSnapshot.removeValue(forKey: key)
+            persistDisabledState()
+        }
+        return result
+    }
+
+    // MARK: - UserDefaults Persistence for Disabled State
+
+    private func loadDisabledState() {
+        if let data = UserDefaults.standard.data(forKey: AppConstants.disabledHooksKey),
+           let keys = try? JSONDecoder().decode([String].self, from: data) {
+            disabledHookKeys = Set(keys)
+        }
+
+        let snapshotKey = AppConstants.disabledHooksKey + "_snapshot"
+        if let data = UserDefaults.standard.data(forKey: snapshotKey),
+           let snapshot = try? JSONDecoder().decode([String: HookGroup].self, from: data) {
+            disabledHooksSnapshot = snapshot
+        }
+    }
+
+    private func persistDisabledState() {
+        if let data = try? JSONEncoder().encode(Array(disabledHookKeys)) {
+            UserDefaults.standard.set(data, forKey: AppConstants.disabledHooksKey)
+        }
+
+        let snapshotKey = AppConstants.disabledHooksKey + "_snapshot"
+        if let data = try? JSONEncoder().encode(disabledHooksSnapshot) {
+            UserDefaults.standard.set(data, forKey: snapshotKey)
+        }
+    }
+
+    // MARK: - Execution Log
+
+    /// Appends a new entry to the execution log and persists it to UserDefaults.
+    /// Automatically trims the oldest entries to keep at most 500 total.
+    func addExecutionEntry(_ entry: HookExecutionEntry) {
+        executionLog.append(entry)
+        if executionLog.count > 500 {
+            executionLog.removeFirst(executionLog.count - 500)
+        }
+        persistExecutionLog()
+    }
+
+    /// Clears all execution log entries and removes them from UserDefaults.
+    func clearExecutionLog() {
+        executionLog.removeAll()
+        UserDefaults.standard.removeObject(forKey: AppConstants.hookExecutionLogKey)
+    }
+
+    /// Loads the execution log from UserDefaults.
+    private func loadExecutionLog() {
+        guard let data = UserDefaults.standard.data(forKey: AppConstants.hookExecutionLogKey),
+              let entries = try? JSONDecoder().decode([HookExecutionEntry].self, from: data) else {
+            return
+        }
+        executionLog = entries
+    }
+
+    private func persistExecutionLog() {
+        if let data = try? JSONEncoder().encode(executionLog) {
+            UserDefaults.standard.set(data, forKey: AppConstants.hookExecutionLogKey)
+        }
+    }
+
     // MARK: - Private
 
     private func flattenHooks(from hooksConfig: HooksConfig?) {
         var items: [HookDisplayItem] = []
 
-        guard let hooksConfig else {
-            hooks = items
-            return
+        if let hooksConfig {
+            // Iterate over all event types in the dictionary, sorted by canonical lifecycle order
+            let sortedEvents = hooksConfig.events.sorted { left, right in
+                let leftIdx = Self.eventTypeOrder[left.key] ?? Int.max
+                let rightIdx = Self.eventTypeOrder[right.key] ?? Int.max
+                return leftIdx < rightIdx
+            }
+
+            for (eventType, groups) in sortedEvents {
+                items.append(contentsOf: flattenGroups(groups, eventType: eventType, isEnabled: true))
+            }
         }
 
-        // Iterate over all event types in the dictionary, sorted by canonical lifecycle order
-        let sortedEvents = hooksConfig.events.sorted { left, right in
-            let leftIdx = Self.eventTypeOrder[left.key] ?? Int.max
-            let rightIdx = Self.eventTypeOrder[right.key] ?? Int.max
+        // Append disabled hooks from the local snapshot, sorted by lifecycle order
+        let sortedDisabled = disabledHooksSnapshot.sorted { left, right in
+            let leftEvent = left.key.components(separatedBy: ":").first ?? ""
+            let rightEvent = right.key.components(separatedBy: ":").first ?? ""
+            let leftIdx = Self.eventTypeOrder[leftEvent] ?? Int.max
+            let rightIdx = Self.eventTypeOrder[rightEvent] ?? Int.max
             return leftIdx < rightIdx
         }
 
-        for (eventType, groups) in sortedEvents {
-            items.append(contentsOf: flattenGroups(groups, eventType: eventType))
+        for (key, group) in sortedDisabled {
+            let parts = key.split(separator: ":", maxSplits: 1)
+            guard parts.count == 2,
+                  let originalGroupIndex = Int(parts[1]) else { continue }
+            let eventType = String(parts[0])
+            items.append(contentsOf: flattenGroups(
+                [group],
+                eventType: eventType,
+                startGroupIndex: originalGroupIndex,
+                isEnabled: false
+            ))
         }
 
         hooks = items
     }
 
-    private func flattenGroups(_ groups: [HookGroup], eventType: String) -> [HookDisplayItem] {
+    private func flattenGroups(
+        _ groups: [HookGroup],
+        eventType: String,
+        startGroupIndex: Int = 0,
+        isEnabled: Bool
+    ) -> [HookDisplayItem] {
         var items: [HookDisplayItem] = []
 
-        for (groupIndex, group) in groups.enumerated() {
+        for (offset, group) in groups.enumerated() {
+            let groupIndex = startGroupIndex + offset
             guard let hookDefs = group.hooks else { continue }
             for (hookIndex, hookDef) in hookDefs.enumerated() {
                 items.append(HookDisplayItem(
@@ -335,7 +598,8 @@ class HooksViewModel {
                     url: hookDef.url,
                     prompt: hookDef.prompt,
                     groupIndex: groupIndex,
-                    hookIndex: hookIndex
+                    hookIndex: hookIndex,
+                    isEnabled: isEnabled
                 ))
             }
         }
