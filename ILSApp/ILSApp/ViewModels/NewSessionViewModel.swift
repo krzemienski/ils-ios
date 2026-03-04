@@ -9,10 +9,46 @@ class NewSessionViewModel {
     var recentSessions: [ChatSession] = []
     var isLoadingSessions = false
 
+    /// Whether a smart routing suggestion request is in flight.
+    var isLoadingRoutingSuggestion = false
+    /// Reasoning text from the last routing suggestion, shown inline under the model picker.
+    var routingReasoning: String?
+
     private var apiClient: APIClient?
 
     func configure(client: APIClient) {
         self.apiClient = client
+    }
+
+    /// Request a smart model suggestion from the backend routing service.
+    ///
+    /// - Parameters:
+    ///   - prompt: Task description or session name used for complexity analysis.
+    ///   - maxBudget: Optional budget ceiling in USD.
+    /// - Returns: The routing response on success, or `nil` on failure.
+    func suggestModel(prompt: String, maxBudget: Double?) async -> ModelRoutingResponse? {
+        guard let apiClient else { return nil }
+        isLoadingRoutingSuggestion = true
+        defer { isLoadingRoutingSuggestion = false }
+
+        let request = ModelRoutingRequest(
+            prompt: prompt.isEmpty ? "general task" : prompt,
+            maxBudgetUSD: maxBudget
+        )
+
+        do {
+            let response: APIResponse<ModelRoutingResponse> = try await apiClient.post(
+                "/sessions/suggest-model",
+                body: request
+            )
+            if let result = response.data {
+                routingReasoning = result.reasoning
+                return result
+            }
+        } catch {
+            AppLogger.shared.error("Failed to fetch model routing suggestion: \(error)", category: "ui")
+        }
+        return nil
     }
 
     /// Loads recent sessions for the fork picker.

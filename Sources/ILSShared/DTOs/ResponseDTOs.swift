@@ -353,6 +353,62 @@ public struct MCPPresetListResponse: Codable, Sendable {
     }
 }
 
+// MARK: - Model Statistics
+
+/// Usage statistics for a single Claude model.
+///
+/// Provides a breakdown of session count, optional cost, and relative
+/// percentage for a given model identifier, used in the model stats dashboard.
+public struct ModelUsageStat: Codable, Sendable {
+    /// Claude model identifier (e.g. "claude-opus-4-5").
+    public let model: String
+    /// Number of sessions that used this model.
+    public let sessionCount: Int
+    /// Total cost in USD across all sessions, if available.
+    public let totalCostUSD: Double?
+    /// Fraction of total sessions that used this model (0.0 – 1.0).
+    public let percentage: Double
+
+    /// Creates a new model usage statistic.
+    /// - Parameters:
+    ///   - model: Claude model identifier.
+    ///   - sessionCount: Number of sessions using this model. Must be non-negative.
+    ///   - totalCostUSD: Cumulative cost in USD, if tracked.
+    ///   - percentage: Fraction of total sessions (0.0 – 1.0).
+    public init(model: String, sessionCount: Int, totalCostUSD: Double? = nil, percentage: Double) {
+        precondition(sessionCount >= 0, "ModelUsageStat sessionCount must be non-negative")
+        self.model = model
+        self.sessionCount = sessionCount
+        self.totalCostUSD = totalCostUSD
+        self.percentage = percentage
+    }
+}
+
+/// Aggregated model usage statistics response.
+///
+/// Returned by the model-stats endpoint. Lists per-model breakdowns,
+/// the total session count across all models, and the most-used model.
+public struct ModelStatsResponse: Codable, Sendable {
+    /// Per-model usage statistics.
+    public let stats: [ModelUsageStat]
+    /// Total number of sessions across all models.
+    public let totalSessions: Int
+    /// Identifier of the most-used model, or `nil` if no sessions exist.
+    public let dominantModel: String?
+
+    /// Creates a new model statistics response.
+    /// - Parameters:
+    ///   - stats: Per-model usage statistics.
+    ///   - totalSessions: Total sessions across all models. Must be non-negative.
+    ///   - dominantModel: Most-used model identifier, if any.
+    public init(stats: [ModelUsageStat], totalSessions: Int, dominantModel: String? = nil) {
+        precondition(totalSessions >= 0, "ModelStatsResponse totalSessions must be non-negative")
+        self.stats = stats
+        self.totalSessions = totalSessions
+        self.dominantModel = dominantModel
+    }
+}
+
 // MARK: - Suggestion Responses
 
 /// A suggested past session relevant to the current context.

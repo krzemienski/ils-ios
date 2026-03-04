@@ -326,6 +326,16 @@ public struct RenameSessionRequest: Codable, Sendable {
     }
 }
 
+/// Request to update the Claude model of an existing session.
+public struct UpdateSessionModelRequest: Codable, Sendable {
+    /// New model identifier (e.g., `"haiku"`, `"sonnet"`, `"opus"`, or a `claude-` prefixed string).
+    public let model: String
+
+    public init(model: String) {
+        self.model = model
+    }
+}
+
 /// Request to bulk-delete sessions by ID.
 public struct BulkDeleteSessionsRequest: Codable, Sendable {
     /// Array of session UUIDs to delete.
@@ -880,6 +890,70 @@ public struct SuggestionFeedbackRequest: Codable, Sendable {
         self.action = action
         self.suggestionType = suggestionType
         self.targetId = targetId
+    }
+}
+
+// MARK: - Model Routing Requests
+
+/// Request payload for smart model routing — asks the backend to suggest the
+/// optimal Claude model for a given prompt and budget constraints.
+public struct ModelRoutingRequest: Codable, Sendable {
+    /// The prompt or task description used to evaluate model suitability.
+    public let prompt: String
+    /// Optional project context to inform routing decisions.
+    public let projectId: UUID?
+    /// Maximum acceptable cost in USD, or `nil` for no constraint.
+    public let maxBudgetUSD: Double?
+    /// When `true`, prioritise lower-latency models over higher-quality ones.
+    public let preferSpeed: Bool?
+
+    /// Creates a model routing request.
+    /// - Parameters:
+    ///   - prompt: The prompt or task description.
+    ///   - projectId: Optional project context.
+    ///   - maxBudgetUSD: Maximum acceptable cost in USD.
+    ///   - preferSpeed: Whether to prioritise speed over quality.
+    public init(
+        prompt: String,
+        projectId: UUID? = nil,
+        maxBudgetUSD: Double? = nil,
+        preferSpeed: Bool? = nil
+    ) {
+        self.prompt = prompt
+        self.projectId = projectId
+        self.maxBudgetUSD = maxBudgetUSD
+        self.preferSpeed = preferSpeed
+    }
+}
+
+/// Response from the smart model routing endpoint containing the suggested
+/// Claude model and supporting metadata.
+public struct ModelRoutingResponse: Codable, Sendable {
+    /// The recommended Claude model identifier (e.g., `"sonnet"`, `"opus"`, `"haiku"`).
+    public let suggestedModel: String
+    /// Human-readable explanation of why this model was chosen.
+    public let reasoning: String
+    /// Estimated cost in USD for the suggested model, or `nil` if unavailable.
+    public let estimatedCostUSD: Double?
+    /// Ordered list of alternative model identifiers the caller may use instead.
+    public let alternativeModels: [String]
+
+    /// Creates a model routing response.
+    /// - Parameters:
+    ///   - suggestedModel: The recommended Claude model identifier.
+    ///   - reasoning: Human-readable explanation of the recommendation.
+    ///   - estimatedCostUSD: Estimated cost in USD for the suggested model.
+    ///   - alternativeModels: Ordered list of alternative model identifiers.
+    public init(
+        suggestedModel: String,
+        reasoning: String,
+        estimatedCostUSD: Double? = nil,
+        alternativeModels: [String] = []
+    ) {
+        self.suggestedModel = suggestedModel
+        self.reasoning = reasoning
+        self.estimatedCostUSD = estimatedCostUSD
+        self.alternativeModels = alternativeModels
     }
 }
 

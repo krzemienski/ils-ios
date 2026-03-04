@@ -66,6 +66,8 @@ struct SettingsView: View {
 
                 statisticsSection
 
+                modelUsageSection
+
                 contextWindowSection
 
                 checkpointSection
@@ -185,6 +187,35 @@ struct SettingsView: View {
             availableColorSchemes: availableColorSchemes,
             formatModelName: ClaudeModel.displayNameForID
         ).statisticsSection
+    }
+
+    private var modelUsageSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("ANALYTICS")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+                .foregroundStyle(theme.textSecondary)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                NavigationLink(destination: ModelStatsView()) {
+                    HStack(spacing: theme.spacingMD) {
+                        Image(systemName: "chart.bar.fill")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.accent)
+                            .frame(width: 28, height: 28)
+                            .background(theme.accent.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        Text("Model Usage")
+                            .font(.system(size: theme.fontBody))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                    }
+                    .padding(theme.spacingMD)
+                }
+            }
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        }
     }
 
     private var contextWindowSection: some View {

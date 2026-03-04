@@ -33,6 +33,7 @@ struct SessionInfoView: View {
     @State private var showCopiedToast = false
     @State private var showExportSheet = false
     @State private var showFileBrowser = false
+    @State private var showModelUpdatedToast = false
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 

@@ -37,6 +37,7 @@ struct NewSessionView: View {
     @State private var maxTurns = ""
     @State private var sessionName = ""
     @State private var showConfig = false
+    @State private var showModelComparison = false
 
     // Fork mode state
     // recentSessions and isLoadingSessions moved to NewSessionViewModel
@@ -56,7 +57,7 @@ struct NewSessionView: View {
 
     let onCreated: (ChatSession) -> Void
 
-    private let models = ["sonnet", "opus", "haiku"]
+    private let models = ClaudeModel.allKnown.map(\.rawValue)
     private let permissionModes = [
         "default", "acceptEdits", "plan", "bypassPermissions", "delegate", "dontAsk"
     ]
@@ -169,6 +170,15 @@ struct NewSessionView: View {
                         || $0.model.lowercased().contains(query)
                 }
             }
+        }
+        .sheet(isPresented: $showModelComparison) {
+            ModelComparisonView()
+        }
+        .onChange(of: selectedProject) { _, newProject in
+            // Auto-populate model from project's defaultModel
+            selectedModel = newProject?.defaultModel ?? "sonnet"
+            // Clear any stale routing reasoning when project context changes
+            sessionViewModel.routingReasoning = nil
         }
         #if os(iOS)
         .presentationDetents([.large])
@@ -659,12 +669,55 @@ struct NewSessionView: View {
     @ViewBuilder
     private var modelSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionLabel("Model")
+            // Label row with Compare ⓘ and Auto-Select buttons
+            HStack {
+                sectionLabel("Model")
 
+                Button {
+                    showModelComparison = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Compare Models")
+
+                Spacer()
+                Button {
+                    Task {
+                        let budget = Double(maxBudget)
+                        if let suggestion = await sessionViewModel.suggestModel(
+                            prompt: sessionName.isEmpty ? (selectedProject?.name ?? "") : sessionName,
+                            maxBudget: budget
+                        ) {
+                            selectedModel = suggestion.suggestedModel
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        if sessionViewModel.isLoadingRoutingSuggestion {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .tint(theme.accent)
+                        } else {
+                            Text("Auto ✨")
+                        }
+                    }
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                    .foregroundStyle(theme.accent)
+                }
+                .buttonStyle(.plain)
+                .disabled(sessionViewModel.isLoadingRoutingSuggestion)
+                .accessibilityLabel("Auto-select model")
+            }
+
+            // Model picker
             HStack(spacing: 0) {
                 ForEach(models, id: \.self) { model in
                     Button {
                         selectedModel = model
+                        sessionViewModel.routingReasoning = nil
                     } label: {
                         Text(model.capitalized)
                             .font(.system(size: theme.fontCaption, weight: selectedModel == model ? .semibold : .regular, design: theme.fontDesign))
@@ -681,6 +734,26 @@ struct NewSessionView: View {
             .background(theme.bgTertiary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             .accessibilityLabel("Claude model selection")
+
+            // Cost info for selected model
+            if let claudeModel = ClaudeModel.allKnown.first(where: { $0.rawValue == selectedModel }) {
+                Text("~$\(String(format: "%.2f", claudeModel.costPerMInputTokens))/1M in · $\(String(format: "%.2f", claudeModel.costPerMOutputTokens))/1M out")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+
+            // Routing reasoning from Auto-Select
+            if let reasoning = sessionViewModel.routingReasoning {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                    Text(reasoning)
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 
