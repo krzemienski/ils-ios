@@ -426,6 +426,7 @@
 		B27742C2E222A0701EE5BC04 /* InfoTooltipButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C01CFB5EC3C84F313D4CC9F /* InfoTooltipButton.swift */; };
 		B294D0AC1C9A0D2EDCF086E0 /* SkillFavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D516718F86AC23C231145753 /* SkillFavoritesManager.swift */; };
 		B2D22D2ABF27C0FB36F9FB2B /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE193B8BF8C7258B6DDE90D /* MidnightTheme.swift */; };
+		B2ECD4C4F9D2141624B215DC /* SessionSuggestionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77CAAAB86046E308204C6C95 /* SessionSuggestionsWidget.swift */; };
 		B337E610D7CD6450D87FB446 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BC2DC9246EFE8F563C68413 /* TerminalView.swift */; };
 		B375F2050B72FBAC42E67ED6 /* ThemesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7753C25377A815B2158332 /* ThemesListView.swift */; };
 		B39D213403357B2EF290572F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 62D1F1E3963FFA7F5AC61009 /* Localizable.xcstrings */; };
@@ -597,6 +598,7 @@
 		F24C0F1EB6FAD4E5C596461C /* RelatedSessionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACA5AD5A936F2F60ECA2D2BB /* RelatedSessionsPanel.swift */; };
 		F26AD11BDD9966A1B6DF7B77 /* FeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */; };
 		F276A16D5AE2E3F7EC2DC5B8 /* WidgetDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */; };
+		F2AA81DE3356E1642D22B281 /* SessionSuggestionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77CAAAB86046E308204C6C95 /* SessionSuggestionsWidget.swift */; };
 		F2B58597D642FD671CEFB1CA /* MetricChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126022DAC2872BEEF6363538 /* MetricChart.swift */; };
 		F3010037ABCA48302B4CE17F /* SSHSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B54988B86A494CD21D10B91 /* SSHSetupView.swift */; };
 		F3598B180D2303048A011310 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9931211AAA50959FAEC7FE5C /* ProgressRing.swift */; };
@@ -807,6 +809,7 @@
 		76FDB1104B5B9E3B5D9FE637 /* XCUITestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCUITestBase.swift; sourceTree = "<group>"; };
 		772B2D8CFCB35297C0DAD86D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		77704C10DDEE770B8E05B890 /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
+		77CAAAB86046E308204C6C95 /* SessionSuggestionsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSuggestionsWidget.swift; sourceTree = "<group>"; };
 		78DF01C3B7B42C92235F6610 /* QuickReplyTemplateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplyTemplateManager.swift; sourceTree = "<group>"; };
 		7A4AB437E75FF882236AFF25 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownParser.swift; sourceTree = "<group>"; };
@@ -1085,6 +1088,14 @@
 				03E11049F41DFFB7A80801AB /* SystemMonitorView.swift */,
 			);
 			path = System;
+			sourceTree = "<group>";
+		};
+		26CC4B5D348D52D54874AEE6 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				77CAAAB86046E308204C6C95 /* SessionSuggestionsWidget.swift */,
+			);
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		3FCDD95699E33E1A571D74BB /* Components */ = {
@@ -1520,6 +1531,7 @@
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
 				3FCDD95699E33E1A571D74BB /* Components */,
+				26CC4B5D348D52D54874AEE6 /* Dashboard */,
 				C794A958C7A1A792B7D6B2D1 /* Documentation */,
 				4C557C8746D41751E699EBCA /* Home */,
 				49504EDF5094AD1D30ECB653 /* Hooks */,
@@ -2229,6 +2241,7 @@
 				BB734C5224E6CA57BF0B19C9 /* SessionInfoViewModel.swift in Sources */,
 				9CF302360D41EFB0C11898D5 /* SessionMonitorService.swift in Sources */,
 				E735A55DF41AA970A5F0C1E2 /* SessionSnippetView.swift in Sources */,
+				F2AA81DE3356E1642D22B281 /* SessionSuggestionsWidget.swift in Sources */,
 				817890CF591A89E8742D6408 /* SessionTemplate.swift in Sources */,
 				5C1BE37B321699D1338D5A18 /* SessionWidget.swift in Sources */,
 				E6F992C4BA5DAA01E1C28291 /* SessionsViewModel.swift in Sources */,
@@ -2521,6 +2534,7 @@
 				771512E15B81D99C14AB1ABF /* SessionInfoViewModel.swift in Sources */,
 				AD616420494008E9001F01C0 /* SessionMonitorService.swift in Sources */,
 				D446BA2BFE64B8625285EF63 /* SessionSnippetView.swift in Sources */,
+				B2ECD4C4F9D2141624B215DC /* SessionSuggestionsWidget.swift in Sources */,
 				66CB3A8E1A407714CC9E3B12 /* SessionTemplate.swift in Sources */,
 				26B89816D115402D4EC07DCF /* SessionWidget.swift in Sources */,
 				AB361433854827B55D401375 /* SessionWindowView.swift in Sources */,

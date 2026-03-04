@@ -22,10 +22,14 @@ class SuggestionsViewModel {
     var sessionSuggestions: [SessionSuggestion] = []
     /// Suggested skills relevant to the current project or context.
     var skillSuggestions: [SkillSuggestion] = []
+    /// Abandoned sessions suggested for resumption.
+    var abandonedSessions: [AbandonedSessionSuggestion] = []
     /// Whether session suggestions are currently loading.
     var isLoadingSessions = false
     /// Whether skill suggestions are currently loading.
     var isLoadingSkills = false
+    /// Whether abandoned sessions are currently loading.
+    var isLoadingAbandoned = false
     /// Current error, if any.
     var error: Error?
 
@@ -109,6 +113,56 @@ class SuggestionsViewModel {
         isLoadingSkills = false
     }
 
+    // MARK: - Load Abandoned Sessions
+
+    /// Fetch abandoned session suggestions from the backend.
+    ///
+    /// Returns sessions that have had no activity for 24+ hours and have
+    /// meaningful work that may be worth resuming.
+    /// - Parameter limit: Maximum number of suggestions to return (default 5).
+    func loadAbandonedSessions(limit: Int = 5) async {
+        guard let client else { return }
+        isLoadingAbandoned = true
+        error = nil
+
+        var components = URLComponents()
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
+
+        do {
+            let response: APIResponse<ListResponse<AbandonedSessionSuggestion>> = try await client.get("/suggestions/abandoned\(query)")
+            if let data = response.data {
+                abandonedSessions = data.items
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to load abandoned sessions: \(error.localizedDescription)", category: "suggestions")
+        }
+
+        isLoadingAbandoned = false
+    }
+
+    // MARK: - Load Continuation Summary
+
+    /// Fetch a smart continuation summary for the given session.
+    ///
+    /// The summary captures what was accomplished, suggests a resume prompt,
+    /// and extracts key topics so the user can pick up exactly where they left off.
+    /// - Parameter sessionId: The UUID of the session to summarize.
+    /// - Returns: A `ContinuationSummary` if found, or `nil` if unavailable.
+    func loadContinuationSummary(sessionId: UUID) async -> ContinuationSummary? {
+        guard let client else { return nil }
+        do {
+            let response: APIResponse<ContinuationSummary> = try await client.get("/suggestions/continuation/\(sessionId.uuidString.lowercased())")
+            return response.data
+        } catch {
+            AppLogger.shared.error("Failed to load continuation summary: \(error.localizedDescription)", category: "suggestions")
+            return nil
+        }
+    }
+
     // MARK: - Feedback
 
     /// Record user interaction with a suggestion for future ranking improvement.
@@ -137,10 +191,36 @@ class SuggestionsViewModel {
         }
     }
 
+    // MARK: - Dismiss
+
+    /// Dismiss a suggestion by recording feedback and removing it from local arrays.
+    ///
+    /// Calls the feedback API with a "dismiss" action so the backend can deprioritise
+    /// the suggestion in future rankings, then removes it immediately from the
+    /// appropriate in-memory array for instant UI updates.
+    ///
+    /// - Parameters:
+    ///   - id: The string identifier of the suggestion to dismiss.
+    ///   - type: The suggestion type — `"session"`, `"skill"`, or `"abandoned"`.
+    func dismissSuggestion(id: String, type: String) async {
+        await recordFeedback(action: "dismiss", suggestionType: type, targetId: id)
+
+        switch type {
+        case "session":
+            sessionSuggestions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
+        case "skill":
+            skillSuggestions.removeAll { $0.id.uuidString.lowercased() == id.lowercased() }
+        case "abandoned":
+            abandonedSessions.removeAll { $0.session.id.uuidString.lowercased() == id.lowercased() }
+        default:
+            break
+        }
+    }
+
     // MARK: - Convenience
 
     /// Whether any loading is in progress.
     var isLoading: Bool {
-        isLoadingSessions || isLoadingSkills
+        isLoadingSessions || isLoadingSkills || isLoadingAbandoned
     }
 }

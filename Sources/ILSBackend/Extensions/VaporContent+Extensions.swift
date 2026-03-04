@@ -224,6 +224,8 @@ extension SessionForkTreeResponse: Content {}
 // MARK: - Suggestion Types
 extension SessionSuggestion: Content {}
 extension SkillSuggestion: Content {}
+extension AbandonedSessionSuggestion: Content {}
+extension ContinuationSummary: Content {}
 extension SuggestionFeedbackRequest: Content {}
 
 // MARK: - Model Routing & Stats Types

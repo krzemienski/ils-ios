@@ -9,6 +9,9 @@ actor SuggestionInteractionStore {
     /// Click counts keyed by suggestion target ID (session ID or skill name).
     var clickCounts: [String: Int] = [:]
 
+    /// Set of dismissed suggestion target IDs (session IDs or skill names).
+    private var dismissedIds: Set<String> = []
+
     /// Record a click interaction for a given target.
     /// - Parameter targetId: The session ID or skill identifier that was clicked.
     func recordClick(targetId: String) {
@@ -19,6 +22,25 @@ actor SuggestionInteractionStore {
     /// - Returns: Dictionary of targetId -> click count
     func getCounts() -> [String: Int] {
         clickCounts
+    }
+
+    /// Record a dismissal for a given suggestion target.
+    /// - Parameter targetId: The session ID or skill identifier that was dismissed.
+    func recordDismissal(targetId: String) {
+        dismissedIds.insert(targetId.lowercased())
+    }
+
+    /// Check whether a suggestion target has been dismissed by the user.
+    /// - Parameter targetId: The session ID or skill identifier to query.
+    /// - Returns: `true` if the target has been dismissed, `false` otherwise.
+    func isDismissed(targetId: String) -> Bool {
+        dismissedIds.contains(targetId.lowercased())
+    }
+
+    /// Retrieve the current set of dismissed suggestion target IDs.
+    /// - Returns: Set of lowercased target ID strings.
+    func getDismissedIds() -> Set<String> {
+        dismissedIds
     }
 }
 
@@ -84,12 +106,15 @@ struct SuggestionService {
 
     /// Score and rank sessions by relevance to the given context.
     ///
-    /// Scoring formula: `0.6 * keyword_overlap + 0.2 * recency_boost + 0.2 * click_boost`
+    /// Scoring formula:
+    /// `0.5 * keyword_overlap + 0.15 * recency_boost + 0.15 * click_boost + 0.1 * git_branch_boost + 0.1 * time_of_day_boost`
     ///
     /// - Parameters:
     ///   - sessions: All available sessions to score.
     ///   - context: Free-text context (current session name, prompt, etc.).
     ///   - projectName: Optional project name to boost same-project sessions.
+    ///   - gitBranch: Optional current git branch name; sessions whose content matches
+    ///     branch tokens receive a 0.1 weight boost.
     ///   - limit: Maximum number of suggestions to return.
     ///   - clickCounts: User interaction history keyed by session UUID string.
     /// - Returns: Ranked array of `SessionSuggestion` with score > 0.05.
@@ -97,11 +122,13 @@ struct SuggestionService {
         from sessions: [ChatSession],
         context: String,
         projectName: String?,
+        gitBranch: String? = nil,
         limit: Int,
         clickCounts: [String: Int]
     ) -> [SessionSuggestion] {
         let contextTokens = tokenize(context)
         let projectTokens = projectName.map { tokenize($0) } ?? Set<String>()
+        let gitBranchTokens = gitBranch.map { tokenize($0) } ?? Set<String>()
         let now = Date()
 
         // Max click count for normalisation (avoid division by zero)
@@ -132,7 +159,22 @@ struct SuggestionService {
             let clicks = clickCounts[session.id.uuidString.lowercased()] ?? 0
             let clickBoost = Double(clicks) / Double(maxClicks)
 
-            let finalScore = 0.6 * keywordScore + 0.2 * recencyBoost + 0.2 * clickBoost
+            // Git branch boost — 1.0 if any branch token appears in session tokens, else 0.0
+            let gitBranchBoost: Double
+            if !gitBranchTokens.isEmpty && !sessionTokens.isEmpty {
+                gitBranchBoost = gitBranchTokens.intersection(sessionTokens).isEmpty ? 0.0 : 1.0
+            } else {
+                gitBranchBoost = 0.0
+            }
+
+            // Time-of-day boost — sessions last active at a similar hour get a boost
+            let timeOfDayBoost = computeTimeOfDayBoost(sessionLastActive: session.lastActiveAt, now: now)
+
+            let finalScore = 0.5 * keywordScore
+                + 0.15 * recencyBoost
+                + 0.15 * clickBoost
+                + 0.1 * gitBranchBoost
+                + 0.1 * timeOfDayBoost
 
             scored.append((session: session, score: finalScore))
         }
@@ -144,14 +186,14 @@ struct SuggestionService {
             .prefix(limit)
 
         return filtered.map { item in
+            let sessionText = [item.session.name, item.session.firstPrompt, item.session.projectName]
+                .compactMap { $0 }
+                .joined(separator: " ")
             let reason = buildSessionReason(
                 session: item.session,
                 contextTokens: contextTokens,
-                sessionTokens: tokenize(
-                    [item.session.name, item.session.firstPrompt, item.session.projectName]
-                        .compactMap { $0 }
-                        .joined(separator: " ")
-                ),
+                sessionTokens: tokenize(sessionText),
+                gitBranchTokens: gitBranchTokens,
                 score: item.score
             )
             return SessionSuggestion(
@@ -162,13 +204,37 @@ struct SuggestionService {
         }
     }
 
+    /// Compute a boost for sessions that were last active at a similar time of day.
+    ///
+    /// Uses circular hour distance with exponential decay over a 4-hour window.
+    /// Peaks at 1.0 when the session's last-active hour matches the current hour exactly,
+    /// and decays to ~0.37 at a 4-hour difference.
+    ///
+    /// - Parameters:
+    ///   - sessionLastActive: When the session was last active.
+    ///   - now: Current timestamp.
+    /// - Returns: Boost value in [0.0, 1.0].
+    private func computeTimeOfDayBoost(sessionLastActive: Date, now: Date) -> Double {
+        let calendar = Calendar.current
+        let currentHour = calendar.component(.hour, from: now)
+        let sessionHour = calendar.component(.hour, from: sessionLastActive)
+        let rawDiff = abs(currentHour - sessionHour)
+        let circularDiff = min(rawDiff, 24 - rawDiff)
+        return exp(-Double(circularDiff) / 4.0)
+    }
+
     /// Build a human-readable reason for a session suggestion.
     private func buildSessionReason(
         session: ChatSession,
         contextTokens: Set<String>,
         sessionTokens: Set<String>,
+        gitBranchTokens: Set<String>,
         score: Double
     ) -> String {
+        // Git branch match is the most specific signal — check first
+        if !gitBranchTokens.isEmpty && !gitBranchTokens.intersection(sessionTokens).isEmpty {
+            return "Active on current branch"
+        }
         let shared = contextTokens.intersection(sessionTokens)
         if !shared.isEmpty {
             let keywords = shared.sorted().prefix(3).joined(separator: ", ")
@@ -259,5 +325,139 @@ struct SuggestionService {
             return String(description.prefix(60))
         }
         return "Relevant skill for your project"
+    }
+
+    // MARK: - Abandoned Session Suggestions
+
+    /// Identify sessions that were abandoned and are worth resuming.
+    ///
+    /// A session qualifies when:
+    /// - It has not been active for more than 24 hours
+    /// - It has at least 3 messages (meaningful prior engagement)
+    /// - Its status is not `.active`
+    /// - Its ID has not been dismissed by the user
+    ///
+    /// Results are ordered by inactivity duration descending (most neglected first).
+    ///
+    /// - Parameters:
+    ///   - sessions: All available sessions to evaluate.
+    ///   - limit: Maximum number of suggestions to return.
+    ///   - dismissedIds: Set of lowercased session ID strings to exclude from results.
+    /// - Returns: Array of `AbandonedSessionSuggestion` capped at `limit`.
+    func suggestAbandoned(
+        from sessions: [ChatSession],
+        limit: Int,
+        dismissedIds: Set<String>
+    ) -> [AbandonedSessionSuggestion] {
+        let now = Date()
+        let abandonedThreshold: TimeInterval = 24 * 3_600  // 24 hours in seconds
+
+        var candidates: [(session: ChatSession, inactivity: TimeInterval)] = []
+        candidates.reserveCapacity(sessions.count)
+
+        for session in sessions {
+            // Must not be currently active
+            guard session.status != .active else { continue }
+
+            // Must have meaningful prior engagement
+            guard session.messageCount >= 3 else { continue }
+
+            // Must have been inactive for at least 24 hours
+            let inactivity = now.timeIntervalSince(session.lastActiveAt)
+            guard inactivity > abandonedThreshold else { continue }
+
+            // Must not have been dismissed by the user
+            guard !dismissedIds.contains(session.id.uuidString.lowercased()) else { continue }
+
+            candidates.append((session: session, inactivity: inactivity))
+        }
+
+        // Sort by inactivity descending (most abandoned first), then cap to limit
+        let sorted = candidates.sorted { $0.inactivity > $1.inactivity }.prefix(limit)
+
+        return sorted.map { item in
+            let hoursAgo = Int(item.inactivity / 3_600)
+            let reason: String
+            if hoursAgo < 48 {
+                reason = "Inactive for \(hoursAgo) hours — pick up where you left off"
+            } else {
+                let daysAgo = hoursAgo / 24
+                reason = "Inactive for \(daysAgo) days — worth resuming"
+            }
+
+            // Estimate how far along the session was; caps at 95% (never "complete")
+            let completionEstimate = min(Int(Double(item.session.messageCount) / 20.0 * 100), 95)
+
+            return AbandonedSessionSuggestion(
+                session: item.session,
+                inactivityDuration: item.inactivity,
+                reason: reason,
+                completionEstimate: completionEstimate
+            )
+        }
+    }
+
+    // MARK: - Smart Continuation
+
+    /// Generate a smart continuation summary for a session based on its recent messages.
+    ///
+    /// Algorithm:
+    /// 1. Extract the last 5 user messages.
+    /// 2. Tokenize their combined content, counting token frequencies.
+    /// 3. Select the top 5 tokens as key topics.
+    /// 4. Compose a summary and a ready-to-use resume prompt.
+    ///
+    /// - Parameters:
+    ///   - session: The session to summarize.
+    ///   - messages: All messages in the session (any order; method finds the most recent).
+    /// - Returns: A `ContinuationSummary` ready to present to the user as a resume prompt.
+    func buildContinuationSummary(session: ChatSession, messages: [Message]) -> ContinuationSummary {
+        // Extract the last 5 user messages in chronological order
+        let userMessages = messages
+            .filter { $0.role == .user }
+            .sorted { $0.createdAt < $1.createdAt }
+            .suffix(5)
+
+        // Count token frequencies across all extracted user messages
+        var tokenFrequencies: [String: Int] = [:]
+        for message in userMessages {
+            let tokens = tokenize(message.content)
+            for token in tokens {
+                tokenFrequencies[token, default: 0] += 1
+            }
+        }
+
+        // Top 5 tokens by frequency as key topics
+        let keyTopics = tokenFrequencies
+            .sorted { $0.value > $1.value || ($0.value == $1.value && $0.key < $1.key) }
+            .prefix(5)
+            .map { $0.key }
+
+        // Build a human-readable summary
+        let sessionName = session.name ?? "this session"
+        let summary: String
+        if keyTopics.isEmpty {
+            summary = "You were working in \"\(sessionName)\" with \(messages.count) messages."
+        } else {
+            let topicsPhrase = keyTopics.joined(separator: ", ")
+            summary = "You were working in \"\(sessionName)\" on topics: \(topicsPhrase)."
+        }
+
+        // Generate a suggested resume prompt
+        let suggestedPrompt: String
+        if keyTopics.isEmpty {
+            suggestedPrompt = "Let's continue where we left off in \"\(sessionName)\"."
+        } else {
+            let firstTopic = keyTopics[0]
+            suggestedPrompt = "Let's continue where we left off. Last time we were discussing \(firstTopic) — please summarize the current state and suggest next steps."
+        }
+
+        return ContinuationSummary(
+            sessionId: session.id,
+            summary: summary,
+            suggestedPrompt: suggestedPrompt,
+            keyTopics: keyTopics,
+            messageCount: userMessages.count
+        )
     }
 }
