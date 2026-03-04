@@ -6,7 +6,9 @@ import ILSShared
 /// Routes (all under `/api/v1/tunnel`):
 /// - `POST /tunnel/start` — start a quick tunnel, returns public URL
 /// - `POST /tunnel/stop` — stop the running tunnel
-/// - `GET  /tunnel/status` — current tunnel status
+/// - `GET  /tunnel/status` — current tunnel status (includes connectionState)
+/// - `GET  /tunnel/health` — tunnel health metrics (latency, uptime, etc.)
+/// - `GET  /tunnel/logs` — recent tunnel log entries (optional `limit` query param)
 struct TunnelController: RouteCollection {
     let tunnelService = TunnelService()
 
@@ -16,6 +18,8 @@ struct TunnelController: RouteCollection {
         tunnel.post("start", use: self.startTunnel)
         tunnel.post("stop", use: self.stopTunnel)
         tunnel.get("status", use: self.getStatus)
+        tunnel.get("health", use: self.getHealth)
+        tunnel.get("logs", use: self.getLogs)
     }
 
     // MARK: - Endpoints
@@ -65,7 +69,7 @@ struct TunnelController: RouteCollection {
         return try encodeResponse(response, status: .ok)
     }
 
-    /// GET /tunnel/status — return current tunnel status.
+    /// GET /tunnel/status — return current tunnel status including connectionState.
     @Sendable
     func getStatus(req: Request) async throws -> Response {
         let isInstalled = await tunnelService.cloudflaredInstalled
@@ -78,8 +82,48 @@ struct TunnelController: RouteCollection {
             running: status.running,
             url: status.url,
             uptime: status.uptime,
-            mode: status.mode
+            mode: status.mode,
+            connectionState: status.connectionState
         )
+        return try encodeResponse(response, status: .ok)
+    }
+
+    /// GET /tunnel/health — return tunnel health metrics including latency.
+    @Sendable
+    func getHealth(req: Request) async throws -> Response {
+        let isInstalled = await tunnelService.cloudflaredInstalled
+        guard isInstalled else {
+            return notInstalledResponse()
+        }
+
+        let status = await tunnelService.status()
+        let latencyMs = await tunnelService.measureLatency()
+        let response = TunnelHealthResponse(
+            connectionState: status.connectionState,
+            latencyMs: latencyMs,
+            uptime: status.uptime
+        )
+        return try encodeResponse(response, status: .ok)
+    }
+
+    /// GET /tunnel/logs — return recent tunnel log entries.
+    /// Optional query param: `limit` (default 50, max 100).
+    @Sendable
+    func getLogs(req: Request) async throws -> Response {
+        let isInstalled = await tunnelService.cloudflaredInstalled
+        guard isInstalled else {
+            return notInstalledResponse()
+        }
+
+        let requestedLimit = (try? req.query.get(Int.self, at: "limit")) ?? 50
+        let limit = min(max(requestedLimit, 1), 100)
+
+        let allLogs = await tunnelService.recentLogs
+        let total = allLogs.count
+        let sliced = Array(allLogs.suffix(limit))
+        let hasMore = total > limit
+
+        let response = TunnelLogsResponse(entries: sliced, total: total, hasMore: hasMore)
         return try encodeResponse(response, status: .ok)
     }
 
@@ -116,3 +160,6 @@ extension TunnelStartResponse: Content {}
 extension TunnelStopResponse: Content {}
 extension TunnelStatusResponse: Content {}
 extension TunnelStartRequest: Content {}
+extension TunnelHealthResponse: Content {}
+extension TunnelLogsResponse: Content {}
+extension TunnelLogEntry: Content {}

@@ -37,6 +37,8 @@ struct HomeView: View {
 
     /// View model that loads dashboard statistics, sparkline data, and entity counts.
     @State private var dashboardVM = DashboardViewModel()
+    /// View model for the tunnel status card shown on the dashboard.
+    @State private var tunnelVM = TunnelSettingsViewModel()
     /// Whether a pull-to-refresh reload is currently in flight.
     @State private var isRefreshing = false
     /// Controls presentation of the New Session sheet.
@@ -71,6 +73,10 @@ struct HomeView: View {
                 TipView(commandPaletteTip)
                     .tipBackground(theme.bgSecondary)
 
+                if appState.isConnected {
+                    tunnelStatusSection
+                }
+
                 quickActionsGrid
                 recentSessionsSection
                 statsSection
@@ -96,6 +102,8 @@ struct HomeView: View {
             dashboardVM.configure(client: appState.apiClient)
             await dashboardVM.loadAll()
             // Sessions are loaded by SidebarRootView (shared VM)
+            tunnelVM.configure(client: appState.apiClient)
+            await tunnelVM.fetchStatus()
         }
         .refreshable {
             #if os(iOS)
@@ -376,6 +384,13 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .shimmer()
+    }
+
+    // MARK: - Tunnel Status
+
+    @ViewBuilder
+    private var tunnelStatusSection: some View {
+        TunnelStatusCard()
     }
 
     // MARK: - Quick Actions

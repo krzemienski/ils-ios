@@ -32,6 +32,10 @@ struct TunnelSettingsView: View {
 
     @State private var showCopiedToast = false
     @State private var qrImage: PlatformImage?
+    @State private var showSetupWizard = false
+    @State private var pulseAnimation = false
+    @State private var troubleshootingExpanded = false
+    @State private var dnsHelperExpanded = false
 
     private enum FocusedField: Hashable {
         case cfToken, cfTunnelName, cfDomain
@@ -70,7 +74,14 @@ struct TunnelSettingsView: View {
                 if viewModel.notInstalled {
                     installSection
                 }
+                if viewModel.isRunning && viewModel.tunnelMode == "named" {
+                    dnsHelperSection
+                }
+                if viewModel.isRunning && !viewModel.accessLog.isEmpty {
+                    accessLogSection
+                }
                 customDomainSection
+                troubleshootingSection
                 howItWorksSection
             }
             .padding(.horizontal, theme.spacingMD)
@@ -82,6 +93,10 @@ struct TunnelSettingsView: View {
         .inlineNavigationBarTitle()
         #endif
         .toast(isPresented: $showCopiedToast, message: "URL copied to clipboard")
+        .sheet(isPresented: $showSetupWizard) {
+            TunnelSetupWizardView()
+                .environment(appState)
+        }
         .task {
             viewModel.configure(client: appState.apiClient)
             viewModel.loadCustomDomainSettings()
@@ -90,6 +105,10 @@ struct TunnelSettingsView: View {
             if let url = viewModel.tunnelURL {
                 generateQRAsync(from: url)
             }
+            viewModel.startStatusPolling()
+        }
+        .onDisappear {
+            viewModel.stopStatusPolling()
         }
         .onChange(of: viewModel.tunnelURL) { _, newURL in
             if let url = newURL {
@@ -101,6 +120,42 @@ struct TunnelSettingsView: View {
         .screenshotProtected()
     }
 
+    // MARK: - Connection State Indicator
+
+    @ViewBuilder
+    private var connectionStateIndicator: some View {
+        switch viewModel.connectionState {
+        case .connecting, .reconnecting:
+            ProgressView()
+                .scaleEffect(0.7)
+                .tint(theme.accent)
+        case .connected:
+            ZStack {
+                Circle()
+                    .fill(theme.success.opacity(pulseAnimation ? 0 : 0.4))
+                    .frame(width: 18, height: 18)
+                    .scaleEffect(pulseAnimation ? 1.6 : 1.0)
+                    .animation(
+                        .easeInOut(duration: 1.2).repeatForever(autoreverses: true),
+                        value: pulseAnimation
+                    )
+                Circle()
+                    .fill(theme.success)
+                    .frame(width: 10, height: 10)
+            }
+            .onAppear { pulseAnimation = true }
+            .onDisappear { pulseAnimation = false }
+        case .error:
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(theme.error)
+                .font(.system(size: 14))
+        case .disconnected:
+            Circle()
+                .fill(theme.textTertiary)
+                .frame(width: 10, height: 10)
+        }
+    }
+
     // MARK: - Quick Tunnel Section
 
     @ViewBuilder
@@ -110,16 +165,32 @@ struct TunnelSettingsView: View {
 
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 HStack {
+                    connectionStateIndicator
+                        .frame(width: 20, height: 20)
+
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Quick Tunnel")
                             .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
-                        Text("Create a temporary public URL")
+                        Text(connectionStateLabel)
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
+                            .foregroundStyle(connectionStateLabelColor)
                     }
 
                     Spacer()
+
+                    // Set Up wizard button
+                    Button {
+                        showSetupWizard = true
+                    } label: {
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: theme.fontCaption))
+                            .foregroundStyle(theme.accent)
+                            .padding(6)
+                            .background(theme.accent.opacity(0.12))
+                            .clipShape(Circle())
+                    }
+                    .accessibilityLabel("Open setup wizard")
 
                     if viewModel.isToggling {
                         ProgressView()
@@ -145,6 +216,36 @@ struct TunnelSettingsView: View {
                     }
                 }
 
+                // Health metrics row
+                if viewModel.isRunning {
+                    HStack(spacing: theme.spacingSM) {
+                        if let latency = viewModel.latencyMs {
+                            latencyBadge(ms: latency)
+                        }
+                        if let uptime = viewModel.uptime {
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock")
+                                    .font(.system(size: theme.fontCaption - 1))
+                                    .foregroundStyle(theme.textTertiary)
+                                Text(viewModel.formatUptime(uptime))
+                                    .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
+                            }
+                        }
+                        if viewModel.isAutoReconnecting {
+                            HStack(spacing: 4) {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                    .tint(theme.accent)
+                                Text("Reconnecting…")
+                                    .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textSecondary)
+                            }
+                        }
+                        Spacer()
+                    }
+                }
+
                 if let error = viewModel.errorMessage {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -164,6 +265,42 @@ struct TunnelSettingsView: View {
         }
     }
 
+    private var connectionStateLabel: String {
+        switch viewModel.connectionState {
+        case .connected: return "Connected"
+        case .connecting: return "Connecting…"
+        case .reconnecting: return "Reconnecting…"
+        case .error: return "Connection error"
+        case .disconnected: return "Create a temporary public URL"
+        }
+    }
+
+    private var connectionStateLabelColor: Color {
+        switch viewModel.connectionState {
+        case .connected: return theme.success
+        case .connecting, .reconnecting: return theme.accent
+        case .error: return theme.error
+        case .disconnected: return theme.textSecondary
+        }
+    }
+
+    @ViewBuilder
+    private func latencyBadge(ms: Int) -> some View {
+        let color: Color = ms < 100 ? theme.success : ms < 300 ? theme.warning : theme.error
+        HStack(spacing: 4) {
+            Image(systemName: "bolt.fill")
+                .font(.system(size: theme.fontCaption - 2))
+                .foregroundStyle(color)
+            Text("\(ms)ms")
+                .font(.system(size: theme.fontCaption - 1, weight: .medium, design: theme.fontDesign))
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.12))
+        .clipShape(Capsule())
+    }
+
     // MARK: - Tunnel Info Section
 
     @ViewBuilder
@@ -172,11 +309,10 @@ struct TunnelSettingsView: View {
             sectionLabel("Connection Info")
 
             VStack(alignment: .leading, spacing: theme.spacingSM) {
-                // Status
+                // Status with animated indicator
                 HStack {
-                    Circle()
-                        .fill(theme.success)
-                        .frame(width: 10, height: 10)
+                    connectionStateIndicator
+                        .frame(width: 20, height: 20)
                     Text("Running")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
@@ -194,6 +330,16 @@ struct TunnelSettingsView: View {
                         Text(viewModel.formatUptime(uptime))
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textSecondary)
+                    }
+                }
+
+                // Health metrics row
+                if viewModel.latencyMs != nil {
+                    HStack(spacing: theme.spacingSM) {
+                        if let latency = viewModel.latencyMs {
+                            latencyBadge(ms: latency)
+                        }
+                        Spacer()
                     }
                 }
 
@@ -309,6 +455,135 @@ struct TunnelSettingsView: View {
         }
     }
 
+    // MARK: - DNS Helper Section
+
+    @ViewBuilder
+    private var dnsHelperSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("DNS Configuration")
+
+            VStack(alignment: .leading, spacing: 0) {
+                DisclosureGroup(isExpanded: $dnsHelperExpanded) {
+                    VStack(alignment: .leading, spacing: theme.spacingSM) {
+                        Text("Your named tunnel requires DNS records in your Cloudflare dashboard. If the tunnel is active but unreachable, verify these settings.")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                            .padding(.top, theme.spacingSM)
+
+                        dnsStep(number: "1", title: "CNAME record",
+                                detail: "Add a CNAME pointing \(viewModel.cfDomain.isEmpty ? "your domain" : viewModel.cfDomain) to your tunnel ID (.cfargotunnel.com).")
+                        dnsStep(number: "2", title: "Proxy enabled",
+                                detail: "Ensure the Proxy status (orange cloud) is enabled in your Cloudflare DNS dashboard.")
+                        dnsStep(number: "3", title: "SSL/TLS mode",
+                                detail: "Set SSL/TLS encryption mode to Full or Full (strict) for secure connections.")
+                        dnsStep(number: "4", title: "Verify propagation",
+                                detail: "DNS changes may take up to 5 minutes. Use 'dig \(viewModel.cfDomain.isEmpty ? "yourdomain.com" : viewModel.cfDomain)' to confirm.")
+                    }
+                } label: {
+                    HStack(spacing: theme.spacingSM) {
+                        Image(systemName: "network")
+                            .foregroundStyle(theme.accent)
+                        Text("DNS Setup Guide")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+                .tint(theme.textTertiary)
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Named tunnels require DNS configuration in your Cloudflare account.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+    }
+
+    @ViewBuilder
+    private func dnsStep(number: String, title: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(number)
+                .font(.system(size: theme.fontCaption - 1, weight: .bold, design: theme.fontDesign))
+                .foregroundStyle(theme.textOnAccent)
+                .frame(width: 18, height: 18)
+                .background(theme.accent)
+                .clipShape(Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                Text(detail)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+            }
+        }
+    }
+
+    // MARK: - Access Log Section
+
+    @ViewBuilder
+    private var accessLogSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Activity Log")
+
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(viewModel.accessLog.prefix(8)) { entry in
+                    logEntryRow(entry: entry)
+                    if entry.id != viewModel.accessLog.prefix(8).last?.id {
+                        Divider()
+                            .background(theme.borderSubtle)
+                    }
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            if viewModel.accessLog.count > 8 {
+                Text("Showing 8 of \(viewModel.accessLog.count) entries.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func logEntryRow(entry: TunnelLogEntry) -> some View {
+        HStack(alignment: .top, spacing: theme.spacingSM) {
+            Image(systemName: logLevelIcon(entry.level))
+                .font(.system(size: theme.fontCaption - 1))
+                .foregroundStyle(logLevelColor(entry.level))
+                .frame(width: 16)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.message)
+                    .font(.system(size: theme.fontCaption - 1, design: .monospaced))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(2)
+                Text(entry.timestamp)
+                    .font(.system(size: theme.fontCaption - 2, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    private func logLevelIcon(_ level: TunnelLogLevel) -> String {
+        switch level {
+        case .debug: return "chevron.right"
+        case .info: return "info.circle"
+        case .warning: return "exclamationmark.triangle"
+        case .error: return "xmark.circle"
+        }
+    }
+
+    private func logLevelColor(_ level: TunnelLogLevel) -> Color {
+        switch level {
+        case .debug: return theme.textTertiary
+        case .info: return theme.accent
+        case .warning: return theme.warning
+        case .error: return theme.error
+        }
+    }
+
     // MARK: - Custom Domain Section
 
     @ViewBuilder
@@ -414,6 +689,83 @@ struct TunnelSettingsView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
+    }
+
+    // MARK: - Troubleshooting Section
+
+    @ViewBuilder
+    private var troubleshootingSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Troubleshooting")
+
+            VStack(alignment: .leading, spacing: 0) {
+                DisclosureGroup(isExpanded: $troubleshootingExpanded) {
+                    VStack(alignment: .leading, spacing: theme.spacingSM) {
+                        troubleshootingIssue(
+                            title: "Tunnel won't start",
+                            detail: "Ensure cloudflared is installed and accessible in your PATH. Try running 'cloudflared version' in Terminal. If missing, install via Homebrew: brew install cloudflared.",
+                            icon: "play.slash"
+                        )
+                        Divider().background(theme.borderSubtle)
+                        troubleshootingIssue(
+                            title: "URL not reachable from outside",
+                            detail: "Check that your firewall is not blocking outbound connections on port 443. Cloudflare tunnels require outbound HTTPS access.",
+                            icon: "wifi.slash"
+                        )
+                        Divider().background(theme.borderSubtle)
+                        troubleshootingIssue(
+                            title: "High latency or slow response",
+                            detail: "Quick tunnels route through Cloudflare's nearest edge. Consider using a named tunnel with a custom domain for better routing control.",
+                            icon: "bolt.slash"
+                        )
+                        Divider().background(theme.borderSubtle)
+                        troubleshootingIssue(
+                            title: "Named tunnel authentication failed",
+                            detail: "Verify your Cloudflare API token has the 'Cloudflare Tunnel' permission. Tokens can be created in the Cloudflare dashboard under My Profile → API Tokens.",
+                            icon: "lock.slash"
+                        )
+                        Divider().background(theme.borderSubtle)
+                        troubleshootingIssue(
+                            title: "Tunnel disconnects frequently",
+                            detail: "Auto-reconnect is enabled and will restore your tunnel when network connectivity is restored. If disconnects persist, check your internet connection stability.",
+                            icon: "arrow.counterclockwise"
+                        )
+                    }
+                    .padding(.top, theme.spacingSM)
+                } label: {
+                    HStack(spacing: theme.spacingSM) {
+                        Image(systemName: "wrench.and.screwdriver")
+                            .foregroundStyle(theme.textSecondary)
+                        Text("Common Issues")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                    }
+                }
+                .tint(theme.textTertiary)
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
+    }
+
+    @ViewBuilder
+    private func troubleshootingIssue(title: String, detail: String, icon: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: theme.fontCaption))
+                .foregroundStyle(theme.textSecondary)
+                .frame(width: 20)
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                Text(detail)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     // MARK: - How It Works Section

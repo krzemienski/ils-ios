@@ -1,5 +1,6 @@
 import Foundation
 import Dispatch
+import ILSShared
 
 /// Actor managing Cloudflare tunnel processes.
 ///
@@ -14,6 +15,13 @@ actor TunnelService {
     private var startTime: Date?
     private var outputPipe: Pipe?
     private var tunnelMode: TunnelMode = .quick
+
+    /// Current connection state of the tunnel.
+    private(set) var connectionState: TunnelConnectionState = .disconnected
+
+    /// Ring buffer of connection event log entries (max 100).
+    private var logEntries: [TunnelLogEntry] = []
+    private static let maxLogEntries = 100
 
     /// Whether cloudflared binary is available on this machine.
     private(set) var cloudflaredInstalled: Bool = false
@@ -30,6 +38,7 @@ actor TunnelService {
         let url: String?
         let uptime: Int?
         let mode: String
+        let connectionState: TunnelConnectionState
     }
 
     // MARK: - Lifecycle
@@ -55,6 +64,9 @@ actor TunnelService {
             throw TunnelError.cloudflaredNotInstalled
         }
 
+        connectionState = .connecting
+        logEvent("Starting quick tunnel on port \(port)")
+
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         proc.arguments = ["cloudflared", "tunnel", "--url", "http://localhost:\(port)"]
@@ -78,24 +90,33 @@ actor TunnelService {
         self.startTime = Date()
 
         // Parse URL from output with 15-second timeout
-        let url = try await withThrowingTaskGroup(of: String.self) { group in
-            group.addTask {
-                try await self.parseURLFromOutput(pipe: pipe)
-            }
+        let url: String
+        do {
+            url = try await withThrowingTaskGroup(of: String.self) { group in
+                group.addTask {
+                    try await self.parseURLFromOutput(pipe: pipe)
+                }
 
-            group.addTask {
-                try await Task.sleep(nanoseconds: 15_000_000_000)
-                throw TunnelError.timeout
-            }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 15_000_000_000)
+                    throw TunnelError.timeout
+                }
 
-            guard let result = try await group.next() else {
-                throw TunnelError.timeout
+                guard let result = try await group.next() else {
+                    throw TunnelError.timeout
+                }
+                group.cancelAll()
+                return result
             }
-            group.cancelAll()
-            return result
+        } catch {
+            connectionState = .error
+            logEvent("Failed to start tunnel: \(error)", level: .error)
+            throw error
         }
 
         self.tunnelURL = url
+        connectionState = .connected
+        logEvent("Tunnel connected: \(url)")
         return url
     }
 
@@ -114,6 +135,9 @@ actor TunnelService {
         guard cloudflaredInstalled else {
             throw TunnelError.cloudflaredNotInstalled
         }
+
+        connectionState = .connecting
+        logEvent("Starting named tunnel for domain: \(domain)")
 
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
@@ -138,15 +162,19 @@ actor TunnelService {
 
         // For named tunnels the URL is the custom domain — no output parsing needed.
         // Wait briefly to verify cloudflared didn't crash immediately.
-        let tunnelURL = domain.hasPrefix("https://") ? domain : "https://\(domain)"
+        let namedTunnelURL = domain.hasPrefix("https://") ? domain : "https://\(domain)"
         try await Task.sleep(nanoseconds: 3_000_000_000)
 
         guard process?.isRunning == true else {
+            connectionState = .error
+            logEvent("Named tunnel process exited unexpectedly", level: .error)
             throw TunnelError.namedTunnelFailed
         }
 
-        self.tunnelURL = tunnelURL
-        return tunnelURL
+        self.tunnelURL = namedTunnelURL
+        connectionState = .connected
+        logEvent("Named tunnel connected: \(namedTunnelURL)")
+        return namedTunnelURL
     }
 
     /// Stop the running tunnel process.
@@ -154,7 +182,9 @@ actor TunnelService {
         if let proc = process, proc.isRunning {
             proc.terminate()
             proc.waitUntilExit()
+            logEvent("Tunnel stopped")
         }
+        connectionState = .disconnected
         clearState()
     }
 
@@ -174,11 +204,53 @@ actor TunnelService {
             running: running,
             url: running ? tunnelURL : nil,
             uptime: uptime,
-            mode: modeString
+            mode: modeString,
+            connectionState: connectionState
         )
     }
 
+    /// Measure round-trip latency to the tunnel URL in milliseconds.
+    /// Returns nil if the tunnel is not running or the request fails.
+    func measureLatency() async -> Int? {
+        guard let urlString = tunnelURL, let url = URL(string: urlString) else {
+            return nil
+        }
+        let start = Date()
+        do {
+            var request = URLRequest(url: url)
+            request.httpMethod = "HEAD"
+            request.timeoutInterval = 10
+            let session = URLSession(configuration: .ephemeral)
+            _ = try await session.data(for: request)
+            let elapsed = Date().timeIntervalSince(start)
+            return Int(elapsed * 1000)
+        } catch {
+            return nil
+        }
+    }
+
+    /// Recent tunnel log entries (up to the last 100).
+    var recentLogs: [TunnelLogEntry] {
+        logEntries
+    }
+
     // MARK: - Private Helpers
+
+    /// Append a log entry to the ring buffer.
+    private func logEvent(_ message: String, level: TunnelLogLevel = .info) {
+        let formatter = ISO8601DateFormatter()
+        let entry = TunnelLogEntry(
+            id: UUID().uuidString,
+            timestamp: formatter.string(from: Date()),
+            level: level,
+            message: message
+        )
+        logEntries.append(entry)
+        // Trim to ring buffer capacity
+        if logEntries.count > Self.maxLogEntries {
+            logEntries.removeFirst(logEntries.count - Self.maxLogEntries)
+        }
+    }
 
     private static func checkCloudflaredInstalled() -> Bool {
         let proc = Process()
@@ -242,7 +314,12 @@ actor TunnelService {
     }
 
     private func handleTermination() {
-        // Process died unexpectedly — clear state
+        // Only treat as unexpected error if we were connected or connecting;
+        // intentional stops via stop() set connectionState = .disconnected first.
+        if connectionState == .connected || connectionState == .connecting {
+            connectionState = .error
+            logEvent("Tunnel process terminated unexpectedly", level: .error)
+        }
         clearState()
     }
 

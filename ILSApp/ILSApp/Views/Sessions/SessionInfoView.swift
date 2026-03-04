@@ -137,7 +137,6 @@ struct SessionInfoView: View {
                     .scrollContentBackground(.hidden)
                 }
             }
-        }
         .background(theme.bgPrimary)
         .navigationTitle("Session Info")
         #if os(iOS)
