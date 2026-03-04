@@ -87,6 +87,16 @@ class SkillsViewModel: BaseViewModel {
         isLoading = true
         error = nil
 
+        // Cache-first: show cached data immediately on first load
+        if !refresh && skills.isEmpty {
+            let cached = await CacheService.shared.getCachedSkills()
+            if !cached.isEmpty {
+                skills = cached
+                rebuildSearchCache()
+                AppLogger.shared.info("Loaded \(cached.count) skills from cache", category: "skills")
+            }
+        }
+
         do {
             let path = refresh ? "/skills?refresh=true" : "/skills"
             let response: APIResponse<ListResponse<Skill>> = try await client.get(path)
@@ -94,6 +104,10 @@ class SkillsViewModel: BaseViewModel {
                 skills = data.items
                 rebuildSearchCache()
                 lastUpdated = Date()
+                // Update cache with fresh data in background
+                Task {
+                    await CacheService.shared.cacheSkills(data.items)
+                }
             }
         } catch {
             self.error = error
