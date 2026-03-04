@@ -81,23 +81,47 @@ class SessionsViewModel: BaseViewModel {
     /// The mutation version at which groupedSessionsByTime cache was last built
     private var cachedGroupedByTimeVersion: Int = -1
 
+    // MARK: - Natural Language Search
+
+    /// The currently active natural-language parsed query, if any.
+    var parsedQuery: ParsedQuery?
+
+    /// When `true`, NL query parsing is applied to the search text before
+    /// falling back to the legacy lowercased full-text search.
+    var nlSearchEnabled: Bool = true
+
+    /// Monotonically increasing counter incremented whenever `parsedQuery` or
+    /// `nlSearchEnabled` changes, so grouped-session caches can detect staleness.
+    private var nlFilterVersion: Int = 0
+
+    /// The NL filter version at which groupedSessions cache was last built.
+    private var cachedGroupedNLVersion: Int = -1
+
+    /// The NL filter version at which groupedSessionsByTime cache was last built.
+    private var cachedGroupedByTimeNLVersion: Int = -1
+
     deinit {
         searchTask?.cancel()
     }
 
     /// Schedule a debounced update of debouncedSearchText.
     /// Call this from `.onChange(of: searchText)` in the view instead of filtering on every keystroke.
+    /// When `nlSearchEnabled` is true, also triggers `parseNLQuery` after the debounce delay.
     func scheduleSearchDebounce() {
         searchTask?.cancel()
         let text = searchText
         guard !text.isEmpty else {
             debouncedSearchText = ""
+            clearNLQuery()
             return
         }
         searchTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 300_000_000)
             guard let self, !Task.isCancelled else { return }
             debouncedSearchText = text
+            if nlSearchEnabled {
+                await parseNLQuery(text)
+            }
         }
     }
 
@@ -106,6 +130,22 @@ class SessionsViewModel: BaseViewModel {
         searchTask?.cancel()
         searchText = ""
         debouncedSearchText = ""
+        clearNLQuery()
+    }
+
+    /// Parse the given text as a natural-language session query and store the result in `parsedQuery`.
+    /// Uses `projectGroups` as the known-projects context for fuzzy project-name matching.
+    func parseNLQuery(_ text: String) async {
+        let knownProjects = projectGroups.map(\.name)
+        let result = NLSessionQueryParser.shared.parse(text, knownProjects: knownProjects)
+        parsedQuery = result
+        nlFilterVersion += 1
+    }
+
+    /// Clear the current NL parsed query, reverting to plain text search.
+    func clearNLQuery() {
+        parsedQuery = nil
+        nlFilterVersion += 1
     }
 
     /// Number of sessions matching the current debounced search text.
@@ -115,14 +155,38 @@ class SessionsViewModel: BaseViewModel {
     }
 
 
-    /// Sessions filtered by the local search text using precomputed lowercase cache.
+    /// Sessions filtered by the current search text.
+    ///
+    /// When `nlSearchEnabled` is true and `parsedQuery` contains structured predicates
+    /// with sufficient confidence (≥ 0.4), applies the NL-derived ``SessionFilter``.
+    /// Falls back to the precomputed lowercase text cache otherwise.
     /// SPERF-MED-8: Uses compactMap instead of filter+map to avoid double allocation.
     var filteredSessions: [ChatSession] {
         guard !debouncedSearchText.isEmpty else { return sessions }
+
+        if nlSearchEnabled,
+           let pq = parsedQuery,
+           !pq.isFullTextOnly,
+           pq.confidence >= 0.4 {
+            return sessions.applying(makeSessionFilter(from: pq))
+        }
+
         let query = debouncedSearchText.lowercased()
         return searchCache.compactMap {
             $0.searchText.contains(query) ? $0.session : nil
         }
+    }
+
+    /// Builds a ``SessionFilter`` from a ``ParsedQuery`` for use with `Array.applying(_:)`.
+    private func makeSessionFilter(from parsedQuery: ParsedQuery) -> SessionFilter {
+        var filter = SessionFilter()
+        filter.dateRange = parsedQuery.dateRange
+        filter.model = parsedQuery.modelFilter
+        filter.statuses = parsedQuery.statusFilter.map { [$0] } ?? []
+        filter.projectName = parsedQuery.projectFilter
+        filter.searchText = parsedQuery.searchTokens.joined(separator: " ")
+        filter.parsedQuery = parsedQuery
+        return filter
     }
 
     /// Build a single search-cache entry for a session.
@@ -141,9 +205,11 @@ class SessionsViewModel: BaseViewModel {
     }
 
     /// Filtered sessions grouped by project, sorted by most recently active.
-    /// Result is cached and only rebuilt when sessions or searchText change.
+    /// Result is cached and only rebuilt when sessions, searchText, or the NL parsed query change.
     var groupedSessions: [(key: String, value: [ChatSession])] {
-        if cachedGroupedSearchText == debouncedSearchText && cachedGroupedVersion == sessionsMutationVersion {
+        if cachedGroupedSearchText == debouncedSearchText
+            && cachedGroupedVersion == sessionsMutationVersion
+            && cachedGroupedNLVersion == nlFilterVersion {
             return cachedGroupedSessions
         }
         let filtered = filteredSessions
@@ -158,14 +224,17 @@ class SessionsViewModel: BaseViewModel {
         cachedGroupedSessions = sorted
         cachedGroupedSearchText = debouncedSearchText
         cachedGroupedVersion = sessionsMutationVersion
+        cachedGroupedNLVersion = nlFilterVersion
         return sorted
     }
 
     /// Filtered sessions grouped by relative time (Today/Yesterday/This Week/Earlier).
     /// Sessions within each bucket are sorted by most recently active.
-    /// Result is cached and only rebuilt when sessions or searchText change.
+    /// Result is cached and only rebuilt when sessions, searchText, or the NL parsed query change.
     var groupedSessionsByTime: [(key: String, value: [ChatSession])] {
-        if cachedGroupedByTimeSearchText == debouncedSearchText && cachedGroupedByTimeVersion == sessionsMutationVersion {
+        if cachedGroupedByTimeSearchText == debouncedSearchText
+            && cachedGroupedByTimeVersion == sessionsMutationVersion
+            && cachedGroupedByTimeNLVersion == nlFilterVersion {
             return cachedGroupedByTime
         }
         let filtered = filteredSessions
@@ -208,6 +277,7 @@ class SessionsViewModel: BaseViewModel {
         cachedGroupedByTime = result
         cachedGroupedByTimeSearchText = debouncedSearchText
         cachedGroupedByTimeVersion = sessionsMutationVersion
+        cachedGroupedByTimeNLVersion = nlFilterVersion
         return result
     }
 
