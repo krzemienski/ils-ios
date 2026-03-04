@@ -102,13 +102,13 @@ struct MacContentView: View {
             sessionsViewModel.configure(client: appState.apiClient)
             activityFeedVM.configure(client: appState.apiClient)
             await sessionsViewModel.loadProjectGroups()
+            await sessionsViewModel.loadSessions(refresh: true)
 
             // Load custom themes from backend on cold start (parity with iOS SidebarRootView)
             await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
 
             // Index sessions in Spotlight after loading
-            let allSessions = sessionsViewModel.projectSessions.values.flatMap { $0 }
-            SpotlightIndexer.shared.indexSessions(Array(allSessions))
+            SpotlightIndexer.shared.indexSessions(sessionsViewModel.sessions)
         }
         .onChange(of: appState.navigationIntent) { _, intent in
             guard let intent else { return }
@@ -118,7 +118,7 @@ struct MacContentView: View {
             sessionsViewModel.configure(client: appState.apiClient)
             activityFeedVM.configure(client: appState.apiClient)
             Task {
-                await sessionsViewModel.loadProjectGroups()
+                await sessionsViewModel.loadSessions(refresh: true)
                 await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
             }
         }
@@ -346,21 +346,21 @@ struct MacContentView: View {
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
 
-            // Session list (project groups loaded from backend)
+            // Session list (time-grouped)
             List {
-                if sessionsViewModel.isLoading && sessionsViewModel.projectGroups.isEmpty {
+                if sessionsViewModel.isLoading && sessionsViewModel.sessions.isEmpty {
                     loadingView
-                } else if sessionsViewModel.filteredProjectGroups.isEmpty {
+                } else if sessionsViewModel.filteredSessions.isEmpty {
                     emptyView
                 } else {
-                    ForEach(sessionsViewModel.filteredProjectGroups) { group in
-                        projectGroup(group: group)
+                    ForEach(sessionsViewModel.groupedSessionsByTime, id: \.key) { label, sessions in
+                        macTimeGroup(label: label, sessions: sessions)
                     }
                 }
             }
             .listStyle(.sidebar)
             .refreshable {
-                await sessionsViewModel.loadProjectGroups()
+                await sessionsViewModel.loadSessions(refresh: true)
             }
 
             Divider()
@@ -559,6 +559,88 @@ struct MacContentView: View {
                 Text("\(group.sessionCount)")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
+            }
+        }
+    }
+
+    // MARK: - Mac Time Group
+
+    @ViewBuilder
+    private func macTimeGroup(label: String, sessions: [ChatSession]) -> some View {
+        Section {
+            ForEach(sessions) { session in
+                Button {
+                    activeScreen = .chat(session)
+                } label: {
+                    MacSessionRow(session: session)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    Button {
+                        activeScreen = .chat(session)
+                    } label: {
+                        Label("Open Session", systemImage: "bubble.left.and.bubble.right")
+                    }
+
+                    Button {
+                        WindowManager.shared.openSessionWindow(session)
+                    } label: {
+                        Label("Open in New Window", systemImage: "macwindow.badge.plus")
+                    }
+
+                    Divider()
+
+                    Button {
+                        renameText = session.name ?? ""
+                        sessionToRename = session
+                    } label: {
+                        Label("Rename...", systemImage: "pencil")
+                    }
+
+                    Button {
+                        Task {
+                            if let forked = await sessionsViewModel.forkSession(session) {
+                                activeScreen = .chat(forked)
+                            }
+                        }
+                    } label: {
+                        Label("Fork Session", systemImage: "arrow.branch")
+                    }
+
+                    Divider()
+
+                    Button {
+                        exportSessionAsJSON(session)
+                    } label: {
+                        Label("Export as JSON...", systemImage: "curlybraces")
+                    }
+
+                    Button {
+                        exportSessionAsMarkdown(session)
+                    } label: {
+                        Label("Export as Markdown...", systemImage: "doc.text")
+                    }
+
+                    Divider()
+
+                    Button(role: .destructive) {
+                        Task {
+                            await sessionsViewModel.deleteSession(session)
+                        }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+            }
+        } header: {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "calendar")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Text(label.uppercased())
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                Spacer()
             }
         }
     }
