@@ -4,15 +4,12 @@ import TipKit
 
 /// The primary home dashboard displayed when the app launches or no session is active.
 ///
-/// Renders six stacked sections — Welcome, Refreshing Banner, Connection Banner, Quick Actions,
-/// Recent Sessions, and Overview Stats — inside a vertically scrolling container. Quick-action
-/// cards are laid out with a two-column ``LazyVGrid``. While the sessions list is loading, the
-/// Recent Sessions section shows skeleton rows animated with a shimmer effect. A ``TipKit``
-/// tip guides new users toward creating their first session. Pull-to-refresh triggers a
-/// simultaneous reload of ``DashboardViewModel`` and the shared ``SessionsViewModel``,
-/// which is owned by the parent `SidebarRootView` so that sidebar and home stay in sync.
-/// Sparkline data for each entity type is sourced from ``DashboardViewModel`` and passed to
-/// individual ``StatCard`` views in the Overview section.
+/// Hosts a configurable ``DashboardGridView`` which renders the user's chosen
+/// ``DashboardLayout`` as a grid of widget tiles. A toolbar slider button opens
+/// ``DashboardLayoutPickerView`` to switch or customise layouts. The ``DashboardLayoutStore``
+/// is owned here as `@State` and injected into the layout-picker sheet via the environment.
+/// Pull-to-refresh triggers a reload of the shared ``SessionsViewModel`` and the
+/// refreshing banner is shown while the operation is in flight.
 ///
 /// ## Topics
 /// ### Sections
@@ -25,13 +22,13 @@ import TipKit
 /// - ``statsSection`` - Overview stat cards with sparklines and secondary health indicators
 ///
 /// ### Actions
-/// - ``onSessionSelected`` - Callback invoked when the user taps a recent session row
+/// - ``onSessionSelected`` - Callback invoked when the user taps a session row in a widget
 /// - ``onNavigate`` - Callback to push a named ``ActiveScreen`` onto the navigation stack
 /// - ``onNavigateToBrowser`` - Callback to deep-link to a specific ``BrowserSegment``
 ///
-/// ### Loading
-/// - ``skeletonSessionRow`` - Placeholder row rendered with shimmer while sessions load
-/// - ``isRefreshing`` - Drives the refreshing banner visibility and shimmer on stat cards
+/// ### Widget Operations
+/// - ``removeWidget(_:)`` - Removes a widget from the active layout and persists the change
+/// - ``reorderWidget(fromID:toID:)`` - Moves a dragged widget before the drop-target widget
 struct HomeView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -41,12 +38,15 @@ struct HomeView: View {
     @State private var dashboardVM = DashboardViewModel()
     /// View model for the tunnel status card shown on the dashboard.
     @State private var tunnelVM = TunnelSettingsViewModel()
+    /// Persists and manages all dashboard layouts, including the active layout selection.
+    /// Injected from the app-level environment so a single store instance is shared app-wide.
+    @Environment(DashboardLayoutStore.self) private var layoutStore
+    /// Whether the dashboard grid is in edit mode (shows remove / reorder controls).
+    @State private var isEditMode = false
     /// Whether a pull-to-refresh reload is currently in flight.
     @State private var isRefreshing = false
-    /// Controls presentation of the New Session sheet.
-    @State private var showNewSessionSheet = false
-    /// Text entered in the sessions search bar.
-    @State private var sessionSearchText: String = ""
+    /// Controls presentation of the ``DashboardLayoutPickerView`` sheet.
+    @State private var showLayoutPicker = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -60,9 +60,9 @@ struct HomeView: View {
 
     /// Shared sessions view model owned by SidebarRootView.
     var sessionsVM: SessionsViewModel
-    /// Called when the user selects a recent session row; passes the chosen ``ChatSession``.
+    /// Called when the user selects a session row inside a widget.
     var onSessionSelected: ((ChatSession) -> Void)?
-    /// Called to navigate to a top-level ``ActiveScreen`` from a quick-action card.
+    /// Called to navigate to a top-level ``ActiveScreen`` from a widget action.
     var onNavigate: ((ActiveScreen) -> Void)?
     /// Called to navigate directly to a specific ``BrowserSegment`` (Skills, MCP, Plugins).
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
@@ -80,14 +80,33 @@ struct HomeView: View {
                 TipView(commandPaletteTip)
                     .tipBackground(theme.bgSecondary)
 
-                if appState.isConnected {
-                    tunnelStatusSection
-                }
+                if let layout = layoutStore.activeLayout {
+                    DashboardGridView(
+                        layout: layout,
+                        isEditMode: $isEditMode,
+                        sessionsVM: sessionsVM,
+                        apiClient: appState.apiClient,
+                        onRemoveWidget: { widget in
+                            removeWidget(widget)
+                        },
+                        onReorderWidget: { fromID, toID in
+                            reorderWidget(fromID: fromID, toID: toID)
+                        },
+                        onSessionSelected: onSessionSelected,
+                        onNavigate: onNavigate,
+                        onNavigateToBrowser: onNavigateToBrowser
+                    )
+                } else {
+                    // Fallback: static dashboard when no layout is configured
+                    if appState.isConnected {
+                        tunnelStatusSection
+                    }
 
-                quickActionsGrid
-                suggestionsWidget
-                recentSessionsSection
-                statsSection
+                    quickActionsGrid
+                    suggestionsWidget
+                    recentSessionsSection
+                    statsSection
+                }
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingMD)
@@ -95,12 +114,34 @@ struct HomeView: View {
         }
         .background(theme.bgPrimary)
         .navigationTitle("Home")
-        .sheet(isPresented: $showNewSessionSheet) {
-            NewSessionView { session in
-                showNewSessionSheet = false
-                onSessionSelected?(session)
+        .toolbar {
+            #if os(iOS)
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showLayoutPicker = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel("Dashboard Layout")
+                .accessibilityHint("Opens the layout picker to customise your dashboard")
             }
-            .environment(appState)
+            #else
+            ToolbarItem {
+                Button {
+                    showLayoutPicker = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+                .accessibilityLabel("Dashboard Layout")
+                .accessibilityHint("Opens the layout picker to customise your dashboard")
+            }
+            #endif
+        }
+        .sheet(isPresented: $showLayoutPicker) {
+            NavigationStack {
+                DashboardLayoutPickerView()
+            }
+            .environment(layoutStore)
             .environment(\.theme, theme)
         }
         #if os(iOS)
@@ -109,7 +150,6 @@ struct HomeView: View {
         .task {
             dashboardVM.configure(client: appState.apiClient)
             await dashboardVM.loadAll()
-            // Sessions are loaded by SidebarRootView (shared VM)
             tunnelVM.configure(client: appState.apiClient)
             await tunnelVM.fetchStatus()
         }
@@ -118,7 +158,6 @@ struct HomeView: View {
             HapticManager.impact(.light)
             #endif
             isRefreshing = true
-            await dashboardVM.loadAll()
             await sessionsVM.loadSessions(refresh: true)  // Shared VM — updates both Home and Sidebar
             isRefreshing = false
         }
@@ -129,10 +168,6 @@ struct HomeView: View {
         }
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
-        }
-        .onChange(of: appState.serverURL) { _, _ in
-            dashboardVM.configure(client: appState.apiClient)
-            Task { await dashboardVM.loadAll() }
         }
     }
 
@@ -230,6 +265,17 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Widget Operations
+
+    /// Removes a widget from the active layout and persists the updated layout.
+    private func removeWidget(_ widget: DashboardWidget) {
+        guard var layout = layoutStore.activeLayout else { return }
+        layout.widgets.removeAll { $0.id == widget.id }
+        renumberRows(&layout.widgets)
+        layoutStore.save(layout)
+        layoutStore.setActiveLayout(layout)
+    }
+
     // MARK: - Suggestions Widget
 
     @ViewBuilder
@@ -321,7 +367,6 @@ struct HomeView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, theme.spacingMD)
         } else if !appState.isConnected {
-            // Empty state handled by connection banner
             EmptyView()
         } else if sessionsVM.isLoading {
             ForEach(0..<3, id: \.self) { _ in
@@ -330,47 +375,36 @@ struct HomeView: View {
         }
     }
 
-    @ViewBuilder
-    private func recentSessionRow(_ session: ChatSession) -> some View {
-        HStack(spacing: theme.spacingSM) {
-            Circle()
-                .fill(session.status == .active ? theme.success : theme.textTertiary.opacity(0.3))
-                .frame(width: 8, height: 8)
+    /// Moves the dragged widget (`fromID`) to the position occupied by the
+    /// drop-target widget (`toID`) and persists the updated layout.
+    ///
+    /// The dragged widget is removed from its original position and inserted
+    /// immediately before (or after) the drop target, matching the visual
+    /// expectation set by ``DashboardGridView``'s drag-and-drop handler.
+    /// Row indices are renumbered after the move.
+    ///
+    /// - Parameters:
+    ///   - fromID: Stable identity of the widget being dragged.
+    ///   - toID: Stable identity of the widget acting as the drop target.
+    private func reorderWidget(fromID: UUID, toID: UUID) {
+        guard var layout = layoutStore.activeLayout,
+              let fromIndex = layout.widgets.firstIndex(where: { $0.id == fromID }),
+              let toIndex = layout.widgets.firstIndex(where: { $0.id == toID }) else { return }
+        let widget = layout.widgets.remove(at: fromIndex)
+        let insertIndex = fromIndex < toIndex ? toIndex - 1 : toIndex
+        layout.widgets.insert(widget, at: insertIndex)
+        renumberRows(&layout.widgets)
+        layoutStore.save(layout)
+        layoutStore.setActiveLayout(layout)
+    }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(session.displayName)
-                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .lineLimit(1)
-
-                HStack(spacing: theme.spacingXS) {
-                    Text(session.model.capitalized)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.entitySession)
-
-                    Text("·")
-                        .foregroundStyle(theme.textTertiary)
-
-                    Text("\(session.messageCount) msgs")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
+    /// Rewrites each widget's `position.row` to its array index, keeping
+    /// `position.col` at zero. Called after every structural mutation.
+    private func renumberRows(_ widgets: inout [DashboardWidget]) {
+        for idx in widgets.indices {
+            widgets[idx].position.row = idx
+            widgets[idx].position.col = 0
         }
-        .padding(theme.spacingSM)
-        .frame(minHeight: 44)
-        .background(theme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        .accessibilityLabel("\(session.displayName), \(session.model), \(session.messageCount) messages")
-        .accessibilityHint("Opens this chat session")
-        .accessibilityAddTraits(.isButton)
     }
 
     @ViewBuilder
@@ -495,9 +529,6 @@ struct HomeView: View {
         return "\(count)"
     }
 
-    /// Returns a health-aware subtitle for the Configure MCP quick action card.
-    /// Shows "X/Y healthy" with a warning color when servers are unhealthy,
-    /// or the plain total count when all servers are healthy.
     private func mcpHealthSubtitle() -> String? {
         guard let mcpStats = dashboardVM.stats?.mcpServers else { return nil }
         if mcpStats.healthy < mcpStats.total {
@@ -506,8 +537,6 @@ struct HomeView: View {
         return "\(mcpStats.total)"
     }
 
-    /// Returns `theme.warning` when any MCP server is unhealthy, otherwise `nil`
-    /// so the card falls back to the default `theme.textTertiary` subtitle color.
     private func mcpHealthSubtitleColor() -> Color? {
         guard let mcpStats = dashboardVM.stats?.mcpServers,
               mcpStats.healthy < mcpStats.total else { return nil }
@@ -568,7 +597,6 @@ struct HomeView: View {
                     CacheStatusView(lastUpdated: dashboardVM.lastUpdated)
                 }
 
-                // Secondary stats row: plugins + active counts
                 HStack(spacing: theme.spacingSM) {
                     secondaryStat(
                         icon: "puzzlepiece.extension.fill",
@@ -586,7 +614,6 @@ struct HomeView: View {
                 }
                 .shimmerIfActive(isRefreshing)
 
-                // Session Health card — shown when at least one session has been scored
                 if let health = stats.healthSummary, health.totalScored > 0 {
                     sessionHealthCard(health)
                         .shimmerIfActive(isRefreshing)
@@ -623,10 +650,6 @@ struct HomeView: View {
 
     // MARK: - Session Health Card
 
-    /// A full-width card showing aggregate session health metrics from ``HealthSummary``.
-    ///
-    /// Displays the average score with a colour-coded value (green ≥ 70, orange ≥ 40, red below)
-    /// and a breakdown row of healthy / degrading / critical session counts.
     @ViewBuilder
     private func sessionHealthCard(_ health: HealthSummary) -> some View {
         let avgScore = health.averageScore
@@ -681,7 +704,6 @@ struct HomeView: View {
         )
     }
 
-    /// A small pill showing a coloured dot alongside a count and level label.
     @ViewBuilder
     private func healthLevelPill(count: Int, label: String, color: Color) -> some View {
         HStack(spacing: 3) {
@@ -776,6 +798,7 @@ private extension View {
     NavigationStack {
         HomeView(sessionsVM: SessionsViewModel())
             .environment(AppState())
+            .environment(DashboardLayoutStore())
             .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
     }
 }

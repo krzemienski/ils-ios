@@ -69,6 +69,8 @@ struct SettingsView: View {
 
                 sessionSuggestionsSection
 
+                DashboardSettingsSection()
+
                 configSection
 
                 statisticsSection

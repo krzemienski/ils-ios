@@ -14,6 +14,7 @@ import BackgroundTasks
 struct ILSAppApp: App {
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
+    @State private var layoutStore = DashboardLayoutStore()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
@@ -64,6 +65,7 @@ struct ILSAppApp: App {
                 SidebarRootView()
                     .environment(appState)
                     .environment(themeManager)
+                    .environment(layoutStore)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(DynamicTypeSize.xSmall ... DynamicTypeSize.accessibility3)

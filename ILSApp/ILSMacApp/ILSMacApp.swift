@@ -17,6 +17,7 @@ struct ILSMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
+    @State private var layoutStore = DashboardLayoutStore()
     @State private var windowManager = WindowManager.shared
     @State private var notificationManager = NotificationManager.shared
     @State private var backendManager = BackendLifecycleManager.shared
@@ -37,6 +38,7 @@ struct ILSMacApp: App {
             MacContentView()
                 .environment(appState)
                 .environment(themeManager)
+                .environment(layoutStore)
                 .environment(windowManager)
                 .environment(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)

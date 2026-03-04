@@ -96,4 +96,19 @@ enum AppConstants {
     /// UserDefaults key for the hook execution log.
     /// Stored as a JSON-encoded array of HookExecutionRecord values.
     static let hookExecutionLogKey = "ils_hook_execution_log"
+
+    // MARK: - Dashboard Layout Keys
+
+    /// UserDefaults / NSUbiquitousKeyValueStore key for the JSON-encoded array of ``DashboardLayout`` objects.
+    static let dashboardLayoutsKey = "dashboard_layouts"
+
+    /// UserDefaults / NSUbiquitousKeyValueStore key for the UUID string of the active ``DashboardLayout``.
+    static let dashboardActiveLayoutIDKey = "dashboard_active_layout_id"
+
+    /// UserDefaults key for the dashboard iCloud Key-Value Store sync enabled flag.
+    static let dashboardICloudSyncEnabledKey = "dashboard_icloud_sync_enabled"
+
+    /// UserDefaults key for the widget auto-refresh interval in seconds.
+    /// Default value is 30 seconds; valid options are 15, 30, 60, and 300.
+    static let dashboardWidgetRefreshIntervalKey = "dashboard_widget_refresh_interval"
 }
