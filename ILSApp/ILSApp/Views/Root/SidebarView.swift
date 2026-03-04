@@ -714,8 +714,7 @@ struct SidebarView: View {
         case (.home, .home), (.system, .system), (.settings, .settings),
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
-             (.documentation, .documentation):
-             (.terminal, .terminal):
+             (.documentation, .documentation), (.terminal, .terminal):
             return true
         case (.chat, .chat):
             return true

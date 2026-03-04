@@ -34,24 +34,16 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID is used to protect your server credentials stored in the Keychain.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is used for voice dictation in chat messages.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Speech recognition is used to convert your voice into text for chat messages.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Face ID is used to protect your server credentials stored in the Keychain.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIApplicationSupportsMultipleScenes</key>
 	<true/>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.ils.app.session-monitor</string>
-	</array>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>
