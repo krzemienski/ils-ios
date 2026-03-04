@@ -100,6 +100,7 @@ struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
     @AppStorage("notif_contextCompactionAlerts") private var notifContextCompactionAlerts: Bool = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Body
 
@@ -283,11 +284,13 @@ struct ChatView: View {
                 }
                 #endif
             }
+    }
+
+    /// Connection and streaming lifecycle modifiers split from chatContentWithNavigation for type-checker.
+    private var chatContentWithLifecycle: some View {
+        chatContentWithNavigation
             .onChange(of: appState.serverURL) { _, _ in
                 viewModel.configure(client: appState.apiClient, sseClient: appState.sseClient)
-            }
-            .onChange(of: appState.isConnected) { _, connected in
-                viewModel.isConnected = connected
             }
             #if os(iOS)
             .onChange(of: viewModel.isStreaming) { wasStreaming, isNowStreaming in
@@ -317,7 +320,7 @@ struct ChatView: View {
 
     /// Additional modifiers split out to help the Swift type-checker with the long modifier chain.
     private var chatContentFinal: some View {
-        chatContentWithNavigation
+        chatContentWithLifecycle
             .onChange(of: inputText) { _, newValue in
                 draftPersistTask?.cancel()
                 draftPersistTask = Task {
@@ -380,7 +383,7 @@ struct ChatView: View {
 
     // MARK: - View Components
 
-    /// Top-level layout stacking the status banner, context window bar, related-sessions panel, message list, divider, and input bar.
+    /// Top-level layout stacking the status banner, offline banner, context window bar, related-sessions panel, message list, divider, and input bar.
     private var mainContent: some View {
         VStack(spacing: 0) {
             if sheets.showSearch {
@@ -393,6 +396,12 @@ struct ChatView: View {
                 statusBanner
 
                 compactionAlertBanner
+
+                OfflineIndicator(isOffline: viewModel.isOffline)
+                    .animation(
+                        reduceMotion ? nil : .easeInOut(duration: 0.3),
+                        value: viewModel.isOffline
+                    )
 
                 contextWindowBar
 
@@ -731,9 +740,21 @@ struct ChatView: View {
     }
 
     /// Chat input bar for composing and sending messages to Claude.
+    ///
+    /// When offline, the send button is disabled and a queued-message count indicator
+    /// is shown above the input row if any messages are waiting to be sent.
     private var bottomBar: some View {
-        chatInputBar
-            .focused($isInputFocused)
+        VStack(spacing: 0) {
+            if viewModel.isOffline && viewModel.queuedMessageCount > 0 {
+                offlineQueueIndicator
+            }
+            chatInputBar
+                .focused($isInputFocused)
+        }
+        .animation(
+            reduceMotion ? nil : .easeInOut(duration: 0.25),
+            value: viewModel.isOffline && viewModel.queuedMessageCount > 0
+        )
     }
 
     @ViewBuilder
@@ -742,7 +763,7 @@ struct ChatView: View {
         ChatInputBar(
             text: $inputText,
             isStreaming: viewModel.isStreaming,
-            isDisabled: viewModel.isLoadingHistory,
+            isDisabled: viewModel.isLoadingHistory || viewModel.isOffline,
             hasCustomOptions: chatOptionsConfig.hasCustomOptions,
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
@@ -755,7 +776,7 @@ struct ChatView: View {
         ChatInputBar(
             text: $inputText,
             isStreaming: viewModel.isStreaming,
-            isDisabled: viewModel.isLoadingHistory,
+            isDisabled: viewModel.isLoadingHistory || viewModel.isOffline,
             hasCustomOptions: chatOptionsConfig.hasCustomOptions,
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
@@ -764,6 +785,35 @@ struct ChatView: View {
             pendingCount: MessageQueueService.shared.pendingCount
         )
         #endif
+    }
+
+    /// Thin strip above the input bar showing how many messages are queued offline.
+    @ViewBuilder
+    private var offlineQueueIndicator: some View {
+        let count = viewModel.queuedMessageCount
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "clock.arrow.2.circlepath")
+                .font(.system(size: theme.fontCaption, weight: .semibold))
+            Text("\(count) message\(count == 1 ? "" : "s") queued — will send when online")
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+        }
+        .foregroundStyle(theme.warning)
+        .padding(.horizontal, theme.spacingMD)
+        .padding(.vertical, theme.spacingXS)
+        .frame(maxWidth: .infinity)
+        .background(
+            theme.warning.opacity(0.15)
+                .overlay(
+                    Rectangle()
+                        .stroke(theme.warning.opacity(0.3), lineWidth: 0.5)
+                )
+        )
+        .transition(
+            reduceMotion
+                ? .opacity
+                : .move(edge: .bottom).combined(with: .opacity)
+        )
+        .accessibilityLabel("\(count) message\(count == 1 ? "" : "s") queued. Will send when back online.")
     }
 
         /// Toolbar items providing session management actions: rename, fork, export, info, and delete.

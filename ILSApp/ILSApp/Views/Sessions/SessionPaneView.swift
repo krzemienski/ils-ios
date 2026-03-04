@@ -105,6 +105,5 @@ struct SessionPaneView: View {
         paneVM.sessionId = session.id
         paneVM.encodedProjectPath = session.encodedProjectPath
         paneVM.claudeSessionId = session.claudeSessionId
-        paneVM.isConnected = appState.isConnected
     }
 }

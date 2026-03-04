@@ -4,16 +4,12 @@ import ILSShared
 /// High-level caching API that wraps LocalDatabase.
 ///
 /// Provides cache-first data loading with configurable expiry times.
-/// Sessions expire after 1 hour; skills, plugins, and MCP servers expire after 24 hours.
+/// TTL and capacity limits are driven by `OfflineCacheSettings`.
 actor CacheService {
     static let shared = CacheService()
 
-    /// Cache TTL for sessions (1 hour).
-    private let sessionTTL: TimeInterval = 3600
-    /// Cache TTL for reference data like skills, plugins, MCP (24 hours).
-    private let referenceTTL: TimeInterval = 86400
-
     private let db = LocalDatabase.shared
+    private let settings = OfflineCacheSettings.shared
 
     private init() {}
 
@@ -21,7 +17,7 @@ actor CacheService {
     func initialize() async {
         do {
             try await db.initialize()
-            try await db.cleanupExpired(olderThan: referenceTTL)
+            try await db.cleanupExpired(olderThan: settings.cacheTTL)
             AppLogger.shared.info("CacheService initialized", category: "cache")
         } catch {
             AppLogger.shared.error(
@@ -33,10 +29,16 @@ actor CacheService {
 
     // MARK: - Sessions
 
-    /// Cache a list of sessions.
+    /// Cache a list of sessions, respecting the configured session count limit.
+    ///
+    /// When `OfflineCacheSettings.maxSessions` is non-zero, the list is sorted by
+    /// `lastActiveAt` descending and trimmed to the limit before saving, so the most
+    /// recently active sessions are always retained.
     func cacheSessions(_ sessions: [ChatSession]) async {
+        guard settings.isCachingEnabled(for: .sessions) else { return }
         do {
-            try await db.saveSessions(sessions)
+            let toCache = applySessionLimit(sessions)
+            try await db.saveSessions(toCache)
         } catch {
             AppLogger.shared.error(
                 "Failed to cache sessions: \(error.localizedDescription)",
@@ -45,10 +47,15 @@ actor CacheService {
         }
     }
 
-    /// Retrieve cached sessions, filtering out expired entries.
-    func getCachedSessions() async -> [ChatSession] {
+    /// Retrieve cached sessions.
+    ///
+    /// - Parameter isOffline: When `true`, bypasses the TTL filter so stale cached
+    ///   sessions are still returned when the server is unreachable.
+    func getCachedSessions(isOffline: Bool = false) async -> [ChatSession] {
+        guard settings.isCachingEnabled(for: .sessions) else { return [] }
         do {
-            return try await db.fetchSessions(olderThan: sessionTTL)
+            let ttl = isOffline ? nil : settings.cacheTTL
+            return try await db.fetchSessions(newerThan: ttl, isOffline: isOffline)
         } catch {
             AppLogger.shared.error(
                 "Failed to fetch cached sessions: \(error.localizedDescription)",
@@ -58,10 +65,20 @@ actor CacheService {
         }
     }
 
+    // MARK: - Private Helpers
+
+    /// Applies the configured session count limit, keeping the most-recently-active sessions.
+    private func applySessionLimit(_ sessions: [ChatSession]) -> [ChatSession] {
+        let limit = settings.maxSessions
+        guard limit > 0, sessions.count > limit else { return sessions }
+        return Array(sessions.sorted { $0.lastActiveAt > $1.lastActiveAt }.prefix(limit))
+    }
+
     // MARK: - Messages
 
     /// Cache messages for a session.
     func cacheMessages(_ messages: [Message], forSession sessionId: UUID) async {
+        guard settings.isCachingEnabled(for: .messages) else { return }
         do {
             // Replace existing cached messages for this session
             try await db.deleteMessages(forSession: sessionId)
@@ -76,6 +93,7 @@ actor CacheService {
 
     /// Retrieve cached messages for a session.
     func getCachedMessages(forSession sessionId: UUID) async -> [Message] {
+        guard settings.isCachingEnabled(for: .messages) else { return [] }
         do {
             return try await db.fetchMessages(forSession: sessionId)
         } catch {
@@ -91,6 +109,7 @@ actor CacheService {
 
     /// Cache a list of projects.
     func cacheProjects(_ projects: [Project]) async {
+        guard settings.isCachingEnabled(for: .projects) else { return }
         do {
             try await db.saveProjects(projects)
         } catch {
@@ -103,6 +122,7 @@ actor CacheService {
 
     /// Retrieve cached projects.
     func getCachedProjects() async -> [Project] {
+        guard settings.isCachingEnabled(for: .projects) else { return [] }
         do {
             return try await db.fetchProjects()
         } catch {
@@ -118,6 +138,7 @@ actor CacheService {
 
     /// Cache a list of skills.
     func cacheSkills(_ skills: [Skill]) async {
+        guard settings.isCachingEnabled(for: .skills) else { return }
         do {
             try await db.saveSkills(skills)
         } catch {
@@ -130,6 +151,7 @@ actor CacheService {
 
     /// Retrieve cached skills.
     func getCachedSkills() async -> [Skill] {
+        guard settings.isCachingEnabled(for: .skills) else { return [] }
         do {
             return try await db.fetchSkills()
         } catch {
@@ -145,6 +167,7 @@ actor CacheService {
 
     /// Cache a list of MCP servers.
     func cacheMCPServers(_ servers: [MCPServer]) async {
+        guard settings.isCachingEnabled(for: .mcpServers) else { return }
         do {
             try await db.saveMCPServers(servers)
         } catch {
@@ -157,6 +180,7 @@ actor CacheService {
 
     /// Retrieve cached MCP servers.
     func getCachedMCPServers() async -> [MCPServer] {
+        guard settings.isCachingEnabled(for: .mcpServers) else { return [] }
         do {
             return try await db.fetchMCPServers()
         } catch {
@@ -172,6 +196,7 @@ actor CacheService {
 
     /// Cache a list of plugins.
     func cachePlugins(_ plugins: [Plugin]) async {
+        guard settings.isCachingEnabled(for: .plugins) else { return }
         do {
             try await db.savePlugins(plugins)
         } catch {
@@ -184,6 +209,7 @@ actor CacheService {
 
     /// Retrieve cached plugins.
     func getCachedPlugins() async -> [Plugin] {
+        guard settings.isCachingEnabled(for: .plugins) else { return [] }
         do {
             return try await db.fetchPlugins()
         } catch {
@@ -224,10 +250,15 @@ actor CacheService {
 
     // MARK: - Cache Management
 
-    /// Clear all cached data.
+    /// Clear all cached data and log the storage freed.
     func clearAll() async {
+        let bytesBefore = await db.cacheStorageBytes()
         do {
             try await db.clearAll()
+            AppLogger.shared.info(
+                "Cache cleared — freed \(bytesBefore / 1024) KB",
+                category: "cache"
+            )
         } catch {
             AppLogger.shared.error(
                 "Failed to clear cache: \(error.localizedDescription)",
@@ -236,15 +267,20 @@ actor CacheService {
         }
     }
 
-    /// Remove expired cache entries.
+    /// Remove expired cache entries using the configured TTL.
     func cleanupExpired() async {
         do {
-            try await db.cleanupExpired(olderThan: referenceTTL)
+            try await db.cleanupExpired(olderThan: settings.cacheTTL)
         } catch {
             AppLogger.shared.error(
                 "Failed to cleanup expired cache: \(error.localizedDescription)",
                 category: "cache"
             )
         }
+    }
+
+    /// Returns the total disk space used by the SQLite cache in bytes.
+    func cacheStorageBytes() async -> Int64 {
+        await db.cacheStorageBytes()
     }
 }

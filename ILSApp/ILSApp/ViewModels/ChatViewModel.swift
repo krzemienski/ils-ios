@@ -61,17 +61,6 @@ class ChatViewModel {
     /// Internal access for Live Activity extension.
     var streamStartTime: Date?
 
-    // MARK: - Offline Message Queue
-
-    /// Whether the backend server is currently reachable.
-    /// Set externally by the hosting view to reflect `appState.isConnected`.
-    var isConnected: Bool = true
-
-    /// True when there are messages queued for this session awaiting delivery.
-    var hasPendingQueuedMessages: Bool {
-        guard sessionId != nil else { return false }
-        return MessageQueueService.shared.pendingCount > 0
-    }
 
     // MARK: - Search State
     /// Whether in-session message search is active.
@@ -181,10 +170,19 @@ class ChatViewModel {
         return stored > 0 ? stored : 5
     }
 
+    // MARK: - Offline Message Queue
+
+    /// Whether the device currently has no network connectivity.
+    var isOffline: Bool { !NetworkMonitor.shared.isConnected }
+
+    /// Number of messages queued for sending when network is restored.
+    var queuedMessageCount: Int = 0
+
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
     @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
     @ObservationIgnored private var connectingTimer: Task<Void, Never>?
+    @ObservationIgnored private var networkObserver: NSObjectProtocol?
 
     // MARK: - Shared Decoder
     // nonisolated: JSONDecoder is thread-safe for decoding. Isolated to instance lifetime.
@@ -239,12 +237,16 @@ class ChatViewModel {
         self.apiClient = client
         self.sseClient = sseClient
         setupBindings()
+        setupOfflineQueueObserver()
     }
 
     deinit {
         batchTask?.cancel()
         connectingTimer?.cancel()
         for task in observationTasks { task.cancel() }
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     private func setupBindings() {
@@ -253,14 +255,6 @@ class ChatViewModel {
         // Cancel any previous observation tasks
         for task in observationTasks { task.cancel() }
         observationTasks.removeAll()
-
-        // Observe network restoration to drain the offline message queue
-        observationTasks.append(Task { @MainActor [weak self] in
-            for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
-                guard !Task.isCancelled else { break }
-                self?.drainQueue()
-            }
-        })
 
         // Single observation task that tracks all SSEClient properties
         // Uses withObservationTracking (Swift Observation) instead of Combine publishers
@@ -421,6 +415,30 @@ class ChatViewModel {
                 #endif
             }
         })
+    }
+
+    // MARK: - Offline Queue Observer
+
+    /// Observe network restoration to refresh `queuedMessageCount` after the
+    /// SyncCoordinator drains its queue.  The observer is set up once per configure()
+    /// call and torn down in deinit.
+    private func setupOfflineQueueObserver() {
+        // Remove any previous observer before installing a new one
+        if let existing = networkObserver {
+            NotificationCenter.default.removeObserver(existing)
+        }
+        networkObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                // Allow SyncCoordinator time to begin draining before refreshing count
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                self.queuedMessageCount = await SyncCoordinator.shared.pendingCount
+            }
+        }
     }
 
     /// Start the batch timer to flush pending messages at regular intervals.
@@ -744,69 +762,8 @@ class ChatViewModel {
         messages.append(ChatMessage(isUser: true, text: text))
     }
 
-    /// Send a message, or enqueue it for later delivery if the server is unreachable.
+    /// Send a message, or enqueue it for later delivery if the device is offline.
     func sendMessage(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
-        guard isConnected else {
-            if let sessionId {
-                let queued = QueuedMessage(sessionId: sessionId, content: prompt)
-                MessageQueueService.shared.enqueue(queued)
-                AppLogger.shared.info("Message queued while offline: \(prompt.prefix(50))", category: "chat")
-            }
-            return
-        }
-        performSend(prompt: prompt, projectId: projectId, options: options)
-    }
-
-    /// Deliver all messages queued for the current session now that connectivity is restored.
-    /// Messages are sent one at a time: each send waits for the prior stream to finish
-    /// before starting the next, preventing `sseClient.startStream()` from cancelling
-    /// in-flight streams (which would silently lose all but the last queued message).
-    func drainQueue() {
-        guard isConnected, let sessionId else { return }
-
-        let all = MessageQueueService.shared.dequeueAll()
-        guard !all.isEmpty else { return }
-
-        // Separate messages for this session from other sessions
-        let mine = all.filter { $0.sessionId == sessionId }
-        let others = all.filter { $0.sessionId != sessionId }
-
-        // Re-enqueue messages belonging to other sessions
-        for msg in others {
-            MessageQueueService.shared.enqueue(msg)
-        }
-
-        guard !mine.isEmpty else { return }
-        AppLogger.shared.info("Draining \(mine.count) queued message(s) for session \(sessionId)", category: "chat")
-
-        // Send sequentially: wait for each stream to complete before starting the next.
-        Task { @MainActor [weak self] in
-            for queued in mine {
-                guard let self, self.isConnected else { break }
-
-                // Wait for any in-flight stream to finish before sending the next message.
-                // Uses withObservationTracking to avoid spinning — fires exactly once
-                // per isStreaming change, then re-registers until streaming is false.
-                while self.isStreaming {
-                    await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                        withObservationTracking {
-                            _ = self.isStreaming
-                        } onChange: {
-                            continuation.resume()
-                        }
-                    }
-                }
-
-                guard self.isConnected else { break }
-                self.performSend(prompt: queued.content, projectId: nil, options: nil)
-            }
-        }
-    }
-
-    /// Core send implementation — builds and starts the SSE stream request.
-    private func performSend(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
-        guard let sseClient else { return }
-
         // For external sessions, inject claudeSessionId as resume option
         var finalOptions = options
         if let claudeId = claudeSessionId {
@@ -840,7 +797,31 @@ class ChatViewModel {
             options: finalOptions
         )
 
+        // If offline, queue for delivery when network is restored
+        if isOffline {
+            enqueueOfflineMessage(request)
+            return
+        }
+
+        guard let sseClient else { return }
         sseClient.startStream(request: request)
+    }
+
+    /// Enqueue a chat message for delivery when network is restored.
+    ///
+    /// Serializes the request and hands it to `SyncCoordinator`, which persists it
+    /// and automatically replays it once `networkDidBecomeAvailable` fires.
+    private func enqueueOfflineMessage(_ request: ChatStreamRequest) {
+        let encoder = JSONEncoder()
+        guard let body = try? encoder.encode(request) else {
+            AppLogger.shared.error("Failed to encode message for offline queue", category: "chat")
+            return
+        }
+        Task {
+            await SyncCoordinator.shared.enqueue(method: "POST", endpoint: "/chat/stream", body: body)
+            self.queuedMessageCount = await SyncCoordinator.shared.pendingCount
+        }
+        AppLogger.shared.info("Message queued for offline delivery (queue size will update)", category: "chat")
     }
 
     /// Retry by removing the assistant response and resending the preceding user message

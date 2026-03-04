@@ -62,6 +62,9 @@ class SessionsViewModel: BaseViewModel {
 
     @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
 
+    /// Task that listens for network restoration to trigger an auto-refresh.
+    @ObservationIgnored nonisolated(unsafe) private var networkObserverTask: Task<Void, Never>?
+
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
     private var searchCache: [(session: ChatSession, searchText: String)] = []
     /// Cached grouped sessions, rebuilt when filteredSessions changes
@@ -102,6 +105,26 @@ class SessionsViewModel: BaseViewModel {
 
     deinit {
         searchTask?.cancel()
+        networkObserverTask?.cancel()
+    }
+
+    /// Configure the view model with an API client and start observing network changes.
+    /// - Parameter client: The API client to use for requests
+    override func configure(client: APIClient) {
+        super.configure(client: client)
+        setupNetworkObserver()
+    }
+
+    /// Subscribe to `networkDidBecomeAvailable` and auto-refresh sessions when connectivity returns.
+    /// Uses `[weak self]` so the Task doesn't prevent deallocation.
+    private func setupNetworkObserver() {
+        networkObserverTask?.cancel()
+        networkObserverTask = Task { [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
+                guard let self else { return }
+                await self.loadSessions(refresh: true)
+            }
+        }
     }
 
     /// Schedule a debounced update of debouncedSearchText.
@@ -387,6 +410,7 @@ class SessionsViewModel: BaseViewModel {
         }
 #endif
         guard let client else { return }
+        let isOffline = !NetworkMonitor.shared.isConnected
         isLoading = true
         error = nil
 
@@ -395,7 +419,20 @@ class SessionsViewModel: BaseViewModel {
             hasMore = true
         }
 
-        // Cache-first: show cached data immediately on first page load
+        // Offline mode: serve cached sessions (bypass TTL) and skip network fetch
+        if isOffline {
+            let cached = await CacheService.shared.getCachedSessions(isOffline: true)
+            sessions = cached
+            totalCount = cached.count
+            rebuildSearchCache()
+            if !cached.isEmpty {
+                AppLogger.shared.info("Offline: serving \(cached.count) cached sessions", category: "sessions")
+            }
+            isLoading = false
+            return
+        }
+
+        // Online: cache-first — show cached data immediately on first page load
         if currentPage == 1 && sessions.isEmpty {
             let cached = await CacheService.shared.getCachedSessions()
             if !cached.isEmpty {

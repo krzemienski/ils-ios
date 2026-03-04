@@ -93,6 +93,8 @@ struct SettingsView: View {
 
                 sessionBackupSection
 
+                OfflineCacheSettingsView()
+
                 dataPrivacySection
                 analyticsSection
 
@@ -152,7 +154,8 @@ struct SettingsView: View {
             viewModel: viewModel,
             serverURL: $serverURL,
             onTestConnection: testConnection,
-            onSaveServerSettings: saveServerSettings
+            onSaveServerSettings: saveServerSettings,
+            onSyncNow: syncNow
         )
     }
 
@@ -705,6 +708,12 @@ struct SettingsView: View {
     /// Saves the current server URL then asynchronously tests the connection via the view model.
     private func testConnection() {
         viewModel.saveAndTestConnection(url: serverURL, appState: appState)
+    }
+
+    /// Triggers a full data refresh from the server when online.
+    private func syncNow() {
+        HapticManager.impact(.medium)
+        Task { await viewModel.loadAll() }
     }
 
     // MARK: - Color Scheme

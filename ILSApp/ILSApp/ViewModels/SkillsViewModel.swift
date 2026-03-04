@@ -84,10 +84,23 @@ class SkillsViewModel: BaseViewModel {
     /// - Parameter refresh: If true, bypasses server cache to rescan ~/.claude directory
     func loadSkills(refresh: Bool = false) async {
         guard let client else { return }
+        let isOffline = !NetworkMonitor.shared.isConnected
         isLoading = true
         error = nil
 
-        // Cache-first: show cached data immediately on first load
+        // Offline mode: serve cached skills and skip network fetch
+        if isOffline {
+            let cached = await CacheService.shared.getCachedSkills()
+            skills = cached
+            rebuildSearchCache()
+            if !cached.isEmpty {
+                AppLogger.shared.info("Offline: serving \(cached.count) cached skills", category: "skills")
+            }
+            isLoading = false
+            return
+        }
+
+        // Online: cache-first — show cached data immediately while fetching fresh data
         if !refresh && skills.isEmpty {
             let cached = await CacheService.shared.getCachedSkills()
             if !cached.isEmpty {
@@ -105,7 +118,7 @@ class SkillsViewModel: BaseViewModel {
                 rebuildSearchCache()
                 lastUpdated = Date()
                 // Update cache with fresh data in background
-                Task {
+                Task.detached {
                     await CacheService.shared.cacheSkills(data.items)
                 }
             }
