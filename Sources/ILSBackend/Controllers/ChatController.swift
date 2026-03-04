@@ -108,6 +108,51 @@ struct ChatController: RouteCollection {
         // Build execution options
         var options = ExecutionOptions(from: input.options)
 
+        // Process attachments from the request.
+        // Image attachments → ExecutionImageAttachment (forwarded to Claude CLI).
+        // Text attachments → prepend decoded file content to the prompt.
+        var prompt = input.prompt
+        if let attachments = input.attachments, !attachments.isEmpty {
+            req.logger.debug("[STREAM] Processing \(attachments.count) attachment(s)")
+
+            let imageAttachments = attachments.filter { $0.mimeType.hasPrefix("image/") }
+            let textAttachments  = attachments.filter { $0.mimeType.hasPrefix("text/") }
+
+            // Validate: at most 5 image attachments per message.
+            guard imageAttachments.count <= 5 else {
+                throw Abort(.unprocessableEntity, reason: "Maximum 5 image attachments allowed per message")
+            }
+
+            // Validate: combined raw data size must not exceed 20 MB.
+            // Base64 encodes 3 bytes as 4 chars, so estimate raw bytes as count * 3 / 4.
+            let combinedBytes = attachments.reduce(0) { $0 + ($1.data.count * 3 / 4) }
+            guard combinedBytes <= 20 * 1024 * 1024 else {
+                throw Abort(.unprocessableEntity, reason: "Combined attachment size exceeds 20 MB limit")
+            }
+
+            // Map image attachments → ExecutionImageAttachment.
+            if !imageAttachments.isEmpty {
+                options.images = imageAttachments.map {
+                    ExecutionImageAttachment(mediaType: $0.mimeType, data: $0.data)
+                }
+            }
+
+            // Prepend text file contents before the user's prompt.
+            if !textAttachments.isEmpty {
+                var textPrefix = ""
+                for attachment in textAttachments {
+                    if let decoded = Data(base64Encoded: attachment.data),
+                       let content = String(data: decoded, encoding: .utf8) {
+                        let name = attachment.filename ?? "attachment"
+                        textPrefix += "--- \(name) ---\n\(content)\n\n"
+                    }
+                }
+                if !textPrefix.isEmpty {
+                    prompt = textPrefix + prompt
+                }
+            }
+        }
+
         // If resuming a session, get the Claude session ID.
         // Prefer DB-stored claudeSessionId; fall back to client-provided resume.
         if let existingSessionId = input.sessionId {
@@ -124,7 +169,7 @@ struct ChatController: RouteCollection {
 
         // Execute Claude CLI
         let stream = executor.execute(
-            prompt: input.prompt,
+            prompt: prompt,
             workingDirectory: projectPath,
             options: options
         )

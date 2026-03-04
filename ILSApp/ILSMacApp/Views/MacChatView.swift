@@ -1,5 +1,6 @@
 import SwiftUI
 import ILSShared
+import UniformTypeIdentifiers
 struct MacChatView: View {
     let session: ChatSession
     @Environment(AppState.self) var appState
@@ -25,6 +26,9 @@ struct MacChatView: View {
     @State private var searchDebounceTask: Task<Void, Never>?
     @State private var chatOptionsConfig = ChatOptionsConfig()
     @State private var showContextWindowDetail = false
+    @State private var pendingAttachments: [MessageAttachment] = []
+    @State private var showAttachmentPicker = false
+    @State private var isDragTargeted = false
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -120,6 +124,11 @@ struct MacChatView: View {
                 NotificationCenter.default.post(name: .ilsToggleExpandAllToolCalls, object: nil)
                 return .handled
             }
+            .onKeyPress("s", phases: .down) { press in
+                guard press.modifiers.contains(.command) && press.modifiers.contains(.shift) else { return .ignored }
+                captureScreenshot()
+                return .handled
+            }
             .onKeyPress(.return, phases: .down) { press in
                 guard press.modifiers.contains(.command) else { return .ignored }
                 if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming {
@@ -190,6 +199,14 @@ struct MacChatView: View {
                 AdvancedOptionsSheet(config: $chatOptionsConfig)
                     .frame(minWidth: 500, minHeight: 600)
                     .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $showAttachmentPicker) {
+                AttachmentPickerSheet(
+                    onAttach: { attachments in pendingAttachments.append(contentsOf: attachments) },
+                    onDismiss: { showAttachmentPicker = false }
+                )
+                .frame(minWidth: 400, minHeight: 300)
+                .presentationBackground(theme.bgPrimary)
             }
             .sheet(item: $viewModel.pendingPermissionRequest) { request in
                 PermissionRequestModal(request: request) { decision in
@@ -282,6 +299,36 @@ struct MacChatView: View {
                 bottomBar
             }
         }
+        .overlay {
+            if isDragTargeted {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(theme.accent, lineWidth: 2)
+                    .background(theme.accent.opacity(0.05))
+                    .overlay {
+                        VStack(spacing: 8) {
+                            Image(systemName: "photo.badge.plus")
+                                .font(.system(size: 36))
+                                .foregroundStyle(theme.accent)
+                            Text("Drop to attach")
+                                .font(.headline)
+                                .foregroundStyle(theme.accent)
+                        }
+                    }
+                    .allowsHitTesting(false)
+            }
+        }
+        .onDrop(of: [UTType.image], isTargeted: $isDragTargeted) { providers in
+            for provider in providers {
+                provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                    guard let data,
+                          let attachment = makeAttachment(from: data, mimeType: "image/jpeg", filename: nil) else { return }
+                    DispatchQueue.main.async {
+                        pendingAttachments.append(attachment)
+                    }
+                }
+            }
+            return true
+        }
     }
 
     @ViewBuilder
@@ -351,7 +398,9 @@ struct MacChatView: View {
             onSend: sendMessage,
             onCancel: { viewModel.cancel() },
             onCommandPalette: { showCommandPalette = true },
-            onAdvancedOptions: { showAdvancedOptions = true }
+            onAdvancedOptions: { showAdvancedOptions = true },
+            attachments: $pendingAttachments,
+            onAttachmentTap: { showAttachmentPicker = true }
         )
         .focused($isInputFocused)
     }
@@ -541,10 +590,48 @@ struct MacChatView: View {
         guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
         let prompt = inputText
+        let attachments = pendingAttachments
         inputText = ""
+        pendingAttachments = []
 
-        viewModel.addUserMessage(prompt)
-        viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
+        viewModel.addUserMessage(prompt, attachments: attachments)
+        viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions(), attachments: attachments)
+    }
+
+    /// Compress image data into a `MessageAttachment`, or nil on failure.
+    private func makeAttachment(from data: Data, mimeType: String, filename: String?) -> MessageAttachment? {
+        guard let compressed = ImageCompressionService.compress(data: data, mimeType: mimeType) else { return nil }
+        return MessageAttachment(
+            mimeType: compressed.mimeType,
+            filename: filename,
+            data: compressed.data.base64EncodedString(),
+            width: compressed.width,
+            height: compressed.height
+        )
+    }
+
+    /// Capture the main screen and add it as a pending attachment (Cmd+Shift+S).
+    private func captureScreenshot() {
+        guard let screen = NSScreen.main else { return }
+        let screenBounds = CGRect(
+            x: screen.frame.origin.x,
+            y: screen.frame.origin.y,
+            width: screen.frame.width,
+            height: screen.frame.height
+        )
+        guard let cgImage = CGWindowListCreateImage(
+            screenBounds,
+            .optionOnScreenOnly,
+            kCGNullWindowID,
+            .bestResolution
+        ) else { return }
+        let nsImage = NSImage(cgImage: cgImage, size: screenBounds.size)
+        guard let tiff = nsImage.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let data = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.85]) else { return }
+        if let attachment = makeAttachment(from: data, mimeType: "image/jpeg", filename: "screenshot.jpg") {
+            pendingAttachments.append(attachment)
+        }
     }
 
     private func exportSession() async {

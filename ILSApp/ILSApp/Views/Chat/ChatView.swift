@@ -62,6 +62,7 @@ struct ChatView: View {
         var showSessionMemory = false
         /// Shown after a > 20% context token drop is detected, indicating Claude Code compacted the session.
         var showPostCompactionRecovery = false
+        var showAttachmentPicker = false
     }
 
     /// Transient action state — data associated with in-flight user actions.
@@ -82,6 +83,8 @@ struct ChatView: View {
     /// The current text in the message input field.
     @State private var inputText = ""
     @State private var searchDebounceTask: Task<Void, Never>?
+    /// Pending attachments to be sent with the next message.
+    @State private var pendingAttachments: [MessageAttachment] = []
     /// Whether the user has manually scrolled up from the bottom of the message list.
     @State private var isUserScrolledUp = false
     /// Whether the "jump to bottom" button is currently visible.
@@ -345,6 +348,15 @@ struct ChatView: View {
                     viewModel.respondToBatchPermissions(requestIds: requestIds, decision: decision)
                 }
                 .presentationDetents(viewModel.pendingPermissionRequests.count > 3 ? [.large] : [.medium, .large])
+                .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $sheets.showAttachmentPicker) {
+                AttachmentPickerSheet(
+                    onAttach: { attachments in
+                        pendingAttachments.append(contentsOf: attachments)
+                    },
+                    onDismiss: { sheets.showAttachmentPicker = false }
+                )
                 .presentationBackground(theme.bgPrimary)
             }
             .onChange(of: viewModel.showPostCompactionRecovery) { _, newValue in
@@ -770,7 +782,9 @@ struct ChatView: View {
             onCommandPalette: { sheets.showCommandPalette = true },
             onAdvancedOptions: { sheets.showAdvancedOptions = true },
             onVoiceInput: { toggleVoiceInput() },
-            isRecording: speechService.isRecording
+            isRecording: speechService.isRecording,
+            attachments: $pendingAttachments,
+            onAttachmentTap: { sheets.showAttachmentPicker = true }
         )
         #else
         ChatInputBar(
@@ -1036,14 +1050,21 @@ struct ChatView: View {
         guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
         let prompt = inputText
+        let attachments = pendingAttachments
         inputText = ""
+        pendingAttachments = []
 
         // Clear persisted draft on send (DATA-05)
         UserDefaults.standard.removeObject(forKey: "chatDraft_\(session.id.uuidString)")
         draftPersistTask?.cancel()
 
-        viewModel.addUserMessage(prompt)
-        viewModel.sendMessage(prompt: prompt, projectId: session.projectId, options: chatOptionsConfig.toChatOptions())
+        viewModel.addUserMessage(prompt, attachments: attachments)
+        viewModel.sendMessage(
+            prompt: prompt,
+            projectId: session.projectId,
+            options: chatOptionsConfig.toChatOptions(),
+            attachments: attachments
+        )
     }
 
     /// Insert a quick reply template's resolved content into the input field.

@@ -1,4 +1,5 @@
 import Foundation
+import ILSShared
 
 // MARK: - Chat Message Models
 
@@ -35,6 +36,7 @@ struct ChatMessage: Identifiable, Equatable {
     var isSystem: Bool = false
     /// Semantic classification of the system event. When nil, `SystemMessageView` falls back to `.generic`.
     var systemEventType: SystemEventType?
+    var attachments: [MessageAttachment] = []
 
     /// Append text in-place, making intent explicit for streaming accumulation.
     @inline(__always)
@@ -55,7 +57,8 @@ struct ChatMessage: Identifiable, Equatable {
         isFromHistory: Bool = false,
         tokenCount: Int = 0,
         elapsedSeconds: Double = 0,
-        systemEventType: SystemEventType? = nil
+        systemEventType: SystemEventType? = nil,
+        attachments: [MessageAttachment] = []
     ) {
         self.id = id
         self.isUser = isUser
@@ -70,6 +73,7 @@ struct ChatMessage: Identifiable, Equatable {
         self.elapsedSeconds = elapsedSeconds
         self.isSystem = isSystem
         self.systemEventType = systemEventType
+        self.attachments = attachments
     }
 
     /// Convenience factory for creating a system event message.
@@ -99,7 +103,8 @@ struct ChatMessage: Identifiable, Equatable {
         lhs.tokenCount == rhs.tokenCount &&
         lhs.elapsedSeconds == rhs.elapsedSeconds &&
         lhs.isSystem == rhs.isSystem &&
-        lhs.systemEventType == rhs.systemEventType
+        lhs.systemEventType == rhs.systemEventType &&
+        lhs.attachments == rhs.attachments
     }
 }
 

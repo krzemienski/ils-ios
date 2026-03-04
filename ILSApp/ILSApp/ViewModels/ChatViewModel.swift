@@ -758,12 +758,29 @@ class ChatViewModel {
         }
     }
 
-    func addUserMessage(_ text: String) {
-        messages.append(ChatMessage(isUser: true, text: text))
+    /// Append a user message to the local message list.
+    ///
+    /// - Parameters:
+    ///   - text: User-entered text.
+    ///   - attachments: Optional image/file attachments to display alongside the message.
+    func addUserMessage(_ text: String, attachments: [MessageAttachment] = []) {
+        messages.append(ChatMessage(isUser: true, text: text, attachments: attachments))
     }
 
     /// Send a message, or enqueue it for later delivery if the device is offline.
-    func sendMessage(prompt: String, projectId: UUID?, options: ChatOptions? = nil) {
+    ///
+    /// - Parameters:
+    ///   - prompt: Text prompt to send.
+    ///   - projectId: Optional project context.
+    ///   - options: Advanced Claude options (model, permissions, etc.).
+    ///   - attachments: Optional image/file attachments forwarded to the backend.
+    ///     Defaults to empty (backward-compatible with `retryMessage` and `retryLastMessage`).
+    func sendMessage(
+        prompt: String,
+        projectId: UUID?,
+        options: ChatOptions? = nil,
+        attachments: [MessageAttachment] = []
+    ) {
         // For external sessions, inject claudeSessionId as resume option
         var finalOptions = options
         if let claudeId = claudeSessionId {
@@ -794,7 +811,8 @@ class ChatViewModel {
             prompt: prompt,
             sessionId: sessionId,
             projectId: projectId,
-            options: finalOptions
+            options: finalOptions,
+            attachments: attachments.isEmpty ? nil : attachments
         )
 
         // If offline, queue for delivery when network is restored
