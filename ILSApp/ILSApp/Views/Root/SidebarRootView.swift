@@ -25,6 +25,7 @@ enum ActiveScreen: Hashable {
     case backends
     case unifiedSessions
     case splitView
+    case analytics
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -48,6 +49,7 @@ enum ActiveScreen: Hashable {
         case .backends: return "backends"
         case .unifiedSessions: return "unifiedSessions"
         case .splitView: return "splitView"
+        case .analytics: return "analytics"
         }
     }
 
@@ -68,6 +70,7 @@ enum ActiveScreen: Hashable {
         case "backends": return .backends
         case "unifiedSessions": return .unifiedSessions
         case "splitView": return .splitView
+        case "analytics": return .analytics
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -364,6 +367,8 @@ struct SidebarRootView: View {
                     unifiedSessionsScreen
                 case .splitView:
                     splitViewScreen
+                case .analytics:
+                    analyticsScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -536,6 +541,10 @@ struct SidebarRootView: View {
     @ViewBuilder
     private var splitViewScreen: some View {
         MultiSessionSplitView(multiSessionVM: multiSessionVM, sessionsVM: sessionsVM)
+    }
+
+    private var analyticsScreen: some View {
+        AnalyticsView()
     }
 
     // MARK: - Chat Navigation

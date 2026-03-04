@@ -55,6 +55,8 @@ struct SettingsView: View {
     @AppStorage("autoCheckpointsEnabled") private var autoCheckpointsEnabled: Bool = true
     @AppStorage("checkpointInterval") private var checkpointInterval: Int = 5
     @AppStorage("checkpointMaxCount") private var checkpointMaxCount: Int = 20
+    /// Whether analytics collection is enabled; persisted in UserDefaults.
+    @AppStorage("analyticsEnabled") private var analyticsEnabled = true
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -84,6 +86,7 @@ struct SettingsView: View {
                 contextPreservationSection
 
                 dataPrivacySection
+                analyticsSection
 
                 terminalSection
 
@@ -549,6 +552,38 @@ struct SettingsView: View {
                 }
                 .padding(theme.spacingMD)
             }
+            .modifier(GlassCard())
+        }
+    }
+
+    // MARK: - Analytics Section
+
+    /// Analytics privacy controls section allowing the user to enable or disable
+    /// local analytics data collection.
+    private var analyticsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Analytics")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Toggle(isOn: $analyticsEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Enable Analytics Collection")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("Analytics data is processed locally on your device and never leaves the app.")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                .tint(theme.accent)
+                .accessibilityLabel("Enable Analytics Collection")
+                .accessibilityHint("Toggle to control whether analytics data is collected and displayed")
+            }
+            .padding(theme.spacingMD)
             .modifier(GlassCard())
         }
     }

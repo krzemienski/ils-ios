@@ -284,3 +284,13 @@ extension AnyCodable: Content {}
 extension Checkpoint: Content {}
 extension CreateCheckpointRequest: Content {}
 extension RestoreCheckpointResponse: Content {}
+
+// MARK: - Analytics DTOs
+extension ActivityDataPoint: Content {}
+extension ActivityTimelineResponse: Content {}
+extension ModelUsageStat: Content {}
+extension SessionMetricsResponse: Content {}
+extension SkillUsageStat: Content {}
+extension SkillAnalyticsResponse: Content {}
+extension AnalyticsSummary: Content {}
+extension AnalyticsExportData: Content {}

@@ -28,6 +28,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: ActivityFeedController())
     try api.register(collection: TerminalController())
     try api.register(collection: RecordingController())
+    try api.register(collection: AnalyticsController(fileSystem: fileSystem))
 
     // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
     let admin = api.grouped(AdminMiddleware())

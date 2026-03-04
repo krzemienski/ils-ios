@@ -393,6 +393,7 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
                 sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
             }
+            sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
         }
         .padding(.horizontal, theme.spacingSM)
         .padding(.top, theme.spacingMD)
@@ -813,7 +814,7 @@ struct SidebarView: View {
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
              (.documentation, .documentation), (.terminal, .terminal),
              (.backends, .backends), (.unifiedSessions, .unifiedSessions),
-             (.splitView, .splitView):
+             (.splitView, .splitView), (.analytics, .analytics):
             return true
         case (.chat, .chat):
             return true
