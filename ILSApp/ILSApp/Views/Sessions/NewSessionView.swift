@@ -639,8 +639,6 @@ struct NewSessionView: View {
         } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Configuration")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textSecondary)
                 if !showConfig {
                     Text(configurationSummary)
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -648,6 +646,8 @@ struct NewSessionView: View {
                 }
             }
         }
+        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+        .foregroundStyle(theme.textSecondary)
         .tint(theme.textTertiary)
         .padding(theme.spacingSM)
         .background(theme.bgSecondary)
@@ -923,15 +923,6 @@ struct NewSessionView: View {
         }
     }
 
-    // MARK: - Configuration Summary
-
-    var configurationSummary: String {
-        let modelPart = selectedModel.capitalized
-        let permissionPart = formattedMode(permissionMode)
-        let budgetPart = maxBudget.isEmpty ? "No limit" : "$\(maxBudget)"
-        return "\(modelPart) \u{00b7} \(permissionPart) \u{00b7} \(budgetPart)"
-    }
-
     private var permissionDescription: String {
         switch permissionMode {
         case "default":
@@ -949,6 +940,24 @@ struct NewSessionView: View {
         default:
             return ""
         }
+    }
+
+    private var configurationSummary: String {
+        var parts: [String] = []
+        parts.append(selectedModel.capitalized)
+        parts.append(formattedMode(permissionMode))
+        let hasBudget = !maxBudget.isEmpty
+        let hasTurns = !maxTurns.isEmpty
+        if hasBudget && hasTurns {
+            parts.append("$\(maxBudget) \u{00b7} \(maxTurns) turns")
+        } else if hasBudget {
+            parts.append("$\(maxBudget)")
+        } else if hasTurns {
+            parts.append("\(maxTurns) turns")
+        } else {
+            parts.append("No limit")
+        }
+        return parts.joined(separator: " \u{00b7} ")
     }
 
     // MARK: - Actions
