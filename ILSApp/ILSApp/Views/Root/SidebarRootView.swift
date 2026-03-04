@@ -312,6 +312,7 @@ struct SidebarRootView: View {
                 permissionsPendingCount: appState.permissionService.pendingPermissions.count
             )
             .background(theme.bgSidebar)
+            .environment(multiSessionVM)
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
         } detail: {
             mainContent(showHamburger: false)
@@ -468,6 +469,7 @@ struct SidebarRootView: View {
                 permissionsPendingCount: appState.permissionService.pendingPermissions.count
             )
             .frame(width: sidebarWidth)
+            .environment(multiSessionVM)
 
             Spacer(minLength: 0)
         }

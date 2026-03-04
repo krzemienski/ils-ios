@@ -268,6 +268,18 @@ class AppState {
             navigationIntent = .permissions
         case "usage":
             navigationIntent = .usage
+        case "terminal":
+            navigationIntent = .terminal
+        case "documentation", "docs":
+            navigationIntent = .documentation
+        case "split-view", "splitview":
+            navigationIntent = .splitView
+        case "search":
+            navigationIntent = .search
+        case "analytics":
+            navigationIntent = .analytics
+        case "agent-queue", "queue":
+            navigationIntent = .agentQueue
         default:
             break
         }

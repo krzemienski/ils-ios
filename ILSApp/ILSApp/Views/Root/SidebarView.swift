@@ -31,8 +31,8 @@ struct SidebarView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(MultiSessionViewModel.self) private var multiSessionVM
-    @AppStorage("enableAgentTeams") private var enableAgentTeams = false
-    @AppStorage("enableAgentQueue") private var enableAgentQueue = false
+    @AppStorage("enableAgentTeams") private var enableAgentTeams = true
+    @AppStorage("enableAgentQueue") private var enableAgentQueue = true
 
     /// Shared sessions view model owned by SidebarRootView.
     @Bindable var sessionsViewModel: SessionsViewModel
@@ -363,55 +363,57 @@ struct SidebarView: View {
     // MARK: - Navigation Items
 
     private var navigationItems: some View {
-        VStack(spacing: 0) {
-            // Primary screens group
-            sidebarSectionHeader(title: "NAVIGATE")
-            VStack(spacing: theme.spacingXS) {
-                sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
-                sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
-                sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
-                sidebarNavItem(icon: "terminal.fill", label: "Terminal", screen: .terminal)
-                sidebarNavItem(icon: "list.bullet.rectangle", label: "All Sessions", screen: .unifiedSessions)
-                sidebarNavItem(
-                    icon: "list.bullet.rectangle.fill",
-                    label: "Activity Feed",
-                    screen: .activityFeed,
-                    badge: activityFeedUnreadCount
-                )
-                sidebarNavItem(icon: "book.fill", label: "Documentation", screen: .documentation)
-                sidebarNavItem(icon: "split.cells.horizontal", label: "Split View", screen: .splitView)
-                sidebarNavItem(icon: "magnifyingglass", label: "Search", screen: .search)
-                sidebarNavItem(
-                    icon: "checkmark.shield.fill",
-                    label: "Permissions",
-                    screen: .permissions,
-                    badge: permissionsPendingCount
-                )
-                if enableAgentTeams {
-                    sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
+                // Primary screens group
+                sidebarSectionHeader(title: "NAVIGATE")
+                VStack(spacing: theme.spacingXS) {
+                    sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
+                    sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
+                    sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
+                    sidebarNavItem(icon: "terminal.fill", label: "Terminal", screen: .terminal)
+                    sidebarNavItem(icon: "list.bullet.rectangle", label: "All Sessions", screen: .unifiedSessions)
+                    sidebarNavItem(
+                        icon: "list.bullet.rectangle.fill",
+                        label: "Activity Feed",
+                        screen: .activityFeed,
+                        badge: activityFeedUnreadCount
+                    )
+                    sidebarNavItem(icon: "book.fill", label: "Documentation", screen: .documentation)
+                    sidebarNavItem(icon: "split.cells.horizontal", label: "Split View", screen: .splitView)
+                    sidebarNavItem(icon: "magnifyingglass", label: "Search", screen: .search)
+                    sidebarNavItem(
+                        icon: "checkmark.shield.fill",
+                        label: "Permissions",
+                        screen: .permissions,
+                        badge: permissionsPendingCount
+                    )
+                    if enableAgentTeams {
+                        sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
+                    }
+                    if enableAgentQueue {
+                        sidebarNavItem(icon: "list.bullet.rectangle.portrait", label: "Agent Queue", screen: .agentQueue)
+                    }
                 }
-                if enableAgentQueue {
-                    sidebarNavItem(icon: "list.bullet.rectangle.portrait", label: "Agent Queue", screen: .agentQueue)
+
+                Spacer().frame(height: theme.spacingMD)
+
+                // Configuration screens group
+                sidebarSectionHeader(title: "CONFIGURE")
+                VStack(spacing: theme.spacingXS) {
+                    sidebarNavItem(icon: "chart.bar.fill", label: "Usage", screen: .usage)
+                    sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
+                    sidebarNavItem(icon: "server.rack", label: "Backends", screen: .backends)
+                    sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
+                    sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
+                    sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
+                    sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
                 }
             }
-
-            Spacer().frame(height: theme.spacingMD)
-
-            // Configuration screens group
-            sidebarSectionHeader(title: "CONFIGURE")
-            VStack(spacing: theme.spacingXS) {
-                sidebarNavItem(icon: "chart.bar.fill", label: "Usage", screen: .usage)
-                sidebarNavItem(icon: "desktopcomputer", label: "Host Profiles", screen: .hostProfiles)
-                sidebarNavItem(icon: "server.rack", label: "Backends", screen: .backends)
-                sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
-                sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
-                sidebarNavItem(icon: "checkmark.shield.fill", label: "Permissions", screen: .permissions)
-                sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
-            }
-            sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.top, theme.spacingMD)
         }
-        .padding(.horizontal, theme.spacingSM)
-        .padding(.top, theme.spacingMD)
+        .frame(maxHeight: UIScreen.main.bounds.height * 0.45)
     }
 
     // MARK: - Section Header
