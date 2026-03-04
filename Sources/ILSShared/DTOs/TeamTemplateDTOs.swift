@@ -133,7 +133,7 @@ extension CGPoint: @retroactive Codable, @retroactive Hashable {
 // MARK: - Request Types
 
 /// Request to create a new team template.
-public struct CreateTemplateRequest: Codable, Sendable {
+public struct CreateTeamTemplateRequest: Codable, Sendable {
     /// Template name.
     public let name: String
     /// Template description.
@@ -160,8 +160,8 @@ public struct CreateTemplateRequest: Codable, Sendable {
     }
 }
 
-/// Request to update an existing template.
-public struct UpdateTemplateRequest: Codable, Sendable {
+/// Request to update an existing team template.
+public struct UpdateTeamTemplateRequest: Codable, Sendable {
     /// New name.
     public let name: String?
     /// New description.

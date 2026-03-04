@@ -94,6 +94,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddMeshGradientToThemes())
     // v5.0 — Session checkpoint & crash recovery
     app.migrations.add(CreateCheckpoints())
+    // v5.1 — Session templates
+    app.migrations.add(CreateTemplates())
 
     // Run migrations
     try await app.autoMigrate()

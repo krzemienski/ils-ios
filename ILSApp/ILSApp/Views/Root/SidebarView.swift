@@ -53,6 +53,10 @@ struct SidebarView: View {
     /// The session pending deletion confirmation, if any.
     @State private var sessionToDelete: ChatSession?
     @State private var showNewSessionSheet = false
+    /// The session being saved as a template, if any.
+    @State private var sessionToSaveAsTemplate: ChatSession?
+    /// View model for template creation (lazy-configured on first appearance).
+    @State private var templatesViewModel = TemplatesViewModel()
 
     /// Comma-separated project names whose DisclosureGroups are expanded, persisted across scenes.
     @SceneStorage("sidebarExpandedProjects") private var expandedProjectsStorage: String = ""
@@ -106,6 +110,22 @@ struct SidebarView: View {
             }
             .environment(appState)
             .environment(\.theme, theme)
+        }
+        .sheet(item: $sessionToSaveAsTemplate) { session in
+            NavigationStack {
+                EditTemplateView(
+                    template: nil,
+                    prefillName: session.name ?? "New Template",
+                    prefillModel: session.model,
+                    prefillPermissionMode: session.permissionMode.rawValue,
+                    viewModel: templatesViewModel
+                )
+            }
+            .environment(appState)
+            .environment(\.theme, theme)
+        }
+        .task {
+            templatesViewModel.configure(client: appState.apiClient)
         }
         .alert("Rename Session", isPresented: Binding(
             get: { sessionToRename != nil },
@@ -518,6 +538,11 @@ struct SidebarView: View {
                             SessionExporter.share(session)
                         } label: {
                             Label("Export", systemImage: "square.and.arrow.up")
+                        }
+                        Button {
+                            sessionToSaveAsTemplate = session
+                        } label: {
+                            Label("Save as Template", systemImage: "doc.badge.plus")
                         }
                         Button(role: .destructive) {
                             sessionToDelete = session

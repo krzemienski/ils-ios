@@ -190,6 +190,82 @@ public struct RecentSessionsResponse: Codable, Sendable {
     }
 }
 
+// MARK: - Session Template Requests
+
+/// Request to create a new session template.
+public struct CreateTemplateRequest: Codable, Sendable {
+    public let name: String
+    public let description: String?
+    public let model: String
+    public let permissionMode: PermissionMode
+    public let systemPrompt: String?
+    public let maxBudgetUSD: Double?
+    public let maxTurns: Int?
+    public let isFavorite: Bool?
+
+    public init(
+        name: String,
+        description: String? = nil,
+        model: String,
+        permissionMode: PermissionMode,
+        systemPrompt: String? = nil,
+        maxBudgetUSD: Double? = nil,
+        maxTurns: Int? = nil,
+        isFavorite: Bool? = nil
+    ) {
+        self.name = name
+        self.description = description
+        self.model = model
+        self.permissionMode = permissionMode
+        self.systemPrompt = systemPrompt
+        self.maxBudgetUSD = maxBudgetUSD
+        self.maxTurns = maxTurns
+        self.isFavorite = isFavorite
+    }
+}
+
+/// Request to update an existing session template (all fields optional).
+public struct UpdateTemplateRequest: Codable, Sendable {
+    public let name: String?
+    public let description: String?
+    public let model: String?
+    public let permissionMode: PermissionMode?
+    public let systemPrompt: String?
+    public let maxBudgetUSD: Double?
+    public let maxTurns: Int?
+    public let isFavorite: Bool?
+
+    public init(
+        name: String? = nil,
+        description: String? = nil,
+        model: String? = nil,
+        permissionMode: PermissionMode? = nil,
+        systemPrompt: String? = nil,
+        maxBudgetUSD: Double? = nil,
+        maxTurns: Int? = nil,
+        isFavorite: Bool? = nil
+    ) {
+        self.name = name
+        self.description = description
+        self.model = model
+        self.permissionMode = permissionMode
+        self.systemPrompt = systemPrompt
+        self.maxBudgetUSD = maxBudgetUSD
+        self.maxTurns = maxTurns
+        self.isFavorite = isFavorite
+    }
+}
+
+/// Request to bulk-delete templates by ID.
+public struct BulkDeleteTemplatesRequest: Codable, Sendable {
+    /// Array of template UUIDs to delete.
+    public let ids: [UUID]
+
+    public init(ids: [UUID]) {
+        self.ids = ids
+    }
+}
+
 // MARK: - Chat Requests
 
 /// Execution backend for Claude queries.

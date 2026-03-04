@@ -20,7 +20,7 @@ import SwiftUI
 ///
 /// ### Sub-Views
 /// - ``CategoryFilterBar`` - Horizontal chip bar for category filtering
-/// - ``TemplateRow`` - Styled list row for a single template
+/// - ``QuickReplyTemplateRow`` - Styled list row for a single template
 /// - ``QuickReplyTemplateEditSheet`` - Modal form for creating or editing a template
 struct QuickReplyTemplatesSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -60,7 +60,7 @@ struct QuickReplyTemplatesSheet: View {
                 emptyStateView
             } else {
                 ForEach(debouncedTemplates) { template in
-                    TemplateRow(template: template, theme: theme) {
+                    QuickReplyTemplateRow(template: template, theme: theme) {
                         selectTemplate(template)
                     } onPin: {
                         Task { await manager.togglePin(id: template.id) }
@@ -281,7 +281,7 @@ private struct CategoryChip: View {
 /// Shows the template name, category badge, pin indicator, and variable count.
 /// Swipe-leading action pins/unpins; swipe-trailing actions edit and delete.
 /// Built-in templates do not offer a delete action.
-private struct TemplateRow: View {
+private struct QuickReplyTemplateRow: View {
     let template: QuickReplyTemplate
     let theme: ThemeSnapshot
     let onTap: () -> Void
