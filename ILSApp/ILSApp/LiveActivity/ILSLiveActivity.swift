@@ -4,26 +4,46 @@ import SwiftUI
 import ActivityKit
 import WidgetKit
 
+// MARK: - Session Activity Status
+
+/// Represents the current streaming/execution status of a session shown in the Live Activity.
+///
+/// This enum replaces the old `isStreaming: Bool` to provide richer status display,
+/// enabling distinct UI treatment for streaming, waiting, complete, and error states.
+enum SessionActivityStatus: String, Codable, Hashable {
+    /// Claude is actively generating a response (tokens flowing).
+    case streaming
+    /// Claude is awaiting user input (tool use prompt, permission request, etc.).
+    case waitingForInput
+    /// Response generation completed successfully.
+    case completed
+    /// Session ended with an error.
+    case error
+}
+
 // MARK: - Activity Attributes
 
 /// Defines the static and dynamic data for a chat streaming Live Activity.
 ///
 /// Static data (set once at activity start):
+/// - `sessionId`: UUID string for deep-link navigation to the session
 /// - `sessionName`: Human-readable session name
 /// - `model`: Claude model being used (e.g., "Sonnet", "Opus")
 ///
 /// Dynamic data (updated during streaming via `ContentState`):
-/// - `isStreaming`: Whether Claude is actively generating
+/// - `status`: Current activity status (streaming, waitingForInput, completed, error)
 /// - `messagePreview`: Truncated preview of the response text
 /// - `tokenCount`: Approximate token count of the response
 /// - `cost`: Running cost in USD
 /// - `elapsedSeconds`: Seconds since streaming started
 struct ChatStreamingAttributes: ActivityAttributes {
+    /// UUID string for deep-link navigation (e.g., `ils://session/<sessionId>`).
+    let sessionId: String
     let sessionName: String
     let model: String
 
     struct ContentState: Codable, Hashable {
-        var isStreaming: Bool
+        var status: SessionActivityStatus
         var messagePreview: String
         var tokenCount: Int
         var cost: Double
@@ -35,15 +55,18 @@ struct ChatStreamingAttributes: ActivityAttributes {
 
 /// Static color constants matching the Obsidian/Cyberpunk dark aesthetic.
 /// WidgetKit views cannot access SwiftUI `@Environment`, so colors are declared as constants.
-private enum LiveActivityColors {
-    static let background = Color(hex: "0A0A0F")
-    static let backgroundSecondary = Color(hex: "111118")
-    static let accent = Color(hex: "00D4FF") // Cyan accent (Cyberpunk)
-    static let accentSecondary = Color(hex: "FF6933") // Orange accent (Obsidian)
-    static let textPrimary = Color(hex: "E8ECF0")
-    static let textSecondary = Color(hex: "888899")
-    static let success = Color(hex: "22C55E")
-    static let border = Color(hex: "1A1A2E")
+/// Uses direct RGBA values to avoid dependency on AppTheme.swift (not available in Widget Extension).
+enum LiveActivityColors {
+    static let background = Color(.sRGB, red: 10/255, green: 10/255, blue: 15/255)
+    static let backgroundSecondary = Color(.sRGB, red: 17/255, green: 17/255, blue: 24/255)
+    static let accent = Color(.sRGB, red: 0/255, green: 212/255, blue: 255/255) // Cyan #00D4FF
+    static let accentSecondary = Color(.sRGB, red: 255/255, green: 105/255, blue: 51/255) // Orange #FF6933
+    static let textPrimary = Color(.sRGB, red: 232/255, green: 236/255, blue: 240/255)
+    static let textSecondary = Color(.sRGB, red: 136/255, green: 136/255, blue: 153/255)
+    static let success = Color(.sRGB, red: 34/255, green: 197/255, blue: 94/255)
+    static let warning = Color(.sRGB, red: 245/255, green: 158/255, blue: 11/255)
+    static let destructive = Color(.sRGB, red: 239/255, green: 68/255, blue: 68/255)
+    static let border = Color(.sRGB, red: 26/255, green: 26/255, blue: 46/255)
 }
 
 // MARK: - Lock Screen Widget View
@@ -90,19 +113,7 @@ struct ChatStreamingLockScreenView: View {
             }
 
             // Status line
-            if context.state.isStreaming {
-                HStack(spacing: 4) {
-                    Text("Claude is responding")
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(LiveActivityColors.success)
-
-                    StreamingDotsView()
-                }
-            } else {
-                Text("Response complete")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(LiveActivityColors.textSecondary)
-            }
+            statusLineView(for: context.state.status)
 
             // Message preview
             if !context.state.messagePreview.isEmpty {
@@ -141,6 +152,41 @@ struct ChatStreamingLockScreenView: View {
         }
         .padding(16)
         .background(LiveActivityColors.background)
+    }
+
+    @ViewBuilder
+    private func statusLineView(for status: SessionActivityStatus) -> some View {
+        switch status {
+        case .streaming:
+            HStack(spacing: 4) {
+                Text("Claude is responding")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.success)
+                StreamingDotsView()
+            }
+        case .waitingForInput:
+            HStack(spacing: 4) {
+                Image(systemName: "hand.raised")
+                    .font(.footnote)
+                    .foregroundStyle(LiveActivityColors.warning)
+                Text("Waiting for input")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.warning)
+            }
+        case .completed:
+            Text("Response complete")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(LiveActivityColors.textSecondary)
+        case .error:
+            HStack(spacing: 4) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.footnote)
+                    .foregroundStyle(LiveActivityColors.destructive)
+                Text("Session error")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.destructive)
+            }
+        }
     }
 
     private func formatTokenCount(_ count: Int) -> String {
@@ -226,9 +272,10 @@ struct ChatStreamingCompactTrailing: View {
 /// Layout:
 /// ```
 /// ┌──────────────────────────────────────┐
-/// │ [icon]  Session Name                 │
-/// │ Claude is responding...     $0.0042  │
-/// │ 1,234 tokens                  0:42   │
+/// │ [icon]  Session Name         model   │
+/// │ ● Streaming               $0.0042   │
+/// │ "Preview of the response text..."   │
+/// │ 1,234 tokens                  0:42  │
 /// └──────────────────────────────────────┘
 /// ```
 @available(iOS 16.2, *)
@@ -258,26 +305,22 @@ struct ChatStreamingExpandedView: View {
 
             // Middle row: status + cost
             HStack {
-                if state.isStreaming {
-                    HStack(spacing: 2) {
-                        Circle()
-                            .fill(LiveActivityColors.success)
-                            .frame(width: 6, height: 6)
-                        Text("Streaming")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(LiveActivityColors.success)
-                    }
-                } else {
-                    Text("Complete")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(LiveActivityColors.textSecondary)
-                }
+                expandedStatusView(for: state.status)
 
                 Spacer()
 
                 Text(formatCost(state.cost))
                     .font(.caption.weight(.semibold).monospaced())
                     .foregroundStyle(LiveActivityColors.accent)
+            }
+
+            // Message preview (only when present)
+            if !state.messagePreview.isEmpty {
+                Text(state.messagePreview)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(LiveActivityColors.textSecondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
 
             // Bottom row: tokens + elapsed
@@ -296,6 +339,43 @@ struct ChatStreamingExpandedView: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func expandedStatusView(for status: SessionActivityStatus) -> some View {
+        switch status {
+        case .streaming:
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(LiveActivityColors.success)
+                    .frame(width: 6, height: 6)
+                Text("Streaming")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.success)
+            }
+        case .waitingForInput:
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(LiveActivityColors.warning)
+                    .frame(width: 6, height: 6)
+                Text("Waiting")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.warning)
+            }
+        case .completed:
+            Text("Complete")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(LiveActivityColors.textSecondary)
+        case .error:
+            HStack(spacing: 2) {
+                Circle()
+                    .fill(LiveActivityColors.destructive)
+                    .frame(width: 6, height: 6)
+                Text("Error")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiveActivityColors.destructive)
+            }
+        }
     }
 
     private func formatTokenCount(_ count: Int) -> String {
@@ -319,131 +399,6 @@ struct ChatStreamingExpandedView: View {
             return String(format: "%d:%02d", mins, secs)
         }
         return "\(secs)s"
-    }
-}
-
-// MARK: - ChatViewModel Live Activity Extension
-
-extension ChatViewModel {
-
-    /// Start a Live Activity for the current chat streaming session.
-    ///
-    /// Creates a new `Activity<ChatStreamingAttributes>` that appears on the lock screen
-    /// and Dynamic Island while Claude streams a response.
-    ///
-    /// - Parameters:
-    ///   - sessionName: Display name for the session
-    ///   - model: Claude model being used (e.g., "Sonnet")
-    @available(iOS 16.2, *)
-    func startLiveActivity(sessionName: String, model: String) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            AppLogger.shared.info("Live Activities not enabled by user", category: "liveActivity")
-            return
-        }
-
-        let attributes = ChatStreamingAttributes(
-            sessionName: sessionName,
-            model: model
-        )
-
-        let initialState = ChatStreamingAttributes.ContentState(
-            isStreaming: true,
-            messagePreview: "",
-            tokenCount: 0,
-            cost: 0.0,
-            elapsedSeconds: 0
-        )
-
-        do {
-            let activity = try Activity.request(
-                attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
-                pushType: nil
-            )
-            AppLogger.shared.info(
-                "Started Live Activity: \(activity.id)",
-                category: "liveActivity"
-            )
-        } catch {
-            AppLogger.shared.error(
-                "Failed to start Live Activity: \(error)",
-                category: "liveActivity"
-            )
-        }
-    }
-
-    /// Update the running Live Activity with new streaming data.
-    ///
-    /// Finds the most recent `ChatStreamingAttributes` activity and updates its state.
-    ///
-    /// - Parameters:
-    ///   - preview: Truncated preview of the assistant message (max ~100 chars)
-    ///   - tokens: Current approximate token count
-    ///   - cost: Running cost in USD
-    @available(iOS 16.2, *)
-    func updateLiveActivity(preview: String, tokens: Int, cost: Double) {
-        let elapsed: Int
-        if let start = streamStartTime {
-            elapsed = Int(Date().timeIntervalSince(start))
-        } else {
-            elapsed = 0
-        }
-
-        let updatedState = ChatStreamingAttributes.ContentState(
-            isStreaming: true,
-            messagePreview: String(preview.prefix(120)),
-            tokenCount: tokens,
-            cost: cost,
-            elapsedSeconds: elapsed
-        )
-
-        Task {
-            for activity in Activity<ChatStreamingAttributes>.activities {
-                await activity.update(
-                    ActivityContent(state: updatedState, staleDate: nil)
-                )
-            }
-        }
-    }
-
-    /// End all running chat streaming Live Activities.
-    ///
-    /// Sets `isStreaming` to `false` and dismisses the activity after a brief delay
-    /// so the user can see the final stats.
-    @available(iOS 16.2, *)
-    func endLiveActivity() {
-        let finalTokens = streamTokenCount
-        let finalCost = currentStreamingMessage?.cost ?? 0.0
-        let finalPreview: String
-        if let lastMessage = messages.last, !lastMessage.isUser {
-            finalPreview = String(lastMessage.text.prefix(120))
-        } else {
-            finalPreview = ""
-        }
-
-        let elapsed: Int
-        if let start = streamStartTime {
-            elapsed = Int(Date().timeIntervalSince(start))
-        } else {
-            elapsed = 0
-        }
-
-        let finalState = ChatStreamingAttributes.ContentState(
-            isStreaming: false,
-            messagePreview: finalPreview,
-            tokenCount: finalTokens,
-            cost: finalCost,
-            elapsedSeconds: elapsed
-        )
-
-        Task {
-            for activity in Activity<ChatStreamingAttributes>.activities {
-                await activity.end(
-                    ActivityContent(state: finalState, staleDate: nil),
-                    dismissalPolicy: .after(.now + 30)
-                )
-            }
-        }
     }
 }
 

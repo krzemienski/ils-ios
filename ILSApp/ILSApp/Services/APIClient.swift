@@ -417,6 +417,31 @@ actor APIClient {
         return try await put("/sessions/\(id.uuidString)", body: body)
     }
 
+    // MARK: - Live Activity Push Token
+
+    private struct LiveActivityTokenBody: Encodable {
+        let pushToken: String
+    }
+
+    /// Register an APNs push token for Live Activity updates on a specific session.
+    ///
+    /// When the iOS app is backgrounded, the backend uses this token to push
+    /// Live Activity content-state updates via APNs, keeping the Dynamic Island
+    /// and Lock Screen widget current without an active SSE connection.
+    ///
+    /// - Parameters:
+    ///   - token: Hex-encoded APNs push token from `Activity.pushTokenUpdates`
+    ///   - sessionId: Lowercase UUID string identifying the session
+    func registerLiveActivityToken(_ token: String, forSession sessionId: String) async throws {
+        let body = LiveActivityTokenBody(pushToken: token)
+        let bodyData = try encoder.encode(body)
+        try await rawRequest(
+            method: "POST",
+            endpoint: "/sessions/\(sessionId)/live-activity-token",
+            body: bodyData
+        )
+    }
+
     /// Invalidate cache entries affected by a mutation (POST/PUT/DELETE).
     /// Removes the exact resource path and its parent list endpoint from both
     /// the NSCache (TTL cache) and conditionalCache (ETag backing store).

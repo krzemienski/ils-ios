@@ -99,8 +99,17 @@ targets:
       path: ILSApp/ILSApp.entitlements
 
   # ──────────────────────────────────────────────
-  # iOS UI Tests
+  # Widget Extension (ILSLiveActivityExtension)
+  # NOTE: The ILSLiveActivityExtension target is managed directly in
+  # ILSApp.xcodeproj/project.pbxproj (not via XcodeGen) because it
+  # requires a widget extension product type with specific build phases.
+  # Bundle ID: com.ils.app.live-activity
+  # Entitlements: ILSLiveActivityExtension/ILSLiveActivityExtension.entitlements
+  # App Group: group.com.ils.app (shared with main app)
   # ──────────────────────────────────────────────
+
+  # ──────────────────────────────────────────────
+  # UI Tests  # ──────────────────────────────────────────────
   ILSAppUITests:
     type: bundle.ui-testing
     platform: iOS

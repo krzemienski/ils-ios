@@ -66,7 +66,7 @@ struct ServerStatusWidgetView: View {
             HStack(spacing: 6) {
                 Image(systemName: "server.rack")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(Color(hex: WidgetColors.accent))
+                    .foregroundColor(Color(widgetHex: WidgetColors.accent))
                 Text("ILS")
                     .font(.subheadline.weight(.bold).monospaced())
                     .foregroundColor(.primary)
@@ -77,17 +77,17 @@ struct ServerStatusWidgetView: View {
             // Connection status
             HStack(spacing: 6) {
                 Circle()
-                    .fill(entry.isConnected ? Color(hex: WidgetColors.success) : Color(hex: WidgetColors.error))
+                    .fill(entry.isConnected ? Color(widgetHex: WidgetColors.success) : Color(widgetHex: WidgetColors.error))
                     .frame(width: 10, height: 10)
                     .shadow(
                         color: entry.isConnected
-                            ? Color(hex: WidgetColors.success).opacity(0.6)
-                            : Color(hex: WidgetColors.error).opacity(0.6),
+                            ? Color(widgetHex: WidgetColors.success).opacity(0.6)
+                            : Color(widgetHex: WidgetColors.error).opacity(0.6),
                         radius: 4
                     )
                 Text(entry.isConnected ? "Connected" : "Offline")
                     .font(.footnote.weight(.semibold))
-                    .foregroundColor(entry.isConnected ? Color(hex: WidgetColors.success) : Color(hex: WidgetColors.error))
+                    .foregroundColor(entry.isConnected ? Color(widgetHex: WidgetColors.success) : Color(widgetHex: WidgetColors.error))
             }
 
             Spacer()
@@ -101,7 +101,7 @@ struct ServerStatusWidgetView: View {
                         .foregroundColor(.primary)
                     Text("Sessions")
                         .font(.caption2.weight(.medium))
-                        .foregroundColor(Color(hex: WidgetColors.textTertiary))
+                        .foregroundColor(Color(widgetHex: WidgetColors.textTertiary))
                 }
 
                 Spacer()
@@ -110,17 +110,17 @@ struct ServerStatusWidgetView: View {
                 VStack(alignment: .trailing, spacing: 1) {
                     Text("v\(entry.backendVersion)")
                         .font(.caption.weight(.medium).monospaced())
-                        .foregroundColor(Color(hex: WidgetColors.textSecondary))
+                        .foregroundColor(Color(widgetHex: WidgetColors.textSecondary))
                     Text("Backend")
                         .font(.caption2.weight(.medium))
-                        .foregroundColor(Color(hex: WidgetColors.textTertiary))
+                        .foregroundColor(Color(widgetHex: WidgetColors.textTertiary))
                 }
             }
         }
         .padding(12)
         .widgetURL(URL(string: "ils://sessions"))
         .containerBackground(for: .widget) {
-            Color(hex: WidgetColors.background)
+            Color(widgetHex: WidgetColors.background)
         }
     }
 }

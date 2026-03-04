@@ -255,9 +255,15 @@ class ChatViewModel {
                         // Start Live Activity for Dynamic Island
                         #if os(iOS)
                         if #available(iOS 16.2, *) {
+                            let sessionIdString = self.sessionId?.uuidString.lowercased() ?? ""
                             let sessionName = self.sessionDisplayName ?? "Chat Session"
                             let model = self.sessionModel ?? "claude"
-                            self.startLiveActivity(sessionName: sessionName, model: model)
+                            // Register push token callback so APNs can update the
+                            // Live Activity when the app is backgrounded.
+                            if let client = self.apiClient {
+                                self.registerLiveActivityPushTokenCallback(apiClient: client)
+                            }
+                            self.startLiveActivity(sessionId: sessionIdString, sessionName: sessionName, model: model)
                         }
                         #endif
                     } else {
@@ -333,6 +339,34 @@ class ChatViewModel {
                     }
                     lastMessageCount = msgs.count
                 }
+            }
+        })
+
+        // Observe pendingPermissionRequest to update Live Activity status.
+        // When a permission request arrives: switch to .waitingForInput.
+        // When the user responds (nil): revert to .streaming.
+        observationTasks.append(Task { @MainActor [weak self] in
+            var lastHadPermission = false
+
+            while let self, !Task.isCancelled {
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    withObservationTracking {
+                        _ = self.pendingPermissionRequest
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+                guard !Task.isCancelled else { break }
+
+                let hasPermission = self.pendingPermissionRequest != nil
+                guard hasPermission != lastHadPermission else { continue }
+                lastHadPermission = hasPermission
+
+                #if os(iOS)
+                if #available(iOS 16.2, *), self.isStreaming {
+                    self.updateLiveActivityStatus(hasPermission ? .waitingForInput : .streaming)
+                }
+                #endif
             }
         })
     }

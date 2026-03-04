@@ -96,6 +96,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateCheckpoints())
     // v5.1 — Session templates
     app.migrations.add(CreateTemplates())
+    // v5.2 — Live Activity push token support
+    app.migrations.add(AddLiveActivityTokenToSessions())
 
     // Run migrations
     try await app.autoMigrate()
