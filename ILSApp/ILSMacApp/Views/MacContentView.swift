@@ -468,7 +468,7 @@ struct MacContentView: View {
                     Button {
                         activeScreen = .chat(session)
                     } label: {
-                        MacSessionRow(session: session)
+                        MacSessionRow(session: session, searchText: sessionsViewModel.debouncedSearchText)
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
@@ -693,14 +693,18 @@ struct MacContentView: View {
 
 struct MacSessionRow: View {
     let session: ChatSession
+    /// Substring used to highlight matching characters in the session name.
+    ///
+    /// When non-empty, any case-insensitive occurrence within ``sessionDisplayName``
+    /// is rendered in `theme.accent`.
+    var searchText: String = ""
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     var body: some View {
         HStack(spacing: theme.spacingSM) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(session.name ?? "Unnamed Session")
+                Text(highlightedDisplayName)
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
                 if let firstPrompt = session.firstPrompt {
@@ -720,6 +724,56 @@ struct MacSessionRow: View {
         .padding(.vertical, theme.spacingXS)
     }
 
+    // MARK: - Helpers
+
+    private var sessionDisplayName: String {
+        session.displayName
+    }
+
+    /// Builds an `AttributedString` for the session name, highlighting every
+    /// case-insensitive occurrence of `searchText` in `theme.accent`.
+    ///
+    /// When `searchText` is empty the name is returned in `theme.textPrimary`
+    /// with no additional work.
+    private var highlightedDisplayName: AttributedString {
+        let name = sessionDisplayName
+
+        guard !searchText.isEmpty else {
+            var result = AttributedString(name)
+            result.foregroundColor = theme.textPrimary
+            return result
+        }
+
+        var result = AttributedString()
+        let lowercasedName = name.lowercased()
+        let lowercasedSearch = searchText.lowercased()
+        var current = name.startIndex
+
+        while current < name.endIndex {
+            let searchRange = current..<name.endIndex
+            if let matchRange = lowercasedName.range(of: lowercasedSearch, range: searchRange) {
+                // Append text before the match in the default colour.
+                if current < matchRange.lowerBound {
+                    var segment = AttributedString(name[current..<matchRange.lowerBound])
+                    segment.foregroundColor = theme.textPrimary
+                    result.append(segment)
+                }
+                // Append the matched substring in accent colour.
+                var match = AttributedString(name[matchRange])
+                match.foregroundColor = theme.accent
+                result.append(match)
+                current = matchRange.upperBound
+            } else {
+                // Append the remaining non-matching tail.
+                var tail = AttributedString(name[current...])
+                tail.foregroundColor = theme.textPrimary
+                result.append(tail)
+                break
+            }
+        }
+
+        return result
+    }
 }
 
 #Preview {

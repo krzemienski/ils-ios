@@ -467,7 +467,7 @@ struct SidebarView: View {
                     SidebarSessionRow(
                         session: session,
                         isActive: isSessionActive(session),
-                        searchText: sessionsViewModel.searchText
+                        searchText: sessionsViewModel.debouncedSearchText
                     ) {
                         onSessionSelected(session)
                         isSidebarOpen = false
