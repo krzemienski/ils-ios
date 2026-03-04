@@ -11,6 +11,7 @@ import ILSShared
 enum ActiveScreen: Hashable {
     case home
     case chat(ChatSession)
+    case sessionForkTree(ChatSession)
     case system
     case settings
     case browser
@@ -29,6 +30,7 @@ enum ActiveScreen: Hashable {
         switch self {
         case .home: return "home"
         case .chat: return "chat"
+        case .sessionForkTree: return "sessionForkTree"
         case .system: return "system"
         case .settings: return "settings"
         case .browser: return "browser"
@@ -293,6 +295,8 @@ struct SidebarRootView: View {
                             previousScreen = nil
                         }
                     } : nil)
+                case .sessionForkTree(let session):
+                    SessionForkTreeView(initialSession: session, onNavigate: { navigateToChat($0) })
                 case .system:
                     systemScreen
                 case .settings:

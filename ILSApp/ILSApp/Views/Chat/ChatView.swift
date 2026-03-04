@@ -58,6 +58,7 @@ struct ChatView: View {
         var forkedSession: ChatSession?
         var navigateToForked: ChatSession?
         var navigateToRelated: ChatSession?
+        var navigateToForkTree: ChatSession?
         var messageToDelete: ChatMessage?
         var renameText = ""
         var exportMarkdown = ""
@@ -207,6 +208,12 @@ struct ChatView: View {
         }
         .navigationDestination(item: $actions.navigateToRelated) { session in
             ChatView(session: session)
+        }
+        .navigationDestination(item: $actions.navigateToForkTree) { sess in
+            SessionForkTreeView(initialSession: sess) { navigated in
+                actions.navigateToRelated = navigated
+            }
+            .environment(appState)
         }
         .onChange(of: viewModel.forkResult) { _, forked in
             if let forked {
@@ -586,6 +593,13 @@ struct ChatView: View {
                     Label("Fork Session", systemImage: "arrow.branch")
                 }
                 .accessibilityIdentifier("fork-session-button")
+
+                Button {
+                    actions.navigateToForkTree = session
+                } label: {
+                    Label("Fork Tree", systemImage: "point.3.connected.trianglepath.dotted")
+                }
+                .accessibilityIdentifier("fork-tree-button")
 
                 Button {
                     Task { await exportSession() }
