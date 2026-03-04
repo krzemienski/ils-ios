@@ -103,6 +103,10 @@ func configure(_ app: Application) async throws {
     // but deferred — scores are computed on-demand instead.
     // v5.4 — Session recordings
     app.migrations.add(CreateSessionRecordings())
+    // v5.5 — Full-text search
+    app.migrations.add(AddMessagesFTS5())
+    // v5.6 — Search history
+    app.migrations.add(CreateSearchHistory())
 
     // Run migrations
     try await app.autoMigrate()

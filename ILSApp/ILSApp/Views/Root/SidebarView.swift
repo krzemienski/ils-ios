@@ -377,6 +377,7 @@ struct SidebarView: View {
                 )
                 sidebarNavItem(icon: "book.fill", label: "Documentation", screen: .documentation)
                 sidebarNavItem(icon: "split.cells.horizontal", label: "Split View", screen: .splitView)
+                sidebarNavItem(icon: "magnifyingglass", label: "Search", screen: .search)
                 if enableAgentTeams {
                     sidebarNavItem(icon: "person.3.fill", label: "Agent Teams", screen: .teams)
                 }
@@ -816,7 +817,7 @@ struct SidebarView: View {
              (.documentation, .documentation), (.terminal, .terminal),
              (.backends, .backends), (.unifiedSessions, .unifiedSessions),
              (.splitView, .splitView), (.analytics, .analytics),
-             (.permissions, .permissions):
+             (.permissions, .permissions), (.search, .search):
             return true
         case (.chat, .chat):
             return true

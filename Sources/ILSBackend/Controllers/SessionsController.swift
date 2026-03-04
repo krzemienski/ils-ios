@@ -1,5 +1,6 @@
 import Vapor
 import Fluent
+import SQLKit
 import ILSShared
 
 // MARK: - Vapor Content Conformances
@@ -13,7 +14,9 @@ extension SessionFileChange: Content {}
 /// - `GET /sessions`: List all sessions with optional project filter
 /// - `POST /sessions`: Create a new session
 /// - `GET /sessions/scan`: Scan for external Claude Code sessions
-/// - `GET /sessions/search?q=`: Search across all session messages
+/// - `GET /sessions/search?q=`: Search across all session messages using FTS5
+/// - `GET /sessions/search/history`: Get recent search history (last 20 unique queries)
+/// - `DELETE /sessions/search/history`: Clear all search history
 /// - `GET /sessions/model-stats`: Aggregate model usage statistics across all sessions
 /// - `POST /sessions/suggest-model`: Smart model routing suggestion
 /// - `GET /sessions/compare?a=id1&b=id2`: Compare two sessions side-by-side
@@ -44,6 +47,8 @@ struct SessionsController: RouteCollection {
         sessions.post(use: create)
         sessions.get("scan", use: scan)
         sessions.get("search", use: searchAll)
+        sessions.get("search", "history", use: getSearchHistory)
+        sessions.delete("search", "history", use: clearSearchHistory)
         sessions.get("model-stats", use: modelStats)
         sessions.post("suggest-model", use: suggestModel)
         sessions.get("compare", use: compare)
@@ -577,21 +582,26 @@ struct SessionsController: RouteCollection {
 
     // MARK: - Message Search
 
-    /// Search across all session messages.
+    /// Search across all session messages using FTS5 full-text search.
     ///
     /// Query parameters:
-    /// - `q`: Search query (required, case-insensitive LIKE match on message content)
-    /// - `limit`: Maximum results (1-100, default 50)
+    /// - `q`: Search query (required)
+    /// - `limit`: Maximum results per page (1-100, default 50)
     /// - `offset`: Pagination offset (default 0)
-    /// - `role`: Filter by message role ("user", "assistant", or "system")
-    /// - `dateFrom`: ISO8601 start date filter (e.g. "2024-01-01T00:00:00Z")
-    /// - `dateTo`: ISO8601 end date filter (e.g. "2024-12-31T23:59:59Z")
-    /// - `projectName`: Filter to messages from sessions belonging to a named project ("Ungrouped" for sessions with no project)
+    /// - `role`: Message role filter (`user`, `assistant`, or `system`)
+    /// - `from` / `dateFrom`: ISO8601 date — include only messages created on or after this date
+    /// - `to` / `dateTo`: ISO8601 date — include only messages created on or before this date
+    /// - `projectId`: UUID — restrict to sessions belonging to this project
+    /// - `projectName`: Filter by project name ("Ungrouped" for sessions with no project)
+    /// - `codeOnly`: If `"true"`, restrict to messages containing code blocks (```)
     ///
-    /// Results include a `matchContext` field with ~60 characters of surrounding text around the match.
+    /// Results are ranked by FTS5 relevance. The search query is treated as a phrase
+    /// match, and snippets with `<mark>` highlighting are returned alongside each result.
+    ///
+    /// Each search query is saved to `search_history` (last 20 unique queries kept).
     ///
     /// - Parameter req: Vapor Request with search query params
-    /// - Returns: APIResponse with list of MessageSearchResult
+    /// - Returns: APIResponse with list of MessageSearchResult (with snippets)
     @Sendable
     func searchAll(req: Request) async throws -> APIResponse<ListResponse<MessageSearchResult>> {
         guard let query = req.query[String.self, at: "q"], !query.isEmpty else {
@@ -605,101 +615,110 @@ struct SessionsController: RouteCollection {
         let roleFilter = req.query[String.self, at: "role"]
         let projectNameFilter = req.query[String.self, at: "projectName"]
 
+        // Support both "dateFrom"/"dateTo" and "from"/"to" parameter names
         let isoFormatter = ISO8601DateFormatter()
-        let dateFrom: Date? = req.query[String.self, at: "dateFrom"].flatMap { isoFormatter.date(from: $0) }
-        let dateTo: Date? = req.query[String.self, at: "dateTo"].flatMap { isoFormatter.date(from: $0) }
+        let dateFrom: Date? = (req.query[String.self, at: "dateFrom"] ?? req.query[String.self, at: "from"]).flatMap { isoFormatter.date(from: $0) }
+        let dateTo: Date? = (req.query[String.self, at: "dateTo"] ?? req.query[String.self, at: "to"]).flatMap { isoFormatter.date(from: $0) }
+        let projectIdFilter = req.query[UUID.self, at: "projectId"]
+        let codeOnly = req.query[String.self, at: "codeOnly"] == "true"
 
-        let searchPattern = "%\(query)%"
+        // Wrap user query in double-quotes for FTS5 phrase matching.
+        // Internal double-quotes are escaped by doubling them ("" → literal ").
+        let escapedQuery = "\"" + query.replacingOccurrences(of: "\"", with: "\"\"") + "\""
 
-        // Build base query with DB-level filters (role, date range)
-        var baseQuery = MessageModel.query(on: req.db)
-            .filter(\.$content, .custom("LIKE"), searchPattern)
-            .sort(\.$createdAt, .descending)
-            .with(\.$session) {
-                $0.with(\.$project)
+        // Phase 1: FTS5 search — get ordered message IDs and snippets by relevance rank.
+        guard let sql = req.db as? SQLDatabase else {
+            throw Abort(.internalServerError, reason: "FTS5 search requires SQLite database")
+        }
+
+        let ftsSQL: SQLQueryString = """
+            SELECT m.id AS message_id,
+                   snippet(messages_fts, 0, '<mark>', '</mark>', '...', 32) AS snippet
+            FROM messages_fts
+            JOIN messages m ON m.rowid = messages_fts.rowid
+            WHERE messages_fts MATCH \(bind: escapedQuery)
+            ORDER BY rank
+            LIMIT 1000
+            """
+        let ftsRows = try await sql.raw(ftsSQL).all()
+
+        // Extract IDs and snippets from FTS5 results (preserving rank order)
+        var snippetMap: [String: String] = [:]
+        var orderedIdStrings: [String] = []
+        for row in ftsRows {
+            guard let idStr = try? row.decode(column: "message_id", as: String.self) else { continue }
+            let normalizedId = idStr.lowercased()
+            orderedIdStrings.append(normalizedId)
+            if let snip = try? row.decode(column: "snippet", as: String.self) {
+                snippetMap[normalizedId] = snip
             }
+        }
 
+        // Return empty results immediately if FTS5 found nothing
+        guard !orderedIdStrings.isEmpty else {
+            try? await SearchHistoryModel(query: query, resultCount: 0).save(on: req.db)
+            try? await pruneSearchHistory(on: req.db)
+            return APIResponse(success: true, data: ListResponse(items: [], total: 0))
+        }
+
+        let orderedUUIDs = orderedIdStrings.compactMap { UUID(uuidString: $0) }
+
+        // Phase 2: Load full message data via Fluent ORM (handles type safety for UUID/Date)
+        var msgQuery = MessageModel.query(on: req.db)
+            .filter(\.$id ~~ orderedUUIDs)
+            .with(\.$session) { $0.with(\.$project) }
+
+        // Apply date and role filters in the database query
+        if let dateFrom = dateFrom {
+            msgQuery = msgQuery.filter(\.$createdAt >= dateFrom)
+        }
+        if let dateTo = dateTo {
+            msgQuery = msgQuery.filter(\.$createdAt <= dateTo)
+        }
         if let role = roleFilter, !role.isEmpty {
-            baseQuery = baseQuery.filter(\.$role == role)
-        }
-        if let from = dateFrom {
-            baseQuery = baseQuery.filter(\.$createdAt >= from)
-        }
-        if let to = dateTo {
-            baseQuery = baseQuery.filter(\.$createdAt <= to)
+            msgQuery = msgQuery.filter(\.$role == role)
         }
 
-        // When projectName is specified, load all matching rows and filter in-memory
-        // (joining through session → project in Fluent requires full eager-load anyway)
-        if let projectName = projectNameFilter, !projectName.isEmpty {
-            let allMatches = try await baseQuery.all()
+        var loadedMessages = try await msgQuery.all()
 
-            let filtered = allMatches.filter { msg in
-                let sessionProjectName = msg.session.project?.name
-                if projectName == "Ungrouped" {
-                    return sessionProjectName == nil || sessionProjectName?.isEmpty == true
-                }
-                return sessionProjectName == projectName
-            }
-
-            let total = filtered.count
-            let start = min(offset, filtered.count)
-            let end = min(start + limit, filtered.count)
-            let page = Array(filtered[start..<end])
-
-            let results = page.map { msg in
-                MessageSearchResult(
-                    id: msg.id ?? UUID(),
-                    sessionId: msg.$session.id,
-                    sessionName: msg.session.name,
-                    sessionModel: msg.session.model,
-                    role: MessageRole(rawValue: msg.role) ?? .user,
-                    content: msg.content,
-                    matchContext: extractMatchContext(from: msg.content, query: query),
-                    createdAt: msg.createdAt ?? Date()
-                )
-            }
-
-            return APIResponse(
-                success: true,
-                data: ListResponse(items: results, total: total)
-            )
+        // Apply post-load filters that require joined data
+        if let projectId = projectIdFilter {
+            loadedMessages = loadedMessages.filter { $0.session.$project.id == projectId }
+        }
+        if codeOnly {
+            loadedMessages = loadedMessages.filter { $0.content.contains("```") }
         }
 
-        // Normal path: use DB-level pagination + a separate count query
-        let matchingMessages = try await baseQuery
-            .offset(offset)
-            .limit(limit)
-            .all()
+        // Sort by FTS5 rank order (Phase 1 relevance ordering)
+        let idToRank = Dictionary(uniqueKeysWithValues: orderedIdStrings.enumerated().map { ($1, $0) })
+        loadedMessages.sort { a, b in
+            let aKey = a.id?.uuidString.lowercased() ?? ""
+            let bKey = b.id?.uuidString.lowercased() ?? ""
+            return (idToRank[aKey] ?? Int.max) < (idToRank[bKey] ?? Int.max)
+        }
 
-        let results = matchingMessages.map { msg in
-            MessageSearchResult(
+        let total = loadedMessages.count
+        let pageItems = Array(loadedMessages.dropFirst(offset).prefix(limit))
+
+        let results = pageItems.map { msg -> MessageSearchResult in
+            let idKey = msg.id?.uuidString.lowercased() ?? ""
+            return MessageSearchResult(
                 id: msg.id ?? UUID(),
                 sessionId: msg.$session.id,
                 sessionName: msg.session.name,
                 sessionModel: msg.session.model,
                 role: MessageRole(rawValue: msg.role) ?? .user,
                 content: msg.content,
-                matchContext: extractMatchContext(from: msg.content, query: query),
-                createdAt: msg.createdAt ?? Date()
+                createdAt: msg.createdAt ?? Date(),
+                snippet: snippetMap[idKey],
+                projectName: msg.session.project?.name,
+                projectId: msg.session.$project.id
             )
         }
 
-        // Build a parallel count query with the same DB-level filters
-        var countQuery = MessageModel.query(on: req.db)
-            .filter(\.$content, .custom("LIKE"), searchPattern)
-
-        if let role = roleFilter, !role.isEmpty {
-            countQuery = countQuery.filter(\.$role == role)
-        }
-        if let from = dateFrom {
-            countQuery = countQuery.filter(\.$createdAt >= from)
-        }
-        if let to = dateTo {
-            countQuery = countQuery.filter(\.$createdAt <= to)
-        }
-
-        let total = try await countQuery.count()
+        // Persist this query to search history (non-critical — ignore save errors)
+        try? await SearchHistoryModel(query: query, resultCount: total).save(on: req.db)
+        try? await pruneSearchHistory(on: req.db)
 
         return APIResponse(
             success: true,
@@ -783,6 +802,68 @@ struct SessionsController: RouteCollection {
                 messagesB: messagesB.map { $0.toShared() }
             )
         )
+    }
+
+    /// Get recent search history, most recent first (up to 20 unique queries).
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of SearchHistoryEntry
+    @Sendable
+    func getSearchHistory(req: Request) async throws -> APIResponse<[SearchHistoryEntry]> {
+        let histories = try await SearchHistoryModel.query(on: req.db)
+            .sort(\.$createdAt, .descending)
+            .limit(20)
+            .all()
+
+        let entries = histories.compactMap { model -> SearchHistoryEntry? in
+            guard let id = model.id, let createdAt = model.createdAt else { return nil }
+            return SearchHistoryEntry(
+                id: id,
+                query: model.query,
+                resultCount: model.resultCount,
+                createdAt: createdAt
+            )
+        }
+
+        return APIResponse(success: true, data: entries)
+    }
+
+    /// Clear all search history entries.
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with deletion confirmation
+    @Sendable
+    func clearSearchHistory(req: Request) async throws -> APIResponse<DeletedResponse> {
+        try await SearchHistoryModel.query(on: req.db).delete()
+        return APIResponse(success: true, data: DeletedResponse())
+    }
+
+    /// Prune search history to keep only the 20 most recent unique queries.
+    ///
+    /// Removes older duplicates when the same query has been run multiple times,
+    /// then trims the total to 20 entries.
+    private func pruneSearchHistory(on db: Database) async throws {
+        let all = try await SearchHistoryModel.query(on: db)
+            .sort(\.$createdAt, .descending)
+            .all()
+
+        var seen = Set<String>()
+        var toDelete: [UUID] = []
+
+        for entry in all {
+            guard let id = entry.id else { continue }
+            if seen.contains(entry.query) || seen.count >= 20 {
+                toDelete.append(id)
+            } else {
+                seen.insert(entry.query)
+            }
+        }
+
+        if !toDelete.isEmpty {
+            try await SearchHistoryModel.query(on: db)
+                .filter(\.$id ~~ toDelete)
+                .delete()
+        }
     }
 
     /// Search within a specific session's messages.

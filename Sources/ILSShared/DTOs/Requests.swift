@@ -491,6 +491,12 @@ public struct MessageSearchResult: Codable, Identifiable, Sendable {
     public let matchContext: String?
     /// When the message was created.
     public let createdAt: Date
+    /// Context snippet highlighting the matched text.
+    public let snippet: String?
+    /// Name of the project the session belongs to.
+    public let projectName: String?
+    /// ID of the project the session belongs to.
+    public let projectId: UUID?
 
     public init(
         id: UUID,
@@ -500,7 +506,10 @@ public struct MessageSearchResult: Codable, Identifiable, Sendable {
         role: MessageRole,
         content: String,
         matchContext: String? = nil,
-        createdAt: Date
+        createdAt: Date,
+        snippet: String? = nil,
+        projectName: String? = nil,
+        projectId: UUID? = nil
     ) {
         self.id = id
         self.sessionId = sessionId
@@ -509,6 +518,56 @@ public struct MessageSearchResult: Codable, Identifiable, Sendable {
         self.role = role
         self.content = content
         self.matchContext = matchContext
+        self.createdAt = createdAt
+        self.snippet = snippet
+        self.projectName = projectName
+        self.projectId = projectId
+    }
+}
+
+/// Filters for narrowing message search results.
+public struct MessageSearchFilters: Codable, Sendable {
+    /// Include only messages created on or after this date.
+    public let dateFrom: Date?
+    /// Include only messages created on or before this date.
+    public let dateTo: Date?
+    /// Include only messages with this role (e.g., `.user`, `.assistant`).
+    public let role: MessageRole?
+    /// Restrict search to sessions belonging to this project.
+    public let projectId: UUID?
+    /// When true, restrict results to messages containing code blocks.
+    public let codeOnly: Bool?
+
+    public init(
+        dateFrom: Date? = nil,
+        dateTo: Date? = nil,
+        role: MessageRole? = nil,
+        projectId: UUID? = nil,
+        codeOnly: Bool? = nil
+    ) {
+        self.dateFrom = dateFrom
+        self.dateTo = dateTo
+        self.role = role
+        self.projectId = projectId
+        self.codeOnly = codeOnly
+    }
+}
+
+/// A recent search query entry from search history.
+public struct SearchHistoryEntry: Codable, Identifiable, Sendable {
+    /// Unique identifier for this history entry.
+    public let id: UUID
+    /// The search query string that was executed.
+    public let query: String
+    /// Number of results returned when the query was run.
+    public let resultCount: Int
+    /// Timestamp when this search was performed.
+    public let createdAt: Date
+
+    public init(id: UUID, query: String, resultCount: Int, createdAt: Date) {
+        self.id = id
+        self.query = query
+        self.resultCount = resultCount
         self.createdAt = createdAt
     }
 }

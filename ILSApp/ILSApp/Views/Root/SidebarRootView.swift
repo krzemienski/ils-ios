@@ -27,6 +27,7 @@ enum ActiveScreen: Hashable {
     case splitView
     case analytics
     case permissions
+    case search
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -52,6 +53,7 @@ enum ActiveScreen: Hashable {
         case .splitView: return "splitView"
         case .analytics: return "analytics"
         case .permissions: return "permissions"
+        case .search: return "search"
         }
     }
 
@@ -74,6 +76,7 @@ enum ActiveScreen: Hashable {
         case "splitView": return .splitView
         case "analytics": return .analytics
         case "permissions": return .permissions
+        case "search": return .search
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -374,6 +377,8 @@ struct SidebarRootView: View {
                     analyticsScreen
                 case .permissions:
                     permissionsScreen
+                case .search:
+                    searchScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -556,6 +561,12 @@ struct SidebarRootView: View {
         PermissionHistoryView()
     }
 
+    private var searchScreen: some View {
+        GlobalSearchView(apiClient: appState.apiClient) { sessionId in
+            navigateToSessionById(sessionId)
+        }
+    }
+
     // MARK: - Chat Navigation
 
     /// Navigate to a chat session, recording the current screen for back-button support.
@@ -588,6 +599,28 @@ struct SidebarRootView: View {
             break
         }
         showGlobalCommandPalette = false
+    }
+
+    /// Navigate to a session by ID, looking it up in the sessions cache first and falling
+    /// back to a minimal `ChatSession` if the session is not yet loaded.
+    private func navigateToSessionById(_ id: UUID) {
+        if let session = sessionsVM.session(byID: id) {
+            navigateToChat(session)
+            return
+        }
+        // Session not in cache — fetch from API then navigate
+        Task {
+            do {
+                let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(id.uuidString.lowercased())")
+                if let session = response.data {
+                    navigateToChat(session)
+                } else {
+                    navigateToChat(ChatSession(id: id, name: "Session"))
+                }
+            } catch {
+                navigateToChat(ChatSession(id: id, name: "Session"))
+            }
+        }
     }
 
     // MARK: - Sidebar Logic (iPhone)
