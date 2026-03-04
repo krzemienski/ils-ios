@@ -291,6 +291,7 @@ struct SidebarView: View {
                 sidebarNavItem(icon: "house.fill", label: "Home", screen: .home)
                 sidebarNavItem(icon: "gauge.with.dots.needle.33percent", label: "System Monitor", screen: .system)
                 sidebarNavItem(icon: "square.grid.2x2.fill", label: "Browse", screen: .browser)
+                sidebarNavItem(icon: "terminal.fill", label: "Terminal", screen: .terminal)
                 sidebarNavItem(
                     icon: "list.bullet.rectangle.fill",
                     label: "Activity Feed",
@@ -710,6 +711,7 @@ struct SidebarView: View {
              (.browser, .browser), (.teams, .teams), (.hostProfiles, .hostProfiles),
              (.themes, .themes), (.hooks, .hooks), (.activityFeed, .activityFeed),
              (.documentation, .documentation):
+             (.terminal, .terminal):
             return true
         case (.chat, .chat):
             return true

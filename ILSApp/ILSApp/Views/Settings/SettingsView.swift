@@ -48,6 +48,8 @@ struct SettingsView: View {
     @AppStorage("autoCheckpointsEnabled") private var autoCheckpointsEnabled: Bool = true
     @AppStorage("checkpointInterval") private var checkpointInterval: Int = 5
     @AppStorage("checkpointMaxCount") private var checkpointMaxCount: Int = 20
+    /// The shell used when executing commands in the embedded terminal.
+    @AppStorage("terminalShell") private var terminalShell: String = "zsh"
 
     private let availableColorSchemes = ["system", "light", "dark"]
 
@@ -67,6 +69,7 @@ struct SettingsView: View {
                 statisticsSection
 
                 modelUsageSection
+                terminalSection
 
                 contextWindowSection
 
@@ -264,6 +267,16 @@ struct SettingsView: View {
                     HStack(spacing: theme.spacingMD) {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(.system(size: theme.fontBody))
+    // MARK: - Terminal Section
+    private var terminalSection: some View {
+            Text("Terminal")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+                HStack {
+                        Image(systemName: "terminal.fill")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.accent)
                             .frame(width: 28, height: 28)
                             .background(theme.accent.opacity(0.15))
@@ -322,6 +335,18 @@ struct SettingsView: View {
                 .font(.system(size: theme.fontCaption))
                 .foregroundStyle(theme.textTertiary)
                 .padding(.horizontal, theme.spacingXS)
+                        Text("Default Shell")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    Spacer()
+                    Picker("Default Shell", selection: $terminalShell) {
+                        Text("zsh").tag("zsh")
+                        Text("bash").tag("bash")
+                    .pickerStyle(.segmented)
+                    .frame(width: 120)
+                    .accessibilityLabel("Default shell picker")
+            .modifier(GlassCard())
+            Text("Shell used when executing commands in the embedded terminal.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
         }
     }
 
