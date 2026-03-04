@@ -40,11 +40,11 @@ struct SessionWidgetEntry: TimelineEntry {
         SessionWidgetEntry(
             date: Date(),
             sessions: [
-                WidgetSessionInfo(id: "1", name: "API Refactor", model: "opus", messageCount: 42, isActive: true),
-                WidgetSessionInfo(id: "2", name: "Bug Fix #331", model: "sonnet", messageCount: 18, isActive: true),
-                WidgetSessionInfo(id: "3", name: "Documentation", model: "haiku", messageCount: 7, isActive: false),
-                WidgetSessionInfo(id: "4", name: "Code Review", model: "sonnet", messageCount: 25, isActive: true),
-                WidgetSessionInfo(id: "5", name: "Architecture", model: "opus", messageCount: 63, isActive: false)
+                WidgetSessionInfo(id: "1", name: "API Refactor", model: "opus", messageCount: 42, isActive: true, lastMessage: "Refactor the authentication endpoints"),
+                WidgetSessionInfo(id: "2", name: "Bug Fix #331", model: "sonnet", messageCount: 18, isActive: true, lastMessage: "Fix the nil crash in SessionListView"),
+                WidgetSessionInfo(id: "3", name: "Documentation", model: "haiku", messageCount: 7, isActive: false, lastMessage: "Write README for widget extension"),
+                WidgetSessionInfo(id: "4", name: "Code Review", model: "sonnet", messageCount: 25, isActive: true, lastMessage: "Review PR #42 for memory leaks"),
+                WidgetSessionInfo(id: "5", name: "Architecture", model: "opus", messageCount: 63, isActive: false, lastMessage: "Design the new data pipeline")
             ],
             isPlaceholder: true
         )
@@ -62,6 +62,7 @@ struct WidgetSessionInfo: Identifiable, Codable {
     let model: String
     let messageCount: Int
     let isActive: Bool
+    let lastMessage: String?
 }
 
 /// Timeline entry for the ServerStatusWidget.
@@ -174,7 +175,8 @@ struct WidgetDataProvider: @unchecked Sendable {
                 name: session.name ?? session.firstPrompt?.prefix(30).description ?? "Unnamed Session",
                 model: session.model,
                 messageCount: session.messageCount,
-                isActive: session.status == "active"
+                isActive: session.status == "active",
+                lastMessage: session.firstPrompt
             )
         }
     }

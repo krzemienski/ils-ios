@@ -12,6 +12,10 @@ struct ILSWidgets: WidgetBundle {
     var body: some Widget {
         SessionWidget()
         ServerStatusWidget()
+        LargeSessionWidget()
+        #if os(iOS)
+        LockScreenWidget()
+        #endif
     }
 }
 #endif

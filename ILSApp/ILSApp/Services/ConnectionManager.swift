@@ -1,5 +1,8 @@
 import Foundation
 import Observation
+#if os(iOS)
+import WidgetKit
+#endif
 import ILSShared
 
 // SEC-MED-1: Centralized connection defaults — avoids scattered localhost hardcoding.
@@ -60,6 +63,7 @@ class ConnectionManager {
     func updateServerURL(_ url: String) {
         serverURL = url
         UserDefaults.standard.set(url, forKey: "serverURL")
+        UserDefaults(suiteName: "group.com.ils.app")?.set(url, forKey: "widget_server_url")
         apiClient = APIClient(baseURL: url)
         sseClient = SSEClient(baseURL: url)
     }
@@ -81,6 +85,9 @@ class ConnectionManager {
         if wasFirstConnection {
             shouldShowFirstSessionWizard = true
         }
+        #if os(iOS)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 
     /// Show onboarding sheet if user has never successfully connected
