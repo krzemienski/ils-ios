@@ -45,6 +45,7 @@ struct ChatMessage: Identifiable, Equatable {
     init(
         id: UUID = UUID(),
         isUser: Bool,
+        isSystem: Bool = false,
         text: String,
         toolCalls: [ToolCallDisplay] = [],
         toolResults: [ToolResultDisplay] = [],
@@ -54,7 +55,6 @@ struct ChatMessage: Identifiable, Equatable {
         isFromHistory: Bool = false,
         tokenCount: Int = 0,
         elapsedSeconds: Double = 0,
-        isSystem: Bool = false,
         systemEventType: SystemEventType? = nil
     ) {
         self.id = id
@@ -80,8 +80,8 @@ struct ChatMessage: Identifiable, Equatable {
     static func systemEvent(_ text: String, eventType: SystemEventType? = nil) -> ChatMessage {
         ChatMessage(
             isUser: false,
-            text: text,
             isSystem: true,
+            text: text,
             systemEventType: eventType
         )
     }

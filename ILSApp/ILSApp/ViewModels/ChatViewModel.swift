@@ -399,6 +399,7 @@ class ChatViewModel {
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
+                            isSystem: message.role == .system,
                             text: message.content,
                             toolCalls: parseToolCalls(from: message.toolCalls),
                             timestamp: message.createdAt,
@@ -441,6 +442,7 @@ class ChatViewModel {
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
+                            isSystem: message.role == .system,
                             text: message.content,
                             toolCalls: parseToolCalls(from: message.toolCalls),
                             toolResults: parseToolResults(from: message.toolResults),
@@ -478,6 +480,7 @@ class ChatViewModel {
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
+                            isSystem: message.role == .system,
                             text: message.content,
                             toolCalls: parseToolCalls(from: message.toolCalls),
                             timestamp: message.createdAt,
@@ -521,6 +524,7 @@ class ChatViewModel {
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
+                            isSystem: message.role == .system,
                             text: message.content,
                             toolCalls: parseToolCalls(from: message.toolCalls),
                             timestamp: message.createdAt,
@@ -537,6 +541,7 @@ class ChatViewModel {
                         ChatMessage(
                             id: message.id,
                             isUser: message.role == .user,
+                            isSystem: message.role == .system,
                             text: message.content,
                             toolCalls: parseToolCalls(from: message.toolCalls),
                             toolResults: parseToolResults(from: message.toolResults),
