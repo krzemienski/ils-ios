@@ -73,6 +73,28 @@ struct NotificationPreferencesView: View {
                     .modifier(GlassCard())
                 }
 
+                // System Resource Alerts
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("System Resource Alerts")
+
+                    VStack(spacing: 0) {
+                        NavigationLink(destination: AlertThresholdSettingsView()) {
+                            HStack {
+                                Text("Alert Thresholds")
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textPrimary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: theme.fontCaption, weight: .semibold))
+                                    .foregroundStyle(theme.textTertiary)
+                            }
+                        }
+                        .accessibilityLabel("Configure system resource alert thresholds")
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
+
                 // Quiet Hours
                 VStack(alignment: .leading, spacing: theme.spacingSM) {
                     sectionLabel("Quiet Hours")

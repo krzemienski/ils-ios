@@ -2,6 +2,7 @@ import SwiftUI
 import Observation
 import ILSShared
 import TipKit
+import UserNotifications
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -95,6 +96,10 @@ struct ILSAppApp: App {
                             }
                         }
                         PerformanceMonitor.shared.start()
+                        Task {
+                            try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+                        }
+                        _ = AlertThresholdManager.shared
                         #endif
                     }
 

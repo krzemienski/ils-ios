@@ -35,6 +35,8 @@ struct SystemMonitorView: View {
     /// View model that manages the ``MetricsWebSocketClient`` and exposes aggregated metric values.
     @State private var viewModel = SystemMetricsViewModel()
 
+    private var alertManager: AlertThresholdManager { AlertThresholdManager.shared }
+
     var body: some View {
         ScrollView {
             VStack(spacing: theme.spacingMD) {
@@ -134,6 +136,33 @@ struct SystemMonitorView: View {
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
                 }
+
+                // Alert History link
+                NavigationLink {
+                    AlertHistoryView()
+                } label: {
+                    HStack {
+                        Image(systemName: "bell.badge")
+                            .foregroundStyle(theme.entitySystem)
+                        Text("Alert History")
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        if !alertManager.alertHistory.isEmpty {
+                            Text("\(alertManager.alertHistory.count)")
+                                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(theme.error)
+                                .clipShape(Capsule())
+                        }
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingLG)
@@ -144,9 +173,15 @@ struct SystemMonitorView: View {
         .toolbar {
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
+                alertHistoryButton
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
                 liveIndicator
             }
             #else
+            ToolbarItem(placement: .automatic) {
+                alertHistoryButton
+            }
             ToolbarItem(placement: .automatic) {
                 liveIndicator
             }
@@ -258,6 +293,40 @@ struct SystemMonitorView: View {
         .modifier(GlassCard())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Network usage chart, \(formatBytes(viewModel.networkBytesIn)) per second download, \(formatBytes(viewModel.networkBytesOut)) per second upload")
+    }
+
+    // MARK: - Alert History Button
+
+    /// Toolbar bell button that navigates to ``AlertHistoryView``.
+    ///
+    /// Shows a `bell.badge` SF Symbol.  When ``AlertThresholdManager/alertHistory`` is
+    /// non-empty, an error-coloured badge overlays the top-trailing corner of the icon
+    /// showing the total alert count (capped at 99+ to stay visually compact).
+    private var alertHistoryButton: some View {
+        NavigationLink {
+            AlertHistoryView()
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(systemName: "bell.badge")
+                    .foregroundStyle(theme.entitySystem)
+
+                if !alertManager.alertHistory.isEmpty {
+                    let count = alertManager.alertHistory.count
+                    Text(count > 99 ? "99+" : "\(count)")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(2)
+                        .background(theme.error)
+                        .clipShape(Circle())
+                        .offset(x: 6, y: -6)
+                }
+            }
+        }
+        .accessibilityLabel(
+            alertManager.alertHistory.isEmpty
+                ? "Alert History"
+                : "Alert History, \(alertManager.alertHistory.count) alert\(alertManager.alertHistory.count == 1 ? "" : "s")"
+        )
     }
 
     // MARK: - Live Indicator
