@@ -35,6 +35,7 @@ struct SessionInfoView: View {
     @State private var showExportSheet = false
     @State private var showFileBrowser = false
     @State private var showModelUpdatedToast = false
+    @State private var showRecordings = false
 
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
@@ -142,6 +143,15 @@ struct SessionInfoView: View {
                             }
                         }
 
+                        Section {
+                            Button {
+                                showRecordings = true
+                            } label: {
+                                Label("Recordings", systemImage: "record.circle")
+                                    .foregroundStyle(theme.textPrimary)
+                            }
+                        }
+
                         if displaySession.claudeSessionId != nil {
                             Section("Files") {
                                 Button {
@@ -234,6 +244,12 @@ struct SessionInfoView: View {
                     SessionFileBrowserView(session: displaySession)
                 }
                 .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $showRecordings) {
+                NavigationStack {
+                    SessionRecordingsView(session: displaySession)
+                        .environment(appState)
+                }
             }
             .toast(isPresented: $showCopiedToast, message: "Session ID copied")
             .task {

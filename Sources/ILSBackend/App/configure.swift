@@ -101,6 +101,8 @@ func configure(_ app: Application) async throws {
     // v5.3 — Session health scoring (on-demand computation; no caching table)
     // DB-NOTE: A session_health_scores caching table was originally planned
     // but deferred — scores are computed on-demand instead.
+    // v5.4 — Session recordings
+    app.migrations.add(CreateSessionRecordings())
 
     // Run migrations
     try await app.autoMigrate()

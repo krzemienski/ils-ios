@@ -251,6 +251,19 @@ extension ActivityEventSeverity: Content {}
 extension ActivityFeedFilter: Content {}
 extension ActivityFeedResponse: Content {}
 
+// MARK: - Recording Types
+extension SessionRecording: Content {}
+extension RecordingEvent: Content {}
+extension RecordingStatus: Content {}
+extension RecordingEventType: Content {}
+extension PlaybackSpeed: Content {}
+extension RecordingListResponse: Content {}
+extension RecordingEventsResponse: Content {}
+extension StartRecordingRequest: Content {}
+extension StopRecordingRequest: Content {}
+extension ExportRecordingRequest: Content {}
+extension ExportRecordingResponse: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}
