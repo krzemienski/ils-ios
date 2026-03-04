@@ -16,7 +16,7 @@ import ILSShared
 ///
 /// ### View Components
 /// - ``brandingHeader`` - ILS logo, title, and tagline banner at the top of the screen
-/// - ``pathCard(title:subtitle:icon:path:)`` - Tappable card that pushes a setup path
+/// - ``PathCardView`` - Tappable card that pushes a setup path with press state feedback
 struct OnboardingView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -33,18 +33,20 @@ struct OnboardingView: View {
             VStack(spacing: theme.spacingLG) {
                 brandingHeader
 
-                pathCard(
+                PathCardView(
                     title: "Quick Connect",
                     subtitle: "Connect to an existing backend server",
                     icon: "bolt.fill",
-                    path: .quickConnect
+                    path: .quickConnect,
+                    onSelect: { selectedPath = $0 }
                 )
 
-                pathCard(
+                PathCardView(
                     title: "Set Up New Server",
                     subtitle: "Deploy ILSBackend on a remote host via SSH",
                     icon: "server.rack",
-                    path: .fullSetup
+                    path: .fullSetup,
+                    onSelect: { selectedPath = $0 }
                 )
             }
             .padding(.horizontal, theme.spacingXL)
@@ -86,13 +88,25 @@ struct OnboardingView: View {
         .padding(.top, theme.spacingXL)
         .padding(.bottom, theme.spacingMD)
     }
+}
 
-    // MARK: - Path Card
+// MARK: - Path Card
 
-    @ViewBuilder
-    private func pathCard(title: String, subtitle: String, icon: String, path: OnboardingPath) -> some View {
+/// A tappable setup-path card with press state scale feedback.
+/// Follows the same press-detection pattern as ``StatCard``.
+private struct PathCardView: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let path: OnboardingView.OnboardingPath
+    let onSelect: (OnboardingView.OnboardingPath) -> Void
+
+    @Environment(\.theme) private var theme: ThemeSnapshot
+    @State private var isPressed = false
+
+    var body: some View {
         Button {
-            selectedPath = path
+            onSelect(path)
         } label: {
             HStack(spacing: theme.spacingMD) {
                 Image(systemName: icon)
@@ -119,6 +133,13 @@ struct OnboardingView: View {
             .modifier(GlassCard())
         }
         .buttonStyle(.plain)
+        .scaleEffect(isPressed ? 0.96 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
         .accessibilityLabel("\(title): \(subtitle)")
     }
 }
