@@ -191,6 +191,8 @@ extension MCPHealthResponse: Content {}
 extension MCPLogEntry: Content {}
 extension MCPLogsResponse: Content {}
 extension MCPRestartResponse: Content {}
+extension MCPMarketplaceEntry: Content {}
+extension MCPEnvVarSpec: Content {}
 extension MCPValidationResult: Content {}
 extension MCPPreset: Content {}
 extension MCPPresetCategory: Content {}
