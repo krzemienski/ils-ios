@@ -136,6 +136,65 @@ extension AppTheme {
     var meshGradientAnimated: Bool { false }
 }
 
+// MARK: - Syntax Colors
+
+/// Theme-aware syntax highlighting color tokens.
+///
+/// Maps syntax token categories to semantic theme colors, ensuring syntax
+/// highlighting adapts automatically to the active theme.
+///
+/// ## Token Mappings
+/// | Token          | Theme Color      |
+/// |----------------|-----------------|
+/// | keyword        | accent          |
+/// | string         | warning         |
+/// | type           | info            |
+/// | call           | success         |
+/// | number         | entityPlugin    |
+/// | comment        | textTertiary    |
+/// | property       | entityMCP       |
+/// | preprocessing  | entitySkill     |
+struct SyntaxColors: Sendable {
+    /// Keywords (e.g., `func`, `var`, `class`) — uses theme accent.
+    let keyword: Color
+    /// String literals — uses theme warning.
+    let string: Color
+    /// Type names (e.g., `Int`, `String`) — uses theme info.
+    let type: Color
+    /// Function and method calls — uses theme success.
+    let call: Color
+    /// Numeric literals — uses theme entityPlugin.
+    let number: Color
+    /// Comments — uses theme textTertiary.
+    let comment: Color
+    /// Property names — uses theme entityMCP.
+    let property: Color
+    /// Preprocessor directives (e.g., `#if`, `#import`) — uses theme entitySkill.
+    let preprocessing: Color
+}
+
+// MARK: - ThemeSnapshot + Syntax Colors
+
+extension ThemeSnapshot {
+    /// Theme-aware syntax highlighting colors derived from semantic theme tokens.
+    ///
+    /// Returns a `SyntaxColors` value whose fields map each syntax token category
+    /// to the appropriate semantic color from this snapshot. Computed on demand —
+    /// no storage overhead on `ThemeSnapshot` itself.
+    var syntaxColors: SyntaxColors {
+        SyntaxColors(
+            keyword: accent,
+            string: warning,
+            type: info,
+            call: success,
+            number: entityPlugin,
+            comment: textTertiary,
+            property: entityMCP,
+            preprocessing: entitySkill
+        )
+    }
+}
+
 // MARK: - Theme Environment Key
 
 struct ThemeEnvironmentKey: EnvironmentKey {

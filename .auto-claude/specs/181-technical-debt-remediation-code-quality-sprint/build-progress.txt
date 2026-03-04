@@ -1,0 +1,159 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: ILS iOS/macOS — Technical Debt Remediation (Task 181)
+Workspace: .auto-claude/worktrees/tasks/181-technical-debt-remediation-code-quality-sprint
+Started: 2026-02-28
+
+Workflow Type: refactor
+Rationale: Six targeted code quality improvements — grammar modularization, theme-aware syntax
+colors, CodeBlockView init fix, ClaudeExecutorService decomposition, and hardcoded color
+cleanup. Two items (MarkdownTextView caching, SessionsViewModel search) are already done.
+
+=== CODEBASE INVESTIGATION FINDINGS ===
+
+Key discoveries from Phase 0 investigation:
+
+1. SyntaxHighlighter.swift — PARTIALLY DONE
+   - Current: 131 lines (was ~1177 in original spec)
+   - Grammar system exists in Utils/Grammars/ (GrammarRegistry.swift, GrammarConfig.swift, etc.)
+   - GrammarDefinitions.swift is 568 lines and needs splitting into 4 files
+   - CRITICAL: colorForTokenType() still uses 9 hardcoded RGB values → needs theme-aware colors
+
+2. CodeBlockView.swift — MINOR ISSUE
+   - init() calls SyntaxHighlighter.highlight() synchronously on main thread (wasteful)
+   - .task(id:) also runs it async → double highlight on view creation
+   - Fix: Remove sync init call, use AttributedString(code) placeholder instead
+
+3. MarkdownTextView.swift — ALREADY DONE ✓
+   - Has cachedTheme + cachedThemeId @State
+   - onChange guard: "guard theme.id != cachedThemeId else { return }"
+   - Only rebuilds theme struct when theme.id changes → correct implementation
+
+4. SessionsViewModel.swift — ALREADY DONE ✓
+   - searchCache: [(session: ChatSession, searchText: String)] — precomputed strings
+   - Incremental append on pagination, O(1) remove on delete
+   - sessionsMutationVersion counter gates grouped cache rebuilds
+   - Excellent incremental caching — no full array rebuilds
+
+5. ClaudeExecutorService.swift — NEEDS WORK
+   - Current: 856 lines (actor)
+   - Lines 499-856: buildCommand, buildSDKConfig, shellEscape, SDKConfig/SDKOptions
+   - Lines 328-414: readStdout (already nonisolated static — natural extraction candidate)
+   - Extract to: ClaudeCommandBuilder.swift (~300 lines) + ClaudeStreamReader.swift (~200 lines)
+
+6. Hardcoded Colors — NEEDS WORK
+   - SyntaxHighlighter.swift: 9 Color(red:green:blue:) values in colorForTokenType
+   - ToastModifier.swift: .foregroundStyle(.white) + .background(.black.opacity(0.8))
+   - ConnectionBanner.swift: .tint(.white) + .foregroundColor(.white)
+   - Widgets: .foregroundColor(.white) × 4 (limited fix — widgets can't use ThemeSnapshot)
+
+=== SESSION 1 (PLANNER) ===
+
+Completed:
+- Deep codebase investigation (Phase 0)
+- Created context.json with findings
+- Updated implementation_plan.json with 6 phases, 14 subtasks
+- Created init.sh
+- Created build-progress.txt
+
+=== PHASE SUMMARY ===
+
+Phase 1 — Verify Already-Complete Items (0 code changes)
+  - 2 subtasks: verify MarkdownTextView caching + SessionsViewModel incremental search
+  - Expected: both already pass acceptance criteria
+
+Phase 2 — GrammarDefinitions Modularization (iOS only)
+  - 3 subtasks: split 568-line file into +Scripting, +Systems, +Web, +Data
+  - Depends on: none
+  - Build verify after each subtask
+
+Phase 3 — Theme-Aware Syntax Colors + CodeBlockView Fix (iOS only)
+  - 3 subtasks: SyntaxColors struct, SyntaxHighlighter update, CodeBlockView fix
+  - Depends on: none (can run in parallel with Phase 2 and 4)
+  - Theme tokens map: keyword→accent, string→warning, type→info, call→success
+
+Phase 4 — ClaudeExecutorService Decomposition (backend only)
+  - 3 subtasks: ClaudeCommandBuilder.swift, ClaudeStreamReader.swift, verify line count
+  - Depends on: none (backend files, no iOS conflict)
+  - Pattern: CLIMessageConverter.swift (standalone enum with static methods)
+
+Phase 5 — Hardcoded Color Cleanup (iOS only)
+  - 3 subtasks: ToastModifier, ConnectionBanner, Widgets
+  - Depends on: phase-3-syntax-colors (SyntaxColors must exist first)
+
+Phase 6 — Final Build Verification
+  - 1 subtask: all three targets + line count audit
+  - Depends on: all phases
+
+=== SERVICES INVOLVED ===
+
+- iOS (ILSApp): SyntaxHighlighter, Grammars, CodeBlockView, ToastModifier, ConnectionBanner, Widgets
+- macOS (ILSMacApp): Same shared files via xcodeproj
+- Backend (ILSBackend): ClaudeExecutorService, ClaudeCommandBuilder (new), ClaudeStreamReader (new)
+
+=== PARALLELISM ANALYSIS ===
+
+Max parallel phases: 4 (phases 1-4 have no dependencies and can run concurrently)
+Recommended workers: 2 (iOS worker + backend worker)
+Phase 5 blocked until Phase 3 complete (SyntaxColors needed)
+Phase 6 blocked until all previous phases complete
+
+Parallel group 1: phase-1, phase-2, phase-3 (iOS), phase-4 (backend)
+Phase 5 follows phase-3
+Phase 6 follows all
+
+Speedup estimate: ~1.6x faster than sequential
+
+=== FILES BEING MODIFIED ===
+
+iOS:
+  MODIFY: ILSApp/ILSApp/Utils/SyntaxHighlighter.swift (add SyntaxColors param)
+  MODIFY: ILSApp/ILSApp/Utils/Grammars/GrammarDefinitions.swift (empty out / remove)
+  CREATE: ILSApp/ILSApp/Utils/Grammars/GrammarDefinitions+Scripting.swift
+  CREATE: ILSApp/ILSApp/Utils/Grammars/GrammarDefinitions+Systems.swift
+  CREATE: ILSApp/ILSApp/Utils/Grammars/GrammarDefinitions+Web.swift
+  CREATE: ILSApp/ILSApp/Utils/Grammars/GrammarDefinitions+Data.swift
+  MODIFY: ILSApp/ILSApp/Theme/AppTheme.swift (add SyntaxColors struct)
+  MODIFY: ILSApp/ILSApp/Views/Chat/CodeBlockView.swift (fix init + pass colors)
+  MODIFY: ILSApp/ILSApp/Utils/ToastModifier.swift (add @Environment + theme colors)
+  MODIFY: ILSApp/ILSApp/Theme/Components/ConnectionBanner.swift (fix .white)
+  MODIFY: ILSApp/ILSApp/Widgets/ServerStatusWidget.swift (Color.primary)
+  MODIFY: ILSApp/ILSApp/Widgets/SessionWidget.swift (Color.primary)
+
+Backend:
+  MODIFY: Sources/ILSBackend/Services/ClaudeExecutorService.swift (slim to ~350 lines)
+  CREATE: Sources/ILSBackend/Services/ClaudeCommandBuilder.swift (~300 lines)
+  CREATE: Sources/ILSBackend/Services/ClaudeStreamReader.swift (~200 lines)
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 181 --parallel 2
+
+=== END SESSION 1 ===
+
+=== PHASE 6 — FINAL BUILD VERIFICATION (subtask-6-1) ===
+
+Date: 2026-02-28
+
+Build Results:
+  ✅ iOS (ILSApp): BUILD SUCCEEDED
+  ✅ macOS (ILSMacApp): BUILD SUCCEEDED
+  ✅ Backend (ILSBackend): Build complete! (0.71s)
+
+File Line Count Audit:
+  ✅ GrammarDefinitions+Data.swift:      168 lines (limit: 200)
+  ✅ GrammarDefinitions+Scripting.swift: 113 lines (limit: 200)
+  ✅ GrammarDefinitions+Systems.swift:   186 lines (limit: 200)
+  ✅ GrammarDefinitions+Web.swift:       134 lines (limit: 200)
+  ✅ ClaudeExecutorService.swift:        392 lines (limit: 400)
+
+Hardcoded Color Audit:
+  ✅ SyntaxHighlighter.swift colorForTokenType(): uses colors.* struct properties only
+     (Color(red:) only in defaultColors fallback constant — NOT in colorForTokenType)
+  ✅ ToastModifier.swift: no .white or .black
+  ✅ ConnectionBanner.swift: no .white or .black
+
+Status: ALL CHECKS PASSED — task complete at 15/15 subtasks (100%)
+
+=== END TASK 181 ===

@@ -40,7 +40,7 @@ struct CodeBlockView: View {
     init(code: String, language: String?) {
         self.code = code
         self.language = language
-        _highlightedCode = State(initialValue: SyntaxHighlighter.highlight(code: code, language: language))
+        _highlightedCode = State(initialValue: AttributedString(code))
     }
 
     /// Maximum number of lines to show when collapsed
@@ -227,8 +227,11 @@ struct CodeBlockView: View {
                 .strokeBorder(theme.textTertiary.opacity(0.2), lineWidth: 1)
         )
         .accessibilityIdentifier("code-block-container")
-        .task(id: "\(code.hashValue)-\(language ?? "")") {
-            highlightedCode = SyntaxHighlighter.highlight(code: code, language: language)
+        .task(id: "\(code.hashValue)-\(language ?? "")-\(theme.id)") {
+            let colors = theme.syntaxColors
+            highlightedCode = await Task.detached(priority: .userInitiated) {
+                SyntaxHighlighter.highlight(code: code, language: language, colors: colors)
+            }.value
         }
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [code])
