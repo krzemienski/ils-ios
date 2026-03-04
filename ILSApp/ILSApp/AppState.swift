@@ -44,6 +44,10 @@ class AppState {
     /// True when two or more backend connections are registered.
     var hasMultipleBackends: Bool { backendManager.backends.count > 1 }
 
+    /// Manages pending permission requests from Claude Code tool-use calls.
+    /// Full polling lifecycle (start/stop) is wired in ILSAppApp (phase-5).
+    let permissionService = PermissionService()
+
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
     // so no Combine forwarding is needed.
@@ -170,11 +174,15 @@ class AppState {
         case .active:
             appPhase = .active
             backendManager.startHealthPolling()
+            if isConnected {
+                permissionService.startPolling(apiClient: apiClient)
+            }
         case .inactive:
             appPhase = .inactive
         case .background:
             appPhase = .background
             backendManager.stopHealthPolling()
+            permissionService.stopPolling()
         @unknown default:
             appPhase = .inactive
         }

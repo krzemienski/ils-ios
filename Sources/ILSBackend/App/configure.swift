@@ -111,6 +111,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateSessionCheckpoints())
     // v5.8 — Agent queue & batch task management
     app.migrations.add(CreateAgentQueueItems())
+    // v5.9 — Permission history
+    app.migrations.add(CreatePermissions())
 
     // Run migrations
     try await app.autoMigrate()

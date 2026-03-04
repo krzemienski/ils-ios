@@ -9,6 +9,7 @@ func routes(_ app: Application) throws {
 
     // Shared services
     let fileSystem = FileSystemService()
+    let executor = ClaudeExecutorService()
 
     // Public routes (require API key only via global middleware)
     try api.register(collection: ProjectsController(fileSystem: fileSystem))
@@ -32,6 +33,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: RecordingController())
     try api.register(collection: AnalyticsController(fileSystem: fileSystem))
     try api.register(collection: AgentQueueController(queueService: AgentQueueService(db: app.db, executor: ClaudeExecutorService())))
+    try api.register(collection: PermissionsController(executor: executor))
 
     // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
     let admin = api.grouped(AdminMiddleware())

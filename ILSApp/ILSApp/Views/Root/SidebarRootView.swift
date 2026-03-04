@@ -308,7 +308,8 @@ struct SidebarRootView: View {
                 onSessionSelected: { session in
                     navigateToChat(session)
                 },
-                activityFeedUnreadCount: activityFeedVM.unreadCount
+                activityFeedUnreadCount: activityFeedVM.unreadCount,
+                permissionsPendingCount: appState.permissionService.pendingPermissions.count
             )
             .background(theme.bgSidebar)
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
@@ -463,7 +464,8 @@ struct SidebarRootView: View {
                 onSessionSelected: { session in
                     navigateToChat(session)
                 },
-                activityFeedUnreadCount: activityFeedVM.unreadCount
+                activityFeedUnreadCount: activityFeedVM.unreadCount,
+                permissionsPendingCount: appState.permissionService.pendingPermissions.count
             )
             .frame(width: sidebarWidth)
 
@@ -584,7 +586,7 @@ struct SidebarRootView: View {
     }
 
     private var permissionsScreen: some View {
-        PermissionHistoryView()
+        PermissionInboxView()
     }
 
     private var searchScreen: some View {

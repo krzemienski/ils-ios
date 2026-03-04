@@ -26,6 +26,7 @@ import ILSShared
 /// - ``contextCriticalAlert`` - Alert when context usage reaches 95%
 /// - ``queueTaskComplete`` - Alert when a queued task completes
 /// - ``queueTaskFailed`` - Alert when a queued task fails
+/// - ``permissionRequestAlerts`` - Alert when a Claude Code permission request arrives
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
@@ -41,6 +42,7 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_contextCritical") private var contextCriticalAlert = true
     @AppStorage("notif_queueTaskComplete") private var queueTaskComplete = true
     @AppStorage("notif_queueTaskFailed") private var queueTaskFailed = true
+    @AppStorage("notif_permissionAlerts") private var permissionRequestAlerts = true
     @AppStorage("notif_quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
@@ -84,6 +86,17 @@ struct NotificationPreferencesView: View {
                         toggleRow("Session Complete", isOn: $sessionCompleteAlerts, accessibilityLabel: "Alert when session completes")
                         Divider().background(theme.bgTertiary)
                         toggleRow("Session Error", isOn: $sessionErrorAlerts, accessibilityLabel: "Alert when session encounters an error")
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+                }
+
+                // Permission Alerts
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Permission Alerts")
+
+                    VStack {
+                        toggleRow("Permission Requests", isOn: $permissionRequestAlerts, accessibilityLabel: "Alert when a permission request arrives")
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
@@ -162,6 +175,7 @@ struct NotificationPreferencesView: View {
                         .modifier(GlassCard())
                     }
                 }
+
 
                 // Quiet Hours
                 VStack(alignment: .leading, spacing: theme.spacingSM) {

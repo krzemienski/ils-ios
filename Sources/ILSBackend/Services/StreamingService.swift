@@ -276,7 +276,18 @@ struct StreamingService {
                         }
                     }
 
-                case .permission:
+                case .permission(let permRequest):
+                    // Store pending permission in PermissionStore for mobile approval UI.
+                    Task {
+                        await PermissionStore.shared.addPending(
+                            requestId: permRequest.requestId,
+                            sessionId: sessionId.uuidString,
+                            toolName: permRequest.toolName,
+                            toolInput: permRequest.toolInput,
+                            sessionName: nil,
+                            projectName: nil
+                        )
+                    }
                     // Send APNs "update" push with waitingForInput status so the
                     // backgrounded user knows input is required.
                     if let token = liveActivityPushToken {
