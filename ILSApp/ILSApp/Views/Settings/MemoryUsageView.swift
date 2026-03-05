@@ -3,14 +3,16 @@ import SwiftUI
 /// Displays cache memory usage statistics and management controls.
 ///
 /// Shows real-time cache size, entry counts, and hit rates from MemoryManager.
-/// Provides visual progress bar for cache utilization and Clear Cache button
-/// for manual eviction. Automatically refreshes on appearance.
+/// Provides configurable cache size limit (25MB, 50MB, 75MB, 100MB) persisted
+/// via AppStorage. Displays visual progress bar for cache utilization and Clear
+/// Cache button for manual eviction. Automatically refreshes on appearance.
 ///
 /// ## Topics
 /// ### State
 /// - ``stats`` - Current cache statistics from MemoryManager
 /// - ``lastUpdated`` - Timestamp of last statistics refresh
 /// - ``isClearing`` - Whether a cache clear operation is in progress
+/// - ``cacheSizeMB`` - User-configured cache size limit in megabytes
 ///
 /// ### Actions
 /// - ``loadStats()`` - Fetch latest cache statistics from MemoryManager
@@ -26,6 +28,12 @@ struct MemoryUsageView: View {
 
     /// Whether a cache clear operation is currently in progress.
     @State private var isClearing: Bool = false
+
+    /// Configured cache size limit in megabytes, persisted via AppStorage.
+    @AppStorage("cacheSizeMB") private var cacheSizeMB: Int = AppConstants.defaultCacheSizeMB
+
+    /// Available cache size options in megabytes.
+    private let availableCacheSizes = [25, 50, 75, 100]
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -43,6 +51,47 @@ struct MemoryUsageView: View {
                     CacheStatusView(lastUpdated: lastUpdated)
                 }
             }
+
+            // Cache size configuration
+            VStack(alignment: .leading, spacing: theme.spacingSM) {
+                Text("CACHE LIMIT")
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+                    .textCase(.uppercase)
+                    .kerning(1)
+
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Maximum Cache Size")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+
+                        Spacer()
+
+                        Picker("Cache Size", selection: $cacheSizeMB) {
+                            ForEach(availableCacheSizes, id: \.self) { size in
+                                Text("\(size) MB").tag(size)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .tint(theme.accent)
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .modifier(GlassCard())
+
+                Text("Larger cache sizes improve performance but consume more memory. Cache is automatically cleared on memory warnings.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+
+            // Statistics section header
+            Text("CURRENT USAGE")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
 
             // Content card
             VStack(spacing: theme.spacingMD) {
@@ -164,14 +213,18 @@ struct MemoryUsageView: View {
             }
             .padding(theme.spacingMD)
             .modifier(GlassCard())
-
-            // Help text
-            Text("In-memory cache for API responses. Cleared automatically on memory warnings or when size limit is reached.")
-                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                .foregroundStyle(theme.textTertiary)
         }
         .task {
             await loadStats()
+        }
+        .onChange(of: cacheSizeMB) { _, newSize in
+            Task {
+                await MemoryManager.shared.configureCacheSize(newSize)
+                await loadStats() // Refresh stats to show new limit
+            }
+            #if os(iOS)
+            HapticManager.selection()
+            #endif
         }
     }
 
