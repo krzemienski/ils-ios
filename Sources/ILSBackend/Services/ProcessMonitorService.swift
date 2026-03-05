@@ -1,6 +1,9 @@
 import Foundation
 import ILSShared
 import Logging
+#if canImport(Darwin)
+import Darwin
+#endif
 
 /// Actor that monitors Claude Code processes and associates them with sessions.
 ///
@@ -81,7 +84,21 @@ actor ProcessMonitorService {
     func getClaudeProcesses() async -> [ProcessMonitorInfo] {
         let allProcesses = await getAllProcesses()
         let claudeProcesses = allProcesses.filter { isClaudeCodeProcess($0) }
-        return claudeProcesses.map { enrichWithSessionInfo($0) }
+
+        // Enrich processes in parallel for better performance
+        return await withTaskGroup(of: ProcessMonitorInfo.self) { group in
+            for process in claudeProcesses {
+                group.addTask {
+                    await self.enrichWithSessionInfo(process)
+                }
+            }
+
+            var results: [ProcessMonitorInfo] = []
+            for await enriched in group {
+                results.append(enriched)
+            }
+            return results
+        }
     }
 
     /// Get process information for a specific PID.
@@ -93,7 +110,7 @@ actor ProcessMonitorService {
               isClaudeCodeProcess(process) else {
             return nil
         }
-        return enrichWithSessionInfo(process)
+        return await enrichWithSessionInfo(process)
     }
 
     /// Kill a process by PID.
@@ -425,24 +442,155 @@ actor ProcessMonitorService {
         return false
     }
 
+    /// Get disk I/O statistics for a process (macOS-specific).
+    ///
+    /// Uses `proc_pid_rusage()` from Darwin's libproc to get cumulative I/O statistics.
+    /// Returns zero values on non-macOS platforms or if the syscall fails.
+    ///
+    /// - Parameter pid: The process ID
+    /// - Returns: DiskIOInfo with bytes read and written
+    private func getDiskIOStats(pid: Int) -> ProcessMonitorInfo.DiskIOInfo {
+        #if os(macOS) || os(iOS)
+        // Use rusage_info_current from libproc to get I/O stats
+        var rusage = rusage_info_v4()
+        var rusagePtr: rusage_info_t? = withUnsafeMutableBytes(of: &rusage) { $0.baseAddress }
+        let result = withUnsafeMutablePointer(to: &rusagePtr) { ptr in
+            proc_pid_rusage(Int32(pid), RUSAGE_INFO_V4, ptr)
+        }
+
+        if result == 0 {
+            // rusage_info_v4 provides:
+            // - ri_diskio_bytesread: bytes read from disk
+            // - ri_diskio_byteswritten: bytes written to disk
+            return ProcessMonitorInfo.DiskIOInfo(
+                bytesRead: rusage.ri_diskio_bytesread,
+                bytesWritten: rusage.ri_diskio_byteswritten
+            )
+        } else {
+            // Failed to get rusage, return zeros
+            return ProcessMonitorInfo.DiskIOInfo(bytesRead: 0, bytesWritten: 0)
+        }
+        #else
+        // Non-macOS platform, return zeros
+        return ProcessMonitorInfo.DiskIOInfo(bytesRead: 0, bytesWritten: 0)
+        #endif
+    }
+
+    /// Get network activity statistics for a process (macOS-specific).
+    ///
+    /// Uses `lsof -p <pid> -a -i` to enumerate open network connections.
+    /// Counts active connections and attempts to parse socket statistics.
+    /// Returns zero values on non-macOS platforms or if lsof fails.
+    ///
+    /// Note: Getting per-process network bytes in/out requires reading /proc/net
+    /// (Linux) or using dtrace/netstat aggregation (macOS). For simplicity, this
+    /// implementation only counts connections. Bytes in/out are returned as zero.
+    ///
+    /// - Parameter pid: The process ID
+    /// - Returns: NetworkActivityInfo with connection count (bytes always zero for now)
+    private func getNetworkStats(pid: Int) async -> ProcessMonitorInfo.NetworkActivityInfo {
+        #if os(macOS) || os(iOS)
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var hasResumed = false
+
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/sbin/lsof")
+                // -p <pid>: filter by PID
+                // -a: AND the selectors
+                // -i: filter for internet connections only
+                // -n: no hostname resolution (faster)
+                // -P: no port name resolution (faster)
+                process.arguments = ["-p", "\(pid)", "-a", "-i", "-n", "-P"]
+
+                let outPipe = Pipe()
+                let errPipe = Pipe()
+                process.standardOutput = outPipe
+                process.standardError = errPipe
+
+                // 2-second timeout for lsof
+                let timeoutItem = DispatchWorkItem {
+                    process.terminate()
+                    if !hasResumed {
+                        hasResumed = true
+                        continuation.resume(returning: ProcessMonitorInfo.NetworkActivityInfo(
+                            bytesIn: 0,
+                            bytesOut: 0,
+                            connections: 0
+                        ))
+                    }
+                }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: timeoutItem)
+
+                do {
+                    try process.run()
+
+                    // Read stdout before waitUntilExit to prevent deadlock
+                    let data = outPipe.fileHandleForReading.readDataToEndOfFile()
+                    _ = errPipe.fileHandleForReading.readDataToEndOfFile()
+
+                    process.waitUntilExit()
+                    timeoutItem.cancel()
+
+                    guard !hasResumed else { return }
+                    hasResumed = true
+
+                    guard let output = String(data: data, encoding: .utf8) else {
+                        continuation.resume(returning: ProcessMonitorInfo.NetworkActivityInfo(
+                            bytesIn: 0,
+                            bytesOut: 0,
+                            connections: 0
+                        ))
+                        return
+                    }
+
+                    // Count lines (excluding header) to get connection count
+                    let lines = output.split(separator: "\n")
+                    // lsof header is typically 1 line, rest are connections
+                    let connectionCount = max(0, lines.count - 1)
+
+                    // Note: Getting actual bytes in/out per process on macOS requires
+                    // complex dtrace scripting or netstat aggregation. For now, we
+                    // only track connection count. Bytes could be added in a future
+                    // enhancement using dtrace or periodic netstat polling.
+                    continuation.resume(returning: ProcessMonitorInfo.NetworkActivityInfo(
+                        bytesIn: 0,
+                        bytesOut: 0,
+                        connections: connectionCount
+                    ))
+                } catch {
+                    timeoutItem.cancel()
+                    guard !hasResumed else { return }
+                    hasResumed = true
+                    continuation.resume(returning: ProcessMonitorInfo.NetworkActivityInfo(
+                        bytesIn: 0,
+                        bytesOut: 0,
+                        connections: 0
+                    ))
+                }
+            }
+        }
+        #else
+        // Non-macOS platform, return zeros
+        return ProcessMonitorInfo.NetworkActivityInfo(bytesIn: 0, bytesOut: 0, connections: 0)
+        #endif
+    }
+
     /// Enrich a raw process with session association and full monitoring info.
     /// - Parameter process: The raw process info
     /// - Returns: Full ProcessMonitorInfo with session ID and enhanced metrics
-    private func enrichWithSessionInfo(_ process: RawProcessInfo) -> ProcessMonitorInfo {
+    private func enrichWithSessionInfo(_ process: RawProcessInfo) async -> ProcessMonitorInfo {
         // Try to associate with a session by matching working directory
         let sessionId = findSessionForProcess(process)
 
         // Calculate uptime
         let uptime = Date().timeIntervalSince(process.startTime)
 
-        // TODO: Disk I/O and network activity require additional system calls
-        // For now, return zero values (will be implemented in subtask-2-3)
-        let diskIO = ProcessMonitorInfo.DiskIOInfo(bytesRead: 0, bytesWritten: 0)
-        let networkActivity = ProcessMonitorInfo.NetworkActivityInfo(
-            bytesIn: 0,
-            bytesOut: 0,
-            connections: 0
-        )
+        // Get disk I/O statistics (macOS-specific using proc_pid_rusage)
+        let diskIO = getDiskIOStats(pid: process.pid)
+
+        // Get network activity statistics (macOS-specific using lsof)
+        let networkActivity = await getNetworkStats(pid: process.pid)
 
         return ProcessMonitorInfo(
             pid: process.pid,
