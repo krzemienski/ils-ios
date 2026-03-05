@@ -18,6 +18,7 @@ actor WebSocketCancellation {
 /// - `WS  /system/metrics/live` — live metrics stream every 2 seconds
 /// - `GET /system/version/current` — current Claude Code CLI version
 /// - `GET /system/version/history` — version history records
+/// - `GET /system/version/check-updates` — check GitHub for latest CLI release
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
 
@@ -32,6 +33,7 @@ struct SystemController: RouteCollection {
 
         system.get("version", "current", use: self.currentVersion)
         system.get("version", "history", use: self.versionHistory)
+        system.get("version", "check-updates", use: self.checkUpdates)
     }
 
     // MARK: - REST Endpoints
@@ -243,6 +245,23 @@ struct SystemController: RouteCollection {
 
         return APIResponse(success: true, data: response)
     }
+
+    /// GET /system/version/check-updates — checks GitHub for latest Claude Code CLI release.
+    @Sendable
+    func checkUpdates(req: Request) async throws -> APIResponse<UpdateCheckResponse> {
+        // Get current version from database
+        guard let latest = try await VersionHistoryModel.query(on: req.db)
+            .sort(\.$detectedAt, .descending)
+            .first() else {
+            throw Abort(.notFound, reason: "No version history found")
+        }
+
+        // Use VersionCheckService to check for updates from GitHub
+        let versionCheckService = req.application.versionCheckService
+        let updateCheck = try await versionCheckService.checkForUpdates(currentVersion: latest.version)
+
+        return APIResponse(success: true, data: updateCheck)
+    }
 }
 
 // MARK: - Live Metrics WebSocket Message
@@ -280,3 +299,4 @@ extension ProcessInfoResponse: Content {}
 extension FileEntryResponse: Content {}
 extension CurrentVersionResponse: Content {}
 extension VersionHistoryResponse: Content {}
+extension UpdateCheckResponse: Content {}
