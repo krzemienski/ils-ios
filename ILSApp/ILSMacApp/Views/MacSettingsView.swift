@@ -40,6 +40,7 @@ struct MacSettingsView: View {
     @AppStorage("enableAgentTeams") var enableAgentTeams: Bool = false
     @AppStorage("enableDebugMode") var enableDebugMode: Bool = false
     @AppStorage("showSessionSuggestions") var showSessionSuggestions: Bool = true
+    @AppStorage("showPromptSuggestions") var showPromptSuggestions: Bool = true
 
     private let syncManager = ICloudSyncManager.shared
 
@@ -166,6 +167,18 @@ struct MacSettingsView: View {
                 }
 
                 Text("Show smart suggestions when starting a new session")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+
+                Divider()
+
+                settingRow(label: "Prompt Suggestions") {
+                    Toggle("", isOn: $showPromptSuggestions)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+
+                Text("Display contextual prompt chips above the chat input")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
@@ -622,6 +635,7 @@ struct MacSettingsView: View {
         enableAgentTeams = false
         enableDebugMode = false
         showSessionSuggestions = true
+        showPromptSuggestions = true
         serverURL = "http://localhost:9999"
         themeManager.setTheme("obsidian")
     }
