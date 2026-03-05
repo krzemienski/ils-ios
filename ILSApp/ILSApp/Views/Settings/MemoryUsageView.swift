@@ -19,7 +19,7 @@ import SwiftUI
 /// - ``clearCache()`` - Trigger manual cache eviction via MemoryManager
 struct MemoryUsageView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @EnvironmentObject private var appState: AppState
+    @Environment(AppState.self) private var appState: AppState
 
     /// Current cache statistics loaded from MemoryManager.
     @State private var stats: CacheStats?
