@@ -6,24 +6,32 @@ import ILSShared
 /// About and diagnostics section for the Settings screen.
 ///
 /// Displays two groups of settings: a **Diagnostics** group containing the
-/// analytics opt-in toggle, a link to ``LogViewerView``, and a link to
-/// ``NotificationPreferencesView``; and an **About** group showing app version,
-/// build number, Claude CLI version, backend URL, and external links to
-/// documentation, privacy policy, and support.
+/// analytics opt-in toggle, a link to ``LogViewerView``, a link to
+/// ``NotificationPreferencesView``, and a link to ``VersionMonitorView``
+/// (with update badge when new Claude Code version is available); and an
+/// **About** group showing app version, build number, Claude CLI version,
+/// backend URL, and external links to documentation, privacy policy, and support.
 ///
 /// ## Topics
 /// ### View Sections
-/// - ``diagnosticsSection`` - Analytics toggle and navigation links for logs and notifications
+/// - ``diagnosticsSection`` - Analytics toggle and navigation links for logs, notifications, and version monitoring
 /// - ``aboutSection`` - App metadata and external resource links
 struct SettingsAboutSection: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(AppState.self) var appState
     var viewModel: SettingsViewModel
     let serverURL: String
+
+    @State private var versionMonitorViewModel = VersionMonitorViewModel()
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             diagnosticsSection
             aboutSection
+        }
+        .task {
+            versionMonitorViewModel.configure(client: appState.apiClient)
+            await versionMonitorViewModel.loadAll()
         }
     }
 
@@ -76,6 +84,27 @@ struct SettingsAboutSection: View {
                             .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                }
+
+                Divider().background(theme.bgTertiary)
+
+                NavigationLink(destination: VersionMonitorView()) {
+                    HStack {
+                        Label("Version Monitor", systemImage: "arrow.up.circle")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        if versionMonitorViewModel.hasUpdateAvailable {
+                            Circle()
+                                .fill(theme.accent)
+                                .frame(width: 8, height: 8)
+                                .padding(.trailing, theme.spacingXS)
+                        }
                         Image(systemName: "chevron.right")
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.textTertiary)
