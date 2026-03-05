@@ -37,6 +37,23 @@ actor APIClient {
     /// Mirrors the `totalCostLimit` applied to the NSCache above.
     private let conditionalCacheByteLimit = AppConstants.defaultCacheSizeMB * 1024 * 1024
 
+    // MARK: - Cache Statistics Tracking
+
+    /// Total cache hits (successful cache reads within TTL).
+    private var cacheHits: Int = 0
+
+    /// Total cache misses (cache reads that required network fetch).
+    private var cacheMisses: Int = 0
+
+    /// Approximate current size of NSCache in bytes.
+    /// NSCache doesn't expose its current size, so we track insertions.
+    /// This is an estimate because NSCache evicts entries without notifying us.
+    private var approximateCacheBytes: Int = 0
+
+    /// Approximate count of entries in NSCache.
+    /// This is an estimate because NSCache evicts entries without notifying us.
+    private var approximateEntryCount: Int = 0
+
     /// Optional API key for authenticated requests.
     /// When set, all /api/v1 requests include `Authorization: Bearer <key>`.
     private var apiKey: String?
@@ -198,6 +215,7 @@ actor APIClient {
         if let entry = cache.object(forKey: cacheKey),
            entry.isValid(ttl: effectiveTTL),
            let cached = entry.value as? T {
+            cacheHits += 1
             return cached
         }
 
@@ -212,6 +230,9 @@ actor APIClient {
         // Wrap the network call in a Task stored in inFlightGETs so concurrent callers share it
         let task = Task<any Sendable, Error> { [baseURL, decoder] in
             defer { self.inFlightGETs[path] = nil }
+
+            // Track cache miss for statistics
+            self.cacheMisses += 1
 
             guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
                 throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
@@ -251,6 +272,9 @@ actor APIClient {
                     forKey: cacheKey,
                     cost: cost
                 )
+                // Track approximate cache bytes and entry count (304 responses reuse existing data)
+                self.approximateCacheBytes += cost
+                self.approximateEntryCount += 1
                 return decoded as any Sendable
             }
 
@@ -264,6 +288,9 @@ actor APIClient {
                 forKey: cacheKey,
                 cost: cost
             )
+            // Track approximate cache bytes and entry count
+            self.approximateCacheBytes += cost
+            self.approximateEntryCount += 1
 
             // Store ETag and raw body for future conditional requests.
             // Evict all entries when total byte footprint would exceed the 10 MB limit.
@@ -532,6 +559,9 @@ actor APIClient {
             cache.removeAllObjects()
             conditionalCache.removeAll()
             conditionalCacheByteCount = 0
+            // Reset cache statistics when clearing all caches
+            approximateCacheBytes = 0
+            approximateEntryCount = 0
         }
     }
 
@@ -540,6 +570,41 @@ actor APIClient {
         if let entry = conditionalCache.removeValue(forKey: key) {
             conditionalCacheByteCount -= entry.data.count
         }
+    }
+
+    // MARK: - Cache Statistics
+
+    /// Returns current cache statistics for monitoring and debugging.
+    ///
+    /// Provides metrics about cache size, entry counts, and hit rates.
+    /// The `currentSizeBytes` and `entryCount` are approximations because NSCache
+    /// doesn't expose its actual state and may evict entries without notification.
+    func getCacheStats() -> CacheStats {
+        let maxBytes = cache.totalCostLimit
+        let maxCount = cache.countLimit
+
+        // Calculate hit rate if we have enough data
+        let totalRequests = cacheHits + cacheMisses
+        let hitRate: Double? = totalRequests > 0 ? Double(cacheHits) / Double(totalRequests) : nil
+
+        return CacheStats(
+            currentSizeBytes: approximateCacheBytes + conditionalCacheByteCount,
+            maxSizeBytes: maxBytes + conditionalCacheByteLimit,
+            entryCount: approximateEntryCount,
+            maxEntryCount: maxCount,
+            hitRate: hitRate
+        )
+    }
+
+    /// Clear all caches and reset statistics.
+    ///
+    /// Removes all entries from the NSCache, conditional cache (ETags),
+    /// and resets hit/miss statistics. Use this for manual cache clearing
+    /// or during memory warnings.
+    func clearCache() {
+        invalidateCache(for: nil)
+        cacheHits = 0
+        cacheMisses = 0
     }
 
     // MARK: - Retry Logic
