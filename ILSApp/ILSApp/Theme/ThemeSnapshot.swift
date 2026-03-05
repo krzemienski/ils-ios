@@ -1,4 +1,5 @@
 import SwiftUI
+import ILSShared
 
 // MARK: - ThemeSnapshot
 
@@ -112,12 +113,51 @@ struct ThemeSnapshot: Sendable {
     let meshGradientColors: [String]?
     let meshGradientAnimated: Bool
 
+    // MARK: - Density
+
+    /// Information density level affecting spacing and typography.
+    let density: InformationDensity
+
+    /// Multiplier applied to all spacing values based on density level.
+    /// - Compact: 0.85 (tighter spacing)
+    /// - Standard: 1.0 (baseline)
+    /// - Comfortable: 1.15 (generous spacing)
+    var spacingMultiplier: CGFloat {
+        switch density {
+        case .compact:
+            return 0.85
+        case .standard:
+            return 1.0
+        case .comfortable:
+            return 1.15
+        }
+    }
+
+    /// Multiplier applied to all font sizes based on density level.
+    /// - Compact: 0.90 (smaller fonts)
+    /// - Standard: 1.0 (baseline)
+    /// - Comfortable: 1.10 (larger fonts)
+    var fontSizeMultiplier: CGFloat {
+        switch density {
+        case .compact:
+            return 0.90
+        case .standard:
+            return 1.0
+        case .comfortable:
+            return 1.10
+        }
+    }
+
     // MARK: - Init from Protocol
 
     /// Creates a snapshot by copying all properties from an `AppTheme` conforming type.
     /// This is the only place existential dispatch occurs — once at snapshot creation,
     /// not on every view body evaluation.
-    init(_ source: any AppTheme) {
+    ///
+    /// - Parameters:
+    ///   - source: The theme to snapshot
+    ///   - density: Information density level (defaults to .standard)
+    init(_ source: any AppTheme, density: InformationDensity = .standard) {
         self.name = source.name
         self.id = source.id
 
@@ -176,6 +216,9 @@ struct ThemeSnapshot: Sendable {
         // MeshGradient — reads from AppTheme protocol; custom themes provide via CustomThemeAdapter
         self.meshGradientColors = source.meshGradientColors
         self.meshGradientAnimated = source.meshGradientAnimated
+
+        // Density
+        self.density = density
     }
 
 }
