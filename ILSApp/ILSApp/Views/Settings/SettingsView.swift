@@ -45,6 +45,9 @@ struct SettingsView: View {
     /// Whether to show AI-powered smart session suggestions in new session and chat views.
     @AppStorage("showSessionSuggestions") private var showSessionSuggestions: Bool = true
 
+    /// Whether to show contextual prompt suggestion chips above the chat input.
+    @AppStorage("showPromptSuggestions") private var showPromptSuggestions: Bool = true
+
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
     @AppStorage("autoForkBeforeCompaction") private var autoForkBeforeCompaction: Bool = false
     @AppStorage("autoSnapshotEnabled") private var autoSnapshotEnabled: Bool = false
@@ -80,6 +83,8 @@ struct SettingsView: View {
                 keyboardShortcutsSection
 
                 sessionSuggestionsSection
+
+                promptSuggestionsSection
 
                 DashboardSettingsSection()
 
@@ -201,6 +206,38 @@ struct SettingsView: View {
             .modifier(GlassCard())
 
             Text("Surface relevant past sessions and skills based on your current context.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+    }
+
+    private var promptSuggestionsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("Prompt Suggestions")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Show Prompt Suggestions")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $showPromptSuggestions)
+                        .labelsHidden()
+                        .tint(theme.accent)
+                }
+                .accessibilityLabel("Show prompt suggestions")
+                .onChange(of: showPromptSuggestions) {
+                    HapticManager.selection()
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+
+            Text("Display contextual prompt chips above the chat input to help you formulate effective follow-up questions.")
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
