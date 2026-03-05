@@ -61,6 +61,12 @@ struct ILSAppApp: App {
         }
     }
 
+    /// Computed theme snapshot that combines current theme with current density.
+    /// Rebuilds whenever themeManager.currentTheme or densityManager.currentDensity changes.
+    private var themeSnapshot: ThemeSnapshot {
+        ThemeSnapshot(themeManager.currentTheme, density: densityManager.currentDensity)
+    }
+
     var body: some Scene {
         WindowGroup {
             ZStack {
@@ -69,7 +75,7 @@ struct ILSAppApp: App {
                     .environment(themeManager)
                     .environment(layoutStore)
                     .environment(densityManager)
-                    .environment(\.theme, themeManager.currentSnapshot)
+                    .environment(\.theme, themeSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(DynamicTypeSize.xSmall ... DynamicTypeSize.accessibility3)
                     .onOpenURL { url in
@@ -191,7 +197,7 @@ struct ILSAppApp: App {
 
                 if showLaunchScreen {
                     LaunchScreenView()
-                        .environment(\.theme, themeManager.currentSnapshot)
+                        .environment(\.theme, themeSnapshot)
                         .transition(.opacity)
                         .zIndex(1)
                 }

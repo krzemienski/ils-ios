@@ -33,6 +33,12 @@ struct ILSMacApp: App {
         }
     }
 
+    /// Computed theme snapshot that combines current theme with current density.
+    /// Rebuilds whenever themeManager.currentTheme or densityManager.currentDensity changes.
+    private var themeSnapshot: ThemeSnapshot {
+        ThemeSnapshot(themeManager.currentTheme, density: densityManager.currentDensity)
+    }
+
     var body: some Scene {
         // Main application window
         WindowGroup {
@@ -43,7 +49,7 @@ struct ILSMacApp: App {
                 .environment(densityManager)
                 .environment(windowManager)
                 .environment(notificationManager)
-                .environment(\.theme, themeManager.currentSnapshot)
+                .environment(\.theme, themeSnapshot)
                 .preferredColorScheme(computedColorScheme)
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .onOpenURL { url in
@@ -78,7 +84,7 @@ struct ILSMacApp: App {
                     .environment(densityManager)
                     .environment(windowManager)
                     .environment(notificationManager)
-                    .environment(\.theme, themeManager.currentSnapshot)
+                    .environment(\.theme, themeSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             } else {

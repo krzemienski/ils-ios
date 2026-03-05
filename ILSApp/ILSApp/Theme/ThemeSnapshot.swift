@@ -198,17 +198,36 @@ struct ThemeSnapshot: Sendable {
         self.cornerRadiusSmall = source.cornerRadiusSmall
         self.cornerRadiusLarge = source.cornerRadiusLarge
 
-        self.spacingXS = source.spacingXS
-        self.spacingSM = source.spacingSM
-        self.spacingMD = source.spacingMD
-        self.spacingLG = source.spacingLG
-        self.spacingXL = source.spacingXL
+        // Density — must be set before spacing/font calculations
+        self.density = density
 
-        self.fontCaption = source.fontCaption
-        self.fontBody = source.fontBody
-        self.fontTitle3 = source.fontTitle3
-        self.fontTitle2 = source.fontTitle2
-        self.fontTitle1 = source.fontTitle1
+        // Apply density multipliers to spacing values
+        let spacingMult: CGFloat
+        switch density {
+        case .compact: spacingMult = 0.85
+        case .standard: spacingMult = 1.0
+        case .comfortable: spacingMult = 1.15
+        }
+
+        self.spacingXS = source.spacingXS * spacingMult
+        self.spacingSM = source.spacingSM * spacingMult
+        self.spacingMD = source.spacingMD * spacingMult
+        self.spacingLG = source.spacingLG * spacingMult
+        self.spacingXL = source.spacingXL * spacingMult
+
+        // Apply density multipliers to font sizes
+        let fontMult: CGFloat
+        switch density {
+        case .compact: fontMult = 0.90
+        case .standard: fontMult = 1.0
+        case .comfortable: fontMult = 1.10
+        }
+
+        self.fontCaption = source.fontCaption * fontMult
+        self.fontBody = source.fontBody * fontMult
+        self.fontTitle3 = source.fontTitle3 * fontMult
+        self.fontTitle2 = source.fontTitle2 * fontMult
+        self.fontTitle1 = source.fontTitle1 * fontMult
 
         self.fontDesign = source.fontDesign
         self.isLight = source.isLight
@@ -216,9 +235,6 @@ struct ThemeSnapshot: Sendable {
         // MeshGradient — reads from AppTheme protocol; custom themes provide via CustomThemeAdapter
         self.meshGradientColors = source.meshGradientColors
         self.meshGradientAnimated = source.meshGradientAnimated
-
-        // Density
-        self.density = density
     }
 
 }
