@@ -34,6 +34,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: AnalyticsController(fileSystem: fileSystem))
     try api.register(collection: AgentQueueController(queueService: AgentQueueService(db: app.db, executor: ClaudeExecutorService())))
     try api.register(collection: PermissionsController(executor: executor))
+    try api.register(collection: AutomationRulesController())
 
     // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
     let admin = api.grouped(AdminMiddleware())

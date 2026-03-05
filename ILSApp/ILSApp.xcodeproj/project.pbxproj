@@ -146,6 +146,11 @@
 		26700FD71B7E04D5B56CB39B /* CommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36CF900FCD0382B49D2D0BFC /* CommandRegistry.swift */; };
 		267F8D641A25C0680605A810 /* GlobalSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 745BF2B4EF0FEC02963EBC63 /* GlobalSearchViewModel.swift */; };
 		268EFA3043E4B2F277143A80 /* BackendConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB0424F9445FB7E743C9346 /* BackendConnectionStore.swift */; };
+
+		39F3A775706620CEDC4EA567 /* RuleEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25FC0BD4A7E31484E56C02AE /* RuleEditorView.swift */; };
+		10E8E9B8AE49A061B70C2537 /* AutomationRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B62A2E486E079A4177A75039 /* AutomationRulesView.swift */; };
+		C3CFE5EC12700109EC300E38 /* AutomationRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34BC91779F32715B02D73E3B /* AutomationRulesViewModel.swift */; };
+		717FC44CFE1E2238FC62342E /* AutomationRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34BC91779F32715B02D73E3B /* AutomationRulesViewModel.swift */; };
 		26B89816D115402D4EC07DCF /* SessionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634B53732914E58E3AAD3092 /* SessionWidget.swift */; };
 		26C76E1856F87109E2347A57 /* ICloudSyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01014133D6D4910097B2C57 /* ICloudSyncSettingsView.swift */; };
 		278786B467D104A12CD0BF09 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DEE8624B9BCC400474F4F46 /* AppConstants.swift */; };
@@ -533,6 +538,7 @@
 		9D91101C81519F0C15C16E3E /* QuickReplyTemplateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78DF01C3B7B42C92235F6610 /* QuickReplyTemplateManager.swift */; };
 		9DF3F9FEB489435792A5E276 /* HostProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D51735664D1356C3DC093E /* HostProfilesView.swift */; };
 		9E0F40446D0B97394A92F04F /* MacSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1715C85690BFE53786364C7B /* MacSettingsView.swift */; };
+		17B826FC7706349D09DAB862 /* MacRuleEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9E7A014F0318039561C6E0 /* MacRuleEditorView.swift */; };
 		9E344C479902CE02AB5F2178 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42504430548D6626CEB65C9 /* SessionsViewModel.swift */; };
 		9ED320AAEBF6655F79A2067D /* GlobalSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44775F4256B3CDEB17B723DF /* GlobalSearchResultRow.swift */; };
 		9F4023B2D94B8E5E33B6A235 /* ILSCodeHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324B242952658924A06EEBFA /* ILSCodeHighlighter.swift */; };
@@ -958,6 +964,7 @@
 		16F375E5CF81C2DE1B678337 /* AppleSpeechProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSpeechProvider.swift; sourceTree = "<group>"; };
 		170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
 		1715C85690BFE53786364C7B /* MacSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSettingsView.swift; sourceTree = "<group>"; };
+		EB9E7A014F0318039561C6E0 /* MacRuleEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacRuleEditorView.swift; sourceTree = "<group>"; };
 		17EC5845473E98DEC4C5FA84 /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
 		18502885F5B6E45B14619177 /* ChatMessageList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageList.swift; sourceTree = "<group>"; };
 		1C47EB9A674C089C426E8865 /* MemoryThresholdTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryThresholdTests.swift; sourceTree = "<group>"; };
@@ -1224,6 +1231,10 @@
 		B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		B66E80B0E8559C1EE682B9B6 /* HookTestSimulatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookTestSimulatorView.swift; sourceTree = "<group>"; };
 		B67328BC8AE46C50CA5DE194 /* TroubleshootingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroubleshootingView.swift; sourceTree = "<group>"; };
+
+		25FC0BD4A7E31484E56C02AE /* RuleEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleEditorView.swift; sourceTree = "<group>"; };
+		B62A2E486E079A4177A75039 /* AutomationRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationRulesView.swift; sourceTree = "<group>"; };
+		34BC91779F32715B02D73E3B /* AutomationRulesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationRulesViewModel.swift; sourceTree = "<group>"; };
 		B6FE738FBE9F93A23342C183 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		B8A191B5D1E0900CB193306A /* WorkflowNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkflowNode.swift; sourceTree = "<group>"; };
 		B8EEFD3C0273857DD7785015 /* SnapshotTestBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotTestBase.swift; sourceTree = "<group>"; };
@@ -1995,6 +2006,7 @@
 				F0B4BF71D7F947143FA895AC /* MacProjectsListView.swift */,
 				F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */,
 				1715C85690BFE53786364C7B /* MacSettingsView.swift */,
+				EB9E7A014F0318039561C6E0 /* MacRuleEditorView.swift */,
 				0292D386E0F18B45765BDB85 /* SessionWindowView.swift */,
 			);
 			path = Views;
@@ -2147,6 +2159,8 @@
 				0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				8AE3E60652AFE81FAB1A7E84 /* CheckpointViewModel.swift */,
+
+				34BC91779F32715B02D73E3B /* AutomationRulesViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				0D9C2128D00ABE45432812A0 /* CrossSessionSearchViewModel.swift */,
 				F77899531B324530342B03A8 /* DashboardViewModel.swift */,
@@ -2737,6 +2751,10 @@
 				FDE0B18E6B3352212B7420A5 /* ChatViewModelLiveActivity.swift in Sources */,
 				A87EE25F2B9ABD105D239942 /* CheckpointBrowserView.swift in Sources */,
 				1DADC1406C49AE38AB6C86E9 /* CheckpointViewModel.swift in Sources */,
+
+				39F3A775706620CEDC4EA567 /* RuleEditorView.swift in Sources */,
+				10E8E9B8AE49A061B70C2537 /* AutomationRulesView.swift in Sources */,
+				717FC44CFE1E2238FC62342E /* AutomationRulesViewModel.swift in Sources */,
 				6E34C5445A2760CEE34B49CE /* CitadelSSHService.swift in Sources */,
 				241E79C7CE232C53DC197469 /* CodeBlockView.swift in Sources */,
 				5AC913551D7837B1ACF2D8AA /* CodingFocusFilter.swift in Sources */,
@@ -3263,7 +3281,9 @@
 				9D3460E0164ED35EF5FB5F39 /* MacContentView.swift in Sources */,
 				A4EDEE8198F803F4DF97D6E8 /* MacProjectsListView.swift in Sources */,
 				CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */,
+				C3CFE5EC12700109EC300E38 /* AutomationRulesViewModel.swift in Sources */,
 				9E0F40446D0B97394A92F04F /* MacSettingsView.swift in Sources */,
+				17B826FC7706349D09DAB862 /* MacRuleEditorView.swift in Sources */,
 				F667CFD814A0024F0A664221 /* MarkdownParser.swift in Sources */,
 				D246CAA1C1D72CFEF773AD08 /* MarkdownTextView.swift in Sources */,
 				DAD9B354553C726ED2E1ED92 /* MessageQueueService.swift in Sources */,

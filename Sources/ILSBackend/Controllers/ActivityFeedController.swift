@@ -7,7 +7,17 @@ import ILSShared
 /// Routes:
 /// - `GET /activity/events`: REST polling — returns filtered, paginated activity events
 /// - `GET /activity/events/stream`: SSE streaming — real-time event updates via Server-Sent Events
+///
+/// Also evaluates automation rules when session events occur (complete, error, idle).
 struct ActivityFeedController: RouteCollection {
+
+    // MARK: - Services
+
+    /// Rule trigger evaluator for checking if automation rules should fire.
+    private let ruleTriggerEvaluator = RuleTriggerEvaluator()
+
+    /// Rule execution service for performing automation actions.
+    private let ruleExecutionService = RuleExecutionService()
 
     func boot(routes: RoutesBuilder) throws {
         let activity = routes.grouped("activity")
@@ -252,7 +262,160 @@ struct ActivityFeedController: RouteCollection {
 
         // Newest first
         events.sort { $0.timestamp > $1.timestamp }
+
+        // Evaluate automation rules for these sessions
+        await evaluateAutomationRules(for: targetSessions, on: req)
+
         return events
+    }
+
+    // MARK: - Automation Rule Integration
+
+    /// Evaluate automation rules for a list of sessions.
+    /// Triggers rule execution when conditions are met (session complete, error, idle, cost threshold).
+    /// - Parameters:
+    ///   - sessions: Sessions to evaluate rules for.
+    ///   - req: Vapor request (provides db access).
+    private func evaluateAutomationRules(for sessions: [SessionModel], on req: Request) async {
+        // Load all enabled automation rules
+        guard let rules = try? await AutomationRuleModel.query(on: req.db)
+            .filter(\.$isEnabled == true)
+            .all() else {
+            return
+        }
+
+        guard !rules.isEmpty else { return }
+
+        // Convert to shared AutomationRule objects
+        let automationRules = rules.compactMap { try? $0.toShared() }
+
+        // Evaluate each session for potential rule triggers
+        for session in sessions {
+            guard let sessionId = session.id else { continue }
+
+            // Convert SessionModel to ChatSession for rule evaluation
+            let chatSession = ChatSession(
+                id: sessionId,
+                name: session.name,
+                projectName: session.project?.name,
+                model: session.model,
+                permissionMode: PermissionMode(rawValue: session.permissionMode) ?? .default,
+                status: SessionStatus(rawValue: session.status) ?? .active,
+                messageCount: session.messageCount,
+                totalCostUSD: session.totalCostUSD,
+                createdAt: session.createdAt ?? Date(),
+                lastActiveAt: session.lastActiveAt ?? Date()
+            )
+
+            // Check for session completion
+            if session.status == SessionStatus.completed.rawValue {
+                await evaluateRulesForEvent(
+                    context: RuleTriggerEvaluator.sessionCompleteContext(session: chatSession),
+                    rules: automationRules,
+                    session: chatSession,
+                    on: req
+                )
+            }
+
+            // Check for session error
+            if session.status == SessionStatus.error.rawValue {
+                // Count error messages in the session
+                let errorCount = (try? await MessageModel.query(on: req.db)
+                    .filter(\.$session.$id == sessionId)
+                    .filter(\.$role == MessageRole.system.rawValue)
+                    .count()) ?? 0
+
+                await evaluateRulesForEvent(
+                    context: RuleTriggerEvaluator.errorOccurredContext(session: chatSession, errorCount: errorCount),
+                    rules: automationRules,
+                    session: chatSession,
+                    on: req
+                )
+            }
+
+            // Check for idle timeout (session inactive for > 30 minutes)
+            if let lastActive = session.lastActiveAt {
+                let idleMinutes = Int(-lastActive.timeIntervalSinceNow / 60)
+                if idleMinutes > 0 {
+                    await evaluateRulesForEvent(
+                        context: RuleTriggerEvaluator.idleTimeoutContext(session: chatSession, idleMinutes: idleMinutes),
+                        rules: automationRules,
+                        session: chatSession,
+                        on: req
+                    )
+                }
+            }
+
+            // Check for cost threshold
+            if let costUSD = session.totalCostUSD, costUSD > 0 {
+                await evaluateRulesForEvent(
+                    context: RuleTriggerEvaluator.costThresholdContext(session: chatSession, costUSD: costUSD),
+                    rules: automationRules,
+                    session: chatSession,
+                    on: req
+                )
+            }
+
+            // Check for context near limit (if we have context usage data)
+            // For now, we'll estimate based on message count
+            // A typical context limit is ~200k tokens, estimate ~500 tokens per message
+            if session.messageCount > 0 {
+                let estimatedTokens = session.messageCount * 500
+                let estimatedPercentage = min(100, (estimatedTokens * 100) / 200_000)
+                if estimatedPercentage > 0 {
+                    await evaluateRulesForEvent(
+                        context: RuleTriggerEvaluator.contextNearLimitContext(session: chatSession, contextPercentage: estimatedPercentage),
+                        rules: automationRules,
+                        session: chatSession,
+                        on: req
+                    )
+                }
+            }
+        }
+    }
+
+    /// Evaluate a specific trigger event context against all rules and execute matching ones.
+    /// - Parameters:
+    ///   - context: The trigger event context to evaluate.
+    ///   - rules: All enabled automation rules.
+    ///   - session: The session that triggered the event.
+    ///   - req: Vapor request (provides db access).
+    private func evaluateRulesForEvent(
+        context: RuleTriggerEvaluator.TriggerEventContext,
+        rules: [AutomationRule],
+        session: ChatSession,
+        on req: Request
+    ) async {
+        for rule in rules {
+            // Check if this rule should fire for this event
+            guard ruleTriggerEvaluator.shouldFireRule(rule, for: context) else {
+                continue
+            }
+
+            // Check if we've already executed this rule for this session recently
+            // to avoid duplicate executions (debouncing)
+            if let recentExecution = try? await RuleExecutionLogModel.query(on: req.db)
+                .filter(\.$ruleId == rule.id)
+                .filter(\.$sessionId == session.id)
+                .sort(\.$executedAt, .descending)
+                .first(),
+               let executedAt = recentExecution.executedAt,
+               Date().timeIntervalSince(executedAt) < 300 { // 5 minutes debounce
+                continue
+            }
+
+            // Execute the rule action
+            do {
+                let _ = try await ruleExecutionService.executeAction(
+                    for: rule,
+                    session: session,
+                    on: req.db
+                )
+            } catch {
+                // Log the error but continue processing other rules
+                req.logger.error("Failed to execute rule '\(rule.name)': \(error)")
+            }
+        }
     }
 
     /// Infer `ActivityEventType` and `ActivityEventSeverity` from a message row.
