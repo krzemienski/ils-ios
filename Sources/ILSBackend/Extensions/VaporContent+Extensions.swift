@@ -291,6 +291,21 @@ extension DenyPermissionRequest: Content {}
 extension BatchPermissionRequest: Content {}
 extension PermissionBatchAction: Content {}
 
+// MARK: - Automation Rule Types
+extension AutomationRule: Content {}
+extension RuleTriggerType: Content {}
+extension RuleActionType: Content {}
+extension ConditionOperator: Content {}
+extension RuleCondition: Content {}
+extension RuleActionConfig: Content {}
+extension CreateAutomationRuleRequest: Content {}
+extension UpdateAutomationRuleRequest: Content {}
+extension AutomationRuleResponse: Content {}
+extension ListAutomationRulesResponse: Content {}
+extension RuleExecutionHistoryResponse: Content {}
+extension RuleTemplate: Content {}
+extension ListRuleTemplatesResponse: Content {}
+
 // MARK: - Stream Types
 extension StreamMessage: Content {}
 extension SystemMessage: Content {}

@@ -113,7 +113,7 @@ final class AutomationRuleModel: Model, Content, @unchecked Sendable {
 
     // MARK: - JSON Encoding/Decoding Helpers
 
-    private static func encodeConditions(_ conditions: [RuleCondition]) -> String {
+    static func encodeConditions(_ conditions: [RuleCondition]) -> String {
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(conditions),
               let json = String(data: data, encoding: .utf8) else {
@@ -130,7 +130,7 @@ final class AutomationRuleModel: Model, Content, @unchecked Sendable {
         return (try? decoder.decode([RuleCondition].self, from: data)) ?? []
     }
 
-    private static func encodeActionConfig(_ config: RuleActionConfig) -> String {
+    static func encodeActionConfig(_ config: RuleActionConfig) -> String {
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(config),
               let json = String(data: data, encoding: .utf8) else {
