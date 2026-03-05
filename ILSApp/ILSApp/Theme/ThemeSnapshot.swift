@@ -223,11 +223,27 @@ struct ThemeSnapshot: Sendable {
         case .comfortable: fontMult = 1.10
         }
 
-        self.fontCaption = source.fontCaption * fontMult
-        self.fontBody = source.fontBody * fontMult
-        self.fontTitle3 = source.fontTitle3 * fontMult
-        self.fontTitle2 = source.fontTitle2 * fontMult
-        self.fontTitle1 = source.fontTitle1 * fontMult
+        // Dynamic Type baseline floors: compact density must never produce font sizes
+        // smaller than these iOS-recommended minimums. The app sets
+        // `.dynamicTypeSize(.xSmall ... .accessibility3)` to allow Dynamic Type scaling,
+        // and these floors ensure readability is preserved at all density levels.
+        // Values correspond to iOS default sizes for the matching text style at the
+        // `medium` content-size category (system default).
+        //
+        // Note: Full Dynamic Type scaling for large accessibility sizes is tracked as
+        // future work (ACC-MED-5). The floor prevents compact mode from actively
+        // harming users who rely on system font sizing.
+        let minCaption: CGFloat = 11   // .caption1 minimum
+        let minBody: CGFloat = 13      // .body minimum for compact density
+        let minTitle3: CGFloat = 15    // .title3 minimum for compact density
+        let minTitle2: CGFloat = 19    // .title2 minimum for compact density
+        let minTitle1: CGFloat = 24    // .title minimum for compact density
+
+        self.fontCaption = max(source.fontCaption * fontMult, minCaption)
+        self.fontBody = max(source.fontBody * fontMult, minBody)
+        self.fontTitle3 = max(source.fontTitle3 * fontMult, minTitle3)
+        self.fontTitle2 = max(source.fontTitle2 * fontMult, minTitle2)
+        self.fontTitle1 = max(source.fontTitle1 * fontMult, minTitle1)
 
         self.fontDesign = source.fontDesign
         self.isLight = source.isLight
