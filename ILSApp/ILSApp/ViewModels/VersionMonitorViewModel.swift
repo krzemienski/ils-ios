@@ -63,6 +63,20 @@ class VersionMonitorViewModel: BaseViewModel {
         do {
             let response: APIResponse<UpdateCheckResponse> = try await client.get("/system/version/check-updates")
             updateCheck = response.data
+
+            // Post notification if update is available (macOS only)
+            #if os(macOS)
+            if let updateData = updateCheck,
+               updateData.updateAvailable,
+               let currentVer = currentVersion?.version {
+                let releaseNotes = updateData.changelog?.prefix(100).description
+                await NotificationManager.shared.postVersionUpdateNotification(
+                    currentVersion: currentVer,
+                    newVersion: updateData.latestVersion,
+                    releaseNotes: releaseNotes
+                )
+            }
+            #endif
         } catch {
             self.error = error
         }

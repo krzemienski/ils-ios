@@ -146,6 +146,54 @@ class NotificationManager: NSObject {
     func removePendingNotifications() {
         center.removeAllPendingNotificationRequests()
     }
+
+    /// Post a notification for a new Claude Code CLI version
+    /// - Parameters:
+    ///   - currentVersion: The current installed version
+    ///   - newVersion: The new available version
+    ///   - releaseNotes: Optional preview of release notes
+    func postVersionUpdateNotification(
+        currentVersion: String,
+        newVersion: String,
+        releaseNotes: String? = nil
+    ) async {
+        // Only post notification if app is not frontmost
+        guard !NSApplication.shared.isActive else { return }
+
+        // Only post if authorized
+        guard isAuthorized else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Claude Code Update Available"
+
+        if let notes = releaseNotes, !notes.isEmpty {
+            content.body = "Version \(newVersion) is available (current: \(currentVersion))\n\(notes)"
+        } else {
+            content.body = "Version \(newVersion) is available (current: \(currentVersion))"
+        }
+
+        content.sound = .default
+
+        content.userInfo = [
+            "currentVersion": currentVersion,
+            "newVersion": newVersion,
+            "type": "version_update"
+        ]
+
+        let identifier = "version-update-\(newVersion)"
+
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: nil
+        )
+
+        do {
+            try await center.add(request)
+        } catch {
+            AppLogger.shared.error("Failed to post version update notification: \(error)", category: "notifications")
+        }
+    }
 }
 
 // MARK: - UNUserNotificationCenterDelegate
