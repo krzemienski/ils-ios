@@ -113,6 +113,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateAgentQueueItems())
     // v5.9 — Permission history
     app.migrations.add(CreatePermissions())
+    // v6.0 — Claude Code CLI version history tracking
+    app.migrations.add(CreateVersionHistory())
 
     // Run migrations
     try await app.autoMigrate()
