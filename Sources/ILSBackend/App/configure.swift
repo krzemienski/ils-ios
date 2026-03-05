@@ -118,6 +118,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateRuleExecutionLogs())
     // v6.0 — Claude Code CLI version history tracking
     app.migrations.add(CreateVersionHistory())
+    // v6.1 — Configuration profiles
+    app.migrations.add(CreateConfigProfiles())
 
     // Run migrations
     try await app.autoMigrate()
