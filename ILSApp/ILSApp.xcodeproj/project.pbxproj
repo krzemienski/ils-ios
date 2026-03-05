@@ -64,6 +64,7 @@
 		0C9253AE203CF71C88E5C728 /* QueueTaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB8500BB7BC601BB1C07CA56 /* QueueTaskRow.swift */; };
 		0CDA69045020D57CEA33A6CF /* QueuedMessageBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAC855B02609FF5D891AC48 /* QueuedMessageBadge.swift */; };
 		0D8CFF51DD0BA0239AA6718F /* ErrorMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EED2EA5CED6B30EE2D3364D /* ErrorMessageView.swift */; };
+		DM111222333444555666777A /* DensityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DM567890ABCDEF1234567890 /* DensityManager.swift */; };
 		0DEA24A0F1FF445652963E8C /* ThemeMetadataSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6FFAF97C7ACBEDC63BAD3C /* ThemeMetadataSection.swift */; };
 		0E0A44D5B9033E5DA3B7BF84 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80430189AE955C4432F1B0B /* AppDelegate.swift */; };
 		0EA99231F1C3CC9117E511B1 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */; };
@@ -681,6 +682,7 @@
 		C6D516D0B12632DD577997BE /* SettingsConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */; };
 		C7035F653620DB1FE2C89844 /* ContextWindowDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8657511CC86987E23682A4B8 /* ContextWindowDetailSheet.swift */; };
 		C7691F9E10BEC0B9F5602A4E /* GrammarDefinitions+Web.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A73D5641721993B42820374 /* GrammarDefinitions+Web.swift */; };
+		DM111222333444555666777B /* DensityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DM567890ABCDEF1234567890 /* DensityManager.swift */; };
 		C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 402B977AA6C4850AA23BDB0E /* AppTheme.swift */; };
 		C78081A75B5DFB73AB720204 /* ThemeEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE8A18EC92A35C2625C719B /* ThemeEditorViewModel.swift */; };
 		C78ED7CE1DAF44CBF5DE3C88 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77704C10DDEE770B8E05B890 /* ShimmerModifier.swift */; };
@@ -1034,6 +1036,7 @@
 		3FD667CEB54A3977A624A32D /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
 		4005FE7854FDFA8AF9FE05D1 /* ModelStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelStatsView.swift; sourceTree = "<group>"; };
 		402B977AA6C4850AA23BDB0E /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		DM567890ABCDEF1234567890 /* DensityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DensityManager.swift; sourceTree = "<group>"; };
 		40AE3C8E1ADD87D38B3BE116 /* ThemeMarketplaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMarketplaceView.swift; sourceTree = "<group>"; };
 		40BB4C233B48361C8E553661 /* ScrollPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollPerformanceTests.swift; sourceTree = "<group>"; };
 		413985672B4899C4B71D7369 /* TemplatesLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesLibraryView.swift; sourceTree = "<group>"; };
@@ -1648,6 +1651,7 @@
 			isa = PBXGroup;
 			children = (
 				402B977AA6C4850AA23BDB0E /* AppTheme.swift */,
+				DM567890ABCDEF1234567890 /* DensityManager.swift */,
 				677E11407A3F745C1D85E232 /* CustomThemeAdapter.swift */,
 				E2DFAB78C7677E370F236D7E /* CyberpunkEffects.swift */,
 				F9A4655E180715DDFB024576 /* EntityType.swift */,
@@ -2720,6 +2724,7 @@
 				531BB01D92A383DA6DF5AA78 /* AppLogger.swift in Sources */,
 				845EF2DE72C08B442585E6D9 /* AppState.swift in Sources */,
 				08CA0507D6E3EFEEF56E4682 /* AppTheme.swift in Sources */,
+				DM111222333444555666777A /* DensityManager.swift in Sources */,
 				1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */,
 				B64ACCD3BF169F68570BBACA /* AppleSpeechProvider.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
@@ -3125,6 +3130,7 @@
 				39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */,
 				72C3B604AF0F01FDCD3FC976 /* AppState.swift in Sources */,
 				C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */,
+				DM111222333444555666777B /* DensityManager.swift in Sources */,
 				BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */,
 				D9962DC530A2375830B78CAD /* AppleSpeechProvider.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,

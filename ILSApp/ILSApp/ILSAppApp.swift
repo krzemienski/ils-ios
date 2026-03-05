@@ -16,6 +16,7 @@ struct ILSAppApp: App {
     @State private var themeManager = ThemeManager()
     @State private var layoutStore = DashboardLayoutStore()
     @State private var permissionNotifDelegate = PermissionNotificationDelegate()
+    @State private var densityManager = DensityManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
@@ -67,6 +68,7 @@ struct ILSAppApp: App {
                     .environment(appState)
                     .environment(themeManager)
                     .environment(layoutStore)
+                    .environment(densityManager)
                     .environment(\.theme, themeManager.currentSnapshot)
                     .preferredColorScheme(computedColorScheme)
                     .dynamicTypeSize(DynamicTypeSize.xSmall ... DynamicTypeSize.accessibility3)
