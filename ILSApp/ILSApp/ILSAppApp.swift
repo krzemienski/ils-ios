@@ -198,6 +198,11 @@ struct ILSAppApp: App {
             appState.handleScenePhase(newPhase)
             if newPhase == .active {
                 ICloudSyncManager.shared.syncPreferencesToCloud()
+                // Check for Claude Code CLI updates when returning to foreground
+                // The checkForUpdates method respects configured interval (daily/weekly)
+                Task.detached(priority: .background) {
+                    await appState.checkForUpdates()
+                }
             }
         }
     }
