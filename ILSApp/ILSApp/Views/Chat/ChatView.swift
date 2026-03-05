@@ -42,6 +42,8 @@ struct ChatView: View {
     @State private var viewModel = ChatViewModel()
     /// View model for checkpoint operations — injected into `viewModel` for ILS-managed sessions.
     @State private var checkpointViewModel = CheckpointViewModel()
+    /// View model for loading contextual prompt suggestions.
+    @State private var suggestionsViewModel = SuggestionsViewModel()
 
     // MARK: - Grouped State
 
@@ -390,6 +392,14 @@ struct ChatView: View {
                 .frame(width: 0, height: 0)
                 .opacity(0)
                 .allowsHitTesting(false)
+            }
+            .onChange(of: viewModel.isStreaming) { oldValue, newValue in
+                // When streaming stops (transitions from true to false), load prompt suggestions
+                if oldValue == true && newValue == false {
+                    Task {
+                        await loadPromptSuggestions()
+                    }
+                }
             }
     }
 
@@ -796,7 +806,13 @@ struct ChatView: View {
             onCancel: { viewModel.cancel() },
             onCommandPalette: { sheets.showCommandPalette = true },
             onAdvancedOptions: { sheets.showAdvancedOptions = true },
-            pendingCount: MessageQueueService.shared.pendingCount
+            pendingCount: MessageQueueService.shared.pendingCount,
+            session: session,
+            apiClient: appState.apiClient,
+            onSuggestionTap: { suggestion in
+                inputText = suggestion
+                isInputFocused = true
+            }
         )
         #endif
     }
@@ -990,6 +1006,8 @@ struct ChatView: View {
             }
         }
 
+        suggestionsViewModel.configure(client: appState.apiClient)
+
         await viewModel.loadMessageHistory()
     }
 
@@ -1081,6 +1099,35 @@ struct ChatView: View {
     /// Present the export format picker for sharing the session.
     private func exportSession() {
         sheets.showExportSheet = true
+    }
+
+    /// Load contextual prompt suggestions based on recent conversation.
+    private func loadPromptSuggestions() async {
+        // Extract context from the last few messages to generate relevant suggestions
+        let context = extractConversationContext()
+        let projectContext = session.projectName
+
+        await suggestionsViewModel.loadPromptSuggestions(
+            sessionId: session.id,
+            context: context,
+            projectContext: projectContext,
+            limit: 4
+        )
+    }
+
+    /// Extract conversation context from recent messages for better suggestion relevance.
+    /// - Returns: A string summarizing the recent conversation topic
+    private func extractConversationContext() -> String {
+        // Get the last 2-3 messages to understand context
+        let recentMessages = viewModel.messages.suffix(3)
+        var contextParts: [String] = []
+
+        for message in recentMessages {
+            let preview = message.text.prefix(100)
+            contextParts.append(String(preview))
+        }
+
+        return contextParts.joined(separator: " ")
     }
 }
 
