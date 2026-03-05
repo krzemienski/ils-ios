@@ -67,6 +67,9 @@ struct SidebarView: View {
     /// Whether the "too many pinned sessions" limit alert is visible.
     @State private var showPinLimitAlert = false
 
+    /// Version monitor to check for Claude Code CLI updates.
+    @State private var versionMonitorViewModel = VersionMonitorViewModel()
+
     /// Comma-separated project names whose DisclosureGroups are expanded, persisted across scenes.
     @SceneStorage("sidebarExpandedProjects") private var expandedProjectsStorage: String = ""
 
@@ -110,6 +113,8 @@ struct SidebarView: View {
         .background(theme.bgSidebar)
         .task {
             await sessionsViewModel.loadProjectGroups()
+            versionMonitorViewModel.configure(client: appState.apiClient)
+            await versionMonitorViewModel.loadAll()
         }
         .sheet(isPresented: $showNewSessionSheet) {
             NewSessionView { session in
@@ -406,7 +411,12 @@ struct SidebarView: View {
                     sidebarNavItem(icon: "server.rack", label: "Backends", screen: .backends)
                     sidebarNavItem(icon: "arrow.triangle.branch", label: "Hooks", screen: .hooks)
                     sidebarNavItem(icon: "paintpalette.fill", label: "Themes", screen: .themes)
-                    sidebarNavItem(icon: "gearshape.fill", label: "Settings", screen: .settings)
+                    sidebarNavItem(
+                        icon: "gearshape.fill",
+                        label: "Settings",
+                        screen: .settings,
+                        badge: versionMonitorViewModel.hasUpdateAvailable ? 1 : 0
+                    )
                     sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
                 }
             }

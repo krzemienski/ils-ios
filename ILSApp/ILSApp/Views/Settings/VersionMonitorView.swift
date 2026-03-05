@@ -79,7 +79,7 @@ struct VersionMonitorView: View {
                                 .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                             Text("Version \(current.version)")
-                                .font(.system(size: theme.fontH2, weight: .bold, design: theme.fontDesign))
+                                .font(.system(size: theme.fontTitle2, weight: .bold, design: theme.fontDesign))
                                 .foregroundStyle(theme.accent)
                         }
                         Spacer()
@@ -134,7 +134,7 @@ struct VersionMonitorView: View {
                                 Image(systemName: "arrow.up.circle.fill")
                                     .foregroundStyle(viewModel.hasBreakingChanges ? theme.error : theme.success)
                                 Text("Version \(update.latestVersion)")
-                                    .font(.system(size: theme.fontH3, weight: .semibold, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
                             }
                             Text("New version available")
@@ -352,7 +352,7 @@ struct VersionMonitorView: View {
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS)
             .background(theme.bgSecondary)
-            .cornerRadius(theme.radiusSM)
+            .cornerRadius(theme.cornerRadiusSmall)
     }
 
     @ViewBuilder
@@ -366,13 +366,13 @@ struct VersionMonitorView: View {
         .padding(.horizontal, theme.spacingSM)
         .padding(.vertical, theme.spacingXS)
         .background(theme.error.opacity(0.1))
-        .cornerRadius(theme.radiusSM)
+        .cornerRadius(theme.cornerRadiusSmall)
     }
 
     // MARK: - Compatibility Helpers
 
     @ViewBuilder
-    private func compatibilityIcon(_ status: CompatibilityCheckResponse.CompatibilityStatus) -> Image {
+    private func compatibilityIcon(_ status: CompatibilityCheckResponse.CompatibilityStatus) -> some View {
         switch status {
         case .compatible:
             Image(systemName: "checkmark.circle.fill")

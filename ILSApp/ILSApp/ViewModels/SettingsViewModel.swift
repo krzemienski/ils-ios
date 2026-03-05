@@ -19,12 +19,23 @@ class SettingsViewModel: BaseViewModel {
     /// Per-key override lookup for O(1) access. Built from effectiveConfig.overrides.
     private var overrideLookup: [String: ConfigOverride] = [:]
 
+    // MARK: - Version Monitoring
+
+    var updateCheck: UpdateCheckResponse?
+    var isCheckingUpdates = false
+
+    /// Whether an update is available for the Claude Code CLI.
+    var hasUpdateAvailable: Bool {
+        updateCheck?.updateAvailable ?? false
+    }
+
     func loadAll() async {
         async let statsTask: () = loadStats()
         async let effectiveTask: () = loadEffectiveConfig()
         async let configTask: () = loadConfig()  // Still needed for saveWithPatch read-modify-write
         async let healthTask: () = loadHealth()
-        _ = await (statsTask, effectiveTask, configTask, healthTask)
+        async let updatesTask: () = checkForUpdates()
+        _ = await (statsTask, effectiveTask, configTask, healthTask, updatesTask)
     }
 
     func loadHealth() async {
@@ -34,6 +45,21 @@ class SettingsViewModel: BaseViewModel {
             claudeVersion = response.claudeVersion
         } catch {
             claudeVersion = nil
+        }
+    }
+
+    /// Check for available Claude Code CLI updates from GitHub.
+    func checkForUpdates() async {
+        guard let client else { return }
+        isCheckingUpdates = true
+        defer { isCheckingUpdates = false }
+
+        do {
+            let response: APIResponse<UpdateCheckResponse> = try await client.get("/system/version/check-updates")
+            updateCheck = response.data
+        } catch {
+            // Non-fatal: update check failure shouldn't block settings load
+            self.error = error
         }
     }
 
