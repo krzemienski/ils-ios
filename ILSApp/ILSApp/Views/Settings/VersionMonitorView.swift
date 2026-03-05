@@ -182,6 +182,23 @@ struct VersionMonitorView: View {
                             }
                         }
                     }
+
+                    if let current = viewModel.currentVersion,
+                       let url = updateInstructionsURL(for: current.installMethod) {
+                        Divider().background(theme.bgTertiary)
+
+                        Link(destination: url) {
+                            HStack {
+                                Text("Update Instructions")
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                    .foregroundStyle(theme.accent)
+                                Spacer()
+                                Image(systemName: "arrow.up.right.square")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.accent)
+                            }
+                        }
+                    }
                 }
             }
             .padding(theme.spacingMD)
@@ -408,6 +425,27 @@ struct VersionMonitorView: View {
             return "Incompatible"
         case .unknown:
             return "Unknown"
+        }
+    }
+
+    // MARK: - Update Instructions Helper
+
+    /// Returns the appropriate documentation URL for updating Claude Code CLI based on installation method.
+    ///
+    /// - Parameter installMethod: The detected installation method (npm, brew, manual)
+    /// - Returns: URL to update instructions, or nil if method is unknown
+    private func updateInstructionsURL(for installMethod: String) -> URL? {
+        let baseURL = "https://github.com/anthropics/claude-code"
+
+        switch installMethod.lowercased() {
+        case "npm":
+            return URL(string: "\(baseURL)#updating-via-npm")
+        case "brew":
+            return URL(string: "\(baseURL)#updating-via-homebrew")
+        case "manual":
+            return URL(string: "\(baseURL)#manual-installation")
+        default:
+            return URL(string: "\(baseURL)#installation")
         }
     }
 
