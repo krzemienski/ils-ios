@@ -132,7 +132,7 @@ struct ILSAppApp: App {
                         }
 
                         // MEM-01 + H-M1: Proactive cache eviction under memory pressure.
-                        // Observer targets a singleton (CacheService.shared) so no retain cycle,
+                        // Observer targets a singleton (MemoryManager.shared) so no retain cycle,
                         // but NotificationCenter holds the token forever. Acceptable for app-lifetime
                         // observer registered once in the root @main struct.
                         NotificationCenter.default.addObserver(
@@ -141,8 +141,7 @@ struct ILSAppApp: App {
                             queue: .main
                         ) { _ in
                             Task {
-                                await CacheService.shared.cleanupExpired()
-                                AppLogger.shared.warning("Memory pressure: caches evicted", category: "memory")
+                                await MemoryManager.shared.handleMemoryWarning()
                             }
                         }
                         PerformanceMonitor.shared.start()
