@@ -14,6 +14,7 @@ actor WebSocketCancellation {
 /// Routes:
 /// - `GET /system/metrics` — current CPU, memory, disk, network stats
 /// - `GET /system/processes` — running processes with optional sort
+/// - `GET /system/processes/history` — historical process data with filtering
 /// - `GET /system/files` — directory listing restricted to home
 /// - `WS  /system/metrics/live` — live metrics stream every 2 seconds
 /// - `GET /system/version/current` — current Claude Code CLI version
@@ -27,6 +28,7 @@ struct SystemController: RouteCollection {
 
         system.get("metrics", use: self.metrics)
         system.get("processes", use: self.processes)
+        system.get("processes", "history", use: self.processHistory)
         system.get("files", use: self.files)
         system.webSocket("metrics", "live", onUpgrade: self.liveMetrics)
         system.get("metrics", "source", use: self.metricsSource)
@@ -135,6 +137,56 @@ struct SystemController: RouteCollection {
             headers: ["Content-Type": "application/json"],
             body: .init(data: data)
         )
+    }
+
+    /// GET /system/processes/history — returns historical process data with filtering.
+    ///
+    /// Query parameters:
+    /// - `sessionId`: Filter to processes belonging to a specific session
+    /// - `startDate`: ISO8601 timestamp — only return processes that started after this date
+    /// - `endDate`: ISO8601 timestamp — only return processes that ended before this date
+    /// - `minDuration`: Minimum process duration in seconds
+    @Sendable
+    func processHistory(req: Request) async throws -> APIResponse<[ProcessHistoryResponse]> {
+        let sessionId = req.query[String.self, at: "sessionId"]
+        let startDateStr = req.query[String.self, at: "startDate"]
+        let endDateStr = req.query[String.self, at: "endDate"]
+        let minDuration = req.query[Double.self, at: "minDuration"]
+
+        // Build query with filters
+        var query = ProcessHistory.query(on: req.db)
+            .sort(\.$startTime, .descending)
+
+        // Filter by session ID
+        if let sessionId = sessionId {
+            query = query.filter(\.$sessionId == sessionId)
+        }
+
+        // Filter by start date
+        if let startDateStr = startDateStr {
+            let formatter = ISO8601DateFormatter()
+            if let startDate = formatter.date(from: startDateStr) {
+                query = query.filter(\.$startTime >= startDate)
+            }
+        }
+
+        // Filter by end date
+        if let endDateStr = endDateStr {
+            let formatter = ISO8601DateFormatter()
+            if let endDate = formatter.date(from: endDateStr) {
+                query = query.filter(\.$endTime <= endDate)
+            }
+        }
+
+        // Filter by minimum duration
+        if let minDuration = minDuration {
+            query = query.filter(\.$duration >= minDuration)
+        }
+
+        let records = try await query.all()
+        let responses = records.map { $0.toResponse() }
+
+        return APIResponse(success: true, data: responses)
     }
 
     // MARK: - WebSocket
@@ -325,3 +377,4 @@ extension CurrentVersionResponse: Content {}
 extension VersionHistoryResponse: Content {}
 extension UpdateCheckResponse: Content {}
 extension CompatibilityCheckResponse: Content {}
+extension ProcessHistoryResponse: Content {}
