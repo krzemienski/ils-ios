@@ -265,14 +265,117 @@ actor ProcessMonitorService {
 
     /// Parse process start time from ps STARTED column.
     ///
-    /// Formats:
-    /// - "12:34PM" - started today
-    /// - "Mon12" - started on Monday the 12th
-    /// - Other variations depending on age
+    /// Handles three common formats on macOS:
+    /// - "12:34PM" or "1:23AM" - Process started today at the given time
+    /// - "Mon12" or "Tue03" - Process started on the given weekday and day of month
+    /// - "Jan01" or "Dec25" - Process started on the given month and day
+    ///
+    /// - Parameters:
+    ///   - startedStr: The STARTED column value from ps output
+    ///   - currentYear: The current year for date calculations
+    /// - Returns: Estimated start time as a Date
     private static func parseStartTime(_ startedStr: String, currentYear: Int) -> Date {
-        // Simplified: assume processes started within the last hour for now
-        // TODO: Proper parsing of ps STARTED time formats
-        return Date().addingTimeInterval(-3600)
+        let now = Date()
+        let calendar = Calendar.current
+
+        // Format 1: Time today (e.g., "12:34PM", "1:23AM")
+        // Contains "AM" or "PM"
+        if startedStr.hasSuffix("AM") || startedStr.hasSuffix("PM") {
+            let timeStr = String(startedStr.dropLast(2)) // Remove AM/PM
+            let isPM = startedStr.hasSuffix("PM")
+
+            let components = timeStr.split(separator: ":")
+            guard components.count == 2,
+                  let hour = Int(components[0]),
+                  let minute = Int(components[1]) else {
+                return now.addingTimeInterval(-3600) // Fallback: 1 hour ago
+            }
+
+            // Convert to 24-hour format
+            var hour24 = hour
+            if isPM && hour != 12 {
+                hour24 = hour + 12
+            } else if !isPM && hour == 12 {
+                hour24 = 0
+            }
+
+            // Create date for today with the given time
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            dateComponents.hour = hour24
+            dateComponents.minute = minute
+            dateComponents.second = 0
+
+            if let startTime = calendar.date(from: dateComponents) {
+                // If the time is in the future, it must have been yesterday
+                if startTime > now {
+                    return calendar.date(byAdding: .day, value: -1, to: startTime) ?? startTime
+                }
+                return startTime
+            }
+        }
+
+        // Format 2: Weekday + day of month (e.g., "Mon12", "Tue03")
+        // First 3 characters are weekday abbreviation
+        let weekdayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        if startedStr.count >= 4 {
+            let weekdayPart = String(startedStr.prefix(3))
+            if weekdayAbbreviations.contains(weekdayPart) {
+                let dayPart = String(startedStr.dropFirst(3))
+                guard let day = Int(dayPart) else {
+                    return now.addingTimeInterval(-3600) // Fallback
+                }
+
+                // Find the most recent occurrence of this weekday + day
+                // Try current month first, then previous month
+                for monthOffset in 0...1 {
+                    var searchComponents = calendar.dateComponents([.year, .month], from: now)
+                    searchComponents.month = (searchComponents.month ?? 1) - monthOffset
+                    searchComponents.day = day
+                    searchComponents.hour = 0
+                    searchComponents.minute = 0
+                    searchComponents.second = 0
+
+                    if let candidateDate = calendar.date(from: searchComponents),
+                       candidateDate <= now {
+                        return candidateDate
+                    }
+                }
+            }
+        }
+
+        // Format 3: Month + day (e.g., "Jan01", "Dec25")
+        let monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        if startedStr.count >= 4 {
+            let monthPart = String(startedStr.prefix(3))
+            if let monthIndex = monthAbbreviations.firstIndex(of: monthPart) {
+                let dayPart = String(startedStr.dropFirst(3))
+                guard let day = Int(dayPart) else {
+                    return now.addingTimeInterval(-3600) // Fallback
+                }
+
+                let month = monthIndex + 1 // Convert to 1-based month
+
+                // Try current year first, then previous year
+                for yearOffset in 0...1 {
+                    var dateComponents = DateComponents()
+                    dateComponents.year = currentYear - yearOffset
+                    dateComponents.month = month
+                    dateComponents.day = day
+                    dateComponents.hour = 0
+                    dateComponents.minute = 0
+                    dateComponents.second = 0
+
+                    if let candidateDate = calendar.date(from: dateComponents),
+                       candidateDate <= now {
+                        return candidateDate
+                    }
+                }
+            }
+        }
+
+        // Fallback: Unable to parse, assume started 1 hour ago
+        return now.addingTimeInterval(-3600)
     }
 
     /// Extract process name from full command line.
