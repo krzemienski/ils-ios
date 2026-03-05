@@ -13,6 +13,7 @@ struct ConfigController: RouteCollection {
 
         config.get(use: get)
         config.get("effective", use: effective)
+        config.get("export", use: exportConfig)
         config.put(use: update)
         config.post("validate", use: validate)
         config.post("validate-api-key", use: validateAPIKey)
@@ -104,6 +105,31 @@ struct ConfigController: RouteCollection {
         )
     }
 
+    /// GET /config/export - Export configuration as a QR-code-friendly payload
+    ///
+    /// Returns the backend version and a JSON string encoding a `QRConfigPayload`
+    /// that iOS clients can scan to auto-configure their backend URL.
+    @Sendable
+    func exportConfig(req: Request) async throws -> APIResponse<ConfigExportResponse> {
+        // Derive the backend URL from the request so the QR payload is self-describing.
+        let scheme = req.headers.first(name: "x-forwarded-proto") ?? "http"
+        let host = req.headers.first(name: "host") ?? "localhost:9999"
+        let backendURL = "\(scheme)://\(host)"
+
+        let qrData = QRConfigPayload(backendURL: backendURL, version: "1.0.0")
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = []
+        let qrPayloadData = try encoder.encode(qrData)
+        guard let qrPayload = String(data: qrPayloadData, encoding: .utf8) else {
+            throw Abort(.internalServerError, reason: "Failed to encode QR payload")
+        }
+
+        return APIResponse(
+            success: true,
+            data: ConfigExportResponse(version: "1.0.0", qrPayload: qrPayload)
+        )
+    }
+
     /// POST /config/validate-api-key - Validate an Anthropic API key
     @Sendable
     func validateAPIKey(req: Request) async throws -> APIResponse<APIKeyValidationResult> {
@@ -143,5 +169,20 @@ struct ValidateAPIKeyRequest: Content {
 struct APIKeyValidationResult: Content {
     let isValid: Bool
     let error: String?
+}
+
+struct ConfigExportResponse: Content {
+    /// The backend version string (e.g., "1.0.0").
+    let version: String
+    /// JSON-encoded string suitable for embedding in a QR code.
+    /// Clients decode this to obtain the backend URL and other connection details.
+    let qrPayload: String
+}
+
+struct QRConfigPayload: Codable {
+    /// The base URL of the ILS backend (e.g., "http://192.168.1.10:9999").
+    let backendURL: String
+    /// The backend version, so clients can detect compatibility.
+    let version: String
 }
 
