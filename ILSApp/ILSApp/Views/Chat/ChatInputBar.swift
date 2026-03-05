@@ -80,6 +80,9 @@ struct ChatInputBar: View {
     var apiClient: APIClient? = nil
     /// Called when the user taps a suggestion chip to populate the input field.
     var onSuggestionTap: ((String) -> Void)? = nil
+    /// Incrementing this value causes the prompt suggestion chips to reload.
+    /// Pass the value from ChatView's `promptSuggestionRefreshToken` state variable.
+    var promptSuggestionRefreshToken: Int = 0
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -136,7 +139,8 @@ struct ChatInputBar: View {
                 PromptSuggestionsChipBar(
                     session: session,
                     apiClient: apiClient,
-                    onSuggestionTap: onSuggestionTap
+                    onSuggestionTap: onSuggestionTap,
+                    refreshToken: promptSuggestionRefreshToken
                 )
                 .padding(.top, theme.spacingXS)
             }

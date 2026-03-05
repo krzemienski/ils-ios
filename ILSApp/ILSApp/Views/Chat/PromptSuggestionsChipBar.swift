@@ -24,6 +24,8 @@ struct PromptSuggestionsChipBar: View {
     let apiClient: APIClient
     /// Called when the user taps a suggestion chip.
     let onSuggestionTap: (String) -> Void
+    /// Incrementing this value causes suggestions to reload. Increment after each Claude response.
+    var refreshToken: Int = 0
 
     @State private var viewModel = SuggestionsViewModel()
     @State private var promptSuggestions: [PromptSuggestion] = []
@@ -47,7 +49,7 @@ struct PromptSuggestionsChipBar: View {
                 .accessibilityIdentifier("prompt-suggestions-chip-bar")
             }
         }
-        .task {
+        .task(id: refreshToken) {
             viewModel.configure(client: apiClient)
             await loadPromptSuggestions()
         }

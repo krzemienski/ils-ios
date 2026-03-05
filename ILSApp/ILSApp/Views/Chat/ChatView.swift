@@ -42,8 +42,8 @@ struct ChatView: View {
     @State private var viewModel = ChatViewModel()
     /// View model for checkpoint operations — injected into `viewModel` for ILS-managed sessions.
     @State private var checkpointViewModel = CheckpointViewModel()
-    /// View model for loading contextual prompt suggestions.
-    @State private var suggestionsViewModel = SuggestionsViewModel()
+    /// Incrementing this token after each Claude response causes suggestion chips to refresh.
+    @State private var promptSuggestionRefreshToken: Int = 0
 
     // MARK: - Grouped State
 
@@ -394,11 +394,9 @@ struct ChatView: View {
                 .allowsHitTesting(false)
             }
             .onChange(of: viewModel.isStreaming) { oldValue, newValue in
-                // When streaming stops (transitions from true to false), load prompt suggestions
+                // When streaming stops, increment the refresh token so suggestion chips reload
                 if oldValue == true && newValue == false {
-                    Task {
-                        await loadPromptSuggestions()
-                    }
+                    promptSuggestionRefreshToken += 1
                 }
             }
     }
@@ -800,7 +798,8 @@ struct ChatView: View {
             onSuggestionTap: { suggestion in
                 inputText = suggestion
                 isInputFocused = true
-            }
+            },
+            promptSuggestionRefreshToken: promptSuggestionRefreshToken
         )
         #else
         ChatInputBar(
@@ -818,7 +817,8 @@ struct ChatView: View {
             onSuggestionTap: { suggestion in
                 inputText = suggestion
                 isInputFocused = true
-            }
+            },
+            promptSuggestionRefreshToken: promptSuggestionRefreshToken
         )
         #endif
     }
@@ -1012,8 +1012,6 @@ struct ChatView: View {
             }
         }
 
-        suggestionsViewModel.configure(client: appState.apiClient)
-
         await viewModel.loadMessageHistory()
     }
 
@@ -1107,86 +1105,6 @@ struct ChatView: View {
         sheets.showExportSheet = true
     }
 
-    /// Load contextual prompt suggestions based on recent conversation.
-    private func loadPromptSuggestions() async {
-        // Extract context from the last few messages to generate relevant suggestions
-        let context = extractConversationContext()
-        let projectContext = session.projectName
-
-        await suggestionsViewModel.loadPromptSuggestions(
-            sessionId: session.id,
-            context: context,
-            projectContext: projectContext,
-            limit: 4
-        )
-    }
-
-    /// Extract conversation context from recent messages for better suggestion relevance.
-    ///
-    /// Analyzes the last 2-3 messages to detect patterns like code blocks, error messages,
-    /// and test-related keywords. These signals help the backend generate more contextually
-    /// relevant prompt suggestions.
-    ///
-    /// - Returns: A string summarizing the recent conversation topic with detected patterns
-    private func extractConversationContext() -> String {
-        // Get the last 2-3 messages to understand context
-        let recentMessages = viewModel.messages.suffix(3)
-        var contextParts: [String] = []
-        var detectedPatterns: [String] = []
-
-        for message in recentMessages {
-            // Extract text preview (increased from 100 to 200 chars for better context)
-            let preview = message.text.prefix(200)
-            contextParts.append(String(preview))
-
-            // Detect code blocks (markdown fences or inline code)
-            if message.text.contains("```") || message.text.contains("`") {
-                detectedPatterns.append("code")
-            }
-
-            // Detect error patterns in message text
-            let lowercasedText = message.text.lowercased()
-            let errorKeywords = ["error:", "failed", "exception", "crash", "bug", "issue", "problem", "broken"]
-            if errorKeywords.contains(where: { lowercasedText.contains($0) }) {
-                detectedPatterns.append("error")
-            }
-
-            // Detect test-related keywords
-            let testKeywords = ["test", "spec", "assert", "expect", "mock", "fixture", "coverage"]
-            if testKeywords.contains(where: { lowercasedText.contains($0) }) {
-                detectedPatterns.append("testing")
-            }
-
-            // Detect performance-related keywords
-            let perfKeywords = ["performance", "slow", "optimize", "speed", "latency", "memory"]
-            if perfKeywords.contains(where: { lowercasedText.contains($0) }) {
-                detectedPatterns.append("performance")
-            }
-
-            // Detect security-related keywords
-            let securityKeywords = ["security", "vulnerability", "authentication", "authorization", "encryption"]
-            if securityKeywords.contains(where: { lowercasedText.contains($0) }) {
-                detectedPatterns.append("security")
-            }
-
-            // Check for tool errors (failed tool executions)
-            if message.toolResults.contains(where: { $0.isError }) {
-                detectedPatterns.append("tool_error")
-            }
-
-            // Check for tool calls (indicates debugging/implementation work)
-            if !message.toolCalls.isEmpty {
-                detectedPatterns.append("implementation")
-            }
-        }
-
-        // Build context string with detected patterns as keywords
-        let uniquePatterns = Array(Set(detectedPatterns))
-        let patternString = uniquePatterns.isEmpty ? "" : " [patterns: \(uniquePatterns.joined(separator: ", "))]"
-        let contextString = contextParts.joined(separator: " ")
-
-        return contextString + patternString
-    }
 }
 
 #Preview {
