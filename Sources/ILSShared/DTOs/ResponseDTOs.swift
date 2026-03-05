@@ -526,3 +526,27 @@ public struct ContinuationSummary: Codable, Sendable, Identifiable {
         self.generatedAt = generatedAt
     }
 }
+
+/// A suggested prompt relevant to the current session context.
+public struct PromptSuggestion: Codable, Sendable, Identifiable {
+    /// Unique identifier for this suggestion.
+    public let id: UUID
+    /// The suggested prompt text.
+    public let prompt: String
+    /// Relevance score (0.0 – 1.0).
+    public let score: Double
+    /// Human-readable reason for the suggestion.
+    public let reason: String
+
+    public init(
+        id: UUID = UUID(),
+        prompt: String,
+        score: Double,
+        reason: String
+    ) {
+        self.id = id
+        self.prompt = prompt
+        self.score = score
+        self.reason = reason
+    }
+}

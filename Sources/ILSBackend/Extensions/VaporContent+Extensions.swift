@@ -240,6 +240,7 @@ extension SessionSuggestion: Content {}
 extension SkillSuggestion: Content {}
 extension AbandonedSessionSuggestion: Content {}
 extension ContinuationSummary: Content {}
+extension PromptSuggestion: Content {}
 extension SuggestionFeedbackRequest: Content {}
 
 // MARK: - Model Routing & Stats Types

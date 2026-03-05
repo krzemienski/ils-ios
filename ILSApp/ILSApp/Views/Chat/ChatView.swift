@@ -42,6 +42,8 @@ struct ChatView: View {
     @State private var viewModel = ChatViewModel()
     /// View model for checkpoint operations — injected into `viewModel` for ILS-managed sessions.
     @State private var checkpointViewModel = CheckpointViewModel()
+    /// Incrementing this token after each Claude response causes suggestion chips to refresh.
+    @State private var promptSuggestionRefreshToken: Int = 0
 
     // MARK: - Grouped State
 
@@ -390,6 +392,12 @@ struct ChatView: View {
                 .frame(width: 0, height: 0)
                 .opacity(0)
                 .allowsHitTesting(false)
+            }
+            .onChange(of: viewModel.isStreaming) { oldValue, newValue in
+                // When streaming stops, increment the refresh token so suggestion chips reload
+                if oldValue == true && newValue == false {
+                    promptSuggestionRefreshToken += 1
+                }
             }
     }
 
@@ -784,7 +792,14 @@ struct ChatView: View {
             onVoiceInput: { toggleVoiceInput() },
             isRecording: speechService.isRecording,
             attachments: $pendingAttachments,
-            onAttachmentTap: { sheets.showAttachmentPicker = true }
+            onAttachmentTap: { sheets.showAttachmentPicker = true },
+            session: session,
+            apiClient: appState.apiClient,
+            onSuggestionTap: { suggestion in
+                inputText = suggestion
+                isInputFocused = true
+            },
+            promptSuggestionRefreshToken: promptSuggestionRefreshToken
         )
         #else
         ChatInputBar(
@@ -796,7 +811,14 @@ struct ChatView: View {
             onCancel: { viewModel.cancel() },
             onCommandPalette: { sheets.showCommandPalette = true },
             onAdvancedOptions: { sheets.showAdvancedOptions = true },
-            pendingCount: MessageQueueService.shared.pendingCount
+            pendingCount: MessageQueueService.shared.pendingCount,
+            session: session,
+            apiClient: appState.apiClient,
+            onSuggestionTap: { suggestion in
+                inputText = suggestion
+                isInputFocused = true
+            },
+            promptSuggestionRefreshToken: promptSuggestionRefreshToken
         )
         #endif
     }
@@ -1082,6 +1104,7 @@ struct ChatView: View {
     private func exportSession() {
         sheets.showExportSheet = true
     }
+
 }
 
 #Preview {

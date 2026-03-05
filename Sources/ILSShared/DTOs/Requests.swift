@@ -1091,6 +1091,35 @@ public struct UpdateCustomThemeRequest: Codable, Sendable {
 
 // MARK: - Suggestion Requests
 
+/// Request payload for generating contextual prompt suggestions.
+///
+/// Used to fetch AI-powered prompt suggestions based on the current session context,
+/// conversation flow, and project environment. Helps users discover effective follow-up
+/// prompts and learn better AI interaction patterns.
+public struct PromptSuggestionsRequest: Codable, Sendable {
+    /// Session ID to generate suggestions for.
+    public let sessionId: UUID
+    /// Optional recent conversation context (e.g., last few messages or topics discussed).
+    public let conversationContext: String?
+    /// Optional project-specific context (e.g., programming language, framework, tech stack).
+    public let projectContext: String?
+
+    /// Creates a prompt suggestions request.
+    /// - Parameters:
+    ///   - sessionId: Session ID to generate suggestions for.
+    ///   - conversationContext: Recent conversation context to inform suggestions.
+    ///   - projectContext: Project-specific context like language or framework.
+    public init(
+        sessionId: UUID,
+        conversationContext: String? = nil,
+        projectContext: String? = nil
+    ) {
+        self.sessionId = sessionId
+        self.conversationContext = conversationContext
+        self.projectContext = projectContext
+    }
+}
+
 /// Feedback event recording user interaction with a suggestion.
 public struct SuggestionFeedbackRequest: Codable, Sendable {
     /// Session context in which the suggestion was shown (optional).

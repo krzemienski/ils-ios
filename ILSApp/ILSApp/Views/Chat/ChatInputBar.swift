@@ -73,6 +73,16 @@ struct ChatInputBar: View {
     var attachments: Binding<[MessageAttachment]> = .constant([])
     /// Called when the user taps the paperclip button to open the attachment picker.
     var onAttachmentTap: (() -> Void)? = nil
+    /// The current chat session used to provide context for prompt suggestions.
+    /// When non-nil, suggestion chips may appear above the input row.
+    var session: ChatSession? = nil
+    /// API client for fetching prompt suggestions from the backend.
+    var apiClient: APIClient? = nil
+    /// Called when the user taps a suggestion chip to populate the input field.
+    var onSuggestionTap: ((String) -> Void)? = nil
+    /// Incrementing this value causes the prompt suggestion chips to reload.
+    /// Pass the value from ChatView's `promptSuggestionRefreshToken` state variable.
+    var promptSuggestionRefreshToken: Int = 0
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -80,6 +90,8 @@ struct ChatInputBar: View {
     /// When true, the documentation sheet is presented pre-filtered for slash commands.
     @State private var showDocumentation = false
     @FocusState private var isInputFocused: Bool
+    /// User preference for showing prompt suggestion chips.
+    @AppStorage("showPromptSuggestions") private var showPromptSuggestions = true
 
     /// Dynamic horizontal padding for the text field, scales with text size preference.
     @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
@@ -117,6 +129,20 @@ struct ChatInputBar: View {
             if !attachments.wrappedValue.isEmpty {
                 AttachmentPreviewStrip(attachments: attachments)
                     .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            // Prompt suggestion chips — shown when session and API client are available.
+            if showPromptSuggestions,
+               let session = session,
+               let apiClient = apiClient,
+               let onSuggestionTap = onSuggestionTap {
+                PromptSuggestionsChipBar(
+                    session: session,
+                    apiClient: apiClient,
+                    onSuggestionTap: onSuggestionTap,
+                    refreshToken: promptSuggestionRefreshToken
+                )
+                .padding(.top, theme.spacingXS)
             }
 
             HStack(spacing: theme.spacingSM) {

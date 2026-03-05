@@ -5,6 +5,7 @@ struct MacChatView: View {
     let session: ChatSession
     @Environment(AppState.self) var appState
     @State private var viewModel = ChatViewModel()
+    @State private var promptSuggestionRefreshToken: Int = 0
     @State private var inputText = ""
     @State private var showCommandPalette = false
     @State private var showSessionInfo = false
@@ -245,6 +246,7 @@ struct MacChatView: View {
                 viewModel.sessionId = session.id
                 viewModel.encodedProjectPath = session.encodedProjectPath
                 viewModel.claudeSessionId = session.claudeSessionId
+
                 await viewModel.loadMessageHistory()
             }
             .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
@@ -261,6 +263,7 @@ struct MacChatView: View {
                             sessionName: session.name ?? "Chat"
                         )
                     }
+                    promptSuggestionRefreshToken += 1
                 }
             }
     }
@@ -400,7 +403,14 @@ struct MacChatView: View {
             onCommandPalette: { showCommandPalette = true },
             onAdvancedOptions: { showAdvancedOptions = true },
             attachments: $pendingAttachments,
-            onAttachmentTap: { showAttachmentPicker = true }
+            onAttachmentTap: { showAttachmentPicker = true },
+            session: session,
+            apiClient: appState.apiClient,
+            onSuggestionTap: { suggestion in
+                inputText = suggestion
+                isInputFocused = true
+            },
+            promptSuggestionRefreshToken: promptSuggestionRefreshToken
         )
         .focused($isInputFocused)
     }
@@ -671,6 +681,7 @@ struct MacChatView: View {
 
         isExporting = false
     }
+
 }
 
 #Preview {
