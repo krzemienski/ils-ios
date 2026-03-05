@@ -34,6 +34,7 @@ struct SystemController: RouteCollection {
         system.get("version", "current", use: self.currentVersion)
         system.get("version", "history", use: self.versionHistory)
         system.get("version", "check-updates", use: self.checkUpdates)
+        system.get("version", "compatibility", use: self.checkCompatibility)
     }
 
     // MARK: - REST Endpoints
@@ -262,6 +263,29 @@ struct SystemController: RouteCollection {
 
         return APIResponse(success: true, data: updateCheck)
     }
+
+    /// GET /system/version/compatibility — checks compatibility between ILS and Claude Code CLI versions.
+    @Sendable
+    func checkCompatibility(req: Request) async throws -> APIResponse<CompatibilityCheckResponse> {
+        // Get current CLI version from database
+        guard let latest = try await VersionHistoryModel.query(on: req.db)
+            .sort(\.$detectedAt, .descending)
+            .first() else {
+            throw Abort(.notFound, reason: "No version history found")
+        }
+
+        // Get ILS version from query parameter or use default
+        let ilsVersion = req.query[String.self, at: "ils_version"] ?? "1.0.0"
+
+        // Use VersionCheckService to check compatibility
+        let versionCheckService = req.application.versionCheckService
+        let compatibilityCheck = versionCheckService.checkCompatibility(
+            ilsVersion: ilsVersion,
+            cliVersion: latest.version
+        )
+
+        return APIResponse(success: true, data: compatibilityCheck)
+    }
 }
 
 // MARK: - Live Metrics WebSocket Message
@@ -300,3 +324,4 @@ extension FileEntryResponse: Content {}
 extension CurrentVersionResponse: Content {}
 extension VersionHistoryResponse: Content {}
 extension UpdateCheckResponse: Content {}
+extension CompatibilityCheckResponse: Content {}

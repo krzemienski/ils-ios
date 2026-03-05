@@ -181,6 +181,103 @@ struct VersionCheckService: Sendable {
 
         return breakingKeywords.contains { changelog.contains($0) }
     }
+
+    /// Check compatibility between ILS version and Claude Code CLI version
+    func checkCompatibility(ilsVersion: String, cliVersion: String) -> CompatibilityCheckResponse {
+        let ilsComponents = parseSemanticVersion(ilsVersion)
+        let cliComponents = parseSemanticVersion(cliVersion)
+
+        // Determine compatibility based on semantic versioning rules
+        let (isCompatible, status, message, recommendedRange) = evaluateCompatibility(
+            ils: ilsComponents,
+            cli: cliComponents,
+            ilsVersionString: ilsVersion
+        )
+
+        return CompatibilityCheckResponse(
+            ilsVersion: ilsVersion,
+            cliVersion: cliVersion,
+            isCompatible: isCompatible,
+            status: status,
+            message: message,
+            recommendedCliVersionRange: recommendedRange
+        )
+    }
+
+    /// Evaluate compatibility between ILS and CLI versions
+    private func evaluateCompatibility(
+        ils: (Int, Int, Int),
+        cli: (Int, Int, Int),
+        ilsVersionString: String
+    ) -> (isCompatible: Bool, status: CompatibilityCheckResponse.CompatibilityStatus, message: String, recommendedRange: String?) {
+        let (ilsMajor, ilsMinor, ilsPatch) = ils
+        let (cliMajor, cliMinor, cliPatch) = cli
+
+        // Major version mismatch = incompatible
+        if ilsMajor != cliMajor {
+            if cliMajor < ilsMajor {
+                return (
+                    false,
+                    .incompatible,
+                    "Claude Code CLI version \(cliMajor).x is too old for ILS \(ilsVersionString). Major version mismatch may cause critical compatibility issues.",
+                    "\(ilsMajor).x.x"
+                )
+            } else {
+                return (
+                    false,
+                    .incompatible,
+                    "Claude Code CLI version \(cliMajor).x is newer than ILS \(ilsVersionString) expects. ILS may need to be updated to support this CLI version.",
+                    "\(ilsMajor).x.x"
+                )
+            }
+        }
+
+        // Same major version - check minor
+        if ilsMinor != cliMinor {
+            if cliMinor < ilsMinor {
+                return (
+                    true,
+                    .warning,
+                    "Claude Code CLI version \(cliMajor).\(cliMinor).x is older than recommended. Consider updating to version \(ilsMajor).\(ilsMinor).x or later for best compatibility.",
+                    "\(ilsMajor).\(ilsMinor).x"
+                )
+            } else {
+                return (
+                    true,
+                    .compatible,
+                    "Claude Code CLI version \(cliMajor).\(cliMinor).x is newer than ILS \(ilsVersionString) but should be compatible. Minor version differences are typically backward compatible.",
+                    "\(ilsMajor).\(ilsMinor).x"
+                )
+            }
+        }
+
+        // Same major and minor - check patch
+        if ilsPatch != cliPatch {
+            if cliPatch < ilsPatch {
+                return (
+                    true,
+                    .compatible,
+                    "Claude Code CLI version \(cliMajor).\(cliMinor).\(cliPatch) is slightly older than recommended. Patch version \(ilsMajor).\(ilsMinor).\(ilsPatch) or later is recommended for bug fixes.",
+                    "\(ilsMajor).\(ilsMinor).\(ilsPatch)"
+                )
+            } else {
+                return (
+                    true,
+                    .compatible,
+                    "Claude Code CLI version \(cliMajor).\(cliMinor).\(cliPatch) is fully compatible with ILS \(ilsVersionString). Patch version differences are safe.",
+                    nil
+                )
+            }
+        }
+
+        // Exact version match
+        return (
+            true,
+            .compatible,
+            "Claude Code CLI version \(cliMajor).\(cliMinor).\(cliPatch) matches ILS \(ilsVersionString) perfectly. Fully compatible.",
+            nil
+        )
+    }
 }
 
 // MARK: - GitHub API Models
