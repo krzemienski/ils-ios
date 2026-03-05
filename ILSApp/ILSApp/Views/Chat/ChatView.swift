@@ -794,7 +794,13 @@ struct ChatView: View {
             onVoiceInput: { toggleVoiceInput() },
             isRecording: speechService.isRecording,
             attachments: $pendingAttachments,
-            onAttachmentTap: { sheets.showAttachmentPicker = true }
+            onAttachmentTap: { sheets.showAttachmentPicker = true },
+            session: session,
+            apiClient: appState.apiClient,
+            onSuggestionTap: { suggestion in
+                inputText = suggestion
+                isInputFocused = true
+            }
         )
         #else
         ChatInputBar(

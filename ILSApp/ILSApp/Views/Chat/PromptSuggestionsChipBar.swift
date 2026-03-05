@@ -63,7 +63,7 @@ struct PromptSuggestionsChipBar: View {
                 await viewModel.recordFeedback(
                     action: "click",
                     suggestionType: "prompt",
-                    targetId: suggestion.id.uuidString,
+                    targetId: suggestion.prompt,
                     sessionId: session.id
                 )
                 onSuggestionTap(suggestion.prompt)

@@ -240,16 +240,18 @@ struct PromptSuggestionService {
 
     /// Generate ranked prompt suggestions based on conversation and project context.
     ///
-    /// Scoring formula: `baseScore * (1.0 + 0.5 * keyword_overlap)`
+    /// Scoring formula: `baseScore * (1.0 + 0.5 * keyword_overlap) + clickBoost`
     ///
     /// - Parameters:
     ///   - conversationContext: Recent conversation messages or topics discussed.
     ///   - projectContext: Project-specific info (language, framework, etc.).
+    ///   - clickCounts: Dictionary of prompt text -> click count for relevance boosting.
     ///   - limit: Maximum number of suggestions to return (default 4).
     /// - Returns: Ranked array of `PromptSuggestion` with diverse categories.
     func suggestPrompts(
         conversationContext: String?,
         projectContext: String?,
+        clickCounts: [String: Int] = [:],
         limit: Int = 4
     ) -> [PromptSuggestion] {
         // Combine all context
@@ -272,8 +274,12 @@ struct PromptSuggestionService {
             let matchedKeywords = template.keywords.intersection(contextTokens)
             let keywordScore = matchedKeywords.isEmpty ? 0.0 : Double(matchedKeywords.count) / Double(template.keywords.count)
 
-            // Boost base score by keyword relevance
-            let finalScore = template.baseScore * (1.0 + 0.5 * keywordScore)
+            // Boost score based on user interaction history (capped at 5 clicks = 0.25 boost)
+            let clicks = clickCounts[template.text.lowercased(), default: 0]
+            let clickBoost = Double(min(clicks, 5)) * 0.05
+
+            // Boost base score by keyword relevance and click history
+            let finalScore = template.baseScore * (1.0 + 0.5 * keywordScore) + clickBoost
 
             scored.append((template: template, score: finalScore, matchedKeywords: matchedKeywords))
         }

@@ -208,11 +208,13 @@ struct SuggestionsController: RouteCollection {
         let projectContext = req.query[String.self, at: "projectContext"]
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 4, 1), 10)
 
-        // Generate context-aware prompt suggestions
+        // Generate context-aware prompt suggestions, boosted by click history
         let service = PromptSuggestionService()
+        let promptClickCounts = await suggestionInteractionStore.getPromptCounts()
         let suggestions = service.suggestPrompts(
             conversationContext: context.isEmpty ? nil : context,
             projectContext: projectContext,
+            clickCounts: promptClickCounts,
             limit: limit
         )
 
@@ -233,7 +235,12 @@ struct SuggestionsController: RouteCollection {
 
         switch input.action {
         case "click":
-            await suggestionInteractionStore.recordClick(targetId: input.targetId)
+            if input.suggestionType == "prompt" {
+                // Track prompt clicks by text so rankings persist across fetches (UUIDs change each request)
+                await suggestionInteractionStore.recordPromptClick(promptText: input.targetId)
+            } else {
+                await suggestionInteractionStore.recordClick(targetId: input.targetId)
+            }
         case "dismiss":
             await suggestionInteractionStore.recordDismissal(targetId: input.targetId)
         default:

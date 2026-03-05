@@ -9,6 +9,9 @@ actor SuggestionInteractionStore {
     /// Click counts keyed by suggestion target ID (session ID or skill name).
     var clickCounts: [String: Int] = [:]
 
+    /// Click counts keyed by prompt text (lowercased). Used to rank prompt suggestions.
+    var promptClickCounts: [String: Int] = [:]
+
     /// Set of dismissed suggestion target IDs (session IDs or skill names).
     private var dismissedIds: Set<String> = []
 
@@ -18,10 +21,22 @@ actor SuggestionInteractionStore {
         clickCounts[targetId.lowercased(), default: 0] += 1
     }
 
+    /// Record a click for a prompt suggestion by its text content.
+    /// - Parameter promptText: The prompt text that was clicked.
+    func recordPromptClick(promptText: String) {
+        promptClickCounts[promptText.lowercased(), default: 0] += 1
+    }
+
     /// Retrieve the current click counts snapshot.
     /// - Returns: Dictionary of targetId -> click count
     func getCounts() -> [String: Int] {
         clickCounts
+    }
+
+    /// Retrieve the current prompt click counts snapshot.
+    /// - Returns: Dictionary of prompt text -> click count
+    func getPromptCounts() -> [String: Int] {
+        promptClickCounts
     }
 
     /// Record a dismissal for a given suggestion target.
