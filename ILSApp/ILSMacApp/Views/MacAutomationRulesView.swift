@@ -55,7 +55,7 @@ struct MacAutomationRulesView: View {
         .background(theme.bgPrimary)
         .sheet(isPresented: $showNewRuleSheet) {
             NavigationStack {
-                RuleEditorView(editingRule: editingRule) {
+                MacRuleEditorView(editingRule: editingRule) {
                     Task { await viewModel.loadRules() }
                 }
                 .environment(appState)
