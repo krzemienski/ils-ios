@@ -5,11 +5,12 @@ import ILSShared
 
 /// Notification preferences screen for configuring push alert behaviour.
 ///
-/// Manages three categories of notification settings persisted via `@AppStorage`:
+/// Manages four categories of notification settings persisted via `@AppStorage`:
 ///
 /// - **MCP Server Alerts** — opt in to alerts when a server goes offline or comes back online.
 /// - **Session Alerts** — opt in to an alert when a Claude session completes.
 /// - **Quiet Hours** — define a time window during which all notifications are suppressed.
+/// - **Version Update Checks** — configure automatic background checks for Claude Code CLI updates.
 ///
 /// Quiet-hour start and end times are stored as integer hours and surfaced as `Date`
 /// bindings for use with `DatePicker`. All toggle changes trigger a haptic selection
@@ -30,6 +31,8 @@ import ILSShared
 /// - ``quietHoursEnabled`` - Whether the quiet-hours window is active
 /// - ``quietStartHour`` - Start hour (0–23) for the quiet window
 /// - ``quietEndHour`` - End hour (0–23) for the quiet window
+/// - ``versionCheckEnabled`` - Whether automatic version update checks are enabled
+/// - ``versionCheckInterval`` - Interval for version checks ("daily" or "weekly")
 struct NotificationPreferencesView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(AppState.self) private var appState
@@ -47,6 +50,8 @@ struct NotificationPreferencesView: View {
     @AppStorage("notif_quietStartHour") private var quietStartHour: Int = 22
     @AppStorage("notif_quietEndHour") private var quietEndHour: Int = 7
     @State private var backendManager = BackendManager.shared
+    @AppStorage("versionCheckEnabled") private var versionCheckEnabled = true
+    @AppStorage("versionCheckInterval") private var versionCheckInterval = "daily"
 
     private var quietStart: Binding<Date> {
         Binding(
@@ -210,6 +215,38 @@ struct NotificationPreferencesView: View {
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
+                }
+
+                // Version Update Checks
+                VStack(alignment: .leading, spacing: theme.spacingSM) {
+                    sectionLabel("Version Update Checks")
+
+                    VStack(spacing: theme.spacingSM) {
+                        toggleRow("Check for Updates", isOn: $versionCheckEnabled, accessibilityLabel: "Enable automatic version update checks")
+
+                        if versionCheckEnabled {
+                            Divider().background(theme.bgTertiary)
+                            HStack {
+                                Text("Check Interval")
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textPrimary)
+                                Spacer()
+                                Picker("", selection: $versionCheckInterval) {
+                                    Text("Daily").tag("daily")
+                                    Text("Weekly").tag("weekly")
+                                }
+                                .pickerStyle(.menu)
+                                .tint(theme.accent)
+                                .accessibilityLabel("Version check interval")
+                            }
+                        }
+                    }
+                    .padding(theme.spacingMD)
+                    .modifier(GlassCard())
+
+                    Text("Automatically checks for new Claude Code CLI versions in the background.")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
                 }
 
                 // Info

@@ -180,14 +180,46 @@ class AppState {
 
     /// Check for available Claude Code CLI updates from GitHub.
     /// Runs silently in the background on app launch and periodically.
+    /// Respects user preferences for check frequency (daily/weekly) and enabled state.
     func checkForUpdates() async {
         guard isConnected else { return }
+
+        // Check user preferences for periodic checks
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: "versionCheckEnabled") else {
+            return
+        }
+
+        // Check if enough time has passed since last check
+        if let lastCheck = defaults.object(forKey: "versionCheckLastRun") as? Date {
+            let interval = defaults.string(forKey: "versionCheckInterval") ?? "daily"
+            let now = Date()
+
+            let intervalSeconds: TimeInterval
+            switch interval {
+            case "daily":
+                intervalSeconds = 24 * 60 * 60
+            case "weekly":
+                intervalSeconds = 7 * 24 * 60 * 60
+            default:
+                intervalSeconds = 24 * 60 * 60
+            }
+
+            // Skip check if not enough time has passed
+            if now.timeIntervalSince(lastCheck) < intervalSeconds {
+                return
+            }
+        }
+
         isCheckingUpdates = true
         defer { isCheckingUpdates = false }
 
         do {
             let response: APIResponse<UpdateCheckResponse> = try await apiClient.get("/system/version/check-updates")
             updateCheck = response.data
+
+            // Update last check timestamp on success
+            defaults.set(Date(), forKey: "versionCheckLastRun")
         } catch {
             // Non-fatal: update check failure shouldn't block app launch
             // Silently log the error without showing to user

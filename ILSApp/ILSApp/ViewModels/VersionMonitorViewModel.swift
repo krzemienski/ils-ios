@@ -1,9 +1,13 @@
 import Foundation
 import Observation
 import ILSShared
+import SwiftUI
 
 /// ViewModel for the Version Monitor feature.
 /// Tracks Claude Code CLI version, checks for updates, and monitors compatibility.
+///
+/// Supports periodic background checks for updates with configurable intervals (daily/weekly).
+/// Check settings are stored in UserDefaults and can be configured via NotificationPreferencesView.
 @MainActor
 @Observable
 class VersionMonitorViewModel: BaseViewModel {
@@ -136,5 +140,57 @@ class VersionMonitorViewModel: BaseViewModel {
     /// Whether any version data is currently loading.
     var isLoadingAny: Bool {
         isLoadingVersion || isLoadingHistory || isCheckingUpdates || isCheckingCompatibility
+    }
+
+    // MARK: - Periodic Background Checks
+
+    /// Check if a periodic update check should run based on user preferences.
+    /// - Returns: True if enough time has passed since the last check based on the configured interval.
+    func shouldRunPeriodicCheck() -> Bool {
+        let defaults = UserDefaults.standard
+
+        // Check if periodic checks are enabled
+        guard defaults.bool(forKey: "versionCheckEnabled") else {
+            return false
+        }
+
+        // Get last check timestamp
+        guard let lastCheck = defaults.object(forKey: "versionCheckLastRun") as? Date else {
+            // Never checked before, so we should check now
+            return true
+        }
+
+        let interval = defaults.string(forKey: "versionCheckInterval") ?? "daily"
+        let now = Date()
+
+        switch interval {
+        case "daily":
+            // Check if 24 hours have passed
+            let dayInSeconds: TimeInterval = 24 * 60 * 60
+            return now.timeIntervalSince(lastCheck) >= dayInSeconds
+        case "weekly":
+            // Check if 7 days have passed
+            let weekInSeconds: TimeInterval = 7 * 24 * 60 * 60
+            return now.timeIntervalSince(lastCheck) >= weekInSeconds
+        default:
+            return false
+        }
+    }
+
+    /// Perform a periodic background check for updates if the configured interval has elapsed.
+    /// Updates the last check timestamp and loads current version data.
+    func performPeriodicCheckIfNeeded() async {
+        guard shouldRunPeriodicCheck() else {
+            return
+        }
+
+        // Update last check timestamp
+        UserDefaults.standard.set(Date(), forKey: "versionCheckLastRun")
+
+        // Perform the update check
+        await checkForUpdates()
+
+        // Also refresh current version to ensure we have latest data
+        await loadCurrentVersion()
     }
 }
