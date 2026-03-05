@@ -150,8 +150,12 @@ func configure(_ app: Application) async throws {
     app.logger.info("ILS Backend starting on http://0.0.0.0:\(port)")
 
     // Bonjour/mDNS auto-discovery — publish _ils._tcp so iOS clients can find the backend
-    let bonjour = BonjourPublisherService()
-    await bonjour.start(port: port)
+    // BonjourPublisherService is @MainActor so NetService runs on the main RunLoop.
+    let bonjour = await MainActor.run {
+        let service = BonjourPublisherService()
+        service.start(port: port)
+        return service
+    }
     app.storage[BonjourPublisherKey.self] = bonjour
 }
 

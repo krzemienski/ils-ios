@@ -1,15 +1,18 @@
 import Foundation
 
-/// Actor managing Bonjour/mDNS service publishing for backend auto-discovery.
+/// Manages Bonjour/mDNS service publishing for backend auto-discovery.
 ///
 /// Publishes an `_ils._tcp` service on the local network so iOS clients
 /// can discover the backend without manual IP configuration.
-actor BonjourPublisherService: NSObject {
+///
+/// Uses `@MainActor` to ensure `NetService` runs on the main RunLoop,
+/// which is required for Bonjour registration to function correctly.
+@MainActor
+final class BonjourPublisherService: NSObject {
     // MARK: - State
 
     private var netService: NetService?
     private var isPublishing: Bool = false
-    private var publishedPort: Int?
 
     // MARK: - Constants
 
@@ -36,20 +39,20 @@ actor BonjourPublisherService: NSObject {
         let txtData = Self.buildTXTRecord(hostname: hostname, port: port, version: Self.version)
         service.setTXTRecord(txtData)
 
+        service.schedule(in: .main, forMode: .common)
         service.delegate = self
         service.publish()
 
         self.netService = service
         self.isPublishing = true
-        self.publishedPort = port
     }
 
     /// Stop publishing the Bonjour service.
     func stop() {
         netService?.stop()
+        netService?.remove(from: .main, forMode: .common)
         netService = nil
         isPublishing = false
-        publishedPort = nil
     }
 
     /// Whether the service is currently published.
@@ -84,10 +87,6 @@ extension BonjourPublisherService: NetServiceDelegate {
     }
 
     nonisolated func netServiceDidStop(_ sender: NetService) {
-        Task { await self.handleStop() }
-    }
-
-    private func handleStop() {
-        isPublishing = false
+        Task { @MainActor in self.isPublishing = false }
     }
 }
