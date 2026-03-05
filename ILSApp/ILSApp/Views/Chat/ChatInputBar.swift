@@ -257,33 +257,7 @@ struct ChatInputBar: View {
     }
 
     private var textField: some View {
-        TextField("Message Claude...", text: $text, axis: .vertical)
-            .textFieldStyle(.plain)
-            .lineLimit(1...5)
-            .disabled(isDisabled)
-            .focused($isInputFocused)
-            #if os(iOS)
-            .onPaste(of: [.plainText]) { providers in
-                guard let provider = providers.first else { return false }
-                Task {
-                    do {
-                        if let pastedText = try await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) as? String {
-                            let result = ContentDetector.detect(pastedText)
-                            await MainActor.run {
-                                if result.type != .plainText && result.confidence > 0.5 {
-                                    self.pastedText = pastedText
-                                    self.detectedContent = result
-                                    self.showPastePreview = true
-                                } else {
-                                    self.text += pastedText
-                                }
-                            }
-                        }
-                    } catch {}
-                }
-                return true
-            }
-            #endif
+        textFieldBase
             .padding(.horizontal, inputPaddingH)
             .padding(.vertical, inputPaddingV)
             .background(
@@ -294,6 +268,14 @@ struct ChatInputBar: View {
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
             .imagePasteHandler(attachments: attachments)
+    }
+
+    private var textFieldBase: some View {
+        TextField("Message Claude...", text: $text, axis: .vertical)
+            .textFieldStyle(.plain)
+            .lineLimit(1...5)
+            .disabled(isDisabled)
+            .focused($isInputFocused)
     }
 
     private var cancelButton: some View {
