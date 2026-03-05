@@ -25,6 +25,7 @@ actor WebSocketCancellation {
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
     let processMonitorService = ProcessMonitorService()
+    let resourceLimitService = ResourceLimitService()
 
     func boot(routes: RoutesBuilder) throws {
         let system = routes.grouped("system")
@@ -42,6 +43,7 @@ struct SystemController: RouteCollection {
         system.get("version", "history", use: self.versionHistory)
         system.get("version", "check-updates", use: self.checkUpdates)
         system.get("version", "compatibility", use: self.checkCompatibility)
+        system.get("limits", use: self.limits)
     }
 
     // MARK: - REST Endpoints
@@ -237,6 +239,13 @@ struct SystemController: RouteCollection {
         )
     }
 
+    /// GET /system/limits — retrieves current resource limits for all sessions.
+    @Sendable
+    func limits(req: Request) async throws -> APIResponse<[String: ResourceLimitsResponse]> {
+        let allLimits = await resourceLimitService.getAllLimits()
+        return APIResponse(success: true, data: allLimits)
+    }
+
     // MARK: - WebSocket
 
     /// WS /system/metrics/live — streams metrics JSON at a configurable interval.
@@ -427,6 +436,7 @@ extension UpdateCheckResponse: Content {}
 extension CompatibilityCheckResponse: Content {}
 extension ProcessHistoryResponse: Content {}
 extension ProcessMonitorInfo: Content {}
+extension ResourceLimitsResponse: Content {}
 
 // MARK: - Response DTOs
 
