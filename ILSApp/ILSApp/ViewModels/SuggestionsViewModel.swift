@@ -2,11 +2,11 @@ import Foundation
 import Observation
 import ILSShared
 
-/// View model for AI-powered session and skill suggestions.
+/// View model for AI-powered session, skill, and prompt suggestions.
 ///
-/// Fetches contextually relevant past sessions and skills from the backend
-/// suggestion engine. Supports independent loading states for sessions and
-/// skills so each can be displayed as soon as available.
+/// Fetches contextually relevant past sessions, skills, and prompts from the backend
+/// suggestion engine. Supports independent loading states for sessions, skills, and
+/// prompts so each can be displayed as soon as available.
 ///
 /// ## Usage
 /// ```swift
@@ -14,6 +14,7 @@ import ILSShared
 /// vm.configure(client: apiClient)
 /// await vm.loadSessionSuggestions(context: "debugging crash", projectName: "MyApp")
 /// await vm.loadSkillSuggestions(projectName: "MyApp", context: "iOS")
+/// await vm.loadPromptSuggestions(context: "implementing login", projectContext: "Swift")
 /// ```
 @Observable
 @MainActor
@@ -24,12 +25,16 @@ class SuggestionsViewModel {
     var skillSuggestions: [SkillSuggestion] = []
     /// Abandoned sessions suggested for resumption.
     var abandonedSessions: [AbandonedSessionSuggestion] = []
+    /// Suggested prompts relevant to the current session context.
+    var promptSuggestions: [PromptSuggestion] = []
     /// Whether session suggestions are currently loading.
     var isLoadingSessions = false
     /// Whether skill suggestions are currently loading.
     var isLoadingSkills = false
     /// Whether abandoned sessions are currently loading.
     var isLoadingAbandoned = false
+    /// Whether prompt suggestions are currently loading.
+    var isLoadingPrompts = false
     /// Current error, if any.
     var error: Error?
 
@@ -163,6 +168,45 @@ class SuggestionsViewModel {
         }
     }
 
+    // MARK: - Load Prompt Suggestions
+
+    /// Fetch prompt suggestions from the backend based on session context.
+    /// - Parameters:
+    ///   - sessionId: Optional session ID for context-specific suggestions.
+    ///   - context: Free-text conversation context used for scoring.
+    ///   - projectContext: Optional project context (e.g. language, framework).
+    ///   - limit: Maximum number of suggestions to return (default 4).
+    func loadPromptSuggestions(sessionId: UUID? = nil, context: String, projectContext: String? = nil, limit: Int = 4) async {
+        guard let client else { return }
+        isLoadingPrompts = true
+        error = nil
+
+        var components = URLComponents()
+        components.queryItems = [
+            URLQueryItem(name: "context", value: context),
+            URLQueryItem(name: "limit", value: String(limit))
+        ]
+        if let sessionId {
+            components.queryItems?.append(URLQueryItem(name: "sessionId", value: sessionId.uuidString))
+        }
+        if let projectContext {
+            components.queryItems?.append(URLQueryItem(name: "projectContext", value: projectContext))
+        }
+        let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
+
+        do {
+            let response: APIResponse<ListResponse<PromptSuggestion>> = try await client.get("/suggestions/prompts\(query)")
+            if let data = response.data {
+                promptSuggestions = data.items
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error("Failed to load prompt suggestions: \(error.localizedDescription)", category: "suggestions")
+        }
+
+        isLoadingPrompts = false
+    }
+
     // MARK: - Feedback
 
     /// Record user interaction with a suggestion for future ranking improvement.
@@ -221,6 +265,6 @@ class SuggestionsViewModel {
 
     /// Whether any loading is in progress.
     var isLoading: Bool {
-        isLoadingSessions || isLoadingSkills || isLoadingAbandoned
+        isLoadingSessions || isLoadingSkills || isLoadingAbandoned || isLoadingPrompts
     }
 }
