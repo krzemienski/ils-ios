@@ -18,6 +18,7 @@ struct ILSMacApp: App {
     @State private var appState = AppState()
     @State private var themeManager = ThemeManager()
     @State private var layoutStore = DashboardLayoutStore()
+    @State private var densityManager = DensityManager.shared
     @State private var windowManager = WindowManager.shared
     @State private var notificationManager = NotificationManager.shared
     @State private var backendManager = BackendLifecycleManager.shared
@@ -39,6 +40,7 @@ struct ILSMacApp: App {
                 .environment(appState)
                 .environment(themeManager)
                 .environment(layoutStore)
+                .environment(densityManager)
                 .environment(windowManager)
                 .environment(notificationManager)
                 .environment(\.theme, themeManager.currentSnapshot)
@@ -73,6 +75,7 @@ struct ILSMacApp: App {
                 SessionWindowView(sessionId: sessionId)
                     .environment(appState)
                     .environment(themeManager)
+                    .environment(densityManager)
                     .environment(windowManager)
                     .environment(notificationManager)
                     .environment(\.theme, themeManager.currentSnapshot)
