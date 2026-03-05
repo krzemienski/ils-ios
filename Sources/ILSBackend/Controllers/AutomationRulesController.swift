@@ -7,16 +7,18 @@ import ILSShared
 /// Routes:
 /// - `GET /automation-rules`: List all automation rules with optional filters
 /// - `POST /automation-rules`: Create a new automation rule
+/// - `GET /automation-rules/executions`: Get rule execution history with optional filters
+/// - `GET /automation-rules/templates`: Get pre-built rule templates
 /// - `GET /automation-rules/:id`: Get a specific automation rule
 /// - `PUT /automation-rules/:id`: Update an automation rule
 /// - `DELETE /automation-rules/:id`: Delete an automation rule
-/// - `GET /automation-rules/templates`: Get pre-built rule templates
 struct AutomationRulesController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let rules = routes.grouped("automation-rules")
 
         rules.get(use: list)
         rules.post(use: create)
+        rules.get("executions", use: listExecutions)
         rules.get("templates", use: templates)
         rules.get(":id", use: get)
         rules.put(":id", use: update)
@@ -58,6 +60,45 @@ struct AutomationRulesController: RouteCollection {
             data: ListAutomationRulesResponse(
                 rules: rules,
                 totalCount: rules.count
+            )
+        )
+    }
+
+    /// List rule execution history with optional filters.
+    ///
+    /// Query parameters:
+    /// - `ruleId`: Filter to executions for a specific rule
+    /// - `sessionId`: Filter to executions for a specific session
+    /// - `status`: Filter to executions with a specific status (success/failed/skipped)
+    @Sendable
+    func listExecutions(req: Request) async throws -> APIResponse<RuleExecutionHistoryResponse> {
+        let ruleId = req.query[UUID.self, at: "ruleId"]
+        let sessionId = req.query[UUID.self, at: "sessionId"]
+        let status = req.query[String.self, at: "status"]
+
+        var query = RuleExecutionLogModel.query(on: req.db)
+            .sort(\.$executedAt, .descending)
+
+        if let ruleId = ruleId {
+            query = query.filter(\.$ruleId == ruleId)
+        }
+
+        if let sessionId = sessionId {
+            query = query.filter(\.$sessionId == sessionId)
+        }
+
+        if let status = status {
+            query = query.filter(\.$status == status)
+        }
+
+        let models = try await query.all()
+        let executions = try models.map { try $0.toShared() }
+
+        return APIResponse(
+            success: true,
+            data: RuleExecutionHistoryResponse(
+                executions: executions,
+                totalCount: executions.count
             )
         )
     }
