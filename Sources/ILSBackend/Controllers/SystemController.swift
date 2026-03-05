@@ -22,6 +22,8 @@ actor WebSocketCancellation {
 /// - `GET /system/version/current` — current Claude Code CLI version
 /// - `GET /system/version/history` — version history records
 /// - `GET /system/version/check-updates` — check GitHub for latest CLI release
+/// - `GET /system/limits` — get resource limits for all sessions
+/// - `PUT /system/limits/:sessionId` — configure CPU/memory limits per session
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
     let processMonitorService = ProcessMonitorService()
@@ -44,6 +46,7 @@ struct SystemController: RouteCollection {
         system.get("version", "check-updates", use: self.checkUpdates)
         system.get("version", "compatibility", use: self.checkCompatibility)
         system.get("limits", use: self.limits)
+        system.put("limits", ":sessionId", use: self.updateLimits)
     }
 
     // MARK: - REST Endpoints
@@ -246,6 +249,19 @@ struct SystemController: RouteCollection {
         return APIResponse(success: true, data: allLimits)
     }
 
+    /// PUT /system/limits/:sessionId — configures CPU/memory limits for a session.
+    @Sendable
+    func updateLimits(req: Request) async throws -> APIResponse<ResourceLimitsResponse> {
+        guard let sessionId = req.parameters.get("sessionId") else {
+            throw Abort(.badRequest, reason: "Missing sessionId parameter")
+        }
+
+        let input = try req.content.decode(UpdateResourceLimitsRequest.self)
+        let updatedLimits = await resourceLimitService.updateLimits(sessionId: sessionId, request: input)
+
+        return APIResponse(success: true, data: updatedLimits)
+    }
+
     // MARK: - WebSocket
 
     /// WS /system/metrics/live — streams metrics JSON at a configurable interval.
@@ -437,6 +453,7 @@ extension CompatibilityCheckResponse: Content {}
 extension ProcessHistoryResponse: Content {}
 extension ProcessMonitorInfo: Content {}
 extension ResourceLimitsResponse: Content {}
+extension UpdateResourceLimitsRequest: Content {}
 
 // MARK: - Response DTOs
 
