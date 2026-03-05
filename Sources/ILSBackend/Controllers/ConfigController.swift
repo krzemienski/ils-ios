@@ -15,6 +15,7 @@ struct ConfigController: RouteCollection {
         config.get("effective", use: effective)
         config.put(use: update)
         config.post("validate", use: validate)
+        config.post("validate-api-key", use: validateAPIKey)
     }
 
     /// GET /config/effective - Get merged effective configuration with scope annotations
@@ -103,5 +104,44 @@ struct ConfigController: RouteCollection {
         )
     }
 
+    /// POST /config/validate-api-key - Validate an Anthropic API key
+    @Sendable
+    func validateAPIKey(req: Request) async throws -> APIResponse<APIKeyValidationResult> {
+        let input = try req.content.decode(ValidateAPIKeyRequest.self)
+
+        let url = URI(string: "https://api.anthropic.com/v1/models")
+        let response = try await req.client.get(url) { clientReq in
+            clientReq.headers.add(name: "x-api-key", value: input.apiKey)
+            clientReq.headers.add(name: "anthropic-version", value: "2023-06-01")
+        }
+
+        let isValid = response.status == .ok
+        var errorMessage: String? = nil
+
+        if !isValid {
+            if response.status == .unauthorized || response.status == .forbidden {
+                errorMessage = "Invalid API key"
+            } else {
+                errorMessage = "Unexpected response from Anthropic API: \(response.status.code)"
+            }
+        }
+
+        return APIResponse(
+            success: true,
+            data: APIKeyValidationResult(isValid: isValid, error: errorMessage)
+        )
+    }
+
+}
+
+// MARK: - Request/Response Types
+
+struct ValidateAPIKeyRequest: Content {
+    let apiKey: String
+}
+
+struct APIKeyValidationResult: Content {
+    let isValid: Bool
+    let error: String?
 }
 
