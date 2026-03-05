@@ -87,6 +87,8 @@ struct ChatInputBar: View {
     /// When true, the documentation sheet is presented pre-filtered for slash commands.
     @State private var showDocumentation = false
     @FocusState private var isInputFocused: Bool
+    /// User preference for showing prompt suggestion chips.
+    @AppStorage("showPromptSuggestions") private var showPromptSuggestions = true
 
     /// Dynamic horizontal padding for the text field, scales with text size preference.
     @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
@@ -127,7 +129,10 @@ struct ChatInputBar: View {
             }
 
             // Prompt suggestion chips — shown when session and API client are available.
-            if let session = session, let apiClient = apiClient, let onSuggestionTap = onSuggestionTap {
+            if showPromptSuggestions,
+               let session = session,
+               let apiClient = apiClient,
+               let onSuggestionTap = onSuggestionTap {
                 PromptSuggestionsChipBar(
                     session: session,
                     apiClient: apiClient,
