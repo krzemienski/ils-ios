@@ -150,10 +150,13 @@ public struct ThemeConfig: Codable, Hashable, Sendable {
     public var colorScheme: String?
     /// Accent color override (hex string)
     public var accentColor: String?
+    /// Information density preference: "compact", "normal", or "spacious"
+    public var informationDensity: String?
 
-    public init(colorScheme: String? = nil, accentColor: String? = nil) {
+    public init(colorScheme: String? = nil, accentColor: String? = nil, informationDensity: String? = nil) {
         self.colorScheme = colorScheme
         self.accentColor = accentColor
+        self.informationDensity = informationDensity
     }
 }
 
