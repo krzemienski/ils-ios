@@ -97,6 +97,8 @@ struct ChatInputBar: View {
     @State private var detectedContent: ContentDetector.DetectionResult?
     /// Controls visibility of the paste preview sheet.
     @State private var showPastePreview = false
+    /// Temporarily stores pasted text while showing preview.
+    @State private var pastedText: String = ""
 
     /// Dynamic horizontal padding for the text field, scales with text size preference.
     @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
@@ -178,6 +180,21 @@ struct ChatInputBar: View {
                 DocumentationView(contextHint: "commands")
             }
         }
+        .sheet(isPresented: $showPastePreview) {
+            if let detectedContent = detectedContent {
+                PastePreviewSheet(
+                    isPresented: $showPastePreview,
+                    detectedContent: detectedContent,
+                    originalText: pastedText,
+                    onInsertFormatted: { formattedText in
+                        text += formattedText
+                    },
+                    onInsertPlain: { plainText in
+                        text += plainText
+                    }
+                )
+            }
+        }
     }
 
     private var commandPaletteButton: some View {
@@ -246,6 +263,38 @@ struct ChatInputBar: View {
             .lineLimit(1...5)
             .disabled(isDisabled)
             .focused($isInputFocused)
+            .onPaste(of: [.plainText]) { providers in
+                // Extract text from the first provider
+                guard let provider = providers.first else { return false }
+
+                // Load the text content asynchronously
+                Task {
+                    do {
+                        if let pastedText = try await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) as? String {
+                            // Detect content type
+                            let result = ContentDetector.detect(pastedText)
+
+                            await MainActor.run {
+                                // Only show preview for non-plain-text content with reasonable confidence
+                                if result.type != .plainText && result.confidence > 0.5 {
+                                    // Store text and detection result, then show preview
+                                    self.pastedText = pastedText
+                                    self.detectedContent = result
+                                    self.showPastePreview = true
+                                } else {
+                                    // For plain text or low confidence, directly insert into text field
+                                    self.text += pastedText
+                                }
+                            }
+                        }
+                    } catch {
+                        // On error, do nothing (paste failed)
+                    }
+                }
+
+                // Return true to prevent default paste (we'll handle insertion manually)
+                return true
+            }
             .padding(.horizontal, inputPaddingH)
             .padding(.vertical, inputPaddingV)
             .background(
@@ -256,28 +305,6 @@ struct ChatInputBar: View {
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
             .imagePasteHandler(attachments: attachments)
-            .onPaste(of: [.plainText]) { providers in
-                guard let provider = providers.first else { return false }
-
-                Task {
-                    do {
-                        if let text = try await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) as? String {
-                            let result = ContentDetector.detect(text)
-
-                            if result.type != .plainText && result.confidence > 0.5 {
-                                await MainActor.run {
-                                    detectedContent = result
-                                    showPastePreview = true
-                                }
-                            }
-                        }
-                    } catch {
-                        // On error, allow default paste behavior
-                    }
-                }
-
-                return false
-            }
     }
 
     private var cancelButton: some View {

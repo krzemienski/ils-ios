@@ -1,0 +1,29 @@
+{
+  "task": "worktree-merge-consolidation",
+  "started": "2026-03-05T03:40:00Z",
+  "phase": "phase-1-analysis",
+  "worktrees": {
+    "auto-claude/187-session-comparison-cross-session-analysis": { "status": "analyzing", "category": "stale-candidate" },
+    "qa-temp-222": { "status": "analyzing", "category": "stale-candidate" },
+    "auto-claude/229-session-checkpoint-crash-recovery": { "status": "analyzing", "category": "stale-candidate" },
+    "auto-claude/231-background-agent-queue-batch-task-management": { "status": "analyzing", "category": "stale-candidate" },
+    "auto-claude/235-cross-session-full-text-message-search": { "status": "analyzing", "category": "stale-candidate" },
+    "auto-claude/237-context-compaction-alert-session-preservation": { "status": "analyzing", "category": "stale-candidate" },
+    "auto-claude/236-backend-process-monitor-resource-manager": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/239-adaptive-information-density-mode": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/240-smart-paste-code-detection-in-chat": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/241-claude-code-cli-version-monitor-update-tracker": { "status": "analyzing", "category": "clean-has-work" },
+    "auto-claude/244-backend-auto-discovery-via-bonjour-mdns": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/245-in-app-api-key-backend-configuration-wizard": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/246-workflow-automation-builder": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/247-claude-code-configuration-profiles": { "status": "analyzing", "category": "noisy-has-work" },
+    "auto-claude/248-session-automation-rules-event-driven-triggers": { "status": "analyzing", "category": "clean-has-work" },
+    "auto-claude/249-unbounded-cache-eviction-memory-management": { "status": "analyzing", "category": "clean-has-work" },
+    "auto-claude/250-contextual-ai-prompt-suggestions": { "status": "analyzing", "category": "clean-has-work" },
+    "auto-claude/252-connection-qr-code-pairing": { "status": "analyzing", "category": "noisy-has-work" }
+  },
+  "stale_branches": ["audit-fixes", "auto-claude/222-mobile-permission-approval-tool-authorization"],
+  "gate_log": [],
+  "merge_log": [],
+  "remediation_log": []
+}
