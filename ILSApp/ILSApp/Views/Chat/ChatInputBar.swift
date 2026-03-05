@@ -73,6 +73,13 @@ struct ChatInputBar: View {
     var attachments: Binding<[MessageAttachment]> = .constant([])
     /// Called when the user taps the paperclip button to open the attachment picker.
     var onAttachmentTap: (() -> Void)? = nil
+    /// The current chat session used to provide context for prompt suggestions.
+    /// When non-nil, suggestion chips may appear above the input row.
+    var session: ChatSession? = nil
+    /// API client for fetching prompt suggestions from the backend.
+    var apiClient: APIClient? = nil
+    /// Called when the user taps a suggestion chip to populate the input field.
+    var onSuggestionTap: ((String) -> Void)? = nil
     /// Drives the spring scale animation on the send button when tapped.
     @State private var sendButtonPressed = false
     /// Debounce task that resets ``sendButtonPressed`` after the animation completes.
@@ -117,6 +124,16 @@ struct ChatInputBar: View {
             if !attachments.wrappedValue.isEmpty {
                 AttachmentPreviewStrip(attachments: attachments)
                     .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            // Prompt suggestion chips — shown when session and API client are available.
+            if let session = session, let apiClient = apiClient, let onSuggestionTap = onSuggestionTap {
+                PromptSuggestionsChipBar(
+                    session: session,
+                    apiClient: apiClient,
+                    onSuggestionTap: onSuggestionTap
+                )
+                .padding(.top, theme.spacingXS)
             }
 
             HStack(spacing: theme.spacingSM) {

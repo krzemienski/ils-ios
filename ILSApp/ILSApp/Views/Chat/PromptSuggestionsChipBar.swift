@@ -90,7 +90,6 @@ struct PromptSuggestionsChipBar: View {
 
     /// Fetch prompt suggestions from the backend based on the current session context.
     private func loadPromptSuggestions() async {
-        guard let client = viewModel.client else { return }
         isLoading = true
 
         // Build context from last messages or session name
@@ -108,7 +107,7 @@ struct PromptSuggestionsChipBar: View {
         let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
 
         do {
-            let response: APIResponse<ListResponse<PromptSuggestion>> = try await client.get("/suggestions/prompts\(query)")
+            let response: APIResponse<ListResponse<PromptSuggestion>> = try await apiClient.get("/suggestions/prompts\(query)")
             if let data = response.data {
                 promptSuggestions = data.items
             }
