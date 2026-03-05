@@ -287,8 +287,16 @@ final class ICloudSyncManager {
             syncStatus = .idle
             AppLogger.shared.info("iCloud KV store initial sync completed", category: "icloud")
         } else {
-            syncStatus = .error
-            AppLogger.shared.warning("iCloud KV store initial sync failed", category: "icloud")
+            // If iCloud is unavailable (no account signed in, simulator, etc.)
+            // treat as disabled rather than showing a scary error to the user.
+            if FileManager.default.ubiquityIdentityToken == nil {
+                syncStatus = .disabled
+                isSyncEnabled = false
+                AppLogger.shared.info("iCloud unavailable — sync auto-disabled", category: "icloud")
+            } else {
+                syncStatus = .error
+                AppLogger.shared.warning("iCloud KV store initial sync failed", category: "icloud")
+            }
         }
     }
 
