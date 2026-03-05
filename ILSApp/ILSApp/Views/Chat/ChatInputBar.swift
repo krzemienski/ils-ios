@@ -1,6 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import ILSShared
+import UniformTypeIdentifiers
 
 /// Multi-control input bar for composing and sending messages to Claude.
 ///
@@ -92,6 +93,10 @@ struct ChatInputBar: View {
     @FocusState private var isInputFocused: Bool
     /// User preference for showing prompt suggestion chips.
     @AppStorage("showPromptSuggestions") private var showPromptSuggestions = true
+    /// Stores the result of paste content detection.
+    @State private var detectedContent: ContentDetector.DetectionResult?
+    /// Controls visibility of the paste preview sheet.
+    @State private var showPastePreview = false
 
     /// Dynamic horizontal padding for the text field, scales with text size preference.
     @ScaledMetric(relativeTo: .body) private var inputPaddingH: CGFloat = 12
@@ -251,6 +256,28 @@ struct ChatInputBar: View {
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
             .imagePasteHandler(attachments: attachments)
+            .onPaste(of: [.plainText]) { providers in
+                guard let provider = providers.first else { return false }
+
+                Task {
+                    do {
+                        if let text = try await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) as? String {
+                            let result = ContentDetector.detect(text)
+
+                            if result.type != .plainText && result.confidence > 0.5 {
+                                await MainActor.run {
+                                    detectedContent = result
+                                    showPastePreview = true
+                                }
+                            }
+                        }
+                    } catch {
+                        // On error, allow default paste behavior
+                    }
+                }
+
+                return false
+            }
     }
 
     private var cancelButton: some View {
