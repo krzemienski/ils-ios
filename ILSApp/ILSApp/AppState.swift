@@ -71,6 +71,16 @@ class AppState {
     /// Whether iCloud sync is enabled on this device.
     var isSyncEnabled: Bool { iCloudSyncManager.isSyncEnabled }
 
+    // MARK: - Version Monitoring
+
+    var updateCheck: UpdateCheckResponse?
+    var isCheckingUpdates = false
+
+    /// Whether an update is available for the Claude Code CLI.
+    var hasUpdateAvailable: Bool {
+        updateCheck?.updateAvailable ?? false
+    }
+
     init() {
         let cm = ConnectionManager()
         self.connectionManager = cm
@@ -166,6 +176,22 @@ class AppState {
 
     func checkConnection() {
         pollingManager.checkConnection()
+    }
+
+    /// Check for available Claude Code CLI updates from GitHub.
+    /// Runs silently in the background on app launch and periodically.
+    func checkForUpdates() async {
+        guard isConnected else { return }
+        isCheckingUpdates = true
+        defer { isCheckingUpdates = false }
+
+        do {
+            let response: APIResponse<UpdateCheckResponse> = try await apiClient.get("/system/version/check-updates")
+            updateCheck = response.data
+        } catch {
+            // Non-fatal: update check failure shouldn't block app launch
+            // Silently log the error without showing to user
+        }
     }
 
     func handleScenePhase(_ phase: ScenePhase) {

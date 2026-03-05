@@ -78,6 +78,10 @@ struct ILSAppApp: App {
                             showLaunchScreen = false
                         }
                         ICloudSyncManager.shared.syncPreferencesToCloud()
+                        // Check for Claude Code CLI updates in background
+                        Task.detached(priority: .background) {
+                            await appState.checkForUpdates()
+                        }
                         Task.detached(priority: .background) {
                             try? Tips.configure([
                                 .displayFrequency(.daily),
