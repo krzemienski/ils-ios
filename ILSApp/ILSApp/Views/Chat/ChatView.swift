@@ -1116,18 +1116,70 @@ struct ChatView: View {
     }
 
     /// Extract conversation context from recent messages for better suggestion relevance.
-    /// - Returns: A string summarizing the recent conversation topic
+    ///
+    /// Analyzes the last 2-3 messages to detect patterns like code blocks, error messages,
+    /// and test-related keywords. These signals help the backend generate more contextually
+    /// relevant prompt suggestions.
+    ///
+    /// - Returns: A string summarizing the recent conversation topic with detected patterns
     private func extractConversationContext() -> String {
         // Get the last 2-3 messages to understand context
         let recentMessages = viewModel.messages.suffix(3)
         var contextParts: [String] = []
+        var detectedPatterns: [String] = []
 
         for message in recentMessages {
-            let preview = message.text.prefix(100)
+            // Extract text preview (increased from 100 to 200 chars for better context)
+            let preview = message.text.prefix(200)
             contextParts.append(String(preview))
+
+            // Detect code blocks (markdown fences or inline code)
+            if message.text.contains("```") || message.text.contains("`") {
+                detectedPatterns.append("code")
+            }
+
+            // Detect error patterns in message text
+            let lowercasedText = message.text.lowercased()
+            let errorKeywords = ["error:", "failed", "exception", "crash", "bug", "issue", "problem", "broken"]
+            if errorKeywords.contains(where: { lowercasedText.contains($0) }) {
+                detectedPatterns.append("error")
+            }
+
+            // Detect test-related keywords
+            let testKeywords = ["test", "spec", "assert", "expect", "mock", "fixture", "coverage"]
+            if testKeywords.contains(where: { lowercasedText.contains($0) }) {
+                detectedPatterns.append("testing")
+            }
+
+            // Detect performance-related keywords
+            let perfKeywords = ["performance", "slow", "optimize", "speed", "latency", "memory"]
+            if perfKeywords.contains(where: { lowercasedText.contains($0) }) {
+                detectedPatterns.append("performance")
+            }
+
+            // Detect security-related keywords
+            let securityKeywords = ["security", "vulnerability", "authentication", "authorization", "encryption"]
+            if securityKeywords.contains(where: { lowercasedText.contains($0) }) {
+                detectedPatterns.append("security")
+            }
+
+            // Check for tool errors (failed tool executions)
+            if message.toolResults.contains(where: { $0.isError }) {
+                detectedPatterns.append("tool_error")
+            }
+
+            // Check for tool calls (indicates debugging/implementation work)
+            if !message.toolCalls.isEmpty {
+                detectedPatterns.append("implementation")
+            }
         }
 
-        return contextParts.joined(separator: " ")
+        // Build context string with detected patterns as keywords
+        let uniquePatterns = Array(Set(detectedPatterns))
+        let patternString = uniquePatterns.isEmpty ? "" : " [patterns: \(uniquePatterns.joined(separator: ", "))]"
+        let contextString = contextParts.joined(separator: " ")
+
+        return contextString + patternString
     }
 }
 
