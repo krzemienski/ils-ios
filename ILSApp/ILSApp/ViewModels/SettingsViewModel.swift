@@ -227,6 +227,20 @@ class SettingsViewModel: BaseViewModel {
         }
     }
 
+    func saveInformationDensity(_ density: InformationDensity) async -> String? {
+        return await saveWithPatch { config in
+            if config.theme == nil {
+                config.theme = ThemeConfig(
+                    colorScheme: nil,
+                    accentColor: nil,
+                    informationDensity: density.rawValue
+                )
+            } else {
+                config.theme?.informationDensity = density.rawValue
+            }
+        }
+    }
+
     // MARK: - Data Deletion
 
     var isDeleting = false
@@ -271,6 +285,13 @@ class SettingsViewModel: BaseViewModel {
     func updateToggle(key: String, value: Bool) {
         Task {
             _ = await saveConfigToggle(key: key, value: value)
+        }
+    }
+
+    /// Updates the information density from a Binding setter without requiring Task/await.
+    func updateInformationDensity(_ density: InformationDensity) {
+        Task {
+            _ = await saveInformationDensity(density)
         }
     }
 }
