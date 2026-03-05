@@ -35,6 +35,14 @@ struct PermissionInboxView: View {
 
     private var service: PermissionService { appState.permissionService }
 
+    private var batchBarPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .bottomBar
+        #else
+        .automatic
+        #endif
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             segmentedPicker
@@ -251,7 +259,7 @@ struct PermissionInboxView: View {
 
         // Batch action bar at the bottom when items are selected
         if isSelecting && !selectedIds.isEmpty {
-            ToolbarItem(placement: .bottomBar) {
+            ToolbarItem(placement: batchBarPlacement) {
                 BatchPermissionView(
                     selectedCount: selectedIds.count,
                     onAllowAll: { Task { await batchDecide("allow") } },

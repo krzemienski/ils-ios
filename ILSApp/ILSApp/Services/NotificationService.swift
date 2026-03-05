@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 import Observation
 import UserNotifications
 import ILSShared
@@ -55,7 +57,9 @@ class NotificationService: NSObject {
         messagePreview: String
     ) async {
         // Only post notification if app is not active in the foreground
+        #if os(iOS)
         guard UIApplication.shared.applicationState != .active else { return }
+        #endif
 
         // Only post if authorized
         guard isAuthorized else { return }
@@ -100,7 +104,9 @@ class NotificationService: NSObject {
         sessionName: String
     ) async {
         // Only post notification if app is not active in the foreground
+        #if os(iOS)
         guard UIApplication.shared.applicationState != .active else { return }
+        #endif
 
         // Only post if authorized
         guard isAuthorized else { return }
@@ -147,7 +153,9 @@ class NotificationService: NSObject {
         errorMessage: String
     ) async {
         // Only post notification if app is not active in the foreground
+        #if os(iOS)
         guard UIApplication.shared.applicationState != .active else { return }
+        #endif
 
         // Only post if authorized
         guard isAuthorized else { return }

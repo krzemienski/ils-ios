@@ -487,6 +487,16 @@ struct MacContentView: View {
             PermissionHistoryView()
         case .usage:
             UsageDashboardView()
+        case .workflows:
+            WorkflowsListView()
+        case .agentQueue:
+            Text("Agent Queue")
+        case .documentation:
+            Text("Documentation")
+        case .terminal:
+            Text("Terminal")
+        case .search:
+            Text("Search")
         }
     }
 
@@ -860,6 +870,11 @@ struct MacContentView: View {
         case .sessionForkTree: selectedSection = .home
         case .splitView: selectedSection = .splitView
         case .permissions: selectedSection = .settings
+        case .workflows: selectedSection = .home
+        case .agentQueue: selectedSection = .home
+        case .documentation: selectedSection = .home
+        case .terminal: selectedSection = .home
+        case .search: selectedSection = .home
         }
         activeScreen = intent
         appState.navigationIntent = nil

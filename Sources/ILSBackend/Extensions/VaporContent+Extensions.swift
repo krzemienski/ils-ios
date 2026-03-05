@@ -350,3 +350,25 @@ extension UpdateQueueItemRequest: Content {}
 extension ReorderQueueRequest: Content {}
 extension QueueControlAction: Content {}
 extension QueueControlAction.Action: Content {}
+
+// MARK: - Workflow Types
+extension Workflow: Content {}
+extension WorkflowNode: Content {}
+extension WorkflowNodeType: Content {}
+extension WorkflowConnection: Content {}
+extension WorkflowStatus: Content {}
+extension WorkflowExecution: Content {}
+extension WorkflowExecutionStatus: Content {}
+extension WorkflowSchedule: Content {}
+extension CreateWorkflowRequest: Content {}
+extension UpdateWorkflowRequest: Content {}
+extension ExecuteWorkflowRequest: Content {}
+extension CreateScheduleRequest: Content {}
+extension UpdateScheduleRequest: Content {}
+
+// MARK: - Config Profile Types
+extension ConfigProfile: Content {}
+extension ProfilePermissions: Content {}
+extension CreateConfigProfileRequest: Content {}
+extension UpdateConfigProfileRequest: Content {}
+extension ConfigProfileListResponse: Content {}

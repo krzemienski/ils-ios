@@ -423,7 +423,7 @@ struct WorkflowExecutionView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+        ToolbarItem(placement: .navigation) {
             if let onBack {
                 Button {
                     onBack()

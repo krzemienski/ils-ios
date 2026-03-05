@@ -423,7 +423,11 @@ struct SidebarView: View {
             .padding(.horizontal, theme.spacingSM)
             .padding(.top, theme.spacingMD)
         }
+        #if os(iOS)
         .frame(maxHeight: UIScreen.main.bounds.height * 0.45)
+        #else
+        .frame(maxHeight: 400)
+        #endif
     }
 
     // MARK: - Section Header

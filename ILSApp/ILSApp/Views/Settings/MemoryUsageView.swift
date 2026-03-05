@@ -287,6 +287,10 @@ struct MemoryUsageView: View {
         MemoryUsageView()
     }
     .padding()
+    #if os(iOS)
     .background(Color(.systemBackground))
+    #else
+    .background(Color(.windowBackgroundColor))
+    #endif
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

@@ -262,7 +262,7 @@ struct ChatInputBar: View {
             .lineLimit(1...5)
             .disabled(isDisabled)
             .focused($isInputFocused)
-            #if os(macOS)
+            #if os(iOS)
             .onPaste(of: [.plainText]) { providers in
                 guard let provider = providers.first else { return false }
                 Task {
