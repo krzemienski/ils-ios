@@ -92,10 +92,13 @@ struct AutomationRulesView: View {
             Task { await viewModel.loadRules() }
         }
         .sheet(isPresented: $showNewRuleSheet) {
-            // TODO: RuleEditorView will be implemented in subtask-4-3
-            Text("Rule Editor - Coming Soon")
+            NavigationStack {
+                RuleEditorView(editingRule: editingRule) {
+                    Task { await viewModel.loadRules() }
+                }
                 .environment(appState)
                 .environment(\.theme, theme)
+            }
         }
         .sheet(item: Bindable(viewModel).error.map { ErrorWrapper(error: $0) }) { wrapper in
             ErrorAlertView(error: wrapper.error) {
