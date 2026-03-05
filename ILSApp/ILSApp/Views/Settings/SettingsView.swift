@@ -89,6 +89,8 @@ struct SettingsView: View {
 
                 agentQueueSection
 
+                MemoryUsageView()
+
                 contextWindowSection
 
                 checkpointSection

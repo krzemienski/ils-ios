@@ -43,6 +43,20 @@ enum AppConstants {
         UserDefaults.standard.string(forKey: defaultModelKey) ?? "sonnet"
     }
 
+    /// UserDefaults key for cache configuration settings.
+    static let cacheConfigKey = "cacheConfig"
+
+    // MARK: - Cache Configuration
+
+    /// Default cache size limit in megabytes (50MB).
+    static let defaultCacheSizeMB = 50
+
+    /// Maximum cache size limit in megabytes (100MB).
+    static let maxCacheSizeMB = 100
+
+    /// Default cache time-to-live in seconds (5 minutes).
+    static let defaultCacheTTL = 300
+
     // MARK: - iCloud Sync Keys
 
     /// iCloud KV store key for the synced server URL.
