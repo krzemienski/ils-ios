@@ -338,6 +338,8 @@ class AppState {
             navigationIntent = .analytics
         case "agent-queue", "queue":
             navigationIntent = .agentQueue
+        case "workflows":
+            navigationIntent = .workflows
         default:
             break
         }

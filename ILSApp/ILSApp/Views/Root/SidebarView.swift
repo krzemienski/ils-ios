@@ -418,6 +418,7 @@ struct SidebarView: View {
                         badge: versionMonitorViewModel.hasUpdateAvailable ? 1 : 0
                     )
                     sidebarNavItem(icon: "chart.bar.fill", label: "Analytics", screen: .analytics)
+                    sidebarNavItem(icon: "gearshape.2.fill", label: "Workflows", screen: .workflows)
                 }
             }
             .padding(.horizontal, theme.spacingSM)
