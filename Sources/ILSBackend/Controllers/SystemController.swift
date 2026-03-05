@@ -24,6 +24,7 @@ actor WebSocketCancellation {
 /// - `GET /system/version/check-updates` — check GitHub for latest CLI release
 /// - `GET /system/limits` — get resource limits for all sessions
 /// - `PUT /system/limits/:sessionId` — configure CPU/memory limits per session
+/// - `GET /system/processes/alerts` — retrieve active resource threshold alerts
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
     let processMonitorService = ProcessMonitorService()
@@ -47,6 +48,7 @@ struct SystemController: RouteCollection {
         system.get("version", "compatibility", use: self.checkCompatibility)
         system.get("limits", use: self.limits)
         system.put("limits", ":sessionId", use: self.updateLimits)
+        system.get("processes", "alerts", use: self.processAlerts)
     }
 
     // MARK: - REST Endpoints
@@ -262,6 +264,21 @@ struct SystemController: RouteCollection {
         return APIResponse(success: true, data: updatedLimits)
     }
 
+    /// GET /system/processes/alerts — retrieves active resource threshold alerts.
+    ///
+    /// Checks all Claude Code processes against their configured resource limits
+    /// and returns alerts for any processes currently exceeding thresholds.
+    @Sendable
+    func processAlerts(req: Request) async throws -> APIResponse<[ResourceViolationAlert]> {
+        // Get current Claude Code processes
+        let processes = await processMonitorService.getClaudeProcesses()
+
+        // Check for violations against configured limits
+        let alerts = await resourceLimitService.checkViolations(processes: processes)
+
+        return APIResponse(success: true, data: alerts)
+    }
+
     // MARK: - WebSocket
 
     /// WS /system/metrics/live — streams metrics JSON at a configurable interval.
@@ -454,6 +471,7 @@ extension ProcessHistoryResponse: Content {}
 extension ProcessMonitorInfo: Content {}
 extension ResourceLimitsResponse: Content {}
 extension UpdateResourceLimitsRequest: Content {}
+extension ResourceViolationAlert: Content {}
 
 // MARK: - Response DTOs
 
