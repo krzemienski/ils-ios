@@ -210,6 +210,16 @@ actor ResourceLimitService {
             )
 
             Self.logger.debug("CPU violation detected for process \(process.pid): \(process.cpuPercent)% > \(maxCpu)% (duration: \(duration) min)")
+
+            // Check if auto-kill should trigger
+            if sessionLimits.autoKillEnabled && duration >= sessionLimits.autoKillThresholdMinutes {
+                killProcess(
+                    pid: process.pid,
+                    processName: process.name,
+                    sessionId: sessionId,
+                    violationType: .cpu
+                )
+            }
         }
         // Check memory limit (only if CPU wasn't violated - CPU takes precedence)
         else if let maxMemory = sessionLimits.maxMemoryMB,
@@ -230,6 +240,16 @@ actor ResourceLimitService {
             )
 
             Self.logger.debug("Memory violation detected for process \(process.pid): \(process.memoryMB)MB > \(maxMemory)MB (duration: \(duration) min)")
+
+            // Check if auto-kill should trigger
+            if sessionLimits.autoKillEnabled && duration >= sessionLimits.autoKillThresholdMinutes {
+                killProcess(
+                    pid: process.pid,
+                    processName: process.name,
+                    sessionId: sessionId,
+                    violationType: .memory
+                )
+            }
         }
 
         // Clear violation tracking if no longer violating
@@ -335,5 +355,49 @@ actor ResourceLimitService {
         }
 
         return removedCount
+    }
+
+    // MARK: - Auto-Kill Functionality
+
+    /// Kill a process that has exceeded resource limits beyond the threshold duration.
+    ///
+    /// Uses SIGTERM for graceful termination. Runs on a background queue to avoid
+    /// blocking the actor. Logs success/failure for audit trail.
+    ///
+    /// - Parameters:
+    ///   - pid: The process ID to kill
+    ///   - processName: The process name (for logging)
+    ///   - sessionId: The session ID (for logging)
+    ///   - violationType: The type of violation that triggered the kill
+    private func killProcess(pid: Int, processName: String, sessionId: String, violationType: ResourceViolationAlert.ViolationType) {
+        // Dispatch to background queue to avoid blocking the actor
+        DispatchQueue.global(qos: .userInitiated).async {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/bin/kill")
+            // Use SIGTERM for graceful termination
+            process.arguments = ["-TERM", "\(pid)"]
+
+            let errorPipe = Pipe()
+            process.standardError = errorPipe
+            defer {
+                try? errorPipe.fileHandleForReading.close()
+            }
+
+            do {
+                try process.run()
+                process.waitUntilExit()
+                let success = process.terminationStatus == 0
+
+                if success {
+                    Self.logger.warning("Auto-killed process \(pid) (\(processName)) for session \(sessionId) due to \(violationType) violation exceeding threshold")
+                } else {
+                    let errorData = try? errorPipe.fileHandleForReading.readToEnd()
+                    let errorMsg = errorData.flatMap { String(data: $0, encoding: .utf8) } ?? "unknown error"
+                    Self.logger.error("Failed to auto-kill process \(pid): \(errorMsg)")
+                }
+            } catch {
+                Self.logger.error("Error auto-killing process \(pid): \(error)")
+            }
+        }
     }
 }
