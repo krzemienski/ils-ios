@@ -14,6 +14,7 @@ actor WebSocketCancellation {
 /// Routes:
 /// - `GET /system/metrics` — current CPU, memory, disk, network stats
 /// - `GET /system/processes` — running processes with optional sort
+/// - `GET /system/processes/claude` — only Claude Code processes with session association
 /// - `GET /system/processes/history` — historical process data with filtering
 /// - `GET /system/files` — directory listing restricted to home
 /// - `WS  /system/metrics/live` — live metrics stream every 2 seconds
@@ -22,12 +23,14 @@ actor WebSocketCancellation {
 /// - `GET /system/version/check-updates` — check GitHub for latest CLI release
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
+    let processMonitorService = ProcessMonitorService()
 
     func boot(routes: RoutesBuilder) throws {
         let system = routes.grouped("system")
 
         system.get("metrics", use: self.metrics)
         system.get("processes", use: self.processes)
+        system.get("processes", "claude", use: self.claudeProcesses)
         system.get("processes", "history", use: self.processHistory)
         system.get("files", use: self.files)
         system.webSocket("metrics", "live", onUpgrade: self.liveMetrics)
@@ -100,6 +103,22 @@ struct SystemController: RouteCollection {
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(items)
+
+        return Response(
+            status: .ok,
+            headers: ["Content-Type": "application/json"],
+            body: .init(data: data)
+        )
+    }
+
+    /// GET /system/processes/claude — returns only Claude Code processes with session association.
+    @Sendable
+    func claudeProcesses(req: Request) async throws -> Response {
+        let processes = await processMonitorService.getClaudeProcesses()
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(processes)
 
         return Response(
             status: .ok,
@@ -378,3 +397,4 @@ extension VersionHistoryResponse: Content {}
 extension UpdateCheckResponse: Content {}
 extension CompatibilityCheckResponse: Content {}
 extension ProcessHistoryResponse: Content {}
+extension ProcessMonitorInfo: Content {}
