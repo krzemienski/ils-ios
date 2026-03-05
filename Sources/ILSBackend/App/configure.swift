@@ -120,6 +120,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateVersionHistory())
     // v6.1 — Configuration profiles
     app.migrations.add(CreateConfigProfiles())
+    // v6.2 — Process monitoring
+    app.migrations.add(CreateProcessHistory())
 
     // Run migrations
     try await app.autoMigrate()
