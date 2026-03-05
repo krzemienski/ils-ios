@@ -1,6 +1,8 @@
 import Foundation
 import ILSShared
 import Logging
+import Fluent
+import Vapor
 #if canImport(Darwin)
 import Darwin
 #endif
@@ -56,6 +58,14 @@ actor ProcessMonitorService {
 
     /// Cache of process start times for uptime calculation (pid -> startTime).
     private var processStartTimes: [Int: Date] = [:]
+
+    /// Active processes being tracked for lifecycle history (pid -> ProcessHistory UUID).
+    /// Used to detect when processes start and stop.
+    private var activeProcesses: [Int: UUID] = [:]
+
+    /// Peak resource usage for active processes (pid -> (peakCPU, peakMemory)).
+    /// Updated each time we scan processes to track maximum resource consumption.
+    private var peakResources: [Int: (cpu: Double, memory: Double)] = [:]
 
     // MARK: - Public API
 
@@ -151,6 +161,88 @@ actor ProcessMonitorService {
                     continuation.resume(returning: false)
                 }
             }
+        }
+    }
+
+    /// Update process lifecycle tracking by detecting new and terminated processes.
+    ///
+    /// Scans current Claude Code processes and:
+    /// - Creates ProcessHistory records for newly detected processes
+    /// - Updates peak resource usage for active processes
+    /// - Finalizes ProcessHistory records for terminated processes with duration and peak resources
+    ///
+    /// This method should be called periodically (e.g., from a scheduled task or API endpoint)
+    /// to maintain accurate process history.
+    ///
+    /// - Parameter db: Database connection for persisting process history
+    func updateProcessLifecycle(db: Database) async throws {
+        let currentProcesses = await getClaudeProcesses()
+        let currentPIDs = Set(currentProcesses.map { $0.pid })
+        let activePIDs = Set(activeProcesses.keys)
+
+        // 1. Detect new processes and create history records
+        let newPIDs = currentPIDs.subtracting(activePIDs)
+        for pid in newPIDs {
+            guard let process = currentProcesses.first(where: { $0.pid == pid }) else { continue }
+
+            let history = ProcessHistory(
+                pid: process.pid,
+                name: process.name,
+                sessionId: process.sessionId,
+                peakCpuPercent: process.cpuPercent,
+                peakMemoryMB: process.memoryMB,
+                command: process.command
+            )
+
+            try await history.save(on: db)
+
+            if let historyId = history.id {
+                activeProcesses[pid] = historyId
+                peakResources[pid] = (cpu: process.cpuPercent, memory: process.memoryMB)
+                Self.logger.info("Started tracking process \(pid) (\(process.name)) - session: \(process.sessionId ?? "none")")
+            }
+        }
+
+        // 2. Update peak resources for active processes
+        for process in currentProcesses {
+            guard activeProcesses[process.pid] != nil else { continue }
+
+            if let existing = peakResources[process.pid] {
+                let newPeakCpu = max(existing.cpu, process.cpuPercent)
+                let newPeakMem = max(existing.memory, process.memoryMB)
+                peakResources[process.pid] = (cpu: newPeakCpu, memory: newPeakMem)
+            } else {
+                peakResources[process.pid] = (cpu: process.cpuPercent, memory: process.memoryMB)
+            }
+        }
+
+        // 3. Detect terminated processes and finalize history records
+        let terminatedPIDs = activePIDs.subtracting(currentPIDs)
+        for pid in terminatedPIDs {
+            guard let historyId = activeProcesses[pid] else { continue }
+
+            // Load the history record
+            if let history = try await ProcessHistory.find(historyId, on: db) {
+                let endTime = Date()
+                let duration = history.startTime.map { endTime.timeIntervalSince($0) }
+
+                // Update with end time, duration, and peak resources
+                history.endTime = endTime
+                history.duration = duration
+
+                if let peaks = peakResources[pid] {
+                    history.peakCpuPercent = peaks.cpu
+                    history.peakMemoryMB = peaks.memory
+                }
+
+                try await history.save(on: db)
+
+                Self.logger.info("Process \(pid) (\(history.name)) terminated - duration: \(duration.map { String(format: "%.1fs", $0) } ?? "unknown"), peak CPU: \(history.peakCpuPercent)%, peak memory: \(String(format: "%.1f", history.peakMemoryMB))MB")
+            }
+
+            // Clean up tracking state
+            activeProcesses.removeValue(forKey: pid)
+            peakResources.removeValue(forKey: pid)
         }
     }
 
