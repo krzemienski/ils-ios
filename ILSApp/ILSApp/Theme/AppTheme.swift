@@ -197,6 +197,21 @@ extension ThemeSnapshot {
 
 // MARK: - Theme Environment Key
 
+/// Environment key for accessing the current theme snapshot.
+///
+/// Works in tandem with `DensityEnvironmentKey` (defined in `DensityManager.swift`)
+/// to provide complete visual customization. Theme provides colors and design tokens,
+/// while density adjusts spacing and typography scales.
+///
+/// ## Usage
+/// ```swift
+/// @Environment(\.theme) var theme
+/// @Environment(\.density) var density
+///
+/// Text("Hello")
+///     .foregroundColor(theme.textPrimary)
+///     .padding(theme.spacingMD * density.spacingMultiplier)
+/// ```
 struct ThemeEnvironmentKey: EnvironmentKey {
     static let defaultValue: ThemeSnapshot = ThemeSnapshot(CyberpunkTheme())
 }
