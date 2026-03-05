@@ -562,26 +562,25 @@ actor APIClient {
     }
 
     func invalidateCache(for path: String? = nil) {
-        Task { @MainActor in
-            if let path {
-                let cacheKey = NSString(string: path)
-                if let entry = cache.object(forKey: cacheKey) {
-                    // Decrement approximate counters when removing specific entry
-                    let cost = estimatedCost(for: entry.value)
-                    approximateCacheBytes = max(0, approximateCacheBytes - cost)
-                    approximateEntryCount = max(0, approximateEntryCount - 1)
-                }
-                cache.removeObject(forKey: cacheKey)
-                removeConditionalEntry(forKey: path)
-            } else {
-                cache.removeAllObjects()
-                conditionalCache.removeAll()
-                conditionalCacheByteCount = 0
-
-                // Reset approximate counters on full cache clear
-                approximateCacheBytes = 0
-                approximateEntryCount = 0
+        // Run directly in actor isolation - no Task wrapper needed
+        if let path {
+            let cacheKey = NSString(string: path)
+            if let entry = cache.object(forKey: cacheKey) {
+                // Decrement approximate counters when removing specific entry
+                let cost = estimatedCost(for: entry.value)
+                approximateCacheBytes = max(0, approximateCacheBytes - cost)
+                approximateEntryCount = max(0, approximateEntryCount - 1)
             }
+            cache.removeObject(forKey: cacheKey)
+            removeConditionalEntry(forKey: path)
+        } else {
+            cache.removeAllObjects()
+            conditionalCache.removeAll()
+            conditionalCacheByteCount = 0
+
+            // Reset approximate counters on full cache clear
+            approximateCacheBytes = 0
+            approximateEntryCount = 0
         }
     }
 
