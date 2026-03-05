@@ -105,24 +105,29 @@ struct DensityPickerView: View {
     @ViewBuilder
     private func densityPreview(_ density: InformationDensity) -> some View {
         // Visual demonstration of spacing based on density level
-        let itemSpacing: CGFloat
-        let itemHeight: CGFloat
-        let fontSize: CGFloat
+        let itemSpacing: CGFloat = {
+            switch density {
+            case .compact: return 4
+            case .standard: return 8
+            case .comfortable: return 12
+            }
+        }()
 
-        switch density {
-        case .compact:
-            itemSpacing = 4
-            itemHeight = 32
-            fontSize = 13
-        case .standard:
-            itemSpacing = 8
-            itemHeight = 44
-            fontSize = 15
-        case .comfortable:
-            itemSpacing = 12
-            itemHeight = 56
-            fontSize = 17
-        }
+        let itemHeight: CGFloat = {
+            switch density {
+            case .compact: return 32
+            case .standard: return 44
+            case .comfortable: return 56
+            }
+        }()
+
+        let fontSize: CGFloat = {
+            switch density {
+            case .compact: return 13
+            case .standard: return 15
+            case .comfortable: return 17
+            }
+        }()
 
         VStack(spacing: itemSpacing) {
             ForEach(0..<3, id: \.self) { index in

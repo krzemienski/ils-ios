@@ -332,6 +332,7 @@
 		5D7AA484E960414C6980432D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 772B2D8CFCB35297C0DAD86D /* PrivacyInfo.xcprivacy */; };
 		5D82EF938390DCD237527FF0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9FF39B3DA7644595EE7DA45 /* HomeView.swift */; };
 		5D833104C3510BD26A7AC9E5 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */; };
+		7FEABD5C3A7929B04DD0BBB3 /* DensityPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B4F7402D8254135FEF3EFA /* DensityPickerView.swift */; };
 		5DE666802AC17A09CD82E7B4 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F48795057C7081556FF5B265 /* ConnectionManager.swift */; };
 		5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A407AD5B2B5CE78C2E654FD /* BrowserView.swift */; };
 		5E17C7A78A89B845BCB06FC7 /* BackendHealthDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5E2C1985E24E69457FC2BA4 /* BackendHealthDashboardView.swift */; };
@@ -634,6 +635,7 @@
 		B9196871ECA9C40D045BCE92 /* ThemeSpacingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2F8DC36FBB97D75857CC6B /* ThemeSpacingSection.swift */; };
 		BA24410DCE90789BC26C03DE /* EmptyEntityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF90E9C7F217ECD6D3B94F64 /* EmptyEntityState.swift */; };
 		BA28D0297F9A74C6D935C543 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */; };
+		7CB2B2FB6925FC7F32B50A2C /* DensityPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B4F7402D8254135FEF3EFA /* DensityPickerView.swift */; };
 		BA4690875BCC009661B3AFAF /* MarkdownParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B36712706EBABFFD36A3DCC /* MarkdownParser.swift */; };
 		BA49ABF453422C572715383B /* ThemesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C62D4B14DF74DE8236B84226 /* ThemesViewModel.swift */; };
 		BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A5E088C4FDB1B4F32EED35 /* AppTips.swift */; };
@@ -993,6 +995,7 @@
 		2780D1E0A8A2C4ABA22E249E /* Documentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Documentation.swift; sourceTree = "<group>"; };
 		28378B874AECABB3E4035FBB /* WelcomeCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCarouselView.swift; sourceTree = "<group>"; };
 		2A73D5641721993B42820374 /* GrammarDefinitions+Web.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GrammarDefinitions+Web.swift"; sourceTree = "<group>"; };
+		84B4F7402D8254135FEF3EFA /* DensityPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DensityPickerView.swift; sourceTree = "<group>"; };
 		2A8D7644950A87917982EDDC /* StreamingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingIndicatorView.swift; sourceTree = "<group>"; };
 		2AE94C5ECFA39B3E883FDE23 /* WidgetDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataProvider.swift; sourceTree = "<group>"; };
 		2BF08DBCF33CA970CAAAC9BD /* WidgetContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetContainerView.swift; sourceTree = "<group>"; };
@@ -1718,6 +1721,7 @@
 				1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */,
 				35A3BD96004EEA5294C1630D /* SettingsConnectionSection.swift */,
 				5A2839D9B4F57064D597B4D3 /* SettingsView.swift */,
+				84B4F7402D8254135FEF3EFA /* DensityPickerView.swift */,
 				276317F7F1CAD97E534EA4D3 /* ThemePickerView.swift */,
 				16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */,
 				8E4B3E9DDA01D8935B6DF923 /* TunnelSetupWizardView.swift */,
@@ -3046,6 +3050,7 @@
 				4AE7404C5F07C1DD574FD563 /* ThemeMarketplaceView.swift in Sources */,
 				804C8D2F76A6E1EBDE2BADFC /* ThemeMeshGradientSection.swift in Sources */,
 				0DEA24A0F1FF445652963E8C /* ThemeMetadataSection.swift in Sources */,
+				7CB2B2FB6925FC7F32B50A2C /* DensityPickerView.swift in Sources */,
 				BA28D0297F9A74C6D935C543 /* ThemePickerView.swift in Sources */,
 				EEE4E13C8E9643105B9D33B3 /* ThemePreviewCard.swift in Sources */,
 				4370ABE4AE6ECF9412B5C19B /* ThemePreviewView.swift in Sources */,
@@ -3463,6 +3468,7 @@
 				2BB6F13CC784C14F38E47ED8 /* ThemeMarketplaceView.swift in Sources */,
 				C8C9B04FC1C8270E438599A7 /* ThemeMeshGradientSection.swift in Sources */,
 				1E03C78A90016AD5952E7DFB /* ThemeMetadataSection.swift in Sources */,
+				7FEABD5C3A7929B04DD0BBB3 /* DensityPickerView.swift in Sources */,
 				5D833104C3510BD26A7AC9E5 /* ThemePickerView.swift in Sources */,
 				246D2629E29830ECDF5A57D5 /* ThemePreviewCard.swift in Sources */,
 				6A1D0563C49549C5B7156575 /* ThemePreviewView.swift in Sources */,
