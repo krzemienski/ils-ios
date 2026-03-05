@@ -52,6 +52,8 @@ struct RuleEditorView: View {
     // UI state
     @State private var isSaving = false
     @State private var validationError: String?
+    @State private var showTemplates = true
+    @State private var selectedTemplate: RuleTemplate?
 
     private enum FocusedField: Hashable {
         case ruleName, ruleDescription
@@ -73,6 +75,10 @@ struct RuleEditorView: View {
 
             ScrollView {
                 VStack(spacing: theme.spacingMD) {
+                    if editingRule == nil && showTemplates {
+                        templatesSection
+                    }
+
                     basicInfoSection
                     triggerSection
                     conditionsSection
@@ -102,6 +108,9 @@ struct RuleEditorView: View {
         .task {
             viewModel.configure(client: appState.apiClient)
             populateFromEditingRule()
+            if editingRule == nil {
+                await viewModel.loadTemplates()
+            }
         }
         #if os(iOS)
         .presentationDetents([.large])
@@ -126,6 +135,144 @@ struct RuleEditorView: View {
         .padding(.horizontal, theme.spacingMD)
         .padding(.top, theme.spacingMD)
         .padding(.bottom, theme.spacingSM)
+    }
+
+    // MARK: - Basic Info Section
+
+    @ViewBuilder
+    private var templatesSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            HStack {
+                sectionLabel("Quick Start Templates")
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showTemplates = false
+                    }
+                } label: {
+                    Text("Start from Scratch")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text("Choose a pre-built template to get started quickly")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+
+            if viewModel.isLoadingTemplates {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(theme.accent)
+                    Spacer()
+                }
+                .padding(.vertical, theme.spacingMD)
+            } else if viewModel.templates.isEmpty {
+                emptyTemplatesView
+            } else {
+                VStack(spacing: theme.spacingXS) {
+                    ForEach(viewModel.templates) { template in
+                        templateCard(template)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var emptyTemplatesView: some View {
+        HStack(spacing: theme.spacingSM) {
+            Image(systemName: "doc.text")
+                .foregroundStyle(theme.textTertiary)
+            Text("No templates available")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(theme.spacingMD)
+        .background(theme.bgSecondary.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+    }
+
+    @ViewBuilder
+    private func templateCard(_ template: RuleTemplate) -> some View {
+        let isSelected = selectedTemplate?.id == template.id
+        Button {
+            applyTemplate(template)
+        } label: {
+            VStack(alignment: .leading, spacing: theme.spacingXS) {
+                HStack(alignment: .top, spacing: theme.spacingSM) {
+                    Image(systemName: templateIcon(template))
+                        .font(.system(size: theme.fontTitle3, design: theme.fontDesign))
+                        .foregroundStyle(templateColor(template))
+                        .frame(width: 32)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(template.name)
+                            .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+
+                        Text(template.description)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                            .lineLimit(2)
+
+                        HStack(spacing: theme.spacingXS) {
+                            templateBadge(
+                                icon: triggerIcon(template.triggerType),
+                                text: triggerDisplayName(template.triggerType),
+                                color: triggerColor(template.triggerType)
+                            )
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                            templateBadge(
+                                icon: actionIcon(template.actionType),
+                                text: actionDisplayName(template.actionType),
+                                color: actionColor(template.actionType)
+                            )
+                        }
+                        .padding(.top, 4)
+                    }
+
+                    Spacer()
+
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(theme.success)
+                            .font(.system(size: theme.fontTitle3))
+                    }
+                }
+            }
+            .padding(theme.spacingSM)
+            .background(isSelected ? theme.success.opacity(0.08) : theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
+                    .stroke(isSelected ? theme.success.opacity(0.3) : Color.clear, lineWidth: 1.5)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(template.name). \(template.description)")
+    }
+
+    @ViewBuilder
+    private func templateBadge(icon: String, text: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+            Text(text)
+                .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
     // MARK: - Basic Info Section
@@ -726,6 +873,32 @@ struct RuleEditorView: View {
         messageContent = rule.actionConfig.messageContent ?? ""
     }
 
+    private func applyTemplate(_ template: RuleTemplate) {
+        selectedTemplate = template
+
+        // Pre-fill form with template data
+        ruleName = template.name
+        ruleDescription = template.description
+        selectedTrigger = template.triggerType
+        conditions = template.conditions
+        selectedAction = template.actionType
+
+        // Populate action config from template
+        notificationMessage = template.actionConfig.notificationMessage ?? ""
+        exportFormat = template.actionConfig.exportFormat ?? "markdown"
+        targetModel = template.actionConfig.targetModel ?? "sonnet"
+        messageContent = template.actionConfig.messageContent ?? ""
+
+        // Scroll to top to show the filled form
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showTemplates = false
+        }
+
+        #if os(iOS)
+        HapticManager.light()
+        #endif
+    }
+
     // MARK: - Helpers
 
     @ViewBuilder
@@ -830,6 +1003,16 @@ struct RuleEditorView: View {
         case .equals: return "="
         case .contains: return "contains"
         }
+    }
+
+    private func templateIcon(_ template: RuleTemplate) -> String {
+        // Use action icon for template card
+        actionIcon(template.actionType)
+    }
+
+    private func templateColor(_ template: RuleTemplate) -> Color {
+        // Use action color for template card
+        actionColor(template.actionType)
     }
 }
 
