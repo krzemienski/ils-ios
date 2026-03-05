@@ -148,4 +148,15 @@ func configure(_ app: Application) async throws {
     app.http.server.configuration.responseCompression = .enabled
 
     app.logger.info("ILS Backend starting on http://0.0.0.0:\(port)")
+
+    // Bonjour/mDNS auto-discovery — publish _ils._tcp so iOS clients can find the backend
+    let bonjour = BonjourPublisherService()
+    await bonjour.start(port: port)
+    app.storage[BonjourPublisherKey.self] = bonjour
+}
+
+// MARK: - Bonjour Storage Key
+
+private struct BonjourPublisherKey: StorageKey {
+    typealias Value = BonjourPublisherService
 }
