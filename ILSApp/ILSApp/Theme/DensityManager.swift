@@ -2,6 +2,10 @@ import SwiftUI
 import Observation
 import ILSShared
 
+#if os(iOS)
+import UIKit
+#endif
+
 // MARK: - Density Manager
 
 /// Manages information density selection and persistence.
@@ -16,6 +20,7 @@ import ILSShared
 ///
 /// ### Methods
 /// - ``setDensity(_:)`` - Switch to a different density level
+/// - ``recommendedDensity()`` - Get device-appropriate default density
 @MainActor
 @Observable
 class DensityManager {
@@ -30,11 +35,39 @@ class DensityManager {
     /// Shared singleton instance.
     static let shared = DensityManager()
 
+    // MARK: - Device-Based Defaults
+
+    /// Detects the recommended density level based on the current device.
+    ///
+    /// - iPhone: `.compact` — Maximize information density on smaller screens
+    /// - iPad: `.standard` — Balanced approach for medium-sized screens
+    /// - Mac: `.comfortable` — Generous spacing for large desktop displays
+    ///
+    /// - Returns: The recommended `InformationDensity` for this device.
+    static func recommendedDensity() -> InformationDensity {
+        #if os(iOS)
+        switch UIDevice.current.userInterfaceIdiom {
+        case .phone:
+            return .compact
+        case .pad:
+            return .standard
+        default:
+            return .standard
+        }
+        #elseif os(macOS)
+        return .comfortable
+        #else
+        return .standard
+        #endif
+    }
+
     private init() {
-        // Load persisted density level
+        // Load persisted density level, or use device-recommended default
         if let rawValue = UserDefaults.standard.string(forKey: Self.densityKey),
            let density = InformationDensity(rawValue: rawValue) {
             currentDensity = density
+        } else {
+            currentDensity = Self.recommendedDensity()
         }
 
         // Listen for iCloud sync changes
