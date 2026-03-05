@@ -139,9 +139,11 @@ struct ILSAppApp: App {
                             forName: UIApplication.didReceiveMemoryWarningNotification,
                             object: nil,
                             queue: .main
-                        ) { _ in
+                        ) { [appState] _ in
                             Task {
-                                await MemoryManager.shared.handleMemoryWarning()
+                                await MemoryManager.shared.handleMemoryWarning(
+                                    connectionManager: appState.connectionManager
+                                )
                             }
                         }
                         PerformanceMonitor.shared.start()

@@ -33,9 +33,10 @@ actor APIClient {
     /// Running total of bytes stored across all `conditionalCache` entries.
     private var conditionalCacheByteCount: Int = 0
 
-    /// Maximum bytes stored in `conditionalCache` before a full eviction (50 MB).
+    /// Maximum bytes stored in `conditionalCache` before a full eviction.
     /// Mirrors the `totalCostLimit` applied to the NSCache above.
-    private let conditionalCacheByteLimit = AppConstants.defaultCacheSizeMB * 1024 * 1024
+    /// Initialized from UserDefaults cache config or AppConstants default.
+    private var conditionalCacheByteLimit: Int
 
     // MARK: - Cache Statistics Tracking
 
@@ -92,9 +93,18 @@ actor APIClient {
 
     init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
+
+        // Read configured cache size from UserDefaults, or use default
+        let configuredSize = UserDefaults.standard.integer(forKey: AppConstants.cacheConfigKey)
+        let cacheSizeBytes = configuredSize > 0 ? configuredSize : (AppConstants.defaultCacheSizeMB * 1024 * 1024)
+
         // Cap cache to prevent unbounded memory growth
         cache.countLimit = 100
-        cache.totalCostLimit = AppConstants.defaultCacheSizeMB * 1024 * 1024  // 50MB memory budget
+        cache.totalCostLimit = cacheSizeBytes
+
+        // Initialize conditional cache byte limit to match NSCache limit
+        self.conditionalCacheByteLimit = cacheSizeBytes
+
         // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
         if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
             self.apiKey = keychainKey
@@ -552,16 +562,26 @@ actor APIClient {
     }
 
     func invalidateCache(for path: String? = nil) {
-        if let path = path {
-            cache.removeObject(forKey: path as NSString)
-            removeConditionalEntry(forKey: path)
-        } else {
-            cache.removeAllObjects()
-            conditionalCache.removeAll()
-            conditionalCacheByteCount = 0
-            // Reset cache statistics when clearing all caches
-            approximateCacheBytes = 0
-            approximateEntryCount = 0
+        Task { @MainActor in
+            if let path {
+                let cacheKey = NSString(string: path)
+                if let entry = cache.object(forKey: cacheKey) {
+                    // Decrement approximate counters when removing specific entry
+                    let cost = estimatedCost(for: entry.value)
+                    approximateCacheBytes = max(0, approximateCacheBytes - cost)
+                    approximateEntryCount = max(0, approximateEntryCount - 1)
+                }
+                cache.removeObject(forKey: cacheKey)
+                removeConditionalEntry(forKey: path)
+            } else {
+                cache.removeAllObjects()
+                conditionalCache.removeAll()
+                conditionalCacheByteCount = 0
+
+                // Reset approximate counters on full cache clear
+                approximateCacheBytes = 0
+                approximateEntryCount = 0
+            }
         }
     }
 
@@ -577,8 +597,13 @@ actor APIClient {
     /// Returns current cache statistics for monitoring and debugging.
     ///
     /// Provides metrics about cache size, entry counts, and hit rates.
-    /// The `currentSizeBytes` and `entryCount` are approximations because NSCache
-    /// doesn't expose its actual state and may evict entries without notification.
+    ///
+    /// **Note**: `currentSizeBytes` and `entryCount` are approximations because:
+    /// - NSCache may evict entries silently when memory pressure occurs
+    /// - We only track insertions and explicit removals
+    /// - Actual values may be lower than reported
+    ///
+    /// For accurate memory profiling, use Xcode Instruments Allocations tool.
     func getCacheStats() -> CacheStats {
         let maxBytes = cache.totalCostLimit
         let maxCount = cache.countLimit
@@ -594,6 +619,33 @@ actor APIClient {
             maxEntryCount: maxCount,
             hitRate: hitRate
         )
+    }
+
+    /// Update the cache size limit dynamically.
+    ///
+    /// Applies new size limit to both NSCache and conditional cache.
+    /// Triggers eviction if current cache exceeds new limit.
+    ///
+    /// - Parameter sizeBytes: New maximum cache size in bytes
+    func updateCacheLimit(_ sizeBytes: Int) {
+        cache.totalCostLimit = sizeBytes
+        self.conditionalCacheByteLimit = sizeBytes
+
+        AppLogger.shared.info(
+            "APIClient cache limit updated to \(sizeBytes / (1024 * 1024)) MB",
+            category: "cache"
+        )
+
+        // If we exceeded the new limit, NSCache will evict automatically
+        // But we need to manually check conditionalCache
+        if conditionalCacheByteCount > conditionalCacheByteLimit {
+            AppLogger.shared.info(
+                "Evicting conditional cache due to new size limit",
+                category: "cache"
+            )
+            conditionalCache.removeAll()
+            conditionalCacheByteCount = 0
+        }
     }
 
     /// Clear all caches and reset statistics.

@@ -2,9 +2,9 @@ import Foundation
 
 /// Coordinated memory management for app caching layers.
 ///
-/// Thread-safe actor that manages cache configuration for CacheService
-/// (SQLite-backed persistence). Provides statistics and proactive eviction
-/// on iOS memory warnings.
+/// Thread-safe actor that manages cache configuration for both APIClient's
+/// in-memory NSCache (primary memory consumer) and CacheService SQLite-backed
+/// persistence. Provides statistics and proactive eviction on iOS memory warnings.
 actor MemoryManager {
     static let shared = MemoryManager()
 
@@ -19,17 +19,22 @@ actor MemoryManager {
     /// Clear all non-essential caches in response to memory pressure.
     ///
     /// Called by the app-wide memory warning handler (ILSAppApp.swift).
-    /// Clears the persistent CacheService database. Essential user state
+    /// Clears both the in-memory APIClient NSCache (primary memory consumer)
+    /// and the persistent CacheService database. Essential user state
     /// (current session, unsent messages) is preserved by the session manager.
-    /// Note: APIClient has its own in-memory NSCache which is managed separately
-    /// per-connection.
-    func handleMemoryWarning() async {
+    ///
+    /// - Parameter connectionManager: Active ConnectionManager instance providing
+    ///   access to the current APIClient for cache eviction.
+    func handleMemoryWarning(connectionManager: ConnectionManager) async {
         AppLogger.shared.warning(
             "Memory warning received - clearing all caches",
             category: "memory"
         )
 
-        // Clear persistent database cache
+        // Clear in-memory HTTP response cache (APIClient NSCache - primary memory consumer)
+        await connectionManager.apiClient.clearCache()
+
+        // Clear persistent database cache (CacheService SQLite - minimal memory impact)
         await cacheService.clearAll()
 
         AppLogger.shared.info(
@@ -40,42 +45,43 @@ actor MemoryManager {
 
     // MARK: - Cache Statistics
 
-    /// Get cache statistics from CacheService.
+    /// Get cache statistics from APIClient.
     ///
-    /// Returns stats for the persistent SQLite cache. Note: This provides
-    /// basic statistics - actual memory usage is minimal as CacheService
-    /// uses disk storage, not in-memory caching.
+    /// Returns stats for the in-memory NSCache which is the primary memory consumer.
+    /// CacheService uses SQLite on disk with minimal memory footprint.
     ///
-    /// - Returns: CacheStats with entry counts and estimated limits.
-    func getTotalMemoryUsage() async -> CacheStats {
-        // CacheService uses SQLite on disk - minimal memory footprint
-        // Provide reasonable defaults for the UI
-        // TODO: Enhance CacheService to track actual entry counts and sizes
-        return CacheStats(
-            currentSizeBytes: 0,  // SQLite cache not tracked in memory
-            maxSizeBytes: 50 * 1024 * 1024,  // 50 MB nominal limit for display
-            entryCount: 0,  // Not tracked by CacheService yet
-            maxEntryCount: 1000,  // Reasonable default
-            hitRate: nil  // Not tracked by CacheService
-        )
+    /// - Parameter connectionManager: Active ConnectionManager instance providing
+    ///   access to the current APIClient for statistics.
+    /// - Returns: CacheStats with actual cache size, entry counts, and hit rate.
+    func getTotalMemoryUsage(from connectionManager: ConnectionManager) async -> CacheStats {
+        // Get real statistics from the active APIClient instance
+        await connectionManager.apiClient.getCacheStats()
     }
 
     // MARK: - Cache Configuration
 
-    /// Configure maximum cache size (reserved for future use).
+    /// Configure maximum cache size and apply to active APIClient.
     ///
-    /// Currently logs the configuration. CacheService uses SQLite with
-    /// TTL-based expiration rather than strict size limits.
+    /// Persists the configuration to UserDefaults and applies it to the
+    /// current APIClient's NSCache and conditional cache limits. New
+    /// connections will read this value from UserDefaults on initialization.
     ///
-    /// - Parameter sizeBytes: Desired maximum cache size in bytes.
-    func configureCacheSize(_ sizeBytes: Int) async {
+    /// - Parameters:
+    ///   - sizeBytes: Desired maximum cache size in bytes.
+    ///   - connectionManager: Active ConnectionManager instance for applying
+    ///     the limit to the current APIClient.
+    func configureCacheSize(_ sizeBytes: Int, connectionManager: ConnectionManager) async {
         let sizeMB = sizeBytes / (1024 * 1024)
         AppLogger.shared.info(
-            "Cache size configuration requested: \(sizeMB) MB (logged for future implementation)",
+            "Configuring cache size to \(sizeMB) MB",
             category: "memory"
         )
 
+        // Persist configuration
         UserDefaults.standard.set(sizeBytes, forKey: AppConstants.cacheConfigKey)
+
+        // Apply to active APIClient NSCache
+        await connectionManager.apiClient.updateCacheLimit(sizeBytes)
     }
 
     // MARK: - Proactive Cache Cleanup

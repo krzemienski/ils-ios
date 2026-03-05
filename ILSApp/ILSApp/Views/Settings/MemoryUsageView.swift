@@ -19,6 +19,7 @@ import SwiftUI
 /// - ``clearCache()`` - Trigger manual cache eviction via MemoryManager
 struct MemoryUsageView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @EnvironmentObject private var appState: AppState
 
     /// Current cache statistics loaded from MemoryManager.
     @State private var stats: CacheStats?
@@ -219,7 +220,10 @@ struct MemoryUsageView: View {
         }
         .onChange(of: cacheSizeMB) { _, newSize in
             Task {
-                await MemoryManager.shared.configureCacheSize(newSize)
+                await MemoryManager.shared.configureCacheSize(
+                    newSize * 1024 * 1024,
+                    connectionManager: appState.connectionManager
+                )
                 await loadStats() // Refresh stats to show new limit
             }
             #if os(iOS)
@@ -232,7 +236,9 @@ struct MemoryUsageView: View {
 
     /// Load cache statistics from MemoryManager.
     private func loadStats() async {
-        stats = await MemoryManager.shared.getTotalMemoryUsage()
+        stats = await MemoryManager.shared.getTotalMemoryUsage(
+            from: appState.connectionManager
+        )
         lastUpdated = Date()
     }
 
@@ -244,7 +250,9 @@ struct MemoryUsageView: View {
         HapticManager.impact(.medium)
         #endif
 
-        await MemoryManager.shared.handleMemoryWarning()
+        await MemoryManager.shared.handleMemoryWarning(
+            connectionManager: appState.connectionManager
+        )
 
         // Reload stats after clearing
         await loadStats()
