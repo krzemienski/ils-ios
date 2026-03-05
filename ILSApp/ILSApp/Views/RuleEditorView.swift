@@ -831,7 +831,7 @@ struct RuleEditorView: View {
                 }
 
                 #if os(iOS)
-                HapticManager.success()
+                HapticManager.notification(.success)
                 #endif
 
                 onSaved()
@@ -839,7 +839,7 @@ struct RuleEditorView: View {
             } catch {
                 validationError = error.localizedDescription
                 #if os(iOS)
-                HapticManager.error()
+                HapticManager.notification(.error)
                 #endif
             }
 
@@ -895,7 +895,7 @@ struct RuleEditorView: View {
         }
 
         #if os(iOS)
-        HapticManager.light()
+        HapticManager.impact(.light)
         #endif
     }
 

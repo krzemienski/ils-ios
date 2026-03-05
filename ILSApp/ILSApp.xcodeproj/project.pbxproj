@@ -2047,6 +2047,8 @@
 				EC4E8B1351AF67B0ECBCCFA5 /* Themes */,
 				B054CBE53D1498EAF28925EC /* Tips */,
 				DAE09728D55B98207A3FC700 /* Usage */,
+				25FC0BD4A7E31484E56C02AE /* RuleEditorView.swift */,
+				B62A2E486E079A4177A75039 /* AutomationRulesView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";

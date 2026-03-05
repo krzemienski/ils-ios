@@ -301,11 +301,11 @@ struct AutomationRulesView: View {
                             do {
                                 try await viewModel.toggleRule(rule.id)
                                 #if os(iOS)
-                                HapticManager.success()
+                                HapticManager.notification(.success)
                                 #endif
                             } catch {
                                 #if os(iOS)
-                                HapticManager.error()
+                                HapticManager.notification(.error)
                                 #endif
                             }
                         }
@@ -342,11 +342,11 @@ struct AutomationRulesView: View {
                     do {
                         try await viewModel.deleteRule(rule.id)
                         #if os(iOS)
-                        HapticManager.success()
+                        HapticManager.notification(.success)
                         #endif
                     } catch {
                         #if os(iOS)
-                        HapticManager.error()
+                        HapticManager.notification(.error)
                         #endif
                     }
                 }
