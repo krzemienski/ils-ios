@@ -12,6 +12,7 @@ let suggestionInteractionStore = SuggestionInteractionStore()
 /// - `GET /suggestions/skills`: Get ranked skill suggestions based on project/context
 /// - `GET /suggestions/abandoned`: Get sessions inactive for 24+ hours worth resuming
 /// - `GET /suggestions/continuation/:sessionId`: Get smart continuation summary for a session
+/// - `GET /suggestions/prompts`: Get context-aware prompt suggestions for chat input
 /// - `POST /suggestions/feedback`: Record user interaction with a suggestion
 struct SuggestionsController: RouteCollection {
     let fileSystem: FileSystemService
@@ -27,6 +28,7 @@ struct SuggestionsController: RouteCollection {
         suggestions.get("skills", use: skills)
         suggestions.get("abandoned", use: abandoned)
         suggestions.get("continuation", ":sessionId", use: continuation)
+        suggestions.get("prompts", use: prompts)
         suggestions.post("feedback", use: feedback)
     }
 
@@ -188,6 +190,33 @@ struct SuggestionsController: RouteCollection {
         let summary = service.buildContinuationSummary(session: session, messages: messages)
 
         return APIResponse(success: true, data: summary)
+    }
+
+    /// Return context-aware prompt suggestions for chat input.
+    ///
+    /// Query parameters:
+    /// - `sessionId`: Session ID for context (optional)
+    /// - `context`: Free-text conversation context (optional, default empty)
+    /// - `projectContext`: Project-specific context like language/framework (optional)
+    /// - `limit`: Max results to return (1–10, default 4)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with ListResponse of PromptSuggestion
+    @Sendable
+    func prompts(req: Request) async throws -> APIResponse<ListResponse<PromptSuggestion>> {
+        let context = req.query[String.self, at: "context"] ?? ""
+        let projectContext = req.query[String.self, at: "projectContext"]
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 4, 1), 10)
+
+        // Generate context-aware prompt suggestions
+        let service = PromptSuggestionService()
+        let suggestions = service.suggestPrompts(
+            conversationContext: context.isEmpty ? nil : context,
+            projectContext: projectContext,
+            limit: limit
+        )
+
+        return APIResponse(success: true, data: ListResponse(items: suggestions))
     }
 
     /// Record user interaction with a suggestion for future relevance boosting.
