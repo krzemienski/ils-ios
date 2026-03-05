@@ -47,6 +47,10 @@ actor ResourceLimitService {
     /// Key: sessionId, Value: ResourceLimitsResponse
     private var limits: [String: ResourceLimitsResponse] = [:]
 
+    /// Cache tracking when violations started for duration calculation.
+    /// Key: "\(processId)-\(violationType)", Value: Date when violation first detected
+    private var violationStartTimes: [String: Date] = [:]
+
     /// Default limits applied when no session-specific limits are configured.
     private let defaultLimits = ResourceLimitsResponse(
         sessionId: "default",
@@ -166,9 +170,9 @@ actor ResourceLimitService {
     /// if any limit is exceeded, or nil if the process is within limits or has
     /// no session association.
     ///
-    /// Note: This method only checks current values. Duration tracking for
-    /// auto-kill functionality is handled separately by the alert generation
-    /// system in subtask 3-2.
+    /// Tracks violation duration by recording when violations first occur and
+    /// calculating elapsed time for ongoing violations. Clears violation tracking
+    /// when processes return to within limits.
     ///
     /// - Parameter process: The process to check for violations
     /// - Returns: ResourceViolationAlert if limits are exceeded, nil otherwise
@@ -183,38 +187,57 @@ actor ResourceLimitService {
             return nil
         }
 
+        let now = Date()
+        var violationDetected = false
+        var alert: ResourceViolationAlert?
+
         // Check CPU limit
         if let maxCpu = sessionLimits.maxCpuPercent,
            process.cpuPercent > maxCpu {
-            return ResourceViolationAlert(
+            violationDetected = true
+            let violationKey = "\(process.pid)-cpu"
+            let duration = calculateViolationDuration(key: violationKey, now: now)
+
+            alert = ResourceViolationAlert(
                 processId: process.pid,
                 processName: process.name,
                 sessionId: sessionId,
                 violationType: .cpu,
                 currentValue: process.cpuPercent,
                 limitValue: maxCpu,
-                durationMinutes: 0, // Duration tracking added in subtask 3-2
-                timestamp: Date()
+                durationMinutes: duration,
+                timestamp: now
             )
-        }
 
-        // Check memory limit
-        if let maxMemory = sessionLimits.maxMemoryMB,
-           process.memoryMB > maxMemory {
-            return ResourceViolationAlert(
+            Self.logger.debug("CPU violation detected for process \(process.pid): \(process.cpuPercent)% > \(maxCpu)% (duration: \(duration) min)")
+        }
+        // Check memory limit (only if CPU wasn't violated - CPU takes precedence)
+        else if let maxMemory = sessionLimits.maxMemoryMB,
+                process.memoryMB > maxMemory {
+            violationDetected = true
+            let violationKey = "\(process.pid)-memory"
+            let duration = calculateViolationDuration(key: violationKey, now: now)
+
+            alert = ResourceViolationAlert(
                 processId: process.pid,
                 processName: process.name,
                 sessionId: sessionId,
                 violationType: .memory,
                 currentValue: process.memoryMB,
                 limitValue: maxMemory,
-                durationMinutes: 0, // Duration tracking added in subtask 3-2
-                timestamp: Date()
+                durationMinutes: duration,
+                timestamp: now
             )
+
+            Self.logger.debug("Memory violation detected for process \(process.pid): \(process.memoryMB)MB > \(maxMemory)MB (duration: \(duration) min)")
         }
 
-        // No violations
-        return nil
+        // Clear violation tracking if no longer violating
+        if !violationDetected {
+            clearViolationTracking(processId: process.pid)
+        }
+
+        return alert
     }
 
     /// Check multiple processes for resource limit violations.
@@ -234,5 +257,83 @@ actor ResourceLimitService {
         }
 
         return violations
+    }
+
+    // MARK: - Duration Tracking Helpers
+
+    /// Calculate violation duration in minutes, tracking start time if new violation.
+    ///
+    /// If this is a new violation, records the start time and returns 0.
+    /// For ongoing violations, calculates elapsed time since first detection.
+    ///
+    /// - Parameters:
+    ///   - key: Violation key in format "\(processId)-\(violationType)"
+    ///   - now: Current timestamp
+    /// - Returns: Duration in minutes (rounded down)
+    private func calculateViolationDuration(key: String, now: Date) -> Int {
+        if let startTime = violationStartTimes[key] {
+            // Existing violation - calculate duration
+            let elapsed = now.timeIntervalSince(startTime)
+            return Int(elapsed / 60.0) // Convert to minutes
+        } else {
+            // New violation - record start time
+            violationStartTimes[key] = now
+            Self.logger.debug("Started tracking violation: \(key)")
+            return 0
+        }
+    }
+
+    /// Clear violation tracking for a specific process.
+    ///
+    /// Removes both CPU and memory violation tracking entries for the given process.
+    /// Called when a process returns to within limits.
+    ///
+    /// - Parameter processId: The process ID to clear tracking for
+    private func clearViolationTracking(processId: Int) {
+        let cpuKey = "\(processId)-cpu"
+        let memoryKey = "\(processId)-memory"
+
+        let hadCpuViolation = violationStartTimes.removeValue(forKey: cpuKey) != nil
+        let hadMemoryViolation = violationStartTimes.removeValue(forKey: memoryKey) != nil
+
+        if hadCpuViolation || hadMemoryViolation {
+            Self.logger.debug("Cleared violation tracking for process \(processId)")
+        }
+    }
+
+    /// Remove violation tracking for a specific process.
+    ///
+    /// Public API to clear violation tracking, useful when a process terminates
+    /// or a session ends.
+    ///
+    /// - Parameter processId: The process ID to remove from tracking
+    func removeViolationTracking(processId: Int) {
+        clearViolationTracking(processId: processId)
+    }
+
+    /// Clean up stale violation tracking entries.
+    ///
+    /// Removes violation tracking entries older than the specified age.
+    /// Should be called periodically to prevent unbounded growth of the tracking cache.
+    ///
+    /// - Parameter maxAgeMinutes: Maximum age in minutes before entries are considered stale (default: 60)
+    /// - Returns: Number of stale entries removed
+    func cleanupStaleViolations(maxAgeMinutes: Int = 60) -> Int {
+        let now = Date()
+        let maxAge = TimeInterval(maxAgeMinutes * 60)
+        var removedCount = 0
+
+        for (key, startTime) in violationStartTimes {
+            if now.timeIntervalSince(startTime) > maxAge {
+                violationStartTimes.removeValue(forKey: key)
+                removedCount += 1
+            }
+        }
+
+        if removedCount > 0 {
+            Self.logger.info("Cleaned up \(removedCount) stale violation tracking entries")
+        }
+
+        return removedCount
     }
 }
