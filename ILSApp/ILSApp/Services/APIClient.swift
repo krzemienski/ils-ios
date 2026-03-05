@@ -15,7 +15,7 @@ actor APIClient {
     nonisolated private let decoder: JSONDecoder
     nonisolated private let encoder: JSONEncoder
     private let cache = NSCache<NSString, CacheEntryObject>()
-    private let defaultCacheTTL: TimeInterval = 30 // 30 seconds
+    private let defaultCacheTTL: TimeInterval = TimeInterval(AppConstants.defaultCacheTTL) // 300 seconds (5 minutes)
 
     /// In-flight GET tasks keyed by path. Actor isolation makes this thread-safe.
     /// Concurrent GET requests to the same path share a single network call.
@@ -33,9 +33,9 @@ actor APIClient {
     /// Running total of bytes stored across all `conditionalCache` entries.
     private var conditionalCacheByteCount: Int = 0
 
-    /// Maximum bytes stored in `conditionalCache` before a full eviction (10 MB).
+    /// Maximum bytes stored in `conditionalCache` before a full eviction (50 MB).
     /// Mirrors the `totalCostLimit` applied to the NSCache above.
-    private let conditionalCacheByteLimit = 10 * 1024 * 1024
+    private let conditionalCacheByteLimit = AppConstants.defaultCacheSizeMB * 1024 * 1024
 
     /// Optional API key for authenticated requests.
     /// When set, all /api/v1 requests include `Authorization: Bearer <key>`.
@@ -77,7 +77,7 @@ actor APIClient {
         self.baseURL = baseURL
         // Cap cache to prevent unbounded memory growth
         cache.countLimit = 100
-        cache.totalCostLimit = 10 * 1024 * 1024  // 10MB memory budget
+        cache.totalCostLimit = AppConstants.defaultCacheSizeMB * 1024 * 1024  // 50MB memory budget
         // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
         if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
             self.apiKey = keychainKey
