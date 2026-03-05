@@ -43,4 +43,5 @@ func routes(_ app: Application) throws {
     try admin.register(collection: HostProfileController())
     try admin.register(collection: TunnelController())
     try admin.register(collection: DataErasureController())
+    try admin.register(collection: PairingController())
 }
