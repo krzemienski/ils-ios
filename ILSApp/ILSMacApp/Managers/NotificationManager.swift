@@ -127,9 +127,60 @@ class NotificationManager: NSObject {
         }
     }
 
+    /// Post a notification for an automation rule trigger
+    /// - Parameters:
+    ///   - ruleName: The name of the automation rule that triggered
+    ///   - message: The notification message from the rule configuration
+    ///   - sessionId: The ID of the session where the rule triggered
+    ///   - sessionName: Optional name of the session
+    func postAutomationRuleNotification(
+        ruleName: String,
+        message: String,
+        sessionId: UUID,
+        sessionName: String? = nil
+    ) async {
+        // Only post notification if app is not frontmost
+        guard !NSApplication.shared.isActive else { return }
+
+        // Only post if authorized
+        guard isAuthorized else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = ruleName
+        content.body = message
+        content.sound = .default
+
+        // Store session ID and rule info in user info for notification handling
+        content.userInfo = [
+            "sessionId": sessionId.uuidString,
+            "type": "automation_rule",
+            "ruleName": ruleName
+        ]
+
+        // Use rule name + session ID for identifier to allow multiple rule notifications
+        // but replace previous notifications from the same rule for the same session
+        let identifier = "automation-rule-\(ruleName.replacingOccurrences(of: " ", with: "-"))-\(sessionId.uuidString)"
+
+        // Create request with immediate trigger
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: nil
+        )
+
+        do {
+            try await center.add(request)
+        } catch {
+            AppLogger.shared.error("Failed to post automation rule notification: \(error)", category: "notifications")
+        }
+    }
+
     /// Remove all delivered notifications for a session
     /// - Parameter sessionId: The session ID
     func removeNotifications(for sessionId: UUID) {
+        // Note: We don't remove automation rule notifications here because they may contain
+        // important information. Users can dismiss them manually or they'll be cleared
+        // when removeAllNotifications() is called.
         let identifiers = [
             "message-\(sessionId.uuidString)",
             "streaming-complete-\(sessionId.uuidString)"
