@@ -16,6 +16,7 @@ actor WebSocketCancellation {
 /// - `GET /system/processes` — running processes with optional sort
 /// - `GET /system/processes/claude` — only Claude Code processes with session association
 /// - `GET /system/processes/history` — historical process data with filtering
+/// - `POST /system/processes/:pid/kill` — kill a process by PID with optional force
 /// - `GET /system/files` — directory listing restricted to home
 /// - `WS  /system/metrics/live` — live metrics stream every 2 seconds
 /// - `GET /system/version/current` — current Claude Code CLI version
@@ -32,6 +33,7 @@ struct SystemController: RouteCollection {
         system.get("processes", use: self.processes)
         system.get("processes", "claude", use: self.claudeProcesses)
         system.get("processes", "history", use: self.processHistory)
+        system.post("processes", ":pid", "kill", use: self.killProcess)
         system.get("files", use: self.files)
         system.webSocket("metrics", "live", onUpgrade: self.liveMetrics)
         system.get("metrics", "source", use: self.metricsSource)
@@ -206,6 +208,33 @@ struct SystemController: RouteCollection {
         let responses = records.map { $0.toResponse() }
 
         return APIResponse(success: true, data: responses)
+    }
+
+    /// POST /system/processes/:pid/kill — kills a process by PID.
+    ///
+    /// Query parameters:
+    /// - `force`: If "true", use SIGKILL instead of SIGTERM (default: false)
+    @Sendable
+    func killProcess(req: Request) async throws -> APIResponse<KillProcessResponse> {
+        guard let pidStr = req.parameters.get("pid"),
+              let pid = Int(pidStr) else {
+            throw Abort(.badRequest, reason: "Invalid PID parameter")
+        }
+
+        let force = req.query[String.self, at: "force"] == "true"
+        let success = await processMonitorService.killProcess(pid: pid, force: force)
+
+        if !success {
+            throw Abort(.notFound, reason: "Process \(pid) not found or could not be killed")
+        }
+
+        return APIResponse(
+            success: true,
+            data: KillProcessResponse(
+                pid: pid,
+                signal: force ? "SIGKILL" : "SIGTERM"
+            )
+        )
     }
 
     // MARK: - WebSocket
@@ -398,3 +427,11 @@ extension UpdateCheckResponse: Content {}
 extension CompatibilityCheckResponse: Content {}
 extension ProcessHistoryResponse: Content {}
 extension ProcessMonitorInfo: Content {}
+
+// MARK: - Response DTOs
+
+/// Response for process kill operation
+struct KillProcessResponse: Content, Sendable {
+    let pid: Int
+    let signal: String
+}
