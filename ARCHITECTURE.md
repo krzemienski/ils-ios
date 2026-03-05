@@ -11,9 +11,9 @@ ILS is a full-stack Swift monorepo with three main components sharing types thro
 │  ┌─────────────────────┐    ┌──────────────────────────┐     │
 │  │     iOS App         │    │      macOS App            │     │
 │  │  (SwiftUI + MVVM)   │    │  (SwiftUI + Multi-Window) │     │
-│  │  122 Swift files    │    │  12 Swift files           │     │
-│  │  15 ViewModels      │    │  WindowManager            │     │
-│  │  12 Themes          │    │  Touch Bar                │     │
+│  │  149 Swift files    │    │  14 Swift files           │     │
+│  │  51 ViewModels      │    │  WindowManager            │     │
+│  │  13 Themes          │    │  Touch Bar                │     │
 │  └────────┬────────────┘    └──────────┬───────────────┘     │
 │           │                             │                    │
 │           └──────────┬──────────────────┘                    │
@@ -30,7 +30,7 @@ ILS is a full-stack Swift monorepo with three main components sharing types thro
 │              ┌───────▼───────┐                               │
 │              │  ILSBackend   │                               │
 │              │  Vapor 4      │                               │
-│              │  44 files     │                               │
+│              │  52 files     │                               │
 │              │  Port 9999    │                               │
 │              └───────┬───────┘                               │
 │                      │                                       │
@@ -105,22 +105,38 @@ ILSBackend/
 │   ├── entrypoint.swift     # @main entry
 │   ├── configure.swift      # Middleware, DB, routes setup
 │   └── routes.swift         # Route registration
-├── Controllers/             # 15 REST controllers
-│   ├── ChatController       # SSE streaming + WebSocket chat
-│   ├── SessionsController   # CRUD + scan + fork + transcript
-│   ├── ProjectsController   # List + detail + project sessions
-│   ├── SkillsController     # CRUD + GitHub search + install
-│   ├── PluginsController    # CRUD + marketplace + enable/disable
-│   ├── MCPController        # CRUD + scope filtering
-│   ├── ConfigController     # Get/Set/Validate config
-│   ├── StatsController      # Dashboard stats + recent sessions
-│   ├── SystemController     # Metrics + processes + files + live WS
-│   ├── ThemesController     # Custom theme CRUD
-│   ├── TeamsController      # Team + member + task + message CRUD
-│   ├── TunnelController     # Start/stop/status Cloudflare tunnel
-│   ├── DataErasureController # GDPR right-to-erasure (delete all user data)
-│   ├── HealthController     # Health checks (detailed/ready/live probes)
-│   └── HostProfileController # Host profile CRUD + activate + health (/fleet aliases)
+├── Controllers/             # 31 REST controllers
+│   ├── ActivityFeedController  # Events list + SSE stream
+│   ├── AgentQueueController    # CRUD + templates + reorder + pause/resume
+│   ├── AnalyticsController     # Activity, sessions, skills, summary, export
+│   ├── AutomationRulesController # CRUD + executions + templates
+│   ├── ChatController          # SSE streaming + WebSocket chat
+│   ├── CheckpointsController   # CRUD + restore
+│   ├── ConfigController        # Get/Set/Validate config
+│   ├── DataErasureController   # GDPR right-to-erasure (delete all user data)
+│   ├── HealthController        # Health checks (detailed/ready/live probes)
+│   ├── HostProfileController   # Host profile CRUD + activate + health (/fleet aliases)
+│   ├── MCPController           # CRUD + scope filtering + marketplace + search
+│   ├── PairingController       # QR code generation
+│   ├── PermissionsController   # Pending, history, decide, clear
+│   ├── PluginsController       # CRUD + marketplace + enable/disable + GitHub search
+│   ├── ProjectsController      # List + detail + project sessions
+│   ├── RecordingController     # CRUD + events + export
+│   ├── SessionBackupController # Checkpoints + restore
+│   ├── SessionHealthController # Summary, export, per-session, projects
+│   ├── SessionsController      # CRUD + scan + fork + transcript + search
+│   ├── SkillsController        # CRUD + GitHub search + install
+│   ├── SSHController           # Connect, disconnect, status, execute
+│   ├── StatsController         # Dashboard stats + recent sessions
+│   ├── SuggestionsController   # Sessions, skills, abandoned, prompts, feedback
+│   ├── SystemController        # Metrics + processes + files + live WS
+│   ├── TeamsController         # Team + member + task + message CRUD
+│   ├── TemplatesController     # CRUD + bulk delete
+│   ├── TerminalController      # Execute, config, reset
+│   ├── ThemesController        # Custom theme CRUD
+│   ├── TunnelController        # Start/stop/status Cloudflare tunnel
+│   ├── UsageController         # Usage stats + export
+│   └── WorkflowsController    # CRUD + execute + schedules + pause/cancel
 ├── Services/                # 18 business logic services
 │   ├── ClaudeExecutorService   # Spawns Claude CLI subprocess
 │   ├── StreamingService        # SSE event formatting
@@ -154,7 +170,7 @@ ILSBackend/
 ```
 
 **Key design decisions:**
-- Two execution backends: Agent SDK (default, via `node scripts/sdk-wrapper.mjs`) and CLI fallback (`claude -p`) — see "Execution Backends" section
+- Two execution backends: Agent SDK (default, via `python3 scripts/sdk-wrapper.py`) and CLI fallback (`claude -p`) — see "Execution Backends" section
 - Both backends use `Process` + `DispatchQueue` for stdout reading (not ClaudeCodeSDK — Vapor's NIO doesn't pump RunLoop)
 - Two-tier timeout: 30s initial response + 5min total execution
 - External sessions read from `~/.claude/projects/*/sessions-index.json` files
@@ -169,27 +185,43 @@ ILSBackend/
 
 **Location:** `ILSApp/ILSApp/`
 
-**Architecture:** MVVM with `@MainActor` ViewModels and `@StateObject` binding.
+**Architecture:** MVVM with `@Observable @MainActor` ViewModels.
 
 ```
-Views/                      ViewModels/
+Views/ (24 screen dirs)     ViewModels/ (51 files)
 ├── Root/                   ├── SessionsViewModel
 ├── Home/                   ├── ChatViewModel
 ├── Chat/                   ├── ProjectsViewModel
 ├── Sessions/               ├── SkillsViewModel
 ├── Projects/               ├── PluginsViewModel
 ├── Skills/                 ├── MCPViewModel
-├── Plugins/                ├── SystemViewModel
+├── Plugins/                ├── SystemMetricsViewModel
 ├── MCP/                    ├── TeamsViewModel
 ├── System/                 ├── ThemesViewModel
-├── Teams/                  ├── FleetViewModel
-├── Fleet/                  ├── SettingsViewModel
-├── Dashboard/              ├── BrowserViewModel
-├── Settings/               ├── DashboardViewModel
-├── Themes/                 └── OnboardingViewModel
-├── Onboarding/
-├── Sidebar/
-└── Shared/
+├── Teams/                  ├── HostProfilesViewModel
+├── Fleet/ (HostProfiles)   ├── SettingsViewModel
+├── Dashboard/              ├── DashboardViewModel
+├── Settings/               ├── OnboardingViewModel
+├── Themes/                 ├── WorkflowViewModel
+├── Onboarding/             ├── AgentQueueViewModel
+├── Sidebar/                ├── AnalyticsViewModel
+├── Shared/                 ├── CrossSessionSearchViewModel
+├── Workflows/              ├── ActivityFeedViewModel
+├── AgentQueue/             ├── HooksViewModel
+├── Analytics/              ├── PermissionHistoryViewModel
+├── Search/                 ├── UsageDashboardViewModel
+├── ActivityFeed/           ├── BackendConnectionsViewModel
+├── Hooks/                  ├── TerminalViewModel
+├── Permissions/            └── ... (51 total)
+├── Usage/
+├── Backends/
+├── Terminal/
+├── Documentation/
+├── Browser/
+├── Premium/
+├── Templates/
+├── Tips/
+└── Components/
 
 Services/
 ├── APIClient.swift         # REST API communication
@@ -205,9 +237,8 @@ Services/
 - URL scheme: `ils://`
 
 **Theme system:**
-- `AppTheme` protocol defines full theme interface
-- `ThemeSnapshot` concrete struct replaces `any AppTheme` existential (performance)
-- 12 built-in themes: Obsidian, Slate, Midnight, GhostProtocol, NeonNoir, ElectricGrid, Ember, Crimson, Carbon, Graphite, CyberPulse, Cyberpunk
+- `ThemeSnapshot` concrete struct (replaced `any AppTheme` existential for performance)
+- 13 built-in themes: Obsidian, Slate, Midnight, GhostProtocol, NeonNoir, ElectricGrid, Ember, Crimson, Carbon, Graphite, CyberPulse, Cyberpunk, Aurora
 - `ThemeManager` handles persistence and switching
 - `GlassCard` modifier for theme-aware container styling
 
@@ -308,16 +339,19 @@ Incoming HTTP Request
 
 ### Agent SDK (Default)
 
-Spawns `node scripts/sdk-wrapper.mjs '<json-config>'` which invokes the `@anthropic-ai/claude-agent-sdk` npm package. The SDK calls the Anthropic API **directly** — no `claude` subprocess is involved — which avoids the hang that occurs when spawning `claude -p` inside an active Claude Code session.
+Spawns `python3 scripts/sdk-wrapper.py '<json-config>'` which invokes the `claude_agent_sdk` Python package (`claude-agent-sdk` pip). The SDK wraps the Claude CLI with `include_partial_messages=True` for streaming, inheriting OAuth auth from the environment.
 
 ```
 ClaudeExecutorService.executeWithSDK()
     |
     v
-/bin/zsh -l -c "node scripts/sdk-wrapper.mjs '<json-config>'"
+/bin/zsh -l -c "python3 scripts/sdk-wrapper.py '<json-config>'"
     |
     v
-sdk-wrapper.mjs  -->  @anthropic-ai/claude-agent-sdk
+sdk-wrapper.py  -->  claude_agent_sdk.query()
+                              |
+                              v
+                      Claude CLI (OAuth)
                               |
                               v
                       Anthropic API (HTTPS)
@@ -334,9 +368,10 @@ CLIMessageConverter --> StreamMessage
 
 **Why SDK is preferred:**
 - Running `claude -p` as a subprocess inside an active Claude Code session causes the parent Claude process to detect the spawn and hang, preventing any output from being returned.
-- The Agent SDK bypasses this by making direct HTTPS calls to the Anthropic API — no `claude` subprocess is involved.
-- Authentication is inherited from the environment (Claude Code's auth tokens); `ANTHROPIC_API_KEY` is not required.
-- The prompt and all options are passed as a JSON argument to `sdk-wrapper.mjs`, keeping the interface clean and shell-injection-safe.
+- The Python Agent SDK wraps the CLI with proper process isolation, avoiding nesting detection.
+- `CLAUDECODE=1` and `CLAUDE_CODE_*` env vars are stripped in `ClaudeExecutorService.executeWithSDK()` before spawning, preventing nesting detection blocks.
+- Authentication is inherited from the environment (Claude Code's OAuth tokens); `ANTHROPIC_API_KEY` is not required.
+- The prompt and all options are passed as a JSON argument to `sdk-wrapper.py`, keeping the interface clean and shell-injection-safe.
 
 ### CLI Fallback
 
