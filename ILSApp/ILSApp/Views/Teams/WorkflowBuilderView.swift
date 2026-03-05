@@ -6,8 +6,8 @@ struct WorkflowBuilderView: View {
     @Environment(AppState.self) var appState
     @State private var viewModel: TeamsViewModel
     let teamName: String
-    @State private var workflowNodes: [WorkflowNode] = []
-    @State private var connections: [WorkflowConnection] = []
+    @State private var workflowNodes: [CanvasWorkflowNode] = []
+    @State private var connections: [CanvasWorkflowConnection] = []
     @State private var selectedNodeId: UUID?
     @State private var connectingFromNodeId: UUID?
     @State private var showAddNodeSheet = false
@@ -269,7 +269,7 @@ struct WorkflowBuilderView: View {
 
     // MARK: - Actions
 
-    private func handleNodeTap(_ node: WorkflowNode) {
+    private func handleNodeTap(_ node: CanvasWorkflowNode) {
         if isConnectMode {
             if let fromId = connectingFromNodeId {
                 if fromId != node.id {
@@ -277,7 +277,7 @@ struct WorkflowBuilderView: View {
                         $0.sourceNodeId == fromId && $0.targetNodeId == node.id
                     }
                     if !alreadyExists {
-                        let newConnection = WorkflowConnection(
+                        let newConnection = CanvasWorkflowConnection(
                             sourceNodeId: fromId,
                             targetNodeId: node.id
                         )
@@ -324,7 +324,7 @@ struct WorkflowBuilderView: View {
             case .deleted: nodeStatus = .skipped
             }
 
-            return WorkflowNode(
+            return CanvasWorkflowNode(
                 taskId: task.id,
                 title: task.subject,
                 type: .action,
@@ -348,7 +348,7 @@ struct WorkflowBuilderView: View {
             for blockingTaskId in blockedBy {
                 let sourceNode = workflowNodes.first { $0.taskId == blockingTaskId }
                 guard let sourceId = sourceNode?.id else { continue }
-                let connection = WorkflowConnection(
+                let connection = CanvasWorkflowConnection(
                     sourceNodeId: sourceId,
                     targetNodeId: targetId
                 )
@@ -357,8 +357,8 @@ struct WorkflowBuilderView: View {
         }
     }
 
-    private func addNode(type: WorkflowNodeType, name: String) {
-        let newNode = WorkflowNode(
+    private func addNode(type: CanvasNodeType, name: String) {
+        let newNode = CanvasWorkflowNode(
             title: name,
             type: type,
             position: NodePosition(x: 200, y: 200 + Double(workflowNodes.count * 100))
@@ -438,7 +438,7 @@ struct ConnectionLineView: View {
 
 // MARK: - Supporting Types
 
-extension WorkflowNodeType {
+extension CanvasNodeType {
     var iconName: String {
         switch self {
         case .agent: return "person.circle"
@@ -448,6 +448,11 @@ extension WorkflowNodeType {
         case .trigger: return "bolt.circle"
         case .transform: return "arrow.triangle.2.circlepath"
         case .loop: return "arrow.circlepath"
+        case .createSession: return "plus.message"
+        case .sendMessage: return "paperplane"
+        case .waitForResponse: return "clock"
+        case .export: return "square.and.arrow.up"
+        case .notify: return "bell"
         }
     }
 
@@ -460,6 +465,11 @@ extension WorkflowNodeType {
         case .trigger: return "Trigger"
         case .transform: return "Transform"
         case .loop: return "Loop"
+        case .createSession: return "Create Session"
+        case .sendMessage: return "Send Message"
+        case .waitForResponse: return "Wait for Response"
+        case .export: return "Export"
+        case .notify: return "Notify"
         }
     }
 }
@@ -467,7 +477,7 @@ extension WorkflowNodeType {
 // MARK: - Workflow Node View
 
 struct WorkflowNodeView: View {
-    let node: WorkflowNode
+    let node: CanvasWorkflowNode
     let isSelected: Bool
     var isConnectSource: Bool = false
     var dependencyCount: Int = 0
@@ -531,17 +541,17 @@ struct WorkflowNodeView: View {
 struct AddWorkflowNodeSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @State private var selectedType: WorkflowNodeType = .agent
+    @State private var selectedType: CanvasNodeType = .agent
     @State private var nodeName = ""
 
-    let onAdd: (WorkflowNodeType, String) -> Void
+    let onAdd: (CanvasNodeType, String) -> Void
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     Picker("Type", selection: $selectedType) {
-                        ForEach([WorkflowNodeType.agent, .action, .condition, .parallel], id: \.self) { type in
+                        ForEach([CanvasNodeType.agent, .action, .condition, .parallel], id: \.self) { type in
                             Label(type.displayName, systemImage: type.iconName)
                                 .tag(type)
                         }

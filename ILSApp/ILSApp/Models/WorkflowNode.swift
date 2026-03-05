@@ -1,14 +1,15 @@
 import Foundation
 
-// MARK: - Workflow Node Models
+// MARK: - Canvas Workflow Node Models (Visual Builder)
+// These are local canvas models for the visual workflow builder.
+// API/shared models are in ILSShared (Workflow, WorkflowNode, WorkflowConnection, WorkflowNodeType).
 
-/// A node in a visual workflow builder.
-struct WorkflowNode: Identifiable, Equatable {
+/// A node in the visual workflow builder canvas.
+struct CanvasWorkflowNode: Identifiable, Equatable {
     let id: UUID
-    /// Optional reference to a backend TeamTask ID.
     var taskId: String?
     var title: String
-    var type: WorkflowNodeType
+    var type: CanvasNodeType
     var position: NodePosition
     var inputs: [String]
     var outputs: [String]
@@ -20,7 +21,7 @@ struct WorkflowNode: Identifiable, Equatable {
         id: UUID = UUID(),
         taskId: String? = nil,
         title: String,
-        type: WorkflowNodeType,
+        type: CanvasNodeType,
         position: NodePosition = NodePosition(x: 0, y: 0),
         inputs: [String] = [],
         outputs: [String] = [],
@@ -40,7 +41,7 @@ struct WorkflowNode: Identifiable, Equatable {
         self.metadata = metadata
     }
 
-    static func == (lhs: WorkflowNode, rhs: WorkflowNode) -> Bool {
+    static func == (lhs: CanvasWorkflowNode, rhs: CanvasWorkflowNode) -> Bool {
         lhs.id == rhs.id &&
         lhs.taskId == rhs.taskId &&
         lhs.title == rhs.title &&
@@ -54,15 +55,20 @@ struct WorkflowNode: Identifiable, Equatable {
     }
 }
 
-/// Type of workflow node.
-enum WorkflowNodeType: String, Equatable {
-    case agent
+/// Type of canvas workflow node.
+enum CanvasNodeType: String, Equatable {
+    case createSession
+    case sendMessage
+    case waitForResponse
+    case export
+    case notify
     case condition
+    case parallel
+    case loop
+    case agent
     case action
     case trigger
     case transform
-    case parallel
-    case loop
 }
 
 /// Status of a workflow node during execution.
@@ -117,10 +123,10 @@ struct NodeMetadata: Equatable {
     }
 }
 
-// MARK: - Workflow Connection
+// MARK: - Canvas Workflow Connection
 
-/// A connection between two workflow nodes.
-struct WorkflowConnection: Identifiable, Equatable {
+/// A connection between two canvas workflow nodes.
+struct CanvasWorkflowConnection: Identifiable, Equatable {
     let id: UUID
     let sourceNodeId: UUID
     let targetNodeId: UUID
@@ -141,7 +147,7 @@ struct WorkflowConnection: Identifiable, Equatable {
         self.condition = condition
     }
 
-    static func == (lhs: WorkflowConnection, rhs: WorkflowConnection) -> Bool {
+    static func == (lhs: CanvasWorkflowConnection, rhs: CanvasWorkflowConnection) -> Bool {
         lhs.id == rhs.id &&
         lhs.sourceNodeId == rhs.sourceNodeId &&
         lhs.targetNodeId == rhs.targetNodeId &&
@@ -150,15 +156,15 @@ struct WorkflowConnection: Identifiable, Equatable {
     }
 }
 
-// MARK: - Workflow
+// MARK: - Canvas Workflow
 
-/// A complete workflow with nodes and connections.
-struct Workflow: Identifiable, Equatable {
+/// A complete canvas workflow with nodes and connections (for visual builder).
+struct CanvasWorkflow: Identifiable, Equatable {
     let id: UUID
     var name: String
     var description: String?
-    var nodes: [WorkflowNode]
-    var connections: [WorkflowConnection]
+    var nodes: [CanvasWorkflowNode]
+    var connections: [CanvasWorkflowConnection]
     var createdAt: Date?
     var updatedAt: Date?
 
@@ -166,8 +172,8 @@ struct Workflow: Identifiable, Equatable {
         id: UUID = UUID(),
         name: String,
         description: String? = nil,
-        nodes: [WorkflowNode] = [],
-        connections: [WorkflowConnection] = [],
+        nodes: [CanvasWorkflowNode] = [],
+        connections: [CanvasWorkflowConnection] = [],
         createdAt: Date? = nil,
         updatedAt: Date? = nil
     ) {
@@ -180,7 +186,7 @@ struct Workflow: Identifiable, Equatable {
         self.updatedAt = updatedAt
     }
 
-    static func == (lhs: Workflow, rhs: Workflow) -> Bool {
+    static func == (lhs: CanvasWorkflow, rhs: CanvasWorkflow) -> Bool {
         lhs.id == rhs.id &&
         lhs.name == rhs.name &&
         lhs.description == rhs.description &&

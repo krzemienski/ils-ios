@@ -35,6 +35,9 @@ func routes(_ app: Application) throws {
     try api.register(collection: AgentQueueController(queueService: AgentQueueService(db: app.db, executor: ClaudeExecutorService())))
     try api.register(collection: PermissionsController(executor: executor))
     try api.register(collection: AutomationRulesController())
+    let workflowExecutionEngine = WorkflowExecutionEngine()
+    let workflowScheduler = WorkflowScheduler(executionEngine: workflowExecutionEngine)
+    try api.register(collection: WorkflowsController(fileService: WorkflowFileService(), executionEngine: workflowExecutionEngine, scheduler: workflowScheduler))
 
     // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
     let admin = api.grouped(AdminMiddleware())

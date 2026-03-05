@@ -1,7 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import ILSShared
-import UniformTypeIdentifiers
 
 /// Multi-control input bar for composing and sending messages to Claude.
 ///
@@ -263,38 +262,28 @@ struct ChatInputBar: View {
             .lineLimit(1...5)
             .disabled(isDisabled)
             .focused($isInputFocused)
+            #if os(macOS)
             .onPaste(of: [.plainText]) { providers in
-                // Extract text from the first provider
                 guard let provider = providers.first else { return false }
-
-                // Load the text content asynchronously
                 Task {
                     do {
                         if let pastedText = try await provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) as? String {
-                            // Detect content type
                             let result = ContentDetector.detect(pastedText)
-
                             await MainActor.run {
-                                // Only show preview for non-plain-text content with reasonable confidence
                                 if result.type != .plainText && result.confidence > 0.5 {
-                                    // Store text and detection result, then show preview
                                     self.pastedText = pastedText
                                     self.detectedContent = result
                                     self.showPastePreview = true
                                 } else {
-                                    // For plain text or low confidence, directly insert into text field
                                     self.text += pastedText
                                 }
                             }
                         }
-                    } catch {
-                        // On error, do nothing (paste failed)
-                    }
+                    } catch {}
                 }
-
-                // Return true to prevent default paste (we'll handle insertion manually)
                 return true
             }
+            #endif
             .padding(.horizontal, inputPaddingH)
             .padding(.vertical, inputPaddingV)
             .background(
