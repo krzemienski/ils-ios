@@ -223,7 +223,13 @@ struct MCPController: RouteCollection {
         let page = req.query[Int.self, at: "page"] ?? 1
         let perPage = req.query[Int.self, at: "per_page"] ?? 20
 
-        let results = try await req.application.githubService.searchMCPServers(query: query, page: page, perPage: perPage)
+        let results: [GitHubSearchResult]
+        do {
+            results = try await req.application.githubService.searchMCPServers(query: query, page: page, perPage: perPage)
+        } catch {
+            req.logger.warning("GitHub MCP search failed: \(error)")
+            results = []
+        }
 
         return APIResponse(
             success: true,
